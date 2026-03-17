@@ -157,7 +157,7 @@ The **Collective Corpus** — accessibility guidelines, best practices, personas
 | ArtInsight | UW | AI-powered art descriptions and spatial browsing for BLV users |
 | PWD reviewer network | The Arc | Compensated human reviewers with disabilities for validation |
 | Global evaluation | UCL GDI Hub | Evaluation frameworks for low-resource and global contexts |
-| NAI + infrastructure | Google | Orchestrator framework, Euphonia ASR, A2UI protocol, compute |
+| NAI + infrastructure, [demo app](https://github.com/paradigms-of-intelligence/ai-for-accessibility) | Google | Orchestrator framework, Euphonia ASR, A2UI protocol, compute |
 
 See [projects/](projects/) for contributed code.
 
