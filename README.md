@@ -165,11 +165,15 @@ See [projects/](projects/) for contributed code.
 
 ### Month 1 — Collect
 - [x] Repo + architecture proposal
-- [ ] Teams contribute existing projects
+- [ ] Collect agent cards from all teams
+- [ ] Collect codebases from all teams
 - [ ] V1 architecture spec
 
 ### Month 3 — Build
-- [ ] V1 implementation
+- [ ] Implement App Agent
+- [ ] Implement User Agent
+- [ ] Implement Adapt Agent
+- [ ] Implement Orchestrator
 - [ ] All teams' projects integrated
 - [ ] Agent↔corpus connections
 - [ ] Co-design sessions with people with disabilities
