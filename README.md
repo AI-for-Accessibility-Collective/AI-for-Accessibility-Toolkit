@@ -166,10 +166,10 @@ See [projects/](projects/) for contributed code.
 ### Month 1 — Collect
 - [x] Repo + architecture proposal
 - [ ] Collect agent cards from all teams
-- [ ] Collect codebases from all teams
 - [ ] V1 architecture spec
 
 ### Month 3 — Build
+- [ ] Collect codebases from all teams
 - [ ] Implement App Agent
 - [ ] Implement User Agent
 - [ ] Implement Adapt Agent
