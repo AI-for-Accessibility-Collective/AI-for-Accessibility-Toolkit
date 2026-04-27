@@ -19,49 +19,72 @@ Teams across the collective contribute capabilities: accessible simulations, aty
 ## How It Works
 
 ```mermaid
-flowchart TB
-    subgraph Extension[Chrome Extension - Content Script]
-        subgraph Analyze[1. ANALYZE]
-            AXE[axe-core WCAG scanner]
-            AN1[missing-alt]
-            AN2[missing-labels]
-            AN3[poor-contrast]
+flowchart TD
+    subgraph Tools[Tools Library]
+        direction LR
+        T1[Accessible<br/>Simulations]
+        T2[Non-Standard<br/>Speech]
+        T3[Memory<br/>Assistant]
+        T4[Storytelling]
+        T5[Tutoring<br/>Agent]
+        T6[Cognitive<br/>A11y]
+        T7[Meeting<br/>Agent]
+        T8[...]
+    end
+
+    subgraph Agents[Shared Agent Services]
+        O[Orchestrator]
+        U[User Agent]
+        App[App Agent]
+        Adapt[Adapt Agent]
+    end
+
+    Corpus[(Collective Corpus<br/>guidelines, benchmarks,<br/>personas, patterns)]
+    
+    Web[Web App / Content]
+
+    Tools <--> O
+    Corpus -.-> O
+    O <--> U
+    O <--> App
+    O <--> Adapt
+    App <--> Web
+    Adapt <--> Web
+```
+
+### Agent Services
+
+| Agent | Role |
+|-------|------|
+| **Orchestrator** | AI plans which tools to activate based on page content + user profile |
+| **User Agent** | Preferences, ability profiles, interaction history |
+| **App Agent** | Parses web app UI, semantic analysis, accessibility APIs |
+| **Adapt Agent** | Generates adaptations, runs modality transforms, resolves conflicts |
+
+### Chrome Extension Implementation
+
+The extension implements this architecture for web browsers:
+
+```mermaid
+flowchart LR
+    subgraph Extension[Chrome Extension]
+        direction TB
+        subgraph Content[Content Script]
+            Analyzers[Analyzers<br/>axe-core, custom]
+            Adapters[Adapters<br/>generate-alt, fix-contrast]
+            Features[Features<br/>dark-mode, dyslexia-font]
         end
-        
-        subgraph Adapt[2. ADAPT]
-            AD1[generate-alt]
-            AD2[generate-labels]
-            AD3[fix-contrast]
-            AD4[simplify-text]
-            AD5[wcag-fixes]
-            AD6[generate-captions]
-        end
-        
-        subgraph Features[3. FEATURES]
-            F1[dark-mode]
-            F2[dyslexia-font]
-            F3[large-cursor]
-            F4[focus-mode]
-            F5[reader-mode]
-            F6[keyboard-nav]
-        end
+        BG[Background Worker]
     end
     
-    subgraph Background[Background Service Worker]
-        API[Gemini API]
-    end
+    Storage[(chrome.storage)]
+    Gemini[Gemini API]
+    Libs[/libs: axe-core,<br/>darkreader, readability/]
     
-    Storage[(chrome.storage.sync)]
-    Profile[(User Profile)]
-    Libs[/lib: axe-core, darkreader,<br/>readability, OpenDyslexic/]
-    
-    Libs --> Analyze
-    Libs --> Features
-    Analyze --> Adapt
-    Adapt --> Features
-    Profile --> Features
-    Storage <--> Profile
-    Adapt <-->|message passing| API
+    Libs --> Analyzers
+    Analyzers --> Adapters --> Features
+    Storage <--> Content
+    Adapters <--> BG <--> Gemini
 ```
 
 **Flow:**
