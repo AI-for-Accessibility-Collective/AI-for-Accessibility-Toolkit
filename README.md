@@ -245,10 +245,6 @@ See [projects/](projects/) for contributed code.
 ### Month 2 — Build
 - [x] Chrome extension with AI-powered accessibility fixes
 - [ ] Collect codebases from all teams
-- [ ] Implement App Agent
-- [ ] Implement User Agent
-- [ ] Implement Adapt Agent
-- [ ] Implement Orchestrator
 - [ ] All teams' projects integrated
 - [ ] Agent↔corpus connections
 - [ ] Co-design sessions with people with disabilities
