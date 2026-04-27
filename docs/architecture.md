@@ -20,45 +20,48 @@ Teams across the collective contribute capabilities: accessible simulations, aty
 
 ```mermaid
 flowchart TB
-    subgraph Extension["Chrome Extension"]
-        subgraph Analyze["1. ANALYZE"]
-            AXE["axe-core<br/>(WCAG scanner)"]
-            AN1["missing-alt"]
-            AN2["missing-labels"]
-            AN3["poor-contrast"]
+    subgraph Extension[Chrome Extension - Content Script]
+        subgraph Analyze[1. ANALYZE]
+            AXE[axe-core WCAG scanner]
+            AN1[missing-alt]
+            AN2[missing-labels]
+            AN3[poor-contrast]
         end
         
-        subgraph Adapt["2. ADAPT"]
-            AD1["generate-alt"]
-            AD2["generate-labels"]
-            AD3["fix-contrast"]
-            AD4["simplify-text"]
-            AD5["wcag-fixes"]
-            AD6["generate-captions"]
+        subgraph Adapt[2. ADAPT]
+            AD1[generate-alt]
+            AD2[generate-labels]
+            AD3[fix-contrast]
+            AD4[simplify-text]
+            AD5[wcag-fixes]
+            AD6[generate-captions]
         end
         
-        subgraph Features["3. FEATURES"]
-            F1["dark-mode"]
-            F2["dyslexia-font"]
-            F3["large-cursor"]
-            F4["focus-mode"]
-            F5["reader-mode"]
-            F6["keyboard-nav"]
-        end
-        
-        subgraph Profiles["4. PROFILES"]
-            P["lowVision, blind,<br/>dyslexia, adhd, motor,<br/>cognitive, deaf, ..."]
+        subgraph Features[3. FEATURES]
+            F1[dark-mode]
+            F2[dyslexia-font]
+            F3[large-cursor]
+            F4[focus-mode]
+            F5[reader-mode]
+            F6[keyboard-nav]
         end
     end
     
-    subgraph Background["Background Service Worker"]
-        API["Gemini API:<br/>describe images, simplify text, labels"]
+    subgraph Background[Background Service Worker]
+        API[Gemini API]
     end
     
+    Storage[(chrome.storage.sync)]
+    Profile[(User Profile)]
+    Libs[/lib: axe-core, darkreader,<br/>readability, OpenDyslexic/]
+    
+    Libs --> Analyze
+    Libs --> Features
     Analyze --> Adapt
     Adapt --> Features
-    Profiles --> Features
-    Adapt <--> API
+    Profile --> Features
+    Storage <--> Profile
+    Adapt <-->|message passing| API
 ```
 
 **Flow:**
@@ -157,14 +160,14 @@ Teams across the collective contribute specialized capabilities. See [projects.m
 | Project | Team | What it does | Status |
 |---------|------|--------------|--------|
 | **NAI** | Google | Multimodal AI agents that adapt UIs in real-time | Demo |
-| **Accessible Simulations** | Stanford | Sonification of STEM content for BLV learners | Prototype |
-| **Universal Memory** | MIT Media Lab | Wearable memory assistant for older adults | TBD |
-| **AI Storytelling** | UW | Creative expression tools for BLV children | TBD |
+| **Accessible Interactive Simulations** | Stanford | Sonification of STEM content for BLV learners | Prototype |
+| **Universal Memory Assistant** | MIT Media Lab | Wearable memory assistant for older adults | TBD |
+| **AI-Augmented Storytelling** | UW | Creative expression tools for BLV children | TBD |
 | **Non-Standard Speech** | UCL GDI Hub | Whisper fine-tunes for atypical speech (13 models) | Published |
 | **Founders Think** | UCL GDI Hub | AI tool for disability-innovation founders | TBD |
-| **Meeting Agent** | RNID | Real-time accessibility nudges in video calls | Zoom app |
-| **Tutoring Agent** | NTID | English grammar tutor for DHH students | TBD |
-| **Cognitive A11y** | The Arc | Text simplification for IDD users | TBD |
+| **Videoconferencing Agent** | RNID | Real-time accessibility nudges in video calls | Zoom app |
+| **AI-Powered Tutoring Agent** | NTID | English grammar tutor for DHH students | TBD |
+| **AI for Cognitive Accessibility** | The Arc | Text simplification for IDD users | TBD |
 
 ### How projects plug in
 
