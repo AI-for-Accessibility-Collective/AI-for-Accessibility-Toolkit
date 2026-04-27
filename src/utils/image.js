@@ -72,16 +72,19 @@ export async function captureVideoFrames(video, numFrames = 6) {
   const interval = duration / (numFrames + 1);
   const originalTime = video.currentTime;
 
-  for (let i = 1; i <= numFrames; i++) {
-    video.currentTime = interval * i;
-    await new Promise(resolve => {
-      video.onseeked = resolve;
-      setTimeout(resolve, 500); // Timeout fallback
-    });
-    frames.push(captureVideoFrame(video));
+  try {
+    for (let i = 1; i <= numFrames; i++) {
+      video.currentTime = interval * i;
+      await new Promise(resolve => {
+        video.onseeked = resolve;
+        setTimeout(resolve, 500); // Timeout fallback
+      });
+      frames.push(captureVideoFrame(video));
+    }
+  } finally {
+    video.currentTime = originalTime;
   }
 
-  video.currentTime = originalTime;
   return frames;
 }
 

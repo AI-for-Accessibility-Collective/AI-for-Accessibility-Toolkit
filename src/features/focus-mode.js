@@ -103,15 +103,21 @@ export const FocusMode = {
     `;
     document.body.appendChild(this.progressEl);
 
+    this.progressRafPending = false;
     this.progressHandler = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      if (this.progressEl) {
-        this.progressEl.style.width = `${progress}%`;
-      }
+      if (this.progressRafPending) return;
+      this.progressRafPending = true;
+      requestAnimationFrame(() => {
+        this.progressRafPending = false;
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        if (this.progressEl) {
+          this.progressEl.style.width = `${progress}%`;
+        }
+      });
     };
-    document.addEventListener('scroll', this.progressHandler);
+    document.addEventListener('scroll', this.progressHandler, { passive: true });
     this.progressHandler();
   },
 

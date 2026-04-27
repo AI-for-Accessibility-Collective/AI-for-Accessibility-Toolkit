@@ -194,7 +194,12 @@
     var _a;
     if (!((_a = node == null ? void 0 : node.target) == null ? void 0 : _a[0]))
       return null;
-    return document.querySelector(node.target[0]);
+    try {
+      return document.querySelector(node.target[0]);
+    } catch (e) {
+      console.warn("[AI4A11y] Invalid selector:", node.target[0]);
+      return null;
+    }
   }
 
   // src/utils/image.js
@@ -1478,12 +1483,21 @@ ${chunk}
       this.readingGuideEl = document.createElement("div");
       this.readingGuideEl.className = "ai4a11y-reading-guide";
       document.body.appendChild(this.readingGuideEl);
+      this.readingGuideRafPending = false;
+      this.lastMouseY = 0;
       this.readingGuideHandler = (e) => {
-        if (this.readingGuideEl) {
-          this.readingGuideEl.style.top = `${e.clientY - 20}px`;
-        }
+        this.lastMouseY = e.clientY;
+        if (this.readingGuideRafPending)
+          return;
+        this.readingGuideRafPending = true;
+        requestAnimationFrame(() => {
+          this.readingGuideRafPending = false;
+          if (this.readingGuideEl) {
+            this.readingGuideEl.style.top = `${this.lastMouseY - 20}px`;
+          }
+        });
       };
-      document.addEventListener("mousemove", this.readingGuideHandler);
+      document.addEventListener("mousemove", this.readingGuideHandler, { passive: true });
     },
     disableReadingGuide() {
       if (this.readingGuideEl) {
@@ -1834,15 +1848,22 @@ ${chunk}
       width: 0%;
     `;
       document.body.appendChild(this.progressEl);
+      this.progressRafPending = false;
       this.progressHandler = () => {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? scrollTop / docHeight * 100 : 0;
-        if (this.progressEl) {
-          this.progressEl.style.width = `${progress}%`;
-        }
+        if (this.progressRafPending)
+          return;
+        this.progressRafPending = true;
+        requestAnimationFrame(() => {
+          this.progressRafPending = false;
+          const scrollTop = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = docHeight > 0 ? scrollTop / docHeight * 100 : 0;
+          if (this.progressEl) {
+            this.progressEl.style.width = `${progress}%`;
+          }
+        });
       };
-      document.addEventListener("scroll", this.progressHandler);
+      document.addEventListener("scroll", this.progressHandler, { passive: true });
       this.progressHandler();
     },
     disableProgressIndicator() {

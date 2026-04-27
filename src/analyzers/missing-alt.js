@@ -67,8 +67,10 @@ export function findBadAltImages() {
 // Find background images that might need descriptions
 export function findBackgroundImages() {
   const found = [];
+  // Target common container elements instead of '*' for better performance
+  const selector = 'div, section, header, footer, article, aside, main, figure, [style*="background"]';
 
-  document.querySelectorAll('*').forEach(el => {
+  document.querySelectorAll(selector).forEach(el => {
     if (wasProcessed(el)) return;
 
     const style = getComputedStyle(el);
