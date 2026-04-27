@@ -233,6 +233,32 @@ flowchart TD
 | RIT / NTID | AI-Powered Tutoring Agent — English grammar tutor for DHH students |
 | The Arc | AI for Cognitive Accessibility — text simplification for IDD users |
 
+See [projects/](projects/) for contributed code.
+
+## Roadmap
+
+### Month 1 — Collect
+- [x] Repo + architecture proposal
+- [x] V1 architecture spec
+- [ ] Collect agent cards from all teams
+
+### Month 2 — Build
+- [x] Chrome extension with AI-powered accessibility fixes
+- [ ] Collect codebases from all teams
+- [ ] Implement App Agent
+- [ ] Implement User Agent
+- [ ] Implement Adapt Agent
+- [ ] Implement Orchestrator
+- [ ] All teams' projects integrated
+- [ ] Agent↔corpus connections
+- [ ] Co-design sessions with people with disabilities
+
+### Month 4 — Ship
+- [ ] Documentation
+- [ ] Example applications
+- [ ] Interactive playground
+- [ ] Public release
+
 ---
 
 <div align="center">
