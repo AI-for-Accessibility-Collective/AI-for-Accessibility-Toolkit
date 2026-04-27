@@ -187,42 +187,38 @@ npx ai4a11y check <url>                        # Test page with axe-core
 ## Architecture
 
 ```mermaid
-flowchart TB
-    subgraph Extension[Chrome Extension]
-        direction LR
-        
-        subgraph Analyze[1. Analyze]
-            axe[axe-core]
-            custom[Custom Analyzers]
-        end
-        
-        subgraph Adapt[2. Adapt]
-            gen[generate-alt<br/>generate-labels<br/>fix-contrast]
-            wcag[wcag-fixes<br/>simplify-text]
-        end
-        
-        subgraph Apply[3. Apply]
-            feat[dark-mode<br/>dyslexia-font<br/>focus-mode]
-        end
+flowchart TD
+    subgraph Tools[Tools from Teams]
+        T1[Simulations]
+        T2[Speech]
+        T3[Memory]
+        T4[Tutoring]
+        T5[Cognitive]
+        T6[...]
     end
+
+    O[Orchestrator]
+    Corpus[(Corpus)]
+    User[User Agent]
     
-    Profile[(User Profile<br/>settings.js)]
-    Storage[(chrome.storage)]
-    Gemini[Gemini API]
-    
-    axe --> Adapt
-    custom --> Adapt
-    Adapt --> Apply
-    Profile --> Apply
-    Storage <--> Profile
-    Adapt <--> Gemini
+    subgraph Target[Web App]
+        App[App Agent]
+        Adapt[Adapt Agent]
+    end
+
+    Tools <--> O
+    Corpus -.-> O
+    O <--> User
+    O <--> App
+    O <--> Adapt
 ```
 
 **Flow:**
-1. Page loads → extension runs
-2. Analyzers scan for issues (axe-core + custom)
-3. Adapters fix issues (immediate or via AI)
-4. Features apply visual presets based on profile
+1. **Tools** from each team provide specialized capabilities (simulations, speech recognition, memory aids, etc.)
+2. **Orchestrator** plans which tools to activate based on page content + user profile
+3. **Corpus** provides shared guidelines, benchmarks, and patterns
+4. **User Agent** manages preferences and ability profiles
+5. **App/Adapt Agents** analyze and modify the web app in real-time
 
 ## Who's Building This
 
