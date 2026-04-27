@@ -242,14 +242,14 @@ See [projects/](projects/) for contributed code.
 - [x] V1 architecture spec
 - [ ] Collect agent cards from all teams
 
-### Month 2 — Build
-- [x] Chrome extension with AI-powered accessibility fixes
+### Month 3 — Build
+- [x] Chrome extension form factor
 - [ ] Collect codebases from all teams
 - [ ] All teams' projects integrated
 - [ ] Agent↔corpus connections
 - [ ] Co-design sessions with people with disabilities
 
-### Month 4 — Ship
+### Month 6 — Ship
 - [ ] Documentation
 - [ ] Example applications
 - [ ] Interactive playground
