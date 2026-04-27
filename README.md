@@ -187,22 +187,35 @@ npx ai4a11y check <url>                        # Test page with axe-core
 ## Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Extension["Chrome Extension"]
-        direction TB
-        subgraph Top[" "]
-            direction LR
-            Analyzers["**Analyzers**<br/>missing-alt<br/>poor-contrast<br/>wcag-issues"]
-            Adapters["**Adapters**<br/>generate-alt<br/>fix-contrast<br/>wcag-fixes"]
-            Features["**Features**<br/>dark-mode<br/>dyslexia<br/>large-cursor"]
+flowchart TB
+    subgraph Extension[Chrome Extension]
+        direction LR
+        
+        subgraph Analyze[1. Analyze]
+            axe[axe-core]
+            custom[Custom Analyzers]
         end
-        Profiles["**Profiles** — lowVision, blind, dyslexia, adhd, motor, ..."]
+        
+        subgraph Adapt[2. Adapt]
+            gen[generate-alt<br/>generate-labels<br/>fix-contrast]
+            wcag[wcag-fixes<br/>simplify-text]
+        end
+        
+        subgraph Apply[3. Apply]
+            feat[dark-mode<br/>dyslexia-font<br/>focus-mode]
+        end
     end
     
-    Background["**Background**<br/>Gemini API"]
+    Profile[(User Profile<br/>settings.js)]
+    Storage[(chrome.storage)]
+    Gemini[Gemini API]
     
-    Analyzers --> Adapters --> Features
-    Adapters <--> Background
+    axe --> Adapt
+    custom --> Adapt
+    Adapt --> Apply
+    Profile --> Apply
+    Storage <--> Profile
+    Adapt <--> Gemini
 ```
 
 **Flow:**
@@ -215,14 +228,14 @@ flowchart LR
 
 | Team | Focus |
 |------|-------|
-| Stanford | Crossmodal simulations, extension infrastructure |
-| MIT Media Lab | AI headphones (BLV), AR captioning (DHH), memory aids |
-| RIT / NTID | Conversational accessibility wizard |
-| RNID | Atypical speech recognition |
-| UW | AI art descriptions |
-| The Arc | PWD reviewer network |
-| UCL GDI Hub | Global evaluation frameworks |
-| Google | Orchestrator, Euphonia ASR, compute |
+| Google | NAI — Multimodal AI agents that adapt UIs in real-time |
+| Stanford | Accessible Interactive Simulations — sonification for BLV STEM learners |
+| MIT Media Lab | Universal Memory Assistant — wearable memory aid for older adults |
+| UW | AI-Augmented Storytelling — creative expression tools for BLV children |
+| UCL GDI Hub | Non-Standard Speech (Whisper fine-tunes), Founders Think |
+| RNID | Videoconferencing Agent — real-time accessibility nudges in meetings |
+| RIT / NTID | AI-Powered Tutoring Agent — English grammar tutor for DHH students |
+| The Arc | AI for Cognitive Accessibility — text simplification for IDD users |
 
 ---
 
