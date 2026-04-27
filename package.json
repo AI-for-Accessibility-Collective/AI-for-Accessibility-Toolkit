@@ -1,0 +1,17 @@
+{
+  "name": "ai-for-accessibility-toolkit",
+  "version": "1.0.0",
+  "description": "AI-powered Chrome extension that adapts any webpage to each user's abilities",
+  "bin": {
+    "ai4a11y": "./scripts/cli.js"
+  },
+  "scripts": {
+    "build": "node src/build.js",
+    "build:prod": "NODE_ENV=production node src/build.js"
+  },
+  "devDependencies": {
+    "chokidar": "^3.6.0",
+    "esbuild": "^0.20.2",
+    "playwright": "^1.49.0"
+  }
+}

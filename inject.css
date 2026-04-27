@@ -1,0 +1,398 @@
+/**
+ * AI for Accessibility - Injected Styles
+ * Visual fixes and UI elements
+ */
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+    scroll-behavior: auto !important;
+  }
+
+  video[autoplay] {
+    animation: none !important;
+  }
+}
+
+/* ============ AI4A11Y UI ELEMENTS ============ */
+
+.ai4a11y-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.ai4a11y-describe-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 6px;
+  border: none;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font: 10px/1 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ai4a11y-wrapper:hover .ai4a11y-describe-btn,
+.ai4a11y-wrapper:focus-within .ai4a11y-describe-btn,
+.ai4a11y-describe-btn:focus {
+  opacity: 0.7;
+}
+
+.ai4a11y-describe-btn:hover {
+  opacity: 1;
+}
+
+.ai4a11y-describe-btn:focus {
+  outline: 1px solid #fff;
+  outline-offset: 1px;
+}
+
+/* Video transcribe button - always visible */
+video + .ai4a11y-describe-btn,
+.ai4a11y-wrapper video ~ .ai4a11y-describe-btn {
+  opacity: 0.6;
+}
+
+video + .ai4a11y-describe-btn:hover,
+.ai4a11y-wrapper video ~ .ai4a11y-describe-btn:hover {
+  opacity: 1;
+}
+
+.ai4a11y-simplify-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 8px;
+  border: 1px solid #007AFF;
+  border-radius: 4px;
+  background: white;
+  color: #007AFF;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+*:hover > .ai4a11y-simplify-btn,
+.ai4a11y-simplify-btn:focus {
+  opacity: 1;
+}
+
+/* ============ TLDR / SUMMARY ============ */
+
+.ai4a11y-tldr-btn {
+  display: inline-block;
+  padding: 3px 8px;
+  margin: 6px 0;
+  border: none;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font: 10px/1.2 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ai4a11y-tldr-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.ai4a11y-tldr-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Simplified text indicator */
+[data-ai4a11y-simplified="done"] {
+  background: linear-gradient(to right, rgba(52, 168, 83, 0.08), transparent 50%);
+  border-left: 3px solid #34a853;
+  padding-left: 8px;
+}
+
+[data-ai4a11y-simplified="done"]::before {
+  content: "✓ Simplified";
+  display: block;
+  font-size: 11px;
+  color: #34a853;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* Summary box - placed above content without disrupting layout */
+.ai4a11y-summary-box {
+  display: block;
+  clear: both;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  margin: 6px 0 12px 0;
+  background: linear-gradient(to right, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.02));
+  border-left: 3px solid #4285f4;
+  border-radius: 2px;
+  font: 13px/1.5 system-ui, -apple-system, sans-serif;
+  color: #222;
+}
+
+.ai4a11y-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #4285f4;
+  margin-bottom: 6px;
+}
+
+.ai4a11y-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #4285f4;
+}
+
+.ai4a11y-summary-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ai4a11y-summary-content {
+  color: #333;
+}
+
+.ai4a11y-summary-box strong {
+  font-weight: 600;
+}
+
+/* Transcript block for audio/video */
+.ai4a11y-transcript {
+  display: block;
+  clear: both;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font: 13px/1.5 system-ui, -apple-system, sans-serif;
+}
+
+.ai4a11y-transcript summary {
+  padding: 8px 12px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+}
+
+.ai4a11y-transcript summary:hover {
+  background: #e8e8e8;
+}
+
+.ai4a11y-transcript-content {
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  color: #444;
+  background: #fff;
+}
+
+/* ============ MODAL ============ */
+
+.ai4a11y-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+
+.ai4a11y-modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.ai4a11y-modal-content h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  color: #1a1a1a;
+}
+
+.ai4a11y-modal-content p {
+  margin: 0;
+  line-height: 1.6;
+  color: #333;
+}
+
+.ai4a11y-modal-body {
+  max-height: 400px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
+
+.ai4a11y-modal-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.ai4a11y-modal-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f5f5f5;
+  color: #333;
+  font: 13px/1 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ai4a11y-modal-btn:hover {
+  background: #e8e8e8;
+  border-color: #ccc;
+}
+
+.ai4a11y-modal-btn:focus {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
+.ai4a11y-modal-close {
+  background: #333;
+  color: white;
+  border-color: #333;
+}
+
+.ai4a11y-modal-close:hover {
+  background: #444;
+  border-color: #444;
+}
+
+/* ============ NATIVE ADAPTATION INDICATORS ============ */
+
+/* Subtle indicator for AI-adapted content */
+.ai4a11y-adapted,
+.ai4a11y-simplified,
+.ai4a11y-contrast-fixed {
+  position: relative;
+}
+
+/* No visual indicator - keeps text clean */
+
+/* Simplified text styling */
+.ai4a11y-simplified {
+  line-height: 1.6 !important;
+  letter-spacing: 0.01em;
+}
+
+/* Toggle button for original/simplified - consistent with other ai4a11y buttons */
+.ai4a11y-toggle-original {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font: 10px/1.2 system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: opacity 0.15s;
+}
+
+.ai4a11y-toggle-original:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.ai4a11y-toggle-original:focus {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+}
+
+/* Adapted links */
+a.ai4a11y-adapted {
+  text-decoration-style: dotted;
+}
+
+/* Contrast-fixed elements */
+.ai4a11y-contrast-fixed {
+  /* Already has inline style applied */
+}
+
+/* Generated alt indicator */
+img[data-ai4a11y-generated="true"] {
+  outline: 2px dashed rgba(0, 200, 100, 0.5);
+  outline-offset: 2px;
+}
+
+canvas[data-ai4a11y-processed="done"] {
+  outline: 2px dashed rgba(0, 122, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* ============ FOCUS VISIBILITY ============ */
+
+*:focus-visible {
+  outline: 3px solid #007AFF !important;
+  outline-offset: 2px !important;
+}
+
+/* ============ SCREEN READER ONLY (for live regions) ============ */
+
+#ai4a11y-live {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ============ HIGH CONTRAST MODE SUPPORT ============ */
+
+@media (prefers-contrast: more) {
+  .ai4a11y-describe-btn {
+    background: #000;
+    border: 2px solid #fff;
+  }
+
+  .ai4a11y-modal-content {
+    border: 3px solid #000;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .ai4a11y-modal-content {
+    background: #1a1a1a;
+    color: #f0f0f0;
+  }
+
+  .ai4a11y-modal-content h2 {
+    color: #f0f0f0;
+  }
+
+  .ai4a11y-modal-content p {
+    color: #ccc;
+  }
+}

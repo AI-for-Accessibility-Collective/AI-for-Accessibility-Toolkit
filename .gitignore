@@ -1,35 +1,5 @@
-# Dependencies
 node_modules/
-__pycache__/
-*.pyc
-.venv/
-venv/
-env/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
 .DS_Store
-Thumbs.db
-
-# Environment
+*.log
 .env
-.env.local
-
-# Test
-.pytest_cache/
-
-# Build
-dist/
-build/
-*.egg-info/
-
-# Models and data
-*.bin
-*.pt
-*.onnx
-*.pkl
+content.bundle.js.map

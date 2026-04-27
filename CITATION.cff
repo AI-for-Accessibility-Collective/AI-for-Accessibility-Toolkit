@@ -4,15 +4,15 @@ message: If you use this toolkit, please cite it using the metadata from this fi
 type: software
 authors:
   - name: AI for Accessibility Collective
-url: https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft
-repository-code: https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft
-abstract: AI agents that adapt the web to each user's abilities.
+url: https://github.com/chuanenlin/AI-for-Accessibility-Toolkit
+repository-code: https://github.com/chuanenlin/AI-for-Accessibility-Toolkit
+abstract: AI-powered Chrome extension that adapts any webpage to each user's abilities.
 keywords:
   - accessibility
-  - agents
+  - chrome extension
   - assistive technology
   - web accessibility
   - ability-based design
   - WCAG
+  - AI
 license: Apache-2.0
-date-released: "2026-03-13"

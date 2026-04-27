@@ -1,0 +1,1262 @@
+/* The Inclusive Post - NYT-style with intentional accessibility issues */
+
+/* ============================================
+   INTENTIONAL ACCESSIBILITY ISSUES:
+   - Small base font (14px instead of 16px+)
+   - Tight line-height (1.3 instead of 1.5+)
+   - Low contrast grays (#777, #999)
+   - Thin font weights (300)
+   - Small touch targets
+   - Animations without prefers-reduced-motion
+   - Hover-only interactions
+   ============================================ */
+
+:root {
+  --black: #121212;
+  --dark-gray: #333;
+  --medium-gray: #666;
+  --light-gray: #999; /* ISSUE: Too light for body text */
+  --faint-gray: #ccc;
+  --bg-gray: #f7f7f7;
+  --white: #fff;
+  --accent: #567b95;
+  --red: #c41d1d;
+  --green: #1a8d1a;
+  --yellow: #d4a500;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Libre Franklin', Georgia, serif;
+  /* ISSUE: Small base font size */
+  font-size: 14px;
+  /* ISSUE: Tight line height */
+  line-height: 1.3;
+  color: var(--dark-gray);
+  background: var(--white);
+  /* ISSUE: No letter-spacing adjustment */
+}
+
+/* ============================================
+   TICKER - ISSUE: Constant animation, distracting
+   ============================================ */
+.ticker {
+  background: var(--black);
+  color: var(--white);
+  padding: 6px 0;
+  overflow: hidden;
+  position: relative;
+  max-height: 32px;
+}
+
+.ticker-content {
+  display: flex;
+  gap: 40px;
+  white-space: nowrap;
+  /* ISSUE: Constant animation with no pause option */
+  animation: ticker-scroll 30s linear infinite;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-sep {
+  color: var(--light-gray);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.site-header {
+  border-bottom: 1px solid var(--faint-gray);
+  background: var(--white);
+  /* Not sticky - allows content to scroll fully */
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--faint-gray);
+}
+
+.header-left, .header-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 150px;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+/* ISSUE: Small touch targets, no visible focus */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--dark-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn svg {
+  display: block;
+}
+
+.icon-btn:hover {
+  color: var(--black);
+}
+
+.header-center {
+  text-align: center;
+}
+
+.date-line {
+  /* ISSUE: Small, low contrast */
+  font-size: 10px;
+  color: var(--light-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.masthead {
+  /* Using Playfair Display - elegant but thin */
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 26px;
+  /* ISSUE: Thin font weight */
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin: 2px 0;
+}
+
+.tagline {
+  font-size: 11px;
+  color: var(--light-gray);
+  font-style: italic;
+}
+
+/* ISSUE: Small buttons */
+.subscribe-btn, .login-btn {
+  font-size: 11px;
+  padding: 6px 12px;
+  border: 1px solid var(--dark-gray);
+  background: var(--dark-gray);
+  color: var(--white);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.login-btn {
+  background: transparent;
+  color: var(--dark-gray);
+}
+
+/* ============================================
+   NAVIGATION - ISSUE: Hover-only dropdowns
+   ============================================ */
+.main-nav {
+  border-bottom: 2px solid var(--black);
+}
+
+.nav-list {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  list-style: none;
+  padding: 6px 0;
+}
+
+.nav-item a {
+  text-decoration: none;
+  color: var(--dark-gray);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-item a:hover {
+  color: var(--black);
+}
+
+/* ISSUE: Dropdown only appears on hover, not keyboard accessible */
+.nav-item.has-dropdown {
+  position: relative;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--white);
+  border: 1px solid var(--faint-gray);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  list-style: none;
+  min-width: 150px;
+  z-index: 50;
+}
+
+/* ISSUE: Hover-only, no focus support */
+.nav-item.has-dropdown:hover .dropdown {
+  display: block;
+}
+
+.dropdown li a {
+  display: block;
+  padding: 10px 16px;
+  text-transform: none;
+  font-size: 13px;
+}
+
+.dropdown li a:hover {
+  background: var(--bg-gray);
+}
+
+/* Mobile menu */
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background: var(--white);
+  z-index: 200;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s;
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--faint-gray);
+  font-weight: 600;
+}
+
+.mobile-menu ul {
+  list-style: none;
+}
+
+.mobile-menu li a {
+  display: block;
+  padding: 14px 20px;
+  color: var(--dark-gray);
+  text-decoration: none;
+  border-bottom: 1px solid var(--bg-gray);
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 20px;
+}
+
+/* Hero Article */
+.hero-article {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--faint-gray);
+  margin-bottom: 30px;
+}
+
+.hero-image-container {
+  position: relative;
+}
+
+.hero-image {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ISSUE: Low contrast caption */
+.image-caption {
+  font-size: 11px;
+  color: var(--light-gray);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.article-category {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+/* ISSUE: Thin headline font */
+.hero-headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.hero-headline a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hero-headline a:hover {
+  text-decoration: underline;
+}
+
+.hero-summary {
+  font-size: 16px;
+  /* ISSUE: Tight line height for body text */
+  line-height: 1.4;
+  color: var(--medium-gray);
+  margin-bottom: 20px;
+}
+
+.hero-byline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.byline-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.byline-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ISSUE: Low contrast */
+.byline-time {
+  font-size: 11px;
+  color: var(--light-gray);
+}
+
+/* ============================================
+   CONTENT GRID
+   ============================================ */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 40px;
+}
+
+.section-header {
+  border-bottom: 2px solid var(--black);
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: 'Libre Franklin', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Story Grid */
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.story-card {
+  border-bottom: 1px solid var(--faint-gray);
+  padding-bottom: 20px;
+}
+
+.story-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.story-category {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.story-headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.25;
+  margin: 8px 0;
+}
+
+.story-headline a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.story-headline a:hover {
+  text-decoration: underline;
+}
+
+/* ISSUE: Low contrast summary text */
+.story-summary {
+  font-size: 13px;
+  color: var(--light-gray);
+  line-height: 1.4;
+}
+
+/* ============================================
+   VIDEO SECTION
+   ============================================ */
+.video-section {
+  margin-bottom: 40px;
+}
+
+.video-container {
+  background: var(--black);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.main-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+.video-info {
+  padding: 16px;
+  color: var(--white);
+}
+
+.video-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.video-description {
+  font-size: 13px;
+  color: var(--faint-gray);
+  margin-bottom: 8px;
+}
+
+.video-duration {
+  font-size: 11px;
+  color: var(--light-gray);
+}
+
+/* ============================================
+   AUDIO SECTION
+   ============================================ */
+.audio-section {
+  margin-bottom: 40px;
+}
+
+.audio-player {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--bg-gray);
+  border-radius: 2px;
+}
+
+.audio-artwork {
+  flex-shrink: 0;
+}
+
+.audio-artwork img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+}
+
+.audio-info {
+  flex: 1;
+}
+
+.audio-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.audio-description {
+  font-size: 13px;
+  color: var(--medium-gray);
+  margin-bottom: 12px;
+}
+
+.audio-element {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* ISSUE: Low contrast meta */
+.audio-meta {
+  font-size: 11px;
+  color: var(--light-gray);
+}
+
+/* ============================================
+   DATA SECTION - ISSUE: Color-only meaning
+   ============================================ */
+.data-section {
+  margin-bottom: 40px;
+}
+
+.data-figure {
+  margin-bottom: 20px;
+}
+
+.data-chart {
+  width: 100%;
+  height: auto;
+}
+
+.data-caption {
+  font-size: 11px;
+  color: var(--light-gray);
+  margin-top: 8px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* ISSUE: Color is the ONLY indicator of meaning */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-dot.red { background: var(--red); }
+.status-dot.yellow { background: var(--yellow); }
+.status-dot.green { background: var(--green); }
+
+.status-label {
+  color: var(--medium-gray);
+}
+
+/* ============================================
+   LONGFORM SECTION - ISSUE: Dense, complex text
+   ============================================ */
+.longform-section {
+  margin-bottom: 40px;
+}
+
+.longform-article {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
+}
+
+.longform-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.longform-headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 8px 0 12px;
+}
+
+.longform-headline a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.longform-headline a:hover {
+  text-decoration: underline;
+}
+
+/* ISSUE: Dense paragraph, tight spacing, complex vocabulary */
+.longform-text {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--medium-gray);
+  margin-bottom: 12px;
+  /* No letter-spacing adjustment */
+}
+
+.read-more {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.read-more:hover {
+  text-decoration: underline;
+}
+
+/* ============================================
+   SIDEBAR - ISSUE: Distracting, cluttered
+   ============================================ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--black);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+/* Ad - ISSUE: Animated, distracting */
+.ad-container {
+  border: 1px solid var(--faint-gray);
+  background: var(--bg-gray);
+}
+
+.ad-label {
+  font-size: 9px;
+  color: var(--light-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--faint-gray);
+}
+
+.ad-content {
+  padding: 20px;
+  text-align: center;
+}
+
+/* ISSUE: Animated ad with pulsing effect */
+.animated-ad {
+  background: linear-gradient(135deg, #1a73e8, #4285f4);
+  color: white;
+  animation: ad-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ad-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.ad-text {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.ad-subtext {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-bottom: 12px;
+}
+
+.ad-cta {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.static-ad img {
+  width: 100%;
+  height: auto;
+}
+
+/* Trending */
+.trending-box {
+  padding: 16px;
+  background: var(--bg-gray);
+}
+
+.trending-list {
+  list-style: none;
+  counter-reset: trending;
+}
+
+.trending-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--faint-gray);
+}
+
+.trending-list li:last-child {
+  border-bottom: none;
+}
+
+/* ISSUE: Small, low contrast links */
+.trending-list a {
+  font-size: 13px;
+  color: var(--medium-gray);
+  text-decoration: none;
+  line-height: 1.3;
+}
+
+.trending-list a:hover {
+  color: var(--black);
+}
+
+/* Newsletter - ISSUE: No labels, small inputs */
+.newsletter-box {
+  padding: 16px;
+  background: var(--black);
+  color: var(--white);
+}
+
+.newsletter-desc {
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: var(--faint-gray);
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* ISSUE: No visible label, placeholder only */
+.newsletter-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+/* ISSUE: Small touch target */
+.newsletter-btn {
+  padding: 8px 12px;
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.newsletter-btn svg {
+  display: block;
+}
+
+/* ISSUE: Extremely small, low contrast fine print */
+.fine-print {
+  font-size: 9px;
+  color: #666;
+  line-height: 1.3;
+}
+
+/* Opinion */
+.opinion-box {
+  padding: 16px;
+  background: var(--bg-gray);
+}
+
+.opinion-item {
+  display: flex;
+  gap: 12px;
+}
+
+.opinion-photo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.opinion-headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.opinion-headline a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.opinion-headline a:hover {
+  text-decoration: underline;
+}
+
+.opinion-author {
+  font-size: 11px;
+  color: var(--light-gray);
+}
+
+/* ============================================
+   MORE STORIES
+   ============================================ */
+.more-stories {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid var(--faint-gray);
+}
+
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.more-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.more-card h4 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.more-card h4 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.more-card h4 a:hover {
+  text-decoration: underline;
+}
+
+.more-summary {
+  font-size: 12px;
+  color: var(--light-gray);
+}
+
+/* ============================================
+   FOOTER - ISSUE: Low contrast, tiny text, icon-only links
+   ============================================ */
+.site-footer {
+  background: var(--black);
+  color: var(--white);
+  margin-top: 60px;
+  padding: 40px 20px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #333;
+}
+
+.footer-masthead {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+}
+
+.footer-tagline {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* ISSUE: Icon-only social links with no accessible names */
+.footer-social {
+  display: flex;
+  gap: 16px;
+}
+
+.social-link {
+  color: var(--white);
+  text-decoration: none;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-link svg {
+  display: block;
+}
+
+.social-link:hover {
+  opacity: 1;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto 24px;
+}
+
+.footer-links a {
+  color: var(--faint-gray);
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.footer-links a:hover {
+  color: var(--white);
+}
+
+/* ISSUE: Extremely low contrast, tiny text */
+.footer-legal {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-legal p {
+  font-size: 10px;
+  color: #444;
+  line-height: 1.4;
+}
+
+/* ============================================
+   COOKIE BANNER - ISSUE: Small close button
+   ============================================ */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--black);
+  color: var(--white);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 150;
+}
+
+.cookie-banner p {
+  font-size: 13px;
+  max-width: 600px;
+}
+
+.cookie-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cookie-accept {
+  padding: 8px 16px;
+  background: var(--white);
+  color: var(--black);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ISSUE: Tiny close button, hard to click */
+.cookie-close {
+  background: none;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cookie-close svg {
+  display: block;
+}
+
+.cookie-close:hover {
+  opacity: 1;
+}
+
+/* Hide cookie banner when dismissed */
+.cookie-banner.hidden {
+  display: none;
+}
+
+/* ============================================
+   NEWSLETTER SIGNUP SECTION
+   ============================================ */
+.newsletter-section {
+  background: var(--bg-gray);
+  border-top: 1px solid var(--faint-gray);
+  border-bottom: 1px solid var(--faint-gray);
+  padding: 40px 20px;
+  margin: 40px 0;
+}
+
+.newsletter-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.newsletter-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.newsletter-subtitle {
+  font-size: 14px;
+  color: var(--medium-gray);
+}
+
+.newsletter-signup-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ISSUE: Inputs rely on placeholder only, no visible labels */
+.form-input {
+  padding: 10px 14px;
+  border: 1px solid var(--faint-gray);
+  font-size: 13px;
+  font-family: inherit;
+  flex: 1;
+  min-width: 140px;
+}
+
+.form-input-wide {
+  min-width: 200px;
+}
+
+.form-input:focus {
+  outline: 1px solid var(--dark-gray);
+  border-color: var(--dark-gray);
+}
+
+.form-input::placeholder {
+  color: var(--light-gray);
+}
+
+.frequency-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--medium-gray);
+}
+
+.frequency-label {
+  font-weight: 500;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.radio-label input {
+  margin: 0;
+}
+
+.signup-btn {
+  padding: 10px 24px;
+  background: var(--dark-gray);
+  color: var(--white);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.signup-btn:hover {
+  background: var(--black);
+}
+
+/* ============================================
+   DATA TABLE SECTION
+   ============================================ */
+.table-section {
+  padding: 0 20px;
+  margin-bottom: 40px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+/* ISSUE: Table uses <td> for headers instead of <th>, no scope */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table tr {
+  border-bottom: 1px solid var(--faint-gray);
+}
+
+.data-table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+/* Visual styling that makes it look like headers but semantically wrong */
+.table-header-cell {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--medium-gray);
+  background: var(--bg-gray);
+  border-bottom: 2px solid var(--dark-gray);
+}
+
+.data-table tr:hover {
+  background: var(--bg-gray);
+}
+
+/* ISSUE: Color-only indication of positive/negative */
+.change-negative {
+  color: var(--red);
+}
+
+.change-positive {
+  color: var(--green);
+}
+
+/* ISSUE: Low contrast source text */
+.table-source {
+  font-size: 10px;
+  color: var(--light-gray);
+  margin-top: 12px;
+  font-style: italic;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+  .hero-article {
+    grid-template-columns: 1fr;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    order: 2;
+  }
+
+  .story-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .more-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .longform-article {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .nav-list {
+    display: none;
+  }
+
+  .more-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .masthead {
+    font-size: 24px;
+  }
+
+  .hero-headline {
+    font-size: 26px;
+  }
+
+  .newsletter-signup-form {
+    flex-direction: column;
+  }
+
+  .form-input {
+    width: 100%;
+  }
+
+  .frequency-options {
+    flex-wrap: wrap;
+  }
+
+  .data-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+}
