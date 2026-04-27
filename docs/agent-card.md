@@ -1,88 +1,88 @@
-# Agent Card
+# Contribution Card
 
-Describe what your project does as an adaptation agent. Takes ~15 min.
+Describe what your team is contributing to the toolkit. Takes ~15 min.
 
 ## Template
 
-Copy into `projects/your-project/AGENT_CARD.md` and fill in.
+Copy and fill in when proposing a new capability.
 
 ---
 
 ```markdown
-# Agent Card: [Project Name]
+# Contribution: [Name]
 
-**Team:** 
-**Contact:** 
-**Status:** Idea / Prototype / Production
+**Code:** [repo URL or TBD]
+**Team:** [institution, names]
+**Contact:** [email]
+**Status:** Idea / Prototype / Ready
 
 ## What it does
 
-[2-3 sentences — what does the agent do?]
+[2-3 sentences]
 
 ## Who it helps
-
-Check all that apply:
 
 - [ ] BLV (blind / low vision)
 - [ ] DHH (deaf / hard of hearing)
 - [ ] Motor (limited mobility / tremor)
 - [ ] Cognitive (dyslexia / IDD / autism)
-- [ ] Speech (nonverbal / atypical speech)
+- [ ] Speech (atypical speech)
 - [ ] Aging
+- [ ] Photosensitive
+- [ ] Anxiety
 - [ ] Other: ___
 
 ## How it works
 
 **Input:** [what it takes in]
-> Examples: web page DOM, video/audio stream, camera feed, image file, design artifact (Figma/wireframe), user speech, text content, ...
+> Examples: DOM elements, images, video, audio, text content, user speech...
 
 **Output:** [what it produces]
-> Examples: modified HTML, audio stream, text description, accessibility report, captions, ...
+> Examples: modified DOM, alt text, captions, simplified text, audio...
 
 **Modality transform:** [if applicable]
-> Examples: visual → audio, image → text description, audio → captions, text → plain language, or N/A
+> Examples: visual → audio, image → text, audio → captions, text → plain language
 
 **Module type:**
-- [ ] Transform — converts content across modalities (e.g., sonification, image descriptions, captioning)
-- [ ] Analysis — detects issues or extracts information (e.g., WCAG violations, face visibility, missing alt text)
-- [ ] Memory — tracks user context across sessions (e.g., browsing history, past preferences, "you were here before")
-- [ ] Validation — human review of adaptations (e.g., PWD testers verify the output works)
-- [ ] Knowledge — contributes to the shared corpus (e.g., guidelines, benchmarks, evaluation criteria)
+- [ ] Analyzer — detects issues
+- [ ] Adapter — fixes issues
+- [ ] Feature — visual/interaction preset
+- [ ] Profile — tool configuration
 - [ ] Other: ___
 
 ## Technical
 
-**Runs in web browser?** Yes / Partially / No — if not, what would it take to get there?
-**Latency:** Real-time / Processing Time: ___
-**Dependencies:** [libraries, models, APIs, hardware]
-> Examples: TensorFlow, MediaPipe, microphone, camera, ...
+**Runs in browser?** Yes / Partially / No
+**Latency:** Real-time / <1s / Processing time: ___
+**Dependencies:** [libraries, APIs, models]
 
-**Code:** [repo URL, language]
-**Timeline to contribute:** Ready now / Weeks / Months / Needs discussion
+## How it fits in the toolkit
+
+[How does this become an analyzer, adapter, feature, or profile? What existing components does it extend or replace?]
+
+## What it pairs with
+
+[Other team projects this connects to]
 
 ## Limitations
 
 [Where does it break? What can't it handle?]
-> Examples: "Only works on English-language sites." "Can't handle Canvas/WebGL content." "Captions degrade on accented speech." "Needs internet — no offline mode." This helps other teams know it's limitations and how to support it.
 
 ## Human involvement
 
-[Does the user control it? Does output need review? How are people with disabilities involved?]
-> Examples: "User adjusts font size and contrast via a settings panel." "AI suggestions reviewed by a human before applying." "PWD reviewers validate output."
+[Does the user control it? Does output need review? How are PWD involved?]
 
 ## Data & Privacy
 
-[Does the agent collect, store, or transmit user data?]
-> Examples: "Stores user preferences locally." "Audio processed on-device." "Requires user profile with encrypted storage, user controls deletion."
+[Does it collect, store, or transmit user data? On-device vs. cloud?]
 
 ## Demo *(optional)*
 
-[Link to a live demo, video, or screenshot so others can see it in action.]
+[Link to demo, video, or screenshot]
 
-## Evaluation *(optional)*
+## What the team needs
 
-[How to tell if it's working? What does success look like?]
-> Examples: "Task completion rate ≥80% for BLV users." "Caption accuracy ≥95%." "Users find items 2x faster with memory aid."
+[Feedback, collaborators, resources?]
 ```
 
 ---
@@ -90,58 +90,70 @@ Check all that apply:
 ## Example
 
 ```markdown
-# Agent Card: Generative Accessible Simulations
+# Contribution: Accessible Interactive Simulations
 
-**Team:** Stanford (Sean Follmer, Hari Subramonyam, David Lin)
-**Contact:** David Lin, dcelin@stanford.edu
+**Code:** TBD
+**Team:** Stanford (Sean Follmer, Hari Subramonyam, Lakshmi Balasubramanian, David Lin)
+**Contact:** dcelin@stanford.edu
 **Status:** Prototype
 
 ## What it does
 
-Sonifies dynamic and interactive web content so blind and low-vision users can experience it through audio. The user explores by adjusting parameters with keyboard and hearing what happens. Works for simulations, interactive visualizations, and other dynamic media where the visual content changes in real-time.
+Generates interactive STEM simulations that BLV learners can explore through audio, text, and symbolic modalities. Educators describe a concept and the system builds a screen-reader compatible simulation with sonification and narration.
 
 ## Who it helps
 
-- [x] BLV (blind / low vision) — real-time sonification of dynamic content, keyboard controls
-- [x] Cognitive (dyslexia / IDD / autism) — simplified representations, scaffolded exploration
+- [x] BLV (blind / low vision)
+- [x] Cognitive (dyslexia / learning differences)
+- [x] Other: STEM educators
 
 ## How it works
 
-**Input:** Dynamic web content (SVG/Canvas simulations, interactive visualizations) or a description of a concept to generate a simulation for.
-**Output:** Real-time audio (sonification), text narration, equations — all linked to the visual, all updating together as the user explores.
-**Modality transform:** visual → audio, visual → text, visual → symbolic
+**Input:** Natural-language description of STEM concept, or existing SVG/Canvas simulation
+**Output:** Interactive simulation with sonification, narration, equations, keyboard controls
+**Modality transform:** Visual → audio, text, symbolic
+
 **Module type:**
-- [x] Transform — sonifies dynamic/interactive media that screen readers can't access
+- [x] Adapter — fixes inaccessible simulations
+- [x] Feature — sonification presets
 
 ## Technical
 
-**Runs in web browser?** Yes — all audio and rendering runs in-browser.
+**Runs in browser?** Yes
 **Latency:** Real-time
-**Dependencies:** Tone.js, Paper.js, LLM API, Next.js
-**Code:** github.com/chuanenlin/generative-accessible-simulations
-**Timeline to contribute:** Weeks
+**Dependencies:** Tone.js, Paper.js, Claude/Gemini (one-time generation)
+
+## How it fits in the toolkit
+
+Contributes a visual-to-audio adapter for dynamic STEM content that screen readers can't reach. Could feed the corpus with sonification mappings and BLV evaluation benchmarks.
+
+## What it pairs with
+
+- UCL Non-Standard Speech — for BLV learners with atypical speech
+- The Arc — for plain-language narration
+- Google NAI — as the orchestrator
 
 ## Limitations
 
-2D simulations only (no 3D yet). Audio gets cluttered with too many variables at once. Some audio mappings are intuitive (pitch = height), others take practice to learn (pitch = density).
+2D simulations only. Audio gets cluttered with too many variables. Some sonification mappings are intuitive (pitch = height), others take practice (pitch = density).
 
 ## Human involvement
 
-User controls exploration — adjusts parameters via keyboard, chooses what maps to pitch vs. volume. No AI in the loop at runtime (sonification is deterministic). User studies with blind students and teachers of the visually impaired planned.
+Learner drives exploration via keyboard. Educators review generated simulations before classroom use. No AI in the interaction loop at runtime.
 
 ## Data & Privacy
 
-Everything runs in-browser, no data sent anywhere. The one-time LLM call sends the concept description, not user info.
+Runs entirely in-browser. No user data leaves the device. Initial LLM call sends only the educator's concept description.
 
 ## Demo
 
-5 physics concepts prototyped (spring motion, Doppler, spectrum, decay, orbital mechanics). Link TBD.
+5 physics concepts prototyped: spring motion, Doppler effect, electromagnetic spectrum, radioactive decay, orbital mechanics.
 
-## Evaluation
+## What the team needs
 
-Can a blind user answer "what happens when you double the mass?" using only audio? Target: ≥80% correct, learning gap within 15% of sighted users.
+Connecting with educators, learners, and accessibility researchers. Understanding real classroom constraints in accessible STEM education.
 ```
 
 ---
 
-Submit via PR to `projects/your-project/AGENT_CARD.md`, or email dcelin@stanford.edu / yasith@mit.edu.
+Submit via PR or email dcelin@stanford.edu.

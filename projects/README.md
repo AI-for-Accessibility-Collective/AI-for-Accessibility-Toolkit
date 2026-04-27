@@ -1,5 +1,9 @@
-# Projects
+# Team Projects
 
-Contributed projects from teams across the collective. Each project handles a specific accessibility need and plugs into the toolkit's shared agent services.
+Sample implementations and agent cards from teams across the AI for Accessibility collective.
 
-To add your project, run `a11y create my-tool` and follow the [contributing guide](../CONTRIBUTING.md).
+Each subfolder contains an `AGENT_CARD.md` describing the project's capabilities, technical details, and how it fits into the toolkit.
+
+## Current Projects
+
+- **recipe-book-sample-app/** — Google NAI demo: adaptive recipes website with voice-controlled accessibility agent

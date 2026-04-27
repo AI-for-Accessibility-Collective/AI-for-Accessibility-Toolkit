@@ -11,4 +11,11 @@ labels: architecture
 
 ## How would it work?
 
-## Which agents or tools does this affect?
+## Which components does this affect?
+
+- [ ] Analyzers
+- [ ] Adapters
+- [ ] Features
+- [ ] Profiles
+- [ ] Background/AI
+- [ ] CLI

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<!-- VIOLATION: html-has-lang - missing lang attribute -->
+<head>
+  <meta charset="UTF-8">
+  <!-- VIOLATION: meta-viewport - disables zoom -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <!-- VIOLATION: meta-refresh -->
+  <meta http-equiv="refresh" content="300">
+  <!-- VIOLATION: document-title - empty title -->
+  <title></title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    section { margin: 30px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    h2 { color: #333; border-bottom: 2px solid #007AFF; padding-bottom: 10px; }
+    .test-item { margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+    .low-contrast { color: #999; background: #aaa; padding: 10px; }
+    .icon-btn { width: 40px; height: 40px; border: none; background: #007AFF; border-radius: 50%; cursor: pointer; }
+    .icon-btn svg { fill: white; }
+    .bg-image { width: 300px; height: 200px; background-size: cover; background-position: center; }
+    .scrollable { height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+  </style>
+</head>
+<body aria-hidden="true">
+<!-- VIOLATION: aria-hidden-body -->
+
+<!-- NO skip link - VIOLATION: bypass -->
+
+<!-- VIOLATION: page-has-heading-one - no h1, starts with h2 -->
+<h2>AI4A11y Comprehensive Test Page</h2>
+<p>This page contains intentional accessibility violations to test the extension.</p>
+
+<!-- ========== IMAGE ALT TEXT ========== -->
+<section>
+  <h2>1. Image Alt Text Issues</h2>
+
+  <div class="test-item">
+    <p><strong>image-alt:</strong> Image without alt</p>
+    <img src="https://picsum.photos/200/150?random=1" width="200" height="150">
+  </div>
+
+  <div class="test-item">
+    <p><strong>image-alt:</strong> Image with placeholder alt</p>
+    <img src="https://picsum.photos/200/150?random=2" alt="image" width="200" height="150">
+  </div>
+
+  <div class="test-item">
+    <p><strong>input-image-alt:</strong> Image input without alt</p>
+    <input type="image" src="https://picsum.photos/100/40?random=3">
+  </div>
+
+  <div class="test-item">
+    <p><strong>role-img-alt:</strong> Div with role=img but no label</p>
+    <div role="img" style="font-size: 48px;">🎨</div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>svg-img-alt:</strong> SVG with role=img but no title</p>
+    <svg role="img" width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#007AFF"/>
+      <rect x="30" y="30" width="40" height="40" fill="white"/>
+    </svg>
+  </div>
+
+  <div class="test-item">
+    <p><strong>object-alt:</strong> Object without alt</p>
+    <object data="https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.jpg" type="image/jpeg" width="200" height="100"></object>
+  </div>
+
+  <div class="test-item">
+    <p><strong>area-alt:</strong> Image map with area without alt</p>
+    <img src="https://picsum.photos/300/200?random=4" usemap="#testmap" width="300" height="200">
+    <map name="testmap">
+      <area shape="rect" coords="0,0,150,200" href="https://example.com/left">
+      <area shape="rect" coords="150,0,300,200" href="https://example.com/right">
+    </map>
+  </div>
+
+  <div class="test-item">
+    <p><strong>CSS background-image:</strong> Div with background image (inaccessible)</p>
+    <div class="bg-image" style="background-image: url('https://picsum.photos/300/200?random=5');"></div>
+  </div>
+</section>
+
+<!-- ========== LINKS & BUTTONS ========== -->
+<section>
+  <h2>2. Link & Button Name Issues</h2>
+
+  <div class="test-item">
+    <p><strong>link-name:</strong> Ambiguous link text</p>
+    <p>For more information about our products, <a href="https://example.com">click here</a>.</p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>link-name:</strong> Empty link</p>
+    <a href="https://example.com"></a>
+  </div>
+
+  <div class="test-item">
+    <p><strong>link-name:</strong> Image link without alt</p>
+    <a href="https://example.com"><img src="https://picsum.photos/50/50?random=6"></a>
+  </div>
+
+  <div class="test-item">
+    <p><strong>button-name:</strong> Icon button without label</p>
+    <button class="icon-btn menu-button">
+      <svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <button class="icon-btn close-button">
+      <svg width="24" height="24" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+    <button class="icon-btn search-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    </button>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-command-name:</strong> ARIA button without name</p>
+    <div role="button" tabindex="0" style="padding: 10px; background: #007AFF; color: white; display: inline-block; border-radius: 4px;">
+      <svg width="20" height="20" viewBox="0 0 20 20"><path fill="white" d="M10 0l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L0 7h7z"/></svg>
+    </div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>link-in-text-block:</strong> Link only distinguishable by color</p>
+    <p style="color: #333;">This paragraph contains a <a href="https://example.com" style="color: #007AFF; text-decoration: none;">link that looks like regular text</a> without underline.</p>
+  </div>
+</section>
+
+<!-- ========== FORMS ========== -->
+<section>
+  <h2>3. Form Label Issues</h2>
+
+  <div class="test-item">
+    <p><strong>label:</strong> Input without label</p>
+    <input type="text" id="username" placeholder="Enter username">
+  </div>
+
+  <div class="test-item">
+    <p><strong>select-name:</strong> Select without label</p>
+    <select id="country">
+      <option>United States</option>
+      <option>Canada</option>
+      <option>United Kingdom</option>
+    </select>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-input-field-name:</strong> ARIA textbox without name</p>
+    <div role="textbox" contenteditable="true" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;"></div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-toggle-field-name:</strong> ARIA checkbox without name</p>
+    <div role="checkbox" aria-checked="false" tabindex="0" style="width: 20px; height: 20px; border: 2px solid #007AFF; display: inline-block;"></div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>autocomplete-valid:</strong> Invalid autocomplete value</p>
+    <input type="text" autocomplete="invalid-value">
+  </div>
+
+  <div class="test-item">
+    <p><strong>form-field-multiple-labels:</strong> Input with multiple labels</p>
+    <label for="multi-label">First Label</label>
+    <label for="multi-label">Second Label</label>
+    <input type="text" id="multi-label">
+  </div>
+</section>
+
+<!-- ========== CONTRAST ========== -->
+<section>
+  <h2>4. Color Contrast Issues</h2>
+
+  <div class="test-item">
+    <p><strong>color-contrast:</strong> Low contrast text</p>
+    <div class="low-contrast">This text has very low contrast and is hard to read.</div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>color-contrast:</strong> Light gray on white</p>
+    <p style="color: #aaa; background: #fff;">This light gray text on white background fails WCAG AA.</p>
+  </div>
+</section>
+
+<!-- ========== ARIA ISSUES ========== -->
+<section>
+  <h2>5. ARIA Issues</h2>
+
+  <div class="test-item">
+    <p><strong>aria-valid-attr:</strong> Invalid ARIA attribute</p>
+    <div aria-invalid-attribute="true">This has an invalid ARIA attribute.</div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-roles:</strong> Invalid role</p>
+    <div role="invalidrole">This has an invalid role.</div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-required-attr:</strong> Checkbox without aria-checked</p>
+    <div role="checkbox" tabindex="0" style="width: 20px; height: 20px; border: 2px solid #333; display: inline-block;"></div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-deprecated-role:</strong> Deprecated directory role</p>
+    <ul role="directory">
+      <li>Item 1</li>
+      <li>Item 2</li>
+    </ul>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-meter-name:</strong> Meter without name</p>
+    <div role="meter" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 200px; height: 20px; background: #eee;">
+      <div style="width: 50%; height: 100%; background: #007AFF;"></div>
+    </div>
+  </div>
+
+  <div class="test-item">
+    <p><strong>aria-progressbar-name:</strong> Progressbar without name</p>
+    <div role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 200px; height: 20px; background: #eee;">
+      <div style="width: 75%; height: 100%; background: #28a745;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== KEYBOARD/FOCUS ========== -->
+<section>
+  <h2>6. Keyboard & Focus Issues</h2>
+
+  <div class="test-item">
+    <p><strong>tabindex:</strong> Positive tabindex</p>
+    <button tabindex="5">Button with tabindex=5</button>
+    <button tabindex="1">Button with tabindex=1</button>
+  </div>
+
+  <div class="test-item">
+    <p><strong>accesskeys:</strong> Duplicate accesskeys</p>
+    <button accesskey="a">Button A (accesskey=a)</button>
+    <button accesskey="a">Button B (accesskey=a)</button>
+  </div>
+
+  <div class="test-item">
+    <p><strong>scrollable-region-focusable:</strong> Scrollable region not focusable</p>
+    <div class="scrollable">
+      <p>Line 1</p><p>Line 2</p><p>Line 3</p><p>Line 4</p><p>Line 5</p>
+      <p>Line 6</p><p>Line 7</p><p>Line 8</p><p>Line 9</p><p>Line 10</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FRAMES ========== -->
+<section>
+  <h2>7. Frame Issues</h2>
+
+  <div class="test-item">
+    <p><strong>frame-title:</strong> iFrame without title</p>
+    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="400" height="225" frameborder="0"></iframe>
+  </div>
+
+  <div class="test-item">
+    <p><strong>frame-focusable-content:</strong> iFrame with tabindex=-1</p>
+    <iframe src="https://example.com" width="400" height="100" tabindex="-1"></iframe>
+  </div>
+</section>
+
+<!-- ========== HEADINGS & TEXT ========== -->
+<section>
+  <h2>8. Heading & Text Issues</h2>
+
+  <div class="test-item">
+    <p><strong>empty-heading:</strong> Empty headings</p>
+    <h3></h3>
+    <h4>   </h4>
+  </div>
+
+  <div class="test-item">
+    <p><strong>summary-name:</strong> Details with empty summary</p>
+    <details>
+      <summary></summary>
+      <p>This is the hidden content that should be described by the summary.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ========== TABLES ========== -->
+<section>
+  <h2>9. Table Issues</h2>
+
+  <div class="test-item">
+    <p><strong>empty-table-header:</strong> Table with empty headers</p>
+    <table border="1" style="border-collapse: collapse;">
+      <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+      <tr>
+        <td>John</td>
+        <td>25</td>
+        <td>Engineer</td>
+      </tr>
+      <tr>
+        <td>Jane</td>
+        <td>30</td>
+        <td>Designer</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="test-item">
+    <p><strong>scope-attr-valid:</strong> Invalid scope attribute</p>
+    <table border="1" style="border-collapse: collapse;">
+      <tr>
+        <td scope="invalid">Name</td>
+        <td>Age</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="test-item">
+    <p><strong>table-duplicate-name:</strong> Table with duplicate caption/summary</p>
+    <table border="1" summary="User Data Table" style="border-collapse: collapse;">
+      <caption>User Data Table</caption>
+      <tr><th>Name</th><th>Age</th></tr>
+      <tr><td>Test</td><td>20</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ========== IDS ========== -->
+<section>
+  <h2>10. Duplicate ID Issues</h2>
+
+  <div class="test-item">
+    <p><strong>duplicate-id:</strong> Elements with duplicate IDs</p>
+    <div id="duplicate-test">First element with id="duplicate-test"</div>
+    <div id="duplicate-test">Second element with id="duplicate-test"</div>
+  </div>
+</section>
+
+<!-- ========== OBSOLETE ELEMENTS ========== -->
+<section>
+  <h2>11. Obsolete Elements</h2>
+
+  <div class="test-item">
+    <p><strong>blink:</strong> Blink element (obsolete)</p>
+    <blink>This text would blink in old browsers.</blink>
+  </div>
+
+  <div class="test-item">
+    <p><strong>marquee:</strong> Marquee element (obsolete)</p>
+    <marquee>This text would scroll in old browsers.</marquee>
+  </div>
+</section>
+
+<!-- ========== MEDIA ========== -->
+<section>
+  <h2>12. Media Issues</h2>
+
+  <div class="test-item">
+    <p><strong>video-caption (speech):</strong> Video with speech, no captions</p>
+    <video width="400" controls>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+    <p><em>Expected: AI transcribes speech → adds captions track</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>video-caption (YouTube):</strong> YouTube embed without captions exposed</p>
+    <iframe width="400" height="225" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0"></iframe>
+    <p><em>Expected: Fetches YouTube auto-captions</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>video-caption (no audio):</strong> Silent video / animation</p>
+    <video width="400" controls>
+      <source src="https://www.w3schools.com/html/movie.mp4" type="video/mp4">
+    </video>
+    <p><em>Expected: Detects no speech → generates visual description instead</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>video-caption (music only):</strong> Video with music but no speech</p>
+    <video width="400" controls poster="https://picsum.photos/400/225?random=10">
+      <source src="https://file-examples.com/storage/fe19e15eac6560f8c936c85/2017/04/file_example_MP4_480_1_5MG.mp4" type="video/mp4">
+    </video>
+    <p><em>Expected: Detects music/no speech → generates visual description</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>video-caption (Vimeo):</strong> Vimeo embed</p>
+    <iframe src="https://player.vimeo.com/video/76979871" width="400" height="225" frameborder="0"></iframe>
+    <p><em>Expected: Adds CC button (Vimeo transcript not easily fetchable)</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>no-autoplay-audio:</strong> Autoplaying video</p>
+    <video width="200" autoplay muted loop>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+    <p><em>Expected: Adds controls attribute, removes autoplay</em></p>
+  </div>
+</section>
+
+<!-- ========== LANDMARKS ========== -->
+<section>
+  <h2>13. Landmark Issues</h2>
+
+  <div class="test-item">
+    <p><strong>landmark-unique:</strong> Multiple navs without labels</p>
+    <nav>
+      <a href="#">Home</a> | <a href="#">About</a>
+    </nav>
+    <nav>
+      <a href="#">Products</a> | <a href="#">Contact</a>
+    </nav>
+  </div>
+</section>
+
+<!-- ========== STYLING ========== -->
+<section>
+  <h2>14. Styling Issues</h2>
+
+  <div class="test-item">
+    <p><strong>avoid-inline-spacing:</strong> Inline !important spacing</p>
+    <p style="letter-spacing: 5px !important; word-spacing: 10px !important;">
+      This text has inline !important spacing that overrides user preferences.
+    </p>
+  </div>
+</section>
+
+<!-- ========== CANVAS ========== -->
+<section>
+  <h2>15. Canvas Elements</h2>
+
+  <div class="test-item">
+    <p><strong>Canvas without description:</strong></p>
+    <canvas id="test-canvas" width="300" height="200"></canvas>
+    <script>
+      const canvas = document.getElementById('test-canvas');
+      const ctx = canvas.getContext('2d');
+      // Draw a simple chart
+      ctx.fillStyle = '#007AFF';
+      ctx.fillRect(20, 150, 40, 50);
+      ctx.fillRect(80, 100, 40, 100);
+      ctx.fillRect(140, 50, 40, 150);
+      ctx.fillRect(200, 120, 40, 80);
+      // Labels
+      ctx.fillStyle = '#333';
+      ctx.font = '12px Arial';
+      ctx.fillText('Q1', 30, 190);
+      ctx.fillText('Q2', 90, 190);
+      ctx.fillText('Q3', 150, 190);
+      ctx.fillText('Q4', 210, 190);
+      ctx.fillText('Sales by Quarter', 90, 20);
+    </script>
+  </div>
+</section>
+
+<!-- ========== TEXT SIMPLIFICATION ========== -->
+<section>
+  <h2>16. Complex Text (Simplification)</h2>
+
+  <div class="test-item">
+    <p><strong>Academic/Technical Text:</strong> Dense paragraph for AI simplification</p>
+    <p>The implementation of quantum error correction protocols necessitates the utilization of sophisticated entanglement-based redundancy mechanisms, wherein logical qubits are encoded across multiple physical qubits through the systematic application of stabilizer codes. This methodology fundamentally ameliorates the deleterious effects of decoherence and operational imperfections that would otherwise precipitate catastrophic information loss in quantum computational systems. The theoretical framework underpinning these error mitigation strategies derives from the seminal contributions to topological quantum computing, which leverages non-Abelian anyonic excitations to achieve fault-tolerant quantum operations through braiding transformations.</p>
+    <p><em>Expected: "Simplify Text" toggle rewrites this in plain language</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Legal/Policy Text:</strong></p>
+    <p>Notwithstanding any provisions to the contrary contained herein, the indemnifying party shall hold harmless and indemnify the indemnified party against any and all claims, damages, losses, costs, and expenses (including but not limited to reasonable attorneys' fees) arising out of or resulting from any breach of the representations, warranties, covenants, or obligations set forth in this Agreement, provided however that such indemnification obligations shall not extend to claims arising from the gross negligence or willful misconduct of the indemnified party.</p>
+    <p><em>Expected: Simplified to everyday language</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Medical Text:</strong></p>
+    <p>The patient presents with acute exacerbation of chronic obstructive pulmonary disease characterized by increased dyspnea, productive cough with purulent sputum, and decreased exercise tolerance. Auscultation reveals bilateral wheezing and diminished breath sounds in the lower lobes. Arterial blood gas analysis demonstrates hypoxemia with compensated respiratory acidosis. Recommend initiation of bronchodilator therapy, systemic corticosteroids, and empiric antibiotic coverage pending sputum culture results.</p>
+    <p><em>Expected: Patient-friendly explanation</em></p>
+  </div>
+</section>
+
+<!-- ========== TEXT SUMMARIZATION ========== -->
+<section>
+  <h2>17. Long Content (Summarization)</h2>
+
+  <div class="test-item">
+    <p><strong>Long Article:</strong> Multi-paragraph content for TL;DR summary</p>
+    <article>
+      <p>Climate change represents one of the most pressing challenges facing humanity in the 21st century. The Intergovernmental Panel on Climate Change has documented unprecedented changes in global temperature patterns, with the past decade being the warmest on record. These changes are primarily driven by anthropogenic greenhouse gas emissions, particularly carbon dioxide from fossil fuel combustion and methane from agricultural activities.</p>
+      <p>The consequences of climate change are far-reaching and interconnected. Rising sea levels threaten coastal communities worldwide, with some island nations facing existential risks. Extreme weather events, including hurricanes, droughts, and heat waves, are becoming more frequent and severe. Agricultural systems are being disrupted, leading to food security concerns in vulnerable regions. Biodiversity loss is accelerating as ecosystems struggle to adapt to rapidly changing conditions.</p>
+      <p>Addressing climate change requires coordinated global action across multiple sectors. The transition to renewable energy sources such as solar, wind, and hydroelectric power is essential for reducing carbon emissions. Energy efficiency improvements in buildings, transportation, and industry can significantly decrease overall energy demand. Carbon capture and storage technologies offer potential pathways for removing existing atmospheric carbon dioxide.</p>
+      <p>Individual actions also play a crucial role in combating climate change. Reducing personal carbon footprints through dietary changes, transportation choices, and consumption patterns can collectively make a significant impact. Supporting policies and politicians committed to environmental protection helps drive systemic change. Education and awareness-raising efforts are essential for building the broad social consensus needed for transformative action.</p>
+    </article>
+    <p><em>Expected: "Summarize" button generates a concise TL;DR</em></p>
+  </div>
+</section>
+
+<!-- ========== FOCUS MODE / DISTRACTIONS ========== -->
+<section>
+  <h2>18. Distracting Elements (Focus Mode)</h2>
+
+  <div class="test-item">
+    <p><strong>Simulated Ads & Distractions:</strong> Elements that Focus Mode should dim/hide</p>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div class="ad-container" style="width: 300px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; border-radius: 8px;">
+        <p style="font-size: 12px; opacity: 0.7;">ADVERTISEMENT</p>
+        <p style="font-size: 18px; font-weight: bold;">🎉 50% OFF TODAY ONLY!</p>
+        <p>Click here for amazing deals</p>
+      </div>
+      <div class="social-share" style="padding: 15px; background: #f0f0f0; border-radius: 8px;">
+        <p style="font-weight: bold; margin-bottom: 10px;">Share this article:</p>
+        <button style="padding: 8px 15px; margin: 2px; background: #1da1f2; color: white; border: none; border-radius: 4px;">Twitter</button>
+        <button style="padding: 8px 15px; margin: 2px; background: #4267b2; color: white; border: none; border-radius: 4px;">Facebook</button>
+        <button style="padding: 8px 15px; margin: 2px; background: #0077b5; color: white; border: none; border-radius: 4px;">LinkedIn</button>
+      </div>
+      <div class="newsletter" style="width: 250px; padding: 20px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;">
+        <p style="font-weight: bold;">📧 Subscribe to our newsletter!</p>
+        <input type="email" placeholder="Enter email" style="width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
+        <button style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px;">Subscribe</button>
+      </div>
+    </div>
+    <p><em>Expected: Focus Mode dims these distractions, highlights main content</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Cookie Banner:</strong></p>
+    <div class="cookie-banner" style="padding: 15px; background: #333; color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+      <span>🍪 We use cookies to improve your experience. By continuing, you agree to our cookie policy.</span>
+      <button style="padding: 8px 20px; background: #007AFF; color: white; border: none; border-radius: 4px;">Accept</button>
+    </div>
+    <p><em>Expected: Focus Mode can hide cookie banners</em></p>
+  </div>
+</section>
+
+<!-- ========== MOTION & ANIMATION ========== -->
+<section>
+  <h2>19. Animations (Motion Reducer)</h2>
+
+  <div class="test-item">
+    <p><strong>CSS Animations:</strong> Elements with continuous animation</p>
+    <style>
+      @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+      .bounce { animation: bounce 1s infinite; display: inline-block; }
+      .spin { animation: spin 2s linear infinite; display: inline-block; }
+      .pulse { animation: pulse 1.5s infinite; }
+      .shake { animation: shake 0.5s infinite; }
+    </style>
+    <div style="display: flex; gap: 30px; align-items: center; padding: 20px;">
+      <span class="bounce" style="font-size: 40px;">⚽</span>
+      <span class="spin" style="font-size: 40px;">⚙️</span>
+      <div class="pulse" style="width: 60px; height: 60px; background: #ff6b6b; border-radius: 50%;"></div>
+      <span class="shake" style="font-size: 24px; background: #ffd93d; padding: 10px; border-radius: 4px;">⚠️ Alert!</span>
+    </div>
+    <p><em>Expected: Motion Reducer stops/reduces all animations</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Scrolling Marquee:</strong></p>
+    <div style="overflow: hidden; background: #e8f5e9; padding: 10px; border-radius: 4px;">
+      <div style="display: inline-block; animation: marquee 10s linear infinite; white-space: nowrap;">
+        📢 Breaking News: This scrolling text can be distracting for users with vestibular disorders or attention difficulties. Motion Reducer should stop this animation.
+      </div>
+    </div>
+    <style>
+      @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+    <p><em>Expected: Scrolling stops with Motion Reducer</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Flashing/Blinking:</strong></p>
+    <div class="pulse" style="padding: 15px; background: #ff4444; color: white; text-align: center; border-radius: 4px; font-weight: bold;">
+      ⚡ FLASH SALE - LIMITED TIME ⚡
+    </div>
+    <p><em>Expected: Pulsing effect disabled</em></p>
+  </div>
+</section>
+
+<!-- ========== READING ASSISTANCE ========== -->
+<section>
+  <h2>20. Dense Text (Reading Assistance)</h2>
+
+  <div class="test-item">
+    <p><strong>Small, Dense Text:</strong> For font scaling, line height, letter spacing</p>
+    <div style="font-size: 11px; line-height: 1.2; letter-spacing: -0.5px; max-width: 600px; text-align: justify;">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris.
+    </div>
+    <p><em>Expected: Font Size, Line Height, Letter Spacing sliders improve readability</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Content for Read Aloud:</strong></p>
+    <div style="padding: 15px; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
+      <p>Welcome to the accessibility test page. This paragraph is designed to test the Read Aloud feature. The text-to-speech engine should read this content clearly and at an adjustable speed. Users can control the speech rate from 0.7x for slower reading to 2x for faster listening. This feature is particularly helpful for users with visual impairments, dyslexia, or those who prefer auditory learning.</p>
+    </div>
+    <p><em>Expected: Read Aloud button speaks this text with word highlighting</em></p>
+  </div>
+
+  <div class="test-item">
+    <p><strong>Dyslexia-Challenging Text:</strong> Similar letters, mirror words</p>
+    <p style="font-family: Times New Roman, serif;">
+      The <strong>b</strong>og and <strong>d</strong>og played in the <strong>p</strong>ark. They saw a <strong>q</strong>ueen <strong>b</strong>y the <strong>p</strong>on<strong>d</strong>. Was it a <strong>b</strong>ir<strong>d</strong> or a <strong>d</strong>eer? The <strong>b</strong>oy couldn't <strong>d</strong>eci<strong>d</strong>e. He went <strong>b</strong>ack to his <strong>d</strong>a<strong>d</strong> who was rea<strong>d</strong>ing a <strong>b</strong>ook a<strong>b</strong>out <strong>d</strong>ragons an<strong>d</strong> <strong>b</strong>attles.
+    </p>
+    <p><em>Expected: Dyslexia Font toggle switches to OpenDyslexic for better letter distinction</em></p>
+  </div>
+</section>
+
+<!-- ========== DARK MODE PREVIEW ========== -->
+<section>
+  <h2>21. Light Content (Dark Mode)</h2>
+
+  <div class="test-item">
+    <p><strong>Bright White Background:</strong> Uncomfortable for light-sensitive users</p>
+    <div style="padding: 30px; background: #ffffff; border: 1px solid #eee;">
+      <h3 style="color: #000;">High Brightness Content</h3>
+      <p style="color: #333;">This white background with dark text can cause eye strain for users with photosensitivity, migraines, or those browsing in dark environments. Dark Mode inverts or darkens this content for comfortable viewing.</p>
+      <button style="padding: 10px 20px; background: #000; color: #fff; border: none; border-radius: 4px;">Sample Button</button>
+    </div>
+    <p><em>Expected: Dark Mode toggle inverts to dark background with light text</em></p>
+  </div>
+</section>
+
+<!-- ========== READER MODE ========== -->
+<section>
+  <h2>22. Cluttered Layout (Reader Mode)</h2>
+
+  <div class="test-item">
+    <p><strong>Article with Sidebars:</strong> Distracting multi-column layout</p>
+    <div style="display: grid; grid-template-columns: 1fr 200px; gap: 20px;">
+      <article style="padding: 15px; background: #fafafa; border-radius: 4px;">
+        <h3>Main Article Content</h3>
+        <p>This is the main article that users want to read. However, it's surrounded by distracting sidebar content, advertisements, and related links that make it hard to focus on the actual content.</p>
+        <p>Reader Mode extracts just the main content, removes distractions, and presents it in a clean, readable format with comfortable typography.</p>
+      </article>
+      <aside style="padding: 15px; background: #fff0f0; border-radius: 4px; font-size: 12px;">
+        <p><strong>Related Articles:</strong></p>
+        <ul style="padding-left: 15px;">
+          <li>10 Tips You Won't Believe</li>
+          <li>Shocking Discovery</li>
+          <li>What Happened Next</li>
+        </ul>
+        <p style="margin-top: 15px;"><strong>Trending:</strong></p>
+        <ul style="padding-left: 15px;">
+          <li>Celebrity News</li>
+          <li>Viral Videos</li>
+        </ul>
+      </aside>
+    </div>
+    <p><em>Expected: Reader Mode shows only the article in clean format</em></p>
+  </div>
+</section>
+
+<section>
+  <h2>Test Complete</h2>
+  <p>Open DevTools console to see AI4A11y logs. Press F12 → Console tab.</p>
+  <p>Expected: Extension should fix most issues automatically.</p>
+  <p><strong>Features to test manually:</strong></p>
+  <ul style="margin: 10px 0 0 20px;">
+    <li>Toggle different <strong>Profiles</strong> (Blind, Low Vision, Dyslexia, etc.)</li>
+    <li>Try <strong>Simplify Text</strong> on complex paragraphs</li>
+    <li>Use <strong>Summarize</strong> on long articles</li>
+    <li>Enable <strong>Focus Mode</strong> to dim distractions</li>
+    <li>Turn on <strong>Motion Reducer</strong> to stop animations</li>
+    <li>Test <strong>Read Aloud</strong> at different speeds</li>
+    <li>Try <strong>Dark Mode</strong> and <strong>Contrast</strong> modes</li>
+    <li>Adjust <strong>Font Size</strong>, <strong>Line Height</strong>, <strong>Letter Spacing</strong></li>
+  </ul>
+</section>
+
+</body>
+</html>

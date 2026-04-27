@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "AI for Accessibility",
+  "version": "1.0.0",
+  "description": "AI-powered accessibility fixes: auto-generate alt text, describe canvas/charts, simplify text, fix contrast, and more.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tts"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "lib/axe.min.js",
+        "lib/ally.min.js",
+        "lib/tabbable.min.js",
+        "lib/focus-trap.min.js",
+        "lib/darkreader.js",
+        "lib/readability.js",
+        "lib/easy-speech.js",
+        "content.bundle.js"
+      ],
+      "css": ["inject.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/OpenDyslexic-Regular.woff2"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

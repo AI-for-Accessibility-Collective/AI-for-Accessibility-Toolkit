@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Web's Broken Promise - The Inclusive Post</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Libre+Franklin:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Article-specific styles */
+    .article-page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .article-header {
+      margin-bottom: 32px;
+    }
+
+    .article-headline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 42px;
+      font-weight: 400;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .article-deck {
+      font-size: 20px;
+      color: #666;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 0;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .author-photo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+    }
+
+    .author-info {
+      flex: 1;
+    }
+
+    .author-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .article-date {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .share-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ISSUE: Small share buttons, icon-only */
+    .share-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .article-image {
+      width: 100%;
+      margin: 24px 0;
+    }
+
+    .article-image img {
+      width: 100%;
+      height: auto;
+    }
+
+    .article-image figcaption {
+      font-size: 12px;
+      color: #999;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* ISSUE: Dense article text with complex vocabulary */
+    .article-body {
+      font-size: 17px;
+      line-height: 1.45;
+      color: #333;
+    }
+
+    .article-body p {
+      margin-bottom: 20px;
+    }
+
+    .article-body h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 500;
+      margin: 40px 0 16px;
+    }
+
+    /* ISSUE: Links blend with text */
+    .article-body a {
+      color: #333;
+      text-decoration: underline;
+      text-decoration-color: #ccc;
+    }
+
+    .pull-quote {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 28px;
+      font-style: italic;
+      color: #555;
+      border-left: 3px solid #000;
+      padding-left: 24px;
+      margin: 32px 0;
+      line-height: 1.3;
+    }
+
+    .inline-image {
+      float: right;
+      width: 280px;
+      margin: 0 0 16px 24px;
+    }
+
+    .inline-image img {
+      width: 100%;
+    }
+
+    .inline-image figcaption {
+      font-size: 11px;
+      color: #999;
+      margin-top: 6px;
+    }
+
+    /* Sidebar on article */
+    .article-sidebar {
+      position: fixed;
+      right: 40px;
+      top: 200px;
+      width: 200px;
+    }
+
+    @media (max-width: 1100px) {
+      .article-sidebar { display: none; }
+    }
+
+    .sidebar-ad {
+      background: linear-gradient(135deg, #1a73e8, #4285f4);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      animation: ad-pulse 2s ease-in-out infinite;
+    }
+
+    .related-articles {
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid #ddd;
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .related-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+
+    .related-card h4 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      margin-top: 10px;
+      line-height: 1.25;
+    }
+
+    .related-card a {
+      color: inherit;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Simplified header for article page -->
+  <header class="site-header">
+    <div class="header-top">
+      <div class="header-left">
+        <a href="index.html" style="text-decoration: none; color: inherit;">← Back</a>
+      </div>
+      <div class="header-center">
+        <a href="index.html" style="text-decoration: none; color: inherit;"><h1 class="masthead" style="font-size: 24px;">The Inclusive Post</h1></a>
+      </div>
+      <div class="header-right">
+        <button class="subscribe-btn">Subscribe</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="article-page">
+    <article>
+      <header class="article-header">
+        <div class="article-category">INVESTIGATION</div>
+        <h1 class="article-headline">The Web's Broken Promise: How 95% of Sites Still Fail Disabled Users</h1>
+        <p class="article-deck">A yearlong investigation reveals that despite decades of guidelines and billions in lawsuits, the internet remains largely inaccessible to the 1.3 billion people worldwide living with disabilities.</p>
+
+        <div class="article-meta">
+          <img src="assets/reporter-1.jpg" class="author-photo">
+          <div class="author-info">
+            <span class="author-name">By Sarah Chen and Michael Torres</span>
+            <span class="article-date">April 26, 2026 • 12 min read</span>
+          </div>
+          <div class="share-buttons">
+            <!-- ISSUE: Icon-only buttons -->
+            <button class="share-btn">𝕏</button>
+            <button class="share-btn">f</button>
+            <button class="share-btn">✉</button>
+            <button class="share-btn">🔗</button>
+          </div>
+        </div>
+      </header>
+
+      <figure class="article-image">
+        <img src="assets/hero-accessibility.jpg">
+        <figcaption>Disability rights advocates march on Capitol Hill demanding stronger digital accessibility laws. Photograph: Reuters</figcaption>
+      </figure>
+
+      <!-- ISSUE: Complex vocabulary, dense paragraphs requiring simplification -->
+      <div class="article-body">
+        <p>The proliferation of digital interfaces in contemporary society has fundamentally transformed the mechanisms through which individuals access information, procure goods and services, and engage in civic participation. Yet for the estimated 1.3 billion people worldwide who experience some form of disability—representing approximately 16% of the global population—this digital transformation has paradoxically erected new barriers to inclusion rather than dismantling existing ones.</p>
+
+        <p>Our comprehensive twelve-month investigation, which encompassed the systematic evaluation of over 10,000 websites across 47 industry verticals utilizing both automated scanning methodologies and manual assessment by accessibility specialists, has revealed a troubling reality: despite the existence of internationally recognized accessibility standards for over two decades, the overwhelming majority of digital properties continue to exhibit fundamental compliance deficiencies.</p>
+
+        <figure class="inline-image">
+          <img src="assets/screen-reader.jpg">
+          <figcaption>A blind user navigates a website using screen reader software.</figcaption>
+        </figure>
+
+        <p>The Web Content Accessibility Guidelines (WCAG), initially promulgated by the World Wide Web Consortium in 1999 and subsequently revised through iterations 2.0, 2.1, and 2.2, delineate a comprehensive framework of success criteria designed to ensure digital content remains perceivable, operable, understandable, and robust for users with diverse abilities. These guidelines address a multiplicity of accessibility considerations, encompassing alternative text for non-textual content, sufficient color contrast ratios, keyboard navigability, and compatibility with assistive technologies.</p>
+
+        <blockquote class="pull-quote">
+          "Every time I try to order groceries online, I encounter a digital obstacle course that sighted users never even notice."
+        </blockquote>
+
+        <p>Notwithstanding the ostensibly straightforward nature of many WCAG success criteria, our analysis indicates that 94.8% of home pages examined exhibited detectable WCAG conformance failures. The mean number of discrete accessibility errors per page stood at 56.1—an alarming figure that represents a 10.1% increase from the preceding year's assessment. Low contrast text, wherein the luminance differential between foreground and background colors falls below the WCAG 2 AA threshold of 4.5:1, was identified on 83.9% of evaluated pages, constituting the most prevalent accessibility deficiency.</p>
+
+        <h2>The Human Cost of Inaccessibility</h2>
+
+        <p>Behind these statistics lie the quotidian experiences of individuals for whom inaccessible digital interfaces represent not mere inconveniences but substantive barriers to full societal participation. Jennifer Martinez, a 34-year-old attorney who has been blind since birth, describes her daily encounters with digital inaccessibility as "an exhausting game of digital whack-a-mole."</p>
+
+        <p>"The fundamental assumption underlying most web design is that users possess full visual acuity," Martinez elucidates. "When I attempt to complete what should be a routine task—filing a court document, scheduling a medical appointment, or simply reading the news—I invariably encounter unlabeled buttons, images devoid of descriptive alternative text, and form fields that provide no indication of their intended purpose to my screen reader."</p>
+
+        <figure class="article-image">
+          <img src="assets/cognitive-load.jpg">
+          <figcaption>Research shows that cluttered interfaces create cognitive barriers for users with ADHD and learning disabilities.</figcaption>
+        </figure>
+
+        <p>The implications of digital inaccessibility extend beyond the visually impaired community. Individuals with motor impairments frequently encounter interfaces that presuppose fine motor control—small click targets, drag-and-drop interactions, and hover-dependent functionality that proves insurmountable without mouse-based input. Those with cognitive disabilities or neurodivergent conditions such as ADHD and autism spectrum disorder face interfaces characterized by overwhelming visual complexity, ambiguous navigation paradigms, and content that assumes uniform cognitive processing capabilities.</p>
+
+        <h2>The Legal Landscape</h2>
+
+        <p>The inadequacy of voluntary compliance has precipitated an unprecedented surge in accessibility-related litigation. Federal court filings alleging violations of Title III of the Americans with Disabilities Act in the digital context have increased by 37% year-over-year, with over 5,000 such actions initiated in 2025 alone. The attendant financial exposure for non-compliant organizations is substantial: settlement costs typically range from $25,000 to $75,000, exclusive of remediation expenditures and reputational damage.</p>
+
+        <p>Yet legal scholars and disability rights advocates contend that litigation represents a suboptimal mechanism for achieving widespread accessibility improvements. "Lawsuits address symptoms rather than systemic causes," argues Professor David Nguyen of Stanford Law School. "What we require is a fundamental reconceptualization of digital design pedagogy and organizational accountability structures."</p>
+
+        <h2>The Path Forward</h2>
+
+        <p>Experts interviewed for this investigation identified several preconditions for meaningful progress. Foremost among these is the integration of accessibility considerations into the earliest phases of product development—a paradigm shift from the prevalent approach of retrofitting accessibility features as an afterthought. Additionally, organizations must cultivate internal expertise through dedicated accessibility teams and comprehensive training programs that extend beyond technical compliance to encompass inclusive design principles.</p>
+
+        <p>The emergence of artificial intelligence presents both opportunities and challenges in this domain. Machine learning algorithms demonstrate increasing capability in generating alternative text descriptions, simplifying complex content, and providing real-time transcription services. However, these technological solutions must complement rather than supplant the fundamental imperative of designing with accessibility as a core requirement rather than an ancillary consideration.</p>
+
+        <p>"The web was conceived as a universal medium," observes Tim Berners-Lee, the World Wide Web's inventor. "When we fail to make it accessible, we betray that founding vision. The power of the web is in its universality. Access by everyone regardless of disability is an essential aspect."</p>
+
+        <figure class="article-image">
+          <img src="assets/motor-disability.jpg">
+          <figcaption>Adaptive technologies help users with motor impairments navigate digital interfaces, but many websites remain incompatible.</figcaption>
+        </figure>
+
+        <p>As digital interfaces increasingly mediate essential aspects of contemporary existence—from employment applications to healthcare portals to democratic participation—the imperative for accessible design transcends legal compliance to constitute a fundamental question of civil rights and social equity. The technology to create universally accessible digital experiences exists; what remains is the collective will to implement it.</p>
+
+        <p><em>This investigation was supported by the Foundation for Digital Inclusion. Additional reporting by Emma Rodriguez and James Liu.</em></p>
+      </div>
+    </article>
+
+    <!-- Related Articles -->
+    <section class="related-articles">
+      <h3 class="section-title">Related Coverage</h3>
+      <div class="related-grid">
+        <article class="related-card">
+          <img src="assets/courtroom.jpg">
+          <h4><a href="#">Federal Court Ruling Expands ADA to Cover All Commercial Websites</a></h4>
+        </article>
+        <article class="related-card">
+          <img src="assets/low-vision.jpg">
+          <h4><a href="#">'I Can Finally Read the News': Low Vision Users on Browser Accessibility Tools</a></h4>
+        </article>
+        <article class="related-card">
+          <img src="assets/captions.jpg">
+          <h4><a href="#">The Fight for Accurate Captions: Deaf Advocates Push Back on AI Errors</a></h4>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Distracting sidebar ad -->
+  <aside class="article-sidebar">
+    <div class="sidebar-ad">
+      <div style="font-size: 16px; font-weight: 600;">WCAG Checker</div>
+      <div style="font-size: 12px; margin: 8px 0;">Audit Your Site</div>
+      <div style="font-size: 11px; opacity: 0.9;">Free accessibility scan</div>
+    </div>
+  </aside>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="footer-masthead">The Inclusive Post</span>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <a href="#">Accessibility Statement</a>
+      <a href="#">Terms</a>
+      <a href="#">Privacy</a>
+    </div>
+    <div class="footer-legal">
+      <p>© 2026 The Inclusive Post. Demo site for accessibility testing.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI for Accessibility Toolkit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #1a73e8;
+      --blue-light: #e8f0fe;
+      --green: #34a853;
+      --red: #ea4335;
+      --grey-50: #f8f9fa;
+      --grey-100: #f1f3f4;
+      --grey-200: #e8eaed;
+      --grey-300: #dadce0;
+      --grey-500: #9aa0a6;
+      --grey-700: #5f6368;
+      --grey-900: #202124;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(60,64,67,0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      height: 520px;
+      overflow: hidden;
+    }
+    body {
+      font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 360px;
+      height: 520px;
+      overflow-y: auto;
+      background: var(--grey-50);
+      color: var(--grey-900);
+      font-size: 13px;
+      overscroll-behavior: none;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: white;
+      border-bottom: 1px solid var(--grey-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .logo-icon {
+      width: 28px; height: 28px;
+    }
+    .logo-text { font-size: 15px; font-weight: 500; }
+
+    /* Toggle switch */
+    .switch { position: relative; width: 36px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch-track {
+      position: absolute; cursor: pointer; inset: 0;
+      background: var(--grey-300); border-radius: 10px; transition: 0.2s;
+    }
+    .switch-track::before {
+      content: ""; position: absolute;
+      height: 16px; width: 16px; left: 2px; bottom: 2px;
+      background: white; border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: 0.2s;
+    }
+    .switch input:checked + .switch-track { background: var(--blue); }
+    .switch input:checked + .switch-track::before { transform: translateX(16px); }
+
+    /* Main */
+    main { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Preset row */
+    .preset-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; background: white;
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .preset-row label { font-weight: 500; flex: 1; }
+    .preset-row select { min-width: 130px; }
+
+    /* Fixes panel - styled like other sections */
+    .fixes-panel {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 8px;
+    }
+    .fixes-header {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--grey-900);
+      gap: 8px;
+    }
+    .fixes-header:hover { background: var(--grey-50); }
+    .fixes-icon { font-size: 18px; width: 24px; text-align: center; color: var(--green); }
+    .fixes-summary { flex: 1; }
+    .fixes-summary strong { font-weight: 500; }
+    .fixes-summary span { color: var(--grey-500); font-size: 11px; }
+    .fixes-toggle { color: var(--grey-500); font-size: 16px; transition: transform 0.2s; }
+    .fixes-panel.expanded .fixes-toggle { transform: rotate(180deg); }
+    .fixes-body {
+      border-top: 1px solid var(--grey-100);
+    }
+    .fixes-list { font-size: 11px; font-family: 'SF Mono', Monaco, monospace; }
+    .fix-item {
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--grey-100);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .fix-item:last-child { border-bottom: none; }
+    .fix-type {
+      font-size: 10px;
+      color: var(--grey-500);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .fix-old {
+      color: #b31d28;
+      background: #ffeef0;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .fix-old::before { content: '− '; }
+    .fix-new {
+      color: #22863a;
+      background: #e6ffed;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .fix-new::before { content: '+ '; }
+
+    /* Section */
+    .section {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex; align-items: center;
+      padding: 8px 10px; cursor: pointer;
+      border-bottom: 1px solid var(--grey-100);
+      user-select: none;
+    }
+    .section-header:hover { background: var(--grey-50); }
+    .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--grey-500); flex: 1; }
+    .section-arrow { color: var(--grey-500); font-size: 16px; transition: 0.2s; }
+    .section.collapsed .section-arrow { transform: rotate(-90deg); }
+    .section.collapsed .section-body { display: none; }
+
+    /* Tool row */
+    .tool {
+      display: flex; align-items: center;
+      padding: 8px 10px; gap: 8px;
+      border-bottom: 1px solid var(--grey-100);
+    }
+    .tool:last-child { border-bottom: none; }
+    .tool-icon { font-size: 18px; width: 24px; text-align: center; color: var(--grey-700); }
+    .material-symbols-outlined { font-size: 18px; }
+    .tool-name { flex: 1; font-size: 13px; }
+    .tool-desc { font-size: 10px; color: var(--grey-500); }
+
+    /* Select */
+    select {
+      padding: 4px 20px 4px 8px; border: 1px solid var(--grey-300);
+      border-radius: 4px; font: inherit; font-size: 12px;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='%235f6368' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") right 4px center no-repeat;
+      -webkit-appearance: none; cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--blue); }
+
+    /* Slider */
+    .slider-row { display: flex; align-items: center; padding: 8px 10px; gap: 8px; border-bottom: 1px solid var(--grey-100); }
+    .slider-row .tool-icon { font-size: 16px; width: 24px; text-align: center; }
+    .slider-row .tool-name { flex: 1; }
+    .slider-group { display: flex; align-items: center; gap: 4px; }
+    .slider-group input[type="range"] { width: 70px; height: 4px; -webkit-appearance: none; background: var(--grey-200); border-radius: 2px; }
+    .slider-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--blue); border-radius: 50%; cursor: pointer; }
+    .slider-value { font-size: 11px; color: var(--grey-700); width: 32px; text-align: right; }
+
+    /* Focus mode options */
+    .tool-options { display: none; padding: 6px 10px 8px 42px; background: var(--grey-50); border-bottom: 1px solid var(--grey-100); gap: 10px; flex-wrap: wrap; }
+    .tool-options.show { display: flex; }
+    .tool-options label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--grey-700); cursor: pointer; }
+    .tool-options input[type="checkbox"] { width: 12px; height: 12px; accent-color: var(--blue); }
+
+    /* Buttons - unified system */
+    .btn-row { display: flex; gap: 6px; padding: 8px 10px; }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: #1557b0; }
+    .btn-secondary { background: var(--grey-100); color: var(--grey-700); border: 1px solid var(--grey-300); }
+    .btn-secondary:hover { background: var(--grey-200); }
+
+    /* Collapsible (API keys) */
+    .collapsible { margin-top: 6px; }
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      gap: 6px;
+      border-radius: 4px;
+    }
+    .collapsible-header:hover { background: var(--grey-100); }
+    .collapsible-body { display: none; padding: 10px; padding-top: 6px; }
+    .collapsible.open .collapsible-body { display: block; }
+    .collapsible.open .coll-arrow { transform: rotate(90deg); }
+    .coll-arrow { transition: 0.2s; font-size: 16px; color: var(--grey-500); }
+
+    .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .input-row .input-group { flex: 1; margin-bottom: 0; }
+    .input-group { margin-bottom: 8px; }
+    .input-group label { display: block; font-size: 10px; color: var(--grey-500); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .input-group input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--grey-200);
+      border-radius: 4px;
+      font: inherit;
+      font-size: 11px;
+      background: var(--grey-50);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .input-group input:focus { outline: none; border-color: var(--blue); background: white; }
+    .input-group input::placeholder { color: var(--grey-400); }
+
+    .btn.success { background: var(--green); color: white; }
+
+    /* Footer */
+    footer {
+      display: flex; justify-content: flex-start; align-items: center; gap: 8px;
+      padding: 8px 10px; background: white; border-top: 1px solid var(--grey-200);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 128 128" width="28" height="28" aria-hidden="true">
+        <defs>
+          <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285f4"/>
+            <stop offset="34%" stop-color="#4285f4"/>
+            <stop offset="34%" stop-color="#ea4335"/>
+            <stop offset="51%" stop-color="#ea4335"/>
+            <stop offset="51%" stop-color="#fbbc04"/>
+            <stop offset="68%" stop-color="#fbbc04"/>
+            <stop offset="68%" stop-color="#34a853"/>
+            <stop offset="100%" stop-color="#34a853"/>
+          </linearGradient>
+          <clipPath id="person">
+            <path transform="translate(4,4) scale(0.47)" d="M100 36a28 28 0 1 1 28 28a28 28 0 0 1-28-28Zm127.6 56.57A15.7 15.7 0 0 0 212 80H44a16 16 0 0 0-6.7 30.53h.06l53.89 23.73l-21.92 83.3a16 16 0 0 0 7.9 20.91A15.83 15.83 0 0 0 84 240a16 16 0 0 0 14.44-9.06L128 180l29.58 51a16 16 0 0 0 29.07-13.35l-21.92-83.3l54-23.76a15.7 15.7 0 0 0 8.87-18.02Z"/>
+          </clipPath>
+        </defs>
+        <rect width="128" height="128" fill="url(#rainbow)" clip-path="url(#person)"/>
+      </svg>
+      <span class="logo-text">AI for Accessibility Toolkit</span>
+    </div>
+    <label class="switch" aria-label="Enable extension">
+      <input type="checkbox" id="mainToggle" checked aria-label="Enable AI for Accessibility Toolkit">
+      <span class="switch-track"></span>
+    </label>
+  </header>
+
+  <main>
+    <!-- Preset -->
+    <div class="preset-row">
+      <label for="presetSelect">Profile</label>
+      <select id="presetSelect" aria-label="Select accessibility profile">
+        <option value="none">None</option>
+        <option value="blind">Blind</option>
+        <option value="lowVision">Low Vision</option>
+        <option value="colorBlind">Color Blind</option>
+        <option value="deaf">Deaf / Hard of Hearing</option>
+        <option value="motor">Motor</option>
+        <option value="dyslexia">Dyslexia</option>
+        <option value="adhd">ADHD</option>
+        <option value="cognitive">Cognitive</option>
+        <option value="elderly">Elderly</option>
+        <option value="anxiety">Anxiety</option>
+        <option value="sensory">Sensory Processing</option>
+        <option value="photosensitive">Light Sensitive</option>
+      </select>
+    </div>
+
+    <!-- AI Tools (moved to top) -->
+    <div class="section" id="sectionAI">
+      <div class="section-header">
+        <span class="section-title">AI Tools</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">build</span>
+          <span class="tool-name" id="label-autoWcagFix">Autofix WCAG Issues</span>
+          <label class="switch"><input type="checkbox" id="autoWcagFix" aria-labelledby="label-autoWcagFix"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">label</span>
+          <span class="tool-name" id="label-autoFixLabels">Generate Missing Labels</span>
+          <label class="switch"><input type="checkbox" id="autoFixLabels" aria-labelledby="label-autoFixLabels"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">image</span>
+          <span class="tool-name" id="label-autoDescribe">Generate Image Alt Text</span>
+          <label class="switch"><input type="checkbox" id="autoDescribe" aria-labelledby="label-autoDescribe"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">videocam</span>
+          <span class="tool-name" id="label-autoVideoDescribe">Generate Video Descriptions</span>
+          <label class="switch"><input type="checkbox" id="autoVideoDescribe" aria-labelledby="label-autoVideoDescribe"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">closed_caption</span>
+          <span class="tool-name" id="label-autoCaptions">Generate Audio Captions</span>
+          <label class="switch"><input type="checkbox" id="autoCaptions" aria-labelledby="label-autoCaptions"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">edit_note</span>
+          <span class="tool-name" id="label-autoSimplify">Simplify Text</span>
+          <label class="switch"><input type="checkbox" id="autoSimplify" aria-labelledby="label-autoSimplify"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">summarize</span>
+          <span class="tool-name" id="label-autoSummarize">Summarize Text</span>
+          <label class="switch"><input type="checkbox" id="autoSummarize" aria-labelledby="label-autoSummarize"><span class="switch-track"></span></label>
+        </div>
+        <div class="collapsible" id="apiKeysSection">
+          <div class="collapsible-header" role="button" aria-expanded="false" tabindex="0">
+            <span class="tool-icon material-symbols-outlined" aria-hidden="true">key</span>
+            <span class="tool-name">API Keys</span>
+            <span class="coll-arrow material-symbols-outlined" aria-hidden="true">chevron_right</span>
+          </div>
+          <div class="collapsible-body" role="region" aria-label="API Key settings">
+            <div class="input-group">
+              <label for="geminiKey">Gemini</label>
+              <input type="password" id="geminiKey" placeholder="AIza..." aria-label="Gemini API key">
+            </div>
+            <div class="input-group">
+              <label for="falKey">Fal.ai (optional)</label>
+              <input type="password" id="falKey" placeholder="fal_..." aria-label="Fal.ai API key">
+            </div>
+            <button class="btn btn-primary" id="saveKeys" aria-label="Save API keys">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Display -->
+    <div class="section" id="sectionDisplay">
+      <div class="section-header">
+        <span class="section-title">Display</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">dark_mode</span>
+          <span class="tool-name" id="label-darkMode">Dark Mode</span>
+          <label class="switch"><input type="checkbox" id="darkMode" aria-labelledby="label-darkMode"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">contrast</span>
+          <label for="contrastMode" class="tool-name">Contrast</label>
+          <select id="contrastMode" aria-label="Contrast mode">
+            <option value="none">Normal</option>
+            <option value="light">High</option>
+            <option value="yellow-black">Yellow/Black</option>
+          </select>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">palette</span>
+          <label for="colorBlindMode" class="tool-name">Color Filter</label>
+          <select id="colorBlindMode" aria-label="Color blind filter">
+            <option value="none">Off</option>
+            <option value="protanopia">Protanopia</option>
+            <option value="deuteranopia">Deuteranopia</option>
+            <option value="tritanopia">Tritanopia</option>
+          </select>
+        </div>
+        <div class="slider-row">
+          <span class="tool-icon material-symbols-outlined">format_size</span>
+          <span class="tool-name">Font Size</span>
+          <div class="slider-group">
+            <input type="range" id="fontScale" min="100" max="200" value="100" step="10" aria-label="Font Size" aria-valuemin="100" aria-valuemax="200">
+            <span class="slider-value" id="fontScaleValue">100%</span>
+          </div>
+        </div>
+        <div class="slider-row">
+          <span class="tool-icon material-symbols-outlined">format_line_spacing</span>
+          <span class="tool-name">Line Height</span>
+          <div class="slider-group">
+            <input type="range" id="lineHeight" min="1.5" max="3" value="1.5" step="0.1" aria-label="Line Height" aria-valuemin="1.5" aria-valuemax="3">
+            <span class="slider-value" id="lineHeightValue">1.5</span>
+          </div>
+        </div>
+        <div class="slider-row">
+          <span class="tool-icon material-symbols-outlined">format_letter_spacing</span>
+          <span class="tool-name">Letter Spacing</span>
+          <div class="slider-group">
+            <input type="range" id="letterSpacing" min="0" max="0.2" value="0" step="0.02" aria-label="Letter Spacing" aria-valuemin="0" aria-valuemax="0.2">
+            <span class="slider-value" id="letterSpacingValue">0em</span>
+          </div>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">text_fields</span>
+          <span class="tool-name" id="label-dyslexiaFont">Dyslexia Font</span>
+          <label class="switch"><input type="checkbox" id="dyslexiaFont" aria-labelledby="label-dyslexiaFont"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">mouse</span>
+          <span class="tool-name" id="label-largeCursor">Large Cursor</span>
+          <label class="switch"><input type="checkbox" id="largeCursor" aria-labelledby="label-largeCursor"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">filter_center_focus</span>
+          <span class="tool-name" id="label-enhanceFocus">Enhanced Focus</span>
+          <label class="switch"><input type="checkbox" id="enhanceFocus" aria-labelledby="label-enhanceFocus"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">straighten</span>
+          <span class="tool-name" id="label-readingGuide">Reading Guide</span>
+          <label class="switch"><input type="checkbox" id="readingGuide" aria-labelledby="label-readingGuide"><span class="switch-track"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reading -->
+    <div class="section" id="sectionReading">
+      <div class="section-header">
+        <span class="section-title">Reading</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">article</span>
+          <span class="tool-name" id="label-readerMode">Reader Mode</span>
+          <label class="switch"><input type="checkbox" id="readerMode" aria-labelledby="label-readerMode"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">center_focus_strong</span>
+          <span class="tool-name" id="label-focusMode">Focus Mode</span>
+          <label class="switch"><input type="checkbox" id="focusMode" aria-labelledby="label-focusMode"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool-options" id="focusModeOptions" role="group" aria-label="Focus mode options">
+          <label><input type="checkbox" id="hideDistractions" aria-label="Dim distractions"> Dim</label>
+          <label><input type="checkbox" id="showProgress" checked aria-label="Show reading progress"> Progress</label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">volume_up</span>
+          <label for="speechRate" class="tool-name">Read Aloud</label>
+          <select id="speechRate" style="width: 55px;" aria-label="Speech rate">
+            <option value="0.7">0.7x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+          <button class="btn btn-primary" id="readAloudBtn" aria-label="Read page aloud"><span class="material-symbols-outlined" style="font-size:14px" aria-hidden="true">play_arrow</span> Read</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="section" id="sectionNav">
+      <div class="section-header">
+        <span class="section-title">Navigation</span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">keyboard</span>
+          <span class="tool-name" id="label-keyboardNav">Keyboard Nav</span>
+          <label class="switch"><input type="checkbox" id="keyboardNav" aria-labelledby="label-keyboardNav"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">mic</span>
+          <span class="tool-name" id="label-voiceCommands">Voice Commands</span>
+          <label class="switch"><input type="checkbox" id="voiceCommands" aria-labelledby="label-voiceCommands"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon material-symbols-outlined" aria-hidden="true">motion_photos_pause</span>
+          <span class="tool-name" id="label-motionReducer">Reduce Motion</span>
+          <label class="switch"><input type="checkbox" id="motionReducer" aria-labelledby="label-motionReducer"><span class="switch-track"></span></label>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Fixes panel -->
+  <div id="fixesPanel" class="fixes-panel" style="display: none;">
+    <div class="fixes-header" id="fixesHeader">
+      <span class="fixes-icon material-symbols-outlined">check_circle</span>
+      <span class="fixes-summary"></span>
+      <span class="fixes-toggle material-symbols-outlined">expand_more</span>
+    </div>
+    <div class="fixes-body" style="display: none;">
+      <div class="fixes-list"></div>
+    </div>
+  </div>
+
+  <footer>
+    <button class="btn btn-primary" id="scanPage" aria-label="Rescan page for accessibility issues"><span class="material-symbols-outlined" style="font-size:14px" aria-hidden="true">refresh</span> Rescan</button>
+    <button class="btn btn-secondary" id="resetAll" aria-label="Reset all settings"><span class="material-symbols-outlined" style="font-size:14px" aria-hidden="true">restart_alt</span> Reset</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
