@@ -83,5 +83,10 @@ export function groupViolationsByCategory(violations) {
 // Get element from axe node
 export function getElementFromNode(node) {
   if (!node?.target?.[0]) return null;
-  return document.querySelector(node.target[0]);
+  try {
+    return document.querySelector(node.target[0]);
+  } catch (e) {
+    console.warn('[AI4A11y] Invalid selector:', node.target[0]);
+    return null;
+  }
 }

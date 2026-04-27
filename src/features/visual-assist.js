@@ -142,12 +142,20 @@ export const VisualAssist = {
     this.readingGuideEl.className = 'ai4a11y-reading-guide';
     document.body.appendChild(this.readingGuideEl);
 
+    this.readingGuideRafPending = false;
+    this.lastMouseY = 0;
     this.readingGuideHandler = (e) => {
-      if (this.readingGuideEl) {
-        this.readingGuideEl.style.top = `${e.clientY - 20}px`;
-      }
+      this.lastMouseY = e.clientY;
+      if (this.readingGuideRafPending) return;
+      this.readingGuideRafPending = true;
+      requestAnimationFrame(() => {
+        this.readingGuideRafPending = false;
+        if (this.readingGuideEl) {
+          this.readingGuideEl.style.top = `${this.lastMouseY - 20}px`;
+        }
+      });
     };
-    document.addEventListener('mousemove', this.readingGuideHandler);
+    document.addEventListener('mousemove', this.readingGuideHandler, { passive: true });
   },
 
   disableReadingGuide() {
