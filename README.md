@@ -186,24 +186,23 @@ npx ai4a11y check <url>                        # Test page with axe-core
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Chrome Extension                      │
-├─────────────────────────────────────────────────────────┤
-│  Analyzers          Adapters           Features         │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐   │
-│  │ missing-alt │   │ generate-alt│   │ dark-mode   │   │
-│  │ poor-contrs │   │ fix-contras │   │ dyslexia    │   │
-│  │ wcag-issues │   │ wcag-fixes  │   │ large-cursor│   │
-│  │ ...         │   │ ...         │   │ ...         │   │
-│  └─────────────┘   └─────────────┘   └─────────────┘   │
-├─────────────────────────────────────────────────────────┤
-│  Profiles (settings.js)                                 │
-│  lowVision, blindness, dyslexia, adhd, motor, ...      │
-├─────────────────────────────────────────────────────────┤
-│  Background (AI APIs)                                   │
-│  Gemini: describe images, simplify text, generate labels│
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Extension["Chrome Extension"]
+        direction TB
+        subgraph Top[" "]
+            direction LR
+            Analyzers["**Analyzers**<br/>missing-alt<br/>poor-contrast<br/>wcag-issues"]
+            Adapters["**Adapters**<br/>generate-alt<br/>fix-contrast<br/>wcag-fixes"]
+            Features["**Features**<br/>dark-mode<br/>dyslexia<br/>large-cursor"]
+        end
+        Profiles["**Profiles** — lowVision, blind, dyslexia, adhd, motor, ..."]
+    end
+    
+    Background["**Background**<br/>Gemini API"]
+    
+    Analyzers --> Adapters --> Features
+    Adapters <--> Background
 ```
 
 **Flow:**

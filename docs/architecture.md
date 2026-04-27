@@ -18,37 +18,47 @@ Teams across the collective contribute capabilities: accessible simulations, aty
 
 ## How It Works
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Chrome Extension                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   1. ANALYZE                    2. ADAPT                     │
-│   ┌─────────────────┐          ┌─────────────────┐          │
-│   │ axe-core        │ ──────▶  │ generate-alt    │          │
-│   │ (WCAG scanner)  │          │ generate-labels │          │
-│   ├─────────────────┤          │ fix-contrast    │          │
-│   │ missing-alt     │          │ simplify-text   │          │
-│   │ missing-labels  │          │ wcag-fixes      │          │
-│   │ poor-contrast   │          │ generate-captions│         │
-│   └─────────────────┘          └─────────────────┘          │
-│                                         │                    │
-│   3. FEATURES                           │                    │
-│   ┌─────────────────┐                   │                    │
-│   │ dark-mode       │◀──────────────────┘                   │
-│   │ dyslexia-font   │                                       │
-│   │ large-cursor    │   4. PROFILES (settings.js)           │
-│   │ focus-mode      │   ┌────────────────────────┐          │
-│   │ reader-mode     │◀──│ lowVision, blindness,  │          │
-│   │ keyboard-nav    │   │ dyslexia, adhd, motor, │          │
-│   └─────────────────┘   │ cognitive, deaf, ...   │          │
-│                         └────────────────────────┘          │
-├─────────────────────────────────────────────────────────────┤
-│   Background Service Worker                                  │
-│   ┌─────────────────────────────────────────────────────┐   │
-│   │ Gemini API: describe images, simplify text, labels  │   │
-│   └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Extension["Chrome Extension"]
+        subgraph Analyze["1. ANALYZE"]
+            AXE["axe-core<br/>(WCAG scanner)"]
+            AN1["missing-alt"]
+            AN2["missing-labels"]
+            AN3["poor-contrast"]
+        end
+        
+        subgraph Adapt["2. ADAPT"]
+            AD1["generate-alt"]
+            AD2["generate-labels"]
+            AD3["fix-contrast"]
+            AD4["simplify-text"]
+            AD5["wcag-fixes"]
+            AD6["generate-captions"]
+        end
+        
+        subgraph Features["3. FEATURES"]
+            F1["dark-mode"]
+            F2["dyslexia-font"]
+            F3["large-cursor"]
+            F4["focus-mode"]
+            F5["reader-mode"]
+            F6["keyboard-nav"]
+        end
+        
+        subgraph Profiles["4. PROFILES"]
+            P["lowVision, blind,<br/>dyslexia, adhd, motor,<br/>cognitive, deaf, ..."]
+        end
+    end
+    
+    subgraph Background["Background Service Worker"]
+        API["Gemini API:<br/>describe images, simplify text, labels"]
+    end
+    
+    Analyze --> Adapt
+    Adapt --> Features
+    Profiles --> Features
+    Adapt <--> API
 ```
 
 **Flow:**
