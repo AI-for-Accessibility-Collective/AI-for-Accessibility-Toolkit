@@ -248,7 +248,7 @@ See [projects/](projects/) for contributed code.
 - [x] Build CLI (prototype 2)
 - [x] Implement ability profiles
 - [x] Support multiple ability profiles
-- [x] Prepopulate basic accessibility tools
+- [x] Prepopulate basic accessibility tools (alt text, labels, contrast, dark mode, focus mode, etc.)
 - [ ] Build evaluation benchmark (test sites arena)
 - [ ] Collect team codebases
 - [ ] Integrate team projects
