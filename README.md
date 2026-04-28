@@ -246,8 +246,16 @@ See [projects/](projects/) for contributed code.
 ### Month 3 — Build
 - [x] Build Chrome extension (prototype 1)
 - [x] Build CLI (prototype 2)
+- [x] Implement AI provider abstraction
 - [x] Implement ability profiles
 - [x] Support multiple ability profiles
+- [x] Integrate axe-core WCAG auditing
+- [x] Add AI-powered adapters (alt text, labels, captions, simplify)
+- [x] Add visual adapters (dark mode, focus, reader, motion reducer)
+- [x] Add input adapters (keyboard nav, voice commands, read aloud)
+- [x] Add JSON output for CLI automation
+- [x] Add scaffolding commands for contributors
+- [ ] Build evaluation benchmark (test sites arena)
 - [ ] Collect team codebases
 - [ ] Integrate team projects
 - [ ] Co-design with disability community
@@ -256,6 +264,8 @@ See [projects/](projects/) for contributed code.
 - [ ] Write documentation
 - [ ] Create example applications
 - [ ] Test with users
+- [ ] Publish to Chrome Web Store
+- [ ] Publish CLI to PyPI
 - [ ] Release publicly
 
 ---
