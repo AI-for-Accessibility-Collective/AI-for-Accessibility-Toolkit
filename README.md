@@ -247,6 +247,7 @@ See [projects/](projects/) for contributed code.
 - [x] Build Chrome extension (prototype 1)
 - [x] Build CLI (prototype 2)
 - [x] Implement ability profiles
+- [x] Support multiple ability profiles
 - [ ] Collect team codebases
 - [ ] Integrate team projects
 - [ ] Co-design with disability community

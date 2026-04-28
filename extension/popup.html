@@ -252,6 +252,45 @@
 
     .btn.success { background: var(--green); color: white; }
 
+    /* Profile grid - matches tool-options styling */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      padding: 8px 10px;
+      background: var(--grey-50);
+    }
+    .profile-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+      font-size: 12px;
+      color: var(--grey-700);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .profile-checkbox:hover {
+      background: var(--grey-100);
+    }
+    .profile-checkbox input {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--blue);
+    }
+    .profile-checkbox:has(input:checked) {
+      color: var(--grey-900);
+      font-weight: 500;
+    }
+    .profile-count {
+      font-size: 10px;
+      color: var(--blue);
+      font-weight: 500;
+      margin-left: auto;
+      margin-right: 8px;
+    }
+
     /* Footer */
     footer {
       display: flex; justify-content: flex-start; align-items: center; gap: 8px;
@@ -289,24 +328,29 @@
   </header>
 
   <main>
-    <!-- Preset -->
-    <div class="preset-row">
-      <label for="presetSelect">Profile</label>
-      <select id="presetSelect" aria-label="Select accessibility profile">
-        <option value="none">None</option>
-        <option value="blind">Blind</option>
-        <option value="lowVision">Low Vision</option>
-        <option value="colorBlind">Color Blind</option>
-        <option value="deaf">Deaf / Hard of Hearing</option>
-        <option value="motor">Motor</option>
-        <option value="dyslexia">Dyslexia</option>
-        <option value="adhd">ADHD</option>
-        <option value="cognitive">Cognitive</option>
-        <option value="elderly">Elderly</option>
-        <option value="anxiety">Anxiety</option>
-        <option value="sensory">Sensory Processing</option>
-        <option value="photosensitive">Light Sensitive</option>
-      </select>
+    <!-- Profiles (multi-select) -->
+    <div class="section" id="sectionProfiles">
+      <div class="section-header">
+        <span class="section-title">Profiles</span>
+        <span id="profileCount" class="profile-count"></span>
+        <span class="section-arrow">▼</span>
+      </div>
+      <div class="section-body" id="profilesBody" role="group" aria-label="Accessibility profiles">
+        <div class="profile-grid">
+          <label class="profile-checkbox"><input type="checkbox" value="blind" aria-label="Blind profile"> Blind</label>
+          <label class="profile-checkbox"><input type="checkbox" value="lowVision" aria-label="Low Vision profile"> Low Vision</label>
+          <label class="profile-checkbox"><input type="checkbox" value="colorBlind" aria-label="Color Blind profile"> Color Blind</label>
+          <label class="profile-checkbox"><input type="checkbox" value="deaf" aria-label="Deaf or Hard of Hearing profile"> Deaf/HoH</label>
+          <label class="profile-checkbox"><input type="checkbox" value="motor" aria-label="Motor profile"> Motor</label>
+          <label class="profile-checkbox"><input type="checkbox" value="dyslexia" aria-label="Dyslexia profile"> Dyslexia</label>
+          <label class="profile-checkbox"><input type="checkbox" value="adhd" aria-label="ADHD profile"> ADHD</label>
+          <label class="profile-checkbox"><input type="checkbox" value="cognitive" aria-label="Cognitive profile"> Cognitive</label>
+          <label class="profile-checkbox"><input type="checkbox" value="elderly" aria-label="Elderly profile"> Elderly</label>
+          <label class="profile-checkbox"><input type="checkbox" value="anxiety" aria-label="Anxiety profile"> Anxiety</label>
+          <label class="profile-checkbox"><input type="checkbox" value="sensory" aria-label="Sensory Processing profile"> Sensory</label>
+          <label class="profile-checkbox"><input type="checkbox" value="photosensitive" aria-label="Light Sensitive profile"> Light Sensitive</label>
+        </div>
+      </div>
     </div>
 
     <!-- AI Tools (moved to top) -->

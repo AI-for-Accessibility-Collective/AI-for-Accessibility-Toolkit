@@ -418,32 +418,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // Preset dropdown - with persistence
-  const presetSelect = document.getElementById('presetSelect');
+  // Multi-profile selection with checkboxes
+  const profileCheckboxes = document.querySelectorAll('.profile-checkbox input');
+  const profileCountEl = document.getElementById('profileCount');
 
-  // Load saved profile (just set dropdown, don't re-apply - settings loaded separately)
-  chrome.storage.sync.get(['selectedProfile'], (result) => {
-    if (result.selectedProfile) {
-      presetSelect.value = result.selectedProfile;
+  // Load saved profiles (with migration from old single-profile format)
+  chrome.storage.sync.get(['selectedProfiles', 'selectedProfile'], async (result) => {
+    let savedProfiles = result.selectedProfiles || [];
+
+    // Migrate from old single-profile format
+    if (savedProfiles.length === 0 && result.selectedProfile && result.selectedProfile !== 'none') {
+      savedProfiles = [result.selectedProfile];
+      await chrome.storage.sync.set({ selectedProfiles: savedProfiles });
+      await chrome.storage.sync.remove('selectedProfile');
+    }
+
+    profileCheckboxes.forEach(cb => {
+      cb.checked = savedProfiles.includes(cb.value);
+    });
+    updateProfileCount(savedProfiles.length);
+
+    // Apply profiles on popup open (ensures consistency)
+    if (savedProfiles.length > 0) {
+      const merged = mergePresets(savedProfiles);
+      applyPreset(merged);
     }
   });
 
-  presetSelect.addEventListener('change', async () => {
-    const presetName = presetSelect.value;
+  function updateProfileCount(count) {
+    profileCountEl.textContent = count > 0 ? `${count} selected` : '';
+  }
 
-    // Save profile selection
-    await chrome.storage.sync.set({ selectedProfile: presetName });
+  function getSelectedProfiles() {
+    return Array.from(profileCheckboxes)
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+  }
 
-    if (presetName === 'none') {
-      await resetAll();
-    } else {
-      // Reset UI state first
-      await resetAllUI(true);
-      // Revert content script state and apply new preset
-      sendToContent({ type: 'revertAll' });
-      presetSelect.value = presetName;
-      applyPreset(presets[presetName]);
+  // Merge multiple presets (booleans: OR, numbers: max)
+  function mergePresets(profileIds) {
+    const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
+    const merged = {};
+
+    for (const id of profileIds) {
+      const preset = presets[id];
+      if (!preset) continue;
+
+      for (const [key, value] of Object.entries(preset)) {
+        if (numericKeys.includes(key) && typeof value === 'number') {
+          merged[key] = Math.max(merged[key] || 0, value);
+        } else if (typeof value === 'boolean') {
+          merged[key] = merged[key] || value;
+        } else {
+          merged[key] = value;
+        }
+      }
     }
+    return merged;
+  }
+
+  profileCheckboxes.forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const selectedProfiles = getSelectedProfiles();
+      await chrome.storage.sync.set({ selectedProfiles });
+      updateProfileCount(selectedProfiles.length);
+
+      if (selectedProfiles.length === 0) {
+        await resetAll();
+      } else {
+        await resetAllUI(true);
+        sendToContent({ type: 'revertAll' });
+        const merged = mergePresets(selectedProfiles);
+        applyPreset(merged);
+      }
+    });
   });
 
   async function resetAllUI(preserveProfile = false) {
@@ -486,9 +534,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Hide focus options
     if (focusOptions) focusOptions.classList.remove('show');
 
-    // Reset preset dropdown (unless preserving for preset switch)
+    // Reset profile checkboxes (unless preserving for profile switch)
     if (!preserveProfile) {
-      setValue('presetSelect', 'none');
+      profileCheckboxes.forEach(cb => cb.checked = false);
+      updateProfileCount(0);
     }
 
     // Save all reset values to storage
@@ -502,7 +551,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     storageReset.lineHeight = 1.5;
     storageReset.letterSpacing = 0;
     if (!preserveProfile) {
-      storageReset.selectedProfile = 'none';
+      storageReset.selectedProfiles = [];
     }
     await chrome.storage.sync.set(storageReset);
   }

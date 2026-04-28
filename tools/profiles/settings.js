@@ -207,7 +207,7 @@ export function updateSettings(newSettings) {
   settings = { ...settings, ...newSettings };
 }
 
-// Apply a profile
+// Apply a single profile
 export function applyProfile(profileId) {
   const profile = profiles[profileId];
   if (profile?.tools) {
@@ -217,6 +217,44 @@ export function applyProfile(profileId) {
     return true;
   }
   return false;
+}
+
+// Apply multiple profiles (merges all their tools)
+export function applyProfiles(profileIds) {
+  if (!Array.isArray(profileIds) || profileIds.length === 0) {
+    settings = { ...defaults };
+    return false;
+  }
+
+  // Start with defaults
+  let merged = { ...defaults };
+
+  // Merge each profile's tools (later profiles override earlier ones for conflicts)
+  // For numeric values like fontScale, take the maximum
+  const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
+
+  for (const profileId of profileIds) {
+    const profile = profiles[profileId];
+    if (!profile?.tools) continue;
+
+    for (const [key, value] of Object.entries(profile.tools)) {
+      if (numericKeys.includes(key) && typeof value === 'number') {
+        // Take the larger value for numeric settings
+        merged[key] = Math.max(merged[key] || 0, value);
+      } else if (key === 'colorFilter' && value !== 'none') {
+        // Last non-none color filter wins
+        merged[key] = value;
+      } else {
+        // Booleans: true wins (enable feature if any profile wants it)
+        merged[key] = merged[key] || value;
+      }
+    }
+  }
+
+  settings = merged;
+  const names = profileIds.map(id => profiles[id]?.name).filter(Boolean);
+  console.log(`[AI4A11y] Applied profiles: ${names.join(', ')}`);
+  return true;
 }
 
 // Get profile by ID
