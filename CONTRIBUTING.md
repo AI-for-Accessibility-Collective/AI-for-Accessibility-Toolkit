@@ -1,6 +1,6 @@
 # Contributing
 
-The extension is designed to be easy to extend. Most contributions are adding new analyzers, adapters, or profiles.
+The toolkit is designed to be easy to extend. Most contributions are adding new auditors, adapters, or profiles.
 
 ## Quick Start
 
@@ -8,15 +8,17 @@ The extension is designed to be easy to extend. Most contributions are adding ne
 git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
 cd AI-for-Accessibility-Toolkit
 npm install
+pip install -e .
 
-npx ai4a11y tools                              # See what exists
-npx ai4a11y create my-analyzer --type analyzer # Create component
-npx ai4a11y build                              # Build
-# Load in Chrome: chrome://extensions → Load unpacked → select this folder
+ai4a11y list tools                              # See what exists
+ai4a11y create my-adapter --type adapter        # Create component
+npm run build                                   # Build extension
 
-git checkout -b add/my-analyzer
+# Load in Chrome: chrome://extensions → Load unpacked → select extension/ folder
+
+git checkout -b add/my-adapter
 git add .
-git commit -m "Add my-analyzer"
+git commit -m "Add my-adapter"
 git push
 ```
 
@@ -24,20 +26,39 @@ git push
 
 | Type | Purpose | When to use |
 |------|---------|-------------|
-| **Analyzer** | Find issues | Detect accessibility problems axe-core misses |
+| **Auditor** | Find issues | Detect accessibility problems axe-core misses |
 | **Adapter** | Fix issues | Auto-fix detected issues, optionally with AI |
 | **Profile** | User preset | Configure tools for a specific disability |
 | **AI Tool** | Backend capability | Add new AI-powered features |
 
-## Adding an Analyzer
+## Project Structure
 
-Analyzers find accessibility issues on the page.
+```
+tools/                    # Shared JS code (used by both extension and CLI)
+├── auditors/            # Find issues
+├── adapters/            # Fix issues
+├── profiles/            # User presets
+└── utils/               # Shared utilities (ai.js, dom.js, color.js)
 
-```bash
-npx ai4a11y create missing-landmarks --type analyzer
+extension/               # Chrome extension
+├── src/content.js      # Entry point (imports from tools/)
+├── background.js       # Service worker (Gemini API)
+└── popup.*             # Extension UI
+
+cli/                     # Python CLI
+├── ai4a11y.py          # Playwright + Claude vision
+└── cli.py              # Command wrapper
 ```
 
-Edit `src/analyzers/missing-landmarks.js`:
+## Adding an Auditor
+
+Auditors find accessibility issues on the page.
+
+```bash
+ai4a11y create missing-landmarks --type auditor
+```
+
+Edit `tools/auditors/missing-landmarks.js`:
 
 ```js
 import { isVisible, wasProcessed } from '../utils/dom.js';
@@ -57,28 +78,34 @@ export function findSectionsWithoutHeadings() {
 }
 ```
 
-Add to `src/analyzers/index.js`:
+Add to `tools/auditors/index.js`:
 ```js
 export * from './missing-landmarks.js';
 ```
 
-**When to use custom analyzers vs axe-core:**
+**When to use custom auditors vs axe-core:**
 - Use **axe-core** for standard WCAG violations (already comprehensive)
-- Use **custom analyzers** for issues axe misses, custom rules, or finding elements for AI enhancement
+- Use **custom auditors** for issues axe misses, custom rules, or finding elements for AI enhancement
 
 ## Adding an Adapter
 
-Adapters fix issues. Map axe rule IDs to fix functions.
+Adapters fix issues. They can handle specific axe rule IDs.
 
 ```bash
-npx ai4a11y create fix-tables --type adapter
+ai4a11y create fix-tables --type adapter --profiles blind
 ```
 
-Edit `src/adapters/fix-tables.js`:
+Edit `tools/adapters/fix-tables.js`:
 
 ```js
 import { markProcessed } from '../utils/dom.js';
-import { logFix, incrementStat } from '../stats.js';
+
+const logFix = globalThis.ai4a11yLogFix || (() => {});
+const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+
+export const name = 'fix-tables';
+export const description = 'Add headers to data tables';
+export const profiles = ['blind'];
 
 export function fixTableHeaders(table) {
   if (table.dataset.ai4a11yProcessed) return;
@@ -102,7 +129,7 @@ export const axeHandlers = {
 };
 ```
 
-Add to `src/adapters/index.js`:
+Add to `tools/adapters/index.js`:
 ```js
 import { axeHandlers as tableHandlers } from './fix-tables.js';
 
@@ -118,23 +145,19 @@ export const axeHandlers = {
 
 Profiles configure which tools are enabled for a specific user need.
 
-```bash
-npx ai4a11y create elderly --type profile
-```
+Edit `tools/profiles/settings.json`:
 
-Edit the generated entry in `src/settings.js`:
-
-```js
-elderly: {
-  name: 'Elderly',
-  description: 'Large text, high contrast, simplified UI',
-  tools: {
-    fontScale: 130,
-    lineHeight: 1.8,
-    largeCursor: true,
-    enhanceFocus: true,
-    fixContrast: true,
-    autoSimplify: true
+```json
+"elderly": {
+  "name": "Elderly",
+  "description": "Large text, high contrast, simplified UI",
+  "tools": {
+    "fontScale": 130,
+    "lineHeight": 1.8,
+    "largeCursor": true,
+    "enhanceFocus": true,
+    "fixContrast": true,
+    "autoSimplify": true
   }
 }
 ```
@@ -148,7 +171,18 @@ elderly: {
 
 ## Adding an AI Tool
 
-1. Add handler in `background.js`:
+AI tools use the provider abstraction so they work in both extension and CLI.
+
+1. Add function in `tools/utils/ai.js`:
+
+```js
+export async function myTool(data) {
+  if (!provider?.myTool) throw new Error('AI provider not set or missing myTool');
+  return provider.myTool(data);
+}
+```
+
+2. Add handler in `extension/background.js` (for Chrome/Gemini):
 
 ```js
 case 'myTool':
@@ -157,31 +191,41 @@ case 'myTool':
   break;
 ```
 
-2. Call from adapter:
+3. Set provider in `extension/src/content.js`:
 
 ```js
-const response = await sendMessage({ type: 'myTool', data: {...} });
+setAIProvider({
+  myTool: (data) => sendMessage({ type: 'myTool', data }).then(r => r?.result),
+  // ... other methods
+});
 ```
+
+4. For CLI support, add to `cli/ai4a11y.py` via `page.expose_function`.
 
 ## Testing
 
 ```bash
-npx ai4a11y build
-npx ai4a11y check https://example.com
+npm run build                                   # Build extension
+ai4a11y session start                           # Launch test browser
+ai4a11y session go https://example.com
+ai4a11y session audit                           # Run accessibility audit
+ai4a11y session describe                        # AI describes the page
+ai4a11y session stop
 ```
 
-Load in Chrome and test on real sites.
+Load extension in Chrome and test on real sites.
 
 ## PR Guidelines
 
 - One feature per PR
 - Test on real sites
-- `npx ai4a11y build` must pass
+- `npm run build` must pass
 - Describe who benefits (which disability/profile)
 
 ## Code Style
 
-- ES modules in `src/`, bundled by esbuild
+- ES modules in `tools/`, bundled by esbuild
+- Use the AI provider abstraction (`tools/utils/ai.js`) for AI features
 - Document which profiles/disabilities the feature helps
 - No large binaries — use Git LFS or link externally
 
