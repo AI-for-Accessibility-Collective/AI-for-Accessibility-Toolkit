@@ -1,0 +1,146 @@
+{
+  "profiles": {
+    "lowVision": {
+      "name": "Low Vision",
+      "description": "Larger text, enhanced focus indicators",
+      "tools": {
+        "fontScale": 150,
+        "lineHeight": 2.0,
+        "largeCursor": true,
+        "enhanceFocus": true,
+        "fixContrast": true
+      }
+    },
+    "blind": {
+      "name": "Blind",
+      "description": "Optimized for screen reader users",
+      "tools": {
+        "autoDescribe": true,
+        "autoVideoDescribe": true,
+        "autoFixLabels": true,
+        "autoWcagFix": true,
+        "keyboardNav": true
+      }
+    },
+    "colorBlind": {
+      "name": "Color Blindness",
+      "description": "Color filters and enhanced contrast",
+      "tools": {
+        "fixContrast": true,
+        "colorFilter": "deuteranopia"
+      }
+    },
+    "dyslexia": {
+      "name": "Dyslexia",
+      "description": "Dyslexia-friendly font and spacing",
+      "tools": {
+        "dyslexiaFont": true,
+        "fontScale": 115,
+        "lineHeight": 2.0,
+        "letterSpacing": 0.12,
+        "focusMode": true
+      }
+    },
+    "adhd": {
+      "name": "ADHD",
+      "description": "Reduced distractions, focus mode",
+      "tools": {
+        "focusMode": true,
+        "motionReducer": true,
+        "readerMode": true
+      }
+    },
+    "cognitive": {
+      "name": "Cognitive",
+      "description": "Simplified text, summaries",
+      "tools": {
+        "autoSimplify": true,
+        "autoSummarize": true,
+        "fontScale": 120,
+        "lineHeight": 1.8,
+        "focusMode": true
+      }
+    },
+    "motor": {
+      "name": "Motor",
+      "description": "Keyboard navigation, large targets",
+      "tools": {
+        "largeCursor": true,
+        "enhanceFocus": true,
+        "keyboardNav": true
+      }
+    },
+    "photosensitive": {
+      "name": "Photosensitive",
+      "description": "Dark mode, reduced motion",
+      "tools": {
+        "darkMode": true,
+        "motionReducer": true
+      }
+    },
+    "deaf": {
+      "name": "Deaf/HoH",
+      "description": "Auto captions for media",
+      "tools": {
+        "autoCaptions": true,
+        "autoVideoDescribe": true,
+        "enhanceFocus": true
+      }
+    },
+    "anxiety": {
+      "name": "Anxiety",
+      "description": "Calm interface, reduced motion",
+      "tools": {
+        "focusMode": true,
+        "motionReducer": true,
+        "readerMode": true,
+        "lineHeight": 1.8
+      }
+    },
+    "elderly": {
+      "name": "Elderly",
+      "description": "Larger text, simplified content",
+      "tools": {
+        "fontScale": 150,
+        "lineHeight": 1.8,
+        "enhanceFocus": true,
+        "autoSimplify": true,
+        "autoSummarize": true
+      }
+    },
+    "sensory": {
+      "name": "Sensory Processing",
+      "description": "Reduced stimulation, calm interface",
+      "tools": {
+        "motionReducer": true,
+        "darkMode": true,
+        "focusMode": true
+      }
+    }
+  },
+  "defaults": {
+    "enabled": true,
+    "autoDescribe": true,
+    "autoVideoDescribe": false,
+    "autoSimplify": false,
+    "autoWcagFix": true,
+    "autoSummarize": false,
+    "autoFixLabels": true,
+    "autoCaptions": false,
+    "fixContrast": true,
+    "darkMode": false,
+    "dyslexiaFont": false,
+    "largeCursor": false,
+    "enhanceFocus": false,
+    "readingGuide": false,
+    "motionReducer": false,
+    "readerMode": false,
+    "focusMode": false,
+    "keyboardNav": false,
+    "voiceCommands": false,
+    "fontScale": 100,
+    "lineHeight": 1.5,
+    "letterSpacing": 0,
+    "colorFilter": "none"
+  }
+}
