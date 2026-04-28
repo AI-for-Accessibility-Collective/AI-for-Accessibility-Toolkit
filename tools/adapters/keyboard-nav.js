@@ -32,7 +32,12 @@ export const KeyboardNavigator = {
     this.hideTabSequence();
     if (this.shortcutHandler) {
       document.removeEventListener('keydown', this.shortcutHandler);
+      this.shortcutHandler = null;
     }
+    // Clean up tabindex="-1" added to main/nav elements
+    document.querySelectorAll('#ai4a11y-main-content, #ai4a11y-nav').forEach(el => {
+      el.removeAttribute('tabindex');
+    });
     console.log('[AI4A11y] Keyboard Navigator disabled');
     announce('Keyboard navigation restored');
   },

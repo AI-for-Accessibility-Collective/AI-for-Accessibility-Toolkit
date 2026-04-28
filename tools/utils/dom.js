@@ -11,12 +11,18 @@ export function isVisible(el) {
 
 // Check if element has accessible name
 export function hasAccessibleName(el) {
-  return !!(
-    el.getAttribute('aria-label') ||
-    el.getAttribute('aria-labelledby') ||
-    el.getAttribute('title') ||
-    el.textContent?.trim()
-  );
+  if (el.getAttribute('aria-label')) return true;
+  if (el.getAttribute('title')) return true;
+  if (el.textContent?.trim()) return true;
+
+  // Verify aria-labelledby target actually exists and has content
+  const labelledBy = el.getAttribute('aria-labelledby');
+  if (labelledBy) {
+    const target = document.getElementById(labelledBy);
+    if (target?.textContent?.trim()) return true;
+  }
+
+  return false;
 }
 
 // Get accessible name of element

@@ -437,6 +437,11 @@ async function describeVideoFromUrl(videoUrl, prompt, apiKey) {
     while (fileState === 'PROCESSING' && attempts < 30) {
       await new Promise(r => setTimeout(r, 2000));
       const checkResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${uploadData.file.name}?key=${apiKey}`);
+      if (!checkResponse.ok) {
+        console.warn('[AI4A11y BG] File check failed, retrying...');
+        attempts++;
+        continue;
+      }
       const checkData = await checkResponse.json();
       fileState = checkData.state;
       console.log('[AI4A11y BG] File state:', fileState);
@@ -714,6 +719,11 @@ async function transcribeWithGemini(mediaUrl, apiKey) {
     while (fileState === 'PROCESSING' && attempts < 30) {
       await new Promise(r => setTimeout(r, 2000));
       const checkResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${uploadData.file.name}?key=${apiKey}`);
+      if (!checkResponse.ok) {
+        console.warn('[AI4A11y BG] File check failed, retrying...');
+        attempts++;
+        continue;
+      }
       const checkData = await checkResponse.json();
       fileState = checkData.state;
       attempts++;
@@ -926,6 +936,7 @@ Return ONLY the heading text, nothing else.`
 
 // Infer column header from sample data
 async function inferColumnHeader(sampleData) {
+  if (!Array.isArray(sampleData) || sampleData.length === 0) return null;
   const keys = await getApiKeys();
   if (!keys.gemini) return null;
 
@@ -1097,13 +1108,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     'getYouTubeTranscript': () => getYouTubeTranscript(message.videoId),
     'checkContrast': () => Promise.resolve(checkContrast(message.textColor || message.foreground, message.bgColor || message.background)),
     'fixContrast': () => Promise.resolve(fixContrast(message.textColor || message.foreground, message.bgColor || message.background, message.targetRatio || 4.5)),
-    'speak': () => {
+    'speak': () => new Promise((resolve, reject) => {
       chrome.tts.speak(message.text, {
         rate: message.rate || 1.0,
         pitch: message.pitch || 1.0,
         volume: message.volume || 1.0
+      }, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve({ success: true });
+        }
       });
-      return Promise.resolve({ success: true });
     },
     'getSettings': () => chrome.storage.sync.get([
       'enabled', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoWcagFix', 'autoFixLabels',

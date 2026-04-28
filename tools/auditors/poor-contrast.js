@@ -46,6 +46,7 @@ export function findLowContrastText() {
 }
 
 // Find links that are indistinguishable from surrounding text
+// Per WCAG 1.4.1: Links must have underline OR 3:1 contrast with surrounding text
 export function findIndistinguishableLinks() {
   return Array.from(document.querySelectorAll('a'))
     .filter(link => {
@@ -57,14 +58,17 @@ export function findIndistinguishableLinks() {
       // Has underline - distinguishable
       if (style.textDecoration.includes('underline')) return false;
 
-      // Check if color differs from parent text
+      // Check contrast against parent text color
       const parent = link.parentElement;
       if (!parent) return false;
 
       const parentStyle = getComputedStyle(parent);
-      if (style.color !== parentStyle.color) return false;
+      const linkParentRatio = getContrastRatio(style.color, parentStyle.color);
 
-      // Same color and no underline - indistinguishable
+      // Needs 3:1 contrast ratio if no underline
+      if (linkParentRatio >= 3) return false;
+
+      // Insufficient contrast and no underline - indistinguishable
       return true;
     });
 }

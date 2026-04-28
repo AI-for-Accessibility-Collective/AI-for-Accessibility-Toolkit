@@ -1636,6 +1636,11 @@ ${chunk}
       document.querySelectorAll('[style*="animation-play-state"]').forEach((el) => {
         el.style.animationPlayState = "";
       });
+      document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach((video) => {
+        video.play().catch(() => {
+        });
+        delete video.dataset.ai4a11yWasPaused;
+      });
       console.log("[AI4A11y] Motion Reducer disabled");
       announce("Motion restored");
     },
@@ -1673,12 +1678,13 @@ ${chunk}
         tempImg.onload = () => {
           ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
           img.replaceWith(canvas);
+          canvas.dataset.ai4a11yGifStopped = "true";
         };
         tempImg.onerror = () => {
           img.style.visibility = "visible";
+          img.dataset.ai4a11yGifStopped = "true";
         };
         tempImg.src = img.src;
-        img.dataset.ai4a11yGifStopped = "true";
       });
     },
     toggle() {
@@ -1967,6 +1973,12 @@ ${chunk}
       }
     },
     stop() {
+      if (typeof EasySpeech !== "undefined" && EasySpeech.cancel) {
+        try {
+          EasySpeech.cancel();
+        } catch (e) {
+        }
+      }
       speechSynthesis.cancel();
       this.speaking = false;
       this.paused = false;
@@ -2393,7 +2405,11 @@ ${chunk}
       this.hideTabSequence();
       if (this.shortcutHandler) {
         document.removeEventListener("keydown", this.shortcutHandler);
+        this.shortcutHandler = null;
       }
+      document.querySelectorAll("#ai4a11y-main-content, #ai4a11y-nav").forEach((el) => {
+        el.removeAttribute("tabindex");
+      });
       console.log("[AI4A11y] Keyboard Navigator disabled");
       announce("Keyboard navigation restored");
     },
@@ -2953,17 +2969,17 @@ ${chunk}
   // extension/src/content.js
   setAIProvider({
     describeImage: (imageData) => sendMessage({ type: "describeImage", imageData }).then((r) => r == null ? void 0 : r.result),
-    describeVideo: (frames) => sendMessage({ type: "describeVideo", frames }).then((r) => r == null ? void 0 : r.result),
+    describeVideo: (frames, metadata) => sendMessage({ type: "describeVideoFrames", frames, metadata }).then((r) => r == null ? void 0 : r.result),
     simplifyText: (text) => sendMessage({ type: "simplifyText", text }).then((r) => r == null ? void 0 : r.result),
     summarizeText: (text) => sendMessage({ type: "summarizeText", text }).then((r) => r == null ? void 0 : r.result),
     generateLabels: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
     inferLabel: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
     fixContrast: (fg, bg) => sendMessage({ type: "fixContrast", foreground: fg, background: bg }).then((r) => r == null ? void 0 : r.result),
-    generateCaptions: (data) => sendMessage({ type: "generateCaptions", ...data }).then((r) => r == null ? void 0 : r.result),
+    generateCaptions: (data) => sendMessage({ type: "transcribeAudio", audioUrl: data.audioUrl }).then((r) => r == null ? void 0 : r.result),
     getYouTubeTranscript: (videoId) => sendMessage({ type: "getYouTubeTranscript", videoId }).then((r) => r == null ? void 0 : r.result),
-    transcribeVideo: (url) => sendMessage({ type: "transcribeVideo", videoUrl: url }).then((r) => r == null ? void 0 : r.result),
+    transcribeVideo: (url) => sendMessage({ type: "transcribeVideo", audioUrl: url }).then((r) => r == null ? void 0 : r.result),
     transcribeAudio: (url) => sendMessage({ type: "transcribeAudio", audioUrl: url }).then((r) => r == null ? void 0 : r.result),
-    describeElement: (el, ctx) => sendMessage({ type: "describeElement", element: el.outerHTML, context: ctx }).then((r) => r == null ? void 0 : r.result),
+    describeElement: (imageData, elementType, context) => sendMessage({ type: "describeElement", imageData, elementType, context }).then((r) => r == null ? void 0 : r.result),
     announce: (msg) => announce2(msg)
   });
   globalThis.ai4a11yLogFix = logFix7;

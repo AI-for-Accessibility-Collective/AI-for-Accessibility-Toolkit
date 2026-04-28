@@ -110,8 +110,14 @@ export function findSvgWithoutAlt() {
 
       // Skip if has accessible name
       if (svg.getAttribute('aria-label')) return false;
-      if (svg.getAttribute('aria-labelledby')) return false;
       if (svg.querySelector('title')) return false;
+
+      // Verify aria-labelledby target actually exists and has content
+      const labelledBy = svg.getAttribute('aria-labelledby');
+      if (labelledBy) {
+        const target = document.getElementById(labelledBy);
+        if (target?.textContent?.trim()) return false;
+      }
 
       // Skip tiny icons
       const rect = svg.getBoundingClientRect();

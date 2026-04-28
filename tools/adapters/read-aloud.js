@@ -152,6 +152,10 @@ export const ReadAloud = {
   },
 
   stop() {
+    // Cancel EasySpeech if it was used
+    if (typeof EasySpeech !== 'undefined' && EasySpeech.cancel) {
+      try { EasySpeech.cancel(); } catch (e) { /* ignore */ }
+    }
     speechSynthesis.cancel();
     this.speaking = false;
     this.paused = false;
