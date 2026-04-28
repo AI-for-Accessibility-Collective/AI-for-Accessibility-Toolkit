@@ -89,6 +89,8 @@ Requires `ANTHROPIC_API_KEY` environment variable for AI features.
 - Adds captions to media
 - Applies visual presets (dark mode, dyslexia font, large cursor, etc.)
 
+**Test site:** [ai4a11y-test-site.vercel.app](https://ai4a11y-test-site.vercel.app/) — a page with intentional accessibility issues for testing
+
 ## Profiles
 
 Select a profile to automatically enable the right tools:
