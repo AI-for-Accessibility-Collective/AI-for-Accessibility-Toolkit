@@ -3,3 +3,11 @@ node_modules/
 *.log
 .env
 content.bundle.js.map
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+*.egg
