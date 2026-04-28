@@ -1128,7 +1128,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'hideDistractions', 'showProgress', 'colorBlindMode',
       'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
       'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
-      'selectedProfile', 'geminiKey', 'falKey'
+      'selectedProfiles', 'geminiKey', 'falKey'
     ])
   };
 
