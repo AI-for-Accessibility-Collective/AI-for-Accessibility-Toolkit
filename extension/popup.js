@@ -456,6 +456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Merge multiple presets (booleans: OR, numbers: max)
+  // Must match logic in tools/profiles/settings.js applyProfiles()
   function mergePresets(profileIds) {
     const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
     const merged = {};
@@ -467,10 +468,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       for (const [key, value] of Object.entries(preset)) {
         if (numericKeys.includes(key) && typeof value === 'number') {
           merged[key] = Math.max(merged[key] || 0, value);
-        } else if (typeof value === 'boolean') {
-          merged[key] = merged[key] || value;
-        } else {
+        } else if ((key === 'colorFilter' || key === 'colorBlindMode') && value !== 'none') {
           merged[key] = value;
+        } else {
+          merged[key] = merged[key] || value;
         }
       }
     }

@@ -59,7 +59,7 @@ globalThis.ai4a11yIncrementStat = incrementStat;
 
 // State
 let isRunning = false;
-let initPending = false;
+let initPromise = null;
 
 // Alias for getHandler (adapters use getAxeHandler)
 const getHandler = getAxeHandler;
@@ -128,12 +128,20 @@ function applyVisualSettings(settings) {
 
 // Initialize on page load
 async function init() {
-  if (isRunning || initPending) {
-    console.log('[AI4A11y] Scan already in progress or pending');
+  if (initPromise) {
+    console.log('[AI4A11y] Init already in progress');
+    return initPromise;
+  }
+  if (isRunning) {
+    console.log('[AI4A11y] Scan already running');
     return;
   }
-  initPending = true;
 
+  initPromise = doInit();
+  return initPromise;
+}
+
+async function doInit() {
   // Load settings via Chrome storage
   const settings = await loadSettings(async () => {
     const response = await sendMessage({ type: 'getSettings' });
@@ -142,7 +150,7 @@ async function init() {
 
   if (!settings.enabled) {
     console.log('[AI4A11y] Extension disabled');
-    initPending = false;
+    initPromise = null;
     return;
   }
 
@@ -150,12 +158,12 @@ async function init() {
 
   if (isRunning) {
     console.log('[AI4A11y] Scan already in progress');
-    initPending = false;
+    initPromise = null;
     return;
   }
 
   isRunning = true;
-  initPending = false;
+  initPromise = null;
 
   try {
     console.log('[AI4A11y] Starting scan...');
