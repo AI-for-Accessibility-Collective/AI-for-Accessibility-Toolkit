@@ -242,16 +242,16 @@ See [projects/](projects/) for contributed code.
 - [x] Set up repo
 - [x] Define architecture spec
 - [x] Define agent cards
-- [ ] Collect agent cards from all teams
+- [ ] Collect agent cards from all teams (in progress)
 
 ### Month 3 — Build
+- [ ] Collect team codebases (in progress)
 - [x] Build Chrome extension (prototype 1)
 - [x] Build CLI (prototype 2)
 - [x] Implement ability profiles
 - [x] Support multiple ability profiles
 - [x] Prepopulate basic accessibility tools (alt text, labels, contrast, dark mode, focus mode, etc.)
-- [ ] Build evaluation benchmark (test sites arena)
-- [ ] Collect team codebases
+- [ ] Build evaluation benchmark (test sites arena) (in progress)
 - [ ] Integrate team projects
 - [ ] Co-design with disability community
 
