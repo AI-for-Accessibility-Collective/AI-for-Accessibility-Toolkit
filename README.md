@@ -241,6 +241,7 @@ See [projects/](projects/) for contributed code.
 ### Month 1 — Collect
 - [x] Set up repo
 - [x] Define architecture spec
+- [x] Define agent cards
 - [ ] Collect agent cards from all teams
 
 ### Month 3 — Build
