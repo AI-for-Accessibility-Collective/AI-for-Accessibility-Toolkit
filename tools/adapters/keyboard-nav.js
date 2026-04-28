@@ -7,6 +7,7 @@ export const KeyboardNavigator = {
   skipLinkElement: null,
   tabSequenceOverlay: false,
   shortcutHandler: null,
+  modifiedElements: [],
   settings: {
     showSkipLinks: true,
     enhanceFocusVisible: true,
@@ -34,10 +35,13 @@ export const KeyboardNavigator = {
       document.removeEventListener('keydown', this.shortcutHandler);
       this.shortcutHandler = null;
     }
-    // Clean up tabindex="-1" added to main/nav elements
-    document.querySelectorAll('#ai4a11y-main-content, #ai4a11y-nav').forEach(el => {
+    // Clean up tabindex="-1" added to all modified elements
+    this.modifiedElements.forEach(el => {
       el.removeAttribute('tabindex');
+      if (el.id === 'ai4a11y-main-content') el.removeAttribute('id');
+      if (el.id === 'ai4a11y-nav') el.removeAttribute('id');
     });
+    this.modifiedElements = [];
     console.log('[AI4A11y] Keyboard Navigator disabled');
     announce('Keyboard navigation restored');
   },
@@ -109,6 +113,7 @@ export const KeyboardNavigator = {
       skipToMain.addEventListener('click', (e) => {
         e.preventDefault();
         main.setAttribute('tabindex', '-1');
+        if (!this.modifiedElements.includes(main)) this.modifiedElements.push(main);
         main.focus();
         main.scrollIntoView({ behavior: 'smooth' });
       });
@@ -126,6 +131,7 @@ export const KeyboardNavigator = {
       skipToNav.addEventListener('click', (e) => {
         e.preventDefault();
         nav.setAttribute('tabindex', '-1');
+        if (!this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
         nav.focus();
       });
       container.appendChild(skipToNav);

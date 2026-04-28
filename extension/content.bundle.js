@@ -2265,6 +2265,7 @@ ${chunk}
       var _a;
       if (this.recognition) {
         this.enabled = false;
+        this.recognition.onend = null;
         this.recognition.stop();
         this.recognition = null;
       }
@@ -2379,6 +2380,7 @@ ${chunk}
     skipLinkElement: null,
     tabSequenceOverlay: false,
     shortcutHandler: null,
+    modifiedElements: [],
     settings: {
       showSkipLinks: true,
       enhanceFocusVisible: true,
@@ -2407,9 +2409,14 @@ ${chunk}
         document.removeEventListener("keydown", this.shortcutHandler);
         this.shortcutHandler = null;
       }
-      document.querySelectorAll("#ai4a11y-main-content, #ai4a11y-nav").forEach((el) => {
+      this.modifiedElements.forEach((el) => {
         el.removeAttribute("tabindex");
+        if (el.id === "ai4a11y-main-content")
+          el.removeAttribute("id");
+        if (el.id === "ai4a11y-nav")
+          el.removeAttribute("id");
       });
+      this.modifiedElements = [];
       console.log("[AI4A11y] Keyboard Navigator disabled");
       announce("Keyboard navigation restored");
     },
@@ -2478,6 +2485,8 @@ ${chunk}
         skipToMain.addEventListener("click", (e) => {
           e.preventDefault();
           main.setAttribute("tabindex", "-1");
+          if (!this.modifiedElements.includes(main))
+            this.modifiedElements.push(main);
           main.focus();
           main.scrollIntoView({ behavior: "smooth" });
         });
@@ -2495,6 +2504,8 @@ ${chunk}
         skipToNav.addEventListener("click", (e) => {
           e.preventDefault();
           nav.setAttribute("tabindex", "-1");
+          if (!this.modifiedElements.includes(nav))
+            this.modifiedElements.push(nav);
           nav.focus();
         });
         container.appendChild(skipToNav);
@@ -2985,7 +2996,7 @@ ${chunk}
   globalThis.ai4a11yLogFix = logFix7;
   globalThis.ai4a11yIncrementStat = incrementStat7;
   var isRunning = false;
-  var initPending = false;
+  var initPromise = null;
   var getHandler = getAxeHandler;
   function applyVisualSettings(settings2) {
     const visualOptions = {};
@@ -3042,28 +3053,35 @@ ${chunk}
     }
   }
   async function init() {
-    if (isRunning || initPending) {
-      console.log("[AI4A11y] Scan already in progress or pending");
+    if (initPromise) {
+      console.log("[AI4A11y] Init already in progress");
+      return initPromise;
+    }
+    if (isRunning) {
+      console.log("[AI4A11y] Scan already running");
       return;
     }
-    initPending = true;
+    initPromise = doInit();
+    return initPromise;
+  }
+  async function doInit() {
     const settings2 = await loadSettings(async () => {
       const response = await sendMessage({ type: "getSettings" });
       return response == null ? void 0 : response.result;
     });
     if (!settings2.enabled) {
       console.log("[AI4A11y] Extension disabled");
-      initPending = false;
+      initPromise = null;
       return;
     }
     applyVisualSettings(settings2);
     if (isRunning) {
       console.log("[AI4A11y] Scan already in progress");
-      initPending = false;
+      initPromise = null;
       return;
     }
     isRunning = true;
-    initPending = false;
+    initPromise = null;
     try {
       console.log("[AI4A11y] Starting scan...");
       notifyProgress("Analyzing", 10);

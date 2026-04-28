@@ -835,13 +835,13 @@ def verify_action(page, action_fn, description="action"):
     diff_path = OUT / "verify_diff.png"
 
     _safe_screenshot(page, before_path)
-    before_hash = hashlib.md5(open(before_path, 'rb').read()).hexdigest()
+    before_hash = hashlib.md5(Path(before_path).read_bytes()).hexdigest()
 
     action_fn()
     time.sleep(0.5)
 
     _safe_screenshot(page, after_path)
-    after_hash = hashlib.md5(open(after_path, 'rb').read()).hexdigest()
+    after_hash = hashlib.md5(Path(after_path).read_bytes()).hexdigest()
 
     if before_hash == after_hash:
         print(f"⚠ {description}: NO CHANGE DETECTED")
@@ -1581,14 +1581,20 @@ USER_DATA_DIR = "/tmp/ai4a11y-user-data"
 
 def _chromium_path():
     """Find a chromium executable: Playwright bundled first, then system Chrome."""
+    p = None
     try:
         p = sync_playwright().start()
         exe = p.chromium.executable_path
-        p.stop()
         if exe and Path(exe).exists():
             return exe
     except Exception:
         pass
+    finally:
+        if p:
+            try:
+                p.stop()
+            except Exception:
+                pass
     for candidate in [
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Chromium.app/Contents/MacOS/Chromium",

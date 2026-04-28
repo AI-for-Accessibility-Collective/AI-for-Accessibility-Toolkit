@@ -1120,7 +1120,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           resolve({ success: true });
         }
       });
-    },
+    }),
     'getSettings': () => chrome.storage.sync.get([
       'enabled', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoWcagFix', 'autoFixLabels',
       'autoVideoDescribe', 'autoCaptions', 'fixContrast',

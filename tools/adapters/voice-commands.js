@@ -96,6 +96,7 @@ export const VoiceCommands = {
   disable() {
     if (this.recognition) {
       this.enabled = false;
+      this.recognition.onend = null;
       this.recognition.stop();
       this.recognition = null;
     }
