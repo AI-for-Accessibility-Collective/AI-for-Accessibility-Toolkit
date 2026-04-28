@@ -2020,9 +2020,16 @@ def session_scroll(direction='down', amount=800):
         session_disconnect(p, browser)
 
 
-def session_describe():
+def session_describe(json_output=False):
     """Fast-path describe of current page for BLV user. One Claude call, no loop."""
-    p, browser, page = session_connect()
+    try:
+        p, browser, page = session_connect()
+    except Exception as e:
+        if json_output:
+            print(json.dumps({"error": f"No browser session: {e}"}))
+        else:
+            print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+        sys.exit(1)
     try:
         import os as _os, re as _re
         run_dir = OUT / f"session_describe_{_os.getpid()}_{int(time.time())}"
@@ -2054,7 +2061,18 @@ Cover: (1) what kind of page this is, (2) main content summary, (3) 2-3 useful i
 Skip decorative elements. If it's a modal/captcha/blocker, say so first."""
 
         result = ask_claude(str(shot), prompt)
-        print(result, flush=True)
+
+        if json_output:
+            output = {
+                "url": page.url,
+                "title": page.title(),
+                "description": result,
+                "elements": addressable,
+                "screenshot": str(shot)
+            }
+            print(json.dumps(output, indent=2))
+        else:
+            print(result, flush=True)
     finally:
         session_disconnect(p, browser)
 
@@ -2455,7 +2473,7 @@ def _get_axe_script():
     return _AXE_SCRIPT
 
 
-def session_audit(severity_filter=None):
+def session_audit(severity_filter=None, json_output=False):
     """Run WCAG accessibility audit on the current page using axe-core.
 
     Reports issues grouped by severity (critical, serious, moderate, minor).
@@ -2464,13 +2482,24 @@ def session_audit(severity_filter=None):
     Args:
         severity_filter: Optional - only show issues of this severity
                         (critical, serious, moderate, minor)
+        json_output: If True, output JSON instead of formatted text
     """
     valid_severities = {'critical', 'serious', 'moderate', 'minor'}
     if severity_filter and severity_filter not in valid_severities:
-        print(f"Invalid severity '{severity_filter}'. Use: {', '.join(sorted(valid_severities))}")
-        return
+        if json_output:
+            print(json.dumps({"error": f"Invalid severity '{severity_filter}'", "valid": list(valid_severities)}))
+        else:
+            print(f"Invalid severity '{severity_filter}'. Use: {', '.join(sorted(valid_severities))}")
+        sys.exit(1)
 
-    p, browser, page = session_connect()
+    try:
+        p, browser, page = session_connect()
+    except Exception as e:
+        if json_output:
+            print(json.dumps({"error": f"No browser session: {e}"}))
+        else:
+            print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+        sys.exit(1)
     try:
         # Inject axe-core
         page.add_script_tag(content=_get_axe_script())
@@ -2506,6 +2535,21 @@ def session_audit(severity_filter=None):
             impact = v.get('impact', 'minor') or 'minor'
             if impact in by_severity:
                 by_severity[impact].append(v)
+
+        # JSON output
+        if json_output:
+            output = {
+                "url": results['url'],
+                "violations": violations,
+                "by_severity": {k: v for k, v in by_severity.items() if v},
+                "summary": {
+                    "total_violations": len(violations),
+                    "passes": results['passes'],
+                    "incomplete": results['incomplete']
+                }
+            }
+            print(json.dumps(output, indent=2))
+            return
 
         # Print summary
         total = len(violations)
@@ -4316,6 +4360,11 @@ if __name__ == "__main__":
         print(__doc__)
         sys.exit(1)
 
+    # Check for --json flag anywhere in args
+    json_output = "--json" in sys.argv
+    if json_output:
+        sys.argv = [a for a in sys.argv if a != "--json"]
+
     # Session subcommands: ai4a11y.py session <sub> [args]
     if sys.argv[1] == "session":
         sub = sys.argv[2] if len(sys.argv) > 2 else "status"
@@ -4337,7 +4386,7 @@ if __name__ == "__main__":
             amount = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 800
             session_scroll(direction, amount)
         elif sub == "describe":
-            session_describe()
+            session_describe(json_output=json_output)
         elif sub == "tap":
             if not sub_args:
                 print("usage: session tap \"<description>\""); sys.exit(1)
@@ -4415,7 +4464,7 @@ if __name__ == "__main__":
             session_diff()
         elif sub == "audit":
             severity = sub_args[0] if sub_args else None
-            session_audit(severity)
+            session_audit(severity, json_output=json_output)
         elif sub == "focused":
             session_focused()
         elif sub == "dismiss":

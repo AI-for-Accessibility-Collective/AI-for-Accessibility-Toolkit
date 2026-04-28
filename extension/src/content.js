@@ -39,17 +39,17 @@ import { sendMessage, notifyProgress, announce } from './utils/messaging.js';
 // Set up Chrome AI provider (bridges to background.js Gemini API)
 setAIProvider({
   describeImage: (imageData) => sendMessage({ type: 'describeImage', imageData }).then(r => r?.result),
-  describeVideo: (frames) => sendMessage({ type: 'describeVideo', frames }).then(r => r?.result),
+  describeVideo: (frames, metadata) => sendMessage({ type: 'describeVideoFrames', frames, metadata }).then(r => r?.result),
   simplifyText: (text) => sendMessage({ type: 'simplifyText', text }).then(r => r?.result),
   summarizeText: (text) => sendMessage({ type: 'summarizeText', text }).then(r => r?.result),
   generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
   inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
   fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(r => r?.result),
-  generateCaptions: (data) => sendMessage({ type: 'generateCaptions', ...data }).then(r => r?.result),
+  generateCaptions: (data) => sendMessage({ type: 'transcribeAudio', audioUrl: data.audioUrl }).then(r => r?.result),
   getYouTubeTranscript: (videoId) => sendMessage({ type: 'getYouTubeTranscript', videoId }).then(r => r?.result),
-  transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', videoUrl: url }).then(r => r?.result),
+  transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(r => r?.result),
   transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(r => r?.result),
-  describeElement: (el, ctx) => sendMessage({ type: 'describeElement', element: el.outerHTML, context: ctx }).then(r => r?.result),
+  describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(r => r?.result),
   announce: (msg) => announce(msg),
 });
 
