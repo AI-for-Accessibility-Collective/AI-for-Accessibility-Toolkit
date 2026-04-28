@@ -24,6 +24,8 @@ export function findLowContrastText() {
     const background = getEffectiveBackground(el);
 
     const ratio = getContrastRatio(color, background);
+    if (ratio === null) return; // Skip if colors unparseable
+
     const fontSize = parseFloat(style.fontSize);
     const fontWeight = parseInt(style.fontWeight) || 400;
 
@@ -64,6 +66,9 @@ export function findIndistinguishableLinks() {
 
       const parentStyle = getComputedStyle(parent);
       const linkParentRatio = getContrastRatio(style.color, parentStyle.color);
+
+      // Skip if colors unparseable
+      if (linkParentRatio === null) return false;
 
       // Needs 3:1 contrast ratio if no underline
       if (linkParentRatio >= 3) return false;

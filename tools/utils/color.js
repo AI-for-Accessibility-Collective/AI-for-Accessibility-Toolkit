@@ -4,12 +4,27 @@ export function parseColor(color) {
     return null;
   }
 
-  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (match) {
+  // Handle rgb/rgba
+  const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgbMatch) {
     return {
-      r: parseInt(match[1]),
-      g: parseInt(match[2]),
-      b: parseInt(match[3])
+      r: parseInt(rgbMatch[1]),
+      g: parseInt(rgbMatch[2]),
+      b: parseInt(rgbMatch[3])
+    };
+  }
+
+  // Handle hex colors (#fff or #ffffff)
+  const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hexMatch) {
+    let hex = hexMatch[1];
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    return {
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16)
     };
   }
 
@@ -19,7 +34,7 @@ export function parseColor(color) {
 // Calculate relative luminance (WCAG formula)
 export function getLuminance(color) {
   const rgb = parseColor(color);
-  if (!rgb) return 0;
+  if (!rgb) return null;
 
   const [r, g, b] = [rgb.r, rgb.g, rgb.b].map(c => {
     c = c / 255;
@@ -29,10 +44,11 @@ export function getLuminance(color) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// Calculate contrast ratio between two colors
+// Calculate contrast ratio between two colors (returns null if colors unparseable)
 export function getContrastRatio(color1, color2) {
   const l1 = getLuminance(color1);
   const l2 = getLuminance(color2);
+  if (l1 === null || l2 === null) return null;
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
   return (lighter + 0.05) / (darker + 0.05);
@@ -41,6 +57,7 @@ export function getContrastRatio(color1, color2) {
 // Check if contrast meets WCAG AA (4.5:1 for normal text, 3:1 for large)
 export function meetsContrastAA(foreground, background, isLarge = false) {
   const ratio = getContrastRatio(foreground, background);
+  if (ratio === null) return false;
   return ratio >= (isLarge ? 3 : 4.5);
 }
 

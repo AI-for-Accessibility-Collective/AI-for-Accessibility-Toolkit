@@ -987,12 +987,24 @@ ${chunk}
     if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
       return null;
     }
-    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (match) {
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
       return {
-        r: parseInt(match[1]),
-        g: parseInt(match[2]),
-        b: parseInt(match[3])
+        r: parseInt(rgbMatch[1]),
+        g: parseInt(rgbMatch[2]),
+        b: parseInt(rgbMatch[3])
+      };
+    }
+    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16)
       };
     }
     return null;
@@ -1000,7 +1012,7 @@ ${chunk}
   function getLuminance(color) {
     const rgb = parseColor(color);
     if (!rgb)
-      return 0;
+      return null;
     const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
       c = c / 255;
       return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
