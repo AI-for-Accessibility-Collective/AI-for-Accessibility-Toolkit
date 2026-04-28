@@ -1,0 +1,4522 @@
+#!/usr/bin/env python3
+"""
+ai4a11y — vision-accessible web agent for BLV users.
+
+A persistent Chromium + Claude Code AI layer. The BLV user drives Chromium directly
+with their screen reader; ai4a11y is called from Claude Code when something's visual-only.
+
+Primary usage — persistent session (the BLV user's daily browser + AI lens):
+
+  ai4a11y.py session start                            # launch fullscreen Chromium (persistent)
+  ai4a11y.py session stop                             # kill it
+  ai4a11y.py session status                           # url + title of focused tab
+  ai4a11y.py session tabs                             # list every open tab, mark focused
+
+  # Instant DOM/keyboard primitives (no Claude call, <1s):
+  ai4a11y.py session go <url>                         # navigate focused tab
+  ai4a11y.py session back                             # browser back
+  ai4a11y.py session scroll [down|up] [amount]
+  ai4a11y.py session tab [back]                       # Tab / Shift+Tab
+  ai4a11y.py session activate                         # Enter on focused element
+  ai4a11y.py session focused                          # report document.activeElement
+  ai4a11y.py session list [headings|links|buttons|forms|landmarks|focusables|images|tables]
+  ai4a11y.py session find "<text>"                    # body text + element attrs
+  ai4a11y.py session read [selector]                  # Readability-style article extraction
+  ai4a11y.py session tables                           # alias: list tables
+
+  # Vision-backed primitives (one Claude call each, ~15-40s):
+  ai4a11y.py session describe                         # BLV-friendly page summary
+  ai4a11y.py session ask "<question>"                 # Q&A on current tab
+  ai4a11y.py session tap "<target>"                   # text-grounded click (vision fallback)
+  ai4a11y.py session type "<field>" "<text>"          # click field + type
+  ai4a11y.py session hover "<target>"                 # hover + read tooltip/popover
+  ai4a11y.py session drag "<from>" "<to>"             # drag between two named targets
+  ai4a11y.py session diff                             # what changed since last baseline
+
+  # Heavy autonomous mode (rare, 1-5 min):
+  ai4a11y.py session do "<task>" [min_int] [max_steps]
+
+One-shot mode (no persistent session — fresh browser per run):
+  ai4a11y.py <url>                                    # capture + describe
+  ai4a11y.py <url> agent "<task>" [min_int] [max_steps]
+"""
+
+from playwright.sync_api import sync_playwright
+from PIL import Image, ImageDraw, ImageFont
+import sys
+import time
+import hashlib
+import io
+import json
+import subprocess
+from pathlib import Path
+from html import escape as html_escape
+
+import os as _os
+# Output directory for screenshots / filmstrips. Override with AI4A11Y_OUT env var.
+OUT = Path(_os.environ.get('AI4A11Y_OUT') or (Path.home() / 'Downloads' / 'ai4a11y'))
+OUT.mkdir(parents=True, exist_ok=True)
+
+
+# ============================================================
+# VISUAL HELPERS — grid, diff, sequence capture
+# ============================================================
+
+def add_som_markers(image_path, output_path, elements, margin=25):
+    """Set-of-Marks: overlay numbered tags on interactive elements.
+
+    Elements are (x, y) points; we draw a numbered badge at each so the agent
+    can pick element by index instead of pixel coordinates.
+    """
+    img = Image.open(image_path)
+    w, h = img.size
+    new_img = Image.new('RGB', (w + margin, h + margin), (40, 40, 40))
+    new_img.paste(img, (margin, margin))
+    draw = ImageDraw.Draw(new_img, 'RGBA')
+
+    try:
+        f_label = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 12)
+        f_ruler = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 9)
+    except:
+        f_label = f_ruler = ImageFont.load_default()
+
+    # Rulers in margins (fallback for coords-still-needed cases)
+    for x in range(0, w, 100):
+        draw.line([(x + margin, 0), (x + margin, margin - 5)], fill=(200, 200, 200), width=1)
+        draw.text((x + margin + 2, 2), str(x), fill=(200, 200, 200), font=f_ruler)
+    for y in range(0, h, 100):
+        draw.line([(0, y + margin), (margin - 5, y + margin)], fill=(200, 200, 200), width=1)
+        draw.text((2, y + margin + 2), str(y), fill=(200, 200, 200), font=f_ruler)
+
+    # Numbered badges on elements
+    palette = [(220, 50, 50), (50, 120, 220), (30, 170, 60), (240, 150, 0),
+               (160, 80, 200), (0, 160, 160), (210, 90, 140), (100, 100, 100)]
+    for i, el in enumerate(elements):
+        x, y = el.get('x', 0), el.get('y', 0)
+        if x <= 0 or y <= 0:
+            continue
+        cx, cy = x + margin, y + margin
+        color = palette[i % len(palette)]
+        r = 12
+        draw.ellipse([(cx - r, cy - r), (cx + r, cy + r)],
+                     fill=(*color, 220), outline=(255, 255, 255), width=2)
+        label = str(i + 1)
+        tw = draw.textlength(label, font=f_label)
+        draw.text((cx - tw / 2, cy - 7), label, fill=(255, 255, 255), font=f_label)
+
+    new_img.save(output_path)
+    return output_path
+
+
+def add_grid_overlay(image_path, output_path, grid_size=100, focus_point=None, mode="full"):
+    """Overlay coordinate grid on image for precise positioning.
+
+    Modes:
+      - "full": grid lines across entire image (can obscure content)
+      - "light": edge rulers + corner ticks only (minimal intrusion)
+      - "margin": coordinates in margin bands, content untouched
+
+    If focus_point=(x,y) provided, adds crosshair + fine grid in that region.
+    """
+    img = Image.open(image_path)
+    w, h = img.size
+
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 11)
+        font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 9)
+    except:
+        font = font_small = ImageFont.load_default()
+
+    if mode == "margin":
+        margin = 25
+        new_img = Image.new('RGB', (w + margin, h + margin), (40, 40, 40))
+        new_img.paste(img, (margin, margin))
+        draw = ImageDraw.Draw(new_img, 'RGBA')
+
+        for x in range(0, w, grid_size):
+            draw.line([(x + margin, 0), (x + margin, margin - 5)], fill=(200, 200, 200), width=1)
+            draw.text((x + margin + 2, 2), str(x), fill=(200, 200, 200), font=font_small)
+
+        for y in range(0, h, grid_size):
+            draw.line([(0, y + margin), (margin - 5, y + margin)], fill=(200, 200, 200), width=1)
+            draw.text((2, y + margin + 2), str(y), fill=(200, 200, 200), font=font_small)
+
+        if focus_point:
+            fx, fy = focus_point[0] + margin, focus_point[1] + margin
+            draw.line([(fx - 20, fy), (fx + 20, fy)], fill=(255, 255, 0), width=2)
+            draw.line([(fx, fy - 20), (fx, fy + 20)], fill=(255, 255, 0), width=2)
+            draw.text((fx + 5, fy + 5), f"{focus_point[0]},{focus_point[1]}", fill=(255, 255, 0), font=font)
+
+        new_img.save(output_path)
+        return output_path
+
+    draw = ImageDraw.Draw(img, 'RGBA')
+
+    if mode == "light":
+        tick_len = 15
+        for x in range(0, w, grid_size):
+            draw.line([(x, 0), (x, tick_len)], fill=(255, 100, 100, 180), width=1)
+            draw.text((x + 2, 1), str(x), fill=(255, 100, 100), font=font_small)
+            draw.line([(x, h - tick_len), (x, h)], fill=(255, 100, 100, 180), width=1)
+        for y in range(0, h, grid_size):
+            draw.line([(0, y), (tick_len, y)], fill=(255, 100, 100, 180), width=1)
+            draw.text((1, y + 2), str(y), fill=(255, 100, 100), font=font_small)
+            draw.line([(w - tick_len, y), (w, y)], fill=(255, 100, 100, 180), width=1)
+
+    else:  # mode == "full"
+        for x in range(0, w, grid_size):
+            draw.line([(x, 0), (x, h)], fill=(255, 0, 0, 60), width=1)
+            draw.text((x + 2, 2), str(x), fill=(255, 0, 0, 200), font=font)
+        for y in range(0, h, grid_size):
+            draw.line([(0, y), (w, y)], fill=(255, 0, 0, 60), width=1)
+            draw.text((2, y + 2), str(y), fill=(255, 0, 0, 200), font=font)
+        for x in range(grid_size // 2, w, grid_size):
+            for y in range(grid_size // 2, h, grid_size):
+                draw.ellipse([(x - 2, y - 2), (x + 2, y + 2)], fill=(0, 200, 0, 150))
+                draw.text((x + 4, y - 5), f"{x},{y}", fill=(0, 120, 0, 180), font=font_small)
+
+    if focus_point:
+        fx, fy = focus_point
+        draw.line([(fx - 25, fy), (fx + 25, fy)], fill=(255, 255, 0), width=2)
+        draw.line([(fx, fy - 25), (fx, fy + 25)], fill=(255, 255, 0), width=2)
+        draw.text((fx + 8, fy + 8), f"{fx},{fy}", fill=(255, 255, 0), font=font)
+
+        fine = 25
+        for x in range(max(0, fx - 100), min(w, fx + 100), fine):
+            draw.line([(x, max(0, fy - 100)), (x, min(h, fy + 100))], fill=(0, 180, 255, 100), width=1)
+        for y in range(max(0, fy - 100), min(h, fy + 100), fine):
+            draw.line([(max(0, fx - 100), y), (min(w, fx + 100), y)], fill=(0, 180, 255, 100), width=1)
+
+    img.save(output_path)
+    return output_path
+
+
+def create_diff_image(before_path, after_path, output_path, threshold=30):
+    """Create visual diff highlighting changes between two screenshots."""
+    from PIL import ImageChops
+
+    before = Image.open(before_path).convert('RGB')
+    after = Image.open(after_path).convert('RGB')
+
+    diff = ImageChops.difference(before, after)
+    gray = diff.convert('L')
+    binary = gray.point(lambda x: 255 if x > threshold else 0)
+    bbox = binary.getbbox()
+
+    pixels = list(binary.getdata())
+    changed = sum(1 for p in pixels if p > 0)
+    change_pct = (changed / len(pixels)) * 100
+
+    result = after.copy()
+    draw = ImageDraw.Draw(result, 'RGBA')
+
+    if bbox:
+        draw.rectangle(bbox, outline=(255, 0, 0), width=3)
+        highlight = Image.new('RGBA', result.size, (0, 0, 0, 0))
+        h_draw = ImageDraw.Draw(highlight)
+        h_draw.rectangle(bbox, fill=(255, 255, 0, 60))
+        result = Image.alpha_composite(result.convert('RGBA'), highlight)
+
+        try:
+            font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14)
+        except:
+            font = ImageFont.load_default()
+        draw = ImageDraw.Draw(result)
+        cx, cy = (bbox[0] + bbox[2]) // 2, bbox[1] - 20
+        draw.text((cx, cy), f"CHANGED ({change_pct:.1f}%)", fill=(255, 0, 0), font=font)
+
+    result.save(output_path)
+    return output_path, change_pct, bbox
+
+
+def capture_sequence(page, duration=3, interval=0.1):
+    """Capture rapid screenshot sequence for animation analysis."""
+    frames = []
+    start = time.time()
+    while time.time() - start < duration:
+        frames.append({'time': time.time() - start, 'data': page.screenshot()})
+        time.sleep(interval)
+    return frames
+
+
+def save_sequence_mosaic(frames, output_path, cols=5):
+    """Save captured frames as a timestamped mosaic for visual analysis."""
+    if not frames:
+        return None
+
+    first = Image.open(io.BytesIO(frames[0]['data']))
+    w, h = first.size
+    thumb_w, thumb_h = int(w * 0.3), int(h * 0.3)
+
+    rows = (len(frames) + cols - 1) // cols
+    mosaic = Image.new('RGB', (thumb_w * cols, thumb_h * rows), (40, 40, 40))
+
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 12)
+    except:
+        font = ImageFont.load_default()
+
+    draw = ImageDraw.Draw(mosaic)
+    for i, frame in enumerate(frames):
+        img = Image.open(io.BytesIO(frame['data']))
+        thumb = img.resize((thumb_w, thumb_h), Image.Resampling.LANCZOS)
+        row, col = i // cols, i % cols
+        x, y = col * thumb_w, row * thumb_h
+        mosaic.paste(thumb, (x, y))
+        draw.text((x + 5, y + 5), f"{frame['time']:.2f}s", fill=(255, 255, 0), font=font)
+
+    mosaic.save(output_path)
+    return output_path
+
+
+# ============================================================
+# PAGE UTILITIES — state, elements, data extraction
+# ============================================================
+
+def get_screenshot_hash(page):
+    """Hash of current screenshot for change detection. Short timeout so it
+    doesn't hang the whole primitive if the page is slow to settle (Amazon's
+    fonts-loading, infinite-scroll pages)."""
+    try:
+        return hashlib.md5(page.screenshot(timeout=5000)).hexdigest()
+    except Exception:
+        return ''
+
+
+def wait_for_stable(page, timeout=5):
+    """Wait for page to stop changing (animations to finish)."""
+    start = time.time()
+    last_hash = get_screenshot_hash(page)
+    stable_count = 0
+
+    while time.time() - start < timeout:
+        time.sleep(0.5)
+        current_hash = get_screenshot_hash(page)
+        if current_hash == last_hash:
+            stable_count += 1
+            if stable_count >= 2:
+                return True
+        else:
+            stable_count = 0
+            last_hash = current_hash
+
+    return False
+
+
+def get_elements(page):
+    """Enumerate interactive elements (including shadow DOM, iframes)."""
+    elements = page.evaluate("""
+        () => {
+            const els = [];
+            const seen = new Set();
+
+            function processElement(el, depth = 0) {
+                if (depth > 5) return;
+                const rect = el.getBoundingClientRect();
+                if (rect.width < 15 || rect.height < 15) return;
+                if (rect.top > window.innerHeight * 2 || rect.bottom < 0) return;
+
+                const label = el.getAttribute('aria-label')
+                    || el.textContent?.trim().slice(0, 40)
+                    || el.getAttribute('title')
+                    || el.getAttribute('alt') || '';
+
+                const tag = el.tagName.toLowerCase();
+                const key = `${label}${tag}${Math.round(rect.x)}${Math.round(rect.y)}`;
+
+                const isButton = tag === 'button' || el.getAttribute('role') === 'button';
+                const isLink = tag === 'a' && el.getAttribute('href');
+                const isInput = ['input', 'select', 'textarea'].includes(tag);
+                const hasPointer = window.getComputedStyle(el).cursor === 'pointer';
+                const hasClick = el.onclick !== null || el.hasAttribute('onclick');
+                const hasTabindex = el.hasAttribute('tabindex');
+                const hasRole = el.hasAttribute('role');
+
+                if ((isButton || isLink || isInput || hasPointer || hasClick || hasTabindex || hasRole) && label && !seen.has(key)) {
+                    seen.add(key);
+
+                    let elType = 'element';
+                    if (isButton) elType = 'button';
+                    else if (isLink) elType = 'link';
+                    else if (tag === 'input' && el.type === 'range') elType = 'slider';
+                    else if (tag === 'select') elType = 'select';
+                    else if (hasPointer) elType = 'clickable';
+
+                    let extra = '';
+                    if (elType === 'slider') extra = ` [${el.min || 0}-${el.max || 100}, val:${el.value}]`;
+                    else if (elType === 'select') extra = ` [selected: ${el.options?.[el.selectedIndex]?.text || ''}]`;
+
+                    // Disambiguation context: role + nearest labeled parent (e.g. "in: nav · header")
+                    const role = el.getAttribute('role') || '';
+                    let parentCtx = '';
+                    let p = el.parentElement, depth2 = 0;
+                    while (p && depth2 < 4) {
+                        const pTag = p.tagName.toLowerCase();
+                        const pLabel = p.getAttribute('aria-label') || p.id || '';
+                        if (['nav', 'header', 'footer', 'aside', 'main', 'section', 'dialog', 'form'].includes(pTag) || pLabel) {
+                            parentCtx = pLabel ? `${pTag}[${pLabel.slice(0, 20)}]` : pTag;
+                            break;
+                        }
+                        p = p.parentElement; depth2++;
+                    }
+
+                    els.push({
+                        tag: elType,
+                        label: label.slice(0, 50) + extra,
+                        role: role,
+                        parent: parentCtx,
+                        x: Math.round(rect.x + rect.width/2),
+                        y: Math.round(rect.y + rect.height/2)
+                    });
+                }
+
+                if (el.shadowRoot) {
+                    el.shadowRoot.querySelectorAll('*').forEach(child => processElement(child, depth + 1));
+                }
+            }
+
+            document.querySelectorAll('*').forEach(el => processElement(el));
+
+            const svgs = document.querySelectorAll('svg');
+            const canvas = document.querySelectorAll('canvas');
+            let chartType = null;
+            svgs.forEach(svg => {
+                const hasCircles = svg.querySelectorAll('circle').length > 5;
+                const hasRects = svg.querySelectorAll('rect').length > 5;
+                const hasPaths = svg.querySelectorAll('path').length > 3;
+                const hasLines = svg.querySelectorAll('line').length > 3;
+                if (hasCircles && hasPaths) chartType = 'scatter/bubble chart';
+                else if (hasRects) chartType = 'bar chart';
+                else if (hasPaths && !hasRects && !hasCircles) chartType = 'line chart';
+                else if (hasLines) chartType = 'line chart';
+            });
+
+            if (chartType) els.push({ tag: 'chart-type', label: chartType, x: 0, y: 0 });
+            if (svgs.length) els.push({ tag: 'info', label: `${svgs.length} SVG graphics`, x: 0, y: 0 });
+            if (canvas.length) els.push({ tag: 'info', label: `${canvas.length} canvas elements`, x: 0, y: 0 });
+
+            return els.slice(0, 25);
+        }
+    """)
+
+    for frame in page.frames[1:]:
+        try:
+            if frame.url and 'about:' not in frame.url:
+                elements.append({'tag': 'iframe', 'label': f'Embedded: {frame.url[:50]}', 'x': 0, 'y': 0})
+        except:
+            pass
+
+    return elements
+
+
+def get_interactables_full(page, max_items=80):
+    """Page-wide interactables snapshot for text-only grounding.
+
+    Broader than get_elements: no viewport filter, no 25-cap. Returns cx/cy (center
+    coords in page-absolute space) and scroll_y (needed to bring offscreen elements
+    into view before clicking). Labels are richer — includes role + parent-landmark
+    context so Claude can disambiguate candidates from text alone, no screenshot.
+    """
+    try:
+        items = page.evaluate("""
+        (maxItems) => {
+            const out = [];
+            const seen = new Set();
+
+            function process(el, depth = 0) {
+                if (depth > 6) return;
+                const rect = el.getBoundingClientRect();
+                // attached to layout (has size); don't skip offscreen — caller scrolls
+                if (rect.width < 8 || rect.height < 8) return;
+
+                const tag = el.tagName.toLowerCase();
+                const role = el.getAttribute('role') || '';
+                const href = el.getAttribute('href') || '';
+
+                const isButton = tag === 'button' || role === 'button' || (tag === 'input' && ['submit','button','reset'].includes(el.type));
+                const isLink = tag === 'a' && href;
+                const isInput = ['input','select','textarea'].includes(tag) && el.type !== 'hidden';
+                const hasPointer = window.getComputedStyle(el).cursor === 'pointer';
+                const hasOnclick = el.onclick !== null || el.hasAttribute('onclick');
+                const hasTabindex = el.hasAttribute('tabindex') && el.getAttribute('tabindex') !== '-1';
+                const interactiveRoles = ['button','link','menuitem','tab','checkbox','radio','switch','option','treeitem','combobox','slider'];
+                const hasInteractiveRole = interactiveRoles.includes(role);
+                const hasTestHook = el.hasAttribute('data-testid') || el.hasAttribute('data-action') || el.hasAttribute('data-test');
+                const isDraggable = el.getAttribute('draggable') === 'true';
+                // An aria-labeled div/span is almost certainly there for a reason —
+                // drop zones, canvas overlays, custom clickables without role.
+                const labeledContainer = (tag === 'div' || tag === 'span' || tag === 'li')
+                                         && el.hasAttribute('aria-label');
+
+                if (!(isButton || isLink || isInput || hasPointer || hasOnclick || hasTabindex || hasInteractiveRole || hasTestHook || isDraggable || labeledContainer)) {
+                    if (el.shadowRoot) {
+                        el.shadowRoot.querySelectorAll('*').forEach(c => process(c, depth + 1));
+                    }
+                    return;
+                }
+
+                // Inputs/selects/textareas: build a richer label from MULTIPLE attrs
+                // (aria-label AND placeholder AND name AND <label for> AND aria-labelledby).
+                // Users describe fields loosely ("email field" / "search box") so we
+                // want any one of those hints to be matchable.
+                let rawLabel;
+                if (isInput) {
+                    const parts = [];
+                    const push = (s) => {
+                        if (!s) return;
+                        const t = String(s).trim().replace(/\\s+/g, ' ').slice(0, 40);
+                        if (!t) return;
+                        // skip if already substring-covered by an existing part (case-insensitive)
+                        const lt = t.toLowerCase();
+                        if (parts.some(p => p.toLowerCase().includes(lt) || lt.includes(p.toLowerCase()))) return;
+                        parts.push(t);
+                    };
+                    push(el.getAttribute('aria-label'));
+                    push(el.getAttribute('placeholder'));
+                    push(el.getAttribute('title'));
+                    push(el.getAttribute('name'));
+                    // Linked <label for="id">
+                    if (el.labels && el.labels.length) {
+                        for (const lbl of el.labels) push(lbl.textContent);
+                    }
+                    // aria-labelledby resolution
+                    const labelledBy = el.getAttribute('aria-labelledby');
+                    if (labelledBy) {
+                        for (const id of labelledBy.split(/\\s+/)) {
+                            const ref = id && document.getElementById(id);
+                            if (ref) push(ref.textContent);
+                        }
+                    }
+                    rawLabel = parts.slice(0, 3).join(' · ').slice(0, 80);
+                    if (!rawLabel) rawLabel = (el.value || el.id || '').slice(0, 40);
+                } else {
+                    rawLabel = (el.getAttribute('aria-label')
+                        || el.textContent?.trim().replace(/\\s+/g, ' ')
+                        || el.getAttribute('title')
+                        || el.getAttribute('alt')
+                        || el.getAttribute('placeholder')
+                        || el.value
+                        || el.getAttribute('data-testid')
+                        || '').slice(0, 80);
+                }
+                if (!rawLabel) return;
+
+                // de-dupe near-duplicates (same label + tag within 20px)
+                const key = `${tag}|${role}|${rawLabel}|${Math.round(rect.x/20)}|${Math.round((rect.y + window.scrollY)/20)}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+
+                // landmark context — helps Claude pick among duplicates like "Edit"
+                let parentCtx = '';
+                let p = el.parentElement, d2 = 0;
+                while (p && d2 < 5) {
+                    const pTag = p.tagName.toLowerCase();
+                    const pLabel = p.getAttribute('aria-label') || p.id || '';
+                    if (['nav','header','footer','aside','main','section','dialog','form','article'].includes(pTag)) {
+                        parentCtx = pLabel ? `${pTag}[${pLabel.slice(0,20)}]` : pTag;
+                        break;
+                    }
+                    if (pLabel && p.getAttribute('role')) {
+                        parentCtx = `${p.getAttribute('role')}[${pLabel.slice(0,20)}]`;
+                        break;
+                    }
+                    p = p.parentElement; d2++;
+                }
+
+                let kind = 'element';
+                if (isButton) kind = 'button';
+                else if (isLink) kind = 'link';
+                else if (tag === 'input' && el.type === 'range') kind = 'slider';
+                else if (tag === 'select') kind = 'select';
+                else if (isInput) kind = 'input';
+                else if (role) kind = role;
+                else if (hasPointer || hasOnclick) kind = 'clickable';
+
+                let extra = '';
+                if (kind === 'slider') extra = ` [${el.min||0}-${el.max||100}, val:${el.value}]`;
+                else if (kind === 'select') extra = ` [sel:${el.options?.[el.selectedIndex]?.text || ''}]`;
+                else if (kind === 'input') extra = el.value ? ` [val:${String(el.value).slice(0,30)}]` : '';
+                else {
+                    // Surface an href suffix whenever one is reachable — from the
+                    // element itself, its nearest <a> ancestor, or a descendant <a>.
+                    // Covers custom turbo-tabs / role=button wrappers around real
+                    // links (GitHub repo tabs, Vercel dashboard nav, etc.) so the
+                    // SAME-SITE disambiguator can see the intended destination.
+                    let linkHref = (tag === 'a' && href) ? href : '';
+                    if (!linkHref) {
+                        const anc = el.closest('a[href]');
+                        if (anc) linkHref = anc.getAttribute('href') || '';
+                    }
+                    if (!linkHref) {
+                        const desc = el.querySelector('a[href]');
+                        if (desc) linkHref = desc.getAttribute('href') || '';
+                    }
+                    if (linkHref) {
+                        // normalize to absolute-ish for downstream SAME-SITE matching
+                        try {
+                            const abs = new URL(linkHref, location.href).href;
+                            extra = ` → ${abs.slice(0, 80)}`;
+                        } catch (e) {
+                            extra = ` → ${linkHref.slice(0, 80)}`;
+                        }
+                    }
+                }
+
+                const vh = window.innerHeight;
+                const cx = Math.round(rect.x + rect.width / 2);
+                const cy_vp = Math.round(rect.y + rect.height / 2);
+                const cy_page = cy_vp + Math.round(window.scrollY);
+                const visible = rect.top < vh && rect.bottom > 0;
+
+                out.push({
+                    kind: kind,
+                    label: rawLabel + extra,
+                    parent: parentCtx,
+                    cx: cx,
+                    cy_vp: cy_vp,
+                    cy_page: cy_page,
+                    visible: visible,
+                    disabled: !!el.disabled,
+                });
+
+                if (el.shadowRoot) {
+                    el.shadowRoot.querySelectorAll('*').forEach(c => process(c, depth + 1));
+                }
+            }
+
+            document.querySelectorAll('body, body *').forEach(el => process(el));
+
+            // Rank before capping so the N we keep are the RELEVANT N, not the first
+            // N in DOM order (which are always header/nav on big pages like Wikipedia,
+            // leaving body-text links unreachable). Priority:
+            //   1. viewport-visible → these are what the user is literally looking at
+            //   2. within visible: SAME-SITE hrefs before cross-site / marketing chrome
+            //      (repo /owner/repo/... before /features/... on github.com/owner/repo;
+            //      current-doc anchors before global nav, etc.)
+            //   3. offscreen, sorted by distance to current viewport (nearest first)
+            //   4. ties: preserve DOM order (stable sort)
+            const vh = window.innerHeight;
+            const sy = window.scrollY;
+            const viewportMid = sy + vh / 2;
+            const curHost = location.host.toLowerCase();
+            const curPathParts = location.pathname.split('/').filter(Boolean);
+            const curPrefix = '/' + curPathParts.slice(0, 2).join('/');
+            out.forEach((o, idx) => {
+                o._domOrder = idx;
+                o._dist = o.visible ? 0 : Math.abs(o.cy_page - viewportMid);
+                o._sameSite = 0;
+                const m = o.label && o.label.match(/→ (\\S+)/);
+                if (m) {
+                    const h = m[1].toLowerCase();
+                    // absolute URL with curHost + curPrefix, or relative starting with curPrefix
+                    if (h.startsWith('/') && !h.startsWith('//')) {
+                        if (curPrefix !== '/' && (h === curPrefix || h.startsWith(curPrefix + '/'))) o._sameSite = 1;
+                    } else if (h.includes(curHost)) {
+                        if (curPrefix === '/' || h.includes(curPrefix + '/') || h.endsWith(curPrefix)) o._sameSite = 1;
+                    }
+                }
+            });
+            out.sort((a, b) => {
+                if (a.visible !== b.visible) return a.visible ? -1 : 1;
+                if (a.visible && a._sameSite !== b._sameSite) return b._sameSite - a._sameSite;
+                if (a._dist !== b._dist) return a._dist - b._dist;
+                return a._domOrder - b._domOrder;
+            });
+            const capped = out.slice(0, maxItems);
+            capped.forEach(o => { delete o._domOrder; delete o._dist; delete o._sameSite; });
+            return capped;
+        }
+    """, max_items)
+    except Exception:
+        # Mid-navigation / CDP race / CSP eval block — degrade to "no candidates"
+        # so _text_ground_one reports "not in list" and vision fallback kicks in.
+        return []
+    for i, it in enumerate(items):
+        it['idx'] = i + 1
+    return items
+
+
+def state_snapshot(page):
+    """Lightweight state tuple for before/after diff. No screenshot hash — that's heavy.
+    Use get_screenshot_hash separately when pixel-change detection matters.
+    """
+    try:
+        return page.evaluate("""
+            () => ({
+                url: location.href,
+                title: document.title,
+                scroll_y: Math.round(window.scrollY),
+                interactable_count: document.querySelectorAll(
+                    'a[href], button, input:not([type=hidden]), textarea, select, [role=button], [role=link], [tabindex]:not([tabindex="-1"])'
+                ).length,
+                focused_label: (document.activeElement?.getAttribute('aria-label')
+                    || document.activeElement?.textContent?.trim().slice(0,40)
+                    || document.activeElement?.tagName?.toLowerCase()
+                    || ''),
+            })
+        """)
+    except Exception:
+        return {'url': page.url, 'title': '', 'scroll_y': 0, 'interactable_count': 0, 'focused_label': ''}
+
+
+def describe_state_diff(before, after):
+    """Return a short human-readable diff or None if state appears unchanged."""
+    if not before or not after:
+        return None
+    changes = []
+    if before.get('url') != after.get('url'):
+        changes.append(f"url → {after['url'][:80]}")
+    if before.get('title') != after.get('title'):
+        changes.append(f"title → {after['title'][:60]}")
+    if before.get('scroll_y') != after.get('scroll_y'):
+        changes.append(f"scroll y={before.get('scroll_y',0)}→{after.get('scroll_y',0)}")
+    ic_before = before.get('interactable_count', 0)
+    ic_after = after.get('interactable_count', 0)
+    if abs(ic_after - ic_before) >= 2:
+        changes.append(f"interactables {ic_before}→{ic_after}")
+    if before.get('focused_label') != after.get('focused_label') and after.get('focused_label'):
+        changes.append(f"focus → {after['focused_label'][:40]}")
+    return "; ".join(changes) if changes else None
+
+
+def extract_data(page):
+    """Extract chart data (legend, axes, values, title) from visualization."""
+    return page.evaluate("""
+        () => {
+            const data = {};
+            const legends = new Set();
+            document.querySelectorAll('[class*="legend"] text, [class*="legend"] span, .legend-item, [class*="series-label"]').forEach(el => {
+                const t = el.textContent?.trim();
+                if (t && t.length < 30 && t.length > 0) legends.add(t);
+            });
+            if (legends.size) data.legend = [...legends].slice(0, 8);
+
+            const axes = new Set();
+            document.querySelectorAll('[class*="axis"] text, .axis-label, [class*="tick"] text').forEach(el => {
+                const t = el.textContent?.trim();
+                if (t && t.length < 20 && t.length > 0) axes.add(t);
+            });
+            if (axes.size) data.axes = [...axes].slice(0, 10);
+
+            const values = [];
+            document.querySelectorAll('[class*="value"], [class*="label"] text, [data-value]').forEach(el => {
+                const v = el.getAttribute('data-value') || el.textContent?.trim();
+                if (v && /^[\\d,.%$]+$/.test(v.replace(/\\s/g, ''))) values.push(v);
+            });
+            if (values.length) data.values = [...new Set(values)].slice(0, 10);
+
+            const title = document.querySelector('h1, h2, [class*="title"]')?.textContent?.trim();
+            if (title) data.title = title.slice(0, 60);
+
+            return data;
+        }
+    """)
+
+
+def get_page_context(page, text_limit=8000):
+    """Assemble a text context bundle for Q&A: visible text + structured tables + outline.
+
+    Much faster and more accurate than vision-only for text-based questions
+    (e.g. 'what's Mars's average temperature' — the answer is in the Wikipedia infobox
+    in plain text, no need to visually scan the page).
+    """
+    try:
+        text = page.evaluate(f"""
+            () => {{
+                const walk = (n, depth=0) => {{
+                    if (depth > 10) return '';
+                    if (n.nodeType === 3) return n.textContent.trim();
+                    if (n.nodeType !== 1) return '';
+                    const tag = n.tagName.toLowerCase();
+                    if (['script','style','noscript','svg','template'].includes(tag)) return '';
+                    if (n.offsetParent === null && tag !== 'body') return '';
+                    let t = '';
+                    for (const c of n.childNodes) t += walk(c, depth+1) + ' ';
+                    return t.trim();
+                }};
+                return walk(document.body).replace(/\\s+/g,' ').slice(0, {text_limit});
+            }}
+        """)
+    except Exception:
+        text = ''
+
+    try:
+        tables = page.evaluate("""
+            () => {
+                const out = [];
+                document.querySelectorAll('table.infobox, table.wikitable, table[role="table"]').forEach(t => {
+                    const rows = [];
+                    t.querySelectorAll('tr').forEach(tr => {
+                        const cells = [...tr.querySelectorAll('th, td')].map(c => (c.textContent || '').trim().replace(/\\s+/g,' '));
+                        if (cells.length) rows.push(cells.join(' | '));
+                    });
+                    if (rows.length) out.push(rows.slice(0, 40).join('\\n'));
+                });
+                return out.slice(0, 3);  // up to 3 tables
+            }
+        """)
+    except Exception:
+        tables = []
+
+    return {'text': text, 'tables': tables}
+
+
+def get_a11y_outline(page, max_items=30):
+    """Flatten the accessibility tree into a compact page-structure outline.
+
+    Gives the agent a semantic view of the page (landmarks, headings, controls) that
+    complements the pixel-coord-keyed element list. Uses Playwright's built-in
+    accessibility.snapshot, which surfaces computed accessible names — more reliable
+    than our DOM label heuristics, especially for icon buttons and ARIA-labelled regions.
+    """
+    try:
+        tree = page.accessibility.snapshot(interesting_only=True)
+    except Exception:
+        return []
+    if not tree:
+        return []
+
+    # Roles worth surfacing for an agent (structure + interactive)
+    STRUCTURAL = {'banner', 'navigation', 'main', 'complementary', 'contentinfo',
+                   'region', 'form', 'search', 'dialog', 'heading'}
+    INTERACTIVE = {'button', 'link', 'textbox', 'combobox', 'checkbox', 'radio',
+                    'tab', 'menuitem', 'slider', 'searchbox', 'switch', 'option'}
+    KEEP = STRUCTURAL | INTERACTIVE
+
+    out = []
+
+    def walk(node, depth=0):
+        if not node or depth > 12 or len(out) >= max_items:
+            return
+        role = node.get('role')
+        name = (node.get('name') or '').strip()
+        value = node.get('value')
+        if role in KEEP and (name or value):
+            indent = '  ' * min(depth, 4)
+            detail = f" = {value}" if value else ''
+            out.append(f"{indent}{role}: {name[:50]}{detail}")
+        for child in node.get('children', []) or []:
+            walk(child, depth + 1)
+
+    walk(tree)
+    return out
+
+
+def get_visible_text(page, limit=5000):
+    """Walk the DOM and collect visible text. Skips script/style/hidden."""
+    return page.evaluate(f"""
+        () => {{
+            const walk = (node, depth = 0) => {{
+                if (depth > 10) return '';
+                if (node.nodeType === 3) return node.textContent.trim();
+                if (node.nodeType !== 1) return '';
+                const tag = node.tagName.toLowerCase();
+                if (['script', 'style', 'noscript', 'svg'].includes(tag)) return '';
+                if (node.offsetParent === null && tag !== 'body') return '';
+                let text = '';
+                for (const child of node.childNodes) {{
+                    text += walk(child, depth + 1) + ' ';
+                }}
+                return text.trim();
+            }};
+            return walk(document.body).replace(/\\s+/g, ' ').slice(0, {limit});
+        }}
+    """)
+
+
+# ============================================================
+# INTERACTIONS — verify, scroll, hover
+# ============================================================
+
+def verify_action(page, action_fn, description="action"):
+    """Execute action, detect state change, return diff info."""
+    before_path = OUT / "verify_before.png"
+    after_path = OUT / "verify_after.png"
+    diff_path = OUT / "verify_diff.png"
+
+    _safe_screenshot(page, before_path)
+    before_hash = hashlib.md5(open(before_path, 'rb').read()).hexdigest()
+
+    action_fn()
+    time.sleep(0.5)
+
+    _safe_screenshot(page, after_path)
+    after_hash = hashlib.md5(open(after_path, 'rb').read()).hexdigest()
+
+    if before_hash == after_hash:
+        print(f"⚠ {description}: NO CHANGE DETECTED")
+        return False, str(before_path), str(after_path), None, None
+
+    diff_path, change_pct, bbox = create_diff_image(str(before_path), str(after_path), str(diff_path))
+    print(f"✓ {description}: {change_pct:.1f}% changed, region: {bbox}")
+    return True, str(before_path), str(after_path), str(diff_path), {'pct': change_pct, 'bbox': bbox}
+
+
+def smart_scroll(page, max_scrolls=10):
+    """Scroll until content stops changing; save each viewport."""
+    screenshots = []
+    last_hash = None
+
+    for i in range(max_scrolls):
+        current_hash = get_screenshot_hash(page)
+        if current_hash == last_hash:
+            print(f"  Content unchanged, stopping at viewport {i}")
+            break
+
+        path = OUT / f"scroll_{i}.png"
+        _safe_screenshot(page, path)
+        screenshots.append(str(path))
+        print(f"  Captured viewport {i+1}")
+
+        last_hash = current_hash
+        page.evaluate("window.scrollBy(0, window.innerHeight * 0.8)")
+        time.sleep(0.8)
+
+        at_bottom = page.evaluate("window.innerHeight + window.scrollY >= document.body.scrollHeight - 100")
+        if at_bottom:
+            _safe_screenshot(page, OUT / f"scroll_{i+1}.png")
+            screenshots.append(str(OUT / f"scroll_{i+1}.png"))
+            print(f"  Reached bottom at viewport {i+2}")
+            break
+
+    return screenshots
+
+
+def grid_hover(page):
+    """Sample 3×3 grid of hovers on the main chart area to trigger tooltips."""
+    chart_bounds = page.evaluate("""
+        () => {
+            const selectors = ['svg:not([width="0"])', 'canvas', '[class*="chart"]',
+                '[class*="graph"]', '[class*="plot"]', 'figure', '.grapher', '#chart', 'main svg'];
+            for (const sel of selectors) {
+                const chart = document.querySelector(sel);
+                if (chart) {
+                    const rect = chart.getBoundingClientRect();
+                    if (rect.width > 200 && rect.height > 200) {
+                        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+                    }
+                }
+            }
+            return { x: 400, y: 300, width: 800, height: 500 };
+        }
+    """)
+
+    if not chart_bounds:
+        print("No chart area found for grid hover")
+        return []
+
+    x_start, y_start = chart_bounds['x'], chart_bounds['y']
+    w, h = chart_bounds['width'], chart_bounds['height']
+    positions = [(x_start + w*fx, y_start + h*fy)
+                 for fy in (0.25, 0.5, 0.75) for fx in (0.25, 0.5, 0.75)]
+
+    _safe_screenshot(page, OUT / "hover_base.png")
+
+    for x, y in positions:
+        page.mouse.move(int(x), int(y))
+        time.sleep(0.3)
+
+    cx, cy = int(x_start + w*0.5), int(y_start + h*0.5)
+    page.mouse.move(cx, cy)
+    time.sleep(0.5)
+    _safe_screenshot(page, OUT / "hover_center.png")
+    print(f"Hover sampled at chart center ({cx}, {cy})")
+
+    return [str(OUT / "hover_base.png"), str(OUT / "hover_center.png")]
+
+
+# ============================================================
+# BROWSER — factory
+# ============================================================
+
+def create_browser(stealth=False, visible=False):
+    """Launch Playwright Chromium with optional stealth or visible (fullscreen) mode."""
+    p = sync_playwright().start()
+
+    args = ['--disable-blink-features=AutomationControlled']
+    if stealth:
+        args.extend(['--disable-infobars', '--disable-dev-shm-usage',
+                     '--no-sandbox', '--disable-setuid-sandbox'])
+    if visible:
+        args.append('--start-fullscreen')
+
+    browser = p.chromium.launch(headless=not visible, args=args)
+
+    context_opts = {'viewport': {'width': 1280, 'height': 800}}
+    if stealth:
+        context_opts['user_agent'] = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                                       'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                       'Chrome/122.0.0.0 Safari/537.36')
+
+    context = browser.new_context(**context_opts)
+    page = context.new_page()
+
+    if stealth:
+        page.add_init_script("delete Object.getPrototypeOf(navigator).webdriver")
+
+    return p, browser, page
+
+
+# ============================================================
+# AGENT LOOP — Claude Code as vision engine
+# ============================================================
+
+def _dispatch_action(page, decision):
+    """Execute a single action (not done/sequence). Returns interact_count delta."""
+    action = decision.get('action')
+    if action == 'click':
+        page.mouse.click(decision.get('x'), decision.get('y'))
+        return 1
+    if action == 'dblclick':
+        page.mouse.dblclick(decision.get('x'), decision.get('y'))
+        return 1
+    if action == 'rclick':
+        page.mouse.click(decision.get('x'), decision.get('y'), button='right')
+        return 1
+    if action == 'drag':
+        page.mouse.move(decision.get('x1'), decision.get('y1'))
+        page.mouse.down()
+        page.mouse.move(decision.get('x2'), decision.get('y2'), steps=20)
+        page.mouse.up()
+        return 1
+    if action == 'scroll':
+        page.evaluate(f"window.scrollBy(0, {decision.get('dy', 800)})")
+        return 0
+    if action == 'scroll_to':
+        page.evaluate(f"window.scrollTo(0, {decision.get('y', 0)})")
+        return 0
+    if action == 'type':
+        page.keyboard.type(decision.get('text', ''))
+        return 1
+    if action == 'key':
+        page.keyboard.press(decision.get('keys') or decision.get('key', 'Escape'))
+        return 1
+    if action == 'hover':
+        page.mouse.move(decision.get('x'), decision.get('y'))
+        return 1
+    if action == 'zoom':
+        page.keyboard.press('Control+=' if decision.get('dir', 'in') == 'in' else 'Control+-')
+        return 1
+    if action == 'select':
+        page.mouse.click(decision.get('x'), decision.get('y'))
+        time.sleep(0.3)
+        page.keyboard.type(decision.get('option', ''))
+        page.keyboard.press('Enter')
+        return 1
+    if action == 'modclick':
+        mod = decision.get('mod', 'Shift')
+        page.keyboard.down(mod)
+        page.mouse.click(decision.get('x'), decision.get('y'))
+        page.keyboard.up(mod)
+        return 1
+    if action == 'draw':
+        points = decision.get('points', [])
+        if points:
+            page.mouse.move(points[0][0], points[0][1])
+            page.mouse.down()
+            for px, py in points[1:]:
+                page.mouse.move(px, py, steps=5)
+            page.mouse.up()
+        return 1
+    if action == 'wheel':
+        page.mouse.move(decision.get('x'), decision.get('y'))
+        mod = decision.get('mod')
+        if mod: page.keyboard.down(mod)
+        page.mouse.wheel(decision.get('dx', 0), decision.get('dy', 300))
+        if mod: page.keyboard.up(mod)
+        return 0
+    if action == 'long_press':
+        page.mouse.move(decision.get('x'), decision.get('y'))
+        page.mouse.down()
+        time.sleep(decision.get('ms', 1000) / 1000)
+        page.mouse.up()
+        return 1
+    if action == 'upload':
+        page.evaluate(f"document.elementFromPoint({decision.get('x')}, {decision.get('y')})?.click()")
+        time.sleep(0.3)
+        inputs = page.locator("input[type='file']")
+        if inputs.count() > 0:
+            inputs.first.set_input_files(decision.get('path', ''))
+        return 1
+    if action == 'media':
+        op, value = decision.get('op', 'info'), decision.get('value', 0)
+        info = page.evaluate(
+            """(args) => {
+                const m = document.querySelector('video, audio');
+                if (!m) return {error: 'no media element'};
+                if (args.op === 'play') m.play();
+                else if (args.op === 'pause') m.pause();
+                else if (args.op === 'seek') m.currentTime = args.value;
+                else if (args.op === 'rate') m.playbackRate = args.value;
+                else if (args.op === 'volume') m.volume = Math.max(0, Math.min(1, args.value));
+                return {duration: m.duration, currentTime: m.currentTime,
+                        paused: m.paused, rate: m.playbackRate, volume: m.volume};
+            }""", {'op': op, 'value': value})
+        print(f"  media.{op}: {info}", flush=True)
+        return 1
+    raise ValueError(f"unknown action: {action}")
+
+
+# Minimal system prompt for ai4a11y calls — avoids loading the user's CLAUDE.md
+# (routing rules, personal profile, cherine scenarios, etc.), skills list, MCP
+# servers, and hooks. Keeps input tokens tight and startup fast.
+_IRIS_SYSTEM_PROMPT = (
+    "You are a concise vision/grounding assistant for a blind-user accessibility tool. "
+    "Follow the user's instructions exactly. When JSON is requested, return ONLY valid "
+    "JSON — no markdown fences, no prose, no preamble."
+)
+
+# Model selection is centralized so a future model bump is a one-line change.
+# Grounding is a constrained classification ('pick N from list'); vision reasons
+# over a screenshot. Per CLAUDE.md: Sonnet floor, Opus when possible.
+_IRIS_GROUND_MODEL = "claude-sonnet-4-6"   # text-only grounding from a11y candidates
+_IRIS_VISION_MODEL = "claude-opus-4-7"     # screenshot reasoning (describe / ask / visual tap)
+# ai4a11y wants fast, grounded vision descriptions — not deep multi-step reasoning.
+# --effort low tells Opus 4.7 to skip extended thinking; keeps latency predictable.
+_IRIS_VISION_EFFORT = "low"
+
+
+def _claude_cli_args(model, prompt_text, effort=None, tools=""):
+    """Build a minimal `claude -p` argv.
+
+    Flags stripped: user CLAUDE.md (via --system-prompt override), skills,
+    MCP servers, session disk persistence, all tools. Keeps only what ai4a11y needs:
+    a single prompt → text/JSON response. Optional effort level tames 4.7+ extended
+    thinking for tasks that don't benefit from it (screenshot Q&A, grounding).
+
+    Callers that need to pass a screenshot pass tools="Read" so Claude can open
+    the PNG path — text-only callers stay on the locked-down tools="" default.
+    """
+    args = [
+        "claude", "-p", prompt_text,
+        "--model", model,
+        "--system-prompt", _IRIS_SYSTEM_PROMPT,
+        "--tools", tools,
+        "--disable-slash-commands",
+        "--strict-mcp-config",
+        "--no-session-persistence",
+        "--add-dir", str(OUT),
+    ]
+    if effort:
+        args.extend(["--effort", effort])
+    # NOTE: --bare is more aggressive (skips hooks / auto-memory / keychain reads) but
+    # requires ANTHROPIC_API_KEY. Setting that env var ALSO switches ai4a11y from OAuth/
+    # subscription billing to pay-per-token API billing — intentional but silent, so
+    # a user who exports ANTHROPIC_API_KEY for another project shouldn't be surprised.
+    if _os.environ.get("ANTHROPIC_API_KEY"):
+        args.append("--bare")
+    return args
+
+
+def _claude_cli_env():
+    """Silence the `DEP0169 url.parse` Node warnings that print on every invocation."""
+    return {**_os.environ, "NODE_NO_WARNINGS": "1"}
+
+
+def _safe_screenshot(page, path):
+    """Screenshot that survives Chrome's "0 width" bug AND font-loading hangs.
+
+    Some restored/detached tabs report innerWidth>0 to JS but still throw
+    'Cannot take screenshot with 0 width' in CDP. Force a viewport resize
+    first and retry once before giving up.
+
+    Also capped at a short timeout so sites that never finish loading fonts
+    (Amazon, some e-commerce) don't hang the whole primitive for 30 seconds.
+    """
+    try:
+        page.screenshot(path=str(path), timeout=8000)
+        return True
+    except Exception as e:
+        msg = str(e)
+    try:
+        page.set_viewport_size({'width': 1280, 'height': 800})
+        time.sleep(0.3)
+        page.screenshot(path=str(path), timeout=8000)
+        return True
+    except Exception:
+        # Last resort: skip all font-ready waits via Playwright option.
+        try:
+            page.screenshot(path=str(path), timeout=8000, animations='disabled')
+            return True
+        except Exception:
+            return False
+
+
+def ask_claude(image_path, prompt):
+    """Invoke Claude Code subprocess with screenshot + prompt, return stdout.
+
+    Passes tools="Read" so Claude can actually open the screenshot file at
+    image_path. Without this, `ask`/`describe` were secretly running text-only
+    against page content + a11y tree, silently failing on canvas/WebGL pages
+    where the screenshot is the ONLY source of truth.
+    """
+    try:
+        result = subprocess.run(
+            _claude_cli_args(_IRIS_VISION_MODEL,
+                             f"Read the image at {image_path}\n\n{prompt}",
+                             effort=_IRIS_VISION_EFFORT,
+                             tools="Read"),
+            capture_output=True, text=True, timeout=180,
+            env=_claude_cli_env(),
+        )
+        if result.returncode != 0:
+            return json.dumps({'action': 'done',
+                               'answer': f'Claude CLI error: {result.stderr[:200]}',
+                               'reason': 'subprocess failed'})
+        return result.stdout.strip()
+    except subprocess.TimeoutExpired:
+        return json.dumps({'action': 'done', 'answer': 'Claude CLI timeout', 'reason': 'took >180s'})
+
+
+def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
+    """Text-only Claude call — no screenshot. Used for textual-choice grounding.
+
+    Research (SeeAct, ICML'24): textual-choice grounding scores 48.9% element
+    accuracy vs 15.1% for image-annotation SoM. When the a11y tree has the target,
+    skipping vision is both faster and more accurate. Grounding is a "pick N from
+    list" task that doesn't benefit from Opus — callers can pass a faster model.
+    """
+    try:
+        result = subprocess.run(
+            _claude_cli_args(model, prompt),
+            capture_output=True, text=True, timeout=timeout,
+            env=_claude_cli_env(),
+        )
+        if result.returncode != 0:
+            return json.dumps({'error': f'cli failed: {result.stderr[:200]}'})
+        return result.stdout.strip()
+    except subprocess.TimeoutExpired:
+        return json.dumps({'error': 'timeout'})
+
+
+def plan_task(page, task, run_dir, context=""):
+    """Produce a high-level 3-7 step plan before the reactive loop begins.
+
+    Returns {plan, unknowns, target_values, direct_answer}.
+    direct_answer is non-empty when the task is answerable from the initial view alone —
+    a latency shortcut that skips the reactive loop entirely.
+
+    Research (From Grounding to Planning, 2024) shows planning is the real bottleneck
+    for web agents, not grounding. A cheap upfront plan gives structure to the loop.
+    """
+    plan_path = run_dir / "plan_input.png"
+    _safe_screenshot(page, plan_path)
+
+    ctx_line = f"\nPRIOR CONTEXT: {context}\n" if context else ""
+
+    planner_prompt = f"""You are planning how to accomplish a browser task. Look at the CURRENT page screenshot.
+
+TASK: {task}{ctx_line}
+
+FIRST: Can the task be answered FULLY from what's already visible in the screenshot, with no additional interaction required? If yes, return direct_answer populated and an empty plan. This skips costly browser steps.
+
+If not, output a numbered plan of 3-7 high-level steps that will accomplish the task. Each step should be one meaningful user intent (e.g. "dismiss cookie banner", "navigate to data explorer", "filter by Japan", "read tooltip value at 1960"). Don't enumerate individual clicks.
+
+Also note:
+- What CANNOT be inferred from this initial screenshot (canvas content, tooltips, data behind filters)
+- Any specific values/facts the task asks for
+
+Respond as JSON: {{"direct_answer": "full answer if visible, else empty string", "plan": ["step 1", ...], "unknowns": ["..."], "target_values": ["..."]}}"""
+
+    raw = ask_claude(str(plan_path), planner_prompt)
+    try:
+        s, e = raw.find('{'), raw.rfind('}') + 1
+        return json.loads(raw[s:e])
+    except Exception:
+        return {"plan": ["(planner parse failed — proceeding without plan)"],
+                "unknowns": [], "target_values": [], "direct_answer": ""}
+
+
+def run_agent(url, task, max_steps=5, min_interactions=0, existing_page=None):
+    """Vision-driven agent loop — capture → Claude decides → execute → repeat.
+
+    min_interactions: reject 'done' until this many non-trivial actions have run.
+    existing_page: if provided, use it instead of opening a new browser (persistent session).
+    """
+    import os, re
+    from urllib.parse import urlparse
+
+    if existing_page is not None:
+        page = existing_page
+        p, browser = None, None  # managed by caller
+        eff_url = page.url
+    else:
+        eff_url = url
+
+    host = re.sub(r'[^a-z0-9]+', '-', (urlparse(eff_url).hostname or 'site').lower()).strip('-')
+    task_slug = re.sub(r'[^a-z0-9]+', '-', task.lower())[:40].strip('-')
+    ts = time.strftime('%H%M%S')
+    run_dir = OUT / f"{host}_{task_slug}_{ts}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    if existing_page is None:
+        p, browser, page = create_browser()
+        print(f"\nTask: {task}\nURL: {url}\nOutput: {run_dir}\n")
+        page.goto(url, wait_until='domcontentloaded', timeout=30000)
+        time.sleep(4)
+    else:
+        print(f"\nTask: {task}\nURL: {eff_url} (existing session)\nOutput: {run_dir}\n")
+
+    # Step 0 — plan (research: planning is the real bottleneck, not grounding)
+    print("--- Planning ---", flush=True)
+    plan = plan_task(page, task, run_dir)
+    plan_str = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(plan.get('plan', [])))
+    unknowns_str = ", ".join(plan.get('unknowns', [])) or "none flagged"
+    targets_str = ", ".join(plan.get('target_values', [])) or "none specified"
+    print(f"Plan:\n{plan_str}", flush=True)
+    print(f"Unknowns: {unknowns_str}", flush=True)
+    print(f"Targets: {targets_str}", flush=True)
+
+    # Latency shortcut: task answerable from initial view alone — skip reactive loop
+    direct = (plan.get('direct_answer') or '').strip()
+    if direct and min_interactions == 0:
+        # Verify the direct answer against the same initial screenshot
+        verify_prompt = f"""Verify an answer against the screenshot.
+TASK: {task}
+ANSWER: {direct}
+
+Is the answer fully supported by what's visible in the screenshot, to a naive observer? JSON only: {{"supported": true|false, "reason": "..."}}"""
+        verdict_raw = ask_claude(str(run_dir / "plan_input.png"), verify_prompt)
+        try:
+            vs, ve = verdict_raw.find('{'), verdict_raw.rfind('}') + 1
+            verdict = json.loads(verdict_raw[vs:ve])
+        except Exception:
+            verdict = {'supported': True}
+        if verdict.get('supported'):
+            print(f"\n✓ ANSWER (direct, verified): {direct}", flush=True)
+            print(f"  Verifier: {verdict.get('reason', '')[:200]}", flush=True)
+            if existing_page is None:
+                browser.close(); p.stop()
+            return [{'action': 'direct_answer', 'answer': direct}]
+        else:
+            print(f"Direct answer rejected ({verdict.get('reason', '')[:100]}) — falling back to reactive loop", flush=True)
+    print("", flush=True)
+
+    history = []
+    last_hash = last_url = None
+    interact_count = 0  # click/type/key/hover — not scroll/done
+    last_click_hit = None  # what document.elementFromPoint saw after last click
+    lessons = []  # Reflexion-style lessons learned from rejected attempts
+    no_effect_streak = 0  # consecutive no-change steps; trigger for plan revision
+
+    for step in range(max_steps):
+        raw_path = run_dir / f"step{step}_raw.png"
+        shot_path = run_dir / f"step{step}.png"
+        _safe_screenshot(page, raw_path)
+
+        elements = get_elements(page)
+        addressable = [e for e in elements if e.get('x', 0) > 0 and e.get('y', 0) > 0][:25]
+        add_som_markers(str(raw_path), str(shot_path), addressable)
+        a11y_outline = get_a11y_outline(page)
+
+        current_hash = get_screenshot_hash(page)
+        current_url = page.url
+
+        # Fine-grained change classification (research: fine-grained failure detection helps recovery)
+        page_state = page.evaluate("""() => {
+            const active = document.activeElement;
+            return {
+                title: document.title.slice(0, 60),
+                focusedTag: active ? active.tagName.toLowerCase() : '',
+                focusedLabel: active ? (active.getAttribute('aria-label') || active.textContent?.trim().slice(0, 40) || '') : '',
+                modalVisible: !!document.querySelector('[role="dialog"]:not([hidden]), .modal:not([hidden]), [aria-modal="true"]'),
+                bodyClasses: document.body.className.slice(0, 80)
+            };
+        }""")
+
+        feedback = ""
+        if step > 0:
+            changes = []
+            if current_url != last_url: changes.append(f"URL→{current_url[:60]}")
+            if last_click_hit and last_click_hit.get('tag') in ('html', 'body', 'none'):
+                changes.append(f"⚠ last click at ({last_click_hit['x']},{last_click_hit['y']}) hit <{last_click_hit['tag']}> — MISSED target")
+            elif last_click_hit:
+                changes.append(f"last click landed on <{last_click_hit['tag']}>:{(last_click_hit.get('aria') or last_click_hit.get('text') or '')[:30]}")
+            if current_hash == last_hash and current_url == last_url:
+                feedback = "\n⚠ LAST ACTION HAD NO EFFECT — screenshot and URL unchanged. Try a different target or approach."
+                no_effect_streak += 1
+            else:
+                no_effect_streak = 0
+                if current_hash != last_hash: changes.append("pixels changed")
+                if page_state.get('modalVisible'): changes.append("MODAL VISIBLE — dismiss first")
+                if page_state.get('focusedTag'): changes.append(f"focus={page_state['focusedTag']}:{page_state['focusedLabel'][:20]}")
+            if changes:
+                feedback = (feedback + f"\nSince last action: {' | '.join(changes)}").strip()
+        last_hash, last_url = current_hash, current_url
+
+        # Plan revision trigger: stuck for 2+ consecutive steps → re-plan with current state
+        if no_effect_streak >= 2 and step < max_steps - 2:
+            print(f"--- Revising plan (stuck {no_effect_streak} steps) ---", flush=True)
+            ctx = (f"Attempted plan was: {plan.get('plan', [])[:3]}... "
+                   f"History: {[h.get('action') for h in history[-5:]]}. "
+                   f"Lessons so far: {lessons[-3:] if lessons else 'none'}. "
+                   f"Stuck because actions produced no effect.")
+            plan = plan_task(page, task, run_dir, context=ctx)
+            plan_str = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(plan.get('plan', [])))
+            unknowns_str = ", ".join(plan.get('unknowns', [])) or "none flagged"
+            targets_str = ", ".join(plan.get('target_values', [])) or "none specified"
+            print(f"Revised plan:\n{plan_str}", flush=True)
+            no_effect_streak = 0
+
+        def _el_line(i, e):
+            ctx = []
+            if e.get('role'): ctx.append(f"role={e['role']}")
+            if e.get('parent'): ctx.append(f"in {e['parent']}")
+            ctx_str = f" ({', '.join(ctx)})" if ctx else ""
+            return f"  [{i+1}] {e['tag']}: {e['label']}{ctx_str}"
+        elements_summary = "\n".join(_el_line(i, e) for i, e in enumerate(addressable))
+
+        interact_need = max(0, min_interactions - interact_count)
+        force_note = (f"\nFORCE-INTERACT: You must perform {interact_need} more real "
+                      "interaction(s) (click/type/hover, NOT scroll) before 'done' is accepted. "
+                      "Actually exercise the page — don't just read captions.") if interact_need else ""
+
+        lessons_str = ""
+        if lessons:
+            lessons_str = "\nLessons learned from earlier attempts (DO NOT repeat these mistakes):\n" + \
+                "\n".join(f"  • {l}" for l in lessons[-5:])
+
+        prompt = f"""Task: {task}
+URL: {current_url}
+
+PLAN (from upfront planning step):
+{plan_str}
+Unknowns to discover: {unknowns_str}
+Target values to extract: {targets_str}
+{lessons_str}
+
+History: {history if history else 'just started'}{feedback}{force_note}
+
+Page structure (accessibility tree — semantic layout, complements the pixel elements):
+{chr(10).join(a11y_outline) if a11y_outline else '  (a11y tree empty — canvas content or no ARIA)'}
+
+Numbered interactive elements (matching the colored badges in the screenshot — use for clicks):
+{elements_summary or '  (none detected — rely on visual grid)'}
+
+BLOCKER CHECK: If you see cookie banner / modal / captcha / autocomplete dropdown blocking view → dismiss it FIRST (click Accept/X/Close or press Escape).
+
+PREFER element-index clicks ("el": N) over pixel coords — much more reliable. Fall back to coords only for things NOT in the numbered list (canvas interiors, map positions, arbitrary drag endpoints). Rulers in margins help with raw coords.
+
+Pick ONE action as JSON:
+- {{"action": "click", "el": 3, "reason": "use badge number"}}
+- {{"action": "click", "x": 500, "y": 300, "reason": "fallback when no badge"}}
+- {{"action": "dblclick", "x": 500, "y": 300, "reason": "word select, folder open"}}
+- {{"action": "rclick", "x": 500, "y": 300, "reason": "context menu"}}
+- {{"action": "modclick", "x": 500, "y": 300, "mod": "Shift", "reason": "Shift|Control|Meta|Alt + click"}}
+- {{"action": "drag", "x1": 100, "y1": 100, "x2": 400, "y2": 100, "reason": "slider/scrubber/pan"}}
+- {{"action": "draw", "points": [[100,100],[200,150],[300,100]], "reason": "multi-point canvas stroke"}}
+- {{"action": "scroll", "dy": 800, "reason": "positive=down, negative=up"}}
+- {{"action": "scroll_to", "y": 0, "reason": "absolute scroll position (0=top)"}}
+- {{"action": "wheel", "x": 500, "y": 300, "dy": 300, "reason": "scroll inside specific element"}}
+- {{"action": "type", "text": "...", "reason": "..."}}
+- {{"action": "key", "keys": "Control+f", "reason": "single key or combo with +"}}
+- {{"action": "hover", "x": 500, "y": 300, "reason": "..."}}
+- {{"action": "long_press", "x": 500, "y": 300, "ms": 1000, "reason": "press-and-hold"}}
+- {{"action": "zoom", "dir": "in", "reason": "in or out (Ctrl+/-)"}}
+- {{"action": "select", "x": 500, "y": 300, "option": "Option text", "reason": "native <select>"}}
+- {{"action": "upload", "x": 500, "y": 300, "path": "/abs/path/file", "reason": "file input"}}
+- {{"action": "media", "op": "play|pause|seek|rate|volume|info", "value": 60, "reason": "HTML5 video/audio (seek=seconds, rate=speed, volume=0-1)"}}
+- {{"action": "sequence", "steps": [{{"action": "click", "x": 100, "y": 200}}, {{"action": "click", "x": 300, "y": 400}}, {{"action": "key", "keys": "Enter"}}], "reason": "atomic multi-step — use when state must stay stable across clicks (polygon vertices, multi-field form, wizard). Max 10 sub-steps."}}
+- {{"action": "done", "answer": "specific answer", "reason": "..."}}
+
+If screenshot has enough info to answer, return done."""
+
+        print(f"--- Step {step+1} ---", flush=True)
+        decision_raw = ask_claude(str(shot_path), prompt)
+        print(f"Claude: {decision_raw[:300]}", flush=True)
+
+        try:
+            s, e = decision_raw.find('{'), decision_raw.rfind('}') + 1
+            decision = json.loads(decision_raw[s:e])
+        except Exception as ex:
+            print(f"Parse failed: {ex}")
+            break
+
+        action = decision.get('action')
+        history.append(decision)
+
+        if action == 'done':
+            if interact_count < min_interactions:
+                print(f"⚠ Done rejected — only {interact_count}/{min_interactions} interactions so far", flush=True)
+                history[-1] = {'action': 'done_rejected', 'reason': 'must interact more'}
+                continue
+            # Verify the answer against the current screenshot
+            answer = decision.get('answer', '')
+            verify_path = run_dir / f"step{step}_verify.png"
+            _safe_screenshot(page, verify_path)
+            verify_prompt = f"""Verify an agent's answer against the screenshot.
+
+TASK (original request): {task}
+AGENT'S ANSWER: {answer}
+AGENT'S ACTIONS TAKEN: {[h.get('action') for h in history[:-1]]}
+
+Imagine a naive human observer who has NO context about what the agent attempted. Would they look at this screenshot and describe it the way the answer does? If the answer uses a specific noun (e.g. "triangle", "map of Tokyo", "two-paragraph description"), does the visible content match that noun to a reasonable person, not just under a lawyerly technicality?
+
+Reject if: a reasonable observer would describe the visible result differently (e.g. the answer claims "triangle" but the shape is a wavy blob, the answer claims "recipe page" but the screen is a loading spinner, the answer claims "zoomed out" but the map looks the same as before).
+Accept only if: the visible state is what the answer describes, at face value, to someone without the benefit of the doubt.
+
+JSON only: {{"supported": true|false, "reason": "concrete mismatch or corroboration, from a naive observer's perspective"}}"""
+            verdict_raw = ask_claude(str(verify_path), verify_prompt)
+            try:
+                s, e = verdict_raw.find('{'), verdict_raw.rfind('}') + 1
+                verdict = json.loads(verdict_raw[s:e])
+            except Exception:
+                verdict = {'supported': True, 'reason': 'parse failed — accepting'}
+
+            if verdict.get('supported'):
+                print(f"\n✓ ANSWER (verified): {answer}", flush=True)
+                print(f"  Verifier: {verdict.get('reason', '')[:200]}", flush=True)
+                break
+            else:
+                print(f"⚠ Done rejected by verifier: {verdict.get('reason', '')[:200]}", flush=True)
+                history[-1] = {'action': 'done_rejected', 'reason': f"verifier: {verdict.get('reason', '')[:100]}"}
+                # Reflexion: ask for a lesson about why the attempt failed + what to try differently
+                reflect_prompt = f"""A previous attempt failed verification.
+
+Your claim: {answer}
+Verifier's rejection: {verdict.get('reason', '')}
+Actions taken so far: {[h.get('action') for h in history]}
+
+Write ONE concise lesson (under 40 words) that would help avoid this failure if you retry. Focus on concrete actionable diagnosis, not apology. Examples: "The welcome dialog resists Escape — must click its specific Close button", "Canvas clicks need the drawing tool active first", "Element appeared but wasn't actually focused for typing".
+
+Return JSON only: {{"lesson": "..."}}"""
+                reflect_raw = ask_claude(str(verify_path), reflect_prompt)
+                try:
+                    rs, re_ = reflect_raw.find('{'), reflect_raw.rfind('}') + 1
+                    lesson = json.loads(reflect_raw[rs:re_]).get('lesson', '')
+                    if lesson:
+                        lessons.append(lesson)
+                        print(f"  💡 Lesson: {lesson[:200]}", flush=True)
+                except Exception:
+                    pass
+                continue
+        def resolve_and_dispatch(dec):
+            """Resolve 'el' index → x,y then dispatch. Returns interact delta."""
+            el_idx = dec.get('el')
+            if el_idx is not None and 1 <= el_idx <= len(addressable):
+                target = addressable[el_idx - 1]
+                dec = {**dec, 'x': target['x'], 'y': target['y']}
+                dec.pop('el', None)
+            return _dispatch_action(page, dec), dec
+
+        def verify_click_landed(dec):
+            """Report what element actually received the click (via elementFromPoint).
+
+            Also stores result in last_click_hit (closure over outer scope) for next step's prompt.
+            """
+            nonlocal last_click_hit
+            if dec.get('action') not in ('click', 'dblclick', 'rclick', 'modclick'):
+                return
+            x, y = dec.get('x'), dec.get('y')
+            if x is None or y is None:
+                return
+            hit = page.evaluate(
+                """([x, y]) => {
+                    const el = document.elementFromPoint(x, y);
+                    if (!el) return null;
+                    return {tag: el.tagName.toLowerCase(),
+                            text: (el.textContent || '').trim().slice(0, 40),
+                            role: el.getAttribute('role') || '',
+                            aria: el.getAttribute('aria-label') || ''};
+                }""", [x, y])
+            last_click_hit = {**hit, 'x': x, 'y': y} if hit else {'x': x, 'y': y, 'tag': 'none'}
+            if hit and hit['tag'] in ('html', 'body'):
+                print(f"  ⚠ click at ({x},{y}) hit <{hit['tag']}> — likely missed target", flush=True)
+
+        try:
+            if action == 'sequence':
+                steps = (decision.get('steps') or [])[:10]
+                pre_url = page.url
+                for i, sub in enumerate(steps):
+                    if sub.get('action') in ('done', 'sequence'):
+                        print(f"  skipping nested/terminal sub-action '{sub.get('action')}'", flush=True)
+                        continue
+                    try:
+                        delta, resolved = resolve_and_dispatch(sub)
+                        interact_count += delta
+                        verify_click_landed(resolved)
+                    except Exception as ex:
+                        print(f"  sub-step {i+1} ({sub.get('action')}) failed: {ex}", flush=True)
+                        break
+                    _safe_screenshot(page, run_dir / f"step{step}_sub{i}.png")
+                    if page.url != pre_url:
+                        print(f"  sequence aborted: URL changed mid-sequence", flush=True)
+                        break
+                    time.sleep(0.1)
+                wait_for_stable(page, timeout=5)
+            else:
+                delta, resolved = resolve_and_dispatch(decision)
+                interact_count += delta
+                verify_click_landed(resolved)
+                wait_for_stable(page, timeout=5)
+        except Exception as ex:
+            print(f"Action '{action}' failed: {ex}", flush=True)
+            history[-1] = {**decision, 'error': str(ex)[:100]}
+    else:
+        # max_steps exhausted — ask for best-effort answer from current state
+        print("\n--- max_steps exhausted, asking for best-effort answer ---", flush=True)
+        final_path = run_dir / "final.png"
+        _safe_screenshot(page, final_path)
+        fallback = ask_claude(
+            str(final_path),
+            f"Task: {task}\nHistory: {history}\n\nBased on what you can see, give your best answer to the task. Reply as JSON: {{\"answer\": \"...\"}}."
+        )
+        print(f"\n✓ BEST-EFFORT ANSWER: {fallback[:500]}", flush=True)
+
+    if existing_page is None:
+        browser.close()
+        p.stop()
+    return history
+
+
+# ============================================================
+# PERSISTENT SESSION — keep browser alive across ai4a11y calls
+# ============================================================
+
+SESSION_DIR = Path.home() / ".ai4a11y"
+SESSION_FILE = SESSION_DIR / "session.json"
+CDP_PORT = 9222
+USER_DATA_DIR = "/tmp/ai4a11y-user-data"
+
+
+def _chromium_path():
+    """Find a chromium executable: Playwright bundled first, then system Chrome."""
+    try:
+        p = sync_playwright().start()
+        exe = p.chromium.executable_path
+        p.stop()
+        if exe and Path(exe).exists():
+            return exe
+    except Exception:
+        pass
+    for candidate in [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium-browser",
+    ]:
+        if Path(candidate).exists():
+            return candidate
+    raise RuntimeError("No Chrome/Chromium found")
+
+
+def session_start():
+    """Launch detached Chromium with CDP port. Survives after this Python process exits."""
+    import os as _os
+    SESSION_DIR.mkdir(exist_ok=True)
+    if SESSION_FILE.exists():
+        existing = json.loads(SESSION_FILE.read_text())
+        # Check if still running
+        try:
+            _os.kill(existing['pid'], 0)
+            print(f"Session already running (pid {existing['pid']}). Use 'session stop' first or just reuse.", flush=True)
+            return existing
+        except ProcessLookupError:
+            pass
+
+    exe = _chromium_path()
+    proc = subprocess.Popen(
+        [exe,
+         f"--remote-debugging-port={CDP_PORT}",
+         f"--user-data-dir={USER_DATA_DIR}",
+         "--start-fullscreen",
+         "--no-first-run",
+         "--no-default-browser-check",
+         "https://www.google.com"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        start_new_session=True,  # detach from current process group
+    )
+    # Wait for CDP endpoint to come up
+    import urllib.request
+    for _ in range(30):
+        time.sleep(0.3)
+        try:
+            urllib.request.urlopen(f"http://localhost:{CDP_PORT}/json/version", timeout=1)
+            break
+        except Exception:
+            continue
+    else:
+        raise RuntimeError("Chromium started but CDP endpoint never came up")
+
+    info = {"pid": proc.pid, "cdp": f"http://localhost:{CDP_PORT}",
+            "started": time.strftime("%Y-%m-%d %H:%M:%S")}
+    SESSION_FILE.write_text(json.dumps(info, indent=2))
+    print(f"Session started (pid {proc.pid}, cdp {info['cdp']})", flush=True)
+    return info
+
+
+def _page_focus_state(pg):
+    """Return (visible, has_focus, usable) for a page, or (False, False, False) if unreachable.
+    visible: document.visibilityState === 'visible' (tab selected in its window)
+    has_focus: document.hasFocus() (that document's window is also the OS-foreground window)
+    usable: page has non-zero viewport — guards against zombie tabs that report visible
+            but have innerWidth===0 (background-navigated tabs that never fully rendered).
+    """
+    try:
+        s = pg.evaluate("({v: document.visibilityState === 'visible', f: document.hasFocus(), u: (innerWidth > 0 && innerHeight > 0)})")
+        return bool(s.get('v')), bool(s.get('f')), bool(s.get('u'))
+    except Exception:
+        return False, False, False
+
+
+def _pick_focused_page(pages):
+    """Return the single tab the user is most likely looking at (or None if no pages).
+
+    Priority:
+      1. visible AND has OS focus  — user is currently in Chromium; exact match
+      2. visible only              — user switched away from Chromium but tab is selected
+                                     in its window. If multiple (several windows open),
+                                     pick the most recent (last in list) as heuristic.
+      3. last page                 — last-resort fallback
+
+    Returns same page type as input. Used by both session_connect (for operations)
+    and session_tabs (for the → display marker) so they stay in sync.
+    """
+    if not pages:
+        return None
+    visible = []
+    fully_focused = []
+    for pg in pages:
+        v, f, u = _page_focus_state(pg)
+        if not u:
+            # Zombie tab (innerWidth=0, never rendered) — skip. page.evaluate would
+            # work but every coord is meaningless; picking this page guarantees failures.
+            continue
+        if v and f:
+            fully_focused.append(pg)
+        elif v:
+            visible.append(pg)
+    if fully_focused:
+        return fully_focused[-1]
+    if visible:
+        return visible[-1]
+    # Last-resort: any page in the list (may still be zombie, but we have nothing better).
+    return pages[-1]
+
+
+_LAST_TAB_FILE = SESSION_DIR / "last_tab.json"
+
+
+def _page_target_id(page):
+    """Return the CDP targetId for a Playwright page, or '' on error.
+    The targetId is stable across CDP reconnects to the same underlying tab, so it
+    survives ai4a11y.s per-CLI-invocation connect/disconnect cycle — unlike Playwright's
+    in-process page objects which are recreated each run.
+    """
+    try:
+        cdp = page.context.new_cdp_session(page)
+        info = cdp.send("Target.getTargetInfo")
+        try:
+            cdp.detach()
+        except Exception:
+            pass
+        return (info.get('targetInfo') or {}).get('targetId', '') or ''
+    except Exception:
+        return ''
+
+
+def _read_last_tab():
+    try:
+        if _LAST_TAB_FILE.exists():
+            return json.loads(_LAST_TAB_FILE.read_text())
+    except Exception:
+        pass
+    return None
+
+
+def _write_last_tab(page):
+    """Remember which tab ai4a11y just operated on. Next session_connect will prefer
+    this tab if it still exists, so ai4a11y doesn't flip-flop between tabs when the user
+    has multiple Chromium windows and OS focus drifts between ai4a11y CLI invocations."""
+    try:
+        tid = _page_target_id(page)
+        if not tid:
+            return
+        _LAST_TAB_FILE.write_text(json.dumps({
+            'target_id': tid,
+            'url': page.url,
+            'ts': time.time(),
+        }, indent=2))
+    except Exception:
+        pass
+
+
+def _find_page_by_target_id(pages, target_id):
+    """Linear search pages for one whose CDP targetId matches. O(n) CDP calls in the
+    worst case, but typical sessions have <10 tabs so it's fast (~50ms total)."""
+    if not target_id:
+        return None
+    for pg in pages:
+        try:
+            if _page_target_id(pg) == target_id:
+                return pg
+        except Exception:
+            continue
+    return None
+
+
+def session_connect():
+    """Connect Playwright to the running CDP browser. Returns (p, browser, page).
+
+    Tab selection priority (fixes the cross-CLI focus-drift bug):
+      1. Sticky:   the tab ai4a11y last operated on, IF it still exists and is visible
+                   (user hasn't backgrounded it explicitly).
+      2. Focused:  _pick_focused_page heuristic (visible + has-OS-focus, then visible-
+                   only, then last page). Used when the sticky tab is gone/hidden.
+
+    Does NOT call bring_to_front — ai4a11y is a passive assistant, not a focus thief.
+    The selected tab is persisted to ~/.ai4a11y/last_tab.json so subsequent ai4a11y calls
+    stay on the same tab even if OS focus drifts to a different window between calls.
+    """
+    if not SESSION_FILE.exists():
+        raise RuntimeError("No session running. Start one with: ai4a11y.py session start")
+    info = json.loads(SESSION_FILE.read_text())
+    p = sync_playwright().start()
+    browser = p.chromium.connect_over_cdp(info['cdp'])
+    contexts = browser.contexts
+    if not contexts:
+        raise RuntimeError("No browser context found")
+
+    all_pages = []
+    for c in contexts:
+        all_pages.extend(c.pages)
+
+    if not all_pages:
+        page = contexts[0].new_page()
+        _write_last_tab(page)
+        return p, browser, page
+
+    # Try sticky first — prefer the tab ai4a11y most recently touched.
+    # Sticky honors the user's working-tab choice even if Chrome's visible window
+    # has drifted. If the sticky tab reports innerWidth==0 (not the front tab in
+    # its Chrome window), we:
+    #   1. bring_to_front() to wake it up
+    #   2. set_viewport_size() to force a concrete viewport regardless of Chrome's
+    #      own decision — needed because CDP won't recompute innerWidth for
+    #      background tabs on some macOS setups even after bring_to_front.
+    # Only drop sticky if the page is truly dead (throws or returns no state).
+    picked = None
+    last = _read_last_tab()
+    if last and last.get('target_id'):
+        cand = _find_page_by_target_id(all_pages, last['target_id'])
+        if cand is not None:
+            _vis, _focused, usable = _page_focus_state(cand)
+            if not usable:
+                try:
+                    cand.bring_to_front()
+                    time.sleep(0.2)
+                    cand.set_viewport_size({'width': 1280, 'height': 800})
+                    time.sleep(0.2)
+                    _vis2, _f2, usable = _page_focus_state(cand)
+                except Exception:
+                    usable = False
+            if usable:
+                picked = cand
+
+    if picked is None:
+        picked = _pick_focused_page(all_pages)
+        # Only update sticky when we fell through to auto-pick AND there was no
+        # user-explicit sticky already. Preserves `session focus <n>` choices
+        # even if the picked tab's viewport is temporarily unusable (e.g. not
+        # the front Chrome tab). Otherwise status/list/tabs reads would clobber
+        # the user's pin the first time the targeted tab isn't front-of-window.
+        if not (last and last.get('target_id')):
+            _write_last_tab(picked)
+    else:
+        _write_last_tab(picked)
+    return p, browser, picked
+
+
+def session_disconnect(p, browser):
+    """Detach Playwright without closing the browser — keeps CDP server alive."""
+    try:
+        browser.close()  # closes the CDP connection, not the underlying browser
+    except Exception:
+        pass
+    try:
+        p.stop()
+    except Exception:
+        pass
+
+
+def session_stop():
+    """Kill the persistent browser."""
+    import os as _os, signal as _signal
+    if not SESSION_FILE.exists():
+        print("No session to stop.", flush=True); return
+    info = json.loads(SESSION_FILE.read_text())
+    try:
+        _os.kill(info['pid'], _signal.SIGTERM)
+        print(f"Killed session pid {info['pid']}", flush=True)
+    except ProcessLookupError:
+        print("Session process already gone.", flush=True)
+    SESSION_FILE.unlink(missing_ok=True)
+
+
+def session_status():
+    """Print current page URL/title and basic state."""
+    if not SESSION_FILE.exists():
+        print("No session running.", flush=True); return
+    info = json.loads(SESSION_FILE.read_text())
+    try:
+        p, browser, page = session_connect()
+        print(f"Session pid={info['pid']} started={info['started']}", flush=True)
+        print(f"URL: {page.url}", flush=True)
+        print(f"Title: {page.title()[:80]}", flush=True)
+        session_disconnect(p, browser)
+    except Exception as ex:
+        print(f"Session file exists but connect failed: {ex}", flush=True)
+
+
+def session_tabs():
+    """List every tab across every context. Marks the focused tab with '→'.
+    BLV users don't have to eyeball the tab strip — ai4a11y reads it aloud instead.
+    """
+    if not SESSION_FILE.exists():
+        print("No session running.", flush=True); return
+    p = sync_playwright().start()
+    try:
+        info = json.loads(SESSION_FILE.read_text())
+        browser = p.chromium.connect_over_cdp(info['cdp'])
+        all_pages = [pg for c in browser.contexts for pg in c.pages]
+        if not all_pages:
+            print("(no open tabs)", flush=True); return
+        # Pick the single tab ai4a11y would operate on — same logic as session_connect
+        # so the display matches reality. No more multiple-→ when multiple windows
+        # each have a "visible" tab.
+        picked = _pick_focused_page(all_pages)
+        rows = []
+        for i, pg in enumerate(all_pages):
+            title, url = '(unreachable)', ''
+            try:
+                title = (pg.title() or '').strip()[:60]
+                url = (pg.url or '').strip()[:80]
+            except Exception:
+                try:
+                    url = (pg.url or '').strip()[:80]
+                except Exception:
+                    pass
+            rows.append((i + 1, pg is picked, title, url))
+        for idx, is_picked, title, url in rows:
+            marker = '→' if is_picked else ' '
+            print(f" {marker} [{idx}] {title or '(untitled)'}   {url}", flush=True)
+        print(f"({len(rows)} tab{'s' if len(rows) != 1 else ''}; → = the tab ai4a11y will operate on)", flush=True)
+        try:
+            browser.close()
+        except Exception:
+            pass
+    finally:
+        p.stop()
+
+
+def session_focus_tab(n):
+    """Pin ai4a11y's sticky tab to the N-th entry from `session tabs` (1-indexed).
+
+    Essential when the browser has accumulated multiple tabs and ai4a11y's heuristic
+    picks the wrong one. Writes targetId to ~/.ai4a11y/last_tab.json so every
+    subsequent ai4a11y call operates on this tab until the user navigates away.
+    """
+    if not SESSION_FILE.exists():
+        print("No session running.", flush=True); return
+    p = sync_playwright().start()
+    try:
+        info = json.loads(SESSION_FILE.read_text())
+        browser = p.chromium.connect_over_cdp(info['cdp'])
+        all_pages = [pg for c in browser.contexts for pg in c.pages]
+        if not all_pages:
+            print("(no open tabs)", flush=True); return
+        if n < 1 or n > len(all_pages):
+            print(f"invalid tab number {n}; have {len(all_pages)} tabs", flush=True); return
+        pg = all_pages[n - 1]
+        _write_last_tab(pg)
+        try:
+            title = pg.title()[:60]
+            url = pg.url[:80]
+        except Exception:
+            title, url = '(unreachable)', ''
+        print(f"Focus locked on tab [{n}]: {title}   {url}", flush=True)
+        try: browser.close()
+        except Exception: pass
+    finally:
+        p.stop()
+
+
+def session_cleanup_tabs():
+    """Close all tabs except ai4a11y's sticky one. Clears accumulated orphans from
+    long-running sessions (e.g. after crashes, restore-on-launch, or multi-test
+    runs that left zombie tabs behind)."""
+    if not SESSION_FILE.exists():
+        print("No session running.", flush=True); return
+    p = sync_playwright().start()
+    try:
+        info = json.loads(SESSION_FILE.read_text())
+        browser = p.chromium.connect_over_cdp(info['cdp'])
+        all_pages = [pg for c in browser.contexts for pg in c.pages]
+        if not all_pages:
+            print("(no open tabs)", flush=True); return
+        keep = None
+        last = _read_last_tab()
+        if last and last.get('target_id'):
+            keep = _find_page_by_target_id(all_pages, last['target_id'])
+        if keep is None:
+            keep = _pick_focused_page(all_pages)
+        if keep is None:
+            keep = all_pages[-1]
+        closed = 0
+        for pg in all_pages:
+            if pg is keep:
+                continue
+            try:
+                pg.close()
+                closed += 1
+            except Exception:
+                pass
+        try:
+            kept_title = keep.title()[:60]
+            kept_url = keep.url[:80]
+        except Exception:
+            kept_title, kept_url = '(unknown)', ''
+        _write_last_tab(keep)
+        print(f"Closed {closed} tab(s). Kept: {kept_title}   {kept_url}", flush=True)
+        try: browser.close()
+        except Exception: pass
+    finally:
+        p.stop()
+
+
+def session_go(url):
+    """Navigate the persistent browser to a URL."""
+    p, browser, page = session_connect()
+    try:
+        page.goto(url, wait_until='domcontentloaded', timeout=30000)
+        time.sleep(2)
+        print(f"Navigated to {page.url}", flush=True)
+        print(f"Title: {page.title()[:80]}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_back():
+    """Browser back."""
+    p, browser, page = session_connect()
+    try:
+        page.go_back(wait_until='domcontentloaded', timeout=15000)
+        time.sleep(1)
+        print(f"Back → {page.url}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_scroll(direction='down', amount=800):
+    """Scroll the persistent page."""
+    p, browser, page = session_connect()
+    try:
+        dy = amount if direction in ('down', 'd') else -amount
+        page.evaluate(f"window.scrollBy(0, {dy})")
+        time.sleep(0.5)
+        pos = page.evaluate("window.scrollY")
+        print(f"Scrolled {direction} → y={pos}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_describe(json_output=False):
+    """Fast-path describe of current page for BLV user. One Claude call, no loop."""
+    try:
+        p, browser, page = session_connect()
+    except Exception as e:
+        if json_output:
+            print(json.dumps({"error": f"No browser session: {e}"}))
+        else:
+            print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+        sys.exit(1)
+    try:
+        import os as _os, re as _re
+        run_dir = OUT / f"session_describe_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        shot = run_dir / "describe.png"
+        _safe_screenshot(page, shot)
+
+        outline = get_a11y_outline(page)
+        elements = get_elements(page)
+        addressable = [e for e in elements if e.get('x', 0) > 0][:15]
+        el_summary = "\n".join(f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
+
+        ctx = get_page_context(page, text_limit=4000)
+        prompt = f"""Describe this page for a BLV (blind/low-vision) user in 3-6 sentences. Be honest and specific. Use the page text + accessibility tree (most reliable) plus the screenshot (for visual layout).
+
+URL: {page.url}
+Title: {page.title()[:100]}
+
+Page structure (accessibility tree):
+{chr(10).join(outline[:20])}
+
+Page text (first 4000 chars):
+{ctx['text']}
+
+Top interactive elements:
+{el_summary or '(none detected)'}
+
+Cover: (1) what kind of page this is, (2) main content summary, (3) 2-3 useful interactions available.
+Skip decorative elements. If it's a modal/captcha/blocker, say so first."""
+
+        result = ask_claude(str(shot), prompt)
+
+        if json_output:
+            output = {
+                "url": page.url,
+                "title": page.title(),
+                "description": result,
+                "elements": addressable,
+                "screenshot": str(shot)
+            }
+            print(json.dumps(output, indent=2))
+        else:
+            print(result, flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def _focused_info(page):
+    """Return role/name/state of the currently focused element, for announce-style output."""
+    return page.evaluate("""
+        () => {
+            const a = document.activeElement;
+            if (!a || a === document.body) return {none: true};
+            return {
+                tag: a.tagName.toLowerCase(),
+                role: a.getAttribute('role') || '',
+                name: a.getAttribute('aria-label') || a.textContent?.trim().slice(0, 80) || a.value || a.placeholder || '',
+                type: a.type || '',
+                checked: a.checked ?? null,
+                disabled: a.disabled ?? false,
+                value: (a.value !== undefined ? String(a.value).slice(0, 60) : null)
+            };
+        }
+    """)
+
+
+def _announce(info):
+    if info.get('none'): return "No element currently focused (focus is on document body)"
+    parts = []
+    role = info.get('role') or info.get('tag', '')
+    name = info.get('name', '').strip()
+    parts.append(f"{role}" + (f": {name}" if name else ""))
+    if info.get('type') and info['type'] != role: parts.append(f"type={info['type']}")
+    if info.get('value') is not None and info['value'] != '': parts.append(f"value={info['value']}")
+    if info.get('checked') is True: parts.append("checked")
+    if info.get('disabled'): parts.append("disabled")
+    return ", ".join(parts)
+
+
+def session_tab(direction='forward'):
+    """Press Tab (or Shift+Tab), report newly focused element. Zero Claude calls."""
+    p, browser, page = session_connect()
+    try:
+        page.keyboard.press('Shift+Tab' if direction == 'back' else 'Tab')
+        time.sleep(0.15)
+        print(_announce(_focused_info(page)), flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_activate():
+    """Press Enter on focused element (activate link/button, submit form). Zero Claude calls."""
+    p, browser, page = session_connect()
+    try:
+        page.keyboard.press('Enter')
+        time.sleep(0.3)
+        print(f"Activated. URL: {page.url}", flush=True)
+        focused = _focused_info(page)
+        if not focused.get('none'):
+            print(f"Now focused: {_announce(focused)}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_key(keys: str, count: int = 1):
+    """Send keyboard input to the focused element. Zero Claude calls.
+
+    Supports:
+      - Single keys: ArrowRight, ArrowLeft, ArrowUp, ArrowDown, Space, Enter, Escape, Home, End, PageUp, PageDown
+      - Modifiers: Shift+Tab, Control+a, Alt+F4
+      - Multiple presses: session_key("ArrowRight", 5) presses right arrow 5 times
+
+    Examples:
+      session_key("ArrowRight")      # one right arrow
+      session_key("ArrowRight", 10)  # ten right arrows (increase slider)
+      session_key("Space")           # toggle/activate
+      session_key("Escape")          # close dialog
+    """
+    p, browser, page = session_connect()
+    try:
+        # Normalize common aliases
+        key_map = {
+            'right': 'ArrowRight', 'left': 'ArrowLeft', 'up': 'ArrowUp', 'down': 'ArrowDown',
+            'space': 'Space', 'enter': 'Enter', 'esc': 'Escape', 'escape': 'Escape',
+            'home': 'Home', 'end': 'End', 'pageup': 'PageUp', 'pagedown': 'PageDown',
+            'pgup': 'PageUp', 'pgdn': 'PageDown', 'pgdown': 'PageDown',
+        }
+        normalized = key_map.get(keys.lower(), keys)
+
+        for _ in range(count):
+            page.keyboard.press(normalized)
+            time.sleep(0.05)  # Small delay between presses
+
+        time.sleep(0.2)  # Wait for UI to update
+        focused = _focused_info(page)
+
+        if count > 1:
+            print(f"Pressed {normalized} x{count}", flush=True)
+        else:
+            print(f"Pressed {normalized}", flush=True)
+
+        if not focused.get('none'):
+            print(f"Focused: {_announce(focused)}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_arrow(direction: str, count: int = 1):
+    """Convenience shorthand for arrow key presses. Zero Claude calls.
+
+    Examples:
+      session_arrow("right", 5)   # increase slider 5 steps
+      session_arrow("left", 3)    # decrease slider 3 steps
+      session_arrow("down")       # move down in menu
+    """
+    dir_map = {'right': 'ArrowRight', 'left': 'ArrowLeft', 'up': 'ArrowUp', 'down': 'ArrowDown'}
+    key = dir_map.get(direction.lower(), f'Arrow{direction.capitalize()}')
+    session_key(key, count)
+
+
+def session_list(kind='focusables'):
+    """Print a list of elements by kind (focusables, headings, links, buttons, forms).
+    Pure DOM extraction, zero Claude calls, instant. Mirrors screen-reader rotor/elements-list.
+    """
+    p, browser, page = session_connect()
+    try:
+        kind = kind.lower()
+        if kind in ('heading', 'headings', 'h'):
+            rows = page.evaluate("""
+                () => [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map(h => ({
+                    level: parseInt(h.tagName[1]),
+                    text: h.textContent.trim().slice(0, 100)
+                })).filter(r => r.text)
+            """)
+            for r in rows[:50]:
+                print(f"  H{r['level']}: {r['text']}")
+            print(f"({len(rows)} headings)" if rows else "(no headings)", flush=True)
+        elif kind in ('link', 'links', 'l', 'k'):
+            rows = page.evaluate("""
+                () => [...document.querySelectorAll('a[href]')].map(a => ({
+                    text: (a.getAttribute('aria-label') || a.textContent.trim() || a.href).slice(0, 80),
+                    href: a.href
+                })).filter(r => r.text && r.text !== r.href.slice(0, 80))
+            """)
+            for r in rows[:50]:
+                print(f"  {r['text']}")
+            print(f"({len(rows)} links)" if rows else "(no links)", flush=True)
+        elif kind in ('button', 'buttons', 'b'):
+            rows = page.evaluate("""
+                () => [...document.querySelectorAll('button, [role=\"button\"], input[type=\"submit\"], input[type=\"button\"]')].map(b => ({
+                    text: (b.getAttribute('aria-label') || b.textContent.trim() || b.value || '').slice(0, 80),
+                    disabled: b.disabled
+                })).filter(r => r.text)
+            """)
+            for r in rows[:50]:
+                print(f"  {r['text']}{' (disabled)' if r['disabled'] else ''}")
+            print(f"({len(rows)} buttons)" if rows else "(no buttons)", flush=True)
+        elif kind in ('form', 'forms', 'fields', 'f'):
+            rows = page.evaluate("""
+                () => [...document.querySelectorAll('input:not([type=\"hidden\"]), textarea, select')].map(el => {
+                    const labelEl = el.labels?.[0];
+                    const label = el.getAttribute('aria-label') || labelEl?.textContent.trim() || el.placeholder || el.name || '';
+                    return {label: label.slice(0, 60), type: el.type || el.tagName.toLowerCase(),
+                            value: (el.value || '').slice(0, 40), required: el.required};
+                }).filter(r => r.label)
+            """)
+            for r in rows[:50]:
+                req = ' *required*' if r['required'] else ''
+                val = f' = {r["value"]}' if r['value'] else ''
+                print(f"  [{r['type']}] {r['label']}{val}{req}")
+            print(f"({len(rows)} form fields)" if rows else "(no form fields)", flush=True)
+        elif kind in ('image', 'images', 'img', 'g'):
+            rows = page.evaluate("""
+                () => [...document.querySelectorAll('img, [role="img"], picture, svg[aria-label]')].map(el => {
+                    const rect = el.getBoundingClientRect();
+                    const scrollY = rect.top + window.scrollY;
+                    const src = el.currentSrc || el.src || el.getAttribute('data-src') || '';
+                    const alt = el.getAttribute('alt') || el.getAttribute('aria-label') || el.getAttribute('title') || '';
+                    return {
+                        alt: alt.slice(0, 80),
+                        src: src.slice(-80),
+                        w: Math.round(rect.width),
+                        h: Math.round(rect.height),
+                        y: Math.round(scrollY),
+                        hidden: rect.width < 5 || rect.height < 5 || el.offsetParent === null
+                    };
+                }).filter(r => !r.hidden)
+            """)
+            for r in rows[:80]:
+                label = r['alt'] or f"(no alt) {r['src'].split('/')[-1][:40]}"
+                print(f"  [{r['w']}×{r['h']} @y={r['y']}] {label}")
+            print(f"({len(rows)} images)" if rows else "(no images)", flush=True)
+        elif kind in ('landmark', 'landmarks', 'region', 'regions', 'r'):
+            rows = page.evaluate("""
+                () => [...document.querySelectorAll('[role=\"banner\"],[role=\"navigation\"],[role=\"main\"],[role=\"complementary\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"form\"],[role=\"region\"],header,nav,main,aside,footer,section[aria-label],section[aria-labelledby]')].map(el => ({
+                    role: el.getAttribute('role') || el.tagName.toLowerCase(),
+                    label: (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || '').slice(0, 60)
+                }))
+            """)
+            for r in rows[:30]:
+                print(f"  {r['role']}" + (f": {r['label']}" if r['label'] else ""))
+            print(f"({len(rows)} landmarks)" if rows else "(no landmarks)", flush=True)
+        else:  # focusables
+            rows = page.evaluate("""
+                () => {
+                    const candidates = document.querySelectorAll('a[href], button, input:not([type=\"hidden\"]), textarea, select, [tabindex]:not([tabindex=\"-1\"])');
+                    return [...candidates].filter(el => !el.disabled && el.offsetParent !== null).map(el => ({
+                        tag: el.tagName.toLowerCase(),
+                        role: el.getAttribute('role') || '',
+                        name: (el.getAttribute('aria-label') || el.textContent?.trim() || el.value || el.placeholder || '').slice(0, 70),
+                        type: el.type || ''
+                    })).filter(r => r.name)
+                }
+            """)
+            for r in rows[:80]:
+                role = r['role'] or r['tag']
+                print(f"  [{role}] {r['name']}")
+            print(f"({len(rows)} focusable)" if rows else "(no focusables)", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_find(text):
+    """Find text on the page — body text AND element attributes (alt, aria-label, title, placeholder).
+    Broader than Ctrl+F: also surfaces unlabeled-in-body items like images with matching alt text.
+    Zero Claude calls.
+    """
+    p, browser, page = session_connect()
+    try:
+        hits = page.evaluate("""
+            (needle) => {
+                const nl = needle.toLowerCase();
+                const out = [];
+
+                // 1. Body text matches (with surrounding context)
+                const body = document.body.innerText || '';
+                const lower = body.toLowerCase();
+                let idx = lower.indexOf(nl);
+                while (idx >= 0 && out.length < 20) {
+                    const s = Math.max(0, idx - 40);
+                    const e = Math.min(body.length, idx + needle.length + 40);
+                    out.push({kind: 'text', snippet: body.slice(s, e).replace(/\\s+/g, ' ').trim()});
+                    idx = lower.indexOf(nl, idx + 1);
+                }
+
+                // 2. Element attribute matches (alt, aria-label, title, placeholder)
+                const attrs = ['alt', 'aria-label', 'title', 'placeholder'];
+                const seen = new Set();
+                document.querySelectorAll('*').forEach(el => {
+                    if (out.length >= 40) return;
+                    for (const a of attrs) {
+                        const v = el.getAttribute(a);
+                        if (v && v.toLowerCase().includes(nl)) {
+                            const key = el.tagName + v;
+                            if (seen.has(key)) continue;
+                            seen.add(key);
+                            const rect = el.getBoundingClientRect();
+                            const y = Math.round(rect.top + window.scrollY);
+                            out.push({kind: 'attr', tag: el.tagName.toLowerCase(), attr: a,
+                                      value: v.slice(0, 100), y: y});
+                        }
+                    }
+                });
+                return out;
+            }
+        """, text)
+
+        if not hits:
+            print(f"Not found: '{text}'", flush=True); return
+
+        text_hits = [h for h in hits if h.get('kind') == 'text']
+        attr_hits = [h for h in hits if h.get('kind') == 'attr']
+
+        if text_hits:
+            print(f"Text matches for '{text}' ({len(text_hits)}):", flush=True)
+            for i, m in enumerate(text_hits[:20], 1):
+                print(f"  {i}. …{m['snippet']}…")
+        if attr_hits:
+            print(f"\nElement attribute matches ({len(attr_hits)}):", flush=True)
+            for h in attr_hits[:20]:
+                print(f"  <{h['tag']} {h['attr']}=\"{h['value']}\"> @y={h['y']}")
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_read(selector=None):
+    """Extract the main article text (Readability-style). One pure DOM call, zero Claude.
+
+    Good for 'read me this article' — skips nav, ads, footers, sidebars. Falls back to
+    full body text if no article-like container found.
+    """
+    p, browser, page = session_connect()
+    try:
+        text = page.evaluate(f"""
+            (sel) => {{
+                // 1. Honor explicit selector if given
+                if (sel) {{
+                    const el = document.querySelector(sel);
+                    if (el) return el.innerText.replace(/\\s+/g, ' ').trim();
+                }}
+                // 2. Try semantic containers
+                const candidates = [
+                    'article',
+                    '[role="article"]',
+                    'main article',
+                    'main',
+                    '[role="main"]',
+                    '#content article',
+                    '#content',
+                    '.article-body',
+                    '.post-content',
+                    '.entry-content',
+                ];
+                for (const c of candidates) {{
+                    const el = document.querySelector(c);
+                    if (el && el.innerText && el.innerText.length > 200) {{
+                        return el.innerText.replace(/\\s+\\n/g, '\\n').replace(/\\n{{3,}}/g, '\\n\\n').trim();
+                    }}
+                }}
+                // 3. Text-density heuristic — find the <div> with most text relative to tags
+                let best = null, bestScore = 0;
+                document.querySelectorAll('div, section').forEach(el => {{
+                    const text = el.innerText || '';
+                    if (text.length < 400) return;
+                    const tags = el.querySelectorAll('*').length || 1;
+                    const score = text.length / tags;
+                    if (score > bestScore) {{ bestScore = score; best = el; }}
+                }});
+                if (best) return best.innerText.replace(/\\s+\\n/g, '\\n').replace(/\\n{{3,}}/g, '\\n\\n').trim();
+                // 4. Fallback: whole body
+                return (document.body.innerText || '').replace(/\\s+\\n/g, '\\n').replace(/\\n{{3,}}/g, '\\n\\n').trim();
+            }}
+        """, selector)
+
+        if not text:
+            print("(no article text found)", flush=True); return
+        # Cap the printed output so terminal doesn't flood; full text still extracted
+        LIMIT = 15000
+        if len(text) > LIMIT:
+            print(text[:LIMIT], flush=True)
+            print(f"\n... [truncated, {len(text) - LIMIT} more chars]", flush=True)
+        else:
+            print(text, flush=True)
+        print(f"\n({len(text)} chars)", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_list_tables(max_tables=5):
+    """Extract tabular data from the page (instant, zero Claude)."""
+    p, browser, page = session_connect()
+    try:
+        tables = page.evaluate(f"""
+            () => {{
+                const out = [];
+                document.querySelectorAll('table').forEach((t, i) => {{
+                    if (i >= {max_tables}) return;
+                    const rows = [];
+                    t.querySelectorAll('tr').forEach(tr => {{
+                        const cells = [...tr.querySelectorAll('th, td')]
+                            .map(c => (c.textContent || '').trim().replace(/\\s+/g, ' '));
+                        if (cells.length) rows.push(cells);
+                    }});
+                    if (rows.length) {{
+                        const caption = t.caption?.textContent?.trim() || t.getAttribute('aria-label') || '';
+                        out.push({{caption, rows: rows.slice(0, 50)}});
+                    }}
+                }});
+                return out;
+            }}
+        """)
+        if not tables:
+            print("(no tables found)", flush=True); return
+        for i, t in enumerate(tables, 1):
+            cap = f": {t['caption']}" if t['caption'] else ''
+            print(f"\nTable {i}{cap} ({len(t['rows'])} rows)")
+            for row in t['rows']:
+                print("  " + " | ".join(c[:40] for c in row))
+        print(f"\n({len(tables)} tables)", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+# Path to bundled axe-core
+_AXE_BUNDLE_PATH = Path(__file__).parent / "axe-core.min.js"
+_AXE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.0/axe.min.js"
+_AXE_SCRIPT = None
+
+def _get_axe_script():
+    """Load axe-core script (cached). Downloads from CDN if local bundle missing."""
+    global _AXE_SCRIPT
+    if _AXE_SCRIPT is None:
+        if _AXE_BUNDLE_PATH.exists():
+            _AXE_SCRIPT = _AXE_BUNDLE_PATH.read_text()
+        else:
+            import urllib.request
+            print("(downloading axe-core...)", flush=True)
+            with urllib.request.urlopen(_AXE_CDN, timeout=10) as resp:
+                _AXE_SCRIPT = resp.read().decode('utf-8')
+            _AXE_BUNDLE_PATH.write_text(_AXE_SCRIPT)
+    return _AXE_SCRIPT
+
+
+def session_audit(severity_filter=None, json_output=False):
+    """Run WCAG accessibility audit on the current page using axe-core.
+
+    Reports issues grouped by severity (critical, serious, moderate, minor).
+    No Claude call — instant DOM-based analysis.
+
+    Args:
+        severity_filter: Optional - only show issues of this severity
+                        (critical, serious, moderate, minor)
+        json_output: If True, output JSON instead of formatted text
+    """
+    valid_severities = {'critical', 'serious', 'moderate', 'minor'}
+    if severity_filter and severity_filter not in valid_severities:
+        if json_output:
+            print(json.dumps({"error": f"Invalid severity '{severity_filter}'", "valid": list(valid_severities)}))
+        else:
+            print(f"Invalid severity '{severity_filter}'. Use: {', '.join(sorted(valid_severities))}")
+        sys.exit(1)
+
+    try:
+        p, browser, page = session_connect()
+    except Exception as e:
+        if json_output:
+            print(json.dumps({"error": f"No browser session: {e}"}))
+        else:
+            print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+        sys.exit(1)
+    try:
+        # Inject axe-core
+        page.add_script_tag(content=_get_axe_script())
+        page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
+
+        # Run axe
+        results = page.evaluate("""
+            async () => {
+                const results = await axe.run();
+                return {
+                    violations: results.violations.map(v => ({
+                        id: v.id,
+                        impact: v.impact,
+                        description: v.description,
+                        help: v.help,
+                        helpUrl: v.helpUrl,
+                        nodes: v.nodes.length
+                    })),
+                    passes: results.passes.length,
+                    incomplete: results.incomplete.length,
+                    url: window.location.href
+                };
+            }
+        """)
+
+        violations = results['violations']
+        if severity_filter:
+            violations = [v for v in violations if v['impact'] == severity_filter]
+
+        # Group by severity
+        by_severity = {'critical': [], 'serious': [], 'moderate': [], 'minor': []}
+        for v in violations:
+            impact = v.get('impact', 'minor') or 'minor'
+            if impact in by_severity:
+                by_severity[impact].append(v)
+
+        # JSON output
+        if json_output:
+            output = {
+                "url": results['url'],
+                "violations": violations,
+                "by_severity": {k: v for k, v in by_severity.items() if v},
+                "summary": {
+                    "total_violations": len(violations),
+                    "passes": results['passes'],
+                    "incomplete": results['incomplete']
+                }
+            }
+            print(json.dumps(output, indent=2))
+            return
+
+        # Print summary
+        total = len(violations)
+        print(f"\nAccessibility Audit: {results['url'][:60]}")
+        print(f"{'─' * 60}")
+
+        if total == 0:
+            print("No violations found.")
+            print(f"\n{results['passes']} rules passed, {results['incomplete']} need review")
+        else:
+            # Print by severity
+            severity_order = ['critical', 'serious', 'moderate', 'minor']
+            severity_icons = {'critical': '[!!]', 'serious': '[!]', 'moderate': '[~]', 'minor': '[.]'}
+
+            for sev in severity_order:
+                issues = by_severity[sev]
+                if not issues:
+                    continue
+                print(f"\n{severity_icons[sev]} {sev.upper()} ({len(issues)})")
+                for v in issues[:5]:  # Limit to 5 per severity
+                    print(f"  - {v['help']} ({v['nodes']} elements)")
+                    print(f"    {v['description'][:70]}...")
+                if len(issues) > 5:
+                    print(f"  ... and {len(issues) - 5} more")
+
+            print(f"\n{'─' * 60}")
+            print(f"Total: {total} violations | {results['passes']} passed | {results['incomplete']} need review")
+
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_ask(question):
+    """One-shot Q&A about the current page — no interaction, just see + answer.
+
+    For BLV users driving the agent: they ask a specific visual question about what's on
+    screen ('what's the mass value?', 'is the block submerged?'), ai4a11y captures + answers.
+    One Claude call, ~20s.
+    """
+    p, browser, page = session_connect()
+    try:
+        import os as _os
+        run_dir = OUT / f"session_ask_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        shot = run_dir / "ask.png"
+        _safe_screenshot(page, shot)
+        outline = get_a11y_outline(page)
+        ctx = get_page_context(page, text_limit=8000)
+        tables_str = "\n\n".join(ctx['tables']) if ctx['tables'] else ""
+        prompt = f"""Answer concisely using the most reliable source available:
+  1. Structured tables (infobox, etc.) — use these first for factual values
+  2. Full page text content — reliable for any text-based facts
+  3. Screenshot — for visual details (colors, layout, positions)
+  4. Accessibility outline — for page structure
+
+Don't speculate. If the answer isn't in ANY of these, say so.
+
+URL: {page.url}
+Question: {question}
+
+Structured tables (if any):
+{tables_str or '(none found)'}
+
+Full page text ({len(ctx['text'])} chars):
+{ctx['text']}
+
+Accessibility outline:
+{chr(10).join(outline[:15])}"""
+        print(ask_claude(str(shot), prompt), flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_nudge(target, direction='right', count=5):
+    """Increment/decrement a canvas slider by repeatedly clicking its arrow button.
+
+    Handles the "PhET slider problem": Playwright's synthetic pointer-drag doesn't
+    trigger continuous value changes on canvas-rendered sliders (PhET Scenery,
+    custom Konva/Pixi widgets), but the arrow buttons flanking the track DO
+    respond to click events and advance the value by one tick each.
+
+    Flow:
+      1. Vision call: locate the arrow button for the given slider + direction.
+      2. Click at those coords `count` times with small delays.
+      3. One verification screenshot after, diffing before/after.
+
+    Example:
+      session_nudge("block A mass slider", "right", 10)
+
+    Note: for sliders that are density-locked to a preset material (e.g. PhET's
+    Mass slider while material=Wood), the arrow button is a no-op until the
+    user selects a Custom/unlocked material. ai4a11y reports this honestly via
+    the before/after diff.
+    """
+    p, browser, page = session_connect()
+    try:
+        before_hash = get_screenshot_hash(page)
+        import os as _os
+        run_dir = OUT / f"session_nudge_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        shot = run_dir / "nudge.png"
+        if not _safe_screenshot(page, shot):
+            print("Can't nudge: screenshot failed", flush=True); return
+
+        real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
+        vw, vh = real.get('w', 1280), real.get('h', 800)
+
+        dir_word = direction.lower().strip()
+        if dir_word in ('right', 'up', 'increase', 'inc', '+'):
+            arrow = 'right (▶) / up / increase'
+        elif dir_word in ('left', 'down', 'decrease', 'dec', '-'):
+            arrow = 'left (◀) / down / decrease'
+        else:
+            arrow = direction
+
+        prompt = f"""Locate the arrow-step button on a slider for a BLV user nudging a value.
+
+Slider target: "{target}"
+Button to find: the {arrow} arrow button (the small step button at the end of the slider track)
+Viewport: {vw} x {vh} pixels
+
+Return EXACT viewport pixel coords of the arrow button CENTER. The button is small and flanks the slider track — NOT the slider thumb, NOT the value display, NOT the label.
+
+Respond with JSON ONLY:
+  {{"x": 1686, "y": 134, "reason": "right arrow on Mass slider, at the far right end of the track, just before the value display"}}
+  {{"error": "reason"}}"""
+        raw = ask_claude(str(shot), prompt)
+        try:
+            s, e = raw.find('{'), raw.rfind('}') + 1
+            choice = json.loads(raw[s:e]) if s >= 0 and e > s else {}
+        except Exception:
+            choice = {'error': f'parse fail: {raw[:80]}'}
+
+        if choice.get('error') or not (isinstance(choice.get('x'), (int, float))
+                                       and isinstance(choice.get('y'), (int, float))):
+            print(f"Can't nudge: {choice.get('error', 'no coords')}", flush=True); return
+
+        x, y = int(choice['x']), int(choice['y'])
+        reason = choice.get('reason', '')
+        print(f"Nudge target: ({x},{y}) — {reason}", flush=True)
+
+        for _ in range(count):
+            page.mouse.click(x, y)
+            time.sleep(0.15)
+        time.sleep(0.5)
+
+        post_hash = get_screenshot_hash(page)
+        if post_hash != before_hash:
+            print(f"Nudged {count}× — visual state changed", flush=True)
+        else:
+            print(f"Nudged {count}× — NO visual change (slider may be locked; "
+                  f"check material/mode state)", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_pickdate(field_desc, date_str):
+    """Pick a date from a calendar widget (Google Flights, Airbnb, Booking.com etc.).
+
+    Flow:
+      1. Tap the date field to open its calendar popup (reuses session_tap grounding).
+      2. Vision call: read current calendar state (visible month/year) and coords
+         of the target day cell OR the "next month" arrow if target is future.
+      3. Loop: if wrong month, click next/prev arrow; re-screenshot; repeat.
+      4. When target month visible, click the day cell.
+
+    Why this exists: typed dates get rejected by custom material-style calendars.
+    Clicking through the calendar works but requires multi-step vision + coords.
+
+    date_str formats accepted: YYYY-MM-DD, "June 15 2026", "Jun 15", etc.
+      — Claude normalizes downstream; we just pass it in the prompt.
+    """
+    p, browser, page = session_connect()
+    try:
+        # Step 1: open the picker by clicking the field
+        before = state_snapshot(page)
+        candidates = get_interactables_full(page)
+        if candidates:
+            lines = [f"  [{c['idx']}] {c['kind']}: {c['label']}" for c in candidates]
+            open_prompt = f"""Pick the field that opens a calendar date picker.
+
+User wants to set date: "{date_str}" in field described as: "{field_desc}"
+
+Candidates:
+{chr(10).join(lines)}
+
+Return JSON ONLY:
+  {{"el": N}}
+  {{"error": "reason"}}"""
+            raw = ask_claude_text(open_prompt, timeout=90, model=_IRIS_VISION_MODEL)
+            try:
+                s, e = raw.find('{'), raw.rfind('}') + 1
+                choice = json.loads(raw[s:e]) if s >= 0 and e > s else {}
+            except Exception:
+                choice = {}
+            el_idx = choice.get('el')
+            if isinstance(el_idx, int) and 1 <= el_idx <= len(candidates):
+                t = candidates[el_idx - 1]
+                t = _scroll_into_view(page, t)
+                if t is None:
+                    print("Can't open picker: element lost after scroll", flush=True)
+                    return
+                page.mouse.click(t['cx'], t['cy_vp'])
+                print(f"Opened picker via [{el_idx}] {t['label']}", flush=True)
+                time.sleep(1.2)
+            else:
+                print(f"Can't open picker: {choice.get('error', 'no field match')}", flush=True)
+                return
+        else:
+            print("No candidates — can't locate date field", flush=True); return
+
+        # Step 2-4: loop up to 14 months forward/back while navigating calendar
+        import os as _os
+        run_dir = OUT / f"session_pickdate_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+
+        for step in range(14):
+            shot = run_dir / f"cal_{step}.png"
+            if not _safe_screenshot(page, shot):
+                print("Can't pickdate: screenshot failed", flush=True); return
+            real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
+            vw, vh = real.get('w', 1280), real.get('h', 800)
+            prompt = f"""You are navigating a calendar popup for a blind user.
+
+Target date: "{date_str}"
+Viewport: {vw}x{vh} pixels
+
+Examine the screenshot. Find the calendar popup (a grid of day cells with a month/year header).
+
+Decide ONE action:
+  (a) If the TARGET day cell for "{date_str}" is visible in the calendar grid, return its click coordinates:
+      {{"action": "pick_day", "x": N, "y": N, "month_year": "June 2026", "reason": "day 15 cell in June 2026 panel"}}
+  (b) If the target month is in the PAST relative to what's shown (need to go back), click previous-month arrow:
+      {{"action": "prev_month", "x": N, "y": N, "current": "August 2026"}}
+  (c) If the target month is in the FUTURE (need to go forward), click next-month arrow:
+      {{"action": "next_month", "x": N, "y": N, "current": "April 2026"}}
+  (d) If no calendar popup is visible at all (picker didn't open or closed):
+      {{"error": "no calendar visible"}}
+
+Coordinates are viewport pixel coords for Playwright mouse.click. Pick the CENTER of the day cell / arrow button.
+
+DAY CELLS are small squares in the calendar grid. Do NOT click the month header or navigation row — click the numeric day cell itself."""
+            raw = ask_claude(str(shot), prompt)
+            try:
+                s, e = raw.find('{'), raw.rfind('}') + 1
+                act = json.loads(raw[s:e]) if s >= 0 and e > s else {}
+            except Exception:
+                act = {'error': f'parse fail: {raw[:80]}'}
+
+            action = act.get('action')
+            if action == 'pick_day':
+                x, y = int(act.get('x', 0)), int(act.get('y', 0))
+                if x <= 0 or y <= 0:
+                    print(f"pick_day: invalid coords {act}", flush=True); return
+                print(f"Clicking day cell at ({x},{y}) in {act.get('month_year','?')}", flush=True)
+                page.mouse.click(x, y)
+                time.sleep(1.0)
+                after = state_snapshot(page)
+                diff = describe_state_diff(before, after)
+                if diff:
+                    print(f"State diff: {diff}", flush=True)
+                print(f"pickdate complete. URL: {page.url[:120]}", flush=True)
+                return
+            elif action == 'next_month' or action == 'prev_month':
+                x, y = int(act.get('x', 0)), int(act.get('y', 0))
+                if x <= 0 or y <= 0:
+                    print(f"{action}: invalid coords {act}", flush=True); return
+                print(f"[step {step}] {action} from {act.get('current','?')} — clicking ({x},{y})", flush=True)
+                page.mouse.click(x, y)
+                time.sleep(0.8)
+            else:
+                print(f"pickdate aborted: {act.get('error', act)}", flush=True); return
+
+        print("pickdate: too many month-navigation steps (>14); giving up", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_type(where, text):
+    """Click a field by natural-language description, then type text.
+
+    Text-first grounding via get_interactables_full (same path as session_tap) —
+    inputs get enriched labels (aria-label + placeholder + name + <label for> +
+    aria-labelledby) so "search field", "search box", "Search Wikipedia" all resolve
+    to the same element. Falls back to vision only when no candidate matches.
+
+    Example: session_type("search field", "accessibility")
+    """
+    p, browser, page = session_connect()
+    try:
+        before = state_snapshot(page)
+        candidates = get_interactables_full(page)
+
+        def _ground_field(cands):
+            field_candidates = [c for c in cands if c['kind'] in ('input', 'select')] or cands
+            if not field_candidates:
+                return None, {}
+            lines = []
+            for i, c in enumerate(field_candidates, 1):
+                offscr = "" if c['visible'] else " [offscreen, will scroll]"
+                parent = f" in:{c['parent']}" if c.get('parent') else ""
+                lines.append(f"  [{i}] {c['kind']}: {c['label']}{parent}{offscr}")
+            cand_text = "\n".join(lines)
+            prompt = f"""You are grounding an input-field selection for a blind user. Pick ONE candidate.
+
+User wants to type into: "{where}"
+Text to be typed after clicking: "{text[:80]}"
+
+Input/select candidates on the page (and other interactables if no input matches):
+{cand_text}
+
+Return JSON ONLY — no prose, no code fences:
+  {{"el": N}}                — confident match; N is from the list
+  {{"error": "not in list"}} — no candidate matches; vision fallback will run
+
+Rules:
+- Prefer `input` kind over `button` kind. The user said "field" — they want to type, not submit.
+- Labels may include multiple hints joined by ` · ` (e.g. "Search Wikipedia · search · searchInput") — any one matching "{where}" is enough.
+- Never invent an index. If nothing fits return {{"error": "not in list"}}."""
+            raw = ask_claude_text(prompt, timeout=90)
+            try:
+                s, e = raw.find('{'), raw.rfind('}') + 1
+                ch = json.loads(raw[s:e]) if s >= 0 and e > s else {}
+            except Exception:
+                ch = {}
+            return field_candidates, ch
+
+        field_candidates, choice = _ground_field(candidates)
+
+        # Recovery: if no field matched, scan the DOM for an INPUT element (not
+        # any clickable — that'd hijack `type "search"` into clicking a "Help"
+        # link, as happened on arXiv). If no real input is found, skip straight
+        # to the vision fallback which can spot form fields visually.
+        if choice and choice.get('error') == 'not in list':
+            rec = _text_recovery_scroll(page, where, kinds=('input', 'textarea'))
+            if rec:
+                print(f"Text-recovery type target: {rec['label']!r}", flush=True)
+                page.mouse.click(rec['cx'], rec['cy_vp'])
+                time.sleep(0.3)
+                page.keyboard.type(text)
+                time.sleep(0.5)
+                after = state_snapshot(page)
+                diff = describe_state_diff(before, after)
+                if diff:
+                    print(f"State diff: {diff}", flush=True)
+                print(f"Typed: {text[:60]}", flush=True)
+                return
+
+        el_idx = (choice or {}).get('el')
+        if field_candidates and isinstance(el_idx, int) and 1 <= el_idx <= len(field_candidates):
+            t = field_candidates[el_idx - 1]
+            print(f"Text-grounded type target: [{el_idx}] {t['kind']}: {t['label']}", flush=True)
+            t = _scroll_into_view(page, t)
+            if t is None:
+                print("Element lost after scroll — falling back to vision", flush=True)
+            else:
+                page.mouse.click(t['cx'], t['cy_vp'])
+                time.sleep(0.3)
+                page.keyboard.type(text)
+                time.sleep(0.5)
+                after = state_snapshot(page)
+                diff = describe_state_diff(before, after)
+                if diff:
+                    print(f"State diff: {diff}", flush=True)
+                print(f"Typed: {text[:60]}", flush=True)
+                return
+        else:
+            print("Text-grounding: no field matched — falling back to vision", flush=True)
+
+        # Phase 2: vision fallback (original SoM flow)
+        import os as _os
+        run_dir = OUT / f"session_type_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = run_dir / "type_raw.png"
+        shot_path = run_dir / "type.png"
+        if not _safe_screenshot(page, raw_path):
+            print("Can't find field: vision fallback screenshot failed", flush=True); return
+
+        elements = get_elements(page)
+        addressable = [e for e in elements if e.get('x', 0) > 0 and e.get('y', 0) > 0][:25]
+        add_som_markers(str(raw_path), str(shot_path), addressable)
+        el_summary = "\n".join(f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
+
+        real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
+        vw, vh = real.get('w', 1280), real.get('h', 800)
+
+        prompt = f"""Locate the input field: "{where}". Return coordinates so we can click then type.
+Numbered elements (prefer these if matching):
+{el_summary or '  (none)'}
+Return JSON: {{"el": N}} or {{"xf": 0.5, "yf": 0.3}} or {{"error": "reason"}}"""
+        raw = ask_claude(str(shot_path), prompt)
+        try:
+            s, e = raw.find('{'), raw.rfind('}') + 1
+            coords = json.loads(raw[s:e])
+        except Exception:
+            print(f"Could not parse vision result: {raw[:150]}", flush=True); return
+
+        if coords.get('error'):
+            print(f"Can't find field: {coords['error']}", flush=True); return
+
+        el_idx = coords.get('el')
+        if el_idx and 1 <= el_idx <= len(addressable):
+            t = addressable[el_idx - 1]
+            x, y = t['x'], t['y']
+        elif coords.get('xf') is not None:
+            x, y = int(coords['xf'] * vw), int(coords['yf'] * vh)
+        else:
+            print("No coordinates returned", flush=True); return
+
+        page.mouse.click(x, y)
+        time.sleep(0.3)
+        page.keyboard.type(text)
+        time.sleep(0.5)
+        print(f"Vision-grounded: clicked ({x},{y}) and typed: {text[:60]}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def _tap_click_and_diff(page, x, y, before):
+    """Click at (x,y), wait for stability, emit a state-diff line. Returns True if anything changed."""
+    pre_hash = get_screenshot_hash(page)
+    page.mouse.click(x, y)
+    wait_for_stable(page, timeout=3)
+    post_hash = get_screenshot_hash(page)
+    after = state_snapshot(page)
+    diff = describe_state_diff(before, after)
+    visually_changed = post_hash != pre_hash
+    if diff:
+        print(f"State diff: {diff}", flush=True)
+    elif visually_changed:
+        print("State diff: visual change (no DOM signal)", flush=True)
+    else:
+        print("State diff: NONE — click appears to have had no effect", flush=True)
+    return bool(diff) or visually_changed
+
+
+def session_tap(description):
+    """Fast single-click by natural-language target. Textual-choice grounding first
+    (SeeAct-style, text-only Claude call — ~3x more accurate than SoM per ICML'24);
+    vision fallback only when no text candidate matches.
+
+    Flow:
+      1. Build page-wide interactables snapshot (no screenshot, instant).
+      2. Text-only Claude call — pick by index or say "not in list".
+      3. If picked: scroll element into view, click at captured center coords, diff state.
+      4. If text miss: fall back to vision SoM flow on the current viewport.
+    """
+    p, browser, page = session_connect()
+    try:
+        before = state_snapshot(page)
+        candidates = get_interactables_full(page)
+
+        def _ground(cands):
+            # Compute same-site prefix from current URL so we can mark candidates
+            # whose href belongs to the *same product/doc/repo context*. Fixes the
+            # ambiguous-label problem (e.g. github.com/owner/repo where "Issues"
+            # matches both the repo tab /owner/repo/issues and a marketing link
+            # /features/issues — the marketing one is on the same host but
+            # different top-level path.
+            try:
+                from urllib.parse import urlparse as _urlparse
+                u = _urlparse(page.url)
+                cur_host = u.netloc.lower()
+                parts = [p for p in u.path.split('/') if p]
+                # Use first 2 path segments as the "site context" prefix
+                # (e.g. /anthropics/claude-code/... → /anthropics/claude-code)
+                cur_prefix = '/' + '/'.join(parts[:2]) if parts else ''
+            except Exception:
+                cur_host, cur_prefix = '', ''
+
+            def _same_site_tag(label):
+                if not cur_host or '→' not in label:
+                    return ''
+                # labels with link hrefs include `→ https://host/path...` suffix
+                try:
+                    href = label.split('→', 1)[1].strip()
+                except Exception:
+                    return ''
+                h = href.lower()
+                # relative href ("/anthropics/claude-code/issues"): starts with cur_prefix
+                if h.startswith(cur_prefix + '/') or h == cur_prefix:
+                    return ' [SAME-SITE]'
+                if cur_host in h and (cur_prefix + '/' in h or h.endswith(cur_prefix)):
+                    return ' [SAME-SITE]'
+                return ''
+
+            lines = []
+            for c in cands:
+                offscr = "" if c['visible'] else " [offscreen, will scroll]"
+                disabled = " [disabled]" if c.get('disabled') else ""
+                parent = f" in:{c['parent']}" if c.get('parent') else ""
+                # Tag any candidate whose label exposes a href (links, clickable
+                # turbo-tabs like GitHub's repo tabs, etc.) — not just kind=link.
+                site_tag = _same_site_tag(c['label']) if '→' in c['label'] else ''
+                lines.append(f"  [{c['idx']}] {c['kind']}: {c['label']}{parent}{site_tag}{offscr}{disabled}")
+            cand_text = "\n".join(lines)
+            cur_url = page.url
+            prompt = f"""You are grounding a click for a blind-user accessibility tool. The user described the target in natural language; you must pick ONE candidate from the numbered list.
+
+Current page URL: {cur_url}
+User wants to click: "{description}"
+
+Candidates (from the page's accessibility tree):
+{cand_text}
+
+Return JSON ONLY — no prose, no code fences:
+  {{"el": N}}     — confident match; N is the index from the list
+  {{"el": N, "note": "..."}}  — match with a caveat
+  {{"error": "not in list"}}  — no candidate clearly matches; vision fallback will run
+
+Rules:
+- Prefer exact label matches over fuzzy ones.
+- When multiple match (e.g. several "Edit" buttons), use the `in:<landmark>` hint to disambiguate — pick the one whose parent context best matches the user's description.
+- For ambiguous labels shared between page-chrome (marketing/nav) and page-content links, prefer the candidate marked `[SAME-SITE]` — that link belongs to the current product/repo/doc context. Example: on `github.com/owner/repo`, "Issues" should resolve to a [SAME-SITE] link like `/owner/repo/issues`, not the unmarked marketing link `/features/issues`.
+- When both a form input and its related submit button match (e.g. "search" → both a search input and a Search button; "email" → email field and Subscribe button), prefer the input — users typically need to fill it before the button is useful. Pick the button only if the description uses an explicit submit verb ("submit", "go", "press", "send").
+- Do NOT invent an index. If nothing fits, return {{"error": "not in list"}} verbatim."""
+            raw = ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL)
+            try:
+                s, e = raw.find('{'), raw.rfind('}') + 1
+                return json.loads(raw[s:e]) if s >= 0 and e > s else {'error': f'parse failed: {raw[:80]}'}
+            except Exception:
+                return {'error': f'parse failed: {raw[:80]}'}
+
+        choice = _ground(candidates) if candidates else {'error': 'no candidates'}
+
+        def _try_recovery():
+            rec = _text_recovery_scroll(page, description)
+            if not rec:
+                return False
+            print(f"Text-recovery tap: {rec['kind']}: {rec['label']!r}", flush=True)
+            changed = _tap_click_and_diff(page, rec['cx'], rec['cy_vp'], before)
+            if changed:
+                print(f"Done. URL: {page.url}", flush=True)
+                title = page.title()
+                if title:
+                    print(f"Title: {title[:80]}", flush=True)
+                return True
+            print("Text-recovery click had no effect", flush=True)
+            return False
+
+        el_idx = choice.get('el') if isinstance(choice, dict) else None
+        confident_pick = isinstance(el_idx, int) and 1 <= el_idx <= len(candidates)
+
+        if confident_pick:
+            t = candidates[el_idx - 1]
+            note = f" ({choice['note']})" if choice.get('note') else ""
+            print(f"Text-grounded tap: [{el_idx}] {t['kind']}: {t['label']}{note}", flush=True)
+
+            t = _scroll_into_view(page, t)
+            if t is None:
+                print("Element lost after scroll — trying recovery", flush=True)
+            else:
+                x, y = t['cx'], t['cy_vp']
+                changed = _tap_click_and_diff(page, x, y, before)
+                if changed:
+                    print(f"Done. URL: {page.url}", flush=True)
+                    title = page.title()
+                    if title:
+                        print(f"Title: {title[:80]}", flush=True)
+                    return
+                print("Text-grounded click had no effect — trying recovery", flush=True)
+        else:
+            print(f"Text-grounding: {choice.get('error') or 'no pick'} — trying recovery", flush=True)
+
+        # Recovery: DOM-wide text scan for leaf element matching description.
+        # Fires whenever text-grounding didn't produce a confident useful click,
+        # covering: target outside cap, parse failures, wrong-element picks, etc.
+        if _try_recovery():
+            return
+        print("Falling back to vision", flush=True)
+
+        # Phase 2: vision fallback (original SoM flow)
+        import os as _os
+        run_dir = OUT / f"session_tap_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = run_dir / "tap_raw.png"
+        shot_path = run_dir / "tap.png"
+        _safe_screenshot(page, raw_path)
+
+        elements = get_elements(page)
+        addressable = [e for e in elements if e.get('x', 0) > 0 and e.get('y', 0) > 0][:25]
+        add_som_markers(str(raw_path), str(shot_path), addressable)
+
+        el_summary = "\n".join(f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
+        a11y_outline = get_a11y_outline(page)
+        real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
+        vw, vh = real.get('w', 1280), real.get('h', 800)
+
+        def resolve_coords(clue_suffix=""):
+            prompt = f"""Look at the screenshot. The image contains a web page of viewport {vw}x{vh}px (with a 25px margin added showing coordinate rulers; colored numbered badges mark DOM-detected interactive elements).
+
+User wants to click: "{description}"{clue_suffix}
+
+Prefer element index if a badge matches. Otherwise return NORMALIZED fractional coordinates (0.0-1.0 of viewport, NOT pixels). A click at the bottom-right corner = {{"xf": 1.0, "yf": 1.0}}. Center = {{"xf": 0.5, "yf": 0.5}}.
+
+Numbered elements:
+{el_summary or '  (none detected)'}
+
+Page structure (a11y):
+{chr(10).join(a11y_outline[:15])}
+
+Return JSON only:
+  {{"el": N}}  — if a numbered badge matches
+  {{"xf": 0.2, "yf": 0.97}}  — normalized fractional coords
+  {{"error": "reason"}}"""
+            raw = ask_claude(str(shot_path), prompt)
+            try:
+                s, e = raw.find('{'), raw.rfind('}') + 1
+                return json.loads(raw[s:e])
+            except Exception:
+                return {'error': f'parse failed: {raw[:100]}'}
+
+        coords = resolve_coords()
+        if coords.get('error'):
+            print(f"Can't tap: {coords['error']}", flush=True); return
+
+        el_idx = coords.get('el')
+        if el_idx is not None and 1 <= el_idx <= len(addressable):
+            t = addressable[el_idx - 1]
+            x, y = t['x'], t['y']
+            print(f"Vision tap: element [{el_idx}] ({t['label']}) at ({x},{y})", flush=True)
+        elif coords.get('xf') is not None and coords.get('yf') is not None:
+            x = int(coords['xf'] * vw); y = int(coords['yf'] * vh)
+            print(f"Vision tap: ({x},{y}) [xf={coords['xf']}, yf={coords['yf']}]", flush=True)
+        else:
+            x, y = coords.get('x'), coords.get('y')
+            if x is None or y is None:
+                print("No coordinates returned", flush=True); return
+            print(f"Vision tap: ({x},{y})", flush=True)
+
+        changed = _tap_click_and_diff(page, x, y, before)
+        if not changed:
+            print("No visible change — retrying with explicit miss feedback", flush=True)
+            _safe_screenshot(page, raw_path)
+            add_som_markers(str(raw_path), str(shot_path), addressable)
+            coords2 = resolve_coords(
+                f" — NOTE: previous click at ({x},{y}) produced NO visual change, so those coords were wrong. Pick a different target."
+            )
+            el2 = coords2.get('el')
+            if el2 and 1 <= el2 <= len(addressable):
+                t = addressable[el2 - 1]; x, y = t['x'], t['y']
+            elif coords2.get('xf') is not None and coords2.get('yf') is not None:
+                x = int(coords2['xf'] * vw); y = int(coords2['yf'] * vh)
+            elif coords2.get('x') is not None:
+                x, y = coords2['x'], coords2['y']
+            else:
+                print(f"Retry failed: {coords2}", flush=True); return
+            print(f"Retrying at ({x},{y})", flush=True)
+            _tap_click_and_diff(page, x, y, before)
+
+        print(f"Done. URL: {page.url}", flush=True)
+        title = page.title()
+        if title: print(f"Title: {title[:80]}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def _text_ground_one(candidates, description, verb="click", timeout=60, model=_IRIS_VISION_MODEL):
+    # NOTE: default model is the vision (Opus) tier — not the grounding (Sonnet) tier —
+    # because the sole caller is session_hover, where a wrong-but-plausible pick is
+    # worse than an honest "no match" (you'd read a wrong tooltip to the user). Sonnet
+    # is more aggressive at forcing a match when confidence is low; Opus is more
+    # conservative. Explicit tap/drag callers still pass model=_IRIS_VISION_MODEL.
+    """Shared text-grounding helper: pick ONE candidate by natural-language description.
+    Returns the matched candidate dict or None.
+    """
+    if not candidates:
+        return None
+    lines = [
+        f"  [{c['idx']}] {c['kind']}: {c['label']}"
+        + (f" in:{c['parent']}" if c.get('parent') else '')
+        + ("" if c['visible'] else " [offscreen, will scroll]")
+        for c in candidates
+    ]
+    prompt = f"""Pick ONE candidate from the numbered list for a blind user's "{verb}" action.
+
+User wants to {verb}: "{description}"
+
+Candidates (from the page's accessibility tree):
+{chr(10).join(lines)}
+
+Return JSON ONLY — no prose, no code fences:
+  {{"el": N}}                    — confident match
+  {{"error": "not in list"}}     — no candidate matches
+
+Rules: prefer exact label matches. Use the `in:<landmark>` hint to disambiguate duplicates. Never invent an index."""
+    raw = ask_claude_text(prompt, timeout=timeout, model=model)
+    try:
+        s, e = raw.find('{'), raw.rfind('}') + 1
+        choice = json.loads(raw[s:e]) if s >= 0 and e > s else {}
+    except Exception:
+        choice = {}
+    idx = choice.get('el')
+    if isinstance(idx, int) and 1 <= idx <= len(candidates):
+        return candidates[idx - 1]
+    return None
+
+
+def _scroll_into_view(page, candidate):
+    """Scroll an offscreen candidate into view and return a refreshed candidate with
+    viewport-relative coords. Returns None if we can't re-find it after scrolling."""
+    if candidate['visible']:
+        return candidate
+    page.evaluate("y => window.scrollTo({top: y, behavior: 'instant'})",
+                  max(0, candidate['cy_page'] - 300))
+    wait_for_stable(page, timeout=2)
+    refreshed = get_interactables_full(page)
+    match = next((r for r in refreshed
+                  if r['kind'] == candidate['kind'] and r['label'] == candidate['label']
+                     and r['visible']), None)
+    return match
+
+
+def _text_recovery_scroll(page, description, kinds=None):
+    """Recovery pass when text-grounding missed — scans the DOM for a clickable
+    element whose text/aria-label contains the description words, scrolls it into
+    view, and returns its click coordinates directly.
+
+    Why skip re-grounding: on pages like Mars Wikipedia the 80-cap is saturated
+    by the sticky TOC and visible links even after scroll, so the target still
+    doesn't land in the list. We already found the concrete element — click it.
+
+    Only returns a match when all meaningful description words appear in the
+    element's accessible text (high-confidence — avoids clicking unrelated
+    elements just because they share one common word).
+
+    When kinds=('input','textarea') (for session_type) we only accept form-field
+    matches — prevents the "recovery clicks a link instead of the search input"
+    bug observed on arXiv where a "Help" link contains the word "search".
+
+    Returns dict with {label, cx, cy_vp, kind} on success, None otherwise.
+    """
+    want_inputs = kinds is not None and all(k in ('input', 'textarea') for k in kinds)
+    try:
+        match = page.evaluate("""
+            ([desc, wantInputs]) => {
+                const stop = new Set(['the','and','for','with','this','that','click','tap','link','button','press','open','use','from','some','any','all','tab','page','site','window','field','box','bar']);
+                const words = desc.toLowerCase().split(/\\s+/)
+                    .filter(w => w.length > 2 && !stop.has(w));
+                if (!words.length) return null;
+
+                const clickableSel = wantInputs
+                    ? 'input:not([type=hidden]), textarea'
+                    : 'a[href], button, [role="button"], [role="link"]';
+
+                // Pick the best-matching element by accessible text, preferring
+                // short/leaf elements. If that element isn't clickable itself,
+                // find the nearest clickable element within its subtree, then
+                // sibling/ancestor subtree (common pattern: title in <p>, adjacent
+                // <a> with ID/link). This fixes sites like arXiv where paper
+                // titles are plain text next to an arXiv:XXXX link.
+                const textSel = 'a[href], button, [role="button"], [role="link"], p, li, h1, h2, h3, h4, h5, h6, td, div, span, article, section';
+                const els = [...document.querySelectorAll(textSel)];
+                let best = null, bestLen = Infinity;
+                for (const el of els) {
+                    const visibleText = (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim();
+                    if (visibleText.length > 300 || visibleText.length < 2) continue;
+                    const t = (visibleText + ' ' +
+                               (el.getAttribute('aria-label') || '') + ' ' +
+                               (el.getAttribute('title') || '') + ' ' +
+                               (el.getAttribute('placeholder') || '')
+                              ).toLowerCase().replace(/\\s+/g, ' ').trim();
+                    if (!t) continue;
+                    if (!words.every(w => t.includes(w))) continue;
+                    if (visibleText.length < bestLen) {
+                        bestLen = visibleText.length;
+                        best = el;
+                    }
+                }
+                if (!best) return null;
+
+                // Resolve to a clickable element.
+                let clickTarget = best;
+                if (!best.matches(clickableSel)) {
+                    // descendant first (click target embedded in the matched text container)
+                    clickTarget = best.querySelector(clickableSel);
+                    if (!clickTarget) {
+                        // nearest clickable ancestor
+                        clickTarget = best.closest(clickableSel);
+                    }
+                    if (!clickTarget) {
+                        // scan ancestor subtree: walk up ≤5 levels, check each parent's subtree
+                        let parent = best.parentElement, depth = 0;
+                        while (parent && depth < 5) {
+                            const cand = parent.querySelector(clickableSel);
+                            if (cand) { clickTarget = cand; break; }
+                            parent = parent.parentElement;
+                            depth += 1;
+                        }
+                    }
+                    if (!clickTarget) return null;
+                }
+                const r = clickTarget.getBoundingClientRect();
+                if (r.width === 0 || r.height === 0) return null;
+                return {
+                    label: (clickTarget.textContent || clickTarget.getAttribute('aria-label') || '').replace(/\\s+/g, ' ').trim().slice(0, 60),
+                    kind: clickTarget.tagName.toLowerCase() === 'a' ? 'link' :
+                          clickTarget.tagName.toLowerCase() === 'button' ? 'button' :
+                          (clickTarget.tagName.toLowerCase()),
+                    cy_page: r.top + window.scrollY + r.height / 2,
+                    cx_page: r.left + window.scrollX + r.width / 2,
+                };
+            }
+        """, [description, want_inputs])
+    except Exception:
+        return None
+
+    if not match:
+        return None
+    target_y = max(0, match['cy_page'] - 300)
+    page.evaluate("y => window.scrollTo({top: y, behavior: 'instant'})", target_y)
+    wait_for_stable(page, timeout=2)
+    # Recompute viewport-relative y after scroll (x unchanged).
+    match['cx'] = match['cx_page']
+    match['cy_vp'] = match['cy_page'] - target_y
+    match['visible'] = True
+    return match
+
+
+def session_hover(description):
+    """Hover on an element by natural-language target; wait for tooltip/popover; describe what appeared.
+
+    BLV value: keyboard users can't trigger :hover. Chart tooltips, icon-button hints,
+    link previews, and dropdown submenus are all invisible to them. This primitive
+    makes hover-revealed content accessible.
+
+    Fast path: if a DOM tooltip (role=tooltip, aria-live, .tippy-box) appears,
+    we read it directly — no vision call, <2s total.
+    Slow path: if the tooltip is canvas-rendered (D3 chart), fall back to vision.
+    """
+    p, browser, page = session_connect()
+    try:
+        before_hash = get_screenshot_hash(page)
+        candidates = get_interactables_full(page)
+        t = _text_ground_one(candidates, description, verb="hover")
+        if t is None:
+            print(f"Can't hover: no candidate matched \"{description}\"", flush=True)
+            return
+
+        t = _scroll_into_view(page, t)
+        if t is None:
+            print(f"Can't hover: element lost after scroll", flush=True)
+            return
+        x, y = t['cx'], t['cy_vp']
+        print(f"Hover: [{t['idx']}] {t['kind']}: {t['label']} at ({x},{y})", flush=True)
+
+        # Move mouse to element center; :hover / mouseenter fire.
+        # First move to the bottom-right corner so mouseenter actually transitions,
+        # and to avoid landing on top-left UI (logo/nav) which could itself show a tooltip.
+        try:
+            vp = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
+            page.mouse.move(max(0, vp.get('w', 1280) - 2), max(0, vp.get('h', 800) - 2))
+        except Exception:
+            page.mouse.move(1, 1)
+        time.sleep(0.05)
+        page.mouse.move(x, y)
+        time.sleep(0.8)  # tooltip render delay
+
+        # Fast path: DOM-detectable tooltip appeared
+        dom_tooltips = page.evaluate("""
+            () => [...document.querySelectorAll(
+                '[role="tooltip"], .tooltip, .tippy-box, [data-tippy-root], [role="status"][aria-live], .MuiTooltip-popper, [data-radix-popper-content-wrapper]'
+            )].filter(el => {
+                const r = el.getBoundingClientRect();
+                return r.width > 0 && r.height > 0 && el.offsetParent !== null;
+            }).map(el => (el.innerText || el.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 300))
+              .filter(t => t)
+        """)
+        if dom_tooltips:
+            for tip in dom_tooltips[:3]:
+                print(f"Tooltip: {tip}", flush=True)
+            return
+
+        # Slow path: vision
+        after_hash = get_screenshot_hash(page)
+        if after_hash == before_hash:
+            print("No visible change after hover — this element likely has no tooltip.", flush=True)
+            return
+
+        import os as _os
+        run_dir = OUT / f"session_hover_{_os.getpid()}_{int(time.time())}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        shot = run_dir / "after_hover.png"
+        _safe_screenshot(page, shot)
+
+        prompt = f"""A blind user hovered on "{t['label']}" to see if a tooltip/popover appeared. Describe WHAT APPEARED or highlighted — be concise (1-3 sentences). Focus only on new content that wasn't there before hovering. If a chart tooltip shows a value, state the exact value and label."""
+        desc = ask_claude(str(shot), prompt)
+        print(desc.strip(), flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_drag(from_desc, to_desc):
+    """Drag from one natural-language target to another.
+
+    Text-grounds both endpoints (one Claude call), then issues a smooth mouse-based
+    drag with 25 intermediate steps. Works for pointer-event-driven targets: canvas
+    widgets (PhET sims), sliders, custom mousedown/move/up handlers.
+
+    LIMITATION: elements with HTML5 `draggable="true"` (Trello/Notion kanban cards,
+    file-upload drop zones) use native drag events that Playwright's raw mouse API
+    does NOT synthesize — the drag will visibly happen but `dragstart`/`dragover`/`drop`
+    won't fire. For those, fall back to `session do`.
+    """
+    p, browser, page = session_connect()
+    try:
+        before = state_snapshot(page)
+        candidates = get_interactables_full(page)
+        if not candidates:
+            print("No interactables found", flush=True); return
+
+        lines = [
+            f"  [{c['idx']}] {c['kind']}: {c['label']}"
+            + (f" in:{c['parent']}" if c.get('parent') else '')
+            for c in candidates
+        ]
+        prompt = f"""Pick TWO candidates for a drag-and-drop for a blind user.
+
+Drag FROM: "{from_desc}"
+Drag TO:   "{to_desc}"
+
+Candidates (a11y tree):
+{chr(10).join(lines)}
+
+Return JSON ONLY:
+  {{"from_el": N, "to_el": M}}        — both indices from the list
+  {{"error": "reason"}}               — if either target is missing
+
+Rules: never invent indices. If only one target is in the list, return {{"error": "..."}} naming which one is missing."""
+        raw = ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL)
+        try:
+            s, e = raw.find('{'), raw.rfind('}') + 1
+            choice = json.loads(raw[s:e]) if s >= 0 and e > s else {}
+        except Exception:
+            choice = {'error': f'parse fail: {raw[:80]}'}
+
+        fi, ti = choice.get('from_el'), choice.get('to_el')
+        text_ok = (isinstance(fi, int) and isinstance(ti, int)
+                   and 1 <= fi <= len(candidates) and 1 <= ti <= len(candidates))
+        if text_ok:
+            src = candidates[fi - 1]
+            dst = candidates[ti - 1]
+            print(f"Drag: [{fi}] {src['label']}  →  [{ti}] {dst['label']}", flush=True)
+            if not src['visible']:
+                src = _scroll_into_view(page, src)
+                if src is None:
+                    print("Drag source element lost after scroll — falling to vision", flush=True)
+                    text_ok = False
+                else:
+                    refreshed = get_interactables_full(page)
+                    dst = next((r for r in refreshed
+                                if r['kind'] == dst['kind'] and r['label'] == dst['label']), dst)
+            if text_ok:
+                x1, y1 = src['cx'], src['cy_vp']
+                x2, y2 = dst['cx'], dst['cy_vp']
+        else:
+            # Vision fallback: canvas/WebGL sliders have no a11y endpoints. Ask Claude
+            # for fractional viewport coords of the start and end points.
+            print(f"Text-grounding failed for drag ({choice.get('error', 'no indices')}) — vision fallback", flush=True)
+            import os as _os
+            run_dir = OUT / f"session_drag_{_os.getpid()}_{int(time.time())}"
+            run_dir.mkdir(parents=True, exist_ok=True)
+            shot = run_dir / "drag.png"
+            if not _safe_screenshot(page, shot):
+                print("Can't drag: screenshot failed", flush=True); return
+            real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
+            vw, vh = real.get('w', 1280), real.get('h', 800)
+            v_prompt = f"""Identify drag start and end coordinates on the screenshot.
+
+Viewport is {vw}x{vh} pixels. Return fractional coords (0.0 = left/top edge, 1.0 = right/bottom edge).
+
+Drag FROM: "{from_desc}"
+Drag TO:   "{to_desc}"
+
+CRITICAL: Before returning coords, first identify the EXACT pixel area of the draggable control.
+- For sliders: the "track" is the thin horizontal bar the thumb rides on. NOT the label above it, NOT the value display, NOT arrow buttons at the ends.
+  * The track thumb sits on is a horizontal line. Your y-coord MUST be on that line, not on the label.
+  * For start: pick the current thumb position (distinct marker/circle on the track).
+  * For end: pick a point inside the track, NOT past the arrow buttons.
+- For kanban/list: "from" is the dragged item's center, "to" is the drop target's center.
+
+Return JSON ONLY:
+  {{"reason_from": "Mass slider track thumb currently at left end, y ~135", "reason_to": "Right end of Mass slider track, y ~135", "from": {{"xf": 0.86, "yf": 0.144}}, "to": {{"xf": 0.97, "yf": 0.144}}}}
+  {{"error": "reason"}}
+
+Include reason_from/reason_to so your own work is auditable — this improves accuracy."""
+            raw2 = ask_claude(str(shot), v_prompt)
+            try:
+                s2, e2 = raw2.find('{'), raw2.rfind('}') + 1
+                v_choice = json.loads(raw2[s2:e2]) if s2 >= 0 and e2 > s2 else {}
+            except Exception:
+                v_choice = {'error': f'parse fail: {raw2[:80]}'}
+            f = v_choice.get('from') or {}
+            t = v_choice.get('to') or {}
+            if not (isinstance(f.get('xf'), (int, float)) and isinstance(f.get('yf'), (int, float))
+                    and isinstance(t.get('xf'), (int, float)) and isinstance(t.get('yf'), (int, float))):
+                print(f"Can't drag: {v_choice.get('error', 'no vision coords')}", flush=True); return
+            x1, y1 = int(f['xf'] * vw), int(f['yf'] * vh)
+            x2, y2 = int(t['xf'] * vw), int(t['yf'] * vh)
+            print(f"Vision drag: ({x1},{y1}) → ({x2},{y2})", flush=True)
+
+        pre_hash = get_screenshot_hash(page)
+
+        # Smooth drag with intermediate steps — required for HTML5 dragover
+        # and for canvas widgets that track mousemove deltas (PhET, sliders).
+        page.mouse.move(x1, y1)
+        time.sleep(0.1)
+        page.mouse.down()
+        time.sleep(0.05)
+        steps = 25
+        for i in range(1, steps + 1):
+            ix = x1 + (x2 - x1) * i / steps
+            iy = y1 + (y2 - y1) * i / steps
+            page.mouse.move(ix, iy)
+            time.sleep(0.015)
+        time.sleep(0.1)
+        page.mouse.up()
+        wait_for_stable(page, timeout=3)
+
+        post_hash = get_screenshot_hash(page)
+        after = state_snapshot(page)
+        diff = describe_state_diff(before, after)
+        visually_changed = post_hash != pre_hash
+        if diff:
+            print(f"State diff: {diff}", flush=True)
+        elif visually_changed:
+            print("State diff: visual change (page content updated — no url/title/focus change)", flush=True)
+        else:
+            print("State diff: NONE — drag may not have taken effect (wrong target or page ignored it)", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_diff():
+    """Compare current tab state to the last saved baseline; describe what changed.
+
+    First call saves a baseline (state + screenshot). Subsequent calls diff, describe,
+    and update the baseline. Useful for: "I moved a slider, what happened?" "I clicked
+    a button, did anything change?" Works across ai4a11y invocations via ~/.ai4a11y/.
+
+    Fast path: if only URL/title/scroll/focus changed (cheap structured diff), report
+    that and skip vision. Slow path: screenshot-diff + vision call for page content change.
+    """
+    p, browser, page = session_connect()
+    try:
+        import os as _os
+        current = state_snapshot(page)
+        try:
+            current['text_hash'] = hashlib.md5(
+                get_visible_text(page, limit=3000).encode('utf-8', errors='ignore')
+            ).hexdigest()
+        except Exception:
+            current['text_hash'] = ''
+
+        baseline_shot = SESSION_DIR / "diff_baseline.png"
+        baseline_state = SESSION_DIR / "diff_baseline.json"
+
+        def save_baseline():
+            baseline_state.write_text(json.dumps(current, indent=2))
+            _safe_screenshot(page, baseline_shot)
+
+        if not baseline_state.exists():
+            save_baseline()
+            print("Saved baseline snapshot. Call `session diff` again after acting to see changes.",
+                  flush=True)
+            return
+
+        prev = json.loads(baseline_state.read_text())
+
+        # Navigation resets the diff context — old baseline is meaningless for a different page.
+        if prev.get('url') != current.get('url'):
+            save_baseline()
+            print(f"URL changed since last snapshot ({prev.get('url', '')[:50]} → {current.get('url', '')[:50]}) — baseline reset.",
+                  flush=True)
+            return
+
+        structured = describe_state_diff(prev, current)
+        text_changed = prev.get('text_hash') != current.get('text_hash')
+
+        if not structured and not text_changed:
+            print("No change detected since last snapshot (url/title/scroll/focus/text all identical).",
+                  flush=True)
+            save_baseline()
+            return
+
+        if structured:
+            print(f"Structured diff: {structured}", flush=True)
+
+        vision_ok = True
+        # Text changed but structure didn't — use vision to describe content change.
+        if text_changed:
+            run_dir = OUT / f"session_diff_{_os.getpid()}_{int(time.time())}"
+            run_dir.mkdir(parents=True, exist_ok=True)
+            after_shot = run_dir / "after.png"
+            _safe_screenshot(page, after_shot)
+
+            # Visual diff highlights changed pixels for the vision call to focus on.
+            vision_target = after_shot
+            if baseline_shot.exists():
+                diff_img = run_dir / "pixel_diff.png"
+                try:
+                    create_diff_image(str(baseline_shot), str(after_shot), str(diff_img))
+                    vision_target = diff_img
+                except Exception:
+                    pass
+
+            prompt = """Describe what CHANGED on this page since the previous snapshot. The image highlights changed regions in red/yellow if it's a pixel-diff overlay, otherwise it's the current state. Be concise (1-3 sentences). Examples: "A modal opened titled 'Confirm'", "Row 3 now shows 'Error'", "Chart switched to Q3 data — tallest bar is now April at 42%"."""
+            desc = ask_claude(str(vision_target), prompt)
+            print(desc.strip(), flush=True)
+            # Detect the sentinel error payload from ask_claude so we don't lose the
+            # baseline when vision failed (the user will want to retry).
+            if desc.strip().startswith('{') and '"reason": "subprocess failed"' in desc:
+                vision_ok = False
+            if desc.strip().startswith('{') and 'timeout' in desc.lower():
+                vision_ok = False
+
+        if vision_ok:
+            save_baseline()
+        else:
+            print("(keeping previous baseline — vision call failed, retry `session diff` later)",
+                  flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_focused():
+    """Report what element currently has document.activeElement. Instant DOM query.
+
+    Use when the user has been tabbing and wants to double-check where they are before
+    hitting Enter, OR when ai4a11y's own click may have moved focus and they want to confirm.
+    """
+    p, browser, page = session_connect()
+    try:
+        info = page.evaluate("""
+            () => {
+                const el = document.activeElement;
+                if (!el || el === document.body) {
+                    return {role: 'body', label: '(nothing focused — just the page)',
+                            url: location.href, title: document.title};
+                }
+                const tag = el.tagName.toLowerCase();
+                const role = el.getAttribute('role') || tag;
+                const label = (el.getAttribute('aria-label')
+                    || el.textContent?.trim().replace(/\\s+/g, ' ')
+                    || el.value
+                    || el.placeholder
+                    || el.getAttribute('title')
+                    || '').slice(0, 120);
+                const href = el.getAttribute('href') || '';
+                const type = el.type || '';
+                const value = (el.value !== undefined ? String(el.value) : '').slice(0, 80);
+                const checked = el.checked;
+                const disabled = el.disabled;
+                let extra = '';
+                if (href) extra += ` → ${href.slice(0, 80)}`;
+                if (type && type !== tag) extra += ` [${type}]`;
+                if (value && value !== label) extra += ` value="${value}"`;
+                if (checked !== undefined && (tag === 'input' && (type === 'checkbox' || type === 'radio'))) {
+                    extra += checked ? ' [checked]' : ' [unchecked]';
+                }
+                if (disabled) extra += ' [disabled]';
+                return {role, label, extra, url: location.href, title: document.title};
+            }
+        """)
+        label = info.get('label') or '(no label)'
+        extra = info.get('extra', '')
+        print(f"Focused: [{info.get('role', '?')}] {label}{extra}", flush=True)
+        print(f"On: {(info.get('title') or '')[:60]} — {(info.get('url') or '')[:60]}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_dismiss():
+    """Auto-dismiss cookie banners, modal popups, and overlay dialogs.
+
+    Huge pain point for BLV users — these often block screen readers.
+    Uses common selector patterns to find and close intrusive overlays.
+    """
+    p, browser, page = session_connect()
+    try:
+        dismissed = page.evaluate("""
+            () => {
+                const selectors = [
+                    // Cookie consent
+                    '[class*="cookie"] button[class*="accept"]',
+                    '[class*="cookie"] button[class*="agree"]',
+                    '[class*="cookie"] button[class*="close"]',
+                    '[class*="consent"] button[class*="accept"]',
+                    '[id*="cookie"] button',
+                    '[aria-label*="cookie" i] button',
+                    '[aria-label*="accept" i][aria-label*="cookie" i]',
+                    // Generic modals/dialogs
+                    '[role="dialog"] button[aria-label*="close" i]',
+                    '[role="dialog"] button[aria-label*="dismiss" i]',
+                    '[role="alertdialog"] button[aria-label*="close" i]',
+                    '[class*="modal"] button[class*="close"]',
+                    '[class*="modal"] [aria-label*="close" i]',
+                    '[class*="popup"] button[class*="close"]',
+                    '[class*="overlay"] button[class*="close"]',
+                    // Newsletter/signup popups
+                    '[class*="newsletter"] button[class*="close"]',
+                    '[class*="subscribe"] button[class*="close"]',
+                    // Generic X close buttons
+                    'button[aria-label="Close"]',
+                    'button[aria-label="Dismiss"]',
+                    '[class*="close-button"]',
+                    // GDPR specific
+                    '#onetrust-accept-btn-handler',
+                    '.cc-dismiss',
+                    '.cc-accept',
+                ];
+                let count = 0;
+                for (const sel of selectors) {
+                    const btns = document.querySelectorAll(sel);
+                    for (const btn of btns) {
+                        if (btn.offsetParent !== null) {  // visible
+                            btn.click();
+                            count++;
+                        }
+                    }
+                }
+                // Also try removing common overlay classes
+                document.querySelectorAll('[class*="overlay"][class*="cookie"]').forEach(el => {
+                    el.style.display = 'none';
+                    count++;
+                });
+                return count;
+            }
+        """)
+        if dismissed > 0:
+            print(f"Dismissed {dismissed} popup(s)/banner(s)", flush=True)
+        else:
+            print("No popups or cookie banners found to dismiss", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_summary():
+    """Quick 2-sentence TLDR of the page. Faster than full describe.
+
+    For rapid orientation — "what kind of page is this and what's the main thing?"
+    """
+    p, browser, page = session_connect()
+    try:
+        # Get minimal context
+        title = page.title()
+        url = page.url
+        text = page.evaluate("""
+            () => {
+                const main = document.querySelector('main, [role="main"], article, .content, #content');
+                const target = main || document.body;
+                return (target.innerText || '').slice(0, 2000);
+            }
+        """)
+
+        prompt = f"""Give a 2-sentence summary of this page. First sentence: what type of page/site is this. Second sentence: what's the main content or purpose right now.
+
+URL: {url}
+Title: {title}
+
+Text preview:
+{text[:1500]}
+
+Be concise — exactly 2 sentences, no more."""
+
+        print(ask_claude_text(prompt), flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_heading(direction='next', level=None):
+    """Jump to next/prev heading (h1-h6). Screen reader power-user pattern.
+
+    Args:
+        direction: 'next' or 'prev'
+        level: Optional - specific level (1-6) or None for any heading
+    """
+    if level is not None and (level < 1 or level > 6):
+        print(f"Invalid heading level {level}. Must be 1-6.", flush=True)
+        return
+    p, browser, page = session_connect()
+    try:
+        result = page.evaluate(f"""
+            (direction, level) => {{
+                const selector = level ? `h${{level}}` : 'h1, h2, h3, h4, h5, h6';
+                const headings = [...document.querySelectorAll(selector)].filter(h => h.offsetParent !== null);
+                if (!headings.length) return {{found: false, msg: 'No headings found'}};
+
+                const active = document.activeElement;
+                let currentIdx = -1;
+
+                // Find current position
+                for (let i = 0; i < headings.length; i++) {{
+                    if (headings[i] === active || headings[i].contains(active)) {{
+                        currentIdx = i;
+                        break;
+                    }}
+                }}
+
+                // Calculate target index
+                let targetIdx;
+                if (direction === 'next') {{
+                    targetIdx = currentIdx + 1;
+                    if (targetIdx >= headings.length) targetIdx = 0;  // wrap
+                }} else {{
+                    targetIdx = currentIdx - 1;
+                    if (targetIdx < 0) targetIdx = headings.length - 1;  // wrap
+                }}
+
+                const target = headings[targetIdx];
+                target.setAttribute('tabindex', '-1');
+                target.focus();
+                target.scrollIntoView({{behavior: 'smooth', block: 'center'}});
+
+                const tag = target.tagName.toLowerCase();
+                const text = (target.textContent || '').trim().slice(0, 80);
+                return {{
+                    found: true,
+                    tag: tag,
+                    text: text,
+                    index: targetIdx + 1,
+                    total: headings.length
+                }};
+            }}
+        """, [direction, level])
+
+        if result.get('found'):
+            print(f"[{result['tag']}] {result['text']}", flush=True)
+            print(f"(heading {result['index']}/{result['total']})", flush=True)
+        else:
+            print(result.get('msg', 'No headings found'), flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_skip():
+    """Jump to main content landmark. Skip nav, get to content.
+
+    Looks for <main>, [role="main"], <article>, or #content.
+    """
+    p, browser, page = session_connect()
+    try:
+        result = page.evaluate("""
+            () => {
+                const selectors = [
+                    'main',
+                    '[role="main"]',
+                    'article',
+                    '#main-content',
+                    '#content',
+                    '.main-content',
+                    '.content'
+                ];
+                for (const sel of selectors) {
+                    const el = document.querySelector(sel);
+                    if (el && el.offsetParent !== null) {
+                        el.setAttribute('tabindex', '-1');
+                        el.focus();
+                        el.scrollIntoView({behavior: 'smooth', block: 'start'});
+
+                        // Find first focusable child
+                        const firstFocusable = el.querySelector('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                        if (firstFocusable) {
+                            firstFocusable.focus();
+                        }
+
+                        const tag = el.tagName.toLowerCase();
+                        const role = el.getAttribute('role') || tag;
+                        const label = el.getAttribute('aria-label') || '';
+                        return {found: true, role: role, label: label};
+                    }
+                }
+                return {found: false};
+            }
+        """)
+
+        if result.get('found'):
+            label = result.get('label')
+            if label:
+                print(f"Skipped to main content: [{result['role']}] {label}", flush=True)
+            else:
+                print(f"Skipped to main content: [{result['role']}]", flush=True)
+        else:
+            print("No main content landmark found", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_media(action, value=None):
+    """Control video/audio playback. Actions: play, pause, toggle, seek, rate, volume, mute.
+
+    Args:
+        action: play, pause, toggle, seek, rate, volume, mute, status
+        value: For seek (seconds), rate (0.5-2.0), volume (0-1)
+    """
+    p, browser, page = session_connect()
+    try:
+        result = page.evaluate(f"""
+            (action, value) => {{
+                const media = document.querySelector('video, audio');
+                if (!media) return {{error: 'No video or audio found on page'}};
+
+                const info = () => ({{
+                    type: media.tagName.toLowerCase(),
+                    duration: media.duration,
+                    currentTime: media.currentTime,
+                    paused: media.paused,
+                    muted: media.muted,
+                    volume: media.volume,
+                    playbackRate: media.playbackRate
+                }});
+
+                switch (action) {{
+                    case 'play':
+                        media.play();
+                        return {{...info(), msg: 'Playing'}};
+                    case 'pause':
+                        media.pause();
+                        return {{...info(), msg: 'Paused'}};
+                    case 'toggle':
+                        if (media.paused) media.play();
+                        else media.pause();
+                        return {{...info(), msg: media.paused ? 'Paused' : 'Playing'}};
+                    case 'seek':
+                        const seekTo = parseFloat(value) || 0;
+                        media.currentTime = Math.max(0, Math.min(seekTo, media.duration));
+                        return {{...info(), msg: `Seeked to ${{Math.floor(media.currentTime)}}s`}};
+                    case 'rate':
+                        const rate = parseFloat(value);
+                        if (!isNaN(rate)) media.playbackRate = Math.max(0.25, Math.min(rate, 4.0));
+                        return {{...info(), msg: `Speed: ${{media.playbackRate}}x`}};
+                    case 'volume':
+                        const vol = parseFloat(value);
+                        if (!isNaN(vol)) media.volume = Math.max(0, Math.min(vol, 1));
+                        return {{...info(), msg: `Volume: ${{Math.round(media.volume * 100)}}%`}};
+                    case 'mute':
+                        media.muted = !media.muted;
+                        return {{...info(), msg: media.muted ? 'Muted' : 'Unmuted'}};
+                    case 'status':
+                    default:
+                        return {{...info(), msg: 'Status'}};
+                }}
+            }}
+        """, [action, value])
+
+        if result.get('error'):
+            print(result['error'], flush=True)
+        else:
+            dur = result.get('duration', 0)
+            cur = result.get('currentTime', 0)
+            dur_str = f"{int(dur // 60)}:{int(dur % 60):02d}" if dur else "?"
+            cur_str = f"{int(cur // 60)}:{int(cur % 60):02d}"
+            state = "paused" if result.get('paused') else "playing"
+            print(f"{result.get('msg', 'OK')}", flush=True)
+            print(f"[{result.get('type', 'media')}] {cur_str} / {dur_str} ({state}, {result.get('playbackRate', 1)}x)", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_screenshot(filename=None):
+    """Save current view to share with sighted helper. "Can you look at this for me?"
+
+    Args:
+        filename: Optional output filename (defaults to timestamped file in Downloads)
+    """
+    p, browser, page = session_connect()
+    try:
+        if filename:
+            path = Path(filename).expanduser()
+        else:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            path = Path.home() / "Downloads" / f"ai4a11y_screenshot_{timestamp}.png"
+
+        page.screenshot(path=str(path), full_page=False)
+        print(f"Screenshot saved: {path}", flush=True)
+        print(f"Page: {page.title()[:50]}", flush=True)
+        print(f"URL: {page.url[:70]}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_report(output=None):
+    """Generate full accessibility report (HTML). More detailed than audit.
+
+    Includes all violations, passes, and incomplete checks with full details.
+    """
+    p, browser, page = session_connect()
+    try:
+        # Inject axe-core
+        page.add_script_tag(content=_get_axe_script())
+        page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
+
+        # Run full axe analysis
+        results = page.evaluate("""
+            async () => {
+                const results = await axe.run();
+                return {
+                    url: window.location.href,
+                    title: document.title,
+                    timestamp: new Date().toISOString(),
+                    violations: results.violations,
+                    passes: results.passes,
+                    incomplete: results.incomplete,
+                    inapplicable: results.inapplicable
+                };
+            }
+        """)
+
+        # Generate HTML report
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        if output:
+            path = Path(output).expanduser()
+        else:
+            path = Path.home() / "Downloads" / f"a11y_report_{timestamp}.html"
+
+        # Escape user content to prevent XSS
+        safe_title = html_escape(results['title'][:50])
+        safe_url = html_escape(results['url'])
+
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Accessibility Report - {safe_title}</title>
+    <style>
+        body {{ font-family: -apple-system, system-ui, sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; }}
+        h1 {{ color: #1a1a1a; }}
+        h2 {{ color: #333; border-bottom: 2px solid #ddd; padding-bottom: 0.3em; margin-top: 2em; }}
+        .summary {{ background: #f5f5f5; padding: 1em; border-radius: 8px; margin: 1em 0; }}
+        .critical {{ color: #d32f2f; }}
+        .serious {{ color: #f57c00; }}
+        .moderate {{ color: #fbc02d; }}
+        .minor {{ color: #7cb342; }}
+        .violation {{ background: #fff3f3; border-left: 4px solid #d32f2f; padding: 1em; margin: 1em 0; }}
+        .pass {{ background: #f3fff3; border-left: 4px solid #4caf50; padding: 0.5em 1em; margin: 0.5em 0; }}
+        .incomplete {{ background: #fff8e1; border-left: 4px solid #ff9800; padding: 0.5em 1em; margin: 0.5em 0; }}
+        code {{ background: #eee; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }}
+        .nodes {{ font-size: 0.85em; color: #666; margin-top: 0.5em; }}
+    </style>
+</head>
+<body>
+    <h1>Accessibility Report</h1>
+    <div class="summary">
+        <strong>URL:</strong> {safe_url}<br>
+        <strong>Title:</strong> {safe_title}<br>
+        <strong>Generated:</strong> {results['timestamp']}<br>
+        <strong>Summary:</strong>
+        <span class="critical">{len([v for v in results['violations'] if v.get('impact') == 'critical'])} critical</span>,
+        <span class="serious">{len([v for v in results['violations'] if v.get('impact') == 'serious'])} serious</span>,
+        <span class="moderate">{len([v for v in results['violations'] if v.get('impact') == 'moderate'])} moderate</span>,
+        <span class="minor">{len([v for v in results['violations'] if v.get('impact') == 'minor'])} minor</span>
+        | {len(results['passes'])} passed | {len(results['incomplete'])} need review
+    </div>
+
+    <h2>Violations ({len(results['violations'])})</h2>
+"""
+        for v in results['violations']:
+            impact = html_escape(v.get('impact', 'minor'))
+            html += f"""
+    <div class="violation">
+        <strong class="{impact}">[{impact.upper()}]</strong> {html_escape(v.get('help', 'Unknown'))}
+        <p>{html_escape(v.get('description', ''))}</p>
+        <div class="nodes">{len(v.get('nodes', []))} element(s) affected</div>
+        <p><a href="{html_escape(v.get('helpUrl', '#'))}">Learn more</a></p>
+    </div>
+"""
+
+        html += f"""
+    <h2>Passed ({len(results['passes'])})</h2>
+"""
+        for p_item in results['passes'][:20]:  # Limit to first 20
+            html += f"""    <div class="pass">{html_escape(p_item.get('help', 'Unknown'))}</div>\n"""
+        if len(results['passes']) > 20:
+            html += f"    <p>...and {len(results['passes']) - 20} more</p>\n"
+
+        html += f"""
+    <h2>Needs Review ({len(results['incomplete'])})</h2>
+"""
+        for inc in results['incomplete']:
+            html += f"""    <div class="incomplete">{html_escape(inc.get('help', 'Unknown'))} ({len(inc.get('nodes', []))} elements)</div>\n"""
+
+        html += """
+</body>
+</html>
+"""
+        path.write_text(html)
+        print(f"Report saved: {path}", flush=True)
+        print(f"Violations: {len(results['violations'])} | Passed: {len(results['passes'])} | Review: {len(results['incomplete'])}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_do(task, min_interactions=0, max_steps=8):
+    """Run the full reactive agent on the current page state (no re-navigation)."""
+    p, browser, page = session_connect()
+    try:
+        run_agent(url=page.url, task=task, max_steps=max_steps,
+                  min_interactions=min_interactions, existing_page=page)
+    finally:
+        session_disconnect(p, browser)
+
+
+# ============================================================
+# CLI — action handlers + dispatcher
+# ============================================================
+
+def _act_fullpage(page, args):
+    page.screenshot(path=str(OUT / "fullpage.png"), full_page=True)
+    print(f"Full page: {OUT}/fullpage.png")
+
+
+def _act_scroll(page, args):
+    if args and args[0].isdigit():
+        count = int(args[0])
+        for i in range(count):
+            _safe_screenshot(page, OUT / f"scroll_{i}.png")
+            print(f"  Captured viewport {i+1}/{count}")
+            page.evaluate("window.scrollBy(0, window.innerHeight * 0.8)")
+            time.sleep(0.5)
+    else:
+        smart_scroll(page)
+    print(f"Screenshots in {OUT}/scroll_*.png")
+
+
+def _act_grid(page, args):
+    grid_size, mode = 100, "light"
+    for arg in args:
+        if arg.isdigit():
+            grid_size = int(arg)
+        elif arg in ("light", "margin", "full"):
+            mode = arg
+    clean_path = OUT / "page_clean.png"
+    grid_path = OUT / "page_grid.png"
+    _safe_screenshot(page, clean_path)
+    add_grid_overlay(str(clean_path), str(grid_path), grid_size, mode=mode)
+    print(f"Grid overlay ({mode}, {grid_size}px): {grid_path}")
+
+
+def _act_diff(page, args):
+    before_path = OUT / "diff_before.png"
+    _safe_screenshot(page, before_path)
+    print(f"Before: {before_path}\nInteract with the page, then press Enter...")
+    input()
+    after_path = OUT / "diff_after.png"
+    _safe_screenshot(page, after_path)
+    diff_path, pct, bbox = create_diff_image(str(before_path), str(after_path), str(OUT / "diff_result.png"))
+    print(f"After: {after_path}\nDiff: {diff_path} ({pct:.1f}% changed, region: {bbox})")
+
+
+def _act_track(page, args):
+    duration = float(args[0]) if args and args[0].replace('.', '').isdigit() else 3.0
+    print(f"Capturing {duration}s animation sequence...")
+    frames = capture_sequence(page, duration=duration, interval=0.1)
+    mosaic_path = save_sequence_mosaic(frames, str(OUT / "sequence.png"))
+    print(f"Captured {len(frames)} frames\nMosaic: {mosaic_path}")
+
+
+def _act_describe(page, args):
+    _safe_screenshot(page, OUT / "describe.png")
+    print(f"Screenshot: {OUT}/describe.png")
+    print("Use Claude vision (Read tool) to describe this image")
+
+
+def _act_read(page, args):
+    text = get_visible_text(page)
+    print(f"Visible text ({len(text)} chars):\n{text[:2000]}")
+    (OUT / "page_text.txt").write_text(text)
+    print(f"\nFull text saved: {OUT}/page_text.txt")
+
+
+def _act_ask(page, args):
+    question = ' '.join(args) if args else "Describe this page"
+    _safe_screenshot(page, OUT / "ask.png")
+    text = page.evaluate("() => document.body.innerText.slice(0, 3000)")
+    print(f"Question: {question}\nScreenshot: {OUT}/ask.png\nPage text preview: {text[:500]}...")
+    print("\nUse Claude vision on ask.png to answer the question")
+
+
+def _act_hover(page, args):
+    if len(args) >= 2:
+        x, y = int(args[0]), int(args[1])
+        _safe_screenshot(page, OUT / "before.png")
+        page.mouse.move(x, y)
+        time.sleep(0.5)
+        _safe_screenshot(page, OUT / "page.png")
+        print(f"Hovered at ({x}, {y})")
+    else:
+        grid_hover(page)
+
+
+def _act_click(page, args):
+    for target in args:
+        try:
+            el = page.locator(f"[aria-label*='{target}' i], button:has-text('{target}'), [class*='{target}' i], :text('{target}')").first
+            el.click(timeout=5000)
+            time.sleep(1)
+            print(f"Clicked: {target}")
+        except Exception as e:
+            print(f"Could not click '{target}': {e}")
+
+
+def _act_play(page, args):
+    try:
+        el = page.locator("[aria-label*='play' i], [class*='play'], button:has-text('Play'), :text('Play'), :text('▶')").first
+        el.click(timeout=5000)
+        print("Playing... waiting for animation to settle")
+        time.sleep(1)
+        wait_for_stable(page, timeout=8)
+        print("Animation settled")
+    except Exception as e:
+        print(f"No play button found: {e}")
+
+
+def _act_drag(page, args):
+    if len(args) < 4:
+        print("drag requires 4 args: x1 y1 x2 y2")
+        return
+    x1, y1, x2, y2 = int(args[0]), int(args[1]), int(args[2]), int(args[3])
+
+    def do_drag():
+        page.mouse.move(x1, y1); time.sleep(0.2)
+        page.mouse.down(); time.sleep(0.1)
+        page.mouse.move(x2, y2, steps=20); time.sleep(0.1)
+        page.mouse.up(); time.sleep(0.8)
+
+    success, before, after, diff, info = verify_action(page, do_drag, f"drag ({x1},{y1})→({x2},{y2})")
+    if success and diff:
+        add_grid_overlay(after, str(OUT / "drag_annotated.png"), grid_size=100, focus_point=(x2, y2), mode="light")
+        print(f"Annotated result: {OUT}/drag_annotated.png")
+
+
+def _act_key(page, args):
+    for key in args:
+        page.keyboard.press(key)
+        time.sleep(0.5)
+    print(f"Pressed: {', '.join(args)}")
+
+
+# Actions that close the browser immediately (no page.png/elements summary after)
+TERMINAL_ACTIONS = {"fullpage", "scroll", "grid", "diff", "track", "describe", "read", "ask", "hover"}
+
+ACTION_HANDLERS = {
+    "fullpage": _act_fullpage, "scroll": _act_scroll, "grid": _act_grid,
+    "diff": _act_diff, "track": _act_track, "describe": _act_describe,
+    "read": _act_read, "ask": _act_ask, "hover": _act_hover,
+    "click": _act_click, "play": _act_play, "drag": _act_drag, "key": _act_key,
+}
+
+
+def run(url, action=None, *args):
+    """Main CLI dispatcher — loads URL, runs one action, reports."""
+    stealth_mode = action == "stealth"
+    visible_mode = action == "visible"
+
+    if stealth_mode or visible_mode:
+        action = args[0] if args else None
+        args = args[1:] if len(args) > 1 else []
+
+    p, browser, page = create_browser(stealth=stealth_mode, visible=visible_mode)
+
+    try:
+        mode_str = " [stealth]" if stealth_mode else (" [visible]" if visible_mode else "")
+        print(f"Loading: {url[:60]}...{mode_str}")
+        page.goto(url, wait_until="domcontentloaded", timeout=25000)
+        time.sleep(2)
+        page.wait_for_load_state("networkidle", timeout=10000)
+        time.sleep(1)
+    except Exception as e:
+        print(f"Error loading page: {e}")
+        browser.close(); p.stop(); return
+
+    handler = ACTION_HANDLERS.get(action)
+
+    # Before-screenshot for non-terminal interactions
+    if action and action not in TERMINAL_ACTIONS:
+        _safe_screenshot(page, OUT / "before.png")
+
+    if handler:
+        handler(page, args)
+
+    if action in TERMINAL_ACTIONS:
+        browser.close(); p.stop(); return
+
+    # Post-action: capture final state + summary for interaction actions
+    _safe_screenshot(page, OUT / "page.png")
+    elements = get_elements(page)
+    data = extract_data(page)
+    browser.close(); p.stop()
+
+    print(f"\nPage: {data.get('title', 'Untitled')[:60]}")
+    print(f"Screenshot: {OUT}/page.png")
+    if action and action not in TERMINAL_ACTIONS:
+        print(f"Before: {OUT}/before.png")
+
+    if elements:
+        print(f"\nElements ({len(elements)}):")
+        for e in elements:
+            coords = f" @({e['x']},{e['y']})" if e['x'] > 0 else ""
+            print(f"  {e['tag']}: {e['label']}{coords}")
+
+    if data.get('legend'): print(f"\nLegend: {', '.join(data['legend'])}")
+    if data.get('axes'): print(f"Axes: {', '.join(data['axes'][:6])}")
+    if data.get('values'): print(f"Values: {', '.join(data['values'][:6])}")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(1)
+
+    # Check for --json flag anywhere in args
+    json_output = "--json" in sys.argv
+    if json_output:
+        sys.argv = [a for a in sys.argv if a != "--json"]
+
+    # Session subcommands: ai4a11y.py session <sub> [args]
+    if sys.argv[1] == "session":
+        sub = sys.argv[2] if len(sys.argv) > 2 else "status"
+        sub_args = sys.argv[3:]
+        if sub == "start":
+            session_start()
+        elif sub == "stop":
+            session_stop()
+        elif sub == "status":
+            session_status()
+        elif sub == "go":
+            if not sub_args:
+                print("usage: session go <url>"); sys.exit(1)
+            session_go(sub_args[0])
+        elif sub == "back":
+            session_back()
+        elif sub == "scroll":
+            direction = sub_args[0] if sub_args else "down"
+            amount = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 800
+            session_scroll(direction, amount)
+        elif sub == "describe":
+            session_describe(json_output=json_output)
+        elif sub == "tap":
+            if not sub_args:
+                print("usage: session tap \"<description>\""); sys.exit(1)
+            session_tap(' '.join(sub_args))
+        elif sub == "ask":
+            if not sub_args:
+                print("usage: session ask \"<question>\""); sys.exit(1)
+            session_ask(' '.join(sub_args))
+        elif sub == "type":
+            if len(sub_args) < 2:
+                print("usage: session type \"<field description>\" \"<text to type>\""); sys.exit(1)
+            session_type(sub_args[0], ' '.join(sub_args[1:]))
+        elif sub == "tab":
+            session_tab('back' if sub_args and sub_args[0] in ('back', 'prev', 'previous') else 'forward')
+        elif sub in ("activate", "enter", "press"):
+            session_activate()
+        elif sub == "key":
+            if not sub_args:
+                print("usage: session key <key> [count]"); print("  keys: ArrowRight, ArrowLeft, ArrowUp, ArrowDown, Space, Enter, Escape, Home, End, PageUp, PageDown"); sys.exit(1)
+            key = sub_args[0]
+            count = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 1
+            session_key(key, count)
+        elif sub == "arrow":
+            if not sub_args:
+                print("usage: session arrow <right|left|up|down> [count]"); sys.exit(1)
+            direction = sub_args[0]
+            count = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 1
+            session_arrow(direction, count)
+        elif sub == "list":
+            kind = sub_args[0] if sub_args else 'focusables'
+            session_list(kind)
+        elif sub == "find":
+            if not sub_args:
+                print("usage: session find \"<text>\""); sys.exit(1)
+            session_find(' '.join(sub_args))
+        elif sub == "read":
+            session_read(sub_args[0] if sub_args else None)
+        elif sub == "tables":
+            session_list_tables()
+        elif sub == "tabs":
+            session_tabs()
+        elif sub == "nudge":
+            if not sub_args:
+                print('usage: session nudge "<slider target>" [right|left|up|down] [count]'); sys.exit(1)
+            target = sub_args[0]
+            direction = sub_args[1] if len(sub_args) > 1 else 'right'
+            try:
+                count = int(sub_args[2]) if len(sub_args) > 2 else 5
+            except ValueError:
+                count = 5
+            session_nudge(target, direction, count)
+        elif sub == "pickdate":
+            if len(sub_args) < 2:
+                print('usage: session pickdate "<date field description>" "<date like 2026-06-15>"'); sys.exit(1)
+            session_pickdate(sub_args[0], ' '.join(sub_args[1:]))
+        elif sub == "focus":
+            if not sub_args:
+                print("usage: session focus <tab-number>  (from 'session tabs' list)"); sys.exit(1)
+            try:
+                n = int(sub_args[0])
+            except ValueError:
+                print("tab number must be an integer"); sys.exit(1)
+            session_focus_tab(n)
+        elif sub == "cleanup-tabs":
+            session_cleanup_tabs()
+        elif sub == "hover":
+            if not sub_args:
+                print('usage: session hover "<target>"'); sys.exit(1)
+            session_hover(' '.join(sub_args))
+        elif sub == "drag":
+            if len(sub_args) < 2:
+                print('usage: session drag "<from>" "<to>"'); sys.exit(1)
+            session_drag(sub_args[0], ' '.join(sub_args[1:]))
+        elif sub == "diff":
+            session_diff()
+        elif sub == "audit":
+            severity = sub_args[0] if sub_args else None
+            session_audit(severity, json_output=json_output)
+        elif sub == "focused":
+            session_focused()
+        elif sub == "dismiss":
+            session_dismiss()
+        elif sub == "summary":
+            session_summary()
+        elif sub == "heading":
+            direction = sub_args[0] if sub_args else 'next'
+            level = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else None
+            session_heading(direction, level)
+        elif sub == "skip":
+            session_skip()
+        elif sub == "media":
+            if not sub_args:
+                print("usage: session media <play|pause|toggle|seek|rate|volume|mute|status> [value]"); sys.exit(1)
+            action = sub_args[0]
+            value = sub_args[1] if len(sub_args) > 1 else None
+            session_media(action, value)
+        elif sub == "screenshot":
+            filename = sub_args[0] if sub_args else None
+            session_screenshot(filename)
+        elif sub == "report":
+            output = sub_args[0] if sub_args else None
+            session_report(output)
+        elif sub == "do":
+            if not sub_args:
+                print("usage: session do \"<task>\" [min_interactions] [max_steps]"); sys.exit(1)
+            trailing = []
+            while sub_args and sub_args[-1].isdigit():
+                trailing.insert(0, int(sub_args[-1]))
+                sub_args = sub_args[:-1]
+            max_steps = trailing[-1] if trailing else 8
+            min_interactions = trailing[0] if len(trailing) >= 2 else 0
+            session_do(' '.join(sub_args), min_interactions=min_interactions, max_steps=max_steps)
+        else:
+            print(f"Unknown session subcommand: {sub}")
+            print("Available: start | stop | status | go <url> | back | scroll [down|up] | describe | do \"<task>\"")
+            sys.exit(1)
+        sys.exit(0)
+
+    # Original one-shot mode: ai4a11y.py <url> <action> [args]
+    url = sys.argv[1]
+    action = sys.argv[2] if len(sys.argv) > 2 else None
+    args = sys.argv[3:] if len(sys.argv) > 3 else []
+
+    if action == "agent":
+        trailing = []
+        while args and args[-1].isdigit():
+            trailing.insert(0, int(args[-1]))
+            args = args[:-1]
+        max_steps = trailing[-1] if trailing else 10
+        min_interactions = trailing[0] if len(trailing) >= 2 else 0
+        run_agent(url, ' '.join(args), max_steps=max_steps, min_interactions=min_interactions)
+    else:
+        run(url, action, *args)
