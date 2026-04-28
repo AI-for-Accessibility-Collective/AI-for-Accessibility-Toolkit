@@ -5,7 +5,7 @@
 **AI-powered accessibility toolkit — Chrome extension for end users, CLI for developers.**
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit-Draft)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 [Extension](#chrome-extension) · [CLI](#cli) · [Profiles](#profiles) · [Contributing](#contributing)
