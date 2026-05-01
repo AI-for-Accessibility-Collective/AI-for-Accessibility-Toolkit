@@ -4,9 +4,14 @@
  * This module bundles all adapters and profiles for injection into Playwright.
  * Unlike the extension (which uses Chrome messaging), this exposes tools
  * directly on window.ai4a11y for Playwright's page.evaluate() to call.
+ *
+ * AI-powered adapters use window.ai4a11y_* callbacks injected by Python.
  */
 
-// Import all adapters
+// Import AI provider system
+import { setAIProvider } from '../tools/utils/ai.js';
+
+// Import visual adapters
 import { VisualAssist } from '../tools/adapters/visual-assist.js';
 import { DarkMode } from '../tools/adapters/dark-mode.js';
 import { MotionReducer } from '../tools/adapters/motion-reducer.js';
@@ -18,6 +23,22 @@ import { KeyboardNavigator } from '../tools/adapters/keyboard-nav.js';
 import { ColorBlindMode } from '../tools/adapters/color-blind.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
+// Import AI-powered adapters
+import {
+  generateImageAlt,
+  generateCanvasDescription,
+  getAxeHandler,
+  axeHandlers
+} from '../tools/adapters/index.js';
+import { simplifyText, summarizeContent } from '../tools/adapters/simplify-text.js';
+
+// Import auditors
+import { runAxeAnalysis, getElementFromNode } from '../tools/auditors/wcag-issues.js';
+import { findEmptyAltImages, findCanvasElements, findImagesWithoutAlt } from '../tools/auditors/missing-alt.js';
+import { findVideosWithoutCaptions, findAudioWithoutTranscripts } from '../tools/auditors/missing-captions.js';
+import { findEmptyLinks, findEmptyButtons, findUnlabeledInputs } from '../tools/auditors/missing-labels.js';
+import { findLowContrastText } from '../tools/auditors/poor-contrast.js';
+
 // Import profiles
 import {
   profiles,
@@ -27,6 +48,57 @@ import {
   getEnabledAdapters,
   getAllProfiles
 } from '../tools/profiles/settings.js';
+
+// Set up AI provider that bridges to Python callbacks
+// Python will inject window.ai4a11y_describeImage, etc. via exposeFunction
+function setupAIProvider() {
+  setAIProvider({
+    describeImage: async (imageData) => {
+      if (typeof window.ai4a11y_describeImage === 'function') {
+        return await window.ai4a11y_describeImage(imageData);
+      }
+      console.warn('[AI4A11y] AI provider not available - run with AI enabled');
+      return null;
+    },
+    simplifyText: async (text) => {
+      if (typeof window.ai4a11y_simplifyText === 'function') {
+        return await window.ai4a11y_simplifyText(text);
+      }
+      return null;
+    },
+    summarizeText: async (text) => {
+      if (typeof window.ai4a11y_summarizeText === 'function') {
+        return await window.ai4a11y_summarizeText(text);
+      }
+      return null;
+    },
+    generateLabels: async (ctx) => {
+      if (typeof window.ai4a11y_generateLabels === 'function') {
+        return await window.ai4a11y_generateLabels(ctx);
+      }
+      return null;
+    },
+    inferLabel: async (ctx) => {
+      if (typeof window.ai4a11y_generateLabels === 'function') {
+        return await window.ai4a11y_generateLabels(ctx);
+      }
+      return null;
+    },
+    fixContrast: async (fg, bg) => {
+      if (typeof window.ai4a11y_fixContrast === 'function') {
+        return await window.ai4a11y_fixContrast(fg, bg);
+      }
+      return null;
+    },
+    describeElement: async (imageData, elementType, context) => {
+      if (typeof window.ai4a11y_describeElement === 'function') {
+        return await window.ai4a11y_describeElement(imageData, elementType, context);
+      }
+      return null;
+    },
+    announce: (msg) => console.log(`[Announce] ${msg}`),
+  });
+}
 
 // Tool registry for enable/disable
 const tools = {
@@ -191,9 +263,146 @@ function getToolDescription(name) {
   return descriptions[name] || '';
 }
 
+// Auditor functions - find accessibility issues
+const auditors = {
+  findMissingAlt() {
+    const noAlt = findImagesWithoutAlt();
+    const emptyAlt = findEmptyAltImages();
+    const canvases = findCanvasElements();
+    return {
+      noAlt: noAlt.map(el => ({
+        tagName: el.tagName,
+        src: el.src || el.currentSrc,
+        selector: getSelector(el)
+      })),
+      emptyAlt: emptyAlt.map(el => ({
+        tagName: el.tagName,
+        src: el.src || el.currentSrc,
+        selector: getSelector(el)
+      })),
+      canvases: canvases.map(el => ({
+        selector: getSelector(el)
+      })),
+      total: noAlt.length + emptyAlt.length + canvases.length
+    };
+  },
+
+  findMissingLabels() {
+    const links = findEmptyLinks();
+    const buttons = findEmptyButtons();
+    const inputs = findUnlabeledInputs();
+    return {
+      links: links.map(el => ({
+        href: el.href,
+        selector: getSelector(el)
+      })),
+      buttons: buttons.map(el => ({
+        selector: getSelector(el)
+      })),
+      inputs: inputs.map(el => ({
+        type: el.type,
+        name: el.name,
+        selector: getSelector(el)
+      })),
+      total: links.length + buttons.length + inputs.length
+    };
+  },
+
+  findMissingCaptions() {
+    const videos = findVideosWithoutCaptions();
+    const audio = findAudioWithoutTranscripts();
+    return {
+      videos: videos.map(el => ({
+        src: el.src || el.currentSrc,
+        selector: getSelector(el)
+      })),
+      audio: audio.map(el => ({
+        src: el.src || el.currentSrc,
+        selector: getSelector(el)
+      })),
+      total: videos.length + audio.length
+    };
+  },
+
+  findPoorContrast() {
+    const results = findLowContrastText();
+    return results.map(item => ({
+      text: item.element?.textContent?.slice(0, 50),
+      selector: getSelector(item.element),
+      color: item.color,
+      background: item.background,
+      ratio: item.ratio?.toFixed(2),
+      required: item.required
+    }));
+  },
+
+  async runFullAudit() {
+    const results = await runAxeAnalysis();
+    return results;
+  }
+};
+
+// AI-powered fix functions
+const aiFixes = {
+  async describeImages() {
+    const { images } = await auditors.findMissingAlt();
+    const results = [];
+    for (const img of images) {
+      const el = document.querySelector(img.selector);
+      if (el) {
+        const alt = await generateImageAlt(el);
+        if (alt) {
+          el.alt = alt;
+          results.push({ selector: img.selector, alt });
+        }
+      }
+    }
+    return results;
+  },
+
+  async simplifyText(selector) {
+    const el = selector ? document.querySelector(selector) : document.body;
+    if (!el) return null;
+    const simplified = await simplifyText(el.textContent);
+    return simplified;
+  },
+
+  async summarize(selector) {
+    const el = selector ? document.querySelector(selector) : document.body;
+    if (!el) return null;
+    const summary = await summarizeContent(el.textContent);
+    return summary;
+  },
+
+  async fixAxeViolation(ruleId, selector) {
+    const handler = getAxeHandler(ruleId);
+    if (!handler) return { error: `No handler for rule: ${ruleId}` };
+    const el = document.querySelector(selector);
+    if (!el) return { error: `Element not found: ${selector}` };
+    await handler(el);
+    return { success: true };
+  }
+};
+
+// Helper to get CSS selector for element
+function getSelector(el) {
+  if (!el || !el.tagName) return 'unknown';
+  const tag = el.tagName.toLowerCase();
+  if (el.id) return `#${el.id}`;
+  if (el.className && typeof el.className === 'string') {
+    const classes = el.className.trim().split(/\s+/).filter(c => c).slice(0, 2).join('.');
+    if (classes) return `${tag}.${classes}`;
+  }
+  return tag;
+}
+
 // Expose on window for Playwright access
 if (typeof window !== 'undefined') {
+  // Set up AI provider
+  setupAIProvider();
+
   window.ai4a11y = {
+    // Tool management
     tools,
     profiles,
     enableTool,
@@ -202,6 +411,26 @@ if (typeof window !== 'undefined') {
     applyProfile: applyProfileByName,
     listProfiles,
     listTools,
+
+    // Auditors - find issues
+    auditors,
+    findMissingAlt: auditors.findMissingAlt,
+    findMissingLabels: auditors.findMissingLabels,
+    findMissingCaptions: auditors.findMissingCaptions,
+    findPoorContrast: auditors.findPoorContrast,
+    runFullAudit: auditors.runFullAudit,
+
+    // AI fixes
+    aiFixes,
+    describeImages: aiFixes.describeImages,
+    simplifyText: aiFixes.simplifyText,
+    summarize: aiFixes.summarize,
+    fixAxeViolation: aiFixes.fixAxeViolation,
+
+    // Axe handlers
+    axeHandlers,
+    getAxeHandler,
+
     // Direct adapter access
     VisualAssist,
     DarkMode,
@@ -224,4 +453,6 @@ export {
   applyProfileByName as applyProfile,
   listProfiles,
   listTools,
+  auditors,
+  aiFixes,
 };

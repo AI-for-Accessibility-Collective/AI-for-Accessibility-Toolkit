@@ -4401,6 +4401,136 @@ def session_profiles(json_output=False):
 
 
 # ============================================================
+# Auditor functions — find accessibility issues
+# ============================================================
+
+def session_find_missing_alt(json_output=False):
+    """Find images without alt text."""
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+        result = page.evaluate("() => window.ai4a11y.auditors.findMissingAlt()")
+        if json_output:
+            print(json.dumps(result, indent=2))
+            return
+        print(f"\nImages missing alt text: {result.get('total', 0)}", flush=True)
+        for img in result.get('noAlt', []):
+            print(f"  • {img['selector']}: {img.get('src', '')[:50]}", flush=True)
+        for img in result.get('emptyAlt', []):
+            print(f"  • {img['selector']}: (empty alt)", flush=True)
+        for c in result.get('canvases', []):
+            print(f"  • {c['selector']}: <canvas>", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_find_missing_labels(json_output=False):
+    """Find unlabeled interactive elements."""
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+        result = page.evaluate("() => window.ai4a11y.auditors.findMissingLabels()")
+        if json_output:
+            print(json.dumps(result, indent=2))
+            return
+        print(f"\nUnlabeled elements: {result.get('total', 0)}", flush=True)
+        for el in result.get('links', []):
+            print(f"  • link: {el['selector']}", flush=True)
+        for el in result.get('buttons', []):
+            print(f"  • button: {el['selector']}", flush=True)
+        for el in result.get('inputs', []):
+            print(f"  • input[{el.get('type', '?')}]: {el['selector']}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_find_poor_contrast(json_output=False):
+    """Find text with poor color contrast."""
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+        result = page.evaluate("() => window.ai4a11y.auditors.findPoorContrast()")
+        if json_output:
+            print(json.dumps(result, indent=2))
+            return
+        print(f"\nLow contrast text: {len(result)}", flush=True)
+        for el in result[:10]:
+            text = el.get('text', '')[:30]
+            print(f"  • {el['selector']}: \"{text}\"", flush=True)
+            print(f"    color: {el.get('color')} on {el.get('background')}", flush=True)
+        if len(result) > 10:
+            print(f"  ... and {len(result) - 10} more", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_find_missing_captions(json_output=False):
+    """Find media without captions."""
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+        result = page.evaluate("() => window.ai4a11y.auditors.findMissingCaptions()")
+        if json_output:
+            print(json.dumps(result, indent=2))
+            return
+        print(f"\nMedia without captions: {result.get('total', 0)}", flush=True)
+        for v in result.get('videos', []):
+            print(f"  • video: {v.get('src', '')[:50]}", flush=True)
+        for a in result.get('audio', []):
+            print(f"  • audio: {a.get('src', '')[:50]}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_find_all(json_output=False):
+    """Run all auditors and summarize issues."""
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+        alt = page.evaluate("() => window.ai4a11y.auditors.findMissingAlt()")
+        labels = page.evaluate("() => window.ai4a11y.auditors.findMissingLabels()")
+        contrast = page.evaluate("() => window.ai4a11y.auditors.findPoorContrast()")
+        captions = page.evaluate("() => window.ai4a11y.auditors.findMissingCaptions()")
+        result = {
+            'missingAlt': alt,
+            'missingLabels': labels,
+            'poorContrast': contrast,
+            'missingCaptions': captions,
+            'summary': {
+                'missingAlt': alt.get('total', 0),
+                'missingLabels': labels.get('total', 0),
+                'poorContrast': len(contrast),
+                'missingCaptions': captions.get('total', 0)
+            }
+        }
+        if json_output:
+            print(json.dumps(result, indent=2))
+            return
+        s = result['summary']
+        total = sum(s.values())
+        print(f"\n{'─' * 40}", flush=True)
+        print(f"Accessibility Issues Found: {total}", flush=True)
+        print(f"{'─' * 40}", flush=True)
+        print(f"  Missing alt text:    {s['missingAlt']}", flush=True)
+        print(f"  Missing labels:      {s['missingLabels']}", flush=True)
+        print(f"  Poor contrast:       {s['poorContrast']}", flush=True)
+        print(f"  Missing captions:    {s['missingCaptions']}", flush=True)
+        print(f"{'─' * 40}", flush=True)
+    finally:
+        session_disconnect(p, browser)
+
+
+# ============================================================
 # CLI — action handlers + dispatcher
 # ============================================================
 
@@ -4773,12 +4903,24 @@ if __name__ == "__main__":
             session_profile(sub_args[0], json_output=json_output)
         elif sub == "profiles":
             session_profiles(json_output=json_output)
+        # Auditor commands
+        elif sub in ("find-alt", "find-missing-alt", "missing-alt"):
+            session_find_missing_alt(json_output=json_output)
+        elif sub in ("find-labels", "find-missing-labels", "missing-labels"):
+            session_find_missing_labels(json_output=json_output)
+        elif sub in ("find-contrast", "find-poor-contrast", "poor-contrast"):
+            session_find_poor_contrast(json_output=json_output)
+        elif sub in ("find-captions", "find-missing-captions", "missing-captions"):
+            session_find_missing_captions(json_output=json_output)
+        elif sub in ("find-all", "find-issues", "issues"):
+            session_find_all(json_output=json_output)
         else:
             print(f"Unknown session subcommand: {sub}")
             print("Available: start | stop | status | tabs | go <url> | back | scroll | describe | ask | tap | type")
             print("           list | find | read | tables | heading | skip | tab | activate | key | arrow | focused")
             print("           hover | drag | nudge | diff | audit | report | media | screenshot | dismiss | do")
             print("           enable <tool> | disable <tool> | tools | profile <name> | profiles")
+            print("           find-alt | find-labels | find-contrast | find-captions | find-all")
             sys.exit(1)
         sys.exit(0)
 

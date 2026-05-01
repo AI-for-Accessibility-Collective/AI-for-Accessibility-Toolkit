@@ -52,6 +52,9 @@ DO = {"tap", "type", "hover", "drag", "nudge", "pickdate", "dismiss", "media", "
 MOVE = {"go", "back", "scroll", "tab", "arrow", "key", "heading", "skip", "list", "find", "read", "tables", "focused", "diff"}
 SESSION = {"start", "stop", "status", "screenshot", "tabs", "focus", "cleanup-tabs"}
 VISUAL = {"enable", "disable", "tools", "profile", "profiles"}
+AUDIT = {"find-alt", "find-missing-alt", "missing-alt", "find-labels", "find-missing-labels", "missing-labels",
+         "find-contrast", "find-poor-contrast", "poor-contrast", "find-captions", "find-missing-captions",
+         "missing-captions", "find-all", "find-issues", "issues"}
 
 
 def get_tools_info():
@@ -309,6 +312,8 @@ def run_session_command(args, json_output=False):
         color = PURPLE
     elif cmd_name in VISUAL:
         color = YELLOW
+    elif cmd_name in AUDIT:
+        color = GREEN
     elif cmd_name in SESSION:
         color = DIM
     else:
@@ -425,7 +430,7 @@ def main():
         sys.exit(run_session_command(args[1:], json_output=json_output))
 
     # Direct session shortcuts (backwards compatible)
-    elif cmd in SEE | DO | MOVE | SESSION | VISUAL:
+    elif cmd in SEE | DO | MOVE | SESSION | VISUAL | AUDIT:
         sys.exit(run_session_command(args, json_output=json_output))
 
     else:

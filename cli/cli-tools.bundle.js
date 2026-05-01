@@ -1,4 +1,63 @@
 (() => {
+  // tools/utils/ai.js
+  var provider = null;
+  function setAIProvider(p) {
+    provider = p;
+  }
+  async function describeImage(imageData) {
+    if (!(provider == null ? void 0 : provider.describeImage)) {
+      throw new Error("AI provider not set or missing describeImage");
+    }
+    return provider.describeImage(imageData);
+  }
+  async function simplifyText(text, options = {}) {
+    if (!(provider == null ? void 0 : provider.simplifyText)) {
+      throw new Error("AI provider not set or missing simplifyText");
+    }
+    return provider.simplifyText(text, options);
+  }
+  async function summarizeText(text) {
+    if (!(provider == null ? void 0 : provider.summarizeText)) {
+      throw new Error("AI provider not set or missing summarizeText");
+    }
+    return provider.summarizeText(text);
+  }
+  async function inferLabel(context) {
+    if (!(provider == null ? void 0 : provider.inferLabel)) {
+      throw new Error("AI provider not set or missing inferLabel");
+    }
+    return provider.inferLabel(context);
+  }
+  async function fixContrast(foreground, background) {
+    if (!(provider == null ? void 0 : provider.fixContrast)) {
+      return null;
+    }
+    return provider.fixContrast(foreground, background);
+  }
+  async function getYouTubeTranscript(videoId) {
+    if (!(provider == null ? void 0 : provider.getYouTubeTranscript)) {
+      return null;
+    }
+    return provider.getYouTubeTranscript(videoId);
+  }
+  function announce(message) {
+    if (provider == null ? void 0 : provider.announce) {
+      provider.announce(message);
+    }
+  }
+  async function transcribeVideo(videoUrl) {
+    if (!(provider == null ? void 0 : provider.transcribeVideo)) {
+      return null;
+    }
+    return provider.transcribeVideo(videoUrl);
+  }
+  async function transcribeAudio(audioUrl) {
+    if (!(provider == null ? void 0 : provider.transcribeAudio)) {
+      return null;
+    }
+    return provider.transcribeAudio(audioUrl);
+  }
+
   // tools/adapters/visual-assist.js
   var VisualAssist = {
     styleId: "ai4a11y-visual-assist",
@@ -153,20 +212,6 @@
     }
   };
   window.__ai4a11yVisualAssist = VisualAssist;
-
-  // tools/utils/ai.js
-  var provider = null;
-  async function getYouTubeTranscript(videoId) {
-    if (!(provider == null ? void 0 : provider.getYouTubeTranscript)) {
-      return null;
-    }
-    return provider.getYouTubeTranscript(videoId);
-  }
-  function announce(message) {
-    if (provider == null ? void 0 : provider.announce) {
-      provider.announce(message);
-    }
-  }
 
   // tools/adapters/dark-mode.js
   var DarkMode = {
@@ -1584,6 +1629,1337 @@
   };
   window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
+  // tools/utils/image.js
+  async function imageToDataUrl(img) {
+    var _a, _b;
+    if (((_a = img.src) == null ? void 0 : _a.startsWith("data:")) || ((_b = img.src) == null ? void 0 : _b.startsWith("blob:"))) {
+      return img.src;
+    }
+    try {
+      const response = await fetch(img.src);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return imageToCanvas(img);
+    }
+  }
+  function imageToCanvas(img) {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    try {
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch (e) {
+      console.warn("[AI4A11y] Canvas tainted, cannot export:", e);
+      return null;
+    }
+  }
+  function getImageSize(img) {
+    return {
+      width: img.naturalWidth || img.width || 0,
+      height: img.naturalHeight || img.height || 0
+    };
+  }
+  function isLikelyDecorative(img) {
+    const { width, height } = getImageSize(img);
+    if (width < 20 && height < 20)
+      return true;
+    if (width === 1 && height === 1)
+      return true;
+    if (img.getAttribute("role") === "presentation")
+      return true;
+    if (img.getAttribute("role") === "none")
+      return true;
+    return false;
+  }
+
+  // tools/utils/dom.js
+  function isVisible(el) {
+    if (!el)
+      return false;
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden")
+      return false;
+    if (parseFloat(style.opacity) === 0)
+      return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+  function hasAccessibleName(el) {
+    var _a, _b;
+    if (el.getAttribute("aria-label"))
+      return true;
+    if (el.getAttribute("title"))
+      return true;
+    if ((_a = el.textContent) == null ? void 0 : _a.trim())
+      return true;
+    const labelledBy = el.getAttribute("aria-labelledby");
+    if (labelledBy) {
+      const target = document.getElementById(labelledBy);
+      if ((_b = target == null ? void 0 : target.textContent) == null ? void 0 : _b.trim())
+        return true;
+    }
+    return false;
+  }
+  function markProcessed(el, status = "done") {
+    el.dataset.ai4a11yProcessed = status;
+  }
+  function wasProcessed(el) {
+    return !!el.dataset.ai4a11yProcessed;
+  }
+
+  // tools/adapters/generate-alt.js
+  var logFix = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  async function generateImageAlt(img) {
+    if (img.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(img, "pending");
+    try {
+      const dataUrl = await imageToDataUrl(img);
+      if (!dataUrl) {
+        markProcessed(img, "failed");
+        return null;
+      }
+      const result = await describeImage(dataUrl);
+      if (result) {
+        const altText = result;
+        img.setAttribute("alt", altText);
+        markProcessed(img, "done");
+        incrementStat("images");
+        logFix("alt text", img, "(empty)", altText);
+        console.log("[AI4A11y] Generated alt:", altText);
+        return altText;
+      }
+      markProcessed(img, "failed");
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to generate alt:", e);
+      markProcessed(img, "failed");
+      return null;
+    }
+  }
+  async function generateSvgDescription(svg) {
+    if (svg.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(svg, "pending");
+    try {
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const dataUrl = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgString)));
+      const description = await describeImage(dataUrl);
+      if (description) {
+        let title = svg.querySelector("title");
+        if (!title) {
+          title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+          svg.insertBefore(title, svg.firstChild);
+        }
+        title.textContent = description;
+        svg.setAttribute("role", "img");
+        markProcessed(svg, "done");
+        incrementStat("images");
+        logFix("svg description", svg, "(none)", description);
+        return description;
+      }
+      markProcessed(svg, "failed");
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to describe SVG:", e);
+      markProcessed(svg, "failed");
+      return null;
+    }
+  }
+  var axeHandlers = {
+    "image-alt": generateImageAlt,
+    "svg-img-alt": generateSvgDescription
+  };
+
+  // tools/constants.js
+  var ARIA_REQUIRED_ATTRS = {
+    checkbox: { "aria-checked": "false" },
+    combobox: { "aria-expanded": "false" },
+    heading: { "aria-level": "2" },
+    listbox: {},
+    meter: { "aria-valuenow": "0" },
+    option: { "aria-selected": "false" },
+    progressbar: {},
+    radio: { "aria-checked": "false" },
+    scrollbar: { "aria-controls": "", "aria-valuenow": "0" },
+    separator: { "aria-valuenow": "0" },
+    slider: { "aria-valuenow": "0" },
+    spinbutton: {},
+    switch: { "aria-checked": "false" },
+    tab: { "aria-selected": "false" },
+    tabpanel: {},
+    tree: {},
+    treeitem: {}
+  };
+  var DEPRECATED_ROLES = {
+    directory: "list"
+  };
+  var VALID_LANGS = /* @__PURE__ */ new Set([
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "pt",
+    "nl",
+    "ru",
+    "zh",
+    "ja",
+    "ko",
+    "ar",
+    "hi",
+    "bn",
+    "pa",
+    "te",
+    "mr",
+    "ta",
+    "ur",
+    "gu",
+    "kn",
+    "ml",
+    "th",
+    "vi",
+    "id",
+    "ms",
+    "tl",
+    "pl",
+    "uk",
+    "ro",
+    "el",
+    "cs",
+    "hu",
+    "sv",
+    "da",
+    "fi",
+    "no",
+    "he",
+    "tr"
+  ]);
+  var VALID_ARIA_ATTRS = /* @__PURE__ */ new Set([
+    "aria-activedescendant",
+    "aria-atomic",
+    "aria-autocomplete",
+    "aria-braillelabel",
+    "aria-brailleroledescription",
+    "aria-busy",
+    "aria-checked",
+    "aria-colcount",
+    "aria-colindex",
+    "aria-colindextext",
+    "aria-colspan",
+    "aria-controls",
+    "aria-current",
+    "aria-describedby",
+    "aria-description",
+    "aria-details",
+    "aria-disabled",
+    "aria-dropeffect",
+    "aria-errormessage",
+    "aria-expanded",
+    "aria-flowto",
+    "aria-grabbed",
+    "aria-haspopup",
+    "aria-hidden",
+    "aria-invalid",
+    "aria-keyshortcuts",
+    "aria-label",
+    "aria-labelledby",
+    "aria-level",
+    "aria-live",
+    "aria-modal",
+    "aria-multiline",
+    "aria-multiselectable",
+    "aria-orientation",
+    "aria-owns",
+    "aria-placeholder",
+    "aria-posinset",
+    "aria-pressed",
+    "aria-readonly",
+    "aria-relevant",
+    "aria-required",
+    "aria-roledescription",
+    "aria-rowcount",
+    "aria-rowindex",
+    "aria-rowindextext",
+    "aria-rowspan",
+    "aria-selected",
+    "aria-setsize",
+    "aria-sort",
+    "aria-valuemax",
+    "aria-valuemin",
+    "aria-valuenow",
+    "aria-valuetext"
+  ]);
+  var VALID_ARIA_ROLES = /* @__PURE__ */ new Set([
+    "alert",
+    "alertdialog",
+    "application",
+    "article",
+    "banner",
+    "blockquote",
+    "button",
+    "caption",
+    "cell",
+    "checkbox",
+    "code",
+    "columnheader",
+    "combobox",
+    "command",
+    "comment",
+    "complementary",
+    "composite",
+    "contentinfo",
+    "definition",
+    "deletion",
+    "dialog",
+    "directory",
+    "document",
+    "emphasis",
+    "feed",
+    "figure",
+    "form",
+    "generic",
+    "grid",
+    "gridcell",
+    "group",
+    "heading",
+    "img",
+    "input",
+    "insertion",
+    "landmark",
+    "link",
+    "list",
+    "listbox",
+    "listitem",
+    "log",
+    "main",
+    "mark",
+    "marquee",
+    "math",
+    "menu",
+    "menubar",
+    "menuitem",
+    "menuitemcheckbox",
+    "menuitemradio",
+    "meter",
+    "navigation",
+    "none",
+    "note",
+    "option",
+    "paragraph",
+    "presentation",
+    "progressbar",
+    "radio",
+    "radiogroup",
+    "range",
+    "region",
+    "roletype",
+    "row",
+    "rowgroup",
+    "rowheader",
+    "scrollbar",
+    "search",
+    "searchbox",
+    "section",
+    "sectionhead",
+    "select",
+    "separator",
+    "slider",
+    "spinbutton",
+    "status",
+    "strong",
+    "structure",
+    "subscript",
+    "superscript",
+    "switch",
+    "tab",
+    "table",
+    "tablist",
+    "tabpanel",
+    "term",
+    "textbox",
+    "time",
+    "timer",
+    "toolbar",
+    "tooltip",
+    "tree",
+    "treegrid",
+    "treeitem",
+    "widget",
+    "window"
+  ]);
+  var IFRAME_PATTERNS = {
+    "youtube.com": "YouTube video",
+    "vimeo.com": "Vimeo video",
+    "maps.google": "Google Maps",
+    "google.com/maps": "Google Maps",
+    "twitter.com": "Twitter embed",
+    "x.com": "Twitter embed",
+    "facebook.com": "Facebook embed",
+    "instagram.com": "Instagram embed",
+    "spotify.com": "Spotify player",
+    "soundcloud.com": "SoundCloud player",
+    "codepen.io": "CodePen demo",
+    "jsfiddle.net": "JSFiddle demo",
+    "codesandbox.io": "CodeSandbox",
+    "calendly.com": "Calendly scheduler",
+    "typeform.com": "Form",
+    "stripe.com": "Payment form",
+    "recaptcha": "CAPTCHA verification"
+  };
+
+  // tools/adapters/generate-labels.js
+  var logFix2 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  async function generateLinkLabel(link) {
+    var _a;
+    if (link.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(link, "pending");
+    const href = link.href || "";
+    const existingText = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
+    const context = getContextForElement(link);
+    const label = await inferLabel({
+      url: href,
+      elementType: "link",
+      existingText,
+      context
+    });
+    if (label) {
+      link.setAttribute("aria-label", label);
+      markProcessed(link, "done");
+      incrementStat2("labels");
+      logFix2("link label", link, existingText || "(empty)", label);
+      console.log("[AI4A11y] Generated link label:", label);
+      return label;
+    }
+    markProcessed(link, "failed");
+    return null;
+  }
+  async function generateButtonLabel(button) {
+    var _a;
+    if (button.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(button, "pending");
+    const inferred = inferButtonLabel(button);
+    if (inferred) {
+      button.setAttribute("aria-label", inferred);
+      markProcessed(button, "done");
+      incrementStat2("labels");
+      logFix2("button label", button, "(empty)", inferred);
+      return inferred;
+    }
+    const context = getContextForElement(button);
+    const svgContent = ((_a = button.querySelector("svg")) == null ? void 0 : _a.outerHTML) || "";
+    const label = await inferLabel({
+      elementType: "button",
+      context,
+      svgContent
+    });
+    if (label) {
+      button.setAttribute("aria-label", label);
+      markProcessed(button, "done");
+      incrementStat2("labels");
+      logFix2("button label", button, "(empty)", label);
+      return label;
+    }
+    markProcessed(button, "failed");
+    return null;
+  }
+  async function generateIframeTitle(iframe) {
+    if (iframe.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(iframe, "pending");
+    const src = iframe.src || "";
+    for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
+      if (src.includes(pattern)) {
+        iframe.setAttribute("title", title);
+        markProcessed(iframe, "done");
+        incrementStat2("labels");
+        logFix2("iframe title", iframe, "(empty)", title);
+        return title;
+      }
+    }
+    try {
+      const url = new URL(src);
+      const title = `Embedded content from ${url.hostname}`;
+      iframe.setAttribute("title", title);
+      markProcessed(iframe, "done");
+      incrementStat2("labels");
+      logFix2("iframe title", iframe, "(empty)", title);
+      return title;
+    } catch {
+      const title = "Embedded content";
+      iframe.setAttribute("title", title);
+      markProcessed(iframe, "done");
+      return title;
+    }
+  }
+  async function generateFormLabel(input) {
+    if (input.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(input, "pending");
+    if (input.placeholder) {
+      input.setAttribute("aria-label", input.placeholder);
+      markProcessed(input, "done");
+      incrementStat2("labels");
+      logFix2("form label", input, "(empty)", input.placeholder);
+      return input.placeholder;
+    }
+    if (input.name) {
+      const label = input.name.replace(/[-_]/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+      input.setAttribute("aria-label", label);
+      markProcessed(input, "done");
+      incrementStat2("labels");
+      logFix2("form label", input, "(empty)", label);
+      return label;
+    }
+    const nearbyText = getNearbyText(input);
+    if (nearbyText) {
+      input.setAttribute("aria-label", nearbyText);
+      markProcessed(input, "done");
+      incrementStat2("labels");
+      logFix2("form label", input, "(empty)", nearbyText);
+      return nearbyText;
+    }
+    markProcessed(input, "skipped");
+    return null;
+  }
+  function inferButtonLabel(button) {
+    var _a, _b;
+    const className = ((_a = button.className) == null ? void 0 : _a.toLowerCase()) || "";
+    const svgPaths = ((_b = button.querySelector("svg path")) == null ? void 0 : _b.getAttribute("d")) || "";
+    const patterns = {
+      close: ["close", "dismiss", "x-btn", "btn-close"],
+      menu: ["menu", "hamburger", "nav-toggle"],
+      search: ["search", "find"],
+      submit: ["submit", "send"],
+      play: ["play"],
+      pause: ["pause"],
+      next: ["next", "forward", "arrow-right"],
+      previous: ["prev", "back", "arrow-left"],
+      expand: ["expand", "more", "dropdown"],
+      collapse: ["collapse", "less"],
+      settings: ["settings", "config", "gear", "cog"],
+      delete: ["delete", "remove", "trash"],
+      edit: ["edit", "pencil"],
+      share: ["share"],
+      like: ["like", "heart", "favorite"],
+      copy: ["copy", "clipboard"]
+    };
+    for (const [label, keywords] of Object.entries(patterns)) {
+      if (keywords.some((kw) => className.includes(kw))) {
+        return label.charAt(0).toUpperCase() + label.slice(1);
+      }
+    }
+    return null;
+  }
+  function getContextForElement(el) {
+    var _a;
+    const parent = el.parentElement;
+    if (!parent)
+      return "";
+    const clone = parent.cloneNode(true);
+    clone.querySelectorAll("script, style").forEach((s) => s.remove());
+    return ((_a = clone.textContent) == null ? void 0 : _a.trim().substring(0, 200)) || "";
+  }
+  function getNearbyText(input) {
+    var _a, _b, _c;
+    const prev = input.previousElementSibling;
+    const next = input.nextElementSibling;
+    const parent = input.parentElement;
+    if ((_a = prev == null ? void 0 : prev.textContent) == null ? void 0 : _a.trim()) {
+      return prev.textContent.trim().replace(/:$/, "");
+    }
+    if ((_b = next == null ? void 0 : next.textContent) == null ? void 0 : _b.trim()) {
+      return next.textContent.trim().replace(/:$/, "");
+    }
+    if (parent) {
+      const clone = parent.cloneNode(true);
+      clone.querySelectorAll("input, select, textarea, button").forEach((e) => e.remove());
+      const text = (_c = clone.textContent) == null ? void 0 : _c.trim();
+      if (text && text.length < 50)
+        return text.replace(/:$/, "");
+    }
+    return null;
+  }
+  var axeHandlers2 = {
+    "link-name": generateLinkLabel,
+    "button-name": generateButtonLabel,
+    "frame-title": generateIframeTitle,
+    "label": generateFormLabel,
+    "select-name": generateFormLabel
+  };
+
+  // tools/adapters/generate-captions.js
+  var logFix3 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat3 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  async function generateVideoCaptions(video) {
+    var _a;
+    if (video.dataset.ai4a11yCaptioned)
+      return null;
+    video.dataset.ai4a11yCaptioned = "pending";
+    const src = video.src || ((_a = video.querySelector("source")) == null ? void 0 : _a.src);
+    if (!src) {
+      video.dataset.ai4a11yCaptioned = "failed";
+      return null;
+    }
+    try {
+      const result = await transcribeVideo(src);
+      if (result == null ? void 0 : result.text) {
+        const text = result.text;
+        addCaptionTrack(video, text);
+        video.dataset.ai4a11yCaptioned = "done";
+        incrementStat3("wcag");
+        logFix3("captions", video, "(none)", "(generated)");
+        console.log("[AI4A11y] Added video captions");
+        return text;
+      }
+      video.dataset.ai4a11yCaptioned = "failed";
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to caption video:", e);
+      video.dataset.ai4a11yCaptioned = "failed";
+      return null;
+    }
+  }
+  async function generateAudioCaptions(audio) {
+    var _a;
+    if (audio.dataset.ai4a11yCaptioned)
+      return null;
+    audio.dataset.ai4a11yCaptioned = "pending";
+    const src = audio.src || ((_a = audio.querySelector("source")) == null ? void 0 : _a.src);
+    if (!src) {
+      audio.dataset.ai4a11yCaptioned = "failed";
+      return null;
+    }
+    try {
+      const result = await transcribeAudio(src);
+      if (result == null ? void 0 : result.text) {
+        const text = result.text;
+        addTranscriptBlock(audio, text);
+        audio.dataset.ai4a11yCaptioned = "done";
+        incrementStat3("wcag");
+        logFix3("transcript", audio, "(none)", "(generated)");
+        console.log("[AI4A11y] Added audio transcript");
+        return text;
+      }
+      audio.dataset.ai4a11yCaptioned = "failed";
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to transcribe audio:", e);
+      audio.dataset.ai4a11yCaptioned = "failed";
+      return null;
+    }
+  }
+  function addCaptionTrack(video, text) {
+    const track = document.createElement("track");
+    track.kind = "captions";
+    track.label = "Auto-generated";
+    track.srclang = "en";
+    track.default = true;
+    const vtt = createSimpleVTT(text);
+    track.src = "data:text/vtt;charset=utf-8," + encodeURIComponent(vtt);
+    video.appendChild(track);
+  }
+  function addTranscriptBlock(audio, text) {
+    var _a;
+    const container = document.createElement("details");
+    container.className = "ai4a11y-transcript";
+    const summary = document.createElement("summary");
+    summary.textContent = "Transcript";
+    container.appendChild(summary);
+    const content = document.createElement("div");
+    content.className = "ai4a11y-transcript-content";
+    content.textContent = text;
+    container.appendChild(content);
+    (_a = audio.parentElement) == null ? void 0 : _a.insertBefore(container, audio.nextSibling);
+  }
+  function createSimpleVTT(text) {
+    const words = text.split(/\s+/);
+    const chunks = [];
+    for (let i = 0; i < words.length; i += 10) {
+      chunks.push(words.slice(i, i + 10).join(" "));
+    }
+    let vtt = "WEBVTT\n\n";
+    const secondsPerChunk = 5;
+    chunks.forEach((chunk, index) => {
+      const start = formatTime(index * secondsPerChunk);
+      const end = formatTime((index + 1) * secondsPerChunk);
+      vtt += `${start} --> ${end}
+${chunk}
+
+`;
+    });
+    return vtt;
+  }
+  function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor(seconds % 3600 / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}.000`;
+  }
+  var axeHandlers3 = {
+    "video-caption": generateVideoCaptions,
+    "audio-caption": generateAudioCaptions
+  };
+
+  // tools/adapters/simplify-text.js
+  var logFix4 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat4 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  async function simplifyText2(element) {
+    var _a;
+    if (element.dataset.ai4a11ySimplified)
+      return null;
+    element.dataset.ai4a11ySimplified = "pending";
+    if (element.tagName === "TABLE" || element.querySelector("table")) {
+      element.dataset.ai4a11ySimplified = "skipped";
+      return null;
+    }
+    const originalText = (_a = element.textContent) == null ? void 0 : _a.trim();
+    if (!originalText || originalText.length < 100 || originalText.length > 1e4) {
+      element.dataset.ai4a11ySimplified = "skipped";
+      return null;
+    }
+    try {
+      const simplified = await simplifyText(originalText);
+      if (simplified) {
+        element.dataset.ai4a11yOriginal = originalText;
+        element.classList.add("ai4a11y-simplified");
+        const textContainer = document.createElement("span");
+        textContainer.className = "ai4a11y-text-content";
+        textContainer.textContent = simplified;
+        const toggleBtn = document.createElement("button");
+        toggleBtn.className = "ai4a11y-toggle-original";
+        toggleBtn.textContent = "Show original";
+        toggleBtn.setAttribute("aria-pressed", "false");
+        toggleBtn.onclick = () => {
+          const showingOriginal = element.dataset.ai4a11yShowOriginal === "true";
+          if (showingOriginal) {
+            textContainer.textContent = simplified;
+            toggleBtn.textContent = "Show original";
+            toggleBtn.setAttribute("aria-pressed", "false");
+            element.dataset.ai4a11yShowOriginal = "false";
+          } else {
+            textContainer.textContent = originalText;
+            toggleBtn.textContent = "Show simplified";
+            toggleBtn.setAttribute("aria-pressed", "true");
+            element.dataset.ai4a11yShowOriginal = "true";
+          }
+        };
+        element.textContent = "";
+        element.appendChild(textContainer);
+        element.appendChild(toggleBtn);
+        element.dataset.ai4a11ySimplified = "done";
+        incrementStat4("wcag");
+        logFix4("simplify", element, "(complex)", "(simplified)");
+        console.log("[AI4A11y] Simplified text");
+        return simplified;
+      }
+      element.dataset.ai4a11ySimplified = "failed";
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to simplify:", e);
+      element.dataset.ai4a11ySimplified = "failed";
+      return null;
+    }
+  }
+  async function summarizeContent(element) {
+    var _a;
+    if (element.dataset.ai4a11ySummarize)
+      return null;
+    element.dataset.ai4a11ySummarize = "pending";
+    if (element.tagName === "TABLE") {
+      element.dataset.ai4a11ySummarize = "skipped";
+      return null;
+    }
+    const text = (_a = element.textContent) == null ? void 0 : _a.trim();
+    if (!text || text.length < 500) {
+      element.dataset.ai4a11ySummarize = "skipped";
+      return null;
+    }
+    try {
+      const summary = await summarizeText(text.substring(0, 3e3));
+      if (summary) {
+        const summaryBox = document.createElement("div");
+        summaryBox.className = "ai4a11y-summary-box";
+        summaryBox.setAttribute("role", "region");
+        summaryBox.setAttribute("aria-label", "Summary");
+        const header = document.createElement("div");
+        header.className = "ai4a11y-summary-header";
+        const icon = document.createElement("span");
+        icon.className = "ai4a11y-summary-icon";
+        icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+        const headerText = document.createElement("span");
+        headerText.textContent = "Summary";
+        header.appendChild(icon);
+        header.appendChild(headerText);
+        const content = document.createElement("div");
+        content.className = "ai4a11y-summary-content";
+        content.textContent = summary;
+        summaryBox.appendChild(header);
+        summaryBox.appendChild(content);
+        element.insertBefore(summaryBox, element.firstChild);
+        element.dataset.ai4a11ySummarize = "done";
+        incrementStat4("wcag");
+        logFix4("summarize", element, "(long)", "(summarized)");
+        return summary;
+      }
+      element.dataset.ai4a11ySummarize = "failed";
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to summarize:", e);
+      element.dataset.ai4a11ySummarize = "failed";
+      return null;
+    }
+  }
+
+  // tools/utils/color.js
+  function parseColor(color) {
+    if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
+      return null;
+    }
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+      return {
+        r: parseInt(rgbMatch[1]),
+        g: parseInt(rgbMatch[2]),
+        b: parseInt(rgbMatch[3])
+      };
+    }
+    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16)
+      };
+    }
+    return null;
+  }
+  function getLuminance(color) {
+    const rgb = parseColor(color);
+    if (!rgb)
+      return null;
+    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function getContrastRatio(color1, color2) {
+    const l1 = getLuminance(color1);
+    const l2 = getLuminance(color2);
+    if (l1 === null || l2 === null)
+      return null;
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+  function getEffectiveBackground(element) {
+    let el = element;
+    while (el && el !== document.body) {
+      const bg = getComputedStyle(el).backgroundColor;
+      if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
+        return bg;
+      }
+      el = el.parentElement;
+    }
+    return "rgb(255, 255, 255)";
+  }
+
+  // tools/adapters/fix-contrast.js
+  var logFix5 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  async function fixLowContrast(element, color, background) {
+    if (element.dataset.ai4a11yProcessed)
+      return null;
+    markProcessed(element, "pending");
+    if (!background || background === "transparent") {
+      background = getEffectiveBackground(element);
+    }
+    let fixedColor;
+    try {
+      fixedColor = await fixContrast(color, background);
+      if (!fixedColor) {
+        fixedColor = getLuminance(background) > 0.5 ? "#000000" : "#ffffff";
+      }
+    } catch (e) {
+      console.warn("[AI4A11y] Contrast fix failed, using fallback:", e);
+      fixedColor = getLuminance(background) > 0.5 ? "#000000" : "#ffffff";
+    }
+    if (color) {
+      element.dataset.ai4a11yOriginalColor = color;
+    }
+    element.style.color = fixedColor;
+    element.classList.add("ai4a11y-contrast-fixed");
+    markProcessed(element, "done");
+    incrementStat5("wcag");
+    logFix5("contrast", element, color, fixedColor);
+    console.log("[AI4A11y] Fixed contrast:", color, "->", fixedColor);
+    return fixedColor;
+  }
+  function fixIndistinguishableLink(link) {
+    if (link.dataset.ai4a11yProcessed)
+      return;
+    markProcessed(link, "done");
+    link.style.textDecoration = "underline";
+    incrementStat5("wcag");
+    logFix5("link-underline", link, "(none)", "underline");
+    console.log("[AI4A11y] Added underline to link");
+  }
+  var axeHandlers4 = {
+    "color-contrast": fixLowContrast,
+    "color-contrast-enhanced": fixLowContrast,
+    "link-in-text-block": fixIndistinguishableLink
+  };
+
+  // tools/adapters/wcag-fixes.js
+  var logFix6 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat6 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  function fixInvalidLang(element) {
+    const currentLang = element.getAttribute("lang");
+    if (!currentLang)
+      return;
+    const baseLang = currentLang.split("-")[0].toLowerCase();
+    const newLang = VALID_LANGS.has(baseLang) ? baseLang : "en";
+    element.setAttribute("lang", newLang);
+    incrementStat6("wcag");
+    logFix6("lang", element, currentLang, newLang);
+    console.log("[AI4A11y] Fixed lang attribute");
+  }
+  function fixMissingLang(element) {
+    element.setAttribute("lang", detectLanguage());
+    incrementStat6("wcag");
+    logFix6("lang", element, "(missing)", element.getAttribute("lang"));
+    console.log("[AI4A11y] Added lang attribute");
+  }
+  function fixDuplicateId(element) {
+    const originalId = element.id;
+    const newId = `${originalId}_${randomSuffix()}`;
+    updateIdReferences(originalId, newId);
+    element.id = newId;
+    markProcessed(element, "done");
+    incrementStat6("wcag");
+    logFix6("duplicate-id", element, originalId, newId);
+    console.log("[AI4A11y] Fixed duplicate ID:", originalId);
+  }
+  function fixHeadingOrder(element) {
+    const match = element.tagName.match(/^H([1-6])$/);
+    if (!match)
+      return;
+    const currentLevel = parseInt(match[1]);
+    const allHeadings = Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6"));
+    const idx = allHeadings.indexOf(element);
+    if (idx === -1 || idx === 0)
+      return;
+    const prevHeading = allHeadings[idx - 1];
+    const prevLevel = parseInt(prevHeading.tagName[1]);
+    if (currentLevel > prevLevel + 1) {
+      const newLevel = prevLevel + 1;
+      const newHeading = document.createElement(`h${newLevel}`);
+      while (element.firstChild) {
+        newHeading.appendChild(element.firstChild);
+      }
+      for (const attr of element.attributes) {
+        newHeading.setAttribute(attr.name, attr.value);
+      }
+      element.replaceWith(newHeading);
+      incrementStat6("wcag");
+      logFix6("heading-order", newHeading, `h${currentLevel}`, `h${newLevel}`);
+      console.log(`[AI4A11y] Fixed heading: h${currentLevel} -> h${newLevel}`);
+    }
+  }
+  function fixPositiveTabindex(element) {
+    const oldVal = element.getAttribute("tabindex");
+    element.setAttribute("tabindex", "0");
+    markProcessed(element, "done");
+    incrementStat6("wcag");
+    logFix6("tabindex", element, oldVal, "0");
+    console.log("[AI4A11y] Fixed positive tabindex");
+  }
+  function fixInvalidAriaAttr(element) {
+    for (const attr of Array.from(element.attributes)) {
+      if (attr.name.startsWith("aria-") && !VALID_ARIA_ATTRS.has(attr.name)) {
+        element.removeAttribute(attr.name);
+        console.log("[AI4A11y] Removed invalid ARIA attr:", attr.name);
+      }
+    }
+    incrementStat6("wcag");
+  }
+  function fixInvalidAriaRole(element) {
+    const role = element.getAttribute("role");
+    if (role && !VALID_ARIA_ROLES.has(role)) {
+      element.removeAttribute("role");
+      incrementStat6("wcag");
+      logFix6("aria-role", element, role, "(removed)");
+      console.log("[AI4A11y] Removed invalid role:", role);
+    }
+  }
+  function fixDeprecatedRole(element) {
+    const role = element.getAttribute("role");
+    if (role && DEPRECATED_ROLES[role]) {
+      element.setAttribute("role", DEPRECATED_ROLES[role]);
+      incrementStat6("wcag");
+      logFix6("aria-role", element, role, DEPRECATED_ROLES[role]);
+      console.log("[AI4A11y] Replaced deprecated role:", role);
+    }
+  }
+  function fixMissingAriaAttrs(element) {
+    const role = element.getAttribute("role");
+    if (role && ARIA_REQUIRED_ATTRS[role]) {
+      for (const [attr, value] of Object.entries(ARIA_REQUIRED_ATTRS[role])) {
+        if (!element.hasAttribute(attr) && value !== "") {
+          element.setAttribute(attr, value);
+          console.log("[AI4A11y] Added required ARIA attr:", attr);
+        }
+      }
+      incrementStat6("wcag");
+    }
+  }
+  function fixNestedInteractive(element) {
+    const parent = element.closest("a, button");
+    if (!parent || element === parent)
+      return;
+    if (element.tagName === "BUTTON") {
+      const span = document.createElement("span");
+      while (element.firstChild) {
+        span.appendChild(element.firstChild);
+      }
+      span.className = element.className;
+      element.replaceWith(span);
+      incrementStat6("wcag");
+      logFix6("nested-interactive", span, "button", "span");
+      console.log("[AI4A11y] Replaced nested button with span");
+    } else if (element.tagName === "A") {
+      element.removeAttribute("href");
+      element.setAttribute("role", "presentation");
+      incrementStat6("wcag");
+      logFix6("nested-interactive", element, "a[href]", "a[role=presentation]");
+      console.log("[AI4A11y] Made nested link non-interactive");
+    }
+  }
+  function fixTargetSize(element) {
+    const rect = element.getBoundingClientRect();
+    if (rect.width >= 44 && rect.height >= 44)
+      return;
+    const needWidth = Math.max(0, (44 - rect.width) / 2);
+    const needHeight = Math.max(0, (44 - rect.height) / 2);
+    const display = getComputedStyle(element).display;
+    element.style.boxSizing = "border-box";
+    element.style.padding = `${needHeight}px ${needWidth}px`;
+    element.style.minWidth = "44px";
+    element.style.minHeight = "44px";
+    if (display === "inline") {
+      element.style.display = "inline-block";
+    }
+    incrementStat6("wcag");
+    logFix6("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, "44x44");
+    console.log("[AI4A11y] Increased touch target size");
+  }
+  function fixViewportMeta(element) {
+    const oldContent = element.getAttribute("content") || "";
+    let content = oldContent;
+    content = content.replace(/maximum-scale\s*=\s*[\d.]+/gi, "maximum-scale=5");
+    content = content.replace(/user-scalable\s*=\s*no/gi, "user-scalable=yes");
+    element.setAttribute("content", content);
+    incrementStat6("wcag");
+    logFix6("viewport", element, oldContent, content);
+    console.log("[AI4A11y] Fixed viewport meta");
+  }
+  function removeMetaRefresh(element) {
+    const oldContent = element.getAttribute("content") || "";
+    element.remove();
+    incrementStat6("wcag");
+    logFix6("meta-refresh", element, oldContent, "(removed)");
+    console.log("[AI4A11y] Removed meta refresh");
+  }
+  function replaceObsoleteElement(element) {
+    const tag = element.tagName.toLowerCase();
+    const replacement = tag === "blink" ? "span" : "div";
+    const newEl = document.createElement(replacement);
+    while (element.firstChild) {
+      newEl.appendChild(element.firstChild);
+    }
+    element.replaceWith(newEl);
+    incrementStat6("wcag");
+    logFix6("obsolete", newEl, `<${tag}>`, `<${replacement}>`);
+    console.log(`[AI4A11y] Replaced <${tag}> with <${replacement}>`);
+  }
+  function detectLanguage() {
+    const meta = document.querySelector('meta[http-equiv="content-language"]');
+    if (meta == null ? void 0 : meta.content)
+      return meta.content.split("-")[0];
+    const patterns = {
+      "/es/": "es",
+      "/fr/": "fr",
+      "/de/": "de",
+      "/zh/": "zh",
+      "/ja/": "ja",
+      "/ko/": "ko"
+    };
+    for (const [pattern, lang] of Object.entries(patterns)) {
+      if (location.href.includes(pattern))
+        return lang;
+    }
+    return "en";
+  }
+  function randomSuffix() {
+    return Math.random().toString(36).substring(2, 7);
+  }
+  function updateIdReferences(oldId, newId) {
+    const attrs = ["for", "aria-labelledby", "aria-describedby", "aria-controls", "aria-owns", "headers", "list"];
+    for (const attr of attrs) {
+      document.querySelectorAll(`[${attr}]`).forEach((el) => {
+        const val = el.getAttribute(attr);
+        if (val) {
+          const ids = val.split(/\s+/);
+          const updated = ids.map((id) => id === oldId ? newId : id);
+          if (updated.join(" ") !== val) {
+            el.setAttribute(attr, updated.join(" "));
+          }
+        }
+      });
+    }
+  }
+  var axeHandlers5 = {
+    "html-has-lang": fixMissingLang,
+    "html-lang-valid": fixInvalidLang,
+    "valid-lang": fixInvalidLang,
+    "duplicate-id": fixDuplicateId,
+    "duplicate-id-aria": fixDuplicateId,
+    "duplicate-id-active": fixDuplicateId,
+    "heading-order": fixHeadingOrder,
+    "tabindex": fixPositiveTabindex,
+    "aria-valid-attr": fixInvalidAriaAttr,
+    "aria-roles": fixInvalidAriaRole,
+    "aria-allowed-role": fixInvalidAriaRole,
+    "aria-deprecated-role": fixDeprecatedRole,
+    "aria-required-attr": fixMissingAriaAttrs,
+    "nested-interactive": fixNestedInteractive,
+    "target-size": fixTargetSize,
+    "meta-viewport": fixViewportMeta,
+    "meta-viewport-large": fixViewportMeta,
+    "meta-refresh": removeMetaRefresh,
+    "blink": replaceObsoleteElement,
+    "marquee": replaceObsoleteElement
+  };
+
+  // tools/adapters/index.js
+  var axeHandlers6 = {
+    ...axeHandlers,
+    ...axeHandlers2,
+    ...axeHandlers3,
+    ...axeHandlers4,
+    ...axeHandlers5
+  };
+  function getAxeHandler(ruleId) {
+    return axeHandlers6[ruleId] || null;
+  }
+
+  // tools/auditors/wcag-issues.js
+  async function runAxeAnalysis() {
+    if (typeof axe === "undefined") {
+      console.warn("[AI4A11y] axe-core not loaded");
+      return [];
+    }
+    try {
+      const results = await axe.run();
+      console.log(`[AI4A11y] axe-core found ${results.violations.length} violation types`);
+      return results.violations;
+    } catch (e) {
+      console.warn("[AI4A11y] axe-core failed:", e);
+      return [];
+    }
+  }
+
+  // tools/auditors/missing-alt.js
+  function findImagesWithoutAlt() {
+    return Array.from(document.querySelectorAll("img")).filter((img) => {
+      if (wasProcessed(img))
+        return false;
+      if (!isVisible(img))
+        return false;
+      if (!img.hasAttribute("alt"))
+        return true;
+      return false;
+    });
+  }
+  function findEmptyAltImages() {
+    return Array.from(document.querySelectorAll('img[alt=""]')).filter((img) => {
+      if (wasProcessed(img))
+        return false;
+      if (!isVisible(img))
+        return false;
+      if (isLikelyDecorative(img))
+        return false;
+      const { width, height } = getImageSize(img);
+      return width > 100 && height > 100;
+    });
+  }
+  function findCanvasElements() {
+    return Array.from(document.querySelectorAll("canvas")).filter((canvas) => {
+      if (wasProcessed(canvas))
+        return false;
+      const rect = canvas.getBoundingClientRect();
+      return rect.width > 50 && rect.height > 50;
+    });
+  }
+
+  // tools/auditors/missing-captions.js
+  function findVideosWithoutCaptions() {
+    return Array.from(document.querySelectorAll("video")).filter((video) => {
+      var _a;
+      if (wasProcessed(video))
+        return false;
+      if (!isVisible(video))
+        return false;
+      const tracks = video.querySelectorAll('track[kind="captions"], track[kind="subtitles"]');
+      if (tracks.length > 0)
+        return false;
+      if (((_a = video.textTracks) == null ? void 0 : _a.length) > 0) {
+        for (const track of video.textTracks) {
+          if (track.kind === "captions" || track.kind === "subtitles") {
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+  }
+  function findAudioWithoutTranscripts() {
+    return Array.from(document.querySelectorAll("audio")).filter((audio) => {
+      var _a;
+      if (wasProcessed(audio))
+        return false;
+      if (!isVisible(audio))
+        return false;
+      const parent = audio.parentElement;
+      if (!parent)
+        return true;
+      const text = ((_a = parent.textContent) == null ? void 0 : _a.toLowerCase()) || "";
+      if (text.includes("transcript"))
+        return false;
+      if (audio.querySelector("track"))
+        return false;
+      return true;
+    });
+  }
+
+  // tools/auditors/missing-labels.js
+  function findEmptyLinks() {
+    return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
+      if (wasProcessed(link))
+        return false;
+      if (!isVisible(link))
+        return false;
+      return !hasAccessibleName(link);
+    });
+  }
+  function findEmptyButtons() {
+    const buttons = [
+      ...document.querySelectorAll("button"),
+      ...document.querySelectorAll('[role="button"]')
+    ];
+    return buttons.filter((btn) => {
+      if (wasProcessed(btn))
+        return false;
+      if (!isVisible(btn))
+        return false;
+      return !hasAccessibleName(btn);
+    });
+  }
+  function findUnlabeledInputs() {
+    const inputs = document.querySelectorAll("input, select, textarea");
+    return Array.from(inputs).filter((input) => {
+      if (wasProcessed(input))
+        return false;
+      if (!isVisible(input))
+        return false;
+      if (input.type === "hidden")
+        return false;
+      if (input.getAttribute("aria-label"))
+        return false;
+      if (input.getAttribute("aria-labelledby"))
+        return false;
+      if (input.id) {
+        const label = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+        if (label)
+          return false;
+      }
+      if (input.closest("label"))
+        return false;
+      if (input.title)
+        return false;
+      return true;
+    });
+  }
+
+  // tools/auditors/poor-contrast.js
+  function findLowContrastText() {
+    const textElements = document.querySelectorAll(
+      "p, span, a, li, td, th, h1, h2, h3, h4, h5, h6, label, button, div"
+    );
+    const found = [];
+    textElements.forEach((el) => {
+      if (wasProcessed(el))
+        return;
+      if (!isVisible(el))
+        return;
+      const hasDirectText = Array.from(el.childNodes).some(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+      );
+      if (!hasDirectText)
+        return;
+      const style = getComputedStyle(el);
+      const color = style.color;
+      const background = getEffectiveBackground(el);
+      const ratio = getContrastRatio(color, background);
+      if (ratio === null)
+        return;
+      const fontSize = parseFloat(style.fontSize);
+      const fontWeight = parseInt(style.fontWeight) || 400;
+      const isLarge = fontSize >= 24 || fontSize >= 18.66 && fontWeight >= 700;
+      const minRatio = isLarge ? 3 : 4.5;
+      if (ratio < minRatio) {
+        found.push({
+          element: el,
+          color,
+          background,
+          ratio,
+          required: minRatio
+        });
+      }
+    });
+    return found;
+  }
+
   // tools/profiles/settings.js
   var defaults = {
     enabled: true,
@@ -1754,6 +3130,54 @@
   }
 
   // cli/cli-tools.js
+  function setupAIProvider() {
+    setAIProvider({
+      describeImage: async (imageData) => {
+        if (typeof window.ai4a11y_describeImage === "function") {
+          return await window.ai4a11y_describeImage(imageData);
+        }
+        console.warn("[AI4A11y] AI provider not available - run with AI enabled");
+        return null;
+      },
+      simplifyText: async (text) => {
+        if (typeof window.ai4a11y_simplifyText === "function") {
+          return await window.ai4a11y_simplifyText(text);
+        }
+        return null;
+      },
+      summarizeText: async (text) => {
+        if (typeof window.ai4a11y_summarizeText === "function") {
+          return await window.ai4a11y_summarizeText(text);
+        }
+        return null;
+      },
+      generateLabels: async (ctx) => {
+        if (typeof window.ai4a11y_generateLabels === "function") {
+          return await window.ai4a11y_generateLabels(ctx);
+        }
+        return null;
+      },
+      inferLabel: async (ctx) => {
+        if (typeof window.ai4a11y_generateLabels === "function") {
+          return await window.ai4a11y_generateLabels(ctx);
+        }
+        return null;
+      },
+      fixContrast: async (fg, bg) => {
+        if (typeof window.ai4a11y_fixContrast === "function") {
+          return await window.ai4a11y_fixContrast(fg, bg);
+        }
+        return null;
+      },
+      describeElement: async (imageData, elementType, context) => {
+        if (typeof window.ai4a11y_describeElement === "function") {
+          return await window.ai4a11y_describeElement(imageData, elementType, context);
+        }
+        return null;
+      },
+      announce: (msg) => console.log(`[Announce] ${msg}`)
+    });
+  }
   var tools = {
     visualAssist: VisualAssist,
     darkMode: DarkMode,
@@ -1906,8 +3330,140 @@
     };
     return descriptions[name] || "";
   }
+  var auditors = {
+    findMissingAlt() {
+      const noAlt = findImagesWithoutAlt();
+      const emptyAlt = findEmptyAltImages();
+      const canvases = findCanvasElements();
+      return {
+        noAlt: noAlt.map((el) => ({
+          tagName: el.tagName,
+          src: el.src || el.currentSrc,
+          selector: getSelector(el)
+        })),
+        emptyAlt: emptyAlt.map((el) => ({
+          tagName: el.tagName,
+          src: el.src || el.currentSrc,
+          selector: getSelector(el)
+        })),
+        canvases: canvases.map((el) => ({
+          selector: getSelector(el)
+        })),
+        total: noAlt.length + emptyAlt.length + canvases.length
+      };
+    },
+    findMissingLabels() {
+      const links = findEmptyLinks();
+      const buttons = findEmptyButtons();
+      const inputs = findUnlabeledInputs();
+      return {
+        links: links.map((el) => ({
+          href: el.href,
+          selector: getSelector(el)
+        })),
+        buttons: buttons.map((el) => ({
+          selector: getSelector(el)
+        })),
+        inputs: inputs.map((el) => ({
+          type: el.type,
+          name: el.name,
+          selector: getSelector(el)
+        })),
+        total: links.length + buttons.length + inputs.length
+      };
+    },
+    findMissingCaptions() {
+      const videos = findVideosWithoutCaptions();
+      const audio = findAudioWithoutTranscripts();
+      return {
+        videos: videos.map((el) => ({
+          src: el.src || el.currentSrc,
+          selector: getSelector(el)
+        })),
+        audio: audio.map((el) => ({
+          src: el.src || el.currentSrc,
+          selector: getSelector(el)
+        })),
+        total: videos.length + audio.length
+      };
+    },
+    findPoorContrast() {
+      const results = findLowContrastText();
+      return results.map((item) => {
+        var _a, _b, _c;
+        return {
+          text: (_b = (_a = item.element) == null ? void 0 : _a.textContent) == null ? void 0 : _b.slice(0, 50),
+          selector: getSelector(item.element),
+          color: item.color,
+          background: item.background,
+          ratio: (_c = item.ratio) == null ? void 0 : _c.toFixed(2),
+          required: item.required
+        };
+      });
+    },
+    async runFullAudit() {
+      const results = await runAxeAnalysis();
+      return results;
+    }
+  };
+  var aiFixes = {
+    async describeImages() {
+      const { images } = await auditors.findMissingAlt();
+      const results = [];
+      for (const img of images) {
+        const el = document.querySelector(img.selector);
+        if (el) {
+          const alt = await generateImageAlt(el);
+          if (alt) {
+            el.alt = alt;
+            results.push({ selector: img.selector, alt });
+          }
+        }
+      }
+      return results;
+    },
+    async simplifyText(selector) {
+      const el = selector ? document.querySelector(selector) : document.body;
+      if (!el)
+        return null;
+      const simplified = await simplifyText2(el.textContent);
+      return simplified;
+    },
+    async summarize(selector) {
+      const el = selector ? document.querySelector(selector) : document.body;
+      if (!el)
+        return null;
+      const summary = await summarizeContent(el.textContent);
+      return summary;
+    },
+    async fixAxeViolation(ruleId, selector) {
+      const handler = getAxeHandler(ruleId);
+      if (!handler)
+        return { error: `No handler for rule: ${ruleId}` };
+      const el = document.querySelector(selector);
+      if (!el)
+        return { error: `Element not found: ${selector}` };
+      await handler(el);
+      return { success: true };
+    }
+  };
+  function getSelector(el) {
+    if (!el || !el.tagName)
+      return "unknown";
+    const tag = el.tagName.toLowerCase();
+    if (el.id)
+      return `#${el.id}`;
+    if (el.className && typeof el.className === "string") {
+      const classes = el.className.trim().split(/\s+/).filter((c) => c).slice(0, 2).join(".");
+      if (classes)
+        return `${tag}.${classes}`;
+    }
+    return tag;
+  }
   if (typeof window !== "undefined") {
+    setupAIProvider();
     window.ai4a11y = {
+      // Tool management
       tools,
       profiles,
       enableTool,
@@ -1916,6 +3472,22 @@
       applyProfile: applyProfileByName,
       listProfiles,
       listTools,
+      // Auditors - find issues
+      auditors,
+      findMissingAlt: auditors.findMissingAlt,
+      findMissingLabels: auditors.findMissingLabels,
+      findMissingCaptions: auditors.findMissingCaptions,
+      findPoorContrast: auditors.findPoorContrast,
+      runFullAudit: auditors.runFullAudit,
+      // AI fixes
+      aiFixes,
+      describeImages: aiFixes.describeImages,
+      simplifyText: aiFixes.simplifyText,
+      summarize: aiFixes.summarize,
+      fixAxeViolation: aiFixes.fixAxeViolation,
+      // Axe handlers
+      axeHandlers: axeHandlers6,
+      getAxeHandler,
       // Direct adapter access
       VisualAssist,
       DarkMode,
