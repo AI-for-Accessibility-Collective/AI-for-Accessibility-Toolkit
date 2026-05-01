@@ -1,0 +1,4 @@
+node_modules/
+extension/content/content.bundle.js
+extension/content/content.bundle.js.map
+*.DS_Store
