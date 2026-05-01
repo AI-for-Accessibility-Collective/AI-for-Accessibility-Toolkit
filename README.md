@@ -76,7 +76,30 @@ ai4a11y session audit --json          # JSON output
 ai4a11y session describe              # AI describes the page
 ai4a11y session describe --json       # JSON output
 ai4a11y session stop                  # Close browser
+
+# Accessibility adapters
+ai4a11y session enable darkMode       # Enable dark mode
+ai4a11y session enable visualAssist fontScale=150 largeCursor=true
+ai4a11y session disable darkMode      # Disable dark mode
+ai4a11y session tools                 # List tools and their status
+ai4a11y session profile lowVision     # Apply a preset profile
+ai4a11y session profiles              # List all available profiles
 ```
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `visualAssist` | Font scaling, spacing, cursor, focus enhancement |
+| `darkMode` | Dark color scheme |
+| `motionReducer` | Reduce animations and motion |
+| `focusMode` | Hide distractions, show reading progress |
+| `readAloud` | Text-to-speech for page content |
+| `readerMode` | Clean reading view (article extraction) |
+| `voiceCommands` | Voice-controlled navigation |
+| `keyboardNav` | Enhanced keyboard navigation |
+| `colorBlindMode` | Color vision deficiency filters |
+| `autoTranscriber` | Auto-generate captions for media |
 
 Requires `ANTHROPIC_API_KEY` environment variable for AI features.
 

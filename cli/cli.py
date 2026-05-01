@@ -14,6 +14,12 @@ Usage:
   ai4a11y session describe [--json]  Describe current page
   ai4a11y session stop            Close browser
 
+  ai4a11y session enable <tool>   Enable an accessibility adapter
+  ai4a11y session disable <tool>  Disable an accessibility adapter
+  ai4a11y session tools           List available tools and status
+  ai4a11y session profile <name>  Apply an accessibility profile
+  ai4a11y session profiles        List available profiles
+
 For full session commands, see: ai4a11y session --help
 """
 
@@ -45,6 +51,7 @@ SEE = {"describe", "summary", "ask", "audit", "report"}
 DO = {"tap", "type", "hover", "drag", "nudge", "pickdate", "dismiss", "media", "activate", "enter", "press", "do"}
 MOVE = {"go", "back", "scroll", "tab", "arrow", "key", "heading", "skip", "list", "find", "read", "tables", "focused", "diff"}
 SESSION = {"start", "stop", "status", "screenshot", "tabs", "focus", "cleanup-tabs"}
+VISUAL = {"enable", "disable", "tools", "profile", "profiles"}
 
 
 def get_tools_info():
@@ -300,6 +307,8 @@ def run_session_command(args, json_output=False):
         color = BLUE
     elif cmd_name in MOVE:
         color = PURPLE
+    elif cmd_name in VISUAL:
+        color = YELLOW
     elif cmd_name in SESSION:
         color = DIM
     else:
@@ -323,6 +332,12 @@ def run_session_command(args, json_output=False):
         detail = f" {args[1] if len(args) > 1 else 'down'}"
     elif cmd_name == "heading":
         detail = f" {args[1] if len(args) > 1 else 'next'}"
+    elif cmd_name == "enable" and len(args) > 1:
+        detail = f": {args[1]}"
+    elif cmd_name == "disable" and len(args) > 1:
+        detail = f": {args[1]}"
+    elif cmd_name == "profile" and len(args) > 1:
+        detail = f": {args[1]}"
 
     print(f"\n{color}{BOLD}{display_name}{RESET}{detail}")
 
@@ -410,7 +425,7 @@ def main():
         sys.exit(run_session_command(args[1:], json_output=json_output))
 
     # Direct session shortcuts (backwards compatible)
-    elif cmd in SEE | DO | MOVE | SESSION:
+    elif cmd in SEE | DO | MOVE | SESSION | VISUAL:
         sys.exit(run_session_command(args, json_output=json_output))
 
     else:
