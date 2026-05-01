@@ -66,45 +66,68 @@ On first install, an onboarding flow walks through your support areas, site type
 
 See [`personalized-extension/README.md`](personalized-extension/README.md) for full documentation.
 
-## Voice Control Web App
+## Browser Control Web Apps
 
-Voice-controlled browser agent powered by Gemini Live API. Talk to your browser — it listens, sees the viewport, and navigates autonomously.
+Two browser automation agents — voice or text input. Both use Gemini + browser-harness to control Chrome.
 
-### Prerequisites
+### Prerequisites (shared)
 
-1. Chrome with remote debugging:
+1. **Chrome with remote debugging:**
    ```bash
    /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
      --remote-debugging-port=9222 \
      --user-data-dir=/tmp/chrome-debug
    ```
 
-2. browser-harness daemon:
+2. **Clone browser-harness:**
    ```bash
-   npm install -g browser-harness
-   browser-harness
+   cd webapp
+   git clone https://github.com/browser-use/browser-harness.git
    ```
 
-### Run
+### Text Control (recommended)
+
+Type commands to control the browser. Uses Gemini 2.5 Flash.
+
+```bash
+cd webapp/textcontrol/backend
+
+# Create .env
+cat > .env << EOF
+USE_VERTEX_AI=false
+GEMINI_API_KEY=your-api-key-here
+AGENT_MODEL=gemini-2.5-flash
+EOF
+
+# Install and run
+uv venv && uv pip install -e . && uv pip install -e ../../browser-harness
+uv run uvicorn main:app --host 0.0.0.0 --port 8080
+```
+
+Open http://localhost:8080 and type commands like "go to google.com".
+
+### Voice Control
+
+Talk to control the browser. Uses Gemini Live API (audio streaming).
 
 ```bash
 cd webapp/voicecontrol
 
 # Backend
 cd backend
-cp .env.example .env
-# Add GOOGLE_API_KEY to .env
-# Use model: gemini-2.5-flash-native-audio-preview-12-2025
+cat > .env << EOF
+GEMINI_API_KEY=your-api-key-here
+DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
+EOF
+uv venv && uv pip install -e . && uv pip install -e ../../browser-harness
 uv run python main.py
 
 # Frontend (new terminal)
-cd frontend
+cd ../frontend
 npm install && npm run dev
 ```
 
-Open `http://localhost:5173`, click **Start Session**, allow mic access, and start talking.
-
-See [`webapp/voicecontrol/README.md`](webapp/voicecontrol/README.md) for full documentation.
+Open http://localhost:3000, click **Start Session**, allow mic, and start talking.
 
 ## CLI
 
