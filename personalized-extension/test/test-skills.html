@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Module Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #fafafa; }
+    h1 { margin-bottom: 8px; }
+    .test-result { padding: 8px 16px; margin: 4px 0; border-radius: 6px; font-size: 14px; }
+    .pass { background: #d4edda; color: #155724; }
+    .fail { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+    #summary { margin-top: 20px; padding: 16px; border-radius: 8px; font-weight: 600; font-size: 18px; }
+    article { margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+    article p { line-height: 1.6; color: #333; }
+    img.test-img { width: 200px; height: 150px; background: #ccc; display: block; margin: 10px 0; }
+    .low-contrast { color: #aaa; background: #ccc; padding: 4px; }
+    nav { background: #333; color: #fff; padding: 8px; margin-bottom: 10px; }
+    nav a { color: #fff; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>AI4A11y Skill Module Tests</h1>
+  <p>This page tests each skill can enable/disable without errors.</p>
+
+  <nav role="navigation"><a href="#">Home</a><a href="#">About</a></nav>
+
+  <main role="main">
+    <article>
+      <h2>Sample Article</h2>
+      <p class="long-text">This is a sample paragraph with enough text to test various skills. The accessibility toolkit should be able to process this content, simplify it if needed, add reading highlights, and more. It contains multiple sentences to ensure the text processing skills have enough material to work with. This sentence exists to pad the paragraph length.</p>
+      <p class="low-contrast">This text has low contrast for testing the fix-contrast skill.</p>
+      <img class="test-img" alt="" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23ccc'/><text x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666'>Test Image</text></svg>">
+      <button class="close-btn">X</button>
+      <a href="https://example.com"></a>
+      <input type="text" name="user_email" placeholder="Email address">
+      <iframe src="about:blank" width="1" height="1" style="display:none"></iframe>
+      <video width="320" height="240" style="display:none"><source src="about:blank"></video>
+    </article>
+  </main>
+
+  <div id="results"></div>
+  <div id="summary"></div>
+
+  <script type="module">
+    // Mock the chrome runtime for testing outside extension context
+    if (typeof chrome === 'undefined' || !chrome.runtime) {
+      window.chrome = {
+        runtime: {
+          sendMessage: (msg, cb) => { if (cb) cb({}); },
+          getURL: (path) => path,
+          lastError: null
+        },
+        storage: { local: { get: (k, cb) => cb({}), set: () => {} } }
+      };
+    }
+
+    // Mock AI provider that returns dummy values
+    const mockProvider = {
+      describeImage: async () => 'A test image placeholder',
+      describeVideo: async () => 'A test video',
+      simplifyText: async (text) => 'Simplified: ' + text.substring(0, 50),
+      summarizeText: async (text) => 'Summary of the text.',
+      inferLabel: async (ctx) => 'Test label',
+      fixContrast: async () => '#000000',
+      getYouTubeTranscript: async () => null,
+      transcribeVideo: async () => null,
+      transcribeAudio: async () => null,
+      describeElement: async () => null,
+      generateLabels: async () => '[]',
+      generateCaptions: async () => null,
+      announce: (msg) => { console.log('[announce]', msg); }
+    };
+
+    const resultsEl = document.getElementById('results');
+    const summaryEl = document.getElementById('summary');
+    let passed = 0, failed = 0;
+
+    function log(msg, status) {
+      const div = document.createElement('div');
+      div.className = `test-result ${status}`;
+      div.textContent = msg;
+      resultsEl.appendChild(div);
+      if (status === 'pass') passed++;
+      else if (status === 'fail') failed++;
+    }
+
+    async function testSkill(name, moduleImport, enableArgs) {
+      try {
+        const mod = await moduleImport;
+        const skillObj = Object.values(mod).find(v => v && typeof v === 'object' && typeof v.enable === 'function' && typeof v.disable === 'function');
+        if (!skillObj) {
+          log(`${name}: No enable/disable found in exports`, 'fail');
+          return;
+        }
+
+        // Test enable
+        try {
+          await skillObj.enable(enableArgs);
+          log(`${name}: enable() OK`, 'pass');
+        } catch (e) {
+          log(`${name}: enable() threw: ${e.message}`, 'fail');
+        }
+
+        // Test that enabled flag is set
+        if ('enabled' in skillObj) {
+          if (skillObj.enabled === true || skillObj.speaking === true) {
+            log(`${name}: enabled flag set correctly`, 'pass');
+          } else {
+            log(`${name}: enabled flag is ${skillObj.enabled} (expected true)`, 'info');
+          }
+        }
+
+        // Test toggle exists
+        if (typeof skillObj.toggle === 'function') {
+          log(`${name}: toggle() exists`, 'pass');
+        } else {
+          log(`${name}: toggle() missing`, 'fail');
+        }
+
+        // Test disable
+        try {
+          skillObj.disable();
+          log(`${name}: disable() OK`, 'pass');
+        } catch (e) {
+          log(`${name}: disable() threw: ${e.message}`, 'fail');
+        }
+      } catch (e) {
+        log(`${name}: import failed: ${e.message}`, 'fail');
+      }
+    }
+
+    async function runTests() {
+      log('Setting up mock AI provider...', 'info');
+
+      // Import and set up AI provider
+      const aiMod = await import('../utils/ai.js');
+      aiMod.setAIProvider(mockProvider);
+      log('AI provider set', 'pass');
+
+      // Test utility modules load correctly
+      try {
+        const domMod = await import('../utils/dom.js');
+        const fns = ['isVisible', 'hasAccessibleName', 'getAccessibleName', 'markProcessed', 'wasProcessed', 'clearAllMarks', 'sleep', 'injectCSS', 'removeCSS', 'escapeSelector'];
+        const missing = fns.filter(f => typeof domMod[f] !== 'function');
+        if (missing.length === 0) log('utils/dom.js: all exports present', 'pass');
+        else log(`utils/dom.js: missing exports: ${missing.join(', ')}`, 'fail');
+      } catch (e) {
+        log(`utils/dom.js: import failed: ${e.message}`, 'fail');
+      }
+
+      try {
+        const colorMod = await import('../utils/color.js');
+        const fns = ['parseColor', 'getLuminance', 'getContrastRatio', 'meetsContrastAA', 'rgbToHex', 'getEffectiveBackground'];
+        const missing = fns.filter(f => typeof colorMod[f] !== 'function');
+        if (missing.length === 0) log('utils/color.js: all exports present', 'pass');
+        else log(`utils/color.js: missing exports: ${missing.join(', ')}`, 'fail');
+
+        // Validate color utility correctness
+        const lum = colorMod.getLuminance('#ffffff');
+        if (Math.abs(lum - 1.0) < 0.01) log('color.js: getLuminance(#ffffff) = 1.0', 'pass');
+        else log(`color.js: getLuminance(#ffffff) = ${lum} (expected 1.0)`, 'fail');
+
+        const ratio = colorMod.getContrastRatio('#000000', '#ffffff');
+        if (Math.abs(ratio - 21) < 0.1) log('color.js: contrast(black,white) = 21:1', 'pass');
+        else log(`color.js: contrast(black,white) = ${ratio} (expected 21)`, 'fail');
+      } catch (e) {
+        log(`utils/color.js: import failed: ${e.message}`, 'fail');
+      }
+
+      try {
+        const constMod = await import('../utils/constants.js');
+        const exports = ['ARIA_REQUIRED_ATTRS', 'DEPRECATED_ROLES', 'VALID_LANGS', 'VALID_ARIA_ATTRS', 'VALID_ARIA_ROLES', 'IFRAME_PATTERNS'];
+        const missing = exports.filter(e => !constMod[e]);
+        if (missing.length === 0) log('utils/constants.js: all exports present', 'pass');
+        else log(`utils/constants.js: missing exports: ${missing.join(', ')}`, 'fail');
+      } catch (e) {
+        log(`utils/constants.js: import failed: ${e.message}`, 'fail');
+      }
+
+      // Test each skill module
+      await testSkill('DarkMode', import('../skills/builtin/dark-mode.js'));
+      await testSkill('FocusMode', import('../skills/builtin/focus-mode.js'));
+      await testSkill('VisualAssist', import('../skills/builtin/visual-assist.js'), { fontScale: 1.2 });
+      await testSkill('MotionReducer', import('../skills/builtin/motion-reducer.js'));
+      await testSkill('ReaderMode', import('../skills/builtin/reader-mode.js'));
+      await testSkill('KeyboardNav', import('../skills/builtin/keyboard-nav.js'));
+      await testSkill('ColorFilter', import('../skills/builtin/color-filter.js'));
+      await testSkill('VoiceCommands', import('../skills/builtin/voice-commands.js'));
+      await testSkill('ReadAloud', import('../skills/builtin/read-aloud.js'));
+      await testSkill('AutoAltText', import('../skills/builtin/auto-alt-text.js'));
+      await testSkill('FixContrast', import('../skills/builtin/fix-contrast.js'));
+      await testSkill('SimplifyText', import('../skills/builtin/simplify-text.js'));
+      await testSkill('AutoCaptions', import('../skills/builtin/auto-captions.js'));
+      await testSkill('GenerateLabels', import('../skills/builtin/generate-labels.js'));
+      await testSkill('GenerateCaptions', import('../skills/builtin/generate-captions.js'));
+      await testSkill('WcagFixes', import('../skills/builtin/wcag-fixes.js'));
+
+      // Test specific skill behaviors
+      log('--- Specific behavior tests ---', 'info');
+
+      // Dark mode: verify CSS injection
+      const darkMod = await import('../skills/builtin/dark-mode.js');
+      darkMod.DarkMode.enable();
+      const darkStyle = document.getElementById('ai4a11y-dark-mode');
+      if (darkStyle) log('DarkMode: CSS style element injected', 'pass');
+      else log('DarkMode: CSS style element NOT found', 'fail');
+      darkMod.DarkMode.disable();
+      if (!document.getElementById('ai4a11y-dark-mode')) log('DarkMode: CSS cleaned up on disable', 'pass');
+      else log('DarkMode: CSS NOT cleaned up', 'fail');
+
+      // Focus mode: verify progress bar
+      const focusMod = await import('../skills/builtin/focus-mode.js');
+      focusMod.FocusMode.enable({ showProgress: true });
+      if (document.getElementById('ai4a11y-progress')) log('FocusMode: progress bar created', 'pass');
+      else log('FocusMode: progress bar NOT found', 'fail');
+      focusMod.FocusMode.disable();
+      if (!document.getElementById('ai4a11y-progress')) log('FocusMode: progress bar cleaned up', 'pass');
+      else log('FocusMode: progress bar NOT cleaned up', 'fail');
+
+      // Keyboard nav: verify skip links
+      const kbMod = await import('../skills/builtin/keyboard-nav.js');
+      kbMod.KeyboardNav.enable();
+      if (document.getElementById('ai4a11y-skip-links')) log('KeyboardNav: skip links created', 'pass');
+      else log('KeyboardNav: skip links NOT found', 'fail');
+      if (document.querySelectorAll('.ai4a11y-skip-link').length >= 1) log('KeyboardNav: at least 1 skip link anchor', 'pass');
+      else log('KeyboardNav: no skip link anchors', 'fail');
+      kbMod.KeyboardNav.disable();
+
+      // Color filter: verify SVG filters
+      const cfMod = await import('../skills/builtin/color-filter.js');
+      cfMod.ColorFilter.enable('protanopia');
+      if (document.getElementById('ai4a11y-svg-filters')) log('ColorFilter: SVG filters injected', 'pass');
+      else log('ColorFilter: SVG filters NOT found', 'fail');
+      if (document.getElementById('ai4a11y-color-blind-styles')) log('ColorFilter: CSS style applied', 'pass');
+      else log('ColorFilter: CSS style NOT found', 'fail');
+      cfMod.ColorFilter.disable();
+      if (!document.getElementById('ai4a11y-svg-filters')) log('ColorFilter: SVG cleaned up', 'pass');
+      else log('ColorFilter: SVG NOT cleaned up', 'fail');
+
+      // WCAG Fixes: verify lang attribute
+      const wcagMod = await import('../skills/builtin/wcag-fixes.js');
+      const htmlEl = document.documentElement;
+      const origLang = htmlEl.getAttribute('lang');
+      wcagMod.WcagFixes.enable();
+      if (htmlEl.getAttribute('lang')) log('WcagFixes: lang attribute present after fix', 'pass');
+      else log('WcagFixes: lang attribute still missing', 'fail');
+
+      // Announce: verify aria-live region
+      const announcer = document.getElementById('ai4a11y-announcer');
+      if (announcer) log('announce(): aria-live region created', 'pass');
+      else log('announce(): aria-live region NOT found (may not have been called)', 'info');
+
+      // Summary
+      summaryEl.textContent = `Results: ${passed} passed, ${failed} failed`;
+      summaryEl.style.background = failed === 0 ? '#d4edda' : '#f8d7da';
+      summaryEl.style.color = failed === 0 ? '#155724' : '#721c24';
+    }
+
+    runTests().catch(e => {
+      log(`Test runner error: ${e.message}\n${e.stack}`, 'fail');
+      summaryEl.textContent = `Tests crashed: ${e.message}`;
+      summaryEl.style.background = '#f8d7da';
+      summaryEl.style.color = '#721c24';
+    });
+  </script>
+</body>
+</html>
