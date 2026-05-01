@@ -32,6 +32,25 @@ import {
 } from '../tools/adapters/index.js';
 import { simplifyText, summarizeContent } from '../tools/adapters/simplify-text.js';
 
+// Import non-AI WCAG fixes
+import {
+  fixInvalidLang,
+  fixMissingLang,
+  fixDuplicateId,
+  fixHeadingOrder,
+  fixPositiveTabindex,
+  fixTargetBlank,
+  fixInvalidAriaAttr,
+  fixInvalidAriaRole,
+  fixDeprecatedRole,
+  fixMissingAriaAttrs,
+  fixNestedInteractive,
+  fixTargetSize,
+  fixViewportMeta,
+  removeMetaRefresh,
+  replaceObsoleteElement
+} from '../tools/adapters/wcag-fixes.js';
+
 // Import auditors
 import { runAxeAnalysis, getElementFromNode } from '../tools/auditors/wcag-issues.js';
 import { findEmptyAltImages, findCanvasElements, findImagesWithoutAlt } from '../tools/auditors/missing-alt.js';
@@ -384,6 +403,119 @@ const aiFixes = {
   }
 };
 
+// Non-AI fix handlers (pure DOM manipulation)
+const nonAiFixes = {
+  'html-has-lang': fixMissingLang,
+  'html-lang-valid': fixInvalidLang,
+  'valid-lang': fixInvalidLang,
+  'duplicate-id': fixDuplicateId,
+  'duplicate-id-aria': fixDuplicateId,
+  'duplicate-id-active': fixDuplicateId,
+  'heading-order': fixHeadingOrder,
+  'tabindex': fixPositiveTabindex,
+  'aria-valid-attr': fixInvalidAriaAttr,
+  'aria-roles': fixInvalidAriaRole,
+  'aria-allowed-role': fixInvalidAriaRole,
+  'aria-deprecated-role': fixDeprecatedRole,
+  'aria-required-attr': fixMissingAriaAttrs,
+  'nested-interactive': fixNestedInteractive,
+  'target-size': fixTargetSize,
+  'meta-viewport': fixViewportMeta,
+  'meta-viewport-large': fixViewportMeta,
+  'meta-refresh': removeMetaRefresh,
+  'blink': replaceObsoleteElement,
+  'marquee': replaceObsoleteElement
+};
+
+// AI-requiring fixes (need Claude callback)
+const aiRequiredRules = new Set([
+  'image-alt', 'input-image-alt', 'role-img-alt', 'svg-img-alt', 'object-alt', 'area-alt',
+  'link-name', 'button-name', 'input-button-name',
+  'color-contrast', 'color-contrast-enhanced'
+]);
+
+// Run full accessibility scan and fix (like extension does)
+async function runFullScan() {
+  const results = {
+    violations: [],
+    fixed: { nonAi: 0, ai: 0 },
+    skipped: { needsAi: [], noHandler: [] }
+  };
+
+  // Run axe analysis
+  const violations = await runAxeAnalysis();
+  results.violations = violations.map(v => ({ id: v.id, count: v.nodes?.length || 0 }));
+
+  // Process each violation
+  for (const violation of violations) {
+    const ruleId = violation.id;
+    const nodes = violation.nodes || [];
+
+    for (const node of nodes) {
+      const selector = node.target?.[0];
+      if (!selector) continue;
+
+      const el = document.querySelector(selector);
+      if (!el || el.dataset.ai4a11yProcessed) continue;
+
+      // Check if we have a non-AI handler
+      if (nonAiFixes[ruleId]) {
+        try {
+          nonAiFixes[ruleId](el);
+          results.fixed.nonAi++;
+        } catch (e) {
+          console.warn(`[AI4A11y] Failed to fix ${ruleId}:`, e);
+        }
+        continue;
+      }
+
+      // Check if this needs AI (skip for now, return to Python)
+      if (aiRequiredRules.has(ruleId)) {
+        results.skipped.needsAi.push({ ruleId, selector });
+        continue;
+      }
+
+      // No handler available
+      results.skipped.noHandler.push(ruleId);
+    }
+  }
+
+  // Run additional non-AI fixes
+  fixTargetBlankLinks();
+  fixPositiveTabindexElements();
+  fixDuplicateIds();
+
+  return results;
+}
+
+// Helper functions for additional scans
+function fixTargetBlankLinks() {
+  document.querySelectorAll('a[target="_blank"]:not([rel*="noopener"])').forEach(link => {
+    if (!link.dataset.ai4a11yProcessed) {
+      fixTargetBlank(link);
+    }
+  });
+}
+
+function fixPositiveTabindexElements() {
+  document.querySelectorAll('[tabindex]').forEach(el => {
+    const val = parseInt(el.getAttribute('tabindex'));
+    if (val > 0 && !el.dataset.ai4a11yProcessed) {
+      fixPositiveTabindex(el);
+    }
+  });
+}
+
+function fixDuplicateIds() {
+  const seen = new Set();
+  document.querySelectorAll('[id]').forEach(el => {
+    if (seen.has(el.id) && !el.dataset.ai4a11yProcessed) {
+      fixDuplicateId(el);
+    }
+    seen.add(el.id);
+  });
+}
+
 // Helper to get CSS selector for element
 function getSelector(el) {
   if (!el || !el.tagName) return 'unknown';
@@ -426,6 +558,11 @@ if (typeof window !== 'undefined') {
     simplifyText: aiFixes.simplifyText,
     summarize: aiFixes.summarize,
     fixAxeViolation: aiFixes.fixAxeViolation,
+
+    // Full scan (like extension)
+    runFullScan,
+    nonAiFixes,
+    aiRequiredRules: [...aiRequiredRules],
 
     // Axe handlers
     axeHandlers,

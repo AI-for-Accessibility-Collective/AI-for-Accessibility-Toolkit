@@ -55,7 +55,7 @@ VISUAL = {"enable", "disable", "tools", "profile", "profiles"}
 AUDIT = {"find-alt", "find-missing-alt", "missing-alt", "find-labels", "find-missing-labels", "missing-labels",
          "find-contrast", "find-poor-contrast", "poor-contrast", "find-captions", "find-missing-captions",
          "missing-captions", "find-all", "find-issues", "issues"}
-FIX = {"fix-alt", "fix-images", "fix-labels", "simplify", "fix-all", "fix"}
+FIX = {"fix-alt", "fix-images", "fix-labels", "simplify", "fix-all", "fix", "scan"}
 
 
 def get_tools_info():
