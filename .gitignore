@@ -3,6 +3,7 @@ node_modules/
 *.log
 .env
 content.bundle.js.map
+cli-tools.bundle.js.map
 
 # Python
 __pycache__/
