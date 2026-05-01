@@ -19,19 +19,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().with_name(".env"))
 
-# Add browser-harness to sys.path
-_harness_dir = os.environ.get(
-    "BROWSER_HARNESS_DIR",
-    str(Path(__file__).resolve().parents[2] / "browser-harness"),
-)
-if _harness_dir not in sys.path:
-    sys.path.insert(0, _harness_dir)
-
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from admin import ensure_daemon  # browser-harness daemon
+from browser_harness.admin import ensure_daemon  # browser-harness daemon
 
 logging.basicConfig(
     level=logging.INFO,
