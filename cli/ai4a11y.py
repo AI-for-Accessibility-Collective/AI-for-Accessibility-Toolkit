@@ -61,6 +61,51 @@ OUT.mkdir(parents=True, exist_ok=True)
 _CLI_TOOLS_BUNDLE = Path(__file__).parent / "cli-tools.bundle.js"
 _CLI_TOOLS_SCRIPT = None
 
+# Readability library (for ReaderMode)
+_READABILITY_PATH = Path(__file__).parent.parent / "extension" / "lib" / "readability.js"
+_READABILITY_SCRIPT = None
+
+
+def _get_readability_script():
+    """Load the Readability library for ReaderMode."""
+    global _READABILITY_SCRIPT
+    if _READABILITY_SCRIPT is None:
+        if _READABILITY_PATH.exists():
+            _READABILITY_SCRIPT = _READABILITY_PATH.read_text()
+        else:
+            _READABILITY_SCRIPT = ""
+    return _READABILITY_SCRIPT
+
+# Session state file for persistent profile settings
+_SESSION_STATE_FILE = OUT / ".ai4a11y_session_state.json"
+
+
+def _get_session_state():
+    """Load persistent session state (active profile, tool settings)."""
+    if _SESSION_STATE_FILE.exists():
+        try:
+            return json.loads(_SESSION_STATE_FILE.read_text())
+        except:
+            pass
+    return {}
+
+
+def _save_session_state(state):
+    """Save persistent session state."""
+    _SESSION_STATE_FILE.write_text(json.dumps(state, indent=2))
+
+
+def _get_active_profile():
+    """Get the currently active profile name."""
+    return _get_session_state().get('activeProfile')
+
+
+def _set_active_profile(profile_name):
+    """Set the active profile (persists across commands)."""
+    state = _get_session_state()
+    state['activeProfile'] = profile_name
+    _save_session_state(state)
+
 
 def _get_cli_tools_script():
     """Load the CLI tools bundle (adapters + profiles) for injection."""
@@ -75,21 +120,67 @@ def _get_cli_tools_script():
     return _CLI_TOOLS_SCRIPT
 
 
-def _inject_cli_tools(page):
-    """Inject the CLI tools bundle into the page if not already present."""
+def _inject_cli_tools(page, auto_apply_profile=False):
+    """Inject the CLI tools bundle into the page if not already present.
+
+    If auto_apply_profile=True and there's an active profile saved,
+    it will be applied automatically after injection.
+    """
     has_tools = page.evaluate("typeof window.ai4a11y !== 'undefined'")
     if has_tools:
+        # Tools already present, but may need to reapply profile
+        if auto_apply_profile:
+            _auto_apply_saved_profile(page)
         return True
+
+    # Inject Readability library first (required for ReaderMode)
+    readability = _get_readability_script()
+    if readability:
+        try:
+            page.add_script_tag(content=readability)
+        except:
+            pass  # Non-critical, ReaderMode just won't work
+
     script = _get_cli_tools_script()
     if not script:
         return False
     try:
         page.add_script_tag(content=script)
         page.wait_for_function("typeof window.ai4a11y !== 'undefined'", timeout=5000)
+
+        # Auto-apply saved profile if requested
+        if auto_apply_profile:
+            _auto_apply_saved_profile(page)
+
         return True
     except Exception as e:
         print(f"Failed to inject tools: {e}")
         return False
+
+
+def _auto_apply_saved_profile(page):
+    """Apply the saved active profile to the page (if any)."""
+    profile = _get_active_profile()
+    if not profile:
+        return
+
+    try:
+        # Set session state so JS can access profile settings
+        page.evaluate(
+            "(state) => window.ai4a11y?.setSessionState?.(state)",
+            {'activeProfile': profile}
+        )
+
+        result = page.evaluate(
+            "(name) => window.ai4a11y.applyProfile(name)",
+            profile
+        )
+        if result.get('success'):
+            # Silently applied — no output to keep it instant/automatic
+            pass
+    except Exception as e:
+        # Profile application failed — page may not have tools loaded properly
+        pass
 
 
 # Track which pages have AI callbacks exposed
@@ -2178,13 +2269,30 @@ def session_cleanup_tabs():
 
 
 def session_go(url):
-    """Navigate the persistent browser to a URL."""
+    """Navigate the persistent browser to a URL.
+
+    If a profile is active, tools are auto-injected and profile auto-applied
+    after navigation — works like the extension.
+    """
     p, browser, page = session_connect()
     try:
         page.goto(url, wait_until='domcontentloaded', timeout=30000)
-        time.sleep(2)
-        print(f"Navigated to {page.url}", flush=True)
-        print(f"Title: {page.title()[:80]}", flush=True)
+        time.sleep(1)
+
+        # Auto-inject tools and apply saved profile (instant, like extension)
+        active_profile = _get_active_profile()
+        if active_profile:
+            _expose_ai_callbacks(page)
+            if _inject_cli_tools(page, auto_apply_profile=True):
+                print(f"Navigated to {page.url}", flush=True)
+                print(f"Title: {page.title()[:80]}", flush=True)
+                print(f"Profile: {active_profile} (auto-applied)", flush=True)
+            else:
+                print(f"Navigated to {page.url}", flush=True)
+                print(f"Title: {page.title()[:80]}", flush=True)
+        else:
+            print(f"Navigated to {page.url}", flush=True)
+            print(f"Title: {page.title()[:80]}", flush=True)
     finally:
         session_disconnect(p, browser)
 
@@ -4490,13 +4598,24 @@ def session_profile(profile_name, json_output=False):
               motor, photosensitive, deaf, anxiety, elderly, sensory
 
     Each profile enables a specific set of tools optimized for that need.
+    The profile is saved and auto-applied to all future page navigations.
+
+    Use 'session profile none' to clear the active profile.
 
     Example:
       session profile lowVision
       session profile dyslexia
+      session profile none       # clear active profile
     """
+    # Handle clearing profile
+    if profile_name.lower() == 'none':
+        _set_active_profile(None)
+        print("Profile cleared. Tools will not auto-apply on navigation.", flush=True)
+        return
+
     p, browser, page = session_connect()
     try:
+        _expose_ai_callbacks(page)
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools. Run 'npm run build' first.", flush=True)
             return
@@ -4508,10 +4627,15 @@ def session_profile(profile_name, json_output=False):
 
         if json_output:
             print(json.dumps(result, indent=2))
+            if result.get('success'):
+                _set_active_profile(profile_name)
             return
 
         if result.get('success'):
+            # Save profile for auto-application on future navigations
+            _set_active_profile(profile_name)
             print(f"Applied profile: {result.get('name', profile_name)}", flush=True)
+            print("(Profile saved — auto-applies on all page navigations)", flush=True)
             print("\nEnabled tools:", flush=True)
             for tool, enabled in result.get('enabled', {}).items():
                 if enabled:
@@ -5100,6 +5224,73 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         else:
             print(f"\n[3/4] No AI fixes needed", flush=True)
 
+        # Text processing (cognitive profile features)
+        text_simplified = 0
+        text_summarized = 0
+        text_processing = result.get('textProcessing', {})
+
+        if text_processing.get('simplify'):
+            simplify_items = text_processing['simplify']
+            print(f"\n[3b/4] Simplifying {len(simplify_items)} complex text blocks...", flush=True)
+            for item in simplify_items[:5]:
+                selector = item['selector']
+                try:
+                    text = page.evaluate(f"() => document.querySelector('{selector}')?.textContent?.trim()?.slice(0, 500)")
+                    if not text:
+                        continue
+                    prompt = f"Simplify this text for someone with cognitive disabilities. Use short sentences, simple words. Keep the meaning. Text: {text}"
+                    raw = ask_claude_text(prompt, timeout=45)
+                    try:
+                        simplified = json.loads(raw).get('answer', raw)
+                    except:
+                        simplified = raw.strip()
+                    simplified = simplified.strip('"\'').strip()
+                    page.evaluate(f"""(d) => {{
+                        const el = document.querySelector(d.s);
+                        if (el) {{
+                            el.dataset.ai4a11ySimplified = 'true';
+                            el.dataset.ai4a11yOriginal = el.textContent;
+                            el.textContent = d.t;
+                            el.style.backgroundColor = '#e8f5e9';
+                            el.title = 'Text simplified for readability';
+                        }}
+                    }}""", {'s': selector, 't': simplified})
+                    text_simplified += 1
+                    print(f"        ✓ {selector[:30]}... simplified", flush=True)
+                except Exception as e:
+                    print(f"        ✗ {selector[:30]}: {e}", flush=True)
+
+        if text_processing.get('summarize'):
+            summarize_items = text_processing['summarize']
+            print(f"\n[3c/4] Summarizing {len(summarize_items)} long content blocks...", flush=True)
+            for item in summarize_items[:3]:
+                selector = item['selector']
+                try:
+                    text = page.evaluate(f"() => document.querySelector('{selector}')?.textContent?.trim()?.slice(0, 1000)")
+                    if not text:
+                        continue
+                    prompt = f"Write a 1-2 sentence summary of this content: {text}"
+                    raw = ask_claude_text(prompt, timeout=45)
+                    try:
+                        summary = json.loads(raw).get('answer', raw)
+                    except:
+                        summary = raw.strip()
+                    summary = summary.strip('"\'').strip()
+                    page.evaluate(f"""(d) => {{
+                        const el = document.querySelector(d.s);
+                        if (el) {{
+                            el.dataset.ai4a11ySummarized = 'true';
+                            const summaryBox = document.createElement('div');
+                            summaryBox.style.cssText = 'background: #fff3e0; padding: 12px; margin-bottom: 12px; border-left: 4px solid #ff9800; border-radius: 4px;';
+                            summaryBox.innerHTML = '<strong>Summary:</strong> ' + d.t;
+                            el.parentElement?.insertBefore(summaryBox, el);
+                        }}
+                    }}""", {'s': selector, 't': summary})
+                    text_summarized += 1
+                    print(f"        ✓ {selector[:30]}... summary added", flush=True)
+                except Exception as e:
+                    print(f"        ✗ {selector[:30]}: {e}", flush=True)
+
         # Step 4: Summary
         print(f"\n[4/4] Summary", flush=True)
         print("─" * 50, flush=True)
@@ -5107,13 +5298,18 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         print(f"      Violations found:  {sum(v['count'] for v in violations)}", flush=True)
         print(f"      Non-AI fixes:      {fixed_non_ai}", flush=True)
         print(f"      AI fixes:          {ai_fixed}", flush=True)
-        print(f"      Total fixed:       {total_fixed}", flush=True)
+        if text_simplified > 0:
+            print(f"      Text simplified:   {text_simplified}", flush=True)
+        if text_summarized > 0:
+            print(f"      Summaries added:   {text_summarized}", flush=True)
+        print(f"      Total fixed:       {total_fixed + text_simplified + text_summarized}", flush=True)
         print("═" * 50 + "\n", flush=True)
 
         if json_output:
             print(json.dumps({
                 'violations': violations,
                 'fixed': {'nonAi': fixed_non_ai, 'ai': ai_fixed, 'total': total_fixed},
+                'textProcessing': {'simplified': text_simplified, 'summarized': text_summarized},
                 'remaining': len(needs_ai) - ai_fixed if needs_ai else 0
             }, indent=2))
 
