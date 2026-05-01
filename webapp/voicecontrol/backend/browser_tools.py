@@ -15,9 +15,16 @@ import sys
 import time
 from pathlib import Path
 
-# Import from browser_harness package
-from browser_harness.admin import ensure_daemon
-from browser_harness.helpers import (
+# Add browser-harness to sys.path so we can import helpers/admin directly
+HARNESS_DIR = os.environ.get(
+    "BROWSER_HARNESS_DIR",
+    str(Path(__file__).resolve().parents[2] / "browser-harness"),
+)
+if HARNESS_DIR not in sys.path:
+    sys.path.insert(0, HARNESS_DIR)
+
+from admin import ensure_daemon  # noqa: E402
+from helpers import (  # noqa: E402
     capture_screenshot,
     click_at_xy,
     goto_url,
