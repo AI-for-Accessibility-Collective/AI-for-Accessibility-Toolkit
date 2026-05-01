@@ -106,7 +106,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     user_id = "user"
 
     # RunConfig for bidi audio streaming
-    model_name = root_agent.model or "gemini-3.1-flash-live-preview"
+    model_name = root_agent.model or "gemini-2.5-flash-native-audio-preview-12-2025"
     use_audio = "live" in model_name or "native-audio" in model_name
 
     run_config = RunConfig(
