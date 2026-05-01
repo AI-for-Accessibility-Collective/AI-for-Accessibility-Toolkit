@@ -1,0 +1,361 @@
+import { setAIProvider, createChromeAIProvider } from '../../utils/ai.js';
+import { DarkMode } from '../../skills/builtin/dark-mode.js';
+import { FocusMode } from '../../skills/builtin/focus-mode.js';
+import { VisualAssist } from '../../skills/builtin/visual-assist.js';
+import { MotionReducer } from '../../skills/builtin/motion-reducer.js';
+import { ReaderMode } from '../../skills/builtin/reader-mode.js';
+import { ColorFilter } from '../../skills/builtin/color-filter.js';
+import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
+import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
+import { FixContrast } from '../../skills/builtin/fix-contrast.js';
+import { SimplifyText } from '../../skills/builtin/simplify-text.js';
+import { AutoCaptions } from '../../skills/builtin/auto-captions.js';
+import { VoiceCommands } from '../../skills/builtin/voice-commands.js';
+import { ReadAloud } from '../../skills/builtin/read-aloud.js';
+import { GenerateLabels } from '../../skills/builtin/generate-labels.js';
+import { GenerateCaptions } from '../../skills/builtin/generate-captions.js';
+import { WcagFixes } from '../../skills/builtin/wcag-fixes.js';
+
+setAIProvider(createChromeAIProvider());
+
+const TOOL_MAP = {
+  DarkMode,
+  FocusMode,
+  VisualAssist,
+  MotionReducer,
+  ReaderMode,
+  ColorBlindMode: ColorFilter,
+  KeyboardNavigator: KeyboardNav,
+  VoiceCommands,
+  ReadAloud,
+};
+
+const AI_TOOL_MAP = {
+  autoWcagFix: WcagFixes,
+  autoFixLabels: GenerateLabels,
+  autoDescribe: AutoAltText,
+  autoVideoDescribe: AutoAltText,
+  autoCaptions: GenerateCaptions,
+  autoSimplify: SimplifyText,
+  autoSummarize: SimplifyText,
+};
+
+let enabledTools = new Set();
+let aiSettings = {};
+let extensionEnabled = true;
+
+const stats = { wcag: 0, images: 0, labels: 0, text: 0, captions: 0 };
+const fixes = [];
+
+function reportFix(type, element, oldVal, newVal) {
+  if (type === 'wcag') stats.wcag++;
+  else if (type === 'image') stats.images++;
+  else if (type === 'label') stats.labels++;
+  else if (type === 'text') stats.text++;
+  else if (type === 'caption') stats.captions++;
+  fixes.push({ type, element: element || '', old: oldVal || '', new: newVal || '' });
+  chrome.runtime.sendMessage({ type: 'fixAdded', stats: { ...stats }, fixes: [...fixes] }).catch(() => {});
+}
+
+function enableTool(toolName, options) {
+  const tool = TOOL_MAP[toolName];
+  if (!tool) return;
+
+  if (enabledTools.has(toolName) && tool.disable) {
+    tool.disable();
+  }
+
+  try {
+    if (options !== undefined) {
+      if (toolName === 'ColorBlindMode') {
+        tool.enable(options);
+      } else {
+        tool.enable(options);
+      }
+    } else {
+      tool.enable();
+    }
+    enabledTools.add(toolName);
+    console.log(`[AI4A11y] Enabled ${toolName}`);
+  } catch (e) {
+    console.warn(`[AI4A11y] Failed to enable ${toolName}:`, e);
+  }
+  // Note: user-authored "custom skills" are NOT applied from this content
+  // script. They are registered as user scripts by background.js
+  // (syncCustomUserScripts) and executed by Chrome's user-scripts runtime in
+  // a CSP-permissive world, so they work on pages that disallow unsafe-eval.
+}
+
+function disableTool(toolName) {
+  const tool = TOOL_MAP[toolName];
+  if (!tool) return;
+  try {
+    if (tool.disable) tool.disable();
+    enabledTools.delete(toolName);
+    console.log(`[AI4A11y] Disabled ${toolName}`);
+  } catch (e) {
+    console.warn(`[AI4A11y] Failed to disable ${toolName}:`, e);
+  }
+}
+
+function revertAll() {
+  for (const toolName of enabledTools) {
+    const tool = TOOL_MAP[toolName];
+    if (tool?.disable) {
+      try { tool.disable(); } catch (e) {}
+    }
+  }
+  enabledTools.clear();
+
+  for (const key of Object.keys(AI_TOOL_MAP)) {
+    const tool = AI_TOOL_MAP[key];
+    if (tool?.disable) {
+      try { tool.disable(); } catch (e) {}
+    }
+  }
+
+  stats.wcag = 0; stats.images = 0; stats.labels = 0; stats.text = 0; stats.captions = 0;
+  fixes.length = 0;
+  console.log('[AI4A11y] All tools reverted');
+}
+
+async function applyAISettings(newSettings) {
+  Object.assign(aiSettings, newSettings);
+
+  if (newSettings.autoWcagFix !== undefined) {
+    if (newSettings.autoWcagFix) {
+      try { await WcagFixes.enable(); } catch (e) { console.warn('[AI4A11y] WcagFixes error:', e); }
+    } else if (WcagFixes.disable) WcagFixes.disable();
+  }
+
+  if (newSettings.autoFixLabels !== undefined) {
+    if (newSettings.autoFixLabels) {
+      try { await GenerateLabels.enable(); } catch (e) { console.warn('[AI4A11y] GenerateLabels error:', e); }
+    } else if (GenerateLabels.disable) GenerateLabels.disable();
+  }
+
+  if (newSettings.autoDescribe !== undefined) {
+    if (newSettings.autoDescribe) {
+      try { await AutoAltText.enable(); } catch (e) { console.warn('[AI4A11y] AutoAltText error:', e); }
+    } else if (AutoAltText.disable) AutoAltText.disable();
+  }
+
+  if (newSettings.autoCaptions !== undefined) {
+    if (newSettings.autoCaptions) {
+      try { await GenerateCaptions.enable(); } catch (e) { console.warn('[AI4A11y] GenerateCaptions error:', e); }
+    } else if (GenerateCaptions.disable) GenerateCaptions.disable();
+  }
+
+  if (newSettings.autoSimplify !== undefined) {
+    if (newSettings.autoSimplify) {
+      try { await SimplifyText.enable(); } catch (e) { console.warn('[AI4A11y] SimplifyText error:', e); }
+    } else if (!aiSettings.autoSummarize && SimplifyText.disable) SimplifyText.disable();
+  }
+
+  if (newSettings.autoSummarize !== undefined) {
+    if (newSettings.autoSummarize) {
+      try { await SimplifyText.enable(); } catch (e) { console.warn('[AI4A11y] SimplifyText error:', e); }
+    } else if (!aiSettings.autoSimplify && SimplifyText.disable) SimplifyText.disable();
+  }
+}
+
+function getToolStates() {
+  const states = {};
+  for (const toolName of Object.keys(TOOL_MAP)) {
+    states[toolName] = enabledTools.has(toolName);
+  }
+  return states;
+}
+
+async function initFromStorage() {
+  try {
+    const settings = await chrome.storage.sync.get([
+      'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
+      'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
+      'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
+      'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
+      'autoCaptions', 'autoSimplify', 'autoSummarize'
+    ]);
+
+    if (settings.enabled === false) {
+      extensionEnabled = false;
+      return;
+    }
+
+    if (settings.darkMode) enableTool('DarkMode');
+    if (settings.motionReducer) enableTool('MotionReducer');
+    if (settings.readerMode) enableTool('ReaderMode');
+    if (settings.keyboardNav) enableTool('KeyboardNavigator');
+    if (settings.voiceCommands) enableTool('VoiceCommands');
+
+    if (settings.focusMode) {
+      enableTool('FocusMode', {
+        hideDistractions: settings.hideDistractions || false,
+        showProgress: settings.showProgress !== false
+      });
+    }
+
+    if (settings.colorBlindMode && settings.colorBlindMode !== 'none') {
+      enableTool('ColorBlindMode', settings.colorBlindMode);
+    }
+
+    const va = {
+      contrastMode: settings.contrastMode || 'none',
+      fontScale: (settings.fontScale || 100) / 100,
+      lineHeight: settings.lineHeight || 1.5,
+      letterSpacing: settings.letterSpacing || 0,
+      dyslexiaFont: settings.dyslexiaFont || false,
+      largeCursor: settings.largeCursor || false,
+      enhanceFocus: settings.enhanceFocus || false,
+      readingGuide: settings.readingGuide || false
+    };
+
+    const hasVA = va.contrastMode !== 'none' || va.fontScale !== 1 ||
+      va.lineHeight !== 1.5 || va.letterSpacing !== 0 ||
+      va.dyslexiaFont || va.largeCursor || va.enhanceFocus || va.readingGuide;
+
+    if (hasVA) enableTool('VisualAssist', va);
+
+    aiSettings = {
+      autoWcagFix: settings.autoWcagFix !== false,
+      autoFixLabels: settings.autoFixLabels !== false,
+      autoDescribe: settings.autoDescribe !== false,
+      autoVideoDescribe: settings.autoVideoDescribe === true,
+      autoCaptions: settings.autoCaptions === true,
+      autoSimplify: settings.autoSimplify === true,
+      autoSummarize: settings.autoSummarize === true,
+    };
+
+    if (aiSettings.autoWcagFix) { try { await WcagFixes.enable(); } catch (e) {} }
+    if (aiSettings.autoFixLabels) { try { await GenerateLabels.enable(); } catch (e) {} }
+    if (aiSettings.autoDescribe) { try { await AutoAltText.enable(); } catch (e) {} }
+    if (aiSettings.autoCaptions) { try { await GenerateCaptions.enable(); } catch (e) {} }
+    if (aiSettings.autoSimplify || aiSettings.autoSummarize) { try { await SimplifyText.enable(); } catch (e) {} }
+
+    console.log('[AI4A11y] Initialized from stored settings');
+  } catch (e) {
+    console.warn('[AI4A11y] Could not load stored settings:', e);
+  }
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'enableTool') {
+    enableTool(msg.tool, msg.options);
+    sendResponse({ success: true });
+  } else if (msg.type === 'disableTool') {
+    disableTool(msg.tool);
+    sendResponse({ success: true });
+  } else if (msg.type === 'settingsChanged') {
+    applyAISettings(msg.settings || {});
+    sendResponse({ success: true });
+  } else if (msg.type === 'revertAll') {
+    revertAll();
+    sendResponse({ success: true });
+  } else if (msg.type === 'rescan') {
+    revertAll();
+    initFromStorage();
+    sendResponse({ success: true });
+  } else if (msg.type === 'setEnabled') {
+    extensionEnabled = msg.enabled;
+    if (!msg.enabled) revertAll();
+    else initFromStorage();
+    sendResponse({ success: true });
+  } else if (msg.type === 'getToolStates') {
+    sendResponse({ states: getToolStates() });
+  } else if (msg.type === 'getStats') {
+    sendResponse({ success: true, stats: { ...stats }, fixes: [...fixes] });
+  } else if (msg.type === 'speakPage') {
+    ReadAloud.speakPage({ rate: msg.rate || 1 });
+    enabledTools.add('ReadAloud');
+    sendResponse({ success: true });
+  } else if (msg.type === 'stopSpeech') {
+    ReadAloud.stop();
+    enabledTools.delete('ReadAloud');
+    sendResponse({ success: true });
+  } else if (msg.type === 'applyProfile') {
+    if (msg.settings) {
+      applyProfileSettings(msg.settings);
+    }
+    sendResponse({ success: true });
+  }
+  // No `return true` here: every matched branch above calls sendResponse
+  // synchronously, and an unconditional `return true` would tell Chrome to
+  // keep the channel open for messages this listener doesn't handle (e.g.
+  // gemini, getActiveSkills) — which causes the "port closed before a
+  // response was received" warning when the unrelated handler in background
+  // sends its response and the channel finally tears down.
+});
+
+function applyProfileSettings(settings) {
+  const toolMapping = {
+    darkMode: 'DarkMode', readerMode: 'ReaderMode',
+    keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
+    motionReducer: 'MotionReducer'
+  };
+
+  for (const [key, toolName] of Object.entries(toolMapping)) {
+    if (settings[key] === true) enableTool(toolName);
+    else if (settings[key] === false) disableTool(toolName);
+  }
+
+  if (settings.focusMode) {
+    enableTool('FocusMode', {
+      hideDistractions: settings.hideDistractions || false,
+      showProgress: settings.showProgress !== false
+    });
+  } else if (settings.focusMode === false) {
+    disableTool('FocusMode');
+  }
+
+  if (settings.colorBlindMode && settings.colorBlindMode !== 'none') {
+    enableTool('ColorBlindMode', settings.colorBlindMode);
+  } else if (settings.colorBlindMode === 'none') {
+    disableTool('ColorBlindMode');
+  }
+
+  const vaKeys = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
+    'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];
+  if (vaKeys.some(k => settings[k] !== undefined)) {
+    const va = {
+      contrastMode: settings.contrastMode || 'none',
+      fontScale: (settings.fontScale || 100) / 100,
+      lineHeight: settings.lineHeight || 1.5,
+      letterSpacing: settings.letterSpacing || 0,
+      dyslexiaFont: settings.dyslexiaFont || false,
+      largeCursor: settings.largeCursor || false,
+      enhanceFocus: settings.enhanceFocus || false,
+      readingGuide: settings.readingGuide || false
+    };
+    enableTool('VisualAssist', va);
+  }
+
+  const aiKeys = { autoWcagFix: WcagFixes, autoFixLabels: GenerateLabels,
+    autoDescribe: AutoAltText, autoCaptions: GenerateCaptions,
+    autoSimplify: SimplifyText, autoSummarize: SimplifyText };
+  for (const [key, mod] of Object.entries(aiKeys)) {
+    if (settings[key] === true) { try { mod.enable(); } catch (e) {} }
+  }
+
+  console.log('[AI4A11y] Profile settings applied');
+}
+
+async function classifyAndAutoApply() {
+  try {
+    const meta = document.querySelector('meta[name="description"]');
+    chrome.runtime.sendMessage({
+      type: 'classifySite',
+      hostname: location.hostname,
+      title: document.title,
+      metaDescription: meta?.content || ''
+    }, (resp) => {
+      if (resp?.matchingProfile?.settings) {
+        console.log(`[AI4A11y] Auto-applying profile "${resp.matchingProfile.name}" for ${resp.siteType} site`);
+        applyProfileSettings(resp.matchingProfile.settings);
+      }
+    });
+  } catch (e) {}
+}
+
+initFromStorage();
+classifyAndAutoApply();

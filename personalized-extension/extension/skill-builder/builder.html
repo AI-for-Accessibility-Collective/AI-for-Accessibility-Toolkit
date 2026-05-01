@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic A11y — Skill Builder</title>
+  <link rel="stylesheet" href="builder.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="app-header" role="banner">
+    <div class="brand">
+      <svg class="brand-icon" width="28" height="28" viewBox="0 0 128 128" aria-hidden="true">
+        <circle cx="64" cy="64" r="64" fill="#1a73e8"/>
+        <text x="64" y="64" text-anchor="middle" dominant-baseline="central"
+              font-family="sans-serif" font-weight="bold" font-size="52" fill="white">A</text>
+      </svg>
+      <h1 class="brand-title">Skill Builder</h1>
+    </div>
+    <div class="header-controls">
+      <button type="button" class="text-size-toggle" id="textSizeBtn"
+              aria-pressed="false" aria-label="Use larger text">
+        <span aria-hidden="true">A+</span>
+        <span class="visually-hidden">Larger text</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="progress-strip" id="progressStrip" hidden aria-live="polite">
+    <span id="progressLabel">Skill 1 of 1</span>
+  </div>
+
+  <main id="main" class="builder" role="main">
+
+    <!-- Shown if chrome.userScripts isn't available (Developer mode off, or
+         old Chrome). Custom skills won't run on strict-CSP pages without it. -->
+    <div class="dev-mode-banner" id="devModeBanner" hidden role="alert">
+      <div class="dev-mode-banner-content">
+        <strong>One-time setup needed.</strong> Custom skills run through
+        Chrome's user-scripts feature, which needs two toggles turned on:
+        <ol>
+          <li>Open <code>chrome://extensions</code> in a new tab.</li>
+          <li>Turn on <strong>Developer mode</strong> in the top-right.</li>
+          <li>Find <em>Agentic A11y</em>, click <strong>Details</strong>, and turn on
+              <strong>Allow user scripts</strong>. (This toggle is per-extension
+              and off by default — Chrome 138+ requires it separately from
+              Developer mode.)</li>
+          <li>Reload the extension at <code>chrome://extensions</code>.</li>
+        </ol>
+        <p class="dev-mode-banner-note" id="devModeBannerNote"></p>
+        <div class="dev-mode-banner-actions">
+          <button type="button" class="btn btn-primary" id="devModeRecheckBtn">
+            Check again
+          </button>
+        </div>
+      </div>
+      <button type="button" class="dev-mode-banner-close" id="devModeBannerClose"
+              aria-label="Dismiss developer-mode notice">×</button>
+    </div>
+
+
+    <!-- ============================================================
+         PHASE: BATCH OVERVIEW (only when opened with ?pending=)
+         ============================================================ -->
+    <section class="phase" id="phase-overview" hidden aria-labelledby="overview-heading">
+      <h2 id="overview-heading" tabindex="-1">We have some skill ideas to build for you</h2>
+      <p class="phase-help">Onboarding identified needs that aren't covered by the built-in skills.
+        Pick which ones to build now. You can skip any and come back later.</p>
+      <div class="pending-list" id="pendingList" role="list"></div>
+      <div class="phase-actions">
+        <button type="button" class="btn btn-secondary" id="overviewSkipAll">Skip all for now</button>
+        <button type="button" class="btn btn-primary" id="overviewStartBtn">Start building</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: INTENT (confirm/edit name & description)
+         ============================================================ -->
+    <section class="phase" id="phase-intent" hidden aria-labelledby="intent-heading">
+      <h2 id="intent-heading" tabindex="-1">What should this skill do?</h2>
+      <p class="phase-help" id="intentHelp">
+        We'll generate the code for you. Edit the description if anything is off.
+      </p>
+
+      <div class="form-group">
+        <label for="intentName">Name</label>
+        <input type="text" id="intentName" maxlength="60" autocomplete="off"
+               placeholder="Leave blank — we'll fill it in from your description">
+      </div>
+
+      <div class="form-group">
+        <label for="intentDescription">What it should do</label>
+        <textarea id="intentDescription" rows="5"
+                  placeholder="e.g. On news articles, make the body text bigger and remove sidebars and ads."></textarea>
+      </div>
+
+      <fieldset class="form-group" id="exampleChips" hidden>
+        <legend>Need ideas? Try one of these</legend>
+        <div class="chip-row" id="chipRow"></div>
+      </fieldset>
+
+      <div class="phase-actions">
+        <button type="button" class="btn btn-secondary" id="intentBackBtn" hidden>Back</button>
+        <button type="button" class="btn btn-primary" id="intentNextBtn">Continue</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: TARGET (pick a page to test on)
+         ============================================================ -->
+    <section class="phase" id="phase-target" hidden aria-labelledby="target-heading">
+      <h2 id="target-heading" tabindex="-1">Where should we try this skill?</h2>
+      <p class="phase-help">
+        Trying it on a real page helps us check whether it does what you want before you save it.
+      </p>
+
+      <div class="target-options" role="radiogroup" aria-labelledby="target-heading">
+        <label class="target-option">
+          <input type="radio" name="targetMode" value="url" checked>
+          <div>
+            <div class="target-option-title">Open a website to try it on</div>
+            <div class="target-option-desc">We'll open the page in a new tab and apply the skill there.</div>
+            <input type="url" id="targetUrl" placeholder="https://example.com" autocomplete="url"
+                   aria-label="Target website URL">
+          </div>
+        </label>
+
+        <label class="target-option">
+          <input type="radio" name="targetMode" value="skip">
+          <div>
+            <div class="target-option-title">Skip preview, just save</div>
+            <div class="target-option-desc">Save without trying. The skill will run automatically on every page once enabled.</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="phase-actions">
+        <button type="button" class="btn btn-secondary" id="targetBackBtn">Back</button>
+        <button type="button" class="btn btn-primary" id="targetNextBtn">Generate the skill</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: AI-CHOICE (decide whether to use runtime AI)
+         ============================================================ -->
+    <section class="phase" id="phase-ai-choice" hidden aria-labelledby="ai-choice-heading">
+      <h2 id="ai-choice-heading" tabindex="-1">Should this skill use AI?</h2>
+
+      <div class="ai-choice-loading" id="aiChoiceLoading" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Looking at your description to see whether AI would help…</p>
+      </div>
+
+      <div id="aiChoiceCards" hidden>
+        <p class="phase-help" id="aiChoiceIntro">
+          Some skills can use AI to read and understand each page. Others work better as
+          simple, instant rules. Here's the trade-off for what you described.
+        </p>
+
+        <div class="ai-choice-grid">
+          <article class="ai-card" id="aiCardWith" aria-labelledby="aiCardWithTitle">
+            <div class="ai-card-badge" id="badgeWith" hidden>Recommended</div>
+            <h3 id="aiCardWithTitle">Use AI on each page</h3>
+            <p class="ai-card-summary" id="summaryWith">—</p>
+            <ul class="ai-card-pros" id="prosWith" aria-label="Benefits of using AI"></ul>
+            <ul class="ai-card-cons" id="consWith" aria-label="Trade-offs of using AI"></ul>
+            <button type="button" class="btn btn-primary" id="chooseWithAI">
+              Use AI for this skill
+            </button>
+          </article>
+
+          <article class="ai-card" id="aiCardWithout" aria-labelledby="aiCardWithoutTitle">
+            <div class="ai-card-badge" id="badgeWithout" hidden>Recommended</div>
+            <h3 id="aiCardWithoutTitle">Skip AI, keep it simple</h3>
+            <p class="ai-card-summary" id="summaryWithout">—</p>
+            <ul class="ai-card-pros" id="prosWithout" aria-label="Benefits of skipping AI"></ul>
+            <ul class="ai-card-cons" id="consWithout" aria-label="Trade-offs of skipping AI"></ul>
+            <button type="button" class="btn btn-secondary" id="chooseWithoutAI">
+              Skip AI, build a static skill
+            </button>
+          </article>
+        </div>
+
+        <div class="phase-actions">
+          <button type="button" class="btn btn-secondary" id="aiChoiceBackBtn">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: GENERATE (loading state)
+         ============================================================ -->
+    <section class="phase" id="phase-generate" hidden aria-labelledby="generate-heading">
+      <h2 id="generate-heading" tabindex="-1">Building your skill…</h2>
+      <div class="loading-block">
+        <p id="generateStatus" class="generate-status" aria-live="polite" aria-atomic="true">
+          Getting started…
+        </p>
+        <ol class="generate-steps" id="generateSteps">
+          <li data-step="ai-generate" data-state="pending">
+            <span class="step-icon" aria-hidden="true"></span>
+            <span class="step-label">Writing the code with Gemini</span>
+            <span class="step-hint" aria-hidden="true">usually 5–15s</span>
+          </li>
+          <li data-step="lint" data-state="pending">
+            <span class="step-icon" aria-hidden="true"></span>
+            <span class="step-label">Checking the code is safe to run</span>
+          </li>
+          <li data-step="load" data-state="pending">
+            <span class="step-icon" aria-hidden="true"></span>
+            <span class="step-label">Loading the test page</span>
+          </li>
+          <li data-step="run" data-state="pending">
+            <span class="step-icon" aria-hidden="true"></span>
+            <span class="step-label">Running the skill on the page</span>
+          </li>
+          <li data-step="explain" data-state="pending">
+            <span class="step-icon" aria-hidden="true"></span>
+            <span class="step-label">Writing a plain-language explanation</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: TRY + ITERATE + CODE REVIEW (combined)
+         ============================================================ -->
+    <section class="phase" id="phase-try" hidden aria-labelledby="try-heading">
+      <h2 id="try-heading" tabindex="-1">Here's what we built</h2>
+
+      <div class="status-pane" id="tryStatus" aria-live="polite" role="status">
+        <span class="status-icon" aria-hidden="true">•</span>
+        <span class="status-text">Ready.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="explainationText">What this skill does</label>
+        <p class="explanation" id="explainationText">—</p>
+        <button type="button" class="btn btn-text" id="readAloudBtn"
+                aria-label="Read this explanation aloud">
+          <span aria-hidden="true">🔊</span> Read this to me
+        </button>
+      </div>
+
+      <div class="iterate-actions" role="group" aria-label="What would you like to do next?">
+        <button type="button" class="btn btn-success" id="approveBtn">Looks good — save it</button>
+        <button type="button" class="btn btn-secondary" id="refineBtn">Almost — change this</button>
+        <button type="button" class="btn btn-secondary" id="restartBtn">Different idea</button>
+      </div>
+
+      <div class="form-group" id="refineGroup" hidden>
+        <label for="refineFeedback">What's still wrong?</label>
+        <textarea id="refineFeedback" rows="3"
+                  placeholder="e.g. The text got bigger but the sidebar is still showing."></textarea>
+        <div class="phase-actions" style="margin-top:10px">
+          <button type="button" class="btn btn-secondary" id="refineCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="refineSubmitBtn">Try the change</button>
+        </div>
+      </div>
+
+      <details class="code-disclosure">
+        <summary>See the code we generated</summary>
+        <pre class="code-block"><code id="codeView"></code></pre>
+        <p class="code-note">
+          This code runs in the page when the skill is enabled. The extension wraps it in
+          <code>try…catch</code> so a bug here will never crash the page.
+        </p>
+      </details>
+
+      <p class="iter-counter" id="iterCounter" hidden></p>
+    </section>
+
+    <!-- ============================================================
+         PHASE: NAME + SAVE
+         ============================================================ -->
+    <section class="phase" id="phase-save" hidden aria-labelledby="save-heading">
+      <h2 id="save-heading" tabindex="-1">Save this skill</h2>
+      <p class="phase-help">It will turn on automatically. You can disable it later from the popup.</p>
+
+      <div class="form-group">
+        <label for="saveName">Name</label>
+        <input type="text" id="saveName" maxlength="60" autocomplete="off">
+      </div>
+
+      <fieldset class="form-group">
+        <legend>Which support areas does it help with?</legend>
+        <div class="chip-row" id="saveAreas"></div>
+      </fieldset>
+
+      <div class="phase-actions">
+        <button type="button" class="btn btn-secondary" id="saveBackBtn">Back</button>
+        <button type="button" class="btn btn-primary" id="saveSubmitBtn">Save and enable</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: CONFIRM (saved)
+         ============================================================ -->
+    <section class="phase" id="phase-confirm" hidden aria-labelledby="confirm-heading">
+      <h2 id="confirm-heading" tabindex="-1">Saved</h2>
+      <p class="phase-help" id="confirmMessage">Your skill will run automatically on the pages you visit.</p>
+
+      <div class="phase-actions">
+        <button type="button" class="btn btn-primary" id="confirmNextBtn" hidden>Build the next one</button>
+        <button type="button" class="btn btn-secondary" id="confirmAnotherBtn">Build another skill</button>
+        <button type="button" class="btn btn-secondary" id="confirmDoneBtn">Done</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PHASE: ERROR (shown for API key / fatal Gemini errors)
+         ============================================================ -->
+    <section class="phase phase-error" id="phase-error" hidden aria-labelledby="error-heading">
+      <h2 id="error-heading" tabindex="-1">Something went wrong</h2>
+      <p class="phase-help" id="errorMessage"></p>
+      <div class="phase-actions">
+        <button type="button" class="btn btn-secondary" id="errorBackBtn">Back</button>
+        <button type="button" class="btn btn-primary" id="errorRetryBtn" hidden>Try again</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer" role="contentinfo">
+    <p>
+      Need help? Use the popup's "Onboarding" button to revisit your needs,
+      or report an issue on the project tracker.
+    </p>
+  </footer>
+
+  <script src="builder.js"></script>
+</body>
+</html>
