@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Agentic A11y</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=article,build,center_focus_strong,check_circle,chevron_right,closed_caption,contrast,dark_mode,edit_note,expand_more,filter_center_focus,format_letter_spacing,format_line_spacing,format_size,image,key,keyboard,label,mic,motion_photos_pause,mouse,palette,play_arrow,refresh,restart_alt,stop,straighten,subtitles,summarize,sync,text_fields,verified,videocam,volume_up&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" width="28" height="28" viewBox="0 0 128 128" aria-hidden="true">
+        <circle cx="64" cy="64" r="64" fill="#1a73e8"/>
+        <text x="64" y="64" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-weight="bold" font-size="52" fill="white">A</text>
+      </svg>
+      <span class="logo-text">Agentic A11y</span>
+    </div>
+    <label class="switch" aria-label="Enable extension">
+      <input type="checkbox" id="mainToggle" checked>
+      <span class="switch-track"></span>
+    </label>
+  </header>
+
+  <main>
+    <!-- Setup nudge (shown if onboarding not completed) -->
+    <div class="setup-nudge" id="setupNudge" hidden role="status">
+      <span>New here? Run the setup wizard to get personalized recommendations.</span>
+      <button class="btn btn-primary btn-sm" id="nudgeSetupBtn">Get Started</button>
+      <button class="nudge-dismiss" id="nudgeDismiss" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <!-- AI Support Input -->
+    <div class="ai-input-row" id="aiInputRow">
+      <label for="aiSupportInput" class="sr-only">Describe what support you need</label>
+      <input type="text" id="aiSupportInput" placeholder="What support do you need? e.g. &quot;I'm tired and can't see well&quot;" aria-label="Describe what support you need">
+      <button class="btn btn-primary btn-sm" id="aiSupportBtn" title="Get AI suggestions" aria-label="Get suggestions">
+        <span class="material-symbols-outlined" style="font-size:16px">build</span>
+      </button>
+    </div>
+    <!-- AI Suggestion Card (hidden until query) -->
+    <div class="ai-suggestion" id="aiSuggestion" hidden role="region" aria-label="AI suggestions" aria-live="polite">
+      <div class="ai-suggestion-summary" id="aiSuggestionSummary"></div>
+      <div class="ai-suggestion-list" id="aiSuggestionList"></div>
+      <div class="ai-suggestion-actions">
+        <button class="btn btn-primary btn-sm" id="aiApplyBtn">Apply suggestions</button>
+        <button class="btn btn-secondary btn-sm" id="aiSaveProfileBtn">Save as Profile</button>
+        <button class="btn btn-secondary btn-sm" id="aiDismissBtn">Dismiss</button>
+      </div>
+    </div>
+    <div class="ai-loading" id="aiLoading" hidden role="status" aria-live="polite">
+      <span class="material-symbols-outlined spin" aria-hidden="true">sync</span> Thinking&hellip;
+    </div>
+
+    <!-- My Profiles -->
+    <section class="section" id="myProfilesSection" hidden>
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">My Profiles</span>
+        <span class="section-count" id="myProfilesCount">0</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body" id="myProfilesList"></div>
+    </section>
+
+    <!-- Access Needs -->
+    <section class="section" id="profilesSection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">I need help with&hellip;</span>
+        <span class="profile-count" id="profileCount"></span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="profile-grid">
+          <label class="profile-checkbox"><input type="checkbox" value="screenReader"> Screen reader support</label>
+          <label class="profile-checkbox"><input type="checkbox" value="biggerText"> Bigger text &amp; spacing</label>
+          <label class="profile-checkbox"><input type="checkbox" value="colorAdjust"> Color adjustments</label>
+          <label class="profile-checkbox"><input type="checkbox" value="captions"> Captions &amp; transcripts</label>
+          <label class="profile-checkbox"><input type="checkbox" value="altInput"> Keyboard &amp; voice input</label>
+          <label class="profile-checkbox"><input type="checkbox" value="simplerContent"> Simpler content</label>
+          <label class="profile-checkbox"><input type="checkbox" value="fewerDistractions"> Fewer distractions</label>
+          <label class="profile-checkbox"><input type="checkbox" value="lessMotion"> Less motion</label>
+          <label class="profile-checkbox"><input type="checkbox" value="dimmerDisplay"> Dimmer display</label>
+          <label class="profile-checkbox"><input type="checkbox" value="readingHelp"> Reading assistance</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI Tools -->
+    <section class="section" id="aiSection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">AI Tools</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">build</span></span>
+          <span class="tool-name">Autofix WCAG Issues</span>
+          <label class="switch small"><input type="checkbox" id="autoWcagFix" checked><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">label</span></span>
+          <span class="tool-name">Generate Missing Labels</span>
+          <label class="switch small"><input type="checkbox" id="autoFixLabels" checked><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">image</span></span>
+          <span class="tool-name">Generate Image Alt Text</span>
+          <label class="switch small"><input type="checkbox" id="autoDescribe" checked><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">videocam</span></span>
+          <span class="tool-name">Generate Video Descriptions</span>
+          <label class="switch small"><input type="checkbox" id="autoVideoDescribe"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">closed_caption</span></span>
+          <span class="tool-name">Generate Audio Captions</span>
+          <label class="switch small"><input type="checkbox" id="autoCaptions"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">edit_note</span></span>
+          <span class="tool-name">Simplify Text</span>
+          <label class="switch small"><input type="checkbox" id="autoSimplify"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">summarize</span></span>
+          <span class="tool-name">Summarize Text</span>
+          <label class="switch small"><input type="checkbox" id="autoSummarize"><span class="switch-track"></span></label>
+        </div>
+
+        <!-- API Keys collapsible -->
+        <div class="collapsible" id="apiKeysSection">
+          <div class="collapsible-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--grey-500)">key</span>
+            <span style="flex:1;font-size:12px">API Keys</span>
+            <span class="coll-arrow material-symbols-outlined">chevron_right</span>
+          </div>
+          <div class="collapsible-body">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="geminiKey">Gemini</label>
+                <input type="password" id="geminiKey" placeholder="AIza...">
+              </div>
+            </div>
+            <button class="btn btn-primary" id="saveKeys">Save</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Display -->
+    <section class="section" id="displaySection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Display</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">dark_mode</span></span>
+          <span class="tool-name">Dark Mode</span>
+          <label class="switch small"><input type="checkbox" id="darkMode"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">contrast</span></span>
+          <span class="tool-name">Contrast</span>
+          <select id="contrastMode">
+            <option value="none">Normal</option>
+            <option value="light">High</option>
+            <option value="yellow-black">Yellow/Black</option>
+          </select>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">palette</span></span>
+          <span class="tool-name">Color Filter</span>
+          <select id="colorBlindMode">
+            <option value="none">Off</option>
+            <option value="protanopia">Protanopia</option>
+            <option value="deuteranopia">Deuteranopia</option>
+            <option value="tritanopia">Tritanopia</option>
+          </select>
+        </div>
+        <div class="slider-row">
+          <span class="tool-icon"><span class="material-symbols-outlined">format_size</span></span>
+          <span class="tool-name">Font Size</span>
+          <div class="slider-group">
+            <input type="range" id="fontScale" min="50" max="200" value="100" step="5">
+            <span class="slider-value" id="fontScaleValue">100%</span>
+          </div>
+        </div>
+        <div class="slider-row">
+          <span class="tool-icon"><span class="material-symbols-outlined">format_line_spacing</span></span>
+          <span class="tool-name">Line Height</span>
+          <div class="slider-group">
+            <input type="range" id="lineHeight" min="1" max="3" value="1.5" step="0.1">
+            <span class="slider-value" id="lineHeightValue">1.5</span>
+          </div>
+        </div>
+        <div class="slider-row">
+          <span class="tool-icon"><span class="material-symbols-outlined">format_letter_spacing</span></span>
+          <span class="tool-name">Letter Spacing</span>
+          <div class="slider-group">
+            <input type="range" id="letterSpacing" min="0" max="0.5" value="0" step="0.01">
+            <span class="slider-value" id="letterSpacingValue">0em</span>
+          </div>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">text_fields</span></span>
+          <span class="tool-name">Dyslexia Font</span>
+          <label class="switch small"><input type="checkbox" id="dyslexiaFont"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">mouse</span></span>
+          <span class="tool-name">Large Cursor</span>
+          <label class="switch small"><input type="checkbox" id="largeCursor"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">filter_center_focus</span></span>
+          <span class="tool-name">Enhanced Focus</span>
+          <label class="switch small"><input type="checkbox" id="enhanceFocus"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">straighten</span></span>
+          <span class="tool-name">Reading Guide</span>
+          <label class="switch small"><input type="checkbox" id="readingGuide"><span class="switch-track"></span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reading -->
+    <section class="section" id="readingSection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Reading</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">article</span></span>
+          <span class="tool-name">Reader Mode</span>
+          <label class="switch small"><input type="checkbox" id="readerMode"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">center_focus_strong</span></span>
+          <span class="tool-name">Focus Mode</span>
+          <label class="switch small"><input type="checkbox" id="focusMode"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool-options" id="focusModeOptions">
+          <label><input type="checkbox" id="hideDistractions"> Dim</label>
+          <label><input type="checkbox" id="showProgress" checked> Progress</label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">volume_up</span></span>
+          <span class="tool-name">Read Aloud</span>
+          <select id="speechRate" style="width:auto;min-width:50px">
+            <option value="0.7">0.7x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="readAloudBtn"><span class="material-symbols-outlined" style="font-size:14px">play_arrow</span> Read</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation -->
+    <section class="section" id="navSection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Navigation</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">keyboard</span></span>
+          <span class="tool-name">Keyboard Nav</span>
+          <label class="switch small"><input type="checkbox" id="keyboardNav"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">mic</span></span>
+          <span class="tool-name">Voice Commands</span>
+          <label class="switch small"><input type="checkbox" id="voiceCommands"><span class="switch-track"></span></label>
+        </div>
+        <div class="tool">
+          <span class="tool-icon"><span class="material-symbols-outlined">motion_photos_pause</span></span>
+          <span class="tool-name">Reduce Motion</span>
+          <label class="switch small"><input type="checkbox" id="motionReducer"><span class="switch-track"></span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Custom Skills (dynamic) -->
+    <section class="section" id="customSection" hidden>
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Custom Skills</span>
+        <span class="section-count" id="customCount">0</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body" id="customList"></div>
+    </section>
+
+    <!-- Fixes panel -->
+    <div class="fixes-panel" id="fixesPanel" style="display:none">
+      <div class="fixes-header" id="fixesHeader" role="button" tabindex="0" aria-expanded="false">
+        <span class="fixes-icon"><span class="material-symbols-outlined">check_circle</span></span>
+        <span class="fixes-summary"></span>
+        <span class="fixes-toggle material-symbols-outlined">expand_more</span>
+      </div>
+      <div class="fixes-body" style="display:none">
+        <div class="fixes-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <button class="btn btn-secondary" id="saveProfileBtn" title="Save current settings as a profile"><span class="material-symbols-outlined" style="font-size:14px">verified</span> Save Profile</button>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary" id="onboardBtn" title="Re-run setup wizard"><span class="material-symbols-outlined" style="font-size:14px">play_arrow</span> Setup</button>
+    <button class="btn btn-secondary" id="builderBtn" title="Open Skill Builder"><span class="material-symbols-outlined" style="font-size:14px">build</span> Skills</button>
+    <button class="btn btn-secondary" id="scanPage" title="Re-apply skills"><span class="material-symbols-outlined" style="font-size:14px">refresh</span> Rescan</button>
+    <button class="btn btn-secondary" id="resetAll" title="Reset all settings"><span class="material-symbols-outlined" style="font-size:14px">restart_alt</span> Reset</button>
+  </footer>
+
+  <!-- Save Profile Modal -->
+  <div class="modal-overlay" id="saveProfileModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalDesc" aria-modal="true">
+      <h2 id="modalTitle">Save Profile</h2>
+      <p id="modalDesc" class="sr-only">Save your current settings as a reusable profile. Optionally choose site types to auto-apply.</p>
+      <div class="input-group" style="margin-bottom:10px">
+        <label for="profileNameInput">Profile Name</label>
+        <input type="text" id="profileNameInput" placeholder="e.g. Tired Evening Browsing">
+      </div>
+      <fieldset style="margin-bottom:10px; border:none; padding:0;">
+        <legend style="font-size:10px;color:var(--grey-500);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px">Auto-apply on site types (optional)</legend>
+        <div class="site-type-grid">
+          <label class="site-type-checkbox"><input type="checkbox" value="news"> News</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="social"> Social</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="video"> Video</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="shopping"> Shopping</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="education"> Education</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="productivity"> Productivity</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="reference"> Reference</label>
+          <label class="site-type-checkbox"><input type="checkbox" value="other"> Other</label>
+        </div>
+      </fieldset>
+      <div style="display:flex;gap:6px;justify-content:flex-end">
+        <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="modalSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

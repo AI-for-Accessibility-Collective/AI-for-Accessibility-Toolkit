@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic A11y — Setup</title>
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+  <header>
+    <h1 class="site-title">Agentic A11y</h1>
+  </header>
+
+  <main class="onboarding" id="app">
+
+    <!-- Landing page (always visible first) -->
+    <section class="page active" id="page-landing" aria-label="Setup">
+      <h2 id="landing-heading">Set up your accessibility support</h2>
+      <p class="subtitle">Select areas where you need help, describe your needs, or both. Then choose how to proceed.</p>
+
+      <!-- Support area chips -->
+      <fieldset class="chip-fieldset">
+        <legend class="chip-legend">Support areas (optional)</legend>
+        <div class="chip-group" role="group" aria-label="Support areas">
+          <label class="chip">
+            <input type="checkbox" name="support" value="vision">
+            <span class="chip-body"><span class="chip-icon" aria-hidden="true">&#x1F441;&#xFE0F;</span> Vision</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" name="support" value="cognitive">
+            <span class="chip-body"><span class="chip-icon" aria-hidden="true">&#x1F9E0;</span> Cognitive</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" name="support" value="hearing">
+            <span class="chip-body"><span class="chip-icon" aria-hidden="true">&#x1F442;</span> Hearing</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" name="support" value="motor">
+            <span class="chip-body"><span class="chip-icon" aria-hidden="true">&#x270B;</span> Motor</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" name="support" value="sensory">
+            <span class="chip-body"><span class="chip-icon" aria-hidden="true">&#x1F319;</span> Sensory</span>
+          </label>
+          <label class="chip">
+            <input type="checkbox" name="support" value="reading">
+            <span class="chip-body"><span class="chip-icon" aria-hidden="true">&#x1F4D6;</span> Reading</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Free text -->
+      <div class="text-section">
+        <label for="freeText" class="field-label">Describe what you need</label>
+        <textarea id="freeText" rows="4"
+          placeholder="Examples: I want large text and no distractions, flashing animations give me headaches, I need help with small text on recipe sites"></textarea>
+      </div>
+
+      <!-- API Key (collapsible) -->
+      <details class="api-details" id="apiDetails">
+        <summary>Gemini API Key</summary>
+        <div class="api-key-body">
+          <p class="api-instructions">Get a key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The free tier allows 15 requests/minute.</p>
+          <div class="key-row">
+            <label for="apiKeyInput" class="sr-only">Gemini API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
+            <button type="button" class="btn-small" id="toggleKeyVisibility" aria-label="Show API key">Show</button>
+          </div>
+          <div id="apiKeyStatus" class="status-msg" role="alert" aria-live="assertive"></div>
+        </div>
+      </details>
+
+      <!-- Two paths -->
+      <nav class="path-buttons" aria-label="Setup paths">
+        <button type="button" class="btn btn-primary" id="quickStartBtn">Quick Start</button>
+        <button type="button" class="btn btn-secondary" id="personalizeBtn">Personalize</button>
+      </nav>
+      <p class="path-hint"><strong>Quick Start</strong> uses AI to recommend skills instantly. <strong>Personalize</strong> lets you pick skills for each support area.</p>
+    </section>
+
+    <!-- Quick Start: AI Recommendations -->
+    <section class="page" id="page-recommendations" aria-label="AI Recommendations">
+      <h2 id="rec-heading">Your Recommended Skills</h2>
+      <p class="subtitle" id="recSubtitle">Based on your input, here is what we suggest.</p>
+
+      <div id="loadingIndicator" class="loading" role="status" aria-live="polite" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Analyzing your needs with Gemini AI...</p>
+      </div>
+
+      <div id="recommendationsContainer" hidden>
+        <h3 class="section-label">Recommended Skills</h3>
+        <div class="skill-list" id="recommendedSkills" role="list"></div>
+
+        <div id="newSkillsSection" hidden>
+          <h3 class="section-label new-skills-label">New Skills to Create</h3>
+          <p class="new-skills-desc">These needs are not covered by built-in skills. We can build them for you.</p>
+          <div class="skill-list" id="newSkills" role="list"></div>
+        </div>
+      </div>
+
+      <nav class="nav-bar" aria-label="Recommendation actions">
+        <button type="button" class="btn btn-secondary" id="recBackBtn">Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" id="recFinishBtn" hidden>Finish Setup</button>
+      </nav>
+    </section>
+
+    <!-- Personalized Wizard: dynamic steps injected here -->
+    <section class="page" id="page-wizard" aria-label="Personalized setup">
+      <div id="wizardContainer"></div>
+      <nav class="nav-bar" aria-label="Wizard navigation">
+        <button type="button" class="btn btn-secondary" id="wizBackBtn">Back</button>
+        <div class="spacer"></div>
+        <span class="wizard-progress" id="wizardProgress" aria-live="polite"></span>
+        <button type="button" class="btn btn-primary" id="wizNextBtn">Next</button>
+      </nav>
+    </section>
+
+    <!-- Summary (personalized path) -->
+    <section class="page" id="page-summary" aria-label="Setup summary">
+      <h2 id="summary-heading">Your Setup Summary</h2>
+      <p class="subtitle">Here are the skills you selected. You can change these anytime from the popup.</p>
+
+      <h3 class="section-label">Enabled Skills</h3>
+      <div class="skill-list" id="summarySkills" role="list"></div>
+
+      <div id="summaryNewSection" hidden>
+        <h3 class="section-label new-skills-label">Skills to Create</h3>
+        <p class="new-skills-desc">These will be built in the Skill Builder.</p>
+        <div class="skill-list" id="summaryNewSkills" role="list"></div>
+      </div>
+
+      <nav class="nav-bar" aria-label="Summary actions">
+        <button type="button" class="btn btn-secondary" id="summaryBackBtn">Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" id="summaryFinishBtn">Finish Setup</button>
+      </nav>
+    </section>
+
+  </main>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>
