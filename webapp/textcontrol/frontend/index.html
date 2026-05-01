@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrowserMind Text — AI Browser Agent</title>
+  <meta name="description" content="Control your browser with natural language. BrowserMind Text is a self-healing AI agent powered by Gemini that navigates the web for you." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=3" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Header ── -->
+    <header id="header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="9" stroke="#6366f1" stroke-width="1.5"/>
+              <circle cx="10" cy="10" r="5" fill="rgba(99,102,241,0.3)"/>
+              <circle cx="10" cy="10" r="2" fill="#6366f1"/>
+              <path d="M10 1 Q14 5 10 10 Q6 5 10 1" fill="rgba(99,102,241,0.2)"/>
+              <path d="M19 10 Q15 14 10 10 Q15 6 19 10" fill="rgba(99,102,241,0.2)"/>
+            </svg>
+          </div>
+          <span class="logo-text">BrowserMind</span>
+          <span class="logo-tag">Text</span>
+        </div>
+        <div id="status-pill" class="status-pill status-connecting">
+          <span class="status-dot"></span>
+          <span id="status-label">Connecting…</span>
+        </div>
+      </div>
+      <div class="header-center">
+        <div id="url-bar-header" class="url-bar-header">
+          <span class="url-prefix">🌐</span>
+          <span id="current-url-display" class="url-text">about:blank</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div id="step-counter" class="step-counter" style="display:none">
+          <span class="step-label">Step</span>
+          <span id="step-num">0</span>
+        </div>
+        <button id="btn-screenshot" class="btn-ghost" title="Take a manual screenshot">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Snapshot
+        </button>
+        <button id="btn-new-session" class="btn-ghost" title="Start a new conversation">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+          </svg>
+          New Session
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Main 3-panel layout ── -->
+    <main id="main">
+
+      <!-- ── Left: Chat panel ── -->
+      <section id="chat-panel">
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Conversation
+          </span>
+          <div class="panel-header-actions">
+            <span id="model-badge" class="model-badge">gemini-2.5-flash</span>
+          </div>
+        </div>
+
+        <div id="messages" aria-live="polite" aria-label="Conversation">
+          <!-- Welcome message -->
+          <div class="message agent-message" id="welcome-msg">
+            <div class="msg-avatar agent-avatar">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" fill="rgba(99,102,241,0.3)"/>
+                <circle cx="10" cy="10" r="4" fill="rgba(99,102,241,0.6)"/>
+                <circle cx="10" cy="10" r="1.5" fill="#fff"/>
+              </svg>
+            </div>
+            <div class="msg-body">
+              <div class="msg-role">BrowserMind Text</div>
+              <div class="msg-content">
+                <p>Hi! I'm BrowserMind Text — a text-based browser agent powered by Gemini. Tell me what to do in your browser and I'll take care of it.</p>
+                <div class="suggestion-chips">
+                  <button class="chip" onclick="insertSuggestion(this)">Go to github.com trending</button>
+                  <button class="chip" onclick="insertSuggestion(this)">Search Hacker News for AI</button>
+                  <button class="chip" onclick="insertSuggestion(this)">Open Reddit r/programming</button>
+                  <button class="chip" onclick="insertSuggestion(this)">Take a screenshot</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input area -->
+        <div id="input-area">
+          <div id="input-wrap">
+            <textarea
+              id="user-input"
+              placeholder="Tell the browser agent what to do… (Enter to send)"
+              rows="1"
+              aria-label="Message input"
+            ></textarea>
+            <button id="btn-send" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+          <div id="input-footer">
+            <span class="input-hint">↵ Send · ⇧↵ Newline</span>
+            <span class="input-hint-sep">·</span>
+            <span class="input-hint">Self-healing · Visual reasoning</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Center: Browser Viewport ── -->
+      <section id="viewport-panel">
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Browser Viewport
+          </span>
+          <div class="panel-header-actions">
+            <div id="viewport-status" class="viewport-status">
+              <span class="vstatus-dot"></span>
+              <span id="viewport-status-label">Waiting…</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Browser chrome bar -->
+        <div id="browser-chrome">
+          <div class="browser-dots">
+            <span class="bdot bdot-r"></span>
+            <span class="bdot bdot-y"></span>
+            <span class="bdot bdot-g"></span>
+          </div>
+          <div id="url-bar" class="browser-url-bar">
+            <svg class="url-lock" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="text" id="url-input" placeholder="Navigate to URL…" autocomplete="off" spellcheck="false" aria-label="URL bar" />
+            <button id="btn-go" class="btn-go" title="Navigate">↵</button>
+          </div>
+        </div>
+
+        <!-- Viewport content -->
+        <div id="viewport-content">
+          <!-- Empty state -->
+          <div id="viewport-empty" class="viewport-empty">
+            <div class="viewport-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect x="4" y="8" width="40" height="28" rx="3" stroke="rgba(99,102,241,0.4)" stroke-width="2" fill="none"/>
+                <circle cx="24" cy="22" r="8" stroke="rgba(99,102,241,0.3)" stroke-width="2" fill="none"/>
+                <line x1="16" y1="40" x2="32" y2="40" stroke="rgba(99,102,241,0.3)" stroke-width="2" stroke-linecap="round"/>
+                <line x1="24" y1="36" x2="24" y2="40" stroke="rgba(99,102,241,0.3)" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="24" cy="22" r="3" fill="rgba(99,102,241,0.3)"/>
+              </svg>
+            </div>
+            <p class="viewport-empty-title">Browser viewport</p>
+            <p class="viewport-empty-sub">Screenshots appear here as the agent works.<br>Make sure Chrome is running with remote debugging.</p>
+          </div>
+
+          <!-- Screenshot display -->
+          <div id="viewport-img-wrap" style="display:none">
+            <img id="viewport-img" src="" alt="Browser viewport" />
+            <!-- Click overlay (red crosshair) -->
+            <div id="click-overlay" class="click-overlay" style="display:none">
+              <div class="crosshair-v"></div>
+              <div class="crosshair-h"></div>
+              <div class="crosshair-dot"></div>
+            </div>
+          </div>
+
+          <!-- Thinking overlay -->
+          <div id="viewport-thinking" class="viewport-thinking" style="display:none">
+            <div class="vt-spinner"></div>
+            <span id="viewport-thinking-label">Agent working…</span>
+          </div>
+        </div>
+
+        <!-- Viewport footer -->
+        <div id="viewport-footer">
+          <span id="viewport-page-title" class="viewport-page-title"></span>
+          <span id="viewport-size" class="viewport-size"></span>
+        </div>
+      </section>
+
+      <!-- ── Right: Activity Log ── -->
+      <aside id="activity-panel">
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Activity
+          </span>
+          <div class="panel-header-actions">
+            <button id="btn-clear-log" class="btn-ghost btn-sm" title="Clear activity log">Clear</button>
+          </div>
+        </div>
+        <div id="activity-log" aria-label="Agent activity log">
+          <div class="activity-empty">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(99,102,241,0.3)" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <p>Activity will stream here as the agent executes tasks.</p>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <script src="app.js?v=3"></script>
+</body>
+</html>

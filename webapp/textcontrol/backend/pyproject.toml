@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "browsermind-text"
+version = "1.0.0"
+description = "BrowserMind Text — genai SDK browser automation agent"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "python-dotenv>=1.0",
+    "google-genai>=1.0",
+    "google-cloud-aiplatform>=1.60",
+]
+
+[tool.setuptools]
+py-modules = ["main", "agent", "browser_tools", "skill_loader"]

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "browsermind-backend"
+version = "0.1.0"
+description = "BrowserMind FastAPI backend"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "python-dotenv",
+    "google-adk>=1.0.0",
+    "google-genai",
+]
+
+[tool.setuptools]
+py-modules = ["main", "agent", "browser_tools"]

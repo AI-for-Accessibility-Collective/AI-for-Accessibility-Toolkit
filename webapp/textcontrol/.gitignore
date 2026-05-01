@@ -1,0 +1,31 @@
+# BrowserMind Text — gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+*.egg
+
+# Environment
+backend/.env
+
+# uv
+uv.lock
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Temp files
+/tmp/bmt_shot.png
