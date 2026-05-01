@@ -182,7 +182,7 @@ browsermind/
 | Problem | Fix |
 |---|---|
 | `Connection refused` on Start Session | Make sure `uv run python main.py` is running on port 8080 |
-| `browser-harness: not connected` or `[Errno 2] No such file or directory` on tool calls | Ensure Chrome was launched with `--remote-debugging-port=9222`. If you used a custom `--user-data-dir`, the harness's profile-dir discovery will fail; set `BU_CDP_WS=ws://localhost:9222/devtools/browser/<id>` in `backend/.env` (get the URL via `curl -s http://localhost:9222/json/version`) |
+| `browser-harness: not connected` or `[Errno 2] No such file or directory` on tool calls | Ensure Chrome was launched with `--remote-debugging-port=9222`. The backend auto-discovers Chrome via `http://localhost:9222/json/version` on startup — override the port with `BU_CDP_PORT`, or set `BU_CDP_WS` directly to skip discovery |
 | No audio input | Grant microphone permission in the browser; check browser console for `AudioContext` errors |
 | `GOOGLE_API_KEY` not found | Confirm `backend/.env` exists and has the correct key (not the example placeholder) |
 | Blank viewport | Chrome must be open with a visible page; the agent needs an active tab to screenshot |

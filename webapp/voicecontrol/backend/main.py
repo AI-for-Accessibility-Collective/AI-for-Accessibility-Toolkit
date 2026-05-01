@@ -39,9 +39,27 @@ logging.basicConfig(level=logging.INFO)
 
 # ---------- Lifespan ----------
 
+def _autodiscover_cdp_ws():
+    """If Chrome is running with --remote-debugging-port, query it for the live
+    webSocketDebuggerUrl and set BU_CDP_WS. Lets the harness skip its hardcoded
+    profile-dir discovery, which doesn't know about custom --user-data-dir paths."""
+    if os.environ.get("BU_CDP_WS"):
+        return
+    import urllib.request
+    port = os.environ.get("BU_CDP_PORT", "9222")
+    try:
+        with urllib.request.urlopen(f"http://localhost:{port}/json/version", timeout=2) as r:
+            ws_url = json.loads(r.read())["webSocketDebuggerUrl"]
+        os.environ["BU_CDP_WS"] = ws_url
+        logger.info(f"Discovered Chrome CDP at {ws_url}")
+    except Exception as e:
+        logger.warning(f"Chrome CDP not reachable on port {port} ({e}); ensure Chrome is running with --remote-debugging-port={port}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure browser-harness daemon is running at startup
+    _autodiscover_cdp_ws()
     try:
         ensure_daemon()
         logger.info("Browser-harness daemon is running")
