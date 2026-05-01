@@ -5185,6 +5185,73 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                     except Exception as e:
                         print(f"        ✗ {selector[:30]}: {e}", flush=True)
 
+            # Fix canvas elements without descriptions
+            canvas_without_desc = page.evaluate("""() => {
+                return Array.from(document.querySelectorAll('canvas'))
+                    .filter(c => !c.getAttribute('aria-label') && !c.getAttribute('role'))
+                    .map((c, i) => ({ index: i, selector: c.id ? '#' + c.id : `canvas:nth-of-type(${i+1})` }));
+            }""")
+            if canvas_without_desc and ai_fixed < max_ai_fixes:
+                count = min(len(canvas_without_desc), 3)
+                print(f"      Describing {count} canvas elements...", flush=True)
+                for cvs in canvas_without_desc[:count]:
+                    try:
+                        el = page.query_selector(cvs['selector'])
+                        if el:
+                            canvas_path = OUT / f"canvas_{cvs['index']}.png"
+                            el.screenshot(path=str(canvas_path))
+                            prompt = "Describe this canvas graphic for a blind user. What does it show? Write 1-2 sentences."
+                            raw = ask_claude(str(canvas_path), prompt)
+                            try:
+                                desc = json.loads(raw).get('answer', raw)
+                            except:
+                                desc = raw.strip()
+                            desc = desc.strip('"\'').strip()[:200]
+                            page.evaluate(f"""(d) => {{
+                                const c = document.querySelectorAll('canvas')[d.i];
+                                if(c) {{ c.setAttribute('role', 'img'); c.setAttribute('aria-label', d.desc); }}
+                            }}""", {'i': cvs['index'], 'desc': desc})
+                            ai_fixed += 1
+                            print(f"        ✓ canvas {cvs['index']+1} → \"{desc[:40]}...\"", flush=True)
+                            canvas_path.unlink(missing_ok=True)
+                    except Exception as e:
+                        print(f"        ✗ canvas {cvs['index']+1}: {e}", flush=True)
+
+            # Fix videos without descriptions (autoVideoDescribe)
+            videos_without_desc = page.evaluate("""() => {
+                return Array.from(document.querySelectorAll('video'))
+                    .filter(v => !v.getAttribute('aria-label') && !v.getAttribute('aria-describedby'))
+                    .map((v, i) => ({ index: i, selector: v.id ? '#' + v.id : `video:nth-of-type(${i+1})` }));
+            }""")
+            if videos_without_desc and ai_fixed < max_ai_fixes:
+                count = min(len(videos_without_desc), 3)  # Limit video processing
+                print(f"      Describing {count} videos...", flush=True)
+                for vid in videos_without_desc[:count]:
+                    try:
+                        # Capture video frame
+                        frame_path = OUT / f"video_frame_{vid['index']}.png"
+                        page.evaluate(f"""(idx) => {{
+                            const video = document.querySelectorAll('video')[idx];
+                            if (video) {{ video.pause(); video.currentTime = Math.min(2, video.duration / 4); }}
+                        }}""", vid['index'])
+                        time.sleep(0.5)
+                        el = page.query_selector(vid['selector'])
+                        if el:
+                            el.screenshot(path=str(frame_path))
+                            prompt = "Describe this video frame for a blind user. What is happening in this video? Write 1-2 sentences."
+                            raw = ask_claude(str(frame_path), prompt)
+                            try:
+                                desc = json.loads(raw).get('answer', raw)
+                            except:
+                                desc = raw.strip()
+                            desc = desc.strip('"\'').strip()[:200]
+                            page.evaluate(f"(d) => {{ const v = document.querySelectorAll('video')[d.i]; if(v) v.setAttribute('aria-label', d.desc); }}", {'i': vid['index'], 'desc': desc})
+                            ai_fixed += 1
+                            print(f"        ✓ video {vid['index']+1} → \"{desc[:40]}...\"", flush=True)
+                            frame_path.unlink(missing_ok=True)
+                    except Exception as e:
+                        print(f"        ✗ video {vid['index']+1}: {e}", flush=True)
+
             # Fix labels
             if label_fixes and ai_fixed < max_ai_fixes:
                 remaining = max_ai_fixes - ai_fixed
@@ -5215,6 +5282,42 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                         page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.setAttribute('aria-label', d.l); }}", {'s': selector, 'l': label})
                         ai_fixed += 1
                         print(f"        ✓ {selector[:30]}... → \"{label}\"", flush=True)
+                    except Exception as e:
+                        print(f"        ✗ {selector[:30]}: {e}", flush=True)
+
+            # Fix contrast issues
+            if contrast_fixes and ai_fixed < max_ai_fixes:
+                remaining = max_ai_fixes - ai_fixed
+                count = min(len(contrast_fixes), remaining, 5)  # Limit contrast fixes
+                print(f"      Fixing {count} contrast issues...", flush=True)
+                for fix in contrast_fixes[:count]:
+                    selector = fix['selector']
+                    try:
+                        # Get current colors
+                        colors = page.evaluate(f"""() => {{
+                            const el = document.querySelector('{selector}');
+                            if (!el) return null;
+                            const s = getComputedStyle(el);
+                            return {{ fg: s.color, bg: s.backgroundColor }};
+                        }}""")
+                        if not colors:
+                            continue
+                        # Simple fix: make text black or white based on background
+                        # (AI-based fix would be better but this is faster)
+                        page.evaluate(f"""(d) => {{
+                            const el = document.querySelector(d.s);
+                            if (!el) return;
+                            const bg = getComputedStyle(el).backgroundColor;
+                            // Parse RGB and calculate luminance
+                            const rgb = bg.match(/\\d+/g);
+                            if (rgb && rgb.length >= 3) {{
+                                const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+                                el.style.color = lum > 0.5 ? '#000000' : '#ffffff';
+                                el.dataset.ai4a11yContrastFixed = 'true';
+                            }}
+                        }}""", {'s': selector})
+                        ai_fixed += 1
+                        print(f"        ✓ {selector[:30]}... contrast fixed", flush=True)
                     except Exception as e:
                         print(f"        ✗ {selector[:30]}: {e}", flush=True)
 
