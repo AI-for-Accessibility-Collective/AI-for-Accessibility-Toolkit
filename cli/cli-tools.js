@@ -485,6 +485,25 @@ async function runFullScan() {
   fixPositiveTabindexElements();
   fixDuplicateIds();
 
+  // Check for text processing needs (cognitive profile features)
+  const settings = getActiveProfileSettings();
+  if (settings.autoSimplify) {
+    const complexText = findComplexText();
+    results.textProcessing = results.textProcessing || {};
+    results.textProcessing.simplify = complexText.map(el => ({
+      selector: getSelector(el),
+      textLength: el.textContent?.length || 0
+    }));
+  }
+  if (settings.autoSummarize) {
+    const longContent = findLongContent();
+    results.textProcessing = results.textProcessing || {};
+    results.textProcessing.summarize = longContent.map(el => ({
+      selector: getSelector(el),
+      textLength: el.textContent?.length || 0
+    }));
+  }
+
   return results;
 }
 
@@ -514,6 +533,54 @@ function fixDuplicateIds() {
     }
     seen.add(el.id);
   });
+}
+
+// Text processing for cognitive profiles
+function findComplexText() {
+  return Array.from(document.querySelectorAll('p, li, td, div'))
+    .filter(el => {
+      if (el.dataset.ai4a11yProcessed) return false;
+      if (el.dataset.ai4a11ySimplified) return false;
+      if (el.querySelector('p, div, article, section')) return false;
+      const text = el.textContent?.trim() || '';
+      // Complex = long sentences or many syllables
+      return text.length > 200 && text.split(/[.!?]/).some(s => s.trim().split(/\s+/).length > 15);
+    })
+    .slice(0, 10); // Limit to avoid overwhelming AI
+}
+
+function findLongContent() {
+  return Array.from(document.querySelectorAll('p, article, section, .article-body, .content'))
+    .filter(el => {
+      if (el.dataset.ai4a11ySummarized) return false;
+      if (el.dataset.ai4a11yProcessed) return false;
+      if (el.closest('[data-ai4a11y-summarized]')) return false;
+      const text = el.textContent?.trim() || '';
+      return text.length > 500;
+    })
+    .slice(0, 5); // Limit to avoid overwhelming AI
+}
+
+// Check if a profile setting is enabled
+function isProfileSettingEnabled(setting) {
+  const state = window._ai4a11ySessionState || {};
+  const profileName = state.activeProfile;
+  if (!profileName) return false;
+
+  const profile = getProfile(profileName);
+  if (!profile) return false;
+
+  return !!profile.tools?.[setting];
+}
+
+// Get all active profile settings
+function getActiveProfileSettings() {
+  const state = window._ai4a11ySessionState || {};
+  const profileName = state.activeProfile;
+  if (!profileName) return {};
+
+  const profile = getProfile(profileName);
+  return profile?.tools || {};
 }
 
 // Helper to get CSS selector for element
@@ -563,6 +630,13 @@ if (typeof window !== 'undefined') {
     runFullScan,
     nonAiFixes,
     aiRequiredRules: [...aiRequiredRules],
+
+    // Text processing (cognitive profile)
+    findComplexText,
+    findLongContent,
+    isProfileSettingEnabled,
+    getActiveProfileSettings,
+    setSessionState: (state) => { window._ai4a11ySessionState = state; },
 
     // Axe handlers
     axeHandlers,

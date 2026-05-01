@@ -3536,6 +3536,29 @@ ${chunk}
     fixTargetBlankLinks();
     fixPositiveTabindexElements();
     fixDuplicateIds();
+    const settings2 = getActiveProfileSettings();
+    if (settings2.autoSimplify) {
+      const complexText = findComplexText();
+      results.textProcessing = results.textProcessing || {};
+      results.textProcessing.simplify = complexText.map((el) => {
+        var _a2;
+        return {
+          selector: getSelector(el),
+          textLength: ((_a2 = el.textContent) == null ? void 0 : _a2.length) || 0
+        };
+      });
+    }
+    if (settings2.autoSummarize) {
+      const longContent = findLongContent();
+      results.textProcessing = results.textProcessing || {};
+      results.textProcessing.summarize = longContent.map((el) => {
+        var _a2;
+        return {
+          selector: getSelector(el),
+          textLength: ((_a2 = el.textContent) == null ? void 0 : _a2.length) || 0
+        };
+      });
+    }
     return results;
   }
   function fixTargetBlankLinks() {
@@ -3561,6 +3584,51 @@ ${chunk}
       }
       seen.add(el.id);
     });
+  }
+  function findComplexText() {
+    return Array.from(document.querySelectorAll("p, li, td, div")).filter((el) => {
+      var _a;
+      if (el.dataset.ai4a11yProcessed)
+        return false;
+      if (el.dataset.ai4a11ySimplified)
+        return false;
+      if (el.querySelector("p, div, article, section"))
+        return false;
+      const text = ((_a = el.textContent) == null ? void 0 : _a.trim()) || "";
+      return text.length > 200 && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > 15);
+    }).slice(0, 10);
+  }
+  function findLongContent() {
+    return Array.from(document.querySelectorAll("p, article, section, .article-body, .content")).filter((el) => {
+      var _a;
+      if (el.dataset.ai4a11ySummarized)
+        return false;
+      if (el.dataset.ai4a11yProcessed)
+        return false;
+      if (el.closest("[data-ai4a11y-summarized]"))
+        return false;
+      const text = ((_a = el.textContent) == null ? void 0 : _a.trim()) || "";
+      return text.length > 500;
+    }).slice(0, 5);
+  }
+  function isProfileSettingEnabled(setting) {
+    var _a;
+    const state = window._ai4a11ySessionState || {};
+    const profileName = state.activeProfile;
+    if (!profileName)
+      return false;
+    const profile = getProfile(profileName);
+    if (!profile)
+      return false;
+    return !!((_a = profile.tools) == null ? void 0 : _a[setting]);
+  }
+  function getActiveProfileSettings() {
+    const state = window._ai4a11ySessionState || {};
+    const profileName = state.activeProfile;
+    if (!profileName)
+      return {};
+    const profile = getProfile(profileName);
+    return (profile == null ? void 0 : profile.tools) || {};
   }
   function getSelector(el) {
     if (!el || !el.tagName)
@@ -3604,6 +3672,14 @@ ${chunk}
       runFullScan,
       nonAiFixes,
       aiRequiredRules: [...aiRequiredRules],
+      // Text processing (cognitive profile)
+      findComplexText,
+      findLongContent,
+      isProfileSettingEnabled,
+      getActiveProfileSettings,
+      setSessionState: (state) => {
+        window._ai4a11ySessionState = state;
+      },
       // Axe handlers
       axeHandlers: axeHandlers6,
       getAxeHandler,
