@@ -92,6 +92,159 @@ def _inject_cli_tools(page):
         return False
 
 
+# Track which pages have AI callbacks exposed
+_ai_callbacks_exposed = set()
+
+
+def _expose_ai_callbacks(page):
+    """Expose AI callback functions to the page for AI-powered adapters."""
+    page_id = id(page)
+    if page_id in _ai_callbacks_exposed:
+        return True
+
+    try:
+        # Describe image - takes base64 image data, returns alt text
+        def ai_describe_image(image_data):
+            import tempfile
+            import base64
+            # Save base64 to temp file
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                f.write(base64.b64decode(image_data))
+                temp_path = f.name
+            prompt = """Describe this image for a blind user. Write a concise alt text (1-2 sentences) that captures:
+1. What the image shows (main subject, action, context)
+2. Any important text visible in the image
+3. Relevant details for understanding the content
+
+Return ONLY the alt text, no quotes or explanation."""
+            result = ask_claude(temp_path, prompt)
+            Path(temp_path).unlink(missing_ok=True)
+            # Extract just the text response
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Simplify text - takes text, returns simplified version
+        def ai_simplify_text(text):
+            prompt = f"""Simplify this text for someone with cognitive disabilities or limited reading ability.
+Keep the same meaning but use:
+- Shorter sentences (under 15 words)
+- Common words (avoid jargon)
+- Active voice
+- Clear structure
+
+Text to simplify:
+{text[:2000]}
+
+Return ONLY the simplified text."""
+            result = ask_claude_text(prompt, timeout=60)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Summarize text - takes text, returns summary
+        def ai_summarize_text(text):
+            prompt = f"""Summarize this text in 2-3 sentences for quick understanding.
+Focus on the main point and key takeaways.
+
+Text:
+{text[:3000]}
+
+Return ONLY the summary."""
+            result = ask_claude_text(prompt, timeout=60)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Generate label - takes context about element, returns accessible label
+        def ai_generate_labels(context):
+            ctx_str = json.dumps(context) if isinstance(context, dict) else str(context)
+            prompt = f"""Generate an accessible label for this interactive element.
+The label should be concise (2-5 words) and describe the element's purpose.
+
+Element context:
+{ctx_str}
+
+Return ONLY the label text."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Fix contrast - takes fg/bg colors, returns adjusted colors
+        def ai_fix_contrast(fg, bg):
+            prompt = f"""The foreground color {fg} on background {bg} has insufficient contrast.
+Suggest adjusted colors that:
+1. Meet WCAG AA contrast ratio (4.5:1 for normal text)
+2. Stay visually similar to the original
+3. Maintain readability
+
+Return JSON: {{"foreground": "#hex", "background": "#hex"}}"""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                # Try to parse JSON from response
+                import re
+                match = re.search(r'\{[^}]+\}', result)
+                if match:
+                    return json.loads(match.group())
+                return {"foreground": fg, "background": bg}
+            except:
+                return {"foreground": fg, "background": bg}
+
+        # Describe element - takes screenshot + element info
+        def ai_describe_element(image_data, element_type, context):
+            import tempfile
+            import base64
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                f.write(base64.b64decode(image_data))
+                temp_path = f.name
+            prompt = f"""Describe this {element_type} element for accessibility.
+Context: {json.dumps(context) if isinstance(context, dict) else context}
+
+Provide a brief, useful description (1-2 sentences) that helps a screen reader user understand what this element shows or does."""
+            result = ask_claude(temp_path, prompt)
+            Path(temp_path).unlink(missing_ok=True)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Expose functions to page
+        page.expose_function("ai4a11y_describeImage", ai_describe_image)
+        page.expose_function("ai4a11y_simplifyText", ai_simplify_text)
+        page.expose_function("ai4a11y_summarizeText", ai_summarize_text)
+        page.expose_function("ai4a11y_generateLabels", ai_generate_labels)
+        page.expose_function("ai4a11y_fixContrast", ai_fix_contrast)
+        page.expose_function("ai4a11y_describeElement", ai_describe_element)
+
+        _ai_callbacks_exposed.add(page_id)
+        return True
+    except Exception as e:
+        print(f"Failed to expose AI callbacks: {e}")
+        return False
+
+
+def _inject_with_ai(page):
+    """Inject CLI tools AND set up AI callbacks."""
+    # AI callbacks must be exposed BEFORE navigating or injecting scripts
+    # that might call them, so we do it first
+    _expose_ai_callbacks(page)
+    return _inject_cli_tools(page)
+
+
 # ============================================================
 # VISUAL HELPERS — grid, diff, sequence capture
 # ============================================================
@@ -4531,6 +4684,298 @@ def session_find_all(json_output=False):
 
 
 # ============================================================
+# AI Fix functions — use Claude to fix accessibility issues
+# ============================================================
+
+def session_fix_alt(max_images=10, json_output=False):
+    """Use Claude to generate alt text for images missing it.
+
+    Takes a screenshot of each image, sends to Claude for description,
+    then applies the alt text to the page.
+
+    Example:
+      session fix-alt           # Fix up to 10 images
+      session fix-alt 5         # Fix up to 5 images
+    """
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+
+        # Find images needing alt text
+        result = page.evaluate("() => window.ai4a11y.auditors.findMissingAlt()")
+        all_images = result.get('noAlt', []) + result.get('emptyAlt', [])
+
+        if not all_images:
+            print("No images found missing alt text.", flush=True)
+            return
+
+        fixes = []
+        count = min(len(all_images), max_images)
+        print(f"\nGenerating alt text for {count} images...", flush=True)
+
+        for i, img_info in enumerate(all_images[:count]):
+            selector = img_info.get('selector', '')
+            src = img_info.get('src', '')[:40]
+            print(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
+
+            try:
+                # Screenshot the specific image element
+                el = page.query_selector(selector)
+                if not el:
+                    # Try finding by src
+                    el = page.query_selector(f'img[src*="{src[:20]}"]')
+                if not el:
+                    print("not found", flush=True)
+                    continue
+
+                # Take screenshot of just this element
+                img_path = OUT / f"img_{i}.png"
+                el.screenshot(path=str(img_path))
+
+                # Call Claude to describe the image
+                prompt = """Describe this image for a blind user. Write a concise alt text (1-2 sentences) that captures:
+1. What the image shows (main subject, action, context)
+2. Any important text visible
+3. Relevant details for understanding
+
+Return ONLY the alt text, no quotes or preamble."""
+
+                raw = ask_claude(str(img_path), prompt)
+
+                # Parse response
+                try:
+                    data = json.loads(raw)
+                    alt_text = data.get('answer', raw)
+                except:
+                    alt_text = raw.strip()
+
+                # Clean up alt text
+                alt_text = alt_text.strip('"\'').strip()
+                if len(alt_text) > 300:
+                    alt_text = alt_text[:297] + "..."
+
+                # Apply the alt text to the page
+                page.evaluate(f"""(data) => {{
+                    const el = document.querySelector(data.selector);
+                    if (el) el.alt = data.alt;
+                }}""", {'selector': selector, 'alt': alt_text})
+
+                fixes.append({'selector': selector, 'alt': alt_text})
+                print(f"✓ \"{alt_text[:50]}...\"" if len(alt_text) > 50 else f"✓ \"{alt_text}\"", flush=True)
+
+                # Clean up screenshot
+                img_path.unlink(missing_ok=True)
+
+            except Exception as e:
+                print(f"error: {e}", flush=True)
+
+        if json_output:
+            print(json.dumps(fixes, indent=2))
+        else:
+            print(f"\n✓ Fixed {len(fixes)} images", flush=True)
+
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_simplify(selector=None, json_output=False):
+    """Use Claude to simplify text content for cognitive accessibility.
+
+    Example:
+      session simplify                    # Simplify main article content
+      session simplify "article"          # Simplify specific element
+      session simplify ".content"         # Simplify by CSS selector
+    """
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+
+        # Find target element
+        if selector:
+            target_selector = selector
+        else:
+            # Try common content selectors
+            for sel in ['article', 'main', '.content', '.post-content', '#content', 'body']:
+                if page.query_selector(sel):
+                    target_selector = sel
+                    break
+            else:
+                target_selector = 'body'
+
+        # Get original text
+        original = page.evaluate(f"""() => {{
+            const el = document.querySelector('{target_selector}');
+            return el ? el.innerText : null;
+        }}""")
+
+        if not original:
+            print(f"Element not found: {target_selector}", flush=True)
+            return
+
+        print(f"Simplifying text in {target_selector}...", flush=True)
+        print(f"Original length: {len(original)} chars", flush=True)
+
+        # Call Claude to simplify
+        prompt = f"""Simplify this text for someone with cognitive disabilities or limited reading ability.
+Use:
+- Shorter sentences (under 15 words each)
+- Common, everyday words
+- Active voice
+- Clear paragraph breaks
+- Bullet points for lists
+
+Keep the same meaning and all important information.
+
+Text to simplify:
+{original[:4000]}
+
+Return ONLY the simplified text, maintaining paragraph structure."""
+
+        raw = ask_claude_text(prompt, timeout=120)
+
+        try:
+            data = json.loads(raw)
+            simplified = data.get('answer', raw)
+        except:
+            simplified = raw.strip()
+
+        if json_output:
+            print(json.dumps({'original': original[:500], 'simplified': simplified}, indent=2))
+        else:
+            print(f"\nSimplified ({len(simplified)} chars):", flush=True)
+            print("─" * 50, flush=True)
+            print(simplified[:1000])
+            if len(simplified) > 1000:
+                print(f"... [{len(simplified) - 1000} more chars]")
+            print("─" * 50, flush=True)
+
+        # Optionally apply to page (create overlay or replace)
+        # For now just return - user can copy/paste or we add --apply flag later
+
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_fix_labels(max_elements=10, json_output=False):
+    """Use Claude to generate labels for unlabeled interactive elements.
+
+    Example:
+      session fix-labels          # Fix up to 10 elements
+      session fix-labels 5        # Fix up to 5 elements
+    """
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+
+        result = page.evaluate("() => window.ai4a11y.auditors.findMissingLabels()")
+        all_elements = (result.get('links', []) + result.get('buttons', []) +
+                       result.get('inputs', []))
+
+        if not all_elements:
+            print("No unlabeled elements found.", flush=True)
+            return
+
+        fixes = []
+        count = min(len(all_elements), max_elements)
+        print(f"\nGenerating labels for {count} elements...", flush=True)
+
+        for i, el_info in enumerate(all_elements[:count]):
+            selector = el_info.get('selector', '')
+            print(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
+
+            try:
+                el = page.query_selector(selector)
+                if not el:
+                    print("not found", flush=True)
+                    continue
+
+                # Get context about the element
+                context = page.evaluate(f"""() => {{
+                    const el = document.querySelector('{selector}');
+                    if (!el) return null;
+                    return {{
+                        tag: el.tagName,
+                        type: el.type || el.role,
+                        href: el.href,
+                        innerHTML: el.innerHTML.slice(0, 200),
+                        parent: el.parentElement?.innerText?.slice(0, 100),
+                        nearby: el.parentElement?.parentElement?.innerText?.slice(0, 200)
+                    }};
+                }}""")
+
+                if not context:
+                    print("no context", flush=True)
+                    continue
+
+                # Call Claude to generate label
+                prompt = f"""Generate an accessible label for this interactive element.
+The label should be concise (2-5 words) and describe what happens when activated.
+
+Element: {context['tag']}
+Type: {context.get('type', 'unknown')}
+Link target: {context.get('href', 'N/A')}
+Content: {context.get('innerHTML', '')[:100]}
+Surrounding text: {context.get('nearby', '')[:150]}
+
+Return ONLY the label text, nothing else."""
+
+                raw = ask_claude_text(prompt, timeout=30)
+                try:
+                    data = json.loads(raw)
+                    label = data.get('answer', raw)
+                except:
+                    label = raw.strip()
+
+                label = label.strip('"\'').strip()[:50]
+
+                # Apply the label
+                page.evaluate(f"""(data) => {{
+                    const el = document.querySelector(data.selector);
+                    if (el) {{
+                        el.setAttribute('aria-label', data.label);
+                        if (el.tagName === 'A' && !el.textContent.trim()) {{
+                            el.title = data.label;
+                        }}
+                    }}
+                }}""", {'selector': selector, 'label': label})
+
+                fixes.append({'selector': selector, 'label': label})
+                print(f"✓ \"{label}\"", flush=True)
+
+            except Exception as e:
+                print(f"error: {e}", flush=True)
+
+        if json_output:
+            print(json.dumps(fixes, indent=2))
+        else:
+            print(f"\n✓ Fixed {len(fixes)} elements", flush=True)
+
+    finally:
+        session_disconnect(p, browser)
+
+
+def session_fix_all(json_output=False):
+    """Run all AI fixes: alt text, labels.
+
+    Example:
+      session fix-all
+    """
+    print("\n=== Fixing Alt Text ===", flush=True)
+    session_fix_alt(max_images=10, json_output=json_output)
+
+    print("\n=== Fixing Labels ===", flush=True)
+    session_fix_labels(max_elements=10, json_output=json_output)
+
+    print("\n=== Done ===", flush=True)
+
+
+# ============================================================
 # CLI — action handlers + dispatcher
 # ============================================================
 
@@ -4914,6 +5359,18 @@ if __name__ == "__main__":
             session_find_missing_captions(json_output=json_output)
         elif sub in ("find-all", "find-issues", "issues"):
             session_find_all(json_output=json_output)
+        # AI fix commands
+        elif sub in ("fix-alt", "fix-images"):
+            max_n = int(sub_args[0]) if sub_args and sub_args[0].isdigit() else 10
+            session_fix_alt(max_images=max_n, json_output=json_output)
+        elif sub in ("fix-labels",):
+            max_n = int(sub_args[0]) if sub_args and sub_args[0].isdigit() else 10
+            session_fix_labels(max_elements=max_n, json_output=json_output)
+        elif sub in ("simplify",):
+            selector = sub_args[0] if sub_args else None
+            session_simplify(selector=selector, json_output=json_output)
+        elif sub in ("fix-all", "fix"):
+            session_fix_all(json_output=json_output)
         else:
             print(f"Unknown session subcommand: {sub}")
             print("Available: start | stop | status | tabs | go <url> | back | scroll | describe | ask | tap | type")
@@ -4921,6 +5378,7 @@ if __name__ == "__main__":
             print("           hover | drag | nudge | diff | audit | report | media | screenshot | dismiss | do")
             print("           enable <tool> | disable <tool> | tools | profile <name> | profiles")
             print("           find-alt | find-labels | find-contrast | find-captions | find-all")
+            print("           fix-alt | fix-labels | simplify | fix-all")
             sys.exit(1)
         sys.exit(0)
 
