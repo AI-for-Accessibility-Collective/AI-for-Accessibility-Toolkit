@@ -13,12 +13,14 @@ Type natural language commands → agent controls your Chrome browser.
 
 ## Prerequisites
 
-1. **Chrome** running with remote debugging:
+1. **Chrome** running with remote debugging. Any `--user-data-dir` works — the backend auto-discovers Chrome via its HTTP endpoint, not a profile file:
    ```bash
-   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+     --remote-debugging-port=9222 \
+     --user-data-dir=/tmp/chrome-debug
    ```
 
-2. **browser-harness** daemon reachable at `../../browser-harness` (or set `BROWSER_HARNESS_DIR`)
+2. **browser-harness** is bundled at `../../browser-harness` (only clone it yourself if the directory is missing). Override the path with `BROWSER_HARNESS_DIR` if needed.
 
 3. **Google credentials** — either Vertex AI or a Gemini API key
 
@@ -29,11 +31,13 @@ cd backend
 cp .env.example .env
 # Edit .env with your project/API key
 
-uv venv && uv pip install -e .
+uv venv && uv pip install -e . && uv pip install -e ../../browser-harness
 uv run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 Then open **http://localhost:8080** in your browser.
+
+On startup the backend auto-discovers Chrome's CDP WebSocket on port 9222 (look for `Discovered Chrome CDP at ws://...` in the log) and passes it to the harness daemon, so you don't need to set `BU_CDP_WS` manually.
 
 ## Environment Variables
 
@@ -45,6 +49,8 @@ Then open **http://localhost:8080** in your browser.
 | `GEMINI_API_KEY` | Gemini API key | required if not Vertex |
 | `AGENT_MODEL` | Model to use | `gemini-2.5-flash` |
 | `BROWSER_HARNESS_DIR` | Path to browser-harness checkout | `../../browser-harness` |
+| `BU_CDP_PORT` | Chrome remote debugging port (used for auto-discovery) | `9222` |
+| `BU_CDP_WS` | Explicit Chrome CDP WebSocket URL — set this to skip auto-discovery | unset |
 
 ## WebSocket Events
 

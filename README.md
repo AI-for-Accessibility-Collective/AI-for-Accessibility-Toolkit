@@ -79,10 +79,11 @@ Two browser automation agents — voice or text input. Both use Gemini + browser
      --user-data-dir=/tmp/chrome-debug
    ```
 
-2. **Clone browser-harness:**
+   The backend auto-discovers Chrome on `localhost:9222` at startup (override the port with `BU_CDP_PORT`, or set `BU_CDP_WS` directly to bypass discovery).
+
+2. **browser-harness** is bundled at `webapp/browser-harness/` and installed via `uv pip install -e ../../browser-harness` below. Only clone it yourself if the directory is missing:
    ```bash
-   cd webapp
-   git clone https://github.com/browser-use/browser-harness.git
+   cd webapp && git clone https://github.com/browser-use/browser-harness.git
    ```
 
 ### Text Control (recommended)
