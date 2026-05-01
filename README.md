@@ -2,13 +2,13 @@
 
 # AI for Accessibility Toolkit
 
-**AI-powered accessibility toolkit — Chrome extension for end users, CLI for developers.**
+**AI-powered accessibility toolkit — multiple interfaces for different use cases.**
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 [![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit-Draft)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-[Extension](#chrome-extension) · [CLI](#cli) · [Profiles](#profiles) · [Contributing](#contributing)
+[Interfaces](#interfaces) · [Profiles](#profiles) · [Contributing](#contributing)
 
 </div>
 
@@ -16,14 +16,14 @@
 
 Existing tools like [axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) give you a list of violations. This toolkit *adapts* the page — AI analyzes what the page is, understands what the user needs, and fixes it in real-time. Not a report. A working page.
 
-## Two Interfaces
+## Interfaces
 
-| Interface | For | AI Backend |
-|-----------|-----|------------|
-| **Chrome Extension** | End users — real-time page adaptation | Gemini |
-| **CLI** | Developers / coding agents — audits, automation, CI/CD | Claude |
-
-Both share the same `tools/` codebase — auditors find issues, adapters fix them.
+| Interface | For | AI Backend | Location |
+|-----------|-----|------------|----------|
+| **[Chrome Extension](#chrome-extension)** | End users — real-time page adaptation | Gemini | `extension/` |
+| **[Personalized Extension](#personalized-extension)** | AI-powered onboarding + custom skill builder | Gemini | `personalized-extension/` |
+| **[Voice Control Web App](#voice-control-web-app)** | Hands-free browser control via voice | Gemini Live | `webapp/voicecontrol/` |
+| **[CLI](#cli)** | Developers / coding agents — audits, automation | Claude | `cli/` |
 
 ## Chrome Extension
 
@@ -48,6 +48,63 @@ Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → s
 **Note:** The free tier has limited quotas (15 req/min, 1500/day). For regular use, enable billing in [Google Cloud Console](https://console.cloud.google.com/).
 
 **Cost:** Gemini 2.5 Flash is ~$0.15 per 1M input tokens. Describing 100 images costs roughly $0.01-0.05.
+
+## Personalized Extension
+
+AI-powered onboarding that recommends skills based on your needs, plus a custom skill builder for gaps not covered by built-in skills.
+
+### Install
+
+```bash
+cd personalized-extension
+npm install && npm run build
+```
+
+Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select `personalized-extension/extension/` folder
+
+On first install, an onboarding flow walks through your support areas, site types, and needs — then Gemini recommends which skills to enable.
+
+See [`personalized-extension/README.md`](personalized-extension/README.md) for full documentation.
+
+## Voice Control Web App
+
+Voice-controlled browser agent powered by Gemini Live API. Talk to your browser — it listens, sees the viewport, and navigates autonomously.
+
+### Prerequisites
+
+1. Chrome with remote debugging:
+   ```bash
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+     --remote-debugging-port=9222 \
+     --user-data-dir=/tmp/chrome-debug
+   ```
+
+2. browser-harness daemon:
+   ```bash
+   npm install -g browser-harness
+   browser-harness
+   ```
+
+### Run
+
+```bash
+cd webapp/voicecontrol
+
+# Backend
+cd backend
+cp .env.example .env
+# Add GOOGLE_API_KEY to .env
+# Use model: gemini-2.5-flash-native-audio-preview-12-2025
+uv run python main.py
+
+# Frontend (new terminal)
+cd frontend
+npm install && npm run dev
+```
+
+Open `http://localhost:5173`, click **Start Session**, allow mic access, and start talking.
+
+See [`webapp/voicecontrol/README.md`](webapp/voicecontrol/README.md) for full documentation.
 
 ## CLI
 
@@ -137,23 +194,33 @@ Select a profile to automatically enable the right tools:
 
 ```
 AI-for-Accessibility-Toolkit/
-├── tools/                    # Shared JS code (browser-native)
-│   ├── auditors/            # Find issues (missing-alt, poor-contrast, etc.)
-│   ├── adapters/            # Fix issues (generate-alt, fix-contrast, etc.)
-│   ├── profiles/            # User presets (settings.js, settings.json)
-│   └── utils/               # Shared utilities (ai.js, dom.js, color.js)
+├── tools/                       # Shared JS code (browser-native)
+│   ├── auditors/               # Find issues (missing-alt, poor-contrast, etc.)
+│   ├── adapters/               # Fix issues (generate-alt, fix-contrast, etc.)
+│   ├── profiles/               # User presets (settings.js, settings.json)
+│   └── utils/                  # Shared utilities (ai.js, dom.js, color.js)
 │
-├── extension/               # Chrome extension
-│   ├── src/content.js      # Imports tools/, sets Gemini provider
-│   ├── background.js       # Service worker (Gemini API)
-│   ├── popup.*             # Extension UI
+├── extension/                   # Chrome extension (basic)
+│   ├── src/content.js          # Imports tools/, sets Gemini provider
+│   ├── background.js           # Service worker (Gemini API)
+│   ├── popup.*                 # Extension UI
 │   └── manifest.json
 │
-├── cli/                     # Python CLI
-│   ├── ai4a11y.py          # Playwright + Claude vision agent
-│   └── cli.py              # Command wrapper
+├── personalized-extension/      # Chrome extension (AI onboarding + skill builder)
+│   ├── extension/              # Extension source
+│   ├── skills/                 # Built-in skill modules
+│   └── utils/                  # AI recommender, DOM utils
 │
-└── pyproject.toml          # pip install ai4a11y
+├── webapp/
+│   └── voicecontrol/           # Voice-controlled browser agent
+│       ├── backend/            # FastAPI + Gemini Live API
+│       └── frontend/           # React UI (transcript, viewport, actions)
+│
+├── cli/                         # Python CLI
+│   ├── ai4a11y.py              # Playwright + Claude vision agent
+│   └── cli.py                  # Command wrapper
+│
+└── pyproject.toml               # pip install ai4a11y
 ```
 
 ### AI Provider Abstraction
