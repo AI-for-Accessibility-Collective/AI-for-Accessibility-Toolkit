@@ -4975,6 +4975,152 @@ def session_fix_all(json_output=False):
     print("\n=== Done ===", flush=True)
 
 
+def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
+    """Run full accessibility scan and fix issues (like extension does).
+
+    This runs:
+    1. axe-core WCAG analysis
+    2. Non-AI fixes (duplicate IDs, tabindex, ARIA, lang, etc.)
+    3. Additional scans (target="_blank", positive tabindex)
+    4. AI fixes (alt text, labels) if enabled
+
+    Example:
+      session scan              # Full scan with AI fixes
+      session scan --no-ai      # Only non-AI fixes
+    """
+    p, browser, page = session_connect()
+    try:
+        if not _inject_cli_tools(page):
+            print("Error: Could not inject tools.", flush=True)
+            return
+
+        # Inject axe-core (required for runFullScan)
+        axe_script = _get_axe_script()
+        if not axe_script:
+            print("Error: Could not load axe-core.", flush=True)
+            return
+        page.add_script_tag(content=axe_script)
+        page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
+
+        print("\n" + "═" * 50, flush=True)
+        print("ACCESSIBILITY SCAN", flush=True)
+        print("═" * 50, flush=True)
+
+        # Step 1: Run full non-AI scan via JavaScript
+        print("\n[1/4] Running axe-core analysis...", flush=True)
+        result = page.evaluate("() => window.ai4a11y.runFullScan()")
+
+        violations = result.get('violations', [])
+        fixed_non_ai = result.get('fixed', {}).get('nonAi', 0)
+        needs_ai = result.get('skipped', {}).get('needsAi', [])
+
+        print(f"      Found {len(violations)} violation types", flush=True)
+        for v in violations[:10]:
+            print(f"        • {v['id']}: {v['count']} elements", flush=True)
+        if len(violations) > 10:
+            print(f"        ... and {len(violations) - 10} more", flush=True)
+
+        # Step 2: Report non-AI fixes
+        print(f"\n[2/4] Applied {fixed_non_ai} non-AI fixes", flush=True)
+        print("      (duplicate IDs, tabindex, ARIA, lang, target=_blank, etc.)", flush=True)
+
+        # Step 3: AI fixes
+        ai_fixed = 0
+        if fix_ai and needs_ai:
+            print(f"\n[3/4] Processing {len(needs_ai)} AI-required fixes...", flush=True)
+
+            # Group by rule type
+            image_fixes = [n for n in needs_ai if 'image' in n['ruleId'] or 'img' in n['ruleId'] or n['ruleId'] == 'image-alt']
+            label_fixes = [n for n in needs_ai if 'name' in n['ruleId'] or 'label' in n['ruleId']]
+            contrast_fixes = [n for n in needs_ai if 'contrast' in n['ruleId']]
+
+            # Fix images
+            if image_fixes:
+                count = min(len(image_fixes), max_ai_fixes)
+                print(f"      Fixing {count} images...", flush=True)
+                for i, fix in enumerate(image_fixes[:count]):
+                    selector = fix['selector']
+                    try:
+                        el = page.query_selector(selector)
+                        if not el:
+                            continue
+                        img_path = OUT / f"scan_img_{i}.png"
+                        el.screenshot(path=str(img_path))
+                        prompt = "Describe this image for a blind user. Write concise alt text (1-2 sentences). Return ONLY the alt text."
+                        raw = ask_claude(str(img_path), prompt)
+                        try:
+                            data = json.loads(raw)
+                            alt = data.get('answer', raw)
+                        except:
+                            alt = raw.strip()
+                        alt = alt.strip('"\'').strip()[:200]
+                        page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.alt = d.a; }}", {'s': selector, 'a': alt})
+                        ai_fixed += 1
+                        print(f"        ✓ {selector[:30]}... → \"{alt[:40]}...\"", flush=True)
+                        img_path.unlink(missing_ok=True)
+                    except Exception as e:
+                        print(f"        ✗ {selector[:30]}: {e}", flush=True)
+
+            # Fix labels
+            if label_fixes and ai_fixed < max_ai_fixes:
+                remaining = max_ai_fixes - ai_fixed
+                count = min(len(label_fixes), remaining)
+                print(f"      Fixing {count} labels...", flush=True)
+                for fix in label_fixes[:count]:
+                    selector = fix['selector']
+                    try:
+                        context = page.evaluate(f"""() => {{
+                            const el = document.querySelector('{selector}');
+                            if (!el) return null;
+                            return {{
+                                tag: el.tagName,
+                                href: el.href,
+                                text: el.innerText?.slice(0,100),
+                                parent: el.parentElement?.innerText?.slice(0,100)
+                            }};
+                        }}""")
+                        if not context:
+                            continue
+                        prompt = f"Generate a 2-5 word accessible label for: {json.dumps(context)}. Return ONLY the label."
+                        raw = ask_claude_text(prompt, timeout=30)
+                        try:
+                            label = json.loads(raw).get('answer', raw)
+                        except:
+                            label = raw.strip()
+                        label = label.strip('"\'').strip()[:50]
+                        page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.setAttribute('aria-label', d.l); }}", {'s': selector, 'l': label})
+                        ai_fixed += 1
+                        print(f"        ✓ {selector[:30]}... → \"{label}\"", flush=True)
+                    except Exception as e:
+                        print(f"        ✗ {selector[:30]}: {e}", flush=True)
+
+            print(f"      Applied {ai_fixed} AI fixes", flush=True)
+        elif not fix_ai:
+            print(f"\n[3/4] Skipping AI fixes (--no-ai)", flush=True)
+        else:
+            print(f"\n[3/4] No AI fixes needed", flush=True)
+
+        # Step 4: Summary
+        print(f"\n[4/4] Summary", flush=True)
+        print("─" * 50, flush=True)
+        total_fixed = fixed_non_ai + ai_fixed
+        print(f"      Violations found:  {sum(v['count'] for v in violations)}", flush=True)
+        print(f"      Non-AI fixes:      {fixed_non_ai}", flush=True)
+        print(f"      AI fixes:          {ai_fixed}", flush=True)
+        print(f"      Total fixed:       {total_fixed}", flush=True)
+        print("═" * 50 + "\n", flush=True)
+
+        if json_output:
+            print(json.dumps({
+                'violations': violations,
+                'fixed': {'nonAi': fixed_non_ai, 'ai': ai_fixed, 'total': total_fixed},
+                'remaining': len(needs_ai) - ai_fixed if needs_ai else 0
+            }, indent=2))
+
+    finally:
+        session_disconnect(p, browser)
+
+
 # ============================================================
 # CLI — action handlers + dispatcher
 # ============================================================
@@ -5371,6 +5517,13 @@ if __name__ == "__main__":
             session_simplify(selector=selector, json_output=json_output)
         elif sub in ("fix-all", "fix"):
             session_fix_all(json_output=json_output)
+        elif sub in ("scan",):
+            fix_ai = "--no-ai" not in sub_args
+            max_n = 10
+            for arg in sub_args:
+                if arg.isdigit():
+                    max_n = int(arg)
+            session_scan(fix_ai=fix_ai, max_ai_fixes=max_n, json_output=json_output)
         else:
             print(f"Unknown session subcommand: {sub}")
             print("Available: start | stop | status | tabs | go <url> | back | scroll | describe | ask | tap | type")
@@ -5378,7 +5531,7 @@ if __name__ == "__main__":
             print("           hover | drag | nudge | diff | audit | report | media | screenshot | dismiss | do")
             print("           enable <tool> | disable <tool> | tools | profile <name> | profiles")
             print("           find-alt | find-labels | find-contrast | find-captions | find-all")
-            print("           fix-alt | fix-labels | simplify | fix-all")
+            print("           fix-alt | fix-labels | simplify | fix-all | scan")
             sys.exit(1)
         sys.exit(0)
 

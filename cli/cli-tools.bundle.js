@@ -2604,6 +2604,19 @@ ${chunk}
     logFix6("tabindex", element, oldVal, "0");
     console.log("[AI4A11y] Fixed positive tabindex");
   }
+  function fixTargetBlank(element) {
+    const rel = element.getAttribute("rel") || "";
+    const parts = rel.split(/\s+/).filter(Boolean);
+    if (!parts.includes("noopener"))
+      parts.push("noopener");
+    if (!parts.includes("noreferrer"))
+      parts.push("noreferrer");
+    element.setAttribute("rel", parts.join(" "));
+    markProcessed(element, "done");
+    incrementStat6("wcag");
+    logFix6("target-blank", element, rel || "(empty)", parts.join(" "));
+    console.log('[AI4A11y] Added rel="noopener noreferrer"');
+  }
   function fixInvalidAriaAttr(element) {
     for (const attr of Array.from(element.attributes)) {
       if (attr.name.startsWith("aria-") && !VALID_ARIA_ATTRS.has(attr.name)) {
@@ -3447,6 +3460,108 @@ ${chunk}
       return { success: true };
     }
   };
+  var nonAiFixes = {
+    "html-has-lang": fixMissingLang,
+    "html-lang-valid": fixInvalidLang,
+    "valid-lang": fixInvalidLang,
+    "duplicate-id": fixDuplicateId,
+    "duplicate-id-aria": fixDuplicateId,
+    "duplicate-id-active": fixDuplicateId,
+    "heading-order": fixHeadingOrder,
+    "tabindex": fixPositiveTabindex,
+    "aria-valid-attr": fixInvalidAriaAttr,
+    "aria-roles": fixInvalidAriaRole,
+    "aria-allowed-role": fixInvalidAriaRole,
+    "aria-deprecated-role": fixDeprecatedRole,
+    "aria-required-attr": fixMissingAriaAttrs,
+    "nested-interactive": fixNestedInteractive,
+    "target-size": fixTargetSize,
+    "meta-viewport": fixViewportMeta,
+    "meta-viewport-large": fixViewportMeta,
+    "meta-refresh": removeMetaRefresh,
+    "blink": replaceObsoleteElement,
+    "marquee": replaceObsoleteElement
+  };
+  var aiRequiredRules = /* @__PURE__ */ new Set([
+    "image-alt",
+    "input-image-alt",
+    "role-img-alt",
+    "svg-img-alt",
+    "object-alt",
+    "area-alt",
+    "link-name",
+    "button-name",
+    "input-button-name",
+    "color-contrast",
+    "color-contrast-enhanced"
+  ]);
+  async function runFullScan() {
+    var _a;
+    const results = {
+      violations: [],
+      fixed: { nonAi: 0, ai: 0 },
+      skipped: { needsAi: [], noHandler: [] }
+    };
+    const violations = await runAxeAnalysis();
+    results.violations = violations.map((v) => {
+      var _a2;
+      return { id: v.id, count: ((_a2 = v.nodes) == null ? void 0 : _a2.length) || 0 };
+    });
+    for (const violation of violations) {
+      const ruleId = violation.id;
+      const nodes = violation.nodes || [];
+      for (const node of nodes) {
+        const selector = (_a = node.target) == null ? void 0 : _a[0];
+        if (!selector)
+          continue;
+        const el = document.querySelector(selector);
+        if (!el || el.dataset.ai4a11yProcessed)
+          continue;
+        if (nonAiFixes[ruleId]) {
+          try {
+            nonAiFixes[ruleId](el);
+            results.fixed.nonAi++;
+          } catch (e) {
+            console.warn(`[AI4A11y] Failed to fix ${ruleId}:`, e);
+          }
+          continue;
+        }
+        if (aiRequiredRules.has(ruleId)) {
+          results.skipped.needsAi.push({ ruleId, selector });
+          continue;
+        }
+        results.skipped.noHandler.push(ruleId);
+      }
+    }
+    fixTargetBlankLinks();
+    fixPositiveTabindexElements();
+    fixDuplicateIds();
+    return results;
+  }
+  function fixTargetBlankLinks() {
+    document.querySelectorAll('a[target="_blank"]:not([rel*="noopener"])').forEach((link) => {
+      if (!link.dataset.ai4a11yProcessed) {
+        fixTargetBlank(link);
+      }
+    });
+  }
+  function fixPositiveTabindexElements() {
+    document.querySelectorAll("[tabindex]").forEach((el) => {
+      const val = parseInt(el.getAttribute("tabindex"));
+      if (val > 0 && !el.dataset.ai4a11yProcessed) {
+        fixPositiveTabindex(el);
+      }
+    });
+  }
+  function fixDuplicateIds() {
+    const seen = /* @__PURE__ */ new Set();
+    document.querySelectorAll("[id]").forEach((el) => {
+      if (seen.has(el.id) && !el.dataset.ai4a11yProcessed) {
+        fixDuplicateId(el);
+      }
+      seen.add(el.id);
+    });
+  }
   function getSelector(el) {
     if (!el || !el.tagName)
       return "unknown";
@@ -3485,6 +3600,10 @@ ${chunk}
       simplifyText: aiFixes.simplifyText,
       summarize: aiFixes.summarize,
       fixAxeViolation: aiFixes.fixAxeViolation,
+      // Full scan (like extension)
+      runFullScan,
+      nonAiFixes,
+      aiRequiredRules: [...aiRequiredRules],
       // Axe handlers
       axeHandlers: axeHandlers6,
       getAxeHandler,
