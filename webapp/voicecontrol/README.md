@@ -38,19 +38,13 @@ Launch Chrome with the remote debugging port open:
 
 > **Tip:** You can also create a shell alias or a launcher script to do this automatically.
 
-### 2. browser-harness daemon
+### 2. browser-harness
 
-Install and start the `browser-harness` tool (must be running before starting the backend):
+`browser-harness` is bundled at `../browser-harness/` in this repo and installed below via `uv pip install -e ../../browser-harness`. Only clone it yourself if `webapp/browser-harness/` is missing:
 
 ```bash
-# Install globally
-npm install -g browser-harness
-
-# Start the daemon (connects to Chrome on port 9222)
-browser-harness
+cd webapp && git clone https://github.com/browser-use/browser-harness.git
 ```
-
-The daemon must be running at `http://localhost:7777` (default).
 
 ### 3. UV (Python package manager)
 
@@ -113,7 +107,7 @@ The frontend starts on **`http://localhost:5173`**.
 ### Step 4 — Start a session
 
 1. Make sure Chrome is running with `--remote-debugging-port=9222`
-2. Make sure `browser-harness` daemon is running
+2. The backend auto-spawns the `browser-harness` daemon on startup — no separate launch needed
 3. Open `http://localhost:5173`
 4. Click **Start Session** and allow microphone access
 5. Start talking — the agent will respond and control the browser
@@ -188,7 +182,7 @@ browsermind/
 | Problem | Fix |
 |---|---|
 | `Connection refused` on Start Session | Make sure `uv run python main.py` is running on port 8080 |
-| `browser-harness: not connected` | Ensure Chrome launched with `--remote-debugging-port=9222` and `browser-harness` daemon is running |
+| `browser-harness: not connected` or `[Errno 2] No such file or directory` on tool calls | Ensure Chrome was launched with `--remote-debugging-port=9222`. The backend auto-discovers Chrome via `http://localhost:9222/json/version` on startup — override the port with `BU_CDP_PORT`, or set `BU_CDP_WS` directly to skip discovery |
 | No audio input | Grant microphone permission in the browser; check browser console for `AudioContext` errors |
 | `GOOGLE_API_KEY` not found | Confirm `backend/.env` exists and has the correct key (not the example placeholder) |
 | Blank viewport | Chrome must be open with a visible page; the agent needs an active tab to screenshot |
