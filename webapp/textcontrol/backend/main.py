@@ -19,11 +19,19 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().with_name(".env"))
 
+# Add browser-harness to sys.path
+_harness_dir = os.environ.get(
+    "BROWSER_HARNESS_DIR",
+    str(Path(__file__).resolve().parents[2] / "browser-harness"),
+)
+if _harness_dir not in sys.path:
+    sys.path.insert(0, _harness_dir)
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from browser_harness.admin import ensure_daemon  # browser-harness daemon
+from admin import ensure_daemon  # browser-harness daemon
 
 logging.basicConfig(
     level=logging.INFO,
@@ -126,9 +134,28 @@ async def health():
 
 # ── Startup ────────────────────────────────────────────────────────────────────
 
+def _autodiscover_cdp_ws():
+    """If Chrome is running with --remote-debugging-port, query it for the live
+    webSocketDebuggerUrl and set BU_CDP_WS. Lets the harness skip its hardcoded
+    profile-dir discovery, which doesn't know about custom --user-data-dir paths."""
+    if os.environ.get("BU_CDP_WS"):
+        return
+    import json
+    import urllib.request
+    port = os.environ.get("BU_CDP_PORT", "9222")
+    try:
+        with urllib.request.urlopen(f"http://localhost:{port}/json/version", timeout=2) as r:
+            ws_url = json.loads(r.read())["webSocketDebuggerUrl"]
+        os.environ["BU_CDP_WS"] = ws_url
+        logger.info(f"Discovered Chrome CDP at {ws_url}")
+    except Exception as e:
+        logger.warning(f"Chrome CDP not reachable on port {port} ({e}); ensure Chrome is running with --remote-debugging-port={port}")
+
+
 @app.on_event("startup")
 async def startup():
     logger.info("BrowserMind Text starting up...")
+    _autodiscover_cdp_ws()
     try:
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, ensure_daemon)

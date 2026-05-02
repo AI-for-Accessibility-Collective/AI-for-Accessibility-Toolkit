@@ -21,9 +21,11 @@ HARNESS_DIR = Path(
         str(Path(__file__).resolve().parents[2] / "browser-harness"),
     )
 )
+if str(HARNESS_DIR) not in sys.path:
+    sys.path.insert(0, str(HARNESS_DIR))
 
-from browser_harness.admin import ensure_daemon
-from browser_harness.helpers import (
+from admin import ensure_daemon  # noqa: E402
+from helpers import (  # noqa: E402
     capture_screenshot,
     click_at_xy,
     goto_url,
