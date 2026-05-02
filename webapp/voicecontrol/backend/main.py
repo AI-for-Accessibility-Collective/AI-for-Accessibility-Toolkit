@@ -381,73 +381,90 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
     # ---------- Downstream: agent → client ----------
     async def downstream_task():
-        async for event in runner.run_live(
-            session=session,
-            live_request_queue=live_request_queue,
-            run_config=run_config,
-        ):
-            if event is None:
-                continue
-            if ws_closed.is_set():
-                break
+        try:
+            async for event in runner.run_live(
+                session=session,
+                live_request_queue=live_request_queue,
+                run_config=run_config,
+            ):
+                if event is None:
+                    continue
+                if ws_closed.is_set():
+                    break
 
-            # Transcription logging
-            input_tx = getattr(event, "input_transcription", None)
-            if input_tx and input_tx.finished and input_tx.text:
-                logger.info(f"USER: {input_tx.text}")
+                # Transcription logging
+                input_tx = getattr(event, "input_transcription", None)
+                if input_tx and input_tx.finished and input_tx.text:
+                    logger.info(f"USER: {input_tx.text}")
 
-            output_tx = getattr(event, "output_transcription", None)
-            if output_tx and output_tx.finished and output_tx.text:
-                logger.info(f"AGENT: {output_tx.text}")
+                output_tx = getattr(event, "output_transcription", None)
+                if output_tx and output_tx.finished and output_tx.text:
+                    logger.info(f"AGENT: {output_tx.text}")
 
-            # Forward event to frontend
-            try:
-                await websocket.send_text(
-                    event.model_dump_json(exclude_none=True, by_alias=True)
-                )
-            except Exception:
-                break
+                # Forward event to frontend
+                try:
+                    await websocket.send_text(
+                        event.model_dump_json(exclude_none=True, by_alias=True)
+                    )
+                except Exception:
+                    break
 
-            # Log tool calls and push action events to frontend
-            _content = getattr(event, "content", None)
-            for _part in (getattr(_content, "parts", None) or []):
-                _fn = getattr(_part, "function_call", None)
-                if _fn:
-                    _fn_name = getattr(_fn, "name", "?")
-                    _fn_args = dict(getattr(_fn, "args", {}) or {})
-                    logger.info(f"[tool-call] {_fn_name}({_fn_args})")
+                # Log tool calls and push action events to frontend
+                _content = getattr(event, "content", None)
+                for _part in (getattr(_content, "parts", None) or []):
+                    _fn = getattr(_part, "function_call", None)
+                    if _fn:
+                        _fn_name = getattr(_fn, "name", "?")
+                        _fn_args = dict(getattr(_fn, "args", {}) or {})
+                        logger.info(f"[tool-call] {_fn_name}({_fn_args})")
 
-                    if not ws_closed.is_set():
-                        try:
-                            ui_queue.put_nowait(json.dumps({
-                                "type": "tool_called",
-                                "tool": _fn_name,
-                                "args": _fn_args,
-                            }))
-                        except Exception:
-                            pass
+                        if not ws_closed.is_set():
+                            try:
+                                ui_queue.put_nowait(json.dumps({
+                                    "type": "tool_called",
+                                    "tool": _fn_name,
+                                    "args": _fn_args,
+                                }))
+                            except Exception:
+                                pass
 
-                    # After action tools, capture a fresh screenshot for the UI.
-                    # Wait 2.5s: background tool (nav) takes ~1-2s to complete.
-                    if _fn_name in (
-                        "browser_navigate", "browser_click",
-                        "browser_type", "browser_press_key",
-                        "browser_scroll", "browser_new_tab",
-                    ):
-                        try:
-                            await asyncio.sleep(2.5)
-                            loop = asyncio.get_running_loop()
-                            b64 = await loop.run_in_executor(None, _screenshot_b64)
-                            info = await loop.run_in_executor(None, page_info)
-                            logger.info(f"[screenshot] pushing after {_fn_name}, url={info.get('url', '')}")
-                            ui_queue.put_nowait(json.dumps({
-                                "type": "browser_screenshot",
-                                "data": b64,
-                                "url": info.get("url", ""),
-                                "title": info.get("title", ""),
-                            }))
-                        except Exception as e:
-                            logger.warning(f"[screenshot] post-tool capture failed: {e}")
+                        # After action tools, capture a fresh screenshot for the UI.
+                        # Wait 2.5s: background tool (nav) takes ~1-2s to complete.
+                        if _fn_name in (
+                            "browser_navigate", "browser_click",
+                            "browser_type", "browser_press_key",
+                            "browser_scroll", "browser_new_tab",
+                        ):
+                            try:
+                                await asyncio.sleep(2.5)
+                                loop = asyncio.get_running_loop()
+                                b64 = await loop.run_in_executor(None, _screenshot_b64)
+                                info = await loop.run_in_executor(None, page_info)
+                                logger.info(f"[screenshot] pushing after {_fn_name}, url={info.get('url', '')}")
+                                ui_queue.put_nowait(json.dumps({
+                                    "type": "browser_screenshot",
+                                    "data": b64,
+                                    "url": info.get("url", ""),
+                                    "title": info.get("title", ""),
+                                }))
+                            except Exception as e:
+                                logger.warning(f"[screenshot] post-tool capture failed: {e}")
+        except Exception as e:
+            msg = str(e)
+            # The Live API rejects explicit activity_start/end when its
+            # default automatic VAD is on. The frontend's end-turn button
+            # triggers this. Don't kill the session — log + notify the UI.
+            if "1007" in msg and "activity" in msg.lower():
+                logger.warning(f"Live API rejected explicit activity control: {e}")
+                try:
+                    ui_queue.put_nowait(json.dumps({
+                        "type": "error",
+                        "message": "End-turn button isn't supported with automatic VAD; just keep talking.",
+                    }))
+                except Exception:
+                    pass
+            else:
+                raise
 
     # ---------- Run all concurrently ----------
     ui_sender = asyncio.create_task(ui_sender_task())
