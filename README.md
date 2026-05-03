@@ -293,13 +293,15 @@ AI-for-Accessibility-Toolkit-Draft/
 │
 ├── personalized-extension/      # Chrome extension (AI onboarding + skill builder)
 │   ├── extension/              # Extension source
+│   ├── skill-creator/          # UI for creating custom skills
 │   ├── skills/                 # Built-in skill modules
 │   └── utils/                  # AI recommender, DOM utils
 │
 ├── webapp/
 │   ├── browser-harness/        # CDP browser control daemon (bundled)
 │   ├── textcontrol/            # Text-input browser agent
-│   │   └── backend/            # FastAPI + Gemini 2.5 Flash
+│   │   ├── backend/            # FastAPI + Gemini 2.5 Flash
+│   │   └── frontend/           # React UI
 │   └── voicecontrol/           # Voice-controlled browser agent
 │       ├── backend/            # FastAPI + Gemini Live API
 │       └── frontend/           # React UI (transcript, viewport, actions)
