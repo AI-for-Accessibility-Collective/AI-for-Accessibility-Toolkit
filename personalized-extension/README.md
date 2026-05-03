@@ -1,4 +1,4 @@
-# Agentic A11y
+# Personalized Extension
 
 AI-powered accessibility Chrome extension with dynamic skill recommendations and custom skill building.
 
@@ -7,13 +7,13 @@ Instead of mapping disability profiles to fixed tool sets, this extension uses a
 ## Install
 
 ```bash
-git clone <repo-url>
-cd agentic-a11y
+# From the repository root
+cd personalized-extension
 npm install
 npm run build
 ```
 
-Then in Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select the `extension/` folder.
+Then in Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select the `personalized-extension/extension/` folder.
 
 ## Gemini API Key
 
@@ -58,7 +58,7 @@ Enter the key during onboarding or in the popup Settings section.
 ## Project Structure
 
 ```
-agentic-a11y/
+personalized-extension/
 ├── extension/
 │   ├── manifest.json
 │   ├── background.js           # Service worker: Gemini API, storage, skill injection
