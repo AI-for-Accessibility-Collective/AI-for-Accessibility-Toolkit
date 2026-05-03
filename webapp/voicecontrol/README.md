@@ -69,8 +69,8 @@ Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
 ### Step 1 — Clone the repo
 
 ```bash
-git clone https://github.com/cuppibla/browsermind.git
-cd browsermind
+git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
+cd AI-for-Accessibility-Toolkit/webapp/voicecontrol
 ```
 
 ### Step 2 — Backend
@@ -102,13 +102,13 @@ npm install
 npm run dev
 ```
 
-The frontend starts on **`http://localhost:5173`**.
+The frontend starts on **`http://localhost:3000`**.
 
 ### Step 4 — Start a session
 
 1. Make sure Chrome is running with `--remote-debugging-port=9222`
 2. The backend auto-spawns the `browser-harness` daemon on startup — no separate launch needed
-3. Open `http://localhost:5173`
+3. Open `http://localhost:3000`
 4. Click **Start Session** and allow microphone access
 5. Start talking — the agent will respond and control the browser
 

@@ -1,8 +1,9 @@
+// Generate alt text for images, canvas, SVG, and video using AI
 import { describeImage, describeVideo } from '../utils/ai.js';
 import { imageToDataUrl, captureVideoFrames } from '../utils/image.js';
 import { markProcessed } from '../utils/dom.js';
 
-// Stats tracking (extension injects these, CLI may skip)
+// Stats tracking (injected by extension)
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 
