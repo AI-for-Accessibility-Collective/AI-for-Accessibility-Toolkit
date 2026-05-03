@@ -459,7 +459,7 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 ---
 
-## AI for Accessibility Collective
+<h2 align="center">AI for Accessibility Collective</h2>
 
 <div align="center">
 <p>
