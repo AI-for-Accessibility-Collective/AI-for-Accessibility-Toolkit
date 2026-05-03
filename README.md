@@ -449,16 +449,20 @@ Apache 2.0. See [LICENSE](LICENSE).
 **AI for Accessibility Collective**
 
 <p>
-  <a href="https://www.stanford.edu/"><img src="https://img.shields.io/badge/Stanford-8C1515?style=for-the-badge" alt="Stanford University"></a>
-  <a href="https://www.google.org/"><img src="https://img.shields.io/badge/Google.org-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google.org"></a>
-  <a href="https://www.washington.edu/"><img src="https://img.shields.io/badge/UW-4B2E83?style=for-the-badge" alt="University of Washington"></a>
-  <a href="https://www.media.mit.edu/"><img src="https://img.shields.io/badge/MIT_Media_Lab-000000?style=for-the-badge" alt="MIT Media Lab"></a>
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="50"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="60"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="55"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.media.mit.edu/"><img src="docs/logos/mit.png" alt="MIT Media Lab" height="50"></a>
 </p>
 <p>
-  <a href="https://www.disabilityinnovation.com/"><img src="https://img.shields.io/badge/UCL_GDI_Hub-500778?style=for-the-badge" alt="UCL GDI Hub"></a>
-  <a href="https://www.rit.edu/ntid/"><img src="https://img.shields.io/badge/RIT_NTID-F76902?style=for-the-badge" alt="RIT/NTID"></a>
-  <a href="https://thearc.org/"><img src="https://img.shields.io/badge/The_Arc-00529B?style=for-the-badge" alt="The Arc"></a>
-  <a href="https://rnid.org.uk/"><img src="https://img.shields.io/badge/RNID-E31837?style=for-the-badge" alt="RNID"></a>
+  <a href="https://www.disabilityinnovation.com/"><img src="docs/logos/gdi.jpg" alt="UCL GDI Hub" height="50"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.rit.edu/ntid/"><img src="docs/logos/rit.png" alt="RIT/NTID" height="55"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc" height="50"></a>
 </p>
 
 </div>
