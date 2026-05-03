@@ -2,19 +2,48 @@
 
 # AI for Accessibility Toolkit
 
-**AI-powered accessibility toolkit — multiple interfaces for different use cases.**
+**AI-powered web accessibility that adapts pages in real-time**
 
+[![CI](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit-Draft)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-[Interfaces](#interfaces) · [Profiles](#profiles) · [Contributing](#contributing)
+[Quick Start](#quick-start) · [Features](#features) · [Interfaces](#interfaces) · [Profiles](#profiles) · [Contributing](#contributing) · [Docs](docs/)
 
 </div>
 
 ---
 
-Existing tools like [axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) give you a list of violations. This toolkit *adapts* the page — AI analyzes what the page is, understands what the user needs, and fixes it in real-time. Not a report. A working page.
+Traditional accessibility tools like [axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) find issues. This toolkit **fixes them** — AI analyzes the page, understands user needs, and adapts content in real-time. Not a report. A working page.
+
+## Quick Start
+
+```bash
+# Clone and build
+git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
+cd AI-for-Accessibility-Toolkit
+npm install && npm run build
+
+# Load in Chrome
+# chrome://extensions → Developer mode → Load unpacked → select extension/ folder
+
+# Get a Gemini API key from https://aistudio.google.com/apikey
+# Enter it in the extension popup → Settings
+```
+
+## Features
+
+| Feature | What it does |
+|---------|--------------|
+| **Auto Alt Text** | AI-generated image descriptions for screen readers |
+| **Fix Contrast** | Automatically adjusts colors to meet WCAG AA |
+| **Simplify Text** | Rewrites complex text for easier reading |
+| **Generate Labels** | Creates labels for unlabeled form fields |
+| **Auto Captions** | Adds captions to video/audio content |
+| **Visual Presets** | Dark mode, dyslexia font, large cursor, and more |
+
+**Test it:** [ai4a11y-test-site.vercel.app](https://ai4a11y-test-site.vercel.app/) — a page with intentional accessibility issues
 
 ## Interfaces
 
@@ -377,9 +406,27 @@ See [projects/](projects/) for contributed code.
 - [ ] Publish CLI to PyPI
 - [ ] Release publicly
 
+## Contributors
+
+<a href="https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=chuanenlin/AI-for-Accessibility-Toolkit" />
+</a>
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+
+## Security
+
+Found a vulnerability? Please report it responsibly. See [SECURITY.md](SECURITY.md).
+
+## License
+
+Apache 2.0. See [LICENSE](LICENSE).
+
 ---
 
 <div align="center">
+
+**Partners**
 
 [Stanford University](https://www.stanford.edu/) · [Google](https://www.google.org/) · [University of Washington](https://www.washington.edu/) · [MIT Media Lab](https://www.media.mit.edu/) · [UCL GDI Hub](https://www.disabilityinnovation.com/) · [RIT/NTID](https://www.rit.edu/ntid/) · [The Arc](https://thearc.org/) · [RNID](https://rnid.org.uk/)
 

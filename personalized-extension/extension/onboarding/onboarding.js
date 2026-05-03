@@ -21,6 +21,16 @@ const AREA_LABELS = {
   motor: 'Motor', sensory: 'Sensory', reading: 'Reading',
 };
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // -- State --
 let recommendations = null;
 let wizardAreas = [];
@@ -223,15 +233,15 @@ function createSkillToggleCard(skillId, checked, reason) {
   const toggleId = `toggle-${skillId}-${Math.random().toString(36).slice(2, 6)}`;
 
   card.innerHTML = `
-    <span class="skill-card-icon" aria-hidden="true">${skill?.icon || '\u26A1'}</span>
+    <span class="skill-card-icon" aria-hidden="true">${escapeHtml(skill?.icon) || '\u26A1'}</span>
     <div class="skill-card-info">
-      <div class="skill-card-name" id="label-${toggleId}">${skill?.name || skillId}</div>
-      ${skill?.description ? `<div class="skill-card-desc">${skill.description}</div>` : ''}
-      ${reason ? `<div class="skill-card-reason">${reason}</div>` : ''}
+      <div class="skill-card-name" id="label-${escapeHtml(toggleId)}">${escapeHtml(skill?.name || skillId)}</div>
+      ${skill?.description ? `<div class="skill-card-desc">${escapeHtml(skill.description)}</div>` : ''}
+      ${reason ? `<div class="skill-card-reason">${escapeHtml(reason)}</div>` : ''}
     </div>
     <label class="skill-toggle">
-      <input type="checkbox" ${checked ? 'checked' : ''} data-skill-id="${skillId}"
-             aria-labelledby="label-${toggleId}">
+      <input type="checkbox" ${checked ? 'checked' : ''} data-skill-id="${escapeHtml(skillId)}"
+             aria-labelledby="label-${escapeHtml(toggleId)}">
       <span class="skill-toggle-track" aria-hidden="true"></span>
     </label>
   `;
@@ -249,8 +259,8 @@ function createNewSkillCard(skill) {
   card.innerHTML = `
     <span class="skill-card-icon" aria-hidden="true">\u2728</span>
     <div class="skill-card-info">
-      <div class="skill-card-name">${skill.name}</div>
-      <div class="skill-card-desc">${skill.description}</div>
+      <div class="skill-card-name">${escapeHtml(skill.name)}</div>
+      <div class="skill-card-desc">${escapeHtml(skill.description)}</div>
     </div>
   `;
   return card;
@@ -400,10 +410,10 @@ function showSummary() {
       card.className = 'skill-card enabled';
       card.setAttribute('role', 'listitem');
       card.innerHTML = `
-        <span class="skill-card-icon" aria-hidden="true">${skill?.icon || '\u26A1'}</span>
+        <span class="skill-card-icon" aria-hidden="true">${escapeHtml(skill?.icon) || '\u26A1'}</span>
         <div class="skill-card-info">
-          <div class="skill-card-name">${skill?.name || id}</div>
-          <div class="skill-card-desc">${skill?.description || ''}</div>
+          <div class="skill-card-name">${escapeHtml(skill?.name || id)}</div>
+          <div class="skill-card-desc">${escapeHtml(skill?.description || '')}</div>
         </div>
       `;
       skillList.appendChild(card);
