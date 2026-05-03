@@ -81,8 +81,8 @@ cd backend
 # Copy the env template and add your API key
 cp .env.example .env
 # Open .env and set:
-#   GOOGLE_API_KEY=your-gemini-api-key
-#   DEMO_AGENT_MODEL=gemini-2.0-flash-live-001   # optional override
+#   GEMINI_API_KEY=your-gemini-api-key
+#   DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025   # optional override
 
 # Run the backend with uv (installs dependencies automatically)
 uv run python main.py
@@ -120,10 +120,10 @@ Copy `backend/.env.example` to `backend/.env` and fill in your values:
 
 ```env
 # Required
-GOOGLE_API_KEY=your-gemini-api-key-here
+GEMINI_API_KEY=your-gemini-api-key-here
 
 # Optional — override the default model
-# DEMO_AGENT_MODEL=gemini-2.0-flash-live-001
+# DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
 ```
 
 > ⚠️ **Never commit `.env`** — it is listed in `.gitignore`.
@@ -184,7 +184,7 @@ browsermind/
 | `Connection refused` on Start Session | Make sure `uv run python main.py` is running on port 8080 |
 | `browser-harness: not connected` or `[Errno 2] No such file or directory` on tool calls | Ensure Chrome was launched with `--remote-debugging-port=9222`. The backend auto-discovers Chrome via `http://localhost:9222/json/version` on startup — override the port with `BU_CDP_PORT`, or set `BU_CDP_WS` directly to skip discovery |
 | No audio input | Grant microphone permission in the browser; check browser console for `AudioContext` errors |
-| `GOOGLE_API_KEY` not found | Confirm `backend/.env` exists and has the correct key (not the example placeholder) |
+| `GEMINI_API_KEY` not found | Confirm `backend/.env` exists and has the correct key (not the example placeholder) |
 | Blank viewport | Chrome must be open with a visible page; the agent needs an active tab to screenshot |
 
 ---

@@ -13,10 +13,11 @@ import { setAIProvider } from './tools/utils/ai.js';
 
 setAIProvider({
   describeImage: async (dataUrl) => { /* returns string */ },
-  describeVideo: async (frames, metadata) => { /* returns string */ },
+  describeVideo: async (frames) => { /* returns string */ },
   simplifyText: async (text) => { /* returns string */ },
   summarizeText: async (text) => { /* returns string */ },
   generateLabels: async (context) => { /* returns string */ },
+  inferLabel: async (context) => { /* returns string */ },
   fixContrast: async (fg, bg) => { /* returns string hex color */ },
   generateCaptions: async (data) => { /* returns transcript string */ },
 });
@@ -27,10 +28,11 @@ setAIProvider({
 | Method | Input | Output | Description |
 |--------|-------|--------|-------------|
 | `describeImage` | `dataUrl: string` (base64 image) | `string` | Generate alt text for image |
-| `describeVideo` | `frames: string[]`, `metadata: object` | `string` | Describe video from sampled frames |
+| `describeVideo` | `frames: string[]` | `string` | Describe video from sampled frames |
 | `simplifyText` | `text: string` | `string` | Rewrite text at lower reading level |
 | `summarizeText` | `text: string` | `string` | Summarize long content (2-3 sentences) |
 | `generateLabels` | `{ elementType, html, context }` | `string` | Generate accessible name for element |
+| `inferLabel` | `{ elementType, html, context }` | `string` | Infer label for unlabeled form field |
 | `fixContrast` | `fg: string`, `bg: string` | `string` | Return fixed color meeting WCAG AA |
 | `generateCaptions` | `{ audioUrl }` | `string` | Transcribe audio/video |
 
@@ -53,7 +55,8 @@ import {
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `findEmptyAltImages()` | `HTMLImageElement[]` | Images with empty or missing alt |
+| `findImagesWithoutAlt()` | `HTMLImageElement[]` | Images with no alt attribute |
+| `findEmptyAltImages()` | `HTMLImageElement[]` | Images with empty alt that look like content |
 | `findCanvasElements()` | `HTMLCanvasElement[]` | Canvas without aria-label |
 | `findEmptyLinks()` | `HTMLAnchorElement[]` | Links with no accessible name |
 | `findUnlabeledInputs()` | `HTMLInputElement[]` | Form inputs without labels |

@@ -23,6 +23,7 @@ Primary usage — persistent session (the BLV user's daily browser + AI lens):
   ai4a11y.py session find "<text>"                    # body text + element attrs
   ai4a11y.py session read [selector]                  # Readability-style article extraction
   ai4a11y.py session tables                           # alias: list tables
+  ai4a11y.py session audit [--json]                   # run axe-core WCAG accessibility audit
 
   # Vision-backed primitives (one Claude call each, ~15-40s):
   ai4a11y.py session describe                         # BLV-friendly page summary
