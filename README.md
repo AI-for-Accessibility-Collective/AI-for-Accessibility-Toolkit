@@ -449,21 +449,21 @@ Apache 2.0. See [LICENSE](LICENSE).
 **AI for Accessibility Collective**
 
 <p>
-  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="50"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="60"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="55"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.media.mit.edu/"><img src="docs/logos/mit.png" alt="MIT Media Lab" height="50"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.disabilityinnovation.com/"><img src="docs/logos/gdi.jpg" alt="UCL GDI Hub" height="50"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.rit.edu/ntid/"><img src="docs/logos/rit.png" alt="RIT/NTID" height="55"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc" height="50"></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID" height="55"></a>
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="35"></a>
+  &nbsp;&nbsp;
+  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="45"></a>
+  &nbsp;&nbsp;
+  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="40"></a>
+  &nbsp;&nbsp;
+  <a href="https://www.media.mit.edu/"><img src="docs/logos/mit.png" alt="MIT Media Lab" height="35"></a>
+  &nbsp;&nbsp;
+  <a href="https://www.disabilityinnovation.com/"><img src="docs/logos/gdi.jpg" alt="UCL GDI Hub" height="35"></a>
+  &nbsp;&nbsp;
+  <a href="https://www.rit.edu/ntid/"><img src="docs/logos/rit.png" alt="RIT/NTID" height="40"></a>
+  &nbsp;&nbsp;
+  <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc" height="35"></a>
+  &nbsp;&nbsp;
+  <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID" height="40"></a>
 </p>
 
 </div>
