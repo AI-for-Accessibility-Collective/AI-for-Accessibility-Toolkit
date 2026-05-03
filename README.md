@@ -4,9 +4,9 @@
 
 **AI-powered web accessibility that adapts pages in real-time**
 
-[![CI](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml)
+[![CI](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/actions/workflows/ci.yml/badge.svg)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/actions/workflows/ci.yml)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit-Draft)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 [Quick Start](#quick-start) · [Features](#features) · [Interfaces](#interfaces) · [Profiles](#profiles) · [API](docs/API.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](#contributing)
@@ -21,8 +21,8 @@ Traditional accessibility tools like [axe-core](https://github.com/dequelabs/axe
 
 ```bash
 # Clone and build
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
-cd AI-for-Accessibility-Toolkit
+git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
+cd AI-for-Accessibility-Toolkit-Draft
 npm install && npm run build
 
 # Load in Chrome
@@ -59,8 +59,8 @@ npm install && npm run build
 ### Install
 
 ```bash
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
-cd AI-for-Accessibility-Toolkit
+git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
+cd AI-for-Accessibility-Toolkit-Draft
 npm install && npm run build
 ```
 
@@ -263,7 +263,7 @@ Select a profile to automatically enable the right tools:
 ## Directory Structure
 
 ```
-AI-for-Accessibility-Toolkit/
+AI-for-Accessibility-Toolkit-Draft/
 ├── tools/                       # Shared JS code (browser-native)
 │   ├── auditors/               # Find issues (missing-alt, poor-contrast, etc.)
 │   ├── adapters/               # Fix issues (generate-alt, fix-contrast, etc.)
@@ -428,8 +428,8 @@ See [projects/](projects/) for contributed code.
 
 ## Contributors
 
-<a href="https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=chuanenlin/AI-for-Accessibility-Toolkit" />
+<a href="https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=chuanenlin/AI-for-Accessibility-Toolkit-Draft" />
 </a>
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.

@@ -170,7 +170,7 @@ pip install -e .               # CLI
 
 If your issue isn't listed:
 
-1. Search [existing issues](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/issues)
+1. Search [existing issues](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/issues)
 2. Open a new issue with:
    - Browser/OS version
    - Steps to reproduce
