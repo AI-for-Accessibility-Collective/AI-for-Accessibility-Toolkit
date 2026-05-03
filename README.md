@@ -19,18 +19,33 @@ Traditional accessibility tools like [axe-core](https://github.com/dequelabs/axe
 
 ## Quick Start
 
+### 🧑 End User (Chrome Extension)
+
 ```bash
-# Clone and build
 git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
-cd AI-for-Accessibility-Toolkit-Draft
-npm install && npm run build
-
-# Load in Chrome
-# chrome://extensions → Developer mode → Load unpacked → select extension/ folder
-
-# Get a Gemini API key from https://aistudio.google.com/apikey
-# Enter it in the extension popup → Settings
+cd AI-for-Accessibility-Toolkit-Draft && npm install && npm run build
 ```
+Load in Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select `extension/` folder
+
+Get a [Gemini API key](https://aistudio.google.com/apikey) → Extension popup → Settings → Paste key
+
+### 💻 Developer (CLI)
+
+```bash
+pip install -e . && playwright install chromium
+export ANTHROPIC_API_KEY=sk-...
+```
+
+```bash
+ai4a11y session start                    # Launch browser
+ai4a11y session go https://example.com   # Navigate
+ai4a11y session audit                    # Run WCAG audit
+ai4a11y session enable darkMode          # Enable dark mode
+ai4a11y session profile lowVision        # Apply preset
+ai4a11y session describe                 # AI describes the page
+```
+
+### 💡 [See examples ↗](docs/API.md) — and give us a ⭐ if this helps!
 
 ## Features
 
