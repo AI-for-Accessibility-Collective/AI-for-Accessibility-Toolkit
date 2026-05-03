@@ -44,10 +44,9 @@ Copy and fill in when proposing a new capability.
 > Examples: visual → audio, image → text, audio → captions, text → plain language
 
 **Module type:**
-- [ ] Analyzer — detects issues
-- [ ] Adapter — fixes issues
-- [ ] Feature — visual/interaction preset
-- [ ] Profile — tool configuration
+- [ ] Auditor — detects issues
+- [ ] Adapter — fixes issues or provides visual/interaction presets
+- [ ] Profile — tool configuration for a disability group
 - [ ] Other: ___
 
 ## Technical
@@ -58,7 +57,7 @@ Copy and fill in when proposing a new capability.
 
 ## How it fits in the toolkit
 
-[How does this become an analyzer, adapter, feature, or profile? What existing components does it extend or replace?]
+[How does this become an auditor, adapter, or profile? What existing components does it extend or replace?]
 
 ## What it pairs with
 

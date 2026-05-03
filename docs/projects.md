@@ -69,8 +69,9 @@ Generates interactive STEM simulations that BLV learners can explore through aud
 
 ## MIT Media Lab — Universal Memory Assistant
 
-**Code:** TBD
+**Code:** https://github.com/wazeerzulfikar/memoro/tree/main
 **Team:** MIT Media Lab (Yasith Samaradivakara, Wazeer Zulfikar, Pattie Maes)
+**Contact:** yasith@media.mit.edu / wazeer@media.mit.edu
 **Status:** TBD
 
 ### What it does
@@ -114,6 +115,35 @@ AI-augmented storytelling and creative-artifact production with blind and low-vi
 - **Input:** Child's voice, narration, or described scenes
 - **Output:** Generated stories, illustrations, audio narratives
 - **Transform:** Voice/description → visual and audio artifact
+
+---
+
+## UW — AI-Powered Artwork Interpretation (ArtInsight)
+
+**Code:** https://github.com/makeabilitylab/ArtInsight/blob/main/README.md
+**Team:** University of Washington (Arnavi Chheda-Kothary, Jon Froehlich, Jacob Wobbrock)
+**Contact:** chheda@cs.washington.edu
+**Status:** Published
+
+### What it does
+
+ArtInsight is an iOS app to support parents who are blind or have low-vision (BLV) to engage with their sighted children's artwork. Uses GPT to generate accessible descriptions of artwork, with a human-in-the-loop system for editing.
+
+### Who it helps
+
+- BLV (blind / low vision)
+- Mixed-ability families and classrooms
+
+### How it works
+
+- **Input:** Child-created 2D visual artwork (drawing, painting), optional audio context
+- **Output:** Blind-accessible descriptions of artwork
+- **Transform:** Visual + voice → text descriptions
+- **Latency:** ~20 seconds to generate descriptions
+
+### Demo
+
+https://www.youtube.com/watch?v=pahmaPzoPgo
 
 ---
 
@@ -252,7 +282,7 @@ Uses AI to make content more cognitively accessible for people with intellectual
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Chrome Extension                             │
-│  (analyzers, adapters, features, profiles)                      │
+│  (auditors, adapters, profiles)                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │   Stanford ──────► Sonification adapters for STEM content       │
@@ -267,4 +297,4 @@ Uses AI to make content more cognitively accessible for people with intellectual
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-Projects contribute as analyzers, adapters, features, or profiles — or inform the design of these components through research.
+Projects contribute as auditors, adapters, or profiles — or inform the design of these components through research.

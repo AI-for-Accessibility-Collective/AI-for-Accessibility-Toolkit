@@ -14,7 +14,7 @@ Teams across the collective contribute capabilities: accessible simulations, aty
 - **Ability-based design** — adapt to what users can do, not what they can't
 - **Human in the loop** — people with disabilities involved in design and evaluation
 - **Build on existing tools** — axe-core for detection, Gemini for AI, darkreader for dark mode
-- **Easy to extend** — add new analyzers/adapters with `npx ai4a11y create`
+- **Easy to extend** — add new auditors/adapters with `ai4a11y create`
 
 ## How It Works
 
@@ -70,9 +70,8 @@ flowchart LR
     subgraph Extension[Chrome Extension]
         direction TB
         subgraph Content[Content Script]
-            Analyzers[Analyzers<br/>axe-core, custom]
-            Adapters[Adapters<br/>generate-alt, fix-contrast]
-            Features[Features<br/>dark-mode, dyslexia-font]
+            Auditors[Auditors<br/>axe-core, custom]
+            Adapters[Adapters<br/>generate-alt, fix-contrast,<br/>dark-mode, dyslexia-font]
         end
         BG[Background Worker]
     end
@@ -81,18 +80,17 @@ flowchart LR
     Gemini[Gemini API]
     Libs[/libs: axe-core,<br/>darkreader, readability/]
     
-    Libs --> Analyzers
-    Analyzers --> Adapters --> Features
+    Libs --> Auditors
+    Auditors --> Adapters
     Storage <--> Content
     Adapters <--> BG <--> Gemini
 ```
 
 **Flow:**
 1. Page loads → extension runs
-2. **Analyzers** scan for issues (axe-core + custom detectors)
-3. **Adapters** fix issues (immediate DOM changes or via AI)
-4. **Features** apply visual presets based on user's profile
-5. **Background** handles AI API calls (Gemini for descriptions, simplification)
+2. **Auditors** scan for issues (axe-core + custom detectors)
+3. **Adapters** fix issues (immediate DOM changes or via AI) and apply visual presets
+4. **Background** handles AI API calls (Gemini for descriptions, simplification)
 
 ## Profiles
 
@@ -113,29 +111,27 @@ Users select a profile that auto-enables the right tools:
 | `sensory` | Reduced motion, dark mode, focus mode |
 | `photosensitive` | Dark mode, reduced motion |
 
-Profiles are defined in `src/settings.js`. Users can also toggle individual tools.
+Profiles are defined in `tools/profiles/settings.json`. Users can also toggle individual tools.
 
-## Extension Structure
+## Directory Structure
 
 ```
 AI-for-Accessibility-Toolkit/
-├── src/
-│   ├── analyzers/          # Find issues
+├── tools/                       # Shared JS code (browser-native)
+│   ├── auditors/               # Find issues
 │   │   ├── missing-alt.js
 │   │   ├── missing-labels.js
 │   │   ├── missing-captions.js
 │   │   ├── poor-contrast.js
 │   │   ├── wcag-issues.js      # axe-core wrapper
 │   │   └── index.js
-│   ├── adapters/           # Fix issues
+│   ├── adapters/               # Fix issues + visual presets
 │   │   ├── generate-alt.js     # AI image descriptions
 │   │   ├── generate-labels.js  # AI form labels
 │   │   ├── generate-captions.js # AI audio/video captions
 │   │   ├── fix-contrast.js
 │   │   ├── simplify-text.js    # AI text simplification
 │   │   ├── wcag-fixes.js       # Generic WCAG violation fixes
-│   │   └── index.js
-│   ├── features/           # Visual presets
 │   │   ├── visual-assist.js    # fonts, spacing, cursor, focus
 │   │   ├── dark-mode.js        # DarkReader + CSS fallback
 │   │   ├── motion-reducer.js   # animations, GIFs, parallax
@@ -146,32 +142,38 @@ AI-for-Accessibility-Toolkit/
 │   │   ├── voice-commands.js   # voice navigation
 │   │   ├── keyboard-nav.js     # skip links, tab sequence
 │   │   ├── auto-transcriber.js # video/audio captions
-│   │   └── index.js            # exports all features
-│   ├── utils/              # Helpers (dom, color, image, messaging)
-│   ├── settings.js         # Profile definitions
-│   ├── stats.js            # Fix tracking and logging
-│   ├── constants.js        # Shared constants
-│   ├── content.js          # Entry point
-│   └── build.js            # esbuild bundler
-├── lib/                    # Vendor libraries
-│   ├── axe.min.js          # WCAG scanner
-│   ├── darkreader.js       # Dark mode
-│   ├── OpenDyslexic-Regular.woff2
-│   └── ...
-├── scripts/cli.js          # CLI (ai4a11y tools, create, build, check)
-├── background.js           # AI API calls (Gemini)
-├── popup.html / popup.js   # Settings UI
-├── manifest.json
-└── content.bundle.js       # Built bundle
+│   │   └── index.js
+│   ├── profiles/               # User presets
+│   │   ├── settings.js
+│   │   └── settings.json
+│   └── utils/                  # Shared utilities (ai.js, dom.js, color.js)
+│
+├── extension/                   # Chrome extension
+│   ├── src/content.js          # Entry point (imports from tools/)
+│   ├── background.js           # Service worker (Gemini API)
+│   ├── popup.html / popup.js   # Extension UI
+│   ├── lib/                    # Vendor libraries (axe, darkreader, etc.)
+│   └── manifest.json
+│
+├── cli/                         # Python CLI
+│   ├── ai4a11y.py              # Playwright + Claude vision
+│   └── cli.py                  # Command wrapper
+│
+└── pyproject.toml               # pip install ai4a11y
 ```
 
 ## Adding Capabilities
 
 ```bash
-npx ai4a11y create missing-landmarks --type analyzer
-npx ai4a11y create fix-tables --type adapter
-npx ai4a11y create elderly --type profile
-npx ai4a11y build
+# Install CLI (one-time)
+pip install -e .
+
+# Scaffold new components
+ai4a11y create missing-landmarks --type auditor
+ai4a11y create fix-tables --type adapter
+
+# Build extension
+npm run build
 ```
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
@@ -198,9 +200,9 @@ Projects contribute as extension components or inform their design:
 
 | Contribution type | Example |
 |-------------------|---------|
-| **Analyzer** | Stanford: detect inaccessible simulations |
+| **Auditor** | Stanford: detect inaccessible simulations |
 | **Adapter** | The Arc: simplify text for cognitive accessibility |
-| **Feature** | MIT: user context/memory tracking |
+| **Adapter** | MIT: user context/memory tracking |
 | **ASR integration** | UCL: non-standard speech recognition |
 | **Patterns** | Google NAI: orchestration architecture |
 | **Validation** | The Arc: PWD reviewer network |

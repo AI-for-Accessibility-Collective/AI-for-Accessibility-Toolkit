@@ -1,8 +1,4 @@
-/**
- * Visual Assist - text/display adjustments (font, spacing, cursor, focus)
- *
- * Note: DarkMode, MotionReducer, ColorBlindMode are in separate files.
- */
+// Visual Assist - text/display adjustments (font, spacing, cursor, focus)
 
 export const VisualAssist = {
   styleId: 'ai4a11y-visual-assist',
