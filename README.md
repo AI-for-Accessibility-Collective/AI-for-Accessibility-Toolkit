@@ -97,20 +97,36 @@ See [`personalized-extension/README.md`](personalized-extension/README.md) for f
 
 ## Browser Control Web Apps
 
-Two browser automation agents — voice or text input. Both use Gemini + browser-harness to control Chrome.
+Two browser automation agents — voice or text input. Both use Gemini + browser-harness to control Chrome. Requires Python 3.11+.
 
 ### Prerequisites (shared)
 
-1. **Chrome with remote debugging:**
+1. **Install uv** (fast Python package manager):
    ```bash
-   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-     --remote-debugging-port=9222 \
-     --user-data-dir=/tmp/chrome-debug
+   # macOS/Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Or with pip (slower but works everywhere)
+   pip install uv
    ```
 
-   The backend auto-discovers Chrome on `localhost:9222` at startup (override the port with `BU_CDP_PORT`, or set `BU_CDP_WS` directly to bypass discovery).
+2. **Chrome with remote debugging:**
+   ```bash
+   # macOS
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+     --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
+   
+   # Linux
+   google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
+   
+   # Windows (PowerShell)
+   & "C:\Program Files\Google\Chrome\Application\chrome.exe" `
+     --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome-debug
+   ```
 
-2. **browser-harness** is bundled at `webapp/browser-harness/` and installed via `uv pip install -e ../../browser-harness` below. Only clone it yourself if the directory is missing:
+   The backend auto-discovers Chrome on `localhost:9222` at startup (override with `BU_CDP_PORT` or `BU_CDP_WS`).
+
+3. **browser-harness** is bundled at `webapp/browser-harness/` and installed via `uv pip install -e ../../browser-harness` below. Only clone it yourself if the directory is missing:
    ```bash
    cd webapp && git clone https://github.com/browser-use/browser-harness.git
    ```
@@ -161,12 +177,13 @@ Open http://localhost:3000, click **Start Session**, allow mic, and start talkin
 
 ## CLI
 
-For developers, coding agents, and CI/CD pipelines.
+For developers, coding agents, and CI/CD pipelines. Requires Python 3.10+.
 
 ### Install
 
 ```bash
 pip install -e .
+playwright install chromium  # Download browser binaries
 ```
 
 ### Commands
@@ -265,6 +282,9 @@ AI-for-Accessibility-Toolkit/
 │   └── utils/                  # AI recommender, DOM utils
 │
 ├── webapp/
+│   ├── browser-harness/        # CDP browser control daemon (bundled)
+│   ├── textcontrol/            # Text-input browser agent
+│   │   └── backend/            # FastAPI + Gemini 2.5 Flash
 │   └── voicecontrol/           # Voice-controlled browser agent
 │       ├── backend/            # FastAPI + Gemini Live API
 │       └── frontend/           # React UI (transcript, viewport, actions)
