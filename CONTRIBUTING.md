@@ -190,10 +190,11 @@ export async function myTool(data) {
 2. Add handler in `extension/background.js` (for Chrome/Gemini):
 
 ```js
-case 'myTool':
-  const result = await callGeminiAPI(request.data);
-  sendResponse({ success: true, result });
-  break;
+// Add to the handlers object in chrome.runtime.onMessage.addListener:
+const handlers = {
+  // ... existing handlers ...
+  'myTool': () => myToolFunction(message.data),
+};
 ```
 
 3. Set provider in `extension/src/content.js`:
