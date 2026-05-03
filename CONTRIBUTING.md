@@ -133,9 +133,14 @@ Add to `tools/adapters/index.js`:
 ```js
 import { axeHandlers as tableHandlers } from './fix-tables.js';
 
+// Add to the existing axeHandlers export:
 export const axeHandlers = {
-  ...existingHandlers,
-  ...tableHandlers
+  ...altHandlers,
+  ...labelHandlers,
+  ...captionHandlers,
+  ...contrastHandlers,
+  ...wcagHandlers,
+  ...tableHandlers,  // your new handlers
 };
 ```
 

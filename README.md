@@ -266,7 +266,7 @@ Select a profile to automatically enable the right tools:
 | **Low Vision** | Large text (150%), enhanced focus, high contrast |
 | **Color Blind** | Color filters (protanopia, deuteranopia, tritanopia) |
 | **Deaf/HoH** | Auto captions, visual emphasis |
-| **Motor** | Large cursor, keyboard nav, voice commands |
+| **Motor** | Large cursor, enhanced focus, keyboard nav |
 | **Dyslexia** | OpenDyslexic font, wider spacing, focus mode |
 | **ADHD** | Focus mode, reduced motion, reader mode |
 | **Cognitive** | Simplified text, summaries |
