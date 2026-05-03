@@ -20,7 +20,16 @@ export function hasAccessibleName(el) {
 }
 
 export function getAccessibleName(el) {
-  return el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent?.trim() || '';
+  if (el.getAttribute('aria-label')) return el.getAttribute('aria-label');
+  if (el.getAttribute('title')) return el.getAttribute('title');
+
+  const labelledBy = el.getAttribute('aria-labelledby');
+  if (labelledBy) {
+    const target = document.getElementById(labelledBy);
+    if (target?.textContent?.trim()) return target.textContent.trim();
+  }
+
+  return el.textContent?.trim() || '';
 }
 
 export function markProcessed(el, status = 'done') {
