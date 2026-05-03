@@ -183,8 +183,8 @@ EOF
 uv venv && uv pip install -e . && uv pip install -e ../../browser-harness
 uv run python main.py
 
-# Frontend (new terminal)
-cd ../frontend
+# Frontend (new terminal, from repo root)
+cd webapp/voicecontrol/frontend
 npm install && npm run dev
 ```
 
