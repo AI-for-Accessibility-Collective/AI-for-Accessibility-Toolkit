@@ -9,7 +9,7 @@
 [![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-[Quick Start](#quick-start) · [Features](#features) · [Interfaces](#interfaces) · [Profiles](#profiles) · [Contributing](#contributing) · [Docs](docs/)
+[Quick Start](#quick-start) · [Features](#features) · [Interfaces](#interfaces) · [Profiles](#profiles) · [API](docs/API.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](#contributing)
 
 </div>
 
