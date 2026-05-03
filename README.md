@@ -449,7 +449,7 @@ Apache 2.0. See [LICENSE](LICENSE).
 **AI for Accessibility Collective**
 
 <p>
-  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="35"></a>
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google" height="35"></a>
   &nbsp;&nbsp;
   <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="45"></a>
   &nbsp;&nbsp;
