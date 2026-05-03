@@ -116,7 +116,7 @@ Profiles are defined in `tools/profiles/settings.json`. Users can also toggle in
 ## Directory Structure
 
 ```
-AI-for-Accessibility-Toolkit/
+AI-for-Accessibility-Toolkit-Draft/
 ├── tools/                       # Shared JS code (browser-native)
 │   ├── auditors/               # Find issues
 │   │   ├── missing-alt.js

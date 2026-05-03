@@ -11,7 +11,7 @@ dependencies = [
     "cdp-use==1.4.5",
     "fetch-use==0.4.0",
     "google-genai>=1.74.0",
-    "websockets==16.0",
+    "websockets>=15.0.1",
 ]
 
 [project.scripts]

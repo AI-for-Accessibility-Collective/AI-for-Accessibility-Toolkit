@@ -5,8 +5,8 @@ The toolkit is designed to be easy to extend. Most contributions are adding new 
 ## Quick Start
 
 ```bash
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
-cd AI-for-Accessibility-Toolkit
+git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
+cd AI-for-Accessibility-Toolkit-Draft
 npm install
 pip install -e .
 

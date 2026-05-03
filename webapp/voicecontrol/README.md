@@ -69,8 +69,8 @@ Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
 ### Step 1 — Clone the repo
 
 ```bash
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit.git
-cd AI-for-Accessibility-Toolkit/webapp/voicecontrol
+git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
+cd AI-for-Accessibility-Toolkit-Draft/webapp/voicecontrol
 ```
 
 ### Step 2 — Backend
