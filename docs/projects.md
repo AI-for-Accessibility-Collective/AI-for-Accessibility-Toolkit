@@ -99,11 +99,12 @@ Human behavior, memory needs, age, and social context vary widely. Designing for
 
 **Code:** TBD
 **Team:** University of Washington (Arnavi Chheda-Kothary, Jon Froehlich, Jacob Wobbrock)
-**Status:** TBD
+**Contact:** chheda@cs.washington.edu
+**Status:** In development
 
 ### What it does
 
-AI-augmented storytelling and creative-artifact production with blind and low-vision children. Gives BLV kids accessible ways to express themselves and share creative work with sighted family, friends, and teachers.
+AI-augmented storytelling and creative-artifact production with blind and low-vision children. Gives BLV kids accessible ways to express themselves through image generation and verification, sharing creative work with sighted family, friends, and teachers.
 
 ### Who it helps
 
@@ -112,9 +113,14 @@ AI-augmented storytelling and creative-artifact production with blind and low-vi
 
 ### How it works
 
-- **Input:** Child's voice, narration, or described scenes
-- **Output:** Generated stories, illustrations, audio narratives
-- **Transform:** Voice/description → visual and audio artifact
+- **Input:** Audio narration, story text, possible sketches/drawings
+- **Output:** Generated stories, illustrations, audio narratives with accompanying image descriptions
+- **Transform:** Voice + text + drawings → generated images + descriptions
+- **Dependencies:** VLM for image + text interpretation and generation; STT for children's narrations
+
+### Human involvement
+
+BLV children, families, and teachers as co-designers
 
 ---
 
@@ -232,25 +238,33 @@ Currently analyzes speaker accessibility only (face on screen, lips visible). Do
 
 ---
 
-## NTID — AI-Powered Tutoring Agent
+## NTID — AI-Powered Tutoring Agent (GrammarLab)
 
 **Code:** TBD
-**Team:** NTID (Justin Mahar, Pamela Francis, Becca Dingman)
-**Status:** TBD
+**Team:** NTID (Pamela Francis, Justin Mahar, Becca Dingman)
+**Contact:** pggncp@rit.edu
+**Status:** In development
 
 ### What it does
 
-An AI tutor for English grammar, built for deaf and hard-of-hearing students. English grammar instruction is a known unmet need for DHH learners, particularly those whose first language is ASL.
+A course-driven tutoring system that lets instructors design personalized, AI-guided learning experiences using structured content, prompts, and multimedia (including ASL videos). Students interact with a chat-based tutor that adapts instruction, pacing, and feedback to their progress and preferences. The flagship course, GrammarLab, focuses on teaching English articles to DHH learners, combining ASL-based instruction with targeted writing feedback.
 
 ### Who it helps
 
 - DHH (deaf / hard of hearing)
+- ASL-first learners
 
 ### How it works
 
-- **Input:** Student writing or grammar exercises (bilingual ASL/English input TBD)
-- **Output:** Tutoring feedback (corrections, explanations, practice exercises)
-- **Dependencies:** Gemini, ASR, sign-language video handling TBD
+- **Input:** Student text input via chat, uploaded student writing
+- **Output:** Instructional text, grammar corrections, guided exercises, quizzes, embedded ASL videos, interactive UI components
+- **Platform:** Progressive Web App (React, Gatsby, Firebase, Netlify)
+- **Dependencies:** Gemini API, Firebase Authentication, video hosting (YouTube/Vimeo) for ASL content
+- **Latency:** Several seconds per response
+
+### Limitations
+
+Response latency can be several seconds. Current implementation focused on English articles. Relies on pre-recorded ASL videos (no real-time ASL generation). AI may produce incorrect or oversimplified explanations for nuanced grammar.
 
 ---
 
