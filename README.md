@@ -446,8 +446,19 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 <div align="center">
 
-**Partners**
+**AI for Accessibility Collective**
 
-[Stanford University](https://www.stanford.edu/) · [Google](https://www.google.org/) · [University of Washington](https://www.washington.edu/) · [MIT Media Lab](https://www.media.mit.edu/) · [UCL GDI Hub](https://www.disabilityinnovation.com/) · [RIT/NTID](https://www.rit.edu/ntid/) · [The Arc](https://thearc.org/) · [RNID](https://rnid.org.uk/)
+<p>
+  <a href="https://www.stanford.edu/"><img src="https://img.shields.io/badge/Stanford-8C1515?style=for-the-badge" alt="Stanford University"></a>
+  <a href="https://www.google.org/"><img src="https://img.shields.io/badge/Google.org-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google.org"></a>
+  <a href="https://www.washington.edu/"><img src="https://img.shields.io/badge/UW-4B2E83?style=for-the-badge" alt="University of Washington"></a>
+  <a href="https://www.media.mit.edu/"><img src="https://img.shields.io/badge/MIT_Media_Lab-000000?style=for-the-badge" alt="MIT Media Lab"></a>
+</p>
+<p>
+  <a href="https://www.disabilityinnovation.com/"><img src="https://img.shields.io/badge/UCL_GDI_Hub-500778?style=for-the-badge" alt="UCL GDI Hub"></a>
+  <a href="https://www.rit.edu/ntid/"><img src="https://img.shields.io/badge/RIT_NTID-F76902?style=for-the-badge" alt="RIT/NTID"></a>
+  <a href="https://thearc.org/"><img src="https://img.shields.io/badge/The_Arc-00529B?style=for-the-badge" alt="The Arc"></a>
+  <a href="https://rnid.org.uk/"><img src="https://img.shields.io/badge/RNID-E31837?style=for-the-badge" alt="RNID"></a>
+</p>
 
 </div>
