@@ -459,10 +459,9 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 ---
 
+## AI for Accessibility Collective
+
 <div align="center">
-
-**AI for Accessibility Collective**
-
 <p>
   <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google" height="28"></a>
   &nbsp;&nbsp;
