@@ -1258,7 +1258,7 @@ function sendMessage(msg) {
 }
 
 async function callGemini(prompt) {
-  const resp = await sendMessage({ type: 'gemini', prompt, model: 'gemini-3.1-pro-preview' });
+  const resp = await sendMessage({ type: 'gemini', prompt, model: 'gemini-2.5-flash' });
   if (resp?.error) throw new Error(resp.error);
   if (typeof resp?.result !== 'string' || resp.result.length === 0) {
     throw new Error('Gemini returned an empty response.');
