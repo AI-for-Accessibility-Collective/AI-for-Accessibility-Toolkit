@@ -449,11 +449,11 @@ Apache 2.0. See [LICENSE](LICENSE).
 **AI for Accessibility Collective**
 
 <p>
-  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google" height="35"></a>
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google" height="28"></a>
   &nbsp;&nbsp;
-  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="45"></a>
+  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="38"></a>
   &nbsp;&nbsp;
-  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="40"></a>
+  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="32"></a>
   &nbsp;&nbsp;
   <a href="https://www.media.mit.edu/"><img src="docs/logos/mit.png" alt="MIT Media Lab" height="35"></a>
   &nbsp;&nbsp;
@@ -463,7 +463,7 @@ Apache 2.0. See [LICENSE](LICENSE).
   &nbsp;&nbsp;
   <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc" height="35"></a>
   &nbsp;&nbsp;
-  <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID" height="40"></a>
+  <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID" height="32"></a>
 </p>
 
 </div>
