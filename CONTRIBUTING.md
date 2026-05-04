@@ -1,212 +1,101 @@
 # Contributing
 
-The toolkit is designed to be easy to extend. Most contributions are adding new auditors, adapters, or profiles.
+Most contributions are adding new auditors, adapters, or profiles.
+
+## Cheat Sheet
+
+| I want to... | Do this |
+|--------------|---------|
+| **Find an issue** | Add auditor → `tools/auditors/` → export from `index.js` |
+| **Fix an issue** | Add adapter → `tools/adapters/` → add to `axeHandlers` in `index.js` |
+| **Add a profile** | Edit `tools/profiles/settings.json` |
+| **Add AI feature** | `tools/utils/ai.js` + `extension/background.js` + `cli/ai4a11y.py` |
+| **Test changes** | `npm run build` → load in Chrome → test on real sites |
 
 ## Quick Start
 
 ```bash
 git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
-cd AI-for-Accessibility-Toolkit-Draft
-npm install
-pip install -e .
+cd AI-for-Accessibility-Toolkit-Draft && npm install && pip install -e .
 
-ai4a11y list tools                              # See what exists
-ai4a11y create my-adapter --type adapter        # Create component
-npm run build                                   # Build extension
-
-# Load in Chrome: chrome://extensions → Load unpacked → select extension/ folder
-
-git checkout -b add/my-adapter
-git add .
-git commit -m "Add my-adapter"
-git push
-```
-
-## What to Contribute
-
-| Type | Purpose | When to use |
-|------|---------|-------------|
-| **Auditor** | Find issues | Detect accessibility problems axe-core misses |
-| **Adapter** | Fix issues | Auto-fix detected issues, optionally with AI |
-| **Profile** | User preset | Configure tools for a specific disability |
-| **AI Tool** | Backend capability | Add new AI-powered features |
-
-## Project Structure
-
-```
-tools/                    # Shared JS code (used by both extension and CLI)
-├── auditors/            # Find issues
-├── adapters/            # Fix issues
-├── profiles/            # User presets
-└── utils/               # Shared utilities (ai.js, dom.js, color.js)
-
-extension/               # Chrome extension
-├── src/content.js      # Entry point (imports from tools/)
-├── background.js       # Service worker (Gemini API)
-└── popup.*             # Extension UI
-
-cli/                     # Python CLI
-├── ai4a11y.py          # Playwright + Claude vision
-└── cli.py              # Command wrapper
+ai4a11y create my-adapter --type adapter   # Scaffold
+npm run build                               # Build
+# Chrome: chrome://extensions → Load unpacked → extension/
 ```
 
 ## Adding an Auditor
 
-Auditors find accessibility issues on the page.
+Auditors find accessibility issues. Use **axe-core** for standard WCAG; custom auditors for issues axe misses.
 
 ```bash
 ai4a11y create missing-landmarks --type auditor
 ```
 
-Edit `tools/auditors/missing-landmarks.js`:
-
 ```js
+// tools/auditors/missing-landmarks.js
 import { isVisible, wasProcessed } from '../utils/dom.js';
-
-export function findMissingMain() {
-  if (document.querySelector('main, [role="main"]')) return [];
-  return [document.body];
-}
 
 export function findSectionsWithoutHeadings() {
   return Array.from(document.querySelectorAll('section, article'))
-    .filter(section => {
-      if (wasProcessed(section)) return false;
-      if (!isVisible(section)) return false;
-      return !section.querySelector('h1, h2, h3, h4, h5, h6');
-    });
+    .filter(el => !wasProcessed(el) && isVisible(el) && !el.querySelector('h1,h2,h3,h4,h5,h6'));
 }
 ```
 
-Add to `tools/auditors/index.js`:
-```js
-export * from './missing-landmarks.js';
-```
-
-**When to use custom auditors vs axe-core:**
-- Use **axe-core** for standard WCAG violations (already comprehensive)
-- Use **custom auditors** for issues axe misses, custom rules, or finding elements for AI enhancement
+Then add to `tools/auditors/index.js`: `export * from './missing-landmarks.js';`
 
 ## Adding an Adapter
 
-Adapters fix issues. They can handle specific axe rule IDs.
+Adapters fix issues. They can handle specific [axe rule IDs](https://dequeuniversity.com/rules/axe/).
 
 ```bash
 ai4a11y create fix-tables --type adapter --profiles blind
 ```
 
-Edit `tools/adapters/fix-tables.js`:
-
 ```js
+// tools/adapters/fix-tables.js
 import { markProcessed } from '../utils/dom.js';
 
-const logFix = globalThis.ai4a11yLogFix || (() => {});
-const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
-
 export const name = 'fix-tables';
-export const description = 'Add headers to data tables';
 export const profiles = ['blind'];
 
 export function fixTableHeaders(table) {
   if (table.dataset.ai4a11yProcessed) return;
   markProcessed(table, 'pending');
-
-  const firstRow = table.querySelector('tr');
-  firstRow?.querySelectorAll('td').forEach(td => {
-    const th = document.createElement('th');
-    th.innerHTML = td.innerHTML;
-    th.scope = 'col';
-    td.replaceWith(th);
-  });
-
+  // ... fix logic ...
   markProcessed(table, 'done');
-  incrementStat('wcag');
-  logFix('table-headers', table, '(none)', '(added)');
 }
 
-export const axeHandlers = {
-  'td-has-header': fixTableHeaders
-};
+export const axeHandlers = { 'td-has-header': fixTableHeaders };
 ```
 
-Add to `tools/adapters/index.js`:
+Then add to `tools/adapters/index.js`:
+
 ```js
 import { axeHandlers as tableHandlers } from './fix-tables.js';
-
-// Add to the existing axeHandlers export:
-export const axeHandlers = {
-  ...altHandlers,
-  ...labelHandlers,
-  ...captionHandlers,
-  ...contrastHandlers,
-  ...wcagHandlers,
-  ...tableHandlers,  // your new handlers
-};
+export const axeHandlers = { ...existingHandlers, ...tableHandlers };
 ```
 
-**Rule IDs:** https://dequeuniversity.com/rules/axe/
-
 ## Adding a Profile
-
-Profiles configure which tools are enabled for a specific user need.
 
 Edit `tools/profiles/settings.json`:
 
 ```json
-"elderly": {
-  "name": "Elderly",
-  "description": "Large text, high contrast, simplified UI",
-  "tools": {
-    "fontScale": 130,
-    "lineHeight": 1.8,
-    "largeCursor": true,
-    "enhanceFocus": true,
-    "fixContrast": true,
-    "autoSimplify": true
-  }
+"myProfile": {
+  "name": "My Profile",
+  "description": "What it does",
+  "tools": { "fontScale": 130, "darkMode": true, "autoSimplify": true }
 }
 ```
 
-**Available tools:**
-- `fontScale`, `lineHeight`, `letterSpacing` — text sizing
-- `largeCursor`, `enhanceFocus`, `dyslexiaFont` — visual aids
-- `darkMode`, `motionReducer`, `colorFilter` — display modes
-- `autoDescribe`, `autoFixLabels`, `autoSimplify`, `autoCaptions` — AI features
-- `focusMode`, `readerMode`, `keyboardNav` — navigation
+**Available tools:** `fontScale`, `lineHeight`, `letterSpacing`, `largeCursor`, `enhanceFocus`, `dyslexiaFont`, `darkMode`, `motionReducer`, `colorFilter`, `autoDescribe`, `autoFixLabels`, `autoSimplify`, `autoCaptions`, `focusMode`, `readerMode`, `keyboardNav`
 
 ## Adding an AI Tool
 
-AI tools use the provider abstraction so they work in both extension and CLI.
+AI tools need implementations in three places:
 
-1. Add function in `tools/utils/ai.js`:
-
-```js
-export async function myTool(data) {
-  if (!provider?.myTool) throw new Error('AI provider not set or missing myTool');
-  return provider.myTool(data);
-}
-```
-
-2. Add handler in `extension/background.js` (for Chrome/Gemini):
-
-```js
-// Add to the handlers object in chrome.runtime.onMessage.addListener:
-const handlers = {
-  // ... existing handlers ...
-  'myTool': () => myToolFunction(message.data),
-};
-```
-
-3. Set provider in `extension/src/content.js`:
-
-```js
-setAIProvider({
-  myTool: (data) => sendMessage({ type: 'myTool', data }).then(r => r?.result),
-  // ... other methods
-});
-```
-
-4. For CLI support, add to `cli/ai4a11y.py` via `page.expose_function`.
+1. **`tools/utils/ai.js`** — provider-agnostic interface
+2. **`extension/background.js`** — Gemini handler (add to `handlers` object)
+3. **`cli/ai4a11y.py`** — Claude handler (via `page.expose_function`)
 
 ## Testing
 
