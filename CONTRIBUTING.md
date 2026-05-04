@@ -68,11 +68,11 @@ export function fixTableHeaders(table) {
 export const axeHandlers = { 'td-has-header': fixTableHeaders };
 ```
 
-Then add to `tools/adapters/index.js`:
+Then in `tools/adapters/index.js`, import and spread into `axeHandlers`:
 
 ```js
 import { axeHandlers as tableHandlers } from './fix-tables.js';
-export const axeHandlers = { ...existingHandlers, ...tableHandlers };
+// In the axeHandlers export, add: ...tableHandlers,
 ```
 
 ## Adding a Profile
