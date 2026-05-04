@@ -245,17 +245,6 @@ ai4a11y session profiles              # List all available profiles
 
 Requires `ANTHROPIC_API_KEY` environment variable for AI features.
 
-## What It Does
-
-- Auto-generates alt text for images using AI
-- Fixes color contrast issues
-- Generates labels for unlabeled form fields
-- Simplifies complex text
-- Adds captions to media
-- Applies visual presets (dark mode, dyslexia font, large cursor, etc.)
-
-**Test site:** [ai4a11y-test-site.vercel.app](https://ai4a11y-test-site.vercel.app/) — a page with intentional accessibility issues for testing
-
 ## Profiles
 
 Select a profile to automatically enable the right tools:
@@ -313,22 +302,6 @@ AI-for-Accessibility-Toolkit-Draft/
 └── pyproject.toml               # pip install ai4a11y
 ```
 
-### AI Provider Abstraction
-
-Both interfaces use the same adapters. The AI provider is swapped at runtime:
-
-```javascript
-// Extension: uses Gemini via Chrome messaging
-setAIProvider({
-  describeImage: (data) => chrome.runtime.sendMessage({ type: 'describeImage', data })
-});
-
-// CLI: uses Claude via Playwright bridge
-setAIProvider({
-  describeImage: (data) => window.ai_describeImage(data)  // exposed from Python
-});
-```
-
 ## Contributing
 
 ### Adding an Adapter
@@ -365,41 +338,11 @@ Creates `tools/auditors/missing-landmarks.js`. Add to `tools/auditors/index.js`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
-## System Architecture
+## Architecture
 
-```mermaid
-flowchart TD
-    subgraph Tools[Tools from Teams]
-        T1[Simulations]
-        T2[Speech]
-        T3[Memory]
-        T4[Tutoring]
-        T5[Cognitive]
-        T6[...]
-    end
+**Tools** (auditors + adapters) live in `tools/` and run in the browser. The **AI provider** is swapped at runtime — Gemini for extensions, Claude for CLI. Both share the same adapters.
 
-    O[Orchestrator]
-    Corpus[(Corpus)]
-    User[User Agent]
-    
-    subgraph Target[Web App]
-        App[App Agent]
-        Adapt[Adapt Agent]
-    end
-
-    Tools <--> O
-    Corpus -.-> O
-    O <--> User
-    O <--> App
-    O <--> Adapt
-```
-
-**Flow:**
-1. **Tools** from each team provide specialized capabilities (simulations, speech recognition, memory aids, etc.)
-2. **Orchestrator** plans which tools to activate based on page content + user profile
-3. **Corpus** provides shared guidelines, benchmarks, and patterns
-4. **User Agent** manages preferences and ability profiles
-5. **App/Adapt Agents** analyze and modify the web app in real-time
+See [docs/architecture.md](docs/architecture.md) for technical details.
 
 ## Who's Building This
 
