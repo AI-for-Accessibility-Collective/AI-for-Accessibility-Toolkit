@@ -9,7 +9,7 @@
 [![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit-Draft)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-[Quick Start](#quick-start) · [Features](#features) · [Interfaces](#interfaces) · [Profiles](#profiles) · [API](docs/API.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](#contributing)
+[Quick Start](#quick-start) · [Tools](#tools) · [Interfaces](#interfaces) · [Profiles](#profiles) · [API](docs/API.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](#contributing)
 
 </div>
 
@@ -47,18 +47,21 @@ ai4a11y session describe                 # AI describes the page
 
 ### 💡 [See examples ↗](docs/API.md) — and give us a ⭐ if this helps!
 
-## Features
+## Tools
 
-| Feature | What it does |
-|---------|--------------|
-| **Auto Alt Text** | AI-generated image descriptions for screen readers |
-| **Fix Contrast** | Automatically adjusts colors to meet WCAG AA |
-| **Simplify Text** | Rewrites complex text for easier reading |
-| **Generate Labels** | Creates labels for unlabeled form fields |
-| **Auto Captions** | Adds captions to video/audio content |
-| **Visual Presets** | Dark mode, dyslexia font, large cursor, and more |
+The toolkit ships with **auditors** (find issues) and **adapters** (fix them). Teams across the [AI for Accessibility Collective](#whos-building-this) contribute specialized tools — and you can add your own.
 
-**Test it:** [ai4a11y-test-site.vercel.app](https://ai4a11y-test-site.vercel.app/) — a page with intentional accessibility issues
+| Auditors | Adapters |
+|----------|----------|
+| missing-alt | generate-alt, generate-labels, generate-captions |
+| missing-labels | fix-contrast, simplify-text, wcag-fixes |
+| missing-captions | visual-assist, dark-mode, focus-mode, reader-mode |
+| poor-contrast | motion-reducer, color-blind, keyboard-nav |
+| wcag-issues (axe-core) | read-aloud, voice-commands, auto-transcriber |
+
+Add your own: `ai4a11y create my-tool --type adapter` → see [CONTRIBUTING.md](CONTRIBUTING.md)
+
+**Test site:** [ai4a11y-test-site.vercel.app](https://ai4a11y-test-site.vercel.app/) — intentional accessibility issues for testing
 
 ## Interfaces
 
