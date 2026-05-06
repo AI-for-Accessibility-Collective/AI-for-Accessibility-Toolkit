@@ -11,7 +11,8 @@ tools/
 │   ├── missing-alt.js
 │   ├── missing-captions.js
 │   ├── missing-labels.js
-│   └── poor-contrast.js
+│   ├── poor-contrast.js
+│   └── wcag-issues.js    # axe-core wrapper
 ├── adapters/       # Fix issues or apply visual presets
 │   ├── index.js
 │   ├── generate-alt.js

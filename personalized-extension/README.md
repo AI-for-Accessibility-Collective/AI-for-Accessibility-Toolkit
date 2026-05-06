@@ -43,17 +43,19 @@ Enter the key during onboarding or in the popup Settings section.
 | Auto Alt Text | AI-generated image descriptions | Vision |
 | Fix Contrast | Fixes poor color contrast (WCAG AA) | Vision |
 | Simplify Text | AI rewrites complex text to simpler reading level | Cognitive, Reading |
+| Generate Labels | AI-generated accessible labels for form elements | Vision, Motor |
+| Generate Captions | AI-generated captions for video/audio content | Hearing |
+| WCAG Fixes | Auto-fix common WCAG violations (headings, IDs, ARIA) | Vision, Motor |
 | Dark Mode | Inverts page to dark theme | Vision, Sensory |
 | Focus Mode | Dims distractions, highlights current paragraph | Cognitive, Reading, Sensory |
 | Reader Mode | Clean distraction-free article view | Cognitive, Reading, Sensory |
 | Reduce Motion | Stops animations, GIFs, auto-playing videos | Sensory, Cognitive, Vision |
-| Large Cursor | Larger, more visible mouse cursor | Vision, Motor |
-| Dyslexia Font | OpenDyslexic font with wider spacing | Reading, Cognitive |
 | Keyboard Nav | Skip links, focus indicators, shortcuts | Motor, Vision |
 | Auto Captions | Caption controls for media | Hearing |
 | Voice Commands | Hands-free browsing via voice | Motor |
 | Color Filter | Color correction for color vision deficiencies | Vision |
-| Visual Assist | Adjustable font size, line height, spacing | Vision, Reading |
+| Read Aloud | Text-to-speech for page content | Vision, Cognitive |
+| Visual Assist | Font scaling, spacing, large cursor, dyslexia font, focus enhancement | Vision, Reading, Motor |
 
 ## Project Structure
 
@@ -69,9 +71,11 @@ personalized-extension/
 │   └── icons/
 ├── skills/
 │   ├── registry.js             # Skill catalog with metadata for AI recommender
-│   └── builtin/                # 14 built-in skill modules
+│   └── builtin/                # 16 built-in skill modules
 ├── utils/
 │   ├── ai.js                   # Gemini provider abstraction
+│   ├── color.js                # Color parsing and contrast
+│   ├── constants.js            # Shared constants
 │   ├── dom.js                  # DOM utilities
 │   └── recommender.js          # AI-powered skill recommendation
 ├── build.js                    # esbuild config
