@@ -80,9 +80,15 @@ Common issues and solutions for the AI for Accessibility Toolkit.
 
 **Solutions:**
 ```bash
-cd webapp/voicecontrol/backend  # or textcontrol
-uv venv && uv pip install -e .
-uv pip install -e ../../browser-harness
+cd webapp/voicecontrol/backend  # or textcontrol/backend
+cp .env.example .env
+# Edit .env with your Gemini API key
+
+# Voice control
+uv run python main.py
+
+# Text control
+uv run uvicorn main:app --host 0.0.0.0 --port 8080
 ```
 
 ### Chrome not connecting

@@ -48,7 +48,7 @@ import {
   findCanvasElements,
   findEmptyLinks,
   findUnlabeledInputs,
-  findPoorContrast,
+  findLowContrastText,
   runAxeAnalysis
 } from './tools/auditors/index.js';
 ```
@@ -60,7 +60,7 @@ import {
 | `findCanvasElements()` | `HTMLCanvasElement[]` | Canvas without aria-label |
 | `findEmptyLinks()` | `HTMLAnchorElement[]` | Links with no accessible name |
 | `findUnlabeledInputs()` | `HTMLInputElement[]` | Form inputs without labels |
-| `findPoorContrast()` | `Element[]` | Text failing WCAG contrast |
+| `findLowContrastText()` | `Element[]` | Text failing WCAG contrast |
 | `runAxeAnalysis()` | `Promise<Violation[]>` | Full axe-core audit |
 
 ### axe-core Integration
@@ -83,7 +83,7 @@ import {
   generateSvgDescription,
   simplifyText,
   summarizeContent,
-  fixContrastForElement
+  fixLowContrast
 } from './tools/adapters/index.js';
 
 // Generate alt text
@@ -136,8 +136,8 @@ Adapters can register handlers for specific axe-core rule IDs:
 // In your adapter file
 export const axeHandlers = {
   'image-alt': generateImageAlt,
-  'color-contrast': fixContrastForElement,
-  'label': generateLabelForInput
+  'color-contrast': fixLowContrast,
+  'label': generateFormLabel
 };
 ```
 

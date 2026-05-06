@@ -2,7 +2,7 @@
 
 ## Context
 
-The original [skill-creator/](/Users/jason/Downloads/skill-creator/) was for Claude Code skills — Markdown + Python + subagent grading. We are NOT publishing a new standalone extension. We are contributing one component to an existing Chrome extension being built concurrently by another team:
+The original skill-creator was for Claude Code skills — Markdown + Python + subagent grading. We are NOT publishing a new standalone extension. We are contributing one component to an existing Chrome extension being built concurrently by another team:
 
 > **Repo**: Here
 >
@@ -108,10 +108,10 @@ This audience deserves more than "non-technical user" generality:
 
 | From | What we take | What we drop |
 |---|---|---|
-| [SKILL.md](/Users/jason/Downloads/skill-creator/SKILL.md) | "Explain the why," progressive disclosure, lean writing — distilled into `prompts/creator.txt` and `prompts/refine.txt`. | Subagent orchestration, baselines, train/test splits, `claude -p` calls, Markdown frontmatter, packaging — all out. |
-| [assets/eval_review.html](/Users/jason/Downloads/skill-creator/assets/eval_review.html) | The visual idiom of "review a list of cases with toggle rows" — informs the **batch overview screen** for the onboarding entry. Borrow row layout and the per-row toggle pattern; raise contrast for accessibility. | Eval-set semantics, the export-to-JSON button, the file:// quirks. |
-| [scripts/improve_description.py](/Users/jason/Downloads/skill-creator/scripts/improve_description.py) | The conceptual shape of the refinement loop — current artifact + user feedback → Gemini → revised artifact. Inline this in `builder.js` as a function calling the `gemini` message. | The 1024-char description budget, the train/test holdout, the Python subprocess, the iteration-history file. |
-| [scripts/quick_validate.py](/Users/jason/Downloads/skill-creator/scripts/quick_validate.py) | Pre-save schema checks (id slug, name length, code is a non-empty string). Inline as a small `validate()` function. | YAML frontmatter parsing. |
+| `skill-creator/SKILL.md` | "Explain the why," progressive disclosure, lean writing — distilled into `prompts/creator.txt` and `prompts/refine.txt`. | Subagent orchestration, baselines, train/test splits, `claude -p` calls, Markdown frontmatter, packaging — all out. |
+| `skill-creator/assets/eval_review.html` | The visual idiom of "review a list of cases with toggle rows" — informs the **batch overview screen** for the onboarding entry. Borrow row layout and the per-row toggle pattern; raise contrast for accessibility. | Eval-set semantics, the export-to-JSON button, the file:// quirks. |
+| `skill-creator/scripts/improve_description.py` | The conceptual shape of the refinement loop — current artifact + user feedback → Gemini → revised artifact. Inline this in `builder.js` as a function calling the `gemini` message. | The 1024-char description budget, the train/test holdout, the Python subprocess, the iteration-history file. |
+| `skill-creator/scripts/quick_validate.py` | Pre-save schema checks (id slug, name length, code is a non-empty string). Inline as a small `validate()` function. | YAML frontmatter parsing. |
 | Everything else (`agents/*`, the rest of `scripts/*`, `eval-viewer/`, `references/schemas.md`) | — | Removed. Not relevant to this deliverable. |
 
 ## File-by-file deliverables

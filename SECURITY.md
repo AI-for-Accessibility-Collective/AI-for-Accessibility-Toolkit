@@ -31,8 +31,9 @@ We will respond within 48 hours and work with you to understand and address the 
 ### Content Script Execution
 
 - Content scripts run in an isolated world separate from page scripts
-- All AI-generated content is sanitized before DOM insertion using `escapeHtml()`
-- We do not use `eval()`, `innerHTML` with unsanitized content, or `document.write()`
+- AI-generated text content uses `textContent` for safe DOM insertion
+- Reader mode sanitizes extracted HTML before `innerHTML` insertion (tag/attribute allowlist)
+- We do not use `eval()` or `document.write()`
 
 ### Data Handling
 
