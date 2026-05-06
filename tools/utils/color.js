@@ -69,11 +69,12 @@ export function rgbToHex(r, g, b) {
 // Get effective background color (walks up DOM tree)
 export function getEffectiveBackground(element) {
   let el = element;
-  while (el && el !== document.body) {
+  while (el) {
     const bg = getComputedStyle(el).backgroundColor;
     if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
       return bg;
     }
+    if (el === document.documentElement) break;
     el = el.parentElement;
   }
   return 'rgb(255, 255, 255)';

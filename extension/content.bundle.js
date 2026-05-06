@@ -870,6 +870,12 @@ ${chunk}
       if (simplified) {
         element.dataset.ai4a11yOriginal = originalText;
         element.classList.add("ai4a11y-simplified");
+        const originalWrapper = document.createElement("span");
+        originalWrapper.className = "ai4a11y-original-content";
+        originalWrapper.style.display = "none";
+        while (element.firstChild) {
+          originalWrapper.appendChild(element.firstChild);
+        }
         const textContainer = document.createElement("span");
         textContainer.className = "ai4a11y-text-content";
         textContainer.textContent = simplified;
@@ -880,18 +886,20 @@ ${chunk}
         toggleBtn.onclick = () => {
           const showingOriginal = element.dataset.ai4a11yShowOriginal === "true";
           if (showingOriginal) {
-            textContainer.textContent = simplified;
+            originalWrapper.style.display = "none";
+            textContainer.style.display = "";
             toggleBtn.textContent = "Show original";
             toggleBtn.setAttribute("aria-pressed", "false");
             element.dataset.ai4a11yShowOriginal = "false";
           } else {
-            textContainer.textContent = originalText;
+            textContainer.style.display = "none";
+            originalWrapper.style.display = "";
             toggleBtn.textContent = "Show simplified";
             toggleBtn.setAttribute("aria-pressed", "true");
             element.dataset.ai4a11yShowOriginal = "true";
           }
         };
-        element.textContent = "";
+        element.appendChild(originalWrapper);
         element.appendChild(textContainer);
         element.appendChild(toggleBtn);
         element.dataset.ai4a11ySimplified = "done";
@@ -995,11 +1003,12 @@ ${chunk}
   }
   function getEffectiveBackground(element) {
     let el = element;
-    while (el && el !== document.body) {
+    while (el) {
       const bg = getComputedStyle(el).backgroundColor;
       if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
         return bg;
       }
+      if (el === document.documentElement) break;
       el = el.parentElement;
     }
     return "rgb(255, 255, 255)";
@@ -2874,7 +2883,7 @@ ${chunk}
   function notifyProgress(phase, progress = 0) {
     try {
       const result = chrome.runtime.sendMessage({
-        type: "progress",
+        type: "scanProgress",
         phase,
         progress
       });
@@ -3077,7 +3086,6 @@ ${chunk}
     }
     fixTargetBlankLinks();
     fixPositiveTabindexElements();
-    fixDuplicateIds();
   }
   async function runTextProcessing() {
     if (isEnabled("autoSimplify")) {
@@ -3133,20 +3141,6 @@ ${chunk}
       }
     });
   }
-  function fixDuplicateIds() {
-    const seen = /* @__PURE__ */ new Map();
-    document.querySelectorAll("[id]").forEach((el) => {
-      if (el.dataset.ai4a11yProcessed) return;
-      const id = el.id;
-      if (!id) return;
-      if (seen.has(id)) {
-        el.id = `${id}_${Math.random().toString(36).substring(2, 7)}`;
-        el.dataset.ai4a11yProcessed = "true";
-      } else {
-        seen.set(id, el);
-      }
-    });
-  }
   function revertAll() {
     VisualAssist.disable();
     MotionReducer.disable();
@@ -3158,13 +3152,21 @@ ${chunk}
     VoiceCommands.disable();
     KeyboardNavigator.disable();
     AutoTranscriber.disable();
-    document.querySelectorAll(".ai4a11y-simplified, .ai4a11y-original").forEach((el) => {
-      var _a;
-      if (el.dataset.ai4a11yOriginal) {
-        (_a = el.querySelector(".ai4a11y-toggle-original")) == null ? void 0 : _a.remove();
-        el.textContent = el.dataset.ai4a11yOriginal;
-        el.classList.remove("ai4a11y-simplified", "ai4a11y-original");
+    document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
+      var _a, _b;
+      const originalWrapper = el.querySelector(".ai4a11y-original-content");
+      if (originalWrapper) {
+        (_a = el.querySelector(".ai4a11y-text-content")) == null ? void 0 : _a.remove();
+        (_b = el.querySelector(".ai4a11y-toggle-original")) == null ? void 0 : _b.remove();
+        while (originalWrapper.firstChild) {
+          el.appendChild(originalWrapper.firstChild);
+        }
+        originalWrapper.remove();
       }
+      delete el.dataset.ai4a11yOriginal;
+      delete el.dataset.ai4a11ySimplified;
+      delete el.dataset.ai4a11yShowOriginal;
+      el.classList.remove("ai4a11y-simplified");
     });
     document.querySelectorAll("a.ai4a11y-adapted").forEach((link) => {
       if (link.dataset.ai4a11yOriginal) {

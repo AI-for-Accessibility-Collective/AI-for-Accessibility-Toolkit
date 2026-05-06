@@ -2270,6 +2270,12 @@ ${chunk}
       if (simplified) {
         element.dataset.ai4a11yOriginal = originalText;
         element.classList.add("ai4a11y-simplified");
+        const originalWrapper = document.createElement("span");
+        originalWrapper.className = "ai4a11y-original-content";
+        originalWrapper.style.display = "none";
+        while (element.firstChild) {
+          originalWrapper.appendChild(element.firstChild);
+        }
         const textContainer = document.createElement("span");
         textContainer.className = "ai4a11y-text-content";
         textContainer.textContent = simplified;
@@ -2280,18 +2286,20 @@ ${chunk}
         toggleBtn.onclick = () => {
           const showingOriginal = element.dataset.ai4a11yShowOriginal === "true";
           if (showingOriginal) {
-            textContainer.textContent = simplified;
+            originalWrapper.style.display = "none";
+            textContainer.style.display = "";
             toggleBtn.textContent = "Show original";
             toggleBtn.setAttribute("aria-pressed", "false");
             element.dataset.ai4a11yShowOriginal = "false";
           } else {
-            textContainer.textContent = originalText;
+            textContainer.style.display = "none";
+            originalWrapper.style.display = "";
             toggleBtn.textContent = "Show simplified";
             toggleBtn.setAttribute("aria-pressed", "true");
             element.dataset.ai4a11yShowOriginal = "true";
           }
         };
-        element.textContent = "";
+        element.appendChild(originalWrapper);
         element.appendChild(textContainer);
         element.appendChild(toggleBtn);
         element.dataset.ai4a11ySimplified = "done";
@@ -2403,11 +2411,12 @@ ${chunk}
   }
   function getEffectiveBackground(element) {
     let el = element;
-    while (el && el !== document.body) {
+    while (el) {
       const bg = getComputedStyle(el).backgroundColor;
       if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
         return bg;
       }
+      if (el === document.documentElement) break;
       el = el.parentElement;
     }
     return "rgb(255, 255, 255)";
