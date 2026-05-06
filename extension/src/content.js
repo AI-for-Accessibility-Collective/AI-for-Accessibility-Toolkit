@@ -263,7 +263,6 @@ async function runAdditionalScans() {
 
   fixTargetBlankLinks();
   fixPositiveTabindexElements();
-  fixDuplicateIds();
 }
 
 async function runTextProcessing() {
@@ -327,21 +326,6 @@ function fixPositiveTabindexElements() {
   });
 }
 
-function fixDuplicateIds() {
-  const seen = new Map();
-  document.querySelectorAll('[id]').forEach(el => {
-    if (el.dataset.ai4a11yProcessed) return;
-    const id = el.id;
-    if (!id) return;
-    if (seen.has(id)) {
-      el.id = `${id}_${Math.random().toString(36).substring(2, 7)}`;
-      el.dataset.ai4a11yProcessed = 'true';
-    } else {
-      seen.set(id, el);
-    }
-  });
-}
-
 function revertAll() {
   VisualAssist.disable();
   MotionReducer.disable();
@@ -354,12 +338,20 @@ function revertAll() {
   KeyboardNavigator.disable();
   AutoTranscriber.disable();
 
-  document.querySelectorAll('.ai4a11y-simplified, .ai4a11y-original').forEach(el => {
-    if (el.dataset.ai4a11yOriginal) {
+  document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
+    const originalWrapper = el.querySelector('.ai4a11y-original-content');
+    if (originalWrapper) {
+      el.querySelector('.ai4a11y-text-content')?.remove();
       el.querySelector('.ai4a11y-toggle-original')?.remove();
-      el.textContent = el.dataset.ai4a11yOriginal;
-      el.classList.remove('ai4a11y-simplified', 'ai4a11y-original');
+      while (originalWrapper.firstChild) {
+        el.appendChild(originalWrapper.firstChild);
+      }
+      originalWrapper.remove();
     }
+    delete el.dataset.ai4a11yOriginal;
+    delete el.dataset.ai4a11ySimplified;
+    delete el.dataset.ai4a11yShowOriginal;
+    el.classList.remove('ai4a11y-simplified');
   });
 
   document.querySelectorAll('a.ai4a11y-adapted').forEach(link => {

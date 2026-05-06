@@ -1259,10 +1259,10 @@ def _dispatch_action(page, decision):
         page.mouse.up()
         return 1
     if action == 'scroll':
-        page.evaluate(f"window.scrollBy(0, {decision.get('dy', 800)})")
+        page.evaluate("(dy) => window.scrollBy(0, dy)", int(decision.get('dy', 800)))
         return 0
     if action == 'scroll_to':
-        page.evaluate(f"window.scrollTo(0, {decision.get('y', 0)})")
+        page.evaluate("(y) => window.scrollTo(0, y)", int(decision.get('y', 0)))
         return 0
     if action == 'type':
         page.keyboard.type(decision.get('text', ''))
@@ -1311,7 +1311,7 @@ def _dispatch_action(page, decision):
         page.mouse.up()
         return 1
     if action == 'upload':
-        page.evaluate(f"document.elementFromPoint({decision.get('x')}, {decision.get('y')})?.click()")
+        page.evaluate("([x, y]) => document.elementFromPoint(x, y)?.click()", [int(decision.get('x', 0)), int(decision.get('y', 0))])
         time.sleep(0.3)
         inputs = page.locator("input[type='file']")
         if inputs.count() > 0:
@@ -2314,7 +2314,7 @@ def session_scroll(direction='down', amount=800):
     p, browser, page = session_connect()
     try:
         dy = amount if direction in ('down', 'd') else -amount
-        page.evaluate(f"window.scrollBy(0, {dy})")
+        page.evaluate("(dy) => window.scrollBy(0, dy)", int(dy))
         time.sleep(0.5)
         pos = page.evaluate("window.scrollY")
         print(f"Scrolled {direction} → y={pos}", flush=True)
@@ -4932,10 +4932,10 @@ def session_simplify(selector=None, json_output=False):
                 target_selector = 'body'
 
         # Get original text
-        original = page.evaluate(f"""() => {{
-            const el = document.querySelector('{target_selector}');
+        original = page.evaluate("""(sel) => {
+            const el = document.querySelector(sel);
             return el ? el.innerText : null;
-        }}""")
+        }""", target_selector)
 
         if not original:
             print(f"Element not found: {target_selector}", flush=True)
@@ -5021,18 +5021,18 @@ def session_fix_labels(max_elements=10, json_output=False):
                     continue
 
                 # Get context about the element
-                context = page.evaluate(f"""() => {{
-                    const el = document.querySelector('{selector}');
+                context = page.evaluate("""(sel) => {
+                    const el = document.querySelector(sel);
                     if (!el) return null;
-                    return {{
+                    return {
                         tag: el.tagName,
                         type: el.type || el.role,
                         href: el.href,
                         innerHTML: el.innerHTML.slice(0, 200),
                         parent: el.parentElement?.innerText?.slice(0, 100),
                         nearby: el.parentElement?.parentElement?.innerText?.slice(0, 200)
-                    }};
-                }}""")
+                    };
+                }""", selector)
 
                 if not context:
                     print("no context", flush=True)
@@ -5261,16 +5261,16 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                 for fix in label_fixes[:count]:
                     selector = fix['selector']
                     try:
-                        context = page.evaluate(f"""() => {{
-                            const el = document.querySelector('{selector}');
+                        context = page.evaluate("""(sel) => {
+                            const el = document.querySelector(sel);
                             if (!el) return null;
-                            return {{
+                            return {
                                 tag: el.tagName,
                                 href: el.href,
                                 text: el.innerText?.slice(0,100),
                                 parent: el.parentElement?.innerText?.slice(0,100)
-                            }};
-                        }}""")
+                            };
+                        }""", selector)
                         if not context:
                             continue
                         prompt = f"Generate a 2-5 word accessible label for: {json.dumps(context)}. Return ONLY the label."
@@ -5295,12 +5295,12 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                     selector = fix['selector']
                     try:
                         # Get current colors
-                        colors = page.evaluate(f"""() => {{
-                            const el = document.querySelector('{selector}');
+                        colors = page.evaluate("""(sel) => {
+                            const el = document.querySelector(sel);
                             if (!el) return null;
                             const s = getComputedStyle(el);
-                            return {{ fg: s.color, bg: s.backgroundColor }};
-                        }}""")
+                            return { fg: s.color, bg: s.backgroundColor };
+                        }""", selector)
                         if not colors:
                             continue
                         # Simple fix: make text black or white based on background
@@ -5339,7 +5339,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             for item in simplify_items[:5]:
                 selector = item['selector']
                 try:
-                    text = page.evaluate(f"() => document.querySelector('{selector}')?.textContent?.trim()?.slice(0, 500)")
+                    text = page.evaluate("(sel) => document.querySelector(sel)?.textContent?.trim()?.slice(0, 500)", selector)
                     if not text:
                         continue
                     prompt = f"Simplify this text for someone with cognitive disabilities. Use short sentences, simple words. Keep the meaning. Text: {text}"
@@ -5349,16 +5349,16 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                     except:
                         simplified = raw.strip()
                     simplified = simplified.strip('"\'').strip()
-                    page.evaluate(f"""(d) => {{
+                    page.evaluate("""(d) => {
                         const el = document.querySelector(d.s);
-                        if (el) {{
+                        if (el) {
                             el.dataset.ai4a11ySimplified = 'true';
                             el.dataset.ai4a11yOriginal = el.textContent;
                             el.textContent = d.t;
                             el.style.backgroundColor = '#e8f5e9';
                             el.title = 'Text simplified for readability';
-                        }}
-                    }}""", {'s': selector, 't': simplified})
+                        }
+                    }""", {'s': selector, 't': simplified})
                     text_simplified += 1
                     print(f"        ✓ {selector[:30]}... simplified", flush=True)
                 except Exception as e:
@@ -5370,7 +5370,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             for item in summarize_items[:3]:
                 selector = item['selector']
                 try:
-                    text = page.evaluate(f"() => document.querySelector('{selector}')?.textContent?.trim()?.slice(0, 1000)")
+                    text = page.evaluate("(sel) => document.querySelector(sel)?.textContent?.trim()?.slice(0, 1000)", selector)
                     if not text:
                         continue
                     prompt = f"Write a 1-2 sentence summary of this content: {text}"

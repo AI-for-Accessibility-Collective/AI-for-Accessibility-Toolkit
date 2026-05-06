@@ -16,7 +16,7 @@ export function sendMessage(msg) {
 export function notifyProgress(phase, progress = 0) {
   try {
     const result = chrome.runtime.sendMessage({
-      type: 'progress',
+      type: 'scanProgress',
       phase,
       progress
     });

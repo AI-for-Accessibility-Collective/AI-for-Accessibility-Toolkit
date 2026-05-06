@@ -27,16 +27,21 @@ export async function simplifyText(element) {
 
     if (simplified) {
 
-      // Store original
       element.dataset.ai4a11yOriginal = originalText;
       element.classList.add('ai4a11y-simplified');
 
-      // Create text container to avoid toggle button destruction on text swap
+      // Wrap existing children in a hidden span to preserve DOM tree (links, images, etc.)
+      const originalWrapper = document.createElement('span');
+      originalWrapper.className = 'ai4a11y-original-content';
+      originalWrapper.style.display = 'none';
+      while (element.firstChild) {
+        originalWrapper.appendChild(element.firstChild);
+      }
+
       const textContainer = document.createElement('span');
       textContainer.className = 'ai4a11y-text-content';
       textContainer.textContent = simplified;
 
-      // Add toggle button
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'ai4a11y-toggle-original';
       toggleBtn.textContent = 'Show original';
@@ -44,20 +49,21 @@ export async function simplifyText(element) {
       toggleBtn.onclick = () => {
         const showingOriginal = element.dataset.ai4a11yShowOriginal === 'true';
         if (showingOriginal) {
-          textContainer.textContent = simplified;
+          originalWrapper.style.display = 'none';
+          textContainer.style.display = '';
           toggleBtn.textContent = 'Show original';
           toggleBtn.setAttribute('aria-pressed', 'false');
           element.dataset.ai4a11yShowOriginal = 'false';
         } else {
-          textContainer.textContent = originalText;
+          textContainer.style.display = 'none';
+          originalWrapper.style.display = '';
           toggleBtn.textContent = 'Show simplified';
           toggleBtn.setAttribute('aria-pressed', 'true');
           element.dataset.ai4a11yShowOriginal = 'true';
         }
       };
 
-      // Clear element and add container + button
-      element.textContent = '';
+      element.appendChild(originalWrapper);
       element.appendChild(textContainer);
       element.appendChild(toggleBtn);
 
@@ -140,10 +146,17 @@ export async function summarizeContent(element) {
 
 // Restore original text
 export function restoreOriginal(element) {
-  const original = element.dataset.ai4a11yOriginal;
-  if (original) {
-    element.textContent = original;
-    delete element.dataset.ai4a11yOriginal;
-    delete element.dataset.ai4a11ySimplified;
+  const originalWrapper = element.querySelector('.ai4a11y-original-content');
+  if (originalWrapper) {
+    element.querySelector('.ai4a11y-text-content')?.remove();
+    element.querySelector('.ai4a11y-toggle-original')?.remove();
+    while (originalWrapper.firstChild) {
+      element.appendChild(originalWrapper.firstChild);
+    }
+    originalWrapper.remove();
   }
+  delete element.dataset.ai4a11yOriginal;
+  delete element.dataset.ai4a11ySimplified;
+  delete element.dataset.ai4a11yShowOriginal;
+  element.classList.remove('ai4a11y-simplified');
 }
