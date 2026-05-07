@@ -341,7 +341,7 @@ See [docs/architecture.md](docs/architecture.md) for technical details.
 
 | Team | Focus |
 |------|-------|
-| Google | NAI — Multimodal AI agents that adapt UIs in real-time |
+| Google.org | NAI — Multimodal AI agents that adapt UIs in real-time |
 | Stanford | Accessible Interactive Simulations — sonification for BLV STEM learners |
 | MIT Media Lab | Universal Memory Assistant — wearable memory aid for older adults |
 | UW | AI-Augmented Storytelling — creative expression tools for BLV children |
@@ -401,7 +401,7 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 <div align="center">
 <p>
-  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google" height="28"></a>
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="28"></a>
   &nbsp;&nbsp;
   <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="38"></a>
   &nbsp;&nbsp;
