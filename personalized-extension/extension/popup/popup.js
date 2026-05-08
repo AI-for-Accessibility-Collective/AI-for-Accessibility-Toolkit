@@ -828,7 +828,114 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Query states from content
   queryToolStates();
   queryStats();
+
+  // ============================================================
+  // Browser Agent panel
+  // ============================================================
+  // Lives in chrome.storage.local.bhAgent and is updated by the service-
+  // worker agent loop in extension/browser-harness/agent.js. The popup is
+  // pure UI: render-from-storage on open, subscribe to onChanged for live
+  // updates, send messages to start/stop/clear.
+  setupAgentPanel();
 });
+
+function setupAgentPanel() {
+  const taskInput = document.getElementById('agentTaskInput');
+  const runBtn = document.getElementById('agentRunBtn');
+  const stopBtn = document.getElementById('agentStopBtn');
+  const clearBtn = document.getElementById('agentClearBtn');
+  const statusEl = document.getElementById('agentStatus');
+  const logEl = document.getElementById('agentLog');
+  if (!taskInput || !runBtn) return;
+
+  function renderAgent(state) {
+    const s = state || { status: 'idle', log: [] };
+    statusEl.textContent = s.status || 'idle';
+    statusEl.dataset.status = s.status || 'idle';
+
+    const running = s.status === 'running';
+    runBtn.hidden = running;
+    stopBtn.hidden = !running;
+    runBtn.disabled = running;
+    taskInput.disabled = running;
+
+    if (s.task && !taskInput.value) taskInput.value = s.task;
+
+    const log = s.log || [];
+    if (!log.length) {
+      logEl.innerHTML = '<div class="agent-log-empty">No runs yet. Type a task and press Run.</div>';
+      return;
+    }
+    const wasAtBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 8;
+    logEl.innerHTML = '';
+    for (const entry of log) {
+      const row = document.createElement('div');
+      row.className = 'agent-entry';
+      row.dataset.kind = entry.kind || 'info';
+      const tag = document.createElement('span');
+      tag.className = 'agent-entry-tag';
+      tag.textContent = entry.step != null ? `#${entry.step}` : (entry.kind || 'info');
+      const text = document.createElement('span');
+      text.className = 'agent-entry-text';
+      text.textContent = entry.text || '';
+      if (entry.action) {
+        const small = document.createElement('small');
+        small.textContent = entry.action;
+        text.appendChild(small);
+      }
+      row.appendChild(tag);
+      row.appendChild(text);
+      logEl.appendChild(row);
+    }
+    if (wasAtBottom) logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // Initial render from persisted state.
+  chrome.storage.local.get('bhAgent', (data) => renderAgent(data.bhAgent));
+
+  // Live updates while the popup is open.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !changes.bhAgent) return;
+    renderAgent(changes.bhAgent.newValue);
+  });
+
+  function startRun() {
+    const task = taskInput.value.trim();
+    if (!task) {
+      taskInput.focus();
+      return;
+    }
+    chrome.runtime.sendMessage({ type: 'bhAgentStart', task }, (resp) => {
+      if (chrome.runtime.lastError || (resp && resp.error)) {
+        const err = (resp && resp.error) || chrome.runtime.lastError?.message || 'failed to start';
+        // Surface the failure in the log even though the loop never wrote to storage.
+        chrome.storage.local.get('bhAgent', (cur) => {
+          const state = cur.bhAgent || { task, status: 'idle', log: [] };
+          state.status = 'error';
+          state.error = err;
+          state.log = (state.log || []).concat({ t: Date.now(), kind: 'error', text: err });
+          chrome.storage.local.set({ bhAgent: state });
+        });
+      }
+    });
+  }
+
+  runBtn.addEventListener('click', startRun);
+  taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      startRun();
+    }
+  });
+  stopBtn.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'bhAgentStop' }, () => {});
+  });
+  clearBtn.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'bhAgentClear' }, () => {
+      renderAgent(null);
+    });
+  });
+}
 
 async function sendToContent(message) {
   try {

@@ -1,0 +1,591 @@
+{
+  "interaction": [
+    "connection",
+    "cookies",
+    "cross-origin-iframes",
+    "dialogs",
+    "downloads",
+    "drag-and-drop",
+    "dropdowns",
+    "iframes",
+    "network-requests",
+    "print-as-pdf",
+    "profile-sync",
+    "screenshots",
+    "scrolling",
+    "shadow-dom",
+    "tabs",
+    "uploads",
+    "viewport"
+  ],
+  "domain": {
+    "boss-zhipin": {
+      "dir": "BOSS-zhipin",
+      "files": [
+        "chat",
+        "job-search",
+        "navigation"
+      ]
+    },
+    "aa": {
+      "dir": "aa",
+      "files": [
+        "checkout"
+      ]
+    },
+    "agentlist": {
+      "dir": "agentlist",
+      "files": [
+        "discovery"
+      ]
+    },
+    "alaska": {
+      "dir": "alaska",
+      "files": [
+        "checkout"
+      ]
+    },
+    "amazon": {
+      "dir": "amazon",
+      "files": [
+        "product-search"
+      ]
+    },
+    "archive-org": {
+      "dir": "archive-org",
+      "files": [
+        "scraping"
+      ]
+    },
+    "articulate-rise": {
+      "dir": "articulate-rise",
+      "files": [
+        "code-blocks"
+      ]
+    },
+    "arxiv": {
+      "dir": "arxiv",
+      "files": [
+        "scraping"
+      ]
+    },
+    "arxiv-bulk": {
+      "dir": "arxiv-bulk",
+      "files": [
+        "scraping"
+      ]
+    },
+    "atlas": {
+      "dir": "atlas",
+      "files": [
+        "overview"
+      ]
+    },
+    "bigbang-hr": {
+      "dir": "bigbang-hr",
+      "files": [
+        "checkout"
+      ]
+    },
+    "bilibili": {
+      "dir": "bilibili",
+      "files": [
+        "navigation"
+      ]
+    },
+    "booking-com": {
+      "dir": "booking-com",
+      "files": [
+        "scraping"
+      ]
+    },
+    "browser-use-cloud": {
+      "dir": "browser-use-cloud",
+      "files": [
+        "cloud"
+      ]
+    },
+    "capterra": {
+      "dir": "capterra",
+      "files": [
+        "scraping"
+      ]
+    },
+    "centilebrain": {
+      "dir": "centilebrain",
+      "files": [
+        "generate-estimates"
+      ]
+    },
+    "claude-ai": {
+      "dir": "claude-ai",
+      "files": [
+        "share-export"
+      ]
+    },
+    "coingecko": {
+      "dir": "coingecko",
+      "files": [
+        "scraping"
+      ]
+    },
+    "coinmarketcap": {
+      "dir": "coinmarketcap",
+      "files": [
+        "scraping"
+      ]
+    },
+    "coursera": {
+      "dir": "coursera",
+      "files": [
+        "scraping"
+      ]
+    },
+    "craigslist": {
+      "dir": "craigslist",
+      "files": [
+        "scraping"
+      ]
+    },
+    "crossref": {
+      "dir": "crossref",
+      "files": [
+        "scraping"
+      ]
+    },
+    "ctrip": {
+      "dir": "ctrip",
+      "files": [
+        "hotels"
+      ]
+    },
+    "dev-to": {
+      "dir": "dev-to",
+      "files": [
+        "scraping"
+      ]
+    },
+    "duckduckgo": {
+      "dir": "duckduckgo",
+      "files": [
+        "scraping"
+      ]
+    },
+    "ebay": {
+      "dir": "ebay",
+      "files": [
+        "scraping"
+      ]
+    },
+    "etsy": {
+      "dir": "etsy",
+      "files": [
+        "scraping"
+      ]
+    },
+    "eventbrite": {
+      "dir": "eventbrite",
+      "files": [
+        "scraping"
+      ]
+    },
+    "expedia": {
+      "dir": "expedia",
+      "files": [
+        "automation"
+      ]
+    },
+    "facebook": {
+      "dir": "facebook",
+      "files": [
+        "groups",
+        "pages"
+      ]
+    },
+    "flipkart": {
+      "dir": "flipkart",
+      "files": [
+        "shopping"
+      ]
+    },
+    "framer": {
+      "dir": "framer",
+      "files": [
+        "editor"
+      ]
+    },
+    "fred": {
+      "dir": "fred",
+      "files": [
+        "scraping"
+      ]
+    },
+    "g2": {
+      "dir": "g2",
+      "files": [
+        "scraping"
+      ]
+    },
+    "genius": {
+      "dir": "genius",
+      "files": [
+        "scraping"
+      ]
+    },
+    "github": {
+      "dir": "github",
+      "files": [
+        "repo-actions",
+        "scraping"
+      ]
+    },
+    "glassdoor": {
+      "dir": "glassdoor",
+      "files": [
+        "scraping"
+      ]
+    },
+    "gmail": {
+      "dir": "gmail",
+      "files": [
+        "compose"
+      ]
+    },
+    "goodreads": {
+      "dir": "goodreads",
+      "files": [
+        "scraping"
+      ]
+    },
+    "gutenberg": {
+      "dir": "gutenberg",
+      "files": [
+        "scraping"
+      ]
+    },
+    "hackernews": {
+      "dir": "hackernews",
+      "files": [
+        "scraping"
+      ]
+    },
+    "howlongtobeat": {
+      "dir": "howlongtobeat",
+      "files": [
+        "scraping"
+      ]
+    },
+    "imdb": {
+      "dir": "imdb",
+      "files": [
+        "scraping"
+      ]
+    },
+    "itch-io": {
+      "dir": "itch-io",
+      "files": [
+        "scraping"
+      ]
+    },
+    "job-boards": {
+      "dir": "job-boards",
+      "files": [
+        "indeed-glassdoor"
+      ]
+    },
+    "letterboxd": {
+      "dir": "letterboxd",
+      "files": [
+        "scraping"
+      ]
+    },
+    "linkedin": {
+      "dir": "linkedin",
+      "files": [
+        "invitation-manager"
+      ]
+    },
+    "loom": {
+      "dir": "loom",
+      "files": [
+        "folder-enumeration"
+      ]
+    },
+    "ly-com": {
+      "dir": "ly-com",
+      "files": [
+        "hotels"
+      ]
+    },
+    "macrotrends": {
+      "dir": "macrotrends",
+      "files": [
+        "scraping"
+      ]
+    },
+    "manus": {
+      "dir": "manus",
+      "files": [
+        "tasks"
+      ]
+    },
+    "medium": {
+      "dir": "medium",
+      "files": [
+        "article-hydration",
+        "scraping"
+      ]
+    },
+    "metacritic": {
+      "dir": "metacritic",
+      "files": [
+        "scraping"
+      ]
+    },
+    "musicbrainz": {
+      "dir": "musicbrainz",
+      "files": [
+        "scraping"
+      ]
+    },
+    "nasa": {
+      "dir": "nasa",
+      "files": [
+        "scraping"
+      ]
+    },
+    "news-aggregation": {
+      "dir": "news-aggregation",
+      "files": [
+        "multi-source"
+      ]
+    },
+    "open-library": {
+      "dir": "open-library",
+      "files": [
+        "scraping"
+      ]
+    },
+    "openalex": {
+      "dir": "openalex",
+      "files": [
+        "scraping"
+      ]
+    },
+    "openstreetmap": {
+      "dir": "openstreetmap",
+      "files": [
+        "scraping"
+      ]
+    },
+    "package-registries": {
+      "dir": "package-registries",
+      "files": [
+        "npm-pypi"
+      ]
+    },
+    "perplexity": {
+      "dir": "perplexity",
+      "files": [
+        "computer"
+      ]
+    },
+    "polymarket": {
+      "dir": "polymarket",
+      "files": [
+        "scraping"
+      ]
+    },
+    "producthunt": {
+      "dir": "producthunt",
+      "files": [
+        "scraping"
+      ]
+    },
+    "pubmed": {
+      "dir": "pubmed",
+      "files": [
+        "scraping"
+      ]
+    },
+    "quora": {
+      "dir": "quora",
+      "files": [
+        "scraping"
+      ]
+    },
+    "rawg": {
+      "dir": "rawg",
+      "files": [
+        "scraping"
+      ]
+    },
+    "reddit": {
+      "dir": "reddit",
+      "files": [
+        "scraping"
+      ]
+    },
+    "rest-countries": {
+      "dir": "rest-countries",
+      "files": [
+        "scraping"
+      ]
+    },
+    "sec-edgar": {
+      "dir": "sec-edgar",
+      "files": [
+        "scraping"
+      ]
+    },
+    "shopify-admin": {
+      "dir": "shopify-admin",
+      "files": [
+        "README",
+        "embedded-apps",
+        "knowledge-base",
+        "polaris-inputs"
+      ]
+    },
+    "soundcloud": {
+      "dir": "soundcloud",
+      "files": [
+        "scraping"
+      ]
+    },
+    "spotify": {
+      "dir": "spotify",
+      "files": [
+        "scraping"
+      ]
+    },
+    "stackoverflow": {
+      "dir": "stackoverflow",
+      "files": [
+        "scraping"
+      ]
+    },
+    "steam": {
+      "dir": "steam",
+      "files": [
+        "scraping"
+      ]
+    },
+    "substack": {
+      "dir": "substack",
+      "files": [
+        "scraping"
+      ]
+    },
+    "tasksquad-ai": {
+      "dir": "tasksquad-ai",
+      "files": [
+        "agents",
+        "auth",
+        "tasks"
+      ]
+    },
+    "thetechgeeks": {
+      "dir": "thetechgeeks",
+      "files": [
+        "pricing"
+      ]
+    },
+    "tiktok": {
+      "dir": "tiktok",
+      "files": [
+        "upload"
+      ]
+    },
+    "tradingview": {
+      "dir": "tradingview",
+      "files": [
+        "scraping"
+      ]
+    },
+    "trello": {
+      "dir": "trello",
+      "files": [
+        "boards-and-lists"
+      ]
+    },
+    "trustpilot": {
+      "dir": "trustpilot",
+      "files": [
+        "scraping"
+      ]
+    },
+    "vercel": {
+      "dir": "vercel",
+      "files": [
+        "vercel"
+      ]
+    },
+    "walmart": {
+      "dir": "walmart",
+      "files": [
+        "scraping"
+      ]
+    },
+    "wayback-machine": {
+      "dir": "wayback-machine",
+      "files": [
+        "scraping"
+      ]
+    },
+    "weather": {
+      "dir": "weather",
+      "files": [
+        "scraping"
+      ]
+    },
+    "wehotel": {
+      "dir": "wehotel",
+      "files": [
+        "hotels"
+      ]
+    },
+    "wellfound": {
+      "dir": "wellfound",
+      "files": [
+        "scraping"
+      ]
+    },
+    "weread": {
+      "dir": "weread",
+      "files": [
+        "read"
+      ]
+    },
+    "world-bank": {
+      "dir": "world-bank",
+      "files": [
+        "scraping"
+      ]
+    },
+    "x": {
+      "dir": "x",
+      "files": [
+        "posting"
+      ]
+    },
+    "xiaohongshu": {
+      "dir": "xiaohongshu",
+      "files": [
+        "scraping"
+      ]
+    },
+    "youtube": {
+      "dir": "youtube",
+      "files": [
+        "scraping"
+      ]
+    },
+    "zillow": {
+      "dir": "zillow",
+      "files": [
+        "scraping"
+      ]
+    }
+  }
+}
