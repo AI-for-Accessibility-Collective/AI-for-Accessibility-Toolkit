@@ -51,6 +51,33 @@
       <span class="material-symbols-outlined spin" aria-hidden="true">sync</span> Thinking&hellip;
     </div>
 
+    <!-- Browser Agent (CDP-driven harness) -->
+    <section class="section" id="agentSection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">Browser Agent</span>
+        <span class="agent-status" id="agentStatus">idle</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="agent-input-row">
+          <label for="agentTaskInput" class="sr-only">Browser task</label>
+          <input type="text" id="agentTaskInput" placeholder="What should the agent do? e.g. &quot;find the top trending Python repo on GitHub&quot;" aria-label="Browser task">
+          <button class="btn btn-primary btn-sm" id="agentRunBtn" title="Run agent" aria-label="Run agent">
+            <span class="material-symbols-outlined" style="font-size:16px">play_arrow</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="agentStopBtn" title="Stop agent" aria-label="Stop agent" hidden>
+            <span class="material-symbols-outlined" style="font-size:16px">stop</span>
+          </button>
+        </div>
+        <div class="agent-log" id="agentLog" role="log" aria-live="polite" aria-label="Agent progress">
+          <div class="agent-log-empty">No runs yet. Type a task and press Run.</div>
+        </div>
+        <div class="agent-actions">
+          <button class="btn btn-secondary btn-sm" id="agentClearBtn">Clear log</button>
+        </div>
+      </div>
+    </section>
+
     <!-- My Profiles -->
     <section class="section" id="myProfilesSection" hidden>
       <div class="section-header" role="button" tabindex="0" aria-expanded="true">

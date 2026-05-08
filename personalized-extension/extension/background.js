@@ -1,4 +1,12 @@
-const GEMINI_MODEL = 'gemini-2.5-flash';
+// Browser-harness primitives (chrome.debugger / CDP) -- exposes
+// `globalThis.BrowserHarness`. See extension/browser-harness/README.md.
+self.importScripts(
+  'browser-harness/harness.js',
+  'browser-harness/skills.js',
+  'browser-harness/agent.js'
+);
+
+const GEMINI_MODEL = 'gemini-3.1-flash-image-preview';
 const USER_SCRIPT_ID_PREFIX = 'aa-custom-';
 
 function getApiUrl(apiKey, model) {
@@ -160,6 +168,17 @@ async function getApiKey() {
   return data.geminiApiKey || data.geminiKey || null;
 }
 
+// Hand the agent loop a Gemini caller that resolves the stored API key on
+// every call. agent.js can't reach this closure on its own; it stays
+// transport-agnostic so future runners (cli, skill-creator) can swap it.
+if (globalThis.BrowserAgent) {
+  globalThis.BrowserAgent.setGeminiCaller(async (prompt, apiKey, opts) => {
+    const key = apiKey || await getApiKey();
+    if (!key) throw new Error('No Gemini API key configured. Open extension settings.');
+    return await callGemini(prompt, key, opts);
+  });
+}
+
 // Routed from BOTH chrome.runtime.onMessage (extension pages: popup, builder,
 // onboarding) AND chrome.runtime.onUserScriptMessage (user scripts running
 // saved custom skills). User-script messages don't reach the regular
@@ -207,9 +226,111 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// --- Browser harness dispatch -----------------------------------------
+// Page-side callers (skill-builder, onboarding) reach the chrome.debugger-
+// backed harness through this message. Keeps args explicit so each op's
+// arity stays obvious from the call site.
+function handleBrowserHarnessMessage(msg, sendResponse) {
+  (async () => {
+    try {
+      const a = msg.args || {};
+      const H = globalThis.BrowserHarness;
+      if (!H) throw new Error('browser harness not loaded');
+      let result;
+      switch (msg.op) {
+        case 'attach':            result = await H.attach(a.tabId); break;
+        case 'detach':            result = await H.detach(a.tabId); break;
+        case 'cdp':               result = await H.cdp(a.tabId, a.method, a.params || {}); break;
+        case 'drainEvents':       result = H.drainEvents(a.tabId); break;
+        case 'pendingDialog':     result = H.pendingDialog(a.tabId); break;
+        case 'handleDialog':      await H.handleDialog(a.tabId, a.accept !== false, a.promptText ?? null); result = { ok: true }; break;
+        case 'gotoUrl':           result = await H.gotoUrl(a.tabId, a.url); break;
+        case 'pageInfo':          result = await H.pageInfo(a.tabId); break;
+        case 'clickAt':           result = await H.clickAt(a.tabId, a.x, a.y, a.button || 'left', a.clicks || 1); break;
+        case 'typeText':          result = await H.typeText(a.tabId, a.text); break;
+        case 'fillInput':         await H.fillInput(a.tabId, a.selector, a.text, { clearFirst: a.clearFirst !== false, timeoutMs: a.timeoutMs || 0 }); result = { ok: true }; break;
+        case 'pressKey':          result = await H.pressKey(a.tabId, a.key, a.modifiers || 0); break;
+        case 'scroll':            result = await H.scroll(a.tabId, a.x, a.y, a.dy ?? -300, a.dx ?? 0); break;
+        case 'captureScreenshot': result = await H.captureScreenshot(a.tabId, { full: !!a.full, maxDim: a.maxDim ?? null, cssNormalize: !!a.cssNormalize }); break;
+        case 'listTabs':          result = await H.listTabs({ includeChrome: a.includeChrome !== false }); break;
+        case 'currentTab':        result = await H.currentTab(); break;
+        case 'switchTab':         result = await H.switchTab(a.tabId); break;
+        case 'newTab':            result = await H.newTab(a.url || 'about:blank', { active: a.active !== false }); break;
+        case 'ensureRealTab':     result = await H.ensureRealTab(); break;
+        case 'iframeTarget':      result = await H.iframeTarget(a.tabId, a.urlSubstr); break;
+        case 'js':                result = await H.js(a.tabId, a.expression, { iframeTargetId: a.iframeTargetId || null }); break;
+        case 'dispatchKey':       result = await H.dispatchKey(a.tabId, a.selector, a.key || 'Enter', a.event || 'keypress'); break;
+        case 'uploadFile':        result = await H.uploadFile(a.tabId, a.selector, a.files); break;
+        case 'waitForLoad':       result = await H.waitForLoad(a.tabId, { timeoutMs: a.timeoutMs }); break;
+        case 'waitForElement':    result = await H.waitForElement(a.tabId, a.selector, { timeoutMs: a.timeoutMs ?? 10000, visible: !!a.visible }); break;
+        case 'waitForNetworkIdle': result = await H.waitForNetworkIdle(a.tabId, { timeoutMs: a.timeoutMs ?? 10000, idleMs: a.idleMs ?? 500 }); break;
+        case 'httpGet':           result = await H.httpGet(a.url, a.headers); break;
+
+        // Skills registry — bundled markdown + agent-written persistence.
+        case 'listInteractionSkills': result = await globalThis.BrowserSkills.listInteraction(); break;
+        case 'listDomainSkills':      result = await globalThis.BrowserSkills.listDomain(a.hostname); break;
+        case 'readSkill':             result = await globalThis.BrowserSkills.read(a.kind, a.name, a.host); break;
+        case 'writeSkill':            result = await globalThis.BrowserSkills.write(a.kind, a.name, a.content, a.host); break;
+        case 'deleteSkill':           result = await globalThis.BrowserSkills.remove(a.kind, a.name, a.host); break;
+
+        default: throw new Error(`unknown harness op: ${msg.op}`);
+      }
+      sendResponse({ result });
+    } catch (e) {
+      sendResponse({ error: e.message || String(e) });
+    }
+  })();
+  return true;
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'gemini') {
     return handleGeminiMessage(msg, sender, sendResponse);
+  }
+
+  if (msg.type === 'bh') {
+    return handleBrowserHarnessMessage(msg, sendResponse);
+  }
+
+  if (msg.type === 'bhAgentStart') {
+    // Kick the loop and answer immediately. Progress lands in
+    // chrome.storage.local.bhAgent; the popup tails it via storage.onChanged
+    // so it survives the popup closing.
+    if (!globalThis.BrowserAgent) {
+      sendResponse({ error: 'agent not loaded' });
+      return false;
+    }
+    if (globalThis.BrowserAgent.isRunning()) {
+      sendResponse({ error: 'agent already running' });
+      return false;
+    }
+    globalThis.BrowserAgent.run(msg.task, {
+      tabId: msg.tabId,
+      maxSteps: msg.maxSteps,
+    }).catch((e) => {
+      // Agent already wrote the error to storage; nothing more to do here.
+      console.warn('[BrowserAgent] run failed:', e.message);
+    });
+    sendResponse({ started: true });
+    return false;
+  }
+
+  if (msg.type === 'bhAgentStop') {
+    globalThis.BrowserAgent?.stop();
+    sendResponse({ success: true });
+    return false;
+  }
+
+  if (msg.type === 'bhAgentClear') {
+    (async () => {
+      try {
+        await globalThis.BrowserAgent?.clear();
+        sendResponse({ success: true });
+      } catch (e) {
+        sendResponse({ error: e.message });
+      }
+    })();
+    return true;
   }
 
   if (msg.type === 'saveApiKey') {
