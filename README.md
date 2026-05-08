@@ -401,8 +401,6 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 <div align="center">
 <p>
-  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="28"></a>
-  &nbsp;&nbsp;
   <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="38"></a>
   &nbsp;&nbsp;
   <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="32"></a>
@@ -416,6 +414,8 @@ Apache 2.0. See [LICENSE](LICENSE).
   <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc" height="35"></a>
   &nbsp;&nbsp;
   <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID" height="32"></a>
+  &nbsp;&nbsp;
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="28"></a>
 </p>
 
 </div>
