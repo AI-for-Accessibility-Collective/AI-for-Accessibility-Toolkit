@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice — Agentic A11y</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="vp-header">
+    <span class="vp-title">🎤 Voice</span>
+    <span id="vp-status" class="vp-status disconnected">disconnected</span>
+  </header>
+
+  <main class="vp-main">
+    <div id="vp-error" class="vp-error" hidden></div>
+    <button id="vp-open-mic-settings" class="vp-btn vp-btn-link" hidden>Open mic settings</button>
+
+    <div id="vp-empty" class="vp-empty">
+      Press <strong>Start</strong> and speak a task. The voice agent will
+      narrate what the browser agent does. The voice agent can start tasks
+      but can't redirect them mid-run.
+    </div>
+
+    <ul id="vp-transcript" class="vp-transcript" aria-live="polite"></ul>
+  </main>
+
+  <footer class="vp-controls">
+    <button id="vp-start" class="vp-btn vp-btn-primary">Start</button>
+    <button id="vp-mic" class="vp-btn vp-btn-icon" hidden title="Mute / unmute mic" aria-label="Toggle microphone">
+      <span class="vp-mic-icon">🎙️</span>
+    </button>
+    <label class="vp-toggle" hidden id="vp-bg-wrapper">
+      <input type="checkbox" id="vp-bg-toggle">
+      <span>Background</span>
+    </label>
+    <button id="vp-restart" class="vp-btn" hidden title="Restart with a fresh conversation" aria-label="Restart">↻ Restart</button>
+    <button id="vp-end" class="vp-btn vp-btn-danger" hidden>End</button>
+  </footer>
+
+  <script src="sidepanel.bundle.js"></script>
+</body>
+</html>

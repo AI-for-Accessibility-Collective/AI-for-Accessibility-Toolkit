@@ -30,7 +30,7 @@ from helpers import (
 import google.genai as genai
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-MODEL = "gemini-2.5-flash-preview-05-20"
+MODEL = "gemini-3-flash-preview"
 
 SYSTEM_PROMPT = """You are a browser agent. You see a screenshot of a web page and decide what action to take next.
 

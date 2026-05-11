@@ -844,9 +844,27 @@ function setupAgentPanel() {
   const runBtn = document.getElementById('agentRunBtn');
   const stopBtn = document.getElementById('agentStopBtn');
   const clearBtn = document.getElementById('agentClearBtn');
+  const voiceBtn = document.getElementById('voicePanelBtn');
   const statusEl = document.getElementById('agentStatus');
   const logEl = document.getElementById('agentLog');
   if (!taskInput || !runBtn) return;
+
+  // Voice panel: opens chrome's side panel and closes the popup. The
+  // panel hosts the Gemini Live conversation; agent control still goes
+  // through this popup. sidePanel.open requires a user gesture.
+  if (voiceBtn) {
+    voiceBtn.addEventListener('click', async () => {
+      try {
+        const win = await chrome.windows.getCurrent();
+        if (chrome.sidePanel && chrome.sidePanel.open) {
+          await chrome.sidePanel.open({ windowId: win.id });
+        }
+        window.close();
+      } catch (e) {
+        console.warn('Open voice panel failed:', e);
+      }
+    });
+  }
 
   function renderAgent(state) {
     const s = state || { status: 'idle', log: [] };

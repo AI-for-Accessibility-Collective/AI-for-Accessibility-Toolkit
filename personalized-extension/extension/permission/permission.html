@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Microphone access — Agentic A11y</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      color: #1d1d1f;
+      background: #fafafa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .card {
+      max-width: 360px;
+      background: #fff;
+      border: 1px solid #e5e5e7;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    p { color: #4b5563; margin: 0 0 16px; }
+    button {
+      background: #1a73e8;
+      color: white;
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status { font-size: 12px; color: #6b7280; margin-top: 12px; min-height: 18px; }
+    .status.error { color: #991b1b; }
+    .status.ok { color: #065f46; }
+  </style>
+</head>
+<body>
+  <!--
+    Standalone permission-request page opened by the side panel via
+    chrome.windows.create. The reason for a real popup window rather
+    than an iframe inside the side panel: Chrome MV3 top-level extension
+    pages (popup, sidepanel, options) refuse to render the getUserMedia
+    permission prompt even with explicit user activation. A fresh
+    browser window IS a top-level browsing context with default
+    permissive Permissions-Policy, so the prompt appears reliably.
+
+    The granted permission is keyed by the chrome-extension://<id>
+    origin, shared by all surfaces -- after grant, the offscreen page's
+    getUserMedia call succeeds silently.
+  -->
+  <div class="card">
+    <h1>🎤 Microphone access</h1>
+    <p>The voice agent needs your microphone to hear you. Click below; Chrome will ask you to allow access.</p>
+    <button id="allow">Enable microphone</button>
+    <p id="status" class="status"></p>
+  </div>
+  <script src="permission.js"></script>
+</body>
+</html>
