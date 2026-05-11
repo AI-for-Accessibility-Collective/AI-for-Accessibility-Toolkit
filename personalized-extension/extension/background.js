@@ -1,9 +1,9 @@
 // Browser-harness primitives (chrome.debugger / CDP) -- exposes
 // `globalThis.BrowserHarness`. See extension/browser-harness/README.md.
 self.importScripts(
-  'browser-harness/harness.js',
+  'browser-harness/dist/harness.js',
   'browser-harness/skills.js',
-  'browser-harness/agent.js'
+  'browser-harness/dist/agent.js'
 );
 
 const GEMINI_MODEL = 'gemini-3.1-flash-image-preview';
@@ -168,6 +168,162 @@ async function getApiKey() {
   return data.geminiApiKey || data.geminiKey || null;
 }
 
+// ---------- Voice offscreen lifecycle ----------------------------------
+// chrome.offscreen.createDocument() requires `reasons` declaring why we
+// need a hidden page. USER_MEDIA covers the mic capture; AUDIO_PLAYBACK
+// keeps the page eligible to play sound when the panel is closed.
+const OFFSCREEN_PATH = 'offscreen/offscreen.html';
+const OFFSCREEN_REASONS = ['USER_MEDIA', 'AUDIO_PLAYBACK'];
+let _offscreenCreating = null;
+
+async function _hasOffscreen() {
+  if (!chrome.offscreen) return false;
+  // hasDocument is supported on Chrome 116+. Fallback uses getContexts.
+  if (typeof chrome.offscreen.hasDocument === 'function') {
+    return await chrome.offscreen.hasDocument();
+  }
+  if (typeof chrome.runtime.getContexts === 'function') {
+    const ctxs = await chrome.runtime.getContexts({ contextTypes: ['OFFSCREEN_DOCUMENT'] });
+    return Array.isArray(ctxs) && ctxs.length > 0;
+  }
+  return false;
+}
+
+async function ensureOffscreen() {
+  if (await _hasOffscreen()) return;
+  // Race-guard: createDocument throws if called twice concurrently.
+  if (_offscreenCreating) return _offscreenCreating;
+  _offscreenCreating = chrome.offscreen.createDocument({
+    url: OFFSCREEN_PATH,
+    reasons: OFFSCREEN_REASONS,
+    justification: 'Hold the Gemini Live WebSocket + audio capture/playback for voice control while the side panel may be closed.',
+  }).finally(() => { _offscreenCreating = null; });
+  await _offscreenCreating;
+}
+
+async function closeOffscreen() {
+  if (!(await _hasOffscreen())) return;
+  try { await chrome.offscreen.closeDocument(); } catch {}
+}
+
+// On SW startup, reconcile persisted voiceState with reality. The
+// offscreen page owns the live connection state and writes it through
+// to chrome.storage.local.voiceState; if the offscreen page isn't
+// running (extension reload / Chrome restart / explicit teardown),
+// any "live" / "connecting" status in storage is left over from a
+// previous session and would mislead the side panel into rendering
+// the live UI on a fresh load.
+(async function _resetStaleVoiceStateOnStart() {
+  try {
+    if (await _hasOffscreen()) return; // real session in flight
+    const { voiceState } = await chrome.storage.local.get('voiceState');
+    if (!voiceState || voiceState.connection === 'disconnected') return;
+    await chrome.storage.local.set({
+      voiceState: {
+        ...voiceState,
+        connection: 'disconnected',
+        recording: false,
+        speaking: false,
+        error: null,
+      },
+    });
+    console.log('[voice] reset stale voiceState on SW start');
+  } catch (e) {
+    console.warn('[voice] stale-state reset failed:', e && e.message);
+  }
+})();
+
+// Track UI ports (the side panel opens a runtime port on mount). When all
+// ports close, we check the user's background-mode preference: if off,
+// tear down the offscreen page so the WebSocket + mic also stop. The
+// preference is persisted by the offscreen doc itself in
+// chrome.storage.local.voiceBackgroundMode.
+const _voicePorts = new Set();
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== 'voice-ui') return;
+  _voicePorts.add(port);
+  port.onDisconnect.addListener(async () => {
+    _voicePorts.delete(port);
+    if (_voicePorts.size > 0) return;
+    const data = await chrome.storage.local.get('voiceBackgroundMode');
+    if (!data.voiceBackgroundMode) {
+      // Ask the offscreen doc to disconnect cleanly first; it stops mic
+      // + closes the Live WS. Then close the page itself.
+      try { await chrome.runtime.sendMessage({ type: 'voiceDisconnect' }); } catch {}
+      try { await closeOffscreen(); } catch {}
+    }
+  });
+});
+
+// ---------- Storage-change forwarding for offscreen ---------------------
+// The offscreen page can't subscribe to chrome.storage.onChanged when
+// chrome.storage isn't exposed to it. We re-broadcast every change as a
+// runtime message; the offscreen storage shim relays it to its
+// in-process listeners (e.g. the agent bridge).
+chrome.storage.onChanged.addListener((changes, area) => {
+  // Log only bhAgent changes -- voiceState writes (chatty) would spam
+  // the SW console without being useful for debugging the bridge path.
+  if (changes && changes.bhAgent) {
+    console.log('[bg] broadcasting bhAgent change to offscreen, area=', area);
+  }
+  chrome.runtime.sendMessage({
+    type: 'voiceProxyStorageChange',
+    changes,
+    area,
+  }).catch(() => {});
+});
+
+// ---------- Browser-agent terminal-state notifications -----------------
+// When the browser agent finishes (done / error) AND the side panel is
+// closed AND background mode is on, fire a desktop notification so the
+// user knows to reopen the panel for the result.
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== 'local' || !changes.bhAgent) return;
+  const prev = changes.bhAgent.oldValue;
+  const next = changes.bhAgent.newValue;
+  if (!next || !prev) return;
+  if (prev.status === next.status) return;
+  if (next.status !== 'done' && next.status !== 'error') return;
+  // Only notify when there's no UI surface visible.
+  if (_voicePorts.size > 0) return;
+  // And only if user opted into background mode (otherwise the offscreen
+  // page is already gone and the notification could surprise them).
+  const pref = await chrome.storage.local.get('voiceBackgroundMode');
+  if (!pref.voiceBackgroundMode) return;
+  if (!chrome.notifications) return;
+  const title = next.status === 'done'
+    ? 'Browser task complete'
+    : 'Browser task failed';
+  const message = next.summary || next.error || 'Tap to open the voice panel.';
+  try {
+    chrome.notifications.create('bhAgentDone', {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon128.svg'),
+      title,
+      message: String(message).slice(0, 200),
+      priority: next.status === 'error' ? 2 : 1,
+    });
+  } catch (e) {
+    console.warn('[voice] notification failed', e);
+  }
+});
+
+// Reopen the side panel when the user clicks the notification.
+if (chrome.notifications && chrome.notifications.onClicked) {
+  chrome.notifications.onClicked.addListener(async (id) => {
+    if (id !== 'bhAgentDone') return;
+    try {
+      const win = await chrome.windows.getCurrent();
+      if (chrome.sidePanel && chrome.sidePanel.open) {
+        await chrome.sidePanel.open({ windowId: win.id });
+      }
+      chrome.notifications.clear(id);
+    } catch (e) {
+      console.warn('[voice] reopen-panel failed', e);
+    }
+  });
+}
+
 // Hand the agent loop a Gemini caller that resolves the stored API key on
 // every call. agent.js can't reach this closure on its own; it stays
 // transport-agnostic so future runners (cli, skill-creator) can swap it.
@@ -290,6 +446,65 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === 'bh') {
     return handleBrowserHarnessMessage(msg, sendResponse);
+  }
+
+  // ---- Voice (offscreen document lifecycle) ---------------------------
+  // The offscreen page (extension/offscreen/offscreen.html) hosts the
+  // Gemini Live WebSocket + AudioWorklet -- APIs that don't exist in the
+  // SW. The side panel sends `voiceEnsure` to make sure the page is up
+  // before issuing voice* commands; subsequent commands route directly
+  // to the offscreen page's own onMessage listener.
+  if (msg.type === 'voiceEnsure') {
+    ensureOffscreen()
+      .then(() => sendResponse({ ok: true }))
+      .catch((e) => sendResponse({ error: e.message || String(e) }));
+    return true;
+  }
+
+  if (msg.type === 'voiceTeardown') {
+    // Explicit shutdown -- closes the offscreen page regardless of
+    // background-mode preference. Used from "End voice session".
+    (async () => {
+      try { await chrome.runtime.sendMessage({ type: 'voiceDisconnect' }); } catch {}
+      try { await closeOffscreen(); } catch {}
+      sendResponse({ ok: true });
+    })();
+    return true;
+  }
+
+  if (msg.type === 'voiceProxyStorage') {
+    // Some Chrome builds don't expose chrome.storage to offscreen
+    // documents even with the "storage" manifest permission. The
+    // offscreen's storage shim falls back to this proxy. The SW
+    // always has chrome.storage available -- it does the operation
+    // here and replies. Supports {op: 'get'|'set'|'remove', area:
+    // 'local'|'sync', payload: keys-or-values}.
+    (async () => {
+      try {
+        const area = msg.area === 'sync' ? 'sync' : 'local';
+        const target = chrome.storage[area];
+        switch (msg.op) {
+          case 'get': {
+            const data = await target.get(msg.payload);
+            sendResponse({ ok: true, data });
+            return;
+          }
+          case 'set':
+            await target.set(msg.payload || {});
+            sendResponse({ ok: true });
+            return;
+          case 'remove':
+            await target.remove(msg.payload);
+            sendResponse({ ok: true });
+            return;
+          default:
+            sendResponse({ error: `unknown storage op: ${msg.op}` });
+        }
+      } catch (e) {
+        sendResponse({ error: e.message || String(e) });
+      }
+    })();
+    return true;
   }
 
   if (msg.type === 'bhAgentStart') {

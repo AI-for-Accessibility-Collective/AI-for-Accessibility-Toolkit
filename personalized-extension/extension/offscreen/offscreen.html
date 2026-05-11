@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice engine (offscreen)</title>
+</head>
+<body>
+  <!--
+    Headless host for the voice engine. chrome.offscreen.createDocument()
+    keeps this page alive in the background so we can hold the Gemini Live
+    WebSocket + AudioWorklet + Web Audio playback queue across panel close.
+    The page is invisible -- everything user-facing lives in the side panel
+    (sidepanel/sidepanel.html), which connects to this engine through the
+    service worker via chrome.runtime messages.
+  -->
+  <script src="offscreen.bundle.js"></script>
+</body>
+</html>

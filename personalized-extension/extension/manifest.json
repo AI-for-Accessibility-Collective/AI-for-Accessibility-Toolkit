@@ -5,13 +5,16 @@
   "description": "AI-powered accessibility toolkit with dynamic skill recommendations and custom skill building.",
   "permissions": [
     "activeTab",
+    "alarms",
     "storage",
     "scripting",
     "userScripts",
     "debugger",
     "tabs",
     "tabGroups",
-    "notifications"
+    "notifications",
+    "sidePanel",
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -23,6 +26,9 @@
       "48": "icons/icon48.svg",
       "128": "icons/icon128.svg"
     }
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
   },
   "background": {
     "service_worker": "background.js"

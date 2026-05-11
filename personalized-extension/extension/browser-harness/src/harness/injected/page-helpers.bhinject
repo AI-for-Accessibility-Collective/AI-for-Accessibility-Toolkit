@@ -1,0 +1,469 @@
+// In-page interactive-element helper. Bundled in by esbuild's text loader
+// (.bhinject suffix) and handed to Runtime.evaluate verbatim, so this file
+// runs in the *page's* JS context, not the service worker's. It must
+// therefore be self-contained: no imports, no SW APIs.
+//
+// Returns an IIFE expression evaluating to { findTarget, enumerate }:
+//   findTarget(x, y) -- nearest interactive ancestor at (x, y); used by
+//     coordinate-click snap and JS-click fallback.
+//   enumerate(opts)  -- index every interactive, visible, in-viewport
+//     element AND every "structural" container; cache live element refs
+//     at window.__bhInteractive[idx] so click_index can later resolve idx
+//     -> live element without a backendNodeId round-trip.
+//
+// Heuristic mirrors browser_use/dom/serializer/clickable_elements.py:
+//   - STRICT tier (deepest-first): semantic clickables (a[href], button,
+//     input not hidden, select, textarea, option, optgroup, summary,
+//     details, label-without-for that wraps a form control, span that
+//     wraps a form control, [onclick|onmousedown|onmouseup|onkeydown|
+//     onkeyup], [role=button|link|menuitem|...], tabindex>=0,
+//     contentEditable, getEventListeners-detected click handlers).
+//   - POINTER tier (topmost in unbroken cursor:pointer chain): catches
+//     clickable wrappers that have no semantic markup but use cursor
+//     styling. cursor:pointer is inherited so we pick the topmost rather
+//     than the deepest, otherwise we'd snap to inner spans inside buttons.
+// Strict beats pointer when both exist.
+//
+// getEventListeners() requires Runtime.evaluate with includeCommandLineAPI=true
+// (DevTools-only API); calls to Runtime.callFunctionOn would not have it in
+// scope.
+
+(function() {
+  const SKIP_TAG = new Set(['HTML', 'BODY']);
+  const ROLE_RX = /^(button|link|tab|menuitem|checkbox|radio|switch|option|combobox|menuitemcheckbox|menuitemradio|treeitem|listbox|textbox|slider|spinbutton|search|searchbox|row|cell|gridcell)$/i;
+  const EVENT_ATTRS = ['onclick', 'onmousedown', 'onmouseup', 'onkeydown', 'onkeyup'];
+  const FORM_TAG_RX = /^(INPUT|SELECT|TEXTAREA)$/i;
+  const SEARCH_KW_RX = /(^|[\s\-_:])(search|magnify|glass|searchbox)([\s\-_:]|$)/i;
+  const ICON_TRIGGER_ATTRS = ['role', 'onclick', 'data-action', 'aria-label'];
+
+  const hasFormDescendant = (el, depth) => {
+    if (depth <= 0 || !el || el.nodeType !== 1) return false;
+    for (const c of el.children) {
+      if (FORM_TAG_RX.test(c.tagName)) return true;
+      if (hasFormDescendant(c, depth - 1)) return true;
+    }
+    return false;
+  };
+
+  const hasJsListener = (el) => {
+    try {
+      if (typeof getEventListeners !== 'function') return false;
+      const ls = getEventListeners(el);
+      return !!(ls && (ls.click || ls.mousedown || ls.mouseup || ls.pointerdown || ls.pointerup));
+    } catch (_) { return false; }
+  };
+
+  const matchesSearchKw = (el) => {
+    const cls = el.getAttribute('class');
+    if (cls && SEARCH_KW_RX.test(cls)) return true;
+    const id = el.getAttribute('id');
+    if (id && SEARCH_KW_RX.test(id)) return true;
+    const attrs = el.attributes;
+    if (!attrs) return false;
+    for (let i = 0; i < attrs.length; i++) {
+      const a = attrs[i];
+      if (a.name && a.name.indexOf('data-') === 0 && a.value && SEARCH_KW_RX.test(a.value)) return true;
+    }
+    return false;
+  };
+
+  const isIconSized = (el) => {
+    const r = el.getBoundingClientRect();
+    if (!r || r.width < 10 || r.width > 50 || r.height < 10 || r.height > 50) return false;
+    for (let i = 0; i < ICON_TRIGGER_ATTRS.length; i++) {
+      if (el.hasAttribute(ICON_TRIGGER_ATTRS[i])) return true;
+    }
+    return false;
+  };
+
+  const isStrict = (el) => {
+    if (!el || el.nodeType !== 1) return false;
+    const tag = el.tagName;
+    if (SKIP_TAG.has(tag)) return false;
+    if (el.disabled === true) return false;
+    if (el.getAttribute('aria-disabled') === 'true') return false;
+    if (el.getAttribute('aria-hidden') === 'true') return false;
+    if (tag === 'A' && el.hasAttribute('href')) return true;
+    if (tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA'
+        || tag === 'OPTION' || tag === 'OPTGROUP' || tag === 'SUMMARY'
+        || tag === 'DETAILS' || tag === 'AREA' || tag === 'MAP') return true;
+    if (tag === 'INPUT') {
+      const t = (el.getAttribute('type') || '').toLowerCase();
+      return t !== 'hidden';
+    }
+    if (tag === 'LABEL') {
+      if (el.hasAttribute('for')) return false;
+      return hasFormDescendant(el, 2);
+    }
+    if (tag === 'SPAN' && hasFormDescendant(el, 2)) return true;
+    if (el.isContentEditable) return true;
+    for (let i = 0; i < EVENT_ATTRS.length; i++) {
+      if (el.hasAttribute(EVENT_ATTRS[i])) return true;
+    }
+    const role = el.getAttribute('role');
+    if (role && ROLE_RX.test(role)) return true;
+    const ti = el.getAttribute('tabindex');
+    if (ti !== null && ti !== '') {
+      const n = parseInt(ti, 10);
+      if (Number.isFinite(n) && n >= 0) return true;
+    }
+    if (hasJsListener(el)) return true;
+    if (matchesSearchKw(el)) return true;
+    if (isIconSized(el)) return true;
+    return false;
+  };
+
+  const isVisible = (el, rect) => {
+    if (!rect || rect.width <= 0 || rect.height <= 0) return false;
+    if (el.getAttribute('aria-hidden') === 'true') return false;
+    const cs = window.getComputedStyle(el);
+    if (!cs) return true; // detached -- conservative include
+    if (cs.display === 'none' || cs.visibility === 'hidden' || cs.visibility === 'collapse') return false;
+    if (cs.opacity === '0') return false;
+    return true;
+  };
+
+  // Truncate strings for prompt budget management.
+  const truncate = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + '…' : (s || ''));
+
+  // Direct text content only (excludes descendant element text). This is
+  // what browser_use renders as an indented child line under the element's
+  // tag -- "Submit" under a [12]<button /> rather than concatenated into
+  // the tag itself. textContent would pull all descendant text including
+  // inner spans / icons, which would duplicate content already represented
+  // by descendant interactive elements.
+  const getDirectText = (el) => {
+    let text = '';
+    for (let i = 0; i < el.childNodes.length; i++) {
+      const c = el.childNodes[i];
+      if (c.nodeType === 3) text += c.nodeValue;
+    }
+    return truncate(text.trim().replace(/\s+/g, ' '), 80);
+  };
+
+  // Element attributes worth surfacing to the LLM. Mirrors browser_use's
+  // include_attributes default set (type, placeholder, name, role,
+  // aria-label, aria-labelledby, title, alt). Returns {} when nothing
+  // useful is set.
+  const getRenderAttrs = (el) => {
+    const attrs = {};
+    const tag = el.tagName;
+    if (tag === 'INPUT') {
+      const t = (el.getAttribute('type') || 'text').toLowerCase();
+      attrs.type = t;
+      const ph = el.getAttribute('placeholder');
+      if (ph) attrs.placeholder = truncate(ph.trim(), 80);
+      const name = el.getAttribute('name');
+      if (name) attrs.name = truncate(name.trim(), 80);
+      const v = el.value;
+      if (v) attrs.value = truncate(String(v).trim(), 80);
+      // Compound-component info for range / number sliders. Mirrors
+      // browser_use's compound_components: surfaces min/max/step so the
+      // LLM knows the valid value range without having to introspect.
+      if (t === 'range' || t === 'number') {
+        const min = el.getAttribute('min');
+        const max = el.getAttribute('max');
+        const step = el.getAttribute('step');
+        if (min) attrs.min = min;
+        if (max) attrs.max = max;
+        if (step) attrs.step = step;
+      }
+    } else if (tag === 'TEXTAREA' || tag === 'SELECT') {
+      const name = el.getAttribute('name');
+      if (name) attrs.name = truncate(name.trim(), 80);
+      const ph = el.getAttribute('placeholder');
+      if (ph) attrs.placeholder = truncate(ph.trim(), 80);
+    } else if (tag === 'METER' || tag === 'PROGRESS') {
+      const min = el.getAttribute('min');
+      const max = el.getAttribute('max');
+      const v = el.getAttribute('value');
+      if (min) attrs.min = min;
+      if (max) attrs.max = max;
+      if (v) attrs.value = v;
+    }
+    const role = el.getAttribute('role');
+    if (role) attrs.role = role;
+    // ARIA value attributes for slider / spinbutton / progressbar / etc.
+    // These reveal current/range data the LLM needs to understand the
+    // widget's state.
+    if (role === 'slider' || role === 'spinbutton' || role === 'progressbar') {
+      const valuemin = el.getAttribute('aria-valuemin');
+      const valuemax = el.getAttribute('aria-valuemax');
+      const valuenow = el.getAttribute('aria-valuenow');
+      const valuetext = el.getAttribute('aria-valuetext');
+      if (valuemin) attrs.min = valuemin;
+      if (valuemax) attrs.max = valuemax;
+      if (valuenow) attrs.value = valuenow;
+      if (valuetext) attrs['value-text'] = truncate(valuetext.trim(), 40);
+    }
+    // ARIA state for toggleable widgets
+    const checked = el.getAttribute('aria-checked');
+    if (checked) attrs.checked = checked;
+    const expanded = el.getAttribute('aria-expanded');
+    if (expanded) attrs.expanded = expanded;
+    const pressed = el.getAttribute('aria-pressed');
+    if (pressed) attrs.pressed = pressed;
+    const selected = el.getAttribute('aria-selected');
+    if (selected) attrs.selected = selected;
+    const ariaLabel = el.getAttribute('aria-label');
+    if (ariaLabel) attrs['aria-label'] = truncate(ariaLabel.trim(), 80);
+    // aria-labelledby resolved to text
+    const labelledBy = el.getAttribute('aria-labelledby');
+    if (labelledBy) {
+      const ids = labelledBy.split(/\s+/).filter(Boolean);
+      const parts = [];
+      for (let i = 0; i < ids.length; i++) {
+        const r = document.getElementById(ids[i]);
+        if (r && r.textContent) parts.push(r.textContent.trim());
+      }
+      if (parts.length) attrs['aria-labelledby'] = truncate(parts.join(' ').replace(/\s+/g, ' '), 80);
+    }
+    const title = el.getAttribute('title');
+    if (title) attrs.title = truncate(title.trim(), 80);
+    const alt = el.getAttribute('alt');
+    if (alt) attrs.alt = truncate(alt.trim(), 80);
+    return attrs;
+  };
+
+
+  const findTarget = (X, Y) => {
+    let el = document.elementFromPoint(X, Y);
+    if (!el || el.tagName === 'IFRAME' || SKIP_TAG.has(el.tagName)) return null;
+    let strict = null;
+    let pointer = null;
+    let pointerChainBroken = false;
+    let cur = el;
+    let depth = 0;
+    while (cur && depth < 8) {
+      if (SKIP_TAG.has(cur.tagName)) break;
+      if (!strict && isStrict(cur)) strict = cur;
+      if (!pointerChainBroken) {
+        const cs = window.getComputedStyle(cur);
+        if (cs && cs.cursor === 'pointer') pointer = cur;
+        else if (pointer) pointerChainBroken = true;
+      }
+      cur = cur.parentElement;
+      depth++;
+    }
+    return strict || pointer;
+  };
+
+  // Recursively walk the document AND every open shadow root AND every
+  // same-origin iframe, returning a flat array of {el, offsetX, offsetY}
+  // entries where offsetX/Y is the cumulative top-left of the element's
+  // owning viewport relative to the parent viewport. Closed shadow roots
+  // and cross-origin iframes are inaccessible from page JS and skipped
+  // silently. The offset lets downstream code translate iframe-local
+  // bounding boxes (getBoundingClientRect returns coords relative to the
+  // iframe's own viewport) back into parent-viewport coords for CDP
+  // mouse-event dispatch and highlight overlays.
+  const collectAllElements = (root, out, offsetX, offsetY) => {
+    const els = root.querySelectorAll('*');
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i];
+      out.push({ el, offsetX, offsetY });
+      if (el.shadowRoot) collectAllElements(el.shadowRoot, out, offsetX, offsetY);
+      if (el.tagName === 'IFRAME') {
+        // Same-origin iframe: contentDocument is accessible. Cross-origin
+        // throws SecurityError or returns null. Tracking the iframe's
+        // own bbox lets us add it to the child offset so descendants
+        // come out in parent-viewport coordinates.
+        try {
+          const doc = el.contentDocument;
+          if (doc) {
+            const r = el.getBoundingClientRect();
+            collectAllElements(doc, out, offsetX + r.left, offsetY + r.top);
+          }
+        } catch (_) { /* cross-origin -- skip */ }
+      }
+    }
+  };
+
+  const isScrollable = (el) => {
+    const cs = window.getComputedStyle(el);
+    if (!cs) return false;
+    const ov = (cs.overflow || '') + (cs.overflowX || '') + (cs.overflowY || '');
+    if (!/auto|scroll/.test(ov)) return false;
+    return el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+  };
+
+  const shadowModeOf = (el) => {
+    const root = el.getRootNode();
+    return (root && root.host && root.mode) ? root.mode : null;
+  };
+
+  // Enumerate every interactive, visible, in-viewport element. Stores live
+  // element references in window.__bhInteractive[idx] keyed by integer
+  // index so a follow-up click_index action can look up the element by
+  // name. Returns serialised metadata only. Hard-caps the result at
+  // maxIndexes to keep the numbered overlay readable on pathological
+  // pages (long sidebars, mega-menus, infinite-scroll pre-renders); over
+  // the cap the LLM falls back to coordinate clicks for the un-indexed
+  // elements.
+  const enumerate = (opts) => {
+    opts = opts || {};
+    const onlyViewport = opts.onlyViewport !== false;
+    const maxIndexes = Number.isFinite(opts.maxIndexes) ? opts.maxIndexes : 100;
+    const all = [];
+    collectAllElements(document, all, 0, 0);
+    // Mirror browser_use's heavy-page guard: getEventListeners() iteration
+    // can take 10s+ on >10k-element pages. Skip it; rely on the rest of
+    // the heuristic.
+    const detectListeners = all.length <= 10000 && typeof getEventListeners === 'function';
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const refs = [];
+    const offsets = []; // parallel to refs -- {x, y} parent-viewport offset
+    const items = [];
+    const elToIdx = new Map(); // element -> numeric idx (for click_index lookup)
+    let capped = false;
+    for (let i = 0; i < all.length; i++) {
+      const { el, offsetX, offsetY } = all[i];
+      if (!isStrict(el)) continue;
+      const rect = el.getBoundingClientRect();
+      if (!isVisible(el, rect)) continue;
+      // Absolute (parent-viewport) coords for viewport filter and bbox.
+      const ax = rect.left + offsetX;
+      const ay = rect.top + offsetY;
+      if (onlyViewport && (ax + rect.width <= 0 || ay + rect.height <= 0 || ax >= vw || ay >= vh)) continue;
+      if (refs.length >= maxIndexes) { capped = true; break; }
+      const idx = refs.length;
+      refs.push(el);
+      offsets.push({ x: offsetX, y: offsetY });
+      elToIdx.set(el, idx);
+      let listener = false;
+      if (detectListeners) {
+        try {
+          const ls = getEventListeners(el);
+          listener = !!(ls && (ls.click || ls.mousedown || ls.mouseup || ls.pointerdown || ls.pointerup));
+        } catch (_) {}
+      }
+      const tag = el.tagName.toLowerCase();
+      items.push({
+        idx,
+        id: 'i' + idx,
+        kind: 'indexed',
+        parent_id: null, // resolved in pass 3 below
+        bbox: { x: ax, y: ay, w: rect.width, h: rect.height },
+        tag,
+        attrs: getRenderAttrs(el),
+        text: getDirectText(el),
+        hasJsListener: listener,
+        scrollable: isScrollable(el),
+        shadowMode: shadowModeOf(el),
+        inIframe: offsetX !== 0 || offsetY !== 0,
+      });
+    }
+
+    // Pass 2: detect structural containers (non-interactive grouping nodes
+    // like <form>, <ul>, <table>, <nav>, etc.) that hold ≥2 indexed
+    // descendants. Mirrors browser_use's behaviour where containers
+    // without their own interactivity still render in the tree as
+    // grouping cues so the LLM can disambiguate "which form is this
+    // input in" / "which row is this cell from". Generic <div>/<span>
+    // wrappers are intentionally excluded -- without a clear semantic
+    // signal they'd add tree noise without grouping benefit. Iframe
+    // boundaries are NOT crossed in the parent walk -- iframe-contained
+    // elements form their own subtrees in the tree.
+    const STRUCTURAL_TAGS = new Set([
+      'FORM', 'FIELDSET',
+      'NAV', 'HEADER', 'FOOTER', 'ASIDE', 'MAIN', 'SECTION', 'ARTICLE',
+      'UL', 'OL', 'DL', 'MENU',
+      'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR',
+      'DIALOG',
+    ]);
+    // Map every walked element -> its offset, so structural bbox
+    // computation can convert iframe-local rects to parent-viewport.
+    const elToOffset = new Map();
+    for (let i = 0; i < all.length; i++) {
+      elToOffset.set(all[i].el, { x: all[i].offsetX, y: all[i].offsetY });
+    }
+    const descCount = new Map(); // structural-eligible element -> count of indexed descendants whose nearest enumerated ancestor is this element
+    for (const el of refs) {
+      let cur = el.parentNode;
+      while (cur) {
+        if (cur.nodeType === 1) {
+          if (elToIdx.has(cur)) break; // hit an interactive ancestor -- stop counting upward
+          if (STRUCTURAL_TAGS.has(cur.tagName)) {
+            descCount.set(cur, (descCount.get(cur) || 0) + 1);
+          }
+          cur = cur.parentNode;
+        } else if (cur.host) {
+          cur = cur.host;
+        } else { break; }
+      }
+    }
+    // Promote eligible containers to structural nodes
+    const structurals = [];
+    const elToSid = new Map();
+    let nextSid = 0;
+    for (const [el, count] of descCount) {
+      if (count < 2) continue;
+      const r = el.getBoundingClientRect();
+      if (!isVisible(el, r)) continue;
+      const off = elToOffset.get(el) || { x: 0, y: 0 };
+      const sid = 's' + (nextSid++);
+      elToSid.set(el, sid);
+      structurals.push({
+        id: sid,
+        kind: 'structural',
+        parent_id: null,
+        tag: el.tagName.toLowerCase(),
+        bbox: { x: r.left + off.x, y: r.top + off.y, w: r.width, h: r.height },
+        domOrderEl: el, // temp -- used for sorting & parent resolution; stripped before return
+      });
+    }
+
+    // Pass 3: resolve parent_id for items AND structurals. Walk up; the
+    // nearest ancestor that's either indexed or structural becomes parent.
+    const idForEl = (el) => {
+      if (elToIdx.has(el)) return 'i' + elToIdx.get(el);
+      if (elToSid.has(el)) return elToSid.get(el);
+      return null;
+    };
+    const resolveParent = (el) => {
+      let cur = el.parentNode;
+      while (cur) {
+        if (cur.nodeType === 1) {
+          const id = idForEl(cur);
+          if (id) return id;
+          cur = cur.parentNode;
+        } else if (cur.host) {
+          cur = cur.host;
+        } else { break; }
+      }
+      return null;
+    };
+    for (let i = 0; i < items.length; i++) {
+      items[i].parent_id = resolveParent(refs[i]);
+    }
+    for (const s of structurals) {
+      s.parent_id = resolveParent(s.domOrderEl);
+    }
+
+    // Pass 4: sort structurals into DOM order relative to items so the
+    // tree-rendering downstream gets siblings in visual order. Items are
+    // already in DOM order from collectAllElements; for each structural,
+    // compute a (domIndex) by binary-search-ish position relative to
+    // refs. Easier: pre-index every element by its position in the walk.
+    const allOrder = new Map();
+    for (let i = 0; i < all.length; i++) allOrder.set(all[i], i);
+    structurals.sort((a, b) => (allOrder.get(a.domOrderEl) || 0) - (allOrder.get(b.domOrderEl) || 0));
+    for (const s of structurals) delete s.domOrderEl;
+
+    window.__bhInteractive = refs;
+    window.__bhInteractiveOffset = offsets;
+    window.__bhInteractiveStamp = Date.now();
+    return {
+      count: items.length,
+      total: all.length,
+      viewport: { w: vw, h: vh },
+      items,
+      structurals,
+      capped,
+      listenerScanSkipped: !detectListeners,
+    };
+  };
+
+  return { findTarget, enumerate };
+})()

@@ -67,14 +67,85 @@ const contentConfig = {
   logLevel: 'info',
 };
 
+// Browser-harness primitives. Loaded into the service worker by background.js
+// via self.importScripts -- so the bundle must be a classic script (IIFE),
+// not an ES module. The entry assigns the public surface onto
+// globalThis.BrowserHarness; all internal modules under src/harness/ stay
+// invisible to the rest of the SW.
+const harnessConfig = {
+  entryPoints: [path.resolve(__dirname, 'extension/browser-harness/src/harness/index.js')],
+  bundle: true,
+  outfile: path.resolve(__dirname, 'extension/browser-harness/dist/harness.js'),
+  format: 'iife',
+  target: 'chrome110',
+  sourcemap: false,
+  logLevel: 'info',
+  // .bhinject files are real JS authored as standalone in-page scripts; the
+  // text loader inlines them as string constants so the harness can hand
+  // them to Runtime.evaluate without a build-time string concatenation.
+  loader: { '.bhinject': 'text' },
+};
+
+// Agent loop. Same constraints as harnessConfig; assigns onto
+// globalThis.BrowserAgent. Depends on globalThis.BrowserHarness +
+// globalThis.BrowserSkills being populated already (background.js's
+// importScripts order guarantees this).
+const agentConfig = {
+  entryPoints: [path.resolve(__dirname, 'extension/browser-harness/src/agent/index.js')],
+  bundle: true,
+  outfile: path.resolve(__dirname, 'extension/browser-harness/dist/agent.js'),
+  format: 'iife',
+  target: 'chrome110',
+  sourcemap: false,
+  logLevel: 'info',
+};
+
+// Voice offscreen document. Hosts the Gemini Live WebSocket + audio capture/
+// playback (Web APIs unavailable in the SW). Loaded by offscreen.html, which
+// the SW spawns via chrome.offscreen.createDocument.
+const offscreenConfig = {
+  entryPoints: [path.resolve(__dirname, 'extension/offscreen/src/index.js')],
+  bundle: true,
+  outfile: path.resolve(__dirname, 'extension/offscreen/offscreen.bundle.js'),
+  format: 'iife',
+  target: 'chrome110',
+  sourcemap: false,
+  logLevel: 'info',
+};
+
+// Voice side-panel UI. Pure presentation layer; no Live API calls happen
+// here. Connects to the offscreen doc via chrome.runtime messages routed
+// through the SW.
+const sidepanelConfig = {
+  entryPoints: [path.resolve(__dirname, 'extension/sidepanel/src/index.js')],
+  bundle: true,
+  outfile: path.resolve(__dirname, 'extension/sidepanel/sidepanel.bundle.js'),
+  format: 'iife',
+  target: 'chrome110',
+  sourcemap: false,
+  logLevel: 'info',
+};
+
 async function build() {
   buildSkillsManifest();
   if (isWatch) {
-    const ctx = await esbuild.context(contentConfig);
-    await ctx.watch();
+    const ctxs = await Promise.all([
+      esbuild.context(contentConfig),
+      esbuild.context(harnessConfig),
+      esbuild.context(agentConfig),
+      esbuild.context(offscreenConfig),
+      esbuild.context(sidepanelConfig),
+    ]);
+    await Promise.all(ctxs.map((c) => c.watch()));
     console.log('Watching for changes...');
   } else {
-    await esbuild.build(contentConfig);
+    await Promise.all([
+      esbuild.build(contentConfig),
+      esbuild.build(harnessConfig),
+      esbuild.build(agentConfig),
+      esbuild.build(offscreenConfig),
+      esbuild.build(sidepanelConfig),
+    ]);
     console.log('Build complete.');
   }
 }

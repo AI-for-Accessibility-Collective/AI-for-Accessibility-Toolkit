@@ -64,7 +64,11 @@ def page_info():
     r = cdp("Runtime.evaluate",
             expression="JSON.stringify({url:location.href,title:document.title,w:innerWidth,h:innerHeight,sx:scrollX,sy:scrollY,pw:document.documentElement.scrollWidth,ph:document.documentElement.scrollHeight})",
             returnByValue=True)
-    return json.loads(r["result"]["value"])
+    val = r.get("result", {}).get("value")
+    if val is None:
+        # Execution context unavailable (mid-navigation, internal URL, etc.)
+        return {"url": "", "title": "", "w": 0, "h": 0, "sx": 0, "sy": 0, "pw": 0, "ph": 0}
+    return json.loads(val)
 
 # --- input ---
 _debug_click_counter = 0
