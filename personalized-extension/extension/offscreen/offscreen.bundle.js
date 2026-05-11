@@ -267,7 +267,12 @@ The user may interrupt you any time. When that happens, stop talking and listen.
           setup: {
             model: model.startsWith("models/") ? model : `models/${model}`,
             generationConfig: {
-              responseModalities: ["AUDIO"]
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: "Algieba" }
+                }
+              }
             },
             systemInstruction: {
               parts: [{ text: SYSTEM_INSTRUCTION }]
@@ -312,6 +317,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         console.warn("[live] ws error", e);
       };
       ws.onclose = (evt) => {
+        if (closed)
+          return;
         const explained = _explainClose(evt.code, evt.reason);
         onError?.(`ws closed code=${evt.code} reason=${evt.reason || ""}${explained ? " (" + explained + ")" : ""}`);
       };

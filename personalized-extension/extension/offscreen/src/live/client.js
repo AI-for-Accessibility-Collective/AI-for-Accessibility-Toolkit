@@ -79,6 +79,11 @@ export function createLiveClient({
           model: model.startsWith('models/') ? model : `models/${model}`,
           generationConfig: {
             responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: 'Algieba' },
+              },
+            },
           },
           systemInstruction: {
             parts: [{ text: SYSTEM_INSTRUCTION }],
@@ -131,6 +136,12 @@ export function createLiveClient({
     };
 
     ws.onclose = (evt) => {
+      // Suppress the onError for closes we initiated ourselves (Restart /
+      // disconnect calls close() which sets `closed = true` before issuing
+      // ws.close(1000)). The native onclose still fires asynchronously --
+      // without this guard the UI would show "ws closed code=1000" every
+      // restart even though the close was intentional.
+      if (closed) return;
       // Surface the close so the outer driver can update UI state and
       // decide on reconnect. Pretty-print common codes so the user sees
       // an actionable message instead of a raw frame number.
