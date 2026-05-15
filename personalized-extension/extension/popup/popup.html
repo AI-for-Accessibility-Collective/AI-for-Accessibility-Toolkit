@@ -77,6 +77,23 @@
         </div>
         <div class="agent-actions">
           <button class="btn btn-secondary btn-sm" id="agentClearBtn">Clear log</button>
+          <button class="btn btn-primary btn-sm" id="agentSaveToProfileBtn" hidden>
+            <span class="material-symbols-outlined" style="font-size:14px">verified</span> Save to Profile
+          </button>
+        </div>
+        <div class="agent-save-form" id="agentSaveForm" hidden>
+          <div class="input-group" style="margin-bottom:6px">
+            <label for="agentActionName">Action name</label>
+            <input type="text" id="agentActionName" placeholder="e.g. Dismiss cookie banners">
+          </div>
+          <div class="input-group" style="margin-bottom:6px">
+            <label for="agentProfileSelect">Save to profile</label>
+            <select id="agentProfileSelect"></select>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <button class="btn btn-secondary btn-sm" id="agentSaveCancelBtn">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="agentSaveConfirmBtn">Save Action</button>
+          </div>
         </div>
       </div>
     </section>
