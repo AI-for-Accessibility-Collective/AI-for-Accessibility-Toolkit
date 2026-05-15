@@ -371,6 +371,13 @@ async function init() {
     if (classifyResp?.matchingProfile?.settings) {
       console.log(`[AI4A11y] Auto-applying profile "${classifyResp.matchingProfile.name}" for ${classifyResp.siteType} site`);
       applyProfileSettings(classifyResp.matchingProfile.settings);
+      if (classifyResp.matchingProfile.actions?.length > 0) {
+        chrome.runtime.sendMessage({
+          type: 'runProfileActions',
+          actions: classifyResp.matchingProfile.actions,
+          sourceUrl: location.href,
+        });
+      }
     } else {
       await initFromStorage();
     }
