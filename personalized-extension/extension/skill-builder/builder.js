@@ -424,10 +424,8 @@ function setupTargetHandlers() {
         return;
       }
       try {
-        // Open in a separate, unfocused window so the user can see the page
-        // while the builder stays in the foreground.
-        const win = await chrome.windows.create({ url, focused: false, type: 'normal' });
-        const tabId = win?.tabs?.[0]?.id ?? null;
+        const tab = await chrome.tabs.create({ url, active: false });
+        const tabId = tab?.id ?? null;
         if (tabId == null) throw new Error('Could not open a tab for the test page.');
         state.targetTabId = tabId;
         state.targetUrl = url;
@@ -469,7 +467,8 @@ function setupAIChoiceHandlers() {
 
 async function goToAIChoice() {
   showPhase('ai-choice');
-  document.getElementById('aiChoiceLoading').hidden = false;
+  const loadingEl = document.getElementById('aiChoiceLoading');
+  loadingEl.hidden = false;
   document.getElementById('aiChoiceCards').hidden = true;
 
   let assessment;
@@ -479,12 +478,14 @@ async function goToAIChoice() {
     // Assessment failed — fall through to a static skill rather than blocking
     // the user. They can always rebuild later if AI would have helped.
     console.warn('AI assessment failed:', e);
+    loadingEl.hidden = true;
     state.useAI = false;
     state.aiAssessment = null;
     await runGenerate();
     return;
   }
 
+  loadingEl.hidden = true;
   state.aiAssessment = assessment;
 
   if (!assessment.couldUseAI) {
@@ -495,7 +496,6 @@ async function goToAIChoice() {
   }
 
   renderAIChoiceCards(assessment);
-  document.getElementById('aiChoiceLoading').hidden = true;
   document.getElementById('aiChoiceCards').hidden = false;
   // Re-focus the heading so the user lands on the new state.
   const heading = document.getElementById('ai-choice-heading');
@@ -632,7 +632,7 @@ async function runGenerate() {
 
   // ---- Step 1: AI generation ----
   setStep('ai-generate', 'active');
-  setStatusLine('Asking Gemini to write the code from your description… This usually takes 5–15 seconds.');
+  setStatusLine('Asking Gemini to write the code from your description… This usually takes 30–60 seconds.');
 
   const prompt = state.prompts.creator
     .replace('{{DESCRIPTION}}', state.current.description)

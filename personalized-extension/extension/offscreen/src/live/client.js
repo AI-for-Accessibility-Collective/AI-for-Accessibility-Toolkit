@@ -81,7 +81,7 @@ export function createLiveClient({
             responseModalities: ['AUDIO'],
             speechConfig: {
               voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: 'Algieba' },
+                prebuiltVoiceConfig: { voiceName: 'Charon' },
               },
             },
           },

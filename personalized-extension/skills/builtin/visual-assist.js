@@ -136,7 +136,12 @@ export const VisualAssist = {
       requestAnimationFrame(() => {
         this.readingGuideRafPending = false;
         if (this.readingGuideEl) {
-          this.readingGuideEl.style.top = `${this.lastMouseY - 20}px`;
+          // html { zoom: N } scales fixed-position children's `top` by N, but
+          // e.clientY stays in viewport pixels — divide so the band tracks
+          // the cursor when font is enlarged.
+          const rawZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+          const zoom = rawZoom > 0 ? rawZoom : 1;
+          this.readingGuideEl.style.top = `${(this.lastMouseY - 20) / zoom}px`;
         }
       });
     };
