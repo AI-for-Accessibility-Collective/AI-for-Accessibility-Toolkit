@@ -11,7 +11,6 @@ const REGISTRY = [
   { id: 'dyslexia-font', name: 'Dyslexia Font', description: 'Applies OpenDyslexic font with wider spacing for dyslexic readers.', supportAreas: ['reading', 'cognitive'], siteRelevance: ['all'], icon: '\u{1F524}' },
   { id: 'keyboard-nav', name: 'Keyboard Navigation', description: 'Adds skip links, focus indicators, and keyboard shortcuts.', supportAreas: ['motor', 'vision'], siteRelevance: ['all'], icon: '\u2328\uFE0F' },
   { id: 'auto-captions', name: 'Auto Captions', description: 'Adds caption controls for video and audio without subtitles.', supportAreas: ['hearing'], siteRelevance: ['video', 'social', 'education'], icon: '\u{1F4AC}' },
-  { id: 'voice-commands', name: 'Voice Commands', description: 'Hands-free browsing via voice: scroll, click, navigate.', supportAreas: ['motor'], siteRelevance: ['all'], icon: '\u{1F399}\uFE0F' },
   { id: 'color-filter', name: 'Color Blind Filter', description: 'Color correction for protanopia, deuteranopia, or tritanopia.', supportAreas: ['vision'], siteRelevance: ['all'], icon: '\u{1F3A8}' },
   { id: 'visual-assist', name: 'Visual Assist', description: 'Adjustable font size, line height, letter spacing, and reading guide.', supportAreas: ['vision', 'reading'], siteRelevance: ['all'], icon: '\u{1F441}\uFE0F' },
 ];
