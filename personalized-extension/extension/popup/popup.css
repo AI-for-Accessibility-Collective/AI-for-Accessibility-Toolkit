@@ -460,9 +460,27 @@ footer {
 .agent-entry-text small { color: var(--grey-500); display: block; font-size: 10px; }
 
 .agent-actions {
-  display: flex; justify-content: flex-end; padding: 6px 10px;
+  display: flex; justify-content: flex-end; gap: 6px; padding: 6px 10px;
   background: white;
 }
+
+.agent-save-form {
+  padding: 8px 10px; border-top: 1px solid var(--grey-200); background: var(--grey-50);
+}
+
+.profile-action-list {
+  margin-top: 4px; padding-left: 0; list-style: none;
+}
+.profile-action-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 0; font-size: 11px; color: var(--grey-700);
+}
+.profile-action-item .action-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-action-item .action-delete {
+  flex-shrink: 0; background: none; border: none; cursor: pointer;
+  color: var(--grey-400); font-size: 12px; padding: 0 2px; line-height: 1;
+}
+.profile-action-item .action-delete:hover { color: var(--red); }
 
 /* Accessibility */
 *:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
