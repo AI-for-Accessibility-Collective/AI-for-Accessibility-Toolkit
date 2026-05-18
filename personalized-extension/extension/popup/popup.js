@@ -817,6 +817,49 @@ document.addEventListener('DOMContentLoaded', async () => {
       row.appendChild(applyBtn);
       row.appendChild(delBtn);
       list.appendChild(row);
+
+      const actions = p.actions || [];
+      if (actions.length > 0) {
+        const actionList = document.createElement('div');
+        actionList.className = 'profile-action-list';
+        for (const action of actions) {
+          const item = document.createElement('div');
+          item.className = 'profile-action-item';
+
+          const icon = document.createElement('span');
+          icon.textContent = '\u25B6';
+          icon.style.cssText = 'font-size:8px;color:var(--blue);flex-shrink:0';
+
+          const name = document.createElement('span');
+          name.className = 'action-name';
+          name.textContent = action.name || action.prompt;
+          name.title = action.prompt;
+
+          const delActionBtn = document.createElement('button');
+          delActionBtn.className = 'action-delete';
+          delActionBtn.textContent = '\u2715';
+          delActionBtn.title = 'Remove action';
+          delActionBtn.setAttribute('aria-label', 'Remove action: ' + (action.name || action.prompt));
+          delActionBtn.addEventListener('click', async () => {
+            try {
+              await chrome.runtime.sendMessage({
+                type: 'removeActionFromProfile',
+                profileId: p.id,
+                actionId: action.id,
+              });
+              await loadAndRenderProfiles();
+            } catch (e) {
+              console.warn('Remove action failed:', e);
+            }
+          });
+
+          item.appendChild(icon);
+          item.appendChild(name);
+          item.appendChild(delActionBtn);
+          actionList.appendChild(item);
+        }
+        list.appendChild(actionList);
+      }
     }
   }
 
@@ -866,6 +909,15 @@ function setupAgentPanel() {
     });
   }
 
+  const saveToProfileBtn = document.getElementById('agentSaveToProfileBtn');
+  const saveForm = document.getElementById('agentSaveForm');
+  const actionNameInput = document.getElementById('agentActionName');
+  const profileSelect = document.getElementById('agentProfileSelect');
+  const saveCancelBtn = document.getElementById('agentSaveCancelBtn');
+  const saveConfirmBtn = document.getElementById('agentSaveConfirmBtn');
+
+  let lastDoneTask = null;
+
   function renderAgent(state) {
     const s = state || { status: 'idle', log: [] };
     statusEl.textContent = s.status || 'idle';
@@ -878,6 +930,14 @@ function setupAgentPanel() {
     taskInput.disabled = running;
 
     if (s.task && !taskInput.value) taskInput.value = s.task;
+
+    if (s.status === 'done' && s.task) {
+      lastDoneTask = s.task;
+      saveToProfileBtn.hidden = false;
+    } else if (s.status === 'running' || s.status === 'idle') {
+      saveToProfileBtn.hidden = true;
+      saveForm.hidden = true;
+    }
 
     const log = s.log || [];
     if (!log.length) {
@@ -907,6 +967,62 @@ function setupAgentPanel() {
     }
     if (wasAtBottom) logEl.scrollTop = logEl.scrollHeight;
   }
+
+  saveToProfileBtn.addEventListener('click', async () => {
+    actionNameInput.value = lastDoneTask || '';
+    profileSelect.innerHTML = '';
+    try {
+      const resp = await chrome.runtime.sendMessage({ type: 'getCustomProfiles' });
+      const profiles = resp?.profiles || [];
+      for (const p of profiles) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name + (p.siteTypes?.length ? ' (' + p.siteTypes.join(', ') + ')' : '');
+        profileSelect.appendChild(opt);
+      }
+      if (!profiles.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No profiles — create one first';
+        opt.disabled = true;
+        profileSelect.appendChild(opt);
+      }
+    } catch (e) {
+      console.warn('Failed to load profiles:', e);
+    }
+    saveForm.hidden = false;
+    actionNameInput.focus();
+  });
+
+  saveCancelBtn.addEventListener('click', () => {
+    saveForm.hidden = true;
+  });
+
+  saveConfirmBtn.addEventListener('click', async () => {
+    const profileId = profileSelect.value;
+    const name = actionNameInput.value.trim();
+    if (!profileId || !name) { actionNameInput.focus(); return; }
+
+    saveConfirmBtn.disabled = true;
+    saveConfirmBtn.textContent = 'Saving...';
+    try {
+      const action = {
+        id: 'action-' + Date.now(),
+        name,
+        prompt: lastDoneTask,
+        savedAt: Date.now(),
+      };
+      await chrome.runtime.sendMessage({ type: 'saveActionToProfile', profileId, action });
+      saveForm.hidden = true;
+      saveToProfileBtn.hidden = true;
+      if (typeof loadAndRenderProfiles === 'function') loadAndRenderProfiles();
+    } catch (e) {
+      console.warn('Save action failed:', e);
+    } finally {
+      saveConfirmBtn.disabled = false;
+      saveConfirmBtn.textContent = 'Save Action';
+    }
+  });
 
   // Initial render from persisted state.
   chrome.storage.local.get('bhAgent', (data) => renderAgent(data.bhAgent));

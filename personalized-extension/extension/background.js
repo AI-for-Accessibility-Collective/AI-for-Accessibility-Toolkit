@@ -869,4 +869,57 @@ Return ONLY valid JSON with:
     sendResponse({ success: true });
     return true;
   }
+
+  if (msg.type === 'saveActionToProfile') {
+    chrome.storage.local.get('customProfiles', (data) => {
+      const profiles = data.customProfiles || [];
+      const profile = profiles.find(p => p.id === msg.profileId);
+      if (!profile) { sendResponse({ error: 'Profile not found' }); return; }
+      if (!profile.actions) profile.actions = [];
+      profile.actions.push(msg.action);
+      chrome.storage.local.set({ customProfiles: profiles }, () => {
+        sendResponse({ success: true });
+      });
+    });
+    return true;
+  }
+
+  if (msg.type === 'removeActionFromProfile') {
+    chrome.storage.local.get('customProfiles', (data) => {
+      const profiles = data.customProfiles || [];
+      const profile = profiles.find(p => p.id === msg.profileId);
+      if (!profile) { sendResponse({ error: 'Profile not found' }); return; }
+      profile.actions = (profile.actions || []).filter(a => a.id !== msg.actionId);
+      chrome.storage.local.set({ customProfiles: profiles }, () => {
+        sendResponse({ success: true });
+      });
+    });
+    return true;
+  }
+
+  if (msg.type === 'runProfileActions') {
+    (async () => {
+      const actions = msg.actions || [];
+      if (!actions.length || !globalThis.BrowserAgent) {
+        sendResponse({ skipped: true });
+        return;
+      }
+      if (globalThis.BrowserAgent.isRunning()) {
+        console.log('[AgenticA11y] Skipping profile actions — agent already running');
+        sendResponse({ skipped: true, reason: 'agent_busy' });
+        return;
+      }
+      sendResponse({ started: true, count: actions.length });
+      for (const action of actions) {
+        if (globalThis.BrowserAgent.isRunning()) break;
+        try {
+          console.log(`[AgenticA11y] Running profile action: ${action.name || action.prompt}`);
+          await globalThis.BrowserAgent.run(action.prompt);
+        } catch (e) {
+          console.warn(`[AgenticA11y] Profile action failed: ${e.message}`);
+        }
+      }
+    })();
+    return true;
+  }
 });

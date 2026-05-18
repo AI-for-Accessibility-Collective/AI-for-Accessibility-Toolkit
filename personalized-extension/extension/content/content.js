@@ -254,12 +254,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({ success: true });
   } else if (msg.type === 'rescan') {
     revertAll();
-    initFromStorage();
+    init();
     sendResponse({ success: true });
   } else if (msg.type === 'setEnabled') {
     extensionEnabled = msg.enabled;
     if (!msg.enabled) revertAll();
-    else initFromStorage();
+    else init();
     sendResponse({ success: true });
   } else if (msg.type === 'getToolStates') {
     sendResponse({ states: getToolStates() });
@@ -340,22 +340,51 @@ function applyProfileSettings(settings) {
   console.log('[AI4A11y] Profile settings applied');
 }
 
-async function classifyAndAutoApply() {
+function sendMessageAsync(msg) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(msg, (resp) => {
+      if (chrome.runtime.lastError) { resolve(null); return; }
+      resolve(resp);
+    });
+  });
+}
+
+async function init() {
   try {
+    const profilesResp = await sendMessageAsync({ type: 'getCustomProfiles' });
+    const profiles = profilesResp?.profiles || [];
+    const autoApplyProfiles = profiles.filter(p => p.autoApply && p.siteTypes?.length > 0);
+
+    if (autoApplyProfiles.length === 0) {
+      await initFromStorage();
+      return;
+    }
+
     const meta = document.querySelector('meta[name="description"]');
-    chrome.runtime.sendMessage({
+    const classifyResp = await sendMessageAsync({
       type: 'classifySite',
       hostname: location.hostname,
       title: document.title,
       metaDescription: meta?.content || ''
-    }, (resp) => {
-      if (resp?.matchingProfile?.settings) {
-        console.log(`[AI4A11y] Auto-applying profile "${resp.matchingProfile.name}" for ${resp.siteType} site`);
-        applyProfileSettings(resp.matchingProfile.settings);
-      }
     });
-  } catch (e) {}
+
+    if (classifyResp?.matchingProfile?.settings) {
+      console.log(`[AI4A11y] Auto-applying profile "${classifyResp.matchingProfile.name}" for ${classifyResp.siteType} site`);
+      applyProfileSettings(classifyResp.matchingProfile.settings);
+      if (classifyResp.matchingProfile.actions?.length > 0) {
+        chrome.runtime.sendMessage({
+          type: 'runProfileActions',
+          actions: classifyResp.matchingProfile.actions,
+          sourceUrl: location.href,
+        });
+      }
+    } else {
+      await initFromStorage();
+    }
+  } catch (e) {
+    console.warn('[AI4A11y] Init failed, falling back to global settings:', e);
+    await initFromStorage();
+  }
 }
 
-initFromStorage();
-classifyAndAutoApply();
+init();
