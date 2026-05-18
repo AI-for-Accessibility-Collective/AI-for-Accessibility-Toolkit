@@ -62,6 +62,12 @@
         <div class="agent-input-row">
           <label for="agentTaskInput" class="sr-only">Browser task</label>
           <input type="text" id="agentTaskInput" placeholder="What should the agent do? e.g. &quot;find the top trending Python repo on GitHub&quot;" aria-label="Browser task">
+          <label for="agentTabMode" class="sr-only">Run on</label>
+          <select id="agentTabMode" class="agent-tab-mode" title="Where the agent runs" aria-label="Run on">
+            <option value="auto">Auto</option>
+            <option value="current">Current tab</option>
+            <option value="new">New tab</option>
+          </select>
           <button class="btn btn-primary btn-sm" id="agentRunBtn" title="Run agent" aria-label="Run agent">
             <span class="material-symbols-outlined" style="font-size:16px">play_arrow</span>
           </button>

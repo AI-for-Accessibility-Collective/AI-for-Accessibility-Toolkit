@@ -521,6 +521,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     globalThis.BrowserAgent.run(msg.task, {
       tabId: msg.tabId,
+      tabMode: msg.tabMode,
       maxSteps: msg.maxSteps,
     }).catch((e) => {
       // Agent already wrote the error to storage; nothing more to do here.
@@ -900,6 +901,10 @@ Return ONLY valid JSON with:
   if (msg.type === 'runProfileActions') {
     (async () => {
       const actions = msg.actions || [];
+      // Profile actions trigger from the content script of the page that
+      // just matched the profile's site type, so the action belongs on
+      // that tab -- not a fresh about:blank one.
+      const senderTabId = sender?.tab?.id ?? null;
       if (!actions.length || !globalThis.BrowserAgent) {
         sendResponse({ skipped: true });
         return;
@@ -914,7 +919,7 @@ Return ONLY valid JSON with:
         if (globalThis.BrowserAgent.isRunning()) break;
         try {
           console.log(`[AgenticA11y] Running profile action: ${action.name || action.prompt}`);
-          await globalThis.BrowserAgent.run(action.prompt);
+          await globalThis.BrowserAgent.run(action.prompt, { tabId: senderTabId });
         } catch (e) {
           console.warn(`[AgenticA11y] Profile action failed: ${e.message}`);
         }
