@@ -24,6 +24,7 @@ import {
   setLastInteractiveHashes,
   getLastInteractiveHashes,
   resetRunState,
+  getGeminiCaller,
   _bhAgentRead,
   _bhAgentWrite,
   _bhAgentPatch,
@@ -42,6 +43,46 @@ import { _bhWithActionTimeout, _bhClassifyAgentError } from './error.js';
 import { _bhAgentAsk } from './ask.js';
 import { _bhAgentExec } from './exec.js';
 import { _bhAgentCompactHistoryIfNeeded } from './history.js';
+
+// Decide whether a manual run should act on the user's currently open tab or
+// open a fresh one. Single LLM round-trip, single-word reply, no streaming.
+// Returns {choice: 'current'|'new', reason: string}. Falls back to 'new' on
+// any error so the loop never gets stuck waiting for autonomy.
+async function _bhDecideTabMode(task, activeTab) {
+  const gemini = getGeminiCaller();
+  if (!gemini || !activeTab) {
+    return { choice: 'new', reason: 'no LLM caller or no active tab' };
+  }
+  const url = activeTab.url || '';
+  const title = (activeTab.title || '').replace(/\s+/g, ' ').slice(0, 200);
+  // Don't try to operate on browser-internal pages.
+  if (!url || /^(chrome|chrome-extension|edge|about|view-source):/.test(url) || url === 'about:blank') {
+    return { choice: 'new', reason: 'current tab is not a real web page' };
+  }
+  const prompt = `Decide whether a browser-agent task should act on the user's currently open page or open a fresh tab.
+
+Task: """${task}"""
+
+Currently open page URL: ${url}
+Currently open page title: ${title}
+
+Reply with exactly one word:
+CURRENT — if the task is about this page (e.g. "dismiss the cookie banner", "turn on captions", "summarize this article", or any phrasing implying "the page I'm on").
+NEW — if the task names a different site, asks to search or visit something else, or implies starting fresh.
+
+One word only.`;
+  let raw;
+  try {
+    raw = await gemini(prompt, null);
+  } catch (e) {
+    return { choice: 'new', reason: 'autonomy LLM call failed: ' + e.message };
+  }
+  const ans = (raw || '').trim().toUpperCase();
+  if (ans.startsWith('CURRENT')) {
+    return { choice: 'current', reason: 'agent picked current tab' };
+  }
+  return { choice: 'new', reason: 'agent picked new tab' };
+}
 
 /**
  * Run a task to completion. Persists progress to chrome.storage.local.bhAgent.
@@ -64,29 +105,66 @@ export async function bhAgentRun(task, opts = {}) {
   const H = globalThis.BrowserHarness;
   const maxSteps = opts.maxSteps ?? 50;
 
-  // Mirror my_agent.py: always run in a fresh about:blank tab unless the
-  // caller pinned a tabId. Open it in the background (active:false) so the
-  // user's current tab keeps focus -- the loop drives the new tab via CDP
-  // without needing it to be foregrounded.
+  // Tab resolution. Three paths in priority order:
+  //   1. opts.tabId pinned -> use it directly (no new tab, no autonomy call).
+  //   2. opts.tabMode === 'current' -> resolve the active tab and use it.
+  //   3. opts.tabMode === 'auto' (default) -> ask the LLM whether the task
+  //      should act on the current page or start fresh; act accordingly.
+  //   4. opts.tabMode === 'new' (or fallback) -> open a fresh about:blank tab
+  //      in the background (active:false) so the user's tab keeps focus.
+  // The about:blank path mirrors my_agent.py's original behaviour.
   let tabId = opts.tabId ?? null;
   let openedNewTab = false;
+  let usedExistingTab = false;
+  let autonomyDecision = null;
+
   if (tabId == null) {
-    setCreatingTab(true);
-    try {
-      const created = await H.newTab('about:blank', { active: false });
-      if (!created || created.tabId == null) {
-        setRunning(false);
-        throw new Error('failed to open new tab');
-      }
-      tabId = created.tabId;
-    } finally {
-      setCreatingTab(false);
+    let tabMode = opts.tabMode || 'auto';
+    let activeTab = null;
+    if (tabMode === 'current' || tabMode === 'auto') {
+      try {
+        const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (t && t.id != null) activeTab = t;
+      } catch (_) { /* fall through */ }
+      if (!activeTab) tabMode = 'new'; // no current tab to use
     }
-    openedNewTab = true;
-    setGroupId(await _bhAgentGroupTab(tabId, task));
+    if (tabMode === 'auto') {
+      autonomyDecision = await _bhDecideTabMode(task, activeTab);
+      tabMode = autonomyDecision.choice;
+    }
+    if (tabMode === 'current' && activeTab) {
+      tabId = activeTab.id;
+      usedExistingTab = true;
+    } else {
+      setCreatingTab(true);
+      try {
+        const created = await H.newTab('about:blank', { active: false });
+        if (!created || created.tabId == null) {
+          setRunning(false);
+          throw new Error('failed to open new tab');
+        }
+        tabId = created.tabId;
+      } finally {
+        setCreatingTab(false);
+      }
+      openedNewTab = true;
+      setGroupId(await _bhAgentGroupTab(tabId, task));
+    }
+  } else {
+    usedExistingTab = true;
   }
   setTabId(tabId);
   _bhAgentOwnedTabs.add(tabId);
+
+  const initialLog = [];
+  if (autonomyDecision) {
+    initialLog.push({ t: Date.now(), kind: 'info', text: `Autonomy: ${autonomyDecision.reason}` });
+  }
+  let initialText;
+  if (openedNewTab) initialText = `Opened new tab (${tabId})`;
+  else if (usedExistingTab) initialText = `Acting on existing tab ${tabId}`;
+  else initialText = `Starting agent on tab ${tabId}`;
+  initialLog.push({ t: Date.now(), kind: 'info', text: initialText });
 
   await _bhAgentWrite({
     task,
@@ -97,11 +175,7 @@ export async function bhAgentRun(task, opts = {}) {
     endedAt: null,
     summary: null,
     error: null,
-    log: [{
-      t: Date.now(),
-      kind: 'info',
-      text: openedNewTab ? `Opened new tab (${tabId})` : `Starting agent on tab ${tabId}`,
-    }],
+    log: initialLog,
   });
 
   try {

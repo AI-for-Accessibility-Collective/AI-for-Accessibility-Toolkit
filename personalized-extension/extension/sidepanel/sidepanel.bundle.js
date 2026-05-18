@@ -53,7 +53,8 @@
   }
   function installListener() {
     chrome.runtime.onMessage.addListener((msg) => {
-      if (!msg || typeof msg.type !== "string") return;
+      if (!msg || typeof msg.type !== "string")
+        return;
       if (msg.type === "voiceState" && msg.state) {
         Object.assign(_store, msg.state);
         _emit();
@@ -66,7 +67,8 @@
       }
     });
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area !== "local") return;
+      if (area !== "local")
+        return;
       if (RESUME_HANDLE_KEY in changes) {
         _store.hasResumeHandle = !!changes[RESUME_HANDLE_KEY].newValue;
         _emit();
@@ -79,7 +81,8 @@
           _store.speaking = !!s.speaking;
           _store.backgroundMode = !!s.backgroundMode;
           _store.error = s.error || null;
-          if (Array.isArray(s.transcript)) _store.transcript = s.transcript.slice();
+          if (Array.isArray(s.transcript))
+            _store.transcript = s.transcript.slice();
           _emit();
         }
       }
@@ -102,7 +105,8 @@
       } else {
         last.text += text;
       }
-      if (finished) last.partial = false;
+      if (finished)
+        last.partial = false;
     } else {
       _store.transcript.push({ role, text, ts: ts || Date.now(), partial: !finished });
     }
@@ -147,7 +151,8 @@
     return li;
   }
   function _renderEntry(entry) {
-    if (entry.role === "event") return _renderEventBubble(entry);
+    if (entry.role === "event")
+      return _renderEventBubble(entry);
     return _renderSpeechBubble(entry);
   }
   function _renderSpeechBubble(entry) {
@@ -163,8 +168,10 @@
     const det = document.createElement("details");
     det.open = _openDetails.has(entry.ts);
     det.addEventListener("toggle", () => {
-      if (det.open) _openDetails.add(entry.ts);
-      else _openDetails.delete(entry.ts);
+      if (det.open)
+        _openDetails.add(entry.ts);
+      else
+        _openDetails.delete(entry.ts);
     });
     const summary = document.createElement("summary");
     summary.className = "vp-event-summary";
@@ -206,7 +213,8 @@
     return t;
   }
   function _fmtTime(ts) {
-    if (!ts) return "";
+    if (!ts)
+      return "";
     const d = new Date(ts);
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   }
@@ -331,11 +339,13 @@
   async function _ensureMicPermission() {
     try {
       const perm = await navigator.permissions.query({ name: "microphone" });
-      if (perm && perm.state === "granted") return { granted: true };
+      if (perm && perm.state === "granted")
+        return { granted: true };
     } catch {
     }
     const result = await _requestMicViaPopup();
-    if (result.granted) return result;
+    if (result.granted)
+      return result;
     if (result.errorName === "CancelledByUser") {
       return {
         granted: false,
@@ -368,7 +378,8 @@
       let resolved = false;
       let popupWinId = null;
       const safeResolve = (val) => {
-        if (resolved) return;
+        if (resolved)
+          return;
         resolved = true;
         chrome.runtime.onMessage.removeListener(onMessage);
         chrome.windows.onRemoved.removeListener(onWinClosed);
@@ -376,7 +387,8 @@
         resolve(val);
       };
       const onMessage = (msg) => {
-        if (!msg || msg.type !== "micPermissionResult") return;
+        if (!msg || msg.type !== "micPermissionResult")
+          return;
         safeResolve({
           granted: !!msg.granted,
           errorName: msg.errorName,
@@ -415,7 +427,8 @@
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       const resp = await send({ type: "voicePing" });
-      if (resp && resp.ok) return true;
+      if (resp && resp.ok)
+        return true;
       await wait(150);
     }
     return false;
