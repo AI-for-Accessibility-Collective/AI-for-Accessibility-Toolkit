@@ -1039,7 +1039,8 @@ function setupAgentPanel() {
       taskInput.focus();
       return;
     }
-    chrome.runtime.sendMessage({ type: 'bhAgentStart', task }, (resp) => {
+    const tabMode = document.getElementById('agentTabMode')?.value || 'auto';
+    chrome.runtime.sendMessage({ type: 'bhAgentStart', task, tabMode }, (resp) => {
       if (chrome.runtime.lastError || (resp && resp.error)) {
         const err = (resp && resp.error) || chrome.runtime.lastError?.message || 'failed to start';
         // Surface the failure in the log even though the loop never wrote to storage.

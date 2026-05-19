@@ -29,9 +29,11 @@
     switch (name) {
       case "start_browser_task": {
         const task = args && typeof args.task === "string" ? args.task.trim() : "";
-        if (!task) return { error: "no task supplied" };
+        if (!task)
+          return { error: "no task supplied" };
         const resp = await sendRuntime({ type: "bhAgentStart", task });
-        if (resp && resp.error) return { error: resp.error };
+        if (resp && resp.error)
+          return { error: resp.error };
         return { status: "started", task };
       }
       case "get_browser_status": {
@@ -56,7 +58,8 @@
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(msg, (resp) => {
         const err = chrome.runtime.lastError;
-        if (err) return resolve({ error: err.message });
+        if (err)
+          return resolve({ error: err.message });
         resolve(resp || {});
       });
     });
@@ -88,10 +91,12 @@ The user may interrupt you any time. When that happens, stop talking and listen.
   var _changeListeners = /* @__PURE__ */ new Set();
   var _forwarderInstalled = false;
   function _ensureForwarder() {
-    if (HAS_STORAGE || _forwarderInstalled) return;
+    if (HAS_STORAGE || _forwarderInstalled)
+      return;
     _forwarderInstalled = true;
     chrome.runtime.onMessage.addListener((msg) => {
-      if (!msg || msg.type !== "voiceProxyStorageChange") return;
+      if (!msg || msg.type !== "voiceProxyStorageChange")
+        return;
       console.log("[voice] storage forwarder received change:", Object.keys(msg.changes || {}));
       for (const fn of _changeListeners) {
         try {
@@ -109,8 +114,10 @@ The user may interrupt you any time. When that happens, stop talking and listen.
           { type: "voiceProxyStorage", op, area, payload },
           (resp) => {
             const err = chrome.runtime.lastError;
-            if (err) resolve({ error: err.message });
-            else resolve(resp || {});
+            if (err)
+              resolve({ error: err.message });
+            else
+              resolve(resp || {});
           }
         );
       } catch (e) {
@@ -144,7 +151,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       return;
     }
     const resp = await _proxy("set", area, payload);
-    if (resp.error) console.warn(`[voice] proxy storage.${area}.set failed:`, resp.error);
+    if (resp.error)
+      console.warn(`[voice] proxy storage.${area}.set failed:`, resp.error);
   }
   async function remove(area, key) {
     if (HAS_STORAGE) {
@@ -156,7 +164,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       return;
     }
     const resp = await _proxy("remove", area, key);
-    if (resp.error) console.warn(`[voice] proxy storage.${area}.remove failed:`, resp.error);
+    if (resp.error)
+      console.warn(`[voice] proxy storage.${area}.remove failed:`, resp.error);
   }
   function onChanged(fn) {
     if (HAS_STORAGE) {
@@ -182,7 +191,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     return _handle;
   }
   function consumeUpdate(update) {
-    if (!update) return;
+    if (!update)
+      return;
     if (update.resumable && update.newHandle) {
       _handle = update.newHandle;
       _scheduleWrite(_handle);
@@ -197,7 +207,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     await remove("local", STORAGE_KEY);
   }
   function _scheduleWrite(value) {
-    if (_writeTimer) clearTimeout(_writeTimer);
+    if (_writeTimer)
+      clearTimeout(_writeTimer);
     _writeTimer = setTimeout(() => {
       _writeTimer = null;
       set("local", { [STORAGE_KEY]: value });
@@ -233,17 +244,20 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     onSetupComplete
     // ()
   }) {
-    if (!apiKey) throw new Error("live: apiKey required");
+    if (!apiKey)
+      throw new Error("live: apiKey required");
     let ws = null;
     let closed = false;
     const pendingTools = /* @__PURE__ */ new Map();
     function _send(obj) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+      if (!ws || ws.readyState !== WebSocket.OPEN)
+        return false;
       ws.send(JSON.stringify(obj));
       return true;
     }
     async function connect2() {
-      if (closed) return;
+      if (closed)
+        return;
       await loadHandle();
       const url = `${LIVE_WS_BASE}?key=${encodeURIComponent(apiKey)}`;
       ws = new WebSocket(url);
@@ -303,7 +317,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         console.warn("[live] ws error", e);
       };
       ws.onclose = (evt) => {
-        if (closed) return;
+        if (closed)
+          return;
         const explained = _explainClose(evt.code, evt.reason);
         onError?.(`ws closed code=${evt.code} reason=${evt.reason || ""}${explained ? " (" + explained + ")" : ""}`);
       };
@@ -315,7 +330,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       }
       if (msg.serverContent) {
         const sc = msg.serverContent;
-        if (sc.interrupted) onInterrupted?.();
+        if (sc.interrupted)
+          onInterrupted?.();
         const parts = sc.modelTurn?.parts || [];
         for (const p of parts) {
           const inline = p.inlineData;
@@ -324,9 +340,12 @@ The user may interrupt you any time. When that happens, stop talking and listen.
             onAudio?.(inline.data, m ? Number(m[1]) : 24e3);
           }
         }
-        if (sc.inputTranscription) onInputTranscript?.(sc.inputTranscription);
-        if (sc.outputTranscription) onOutputTranscript?.(sc.outputTranscription);
-        if (sc.turnComplete) onTurnComplete?.();
+        if (sc.inputTranscription)
+          onInputTranscript?.(sc.inputTranscription);
+        if (sc.outputTranscription)
+          onOutputTranscript?.(sc.outputTranscription);
+        if (sc.turnComplete)
+          onTurnComplete?.();
         return;
       }
       if (msg.toolCall) {
@@ -335,7 +354,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
           const ac = new AbortController();
           pendingTools.set(fc.id, ac);
           Promise.resolve().then(() => onToolCall?.(fc, ac.signal)).then((response) => {
-            if (ac.signal.aborted) return;
+            if (ac.signal.aborted)
+              return;
             pendingTools.delete(fc.id);
             sendToolResponse(fc.id, fc.name, response || {});
           }).catch((err) => {
@@ -369,7 +389,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       }
     }
     function sendAudioChunk(int16ArrayBuffer) {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN)
+        return;
       const u8 = new Uint8Array(int16ArrayBuffer);
       const b64 = _bytesToBase64(u8);
       _send({
@@ -379,7 +400,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       });
     }
     function sendTextTurn(text, { role = "user", turnComplete = true } = {}) {
-      if (!text) return;
+      if (!text)
+        return;
       _send({
         clientContent: {
           turns: [{ role, parts: [{ text }] }],
@@ -427,10 +449,14 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     };
   }
   function _explainClose(code, reason) {
-    if (code === 1e3 || code === 1001) return null;
-    if (code === 1006) return "connection lost (network or server unavailable)";
-    if (code === 1007) return "protocol error -- check setup payload";
-    if (code === 1011) return "server internal error";
+    if (code === 1e3 || code === 1001)
+      return null;
+    if (code === 1006)
+      return "connection lost (network or server unavailable)";
+    if (code === 1007)
+      return "protocol error -- check setup payload";
+    if (code === 1011)
+      return "server internal error";
     if (code >= 4e3 && code < 5e3) {
       return reason || `server rejected the session (${code})`;
     }
@@ -457,7 +483,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     let silentFrames = 0;
     let running = false;
     async function start() {
-      if (running) return;
+      if (running)
+        return;
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
@@ -467,7 +494,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         }
       });
       audioCtx = new AudioContext();
-      if (audioCtx.state === "suspended") await audioCtx.resume();
+      if (audioCtx.state === "suspended")
+        await audioCtx.resume();
       const url = chrome.runtime.getURL("offscreen/pcm-processor.js");
       await audioCtx.audioWorklet.addModule(url);
       source = audioCtx.createMediaStreamSource(stream);
@@ -508,7 +536,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       running = true;
     }
     function stop() {
-      if (!running) return;
+      if (!running)
+        return;
       try {
         workletNode?.disconnect();
       } catch {
@@ -564,17 +593,20 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       const padded = norm.length % 4 ? norm.padEnd(norm.length + (4 - norm.length % 4), "=") : norm;
       const raw = atob(padded);
       const bytes = new Uint8Array(raw.length);
-      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      for (let i = 0; i < raw.length; i++)
+        bytes[i] = raw.charCodeAt(i);
       return bytes;
     }
     async function enqueue(base64Pcm, mimeRate) {
       const c = await ensureCtx();
       const bytes = _b64ToBytes(base64Pcm);
       const byteLen = bytes.length - bytes.length % 2;
-      if (!byteLen) return;
+      if (!byteLen)
+        return;
       const int16 = new Int16Array(bytes.buffer, bytes.byteOffset, byteLen / 2);
       const float32 = new Float32Array(int16.length);
-      for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+      for (let i = 0; i < int16.length; i++)
+        float32[i] = int16[i] / 32768;
       const rate = Number(mimeRate) || sampleRate;
       const buffer = c.createBuffer(1, float32.length, rate);
       buffer.copyToChannel(float32, 0);
@@ -587,7 +619,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         if (activeSources.size === 0 && onIdle) {
           const cb = onIdle;
           setTimeout(() => {
-            if (activeSources.size === 0) cb();
+            if (activeSources.size === 0)
+              cb();
           }, 0);
         }
       };
@@ -607,13 +640,16 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         }
       }
       activeSources.clear();
-      if (ctx && ctx.state !== "closed") nextPlayTime = ctx.currentTime;
-      if (onIdle) onIdle();
+      if (ctx && ctx.state !== "closed")
+        nextPlayTime = ctx.currentTime;
+      if (onIdle)
+        onIdle();
     }
     function close() {
       flush();
-      if (ctx && ctx.state !== "closed") ctx.close().catch(() => {
-      });
+      if (ctx && ctx.state !== "closed")
+        ctx.close().catch(() => {
+        });
       ctx = null;
     }
     return {
@@ -647,9 +683,11 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     "close_tab"
   ]);
   function _isMajor(event) {
-    if (event.kind === "status") return true;
+    if (event.kind === "status")
+      return true;
     if (event.kind === "log") {
-      if (event.logKind === "action" && MAJOR_ACTIONS.has(event.action)) return true;
+      if (event.logKind === "action" && MAJOR_ACTIONS.has(event.action))
+        return true;
     }
     return false;
   }
@@ -664,9 +702,11 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     let writeTimer = null;
     let unsubscribe = null;
     function _persistLastSeen(t) {
-      if (!t) return;
+      if (!t)
+        return;
       lastEmittedT = Math.max(lastEmittedT, t);
-      if (writeTimer) clearTimeout(writeTimer);
+      if (writeTimer)
+        clearTimeout(writeTimer);
       writeTimer = setTimeout(() => {
         writeTimer = null;
         set("local", { [LAST_SEEN_KEY]: lastEmittedT });
@@ -678,12 +718,14 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       onEvent({ ...evt, major });
     }
     function _listener(changes, area) {
-      if (area !== "local" || !changes.bhAgent) return;
+      if (area !== "local" || !changes.bhAgent)
+        return;
       console.log("[voice] bridge sees bhAgent change");
       const next = changes.bhAgent.newValue || null;
       const prev = lastSnapshot;
       lastSnapshot = next;
-      if (!next) return;
+      if (!next)
+        return;
       _diff(prev, next);
     }
     function _diff(prev, next) {
@@ -703,18 +745,22 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       }
       const prevLog = prev && prev.log || [];
       const nextLog = next.log || [];
-      if (!nextLog.length) return;
+      if (!nextLog.length)
+        return;
       const anchorT = prevLog.length ? prevLog[prevLog.length - 1].t : lastEmittedT;
       let i = nextLog.length - 1;
-      while (i >= 0 && nextLog[i].t > anchorT) i--;
+      while (i >= 0 && nextLog[i].t > anchorT)
+        i--;
       const newEntries = nextLog.slice(i + 1);
       for (const e of newEntries) {
         _maybeEmitLog(e);
       }
     }
     function _maybeEmitLog(e) {
-      if (!NOTABLE_LOG_KINDS.has(e.kind)) return;
-      if (e.kind === "action" && NOISY_ACTIONS.has(e.action)) return;
+      if (!NOTABLE_LOG_KINDS.has(e.kind))
+        return;
+      if (e.kind === "action" && NOISY_ACTIONS.has(e.action))
+        return;
       _emit({ kind: "log", logKind: e.kind, action: e.action, text: e.text, ts: e.t });
       _persistLastSeen(e.t || Date.now());
     }
@@ -722,11 +768,13 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       const data = await get("local", LAST_SEEN_KEY);
       const lastSeen = data[LAST_SEEN_KEY] || 0;
       lastEmittedT = lastSeen;
-      if (!cur || !Array.isArray(cur.log) || !cur.log.length) return;
+      if (!cur || !Array.isArray(cur.log) || !cur.log.length)
+        return;
       const now = Date.now();
       const cutoff = Math.max(lastSeen, now - CATCHUP_MAX_AGE_MS);
       const fresh = cur.log.filter((e) => e && e.t > cutoff).filter((e) => NOTABLE_LOG_KINDS.has(e.kind)).filter((e) => !(e.kind === "action" && NOISY_ACTIONS.has(e.action)));
-      if (!fresh.length) return;
+      if (!fresh.length)
+        return;
       const slice = fresh.slice(-CATCHUP_MAX_ENTRIES);
       for (const e of slice) {
         _emit({ kind: "log", logKind: e.kind, action: e.action, text: e.text, ts: e.t, catchup: true });
@@ -734,7 +782,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       _persistLastSeen(slice[slice.length - 1].t || now);
     }
     async function start() {
-      if (installed) return;
+      if (installed)
+        return;
       unsubscribe = onChanged(_listener);
       installed = true;
       try {
@@ -750,7 +799,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       }
     }
     function stop() {
-      if (!installed) return;
+      if (!installed)
+        return;
       if (typeof unsubscribe === "function") {
         try {
           unsubscribe();
@@ -784,7 +834,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     let flushTimer = null;
     let minorFlushTimer = null;
     function ingest(event) {
-      if (!event) return;
+      if (!event)
+        return;
       console.log("[voice] router ingest:", event.kind, event.logKind || event.status || "", event.action || "", "(major=" + !!event.major + ")");
       if (event.major) {
         pendingMajor.push({
@@ -801,12 +852,14 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         return;
       }
       minorBuffer.push(event);
-      if (minorFlushTimer) clearTimeout(minorFlushTimer);
+      if (minorFlushTimer)
+        clearTimeout(minorFlushTimer);
       minorFlushTimer = setTimeout(_synthesizeProgress, MINOR_FLUSH_MS);
     }
     function _synthesizeProgress() {
       minorFlushTimer = null;
-      if (!minorBuffer.length) return;
+      if (!minorBuffer.length)
+        return;
       const last = minorBuffer[minorBuffer.length - 1];
       const synthetic = {
         kind: "progress",
@@ -834,15 +887,18 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       if (minorBuffer.length) {
         _synthesizeProgress();
       }
-      while (pendingMajor.length) _emitOne(pendingMajor.shift());
+      while (pendingMajor.length)
+        _emitOne(pendingMajor.shift());
     }
     function _scheduleFlush() {
-      if (flushTimer) return;
+      if (flushTimer)
+        return;
       flushTimer = setTimeout(_tryFlush, SILENT_WAIT_MS);
     }
     function _tryFlush() {
       flushTimer = null;
-      if (!pendingMajor.length) return;
+      if (!pendingMajor.length)
+        return;
       const head = pendingMajor[0];
       const overBudget = head && head.queuedAt && Date.now() - head.queuedAt > MAX_DEFER_MS;
       if (!overBudget) {
@@ -857,11 +913,13 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       } else {
         console.log(`[voice] router force-flush ${pendingMajor.length} events (over ${MAX_DEFER_MS}ms defer budget)`);
       }
-      while (pendingMajor.length) _emitOne(pendingMajor.shift());
+      while (pendingMajor.length)
+        _emitOne(pendingMajor.shift());
     }
     function _emitOne({ event, minors }) {
       const summary = event.kind === "progress" ? event.text : _phraseMajor(event);
-      if (!summary) return;
+      if (!summary)
+        return;
       const ts = event.ts || Date.now();
       console.log("[voice] router emit bubble:", summary, "ts=", new Date(ts).toLocaleTimeString());
       onMajorBubble?.({
@@ -875,7 +933,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       }
       if (minors.length) {
         const ctx = minors.map(_phraseMinor).filter(Boolean).slice(-5).join(" \xB7 ");
-        if (ctx) text += ` (recent activity: ${ctx})`;
+        if (ctx)
+          text += ` (recent activity: ${ctx})`;
       }
       sendTextTurn(text, { role: "user", turnComplete: true });
     }
@@ -892,12 +951,15 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       if (event.status === "error") {
         return event.error ? `Task error: ${event.error}` : "Task errored";
       }
-      if (event.status === "stopped") return "Task stopped";
+      if (event.status === "stopped")
+        return "Task stopped";
       return null;
     }
     if (event.kind === "log") {
-      if (event.logKind === "error") return `Error: ${event.text || ""}`.trim();
-      if (event.logKind === "done") return event.text || "Done";
+      if (event.logKind === "error")
+        return `Error: ${event.text || ""}`.trim();
+      if (event.logKind === "done")
+        return event.text || "Done";
       if (event.logKind === "action") {
         switch (event.action) {
           case "navigate":
@@ -925,7 +987,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
   }
   function _phraseProgress(minors) {
     const last = minors[minors.length - 1];
-    if (!last) return "Progress";
+    if (!last)
+      return "Progress";
     if (last.kind === "log") {
       if (last.action) {
         const verb = _verbForAction(last.action);
@@ -970,7 +1033,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     if (event.kind === "log") {
       return event.text || event.action || event.logKind;
     }
-    if (event.kind === "status") return `status -> ${event.status}`;
+    if (event.kind === "status")
+      return `status -> ${event.status}`;
     return null;
   }
   function _detailLines(major, minors) {
@@ -1080,7 +1144,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       ts: ts || Date.now()
     };
     _state.transcript.push(entry);
-    while (_state.transcript.length > TRANSCRIPT_LIMIT) _state.transcript.shift();
+    while (_state.transcript.length > TRANSCRIPT_LIMIT)
+      _state.transcript.shift();
     try {
       chrome.runtime.sendMessage({
         type: "voiceTranscript",
@@ -1101,7 +1166,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     });
   }
   function appendTranscript({ role, text, finished }) {
-    if (!text) return;
+    if (!text)
+      return;
     const last = _state.transcript[_state.transcript.length - 1];
     if (last && last.role === role && last.partial) {
       if (text.startsWith(last.text) && text.length >= last.text.length) {
@@ -1109,7 +1175,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       } else {
         last.text += text;
       }
-      if (finished) last.partial = false;
+      if (finished)
+        last.partial = false;
     } else {
       _state.transcript.push({
         role,
@@ -1118,7 +1185,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
         partial: !finished
       });
     }
-    while (_state.transcript.length > TRANSCRIPT_LIMIT) _state.transcript.shift();
+    while (_state.transcript.length > TRANSCRIPT_LIMIT)
+      _state.transcript.shift();
     try {
       chrome.runtime.sendMessage({
         type: "voiceTranscript",
@@ -1171,7 +1239,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     sendTextTurn: (text, opts) => live?.sendTextTurn(text, opts),
     isUserSpeaking: () => get2().micActivity,
     isModelSpeaking: () => {
-      if (player.isPlaying()) return true;
+      if (player.isPlaying())
+        return true;
       return Date.now() - lastAudioChunkAt < SPEAKING_GRACE_MS;
     },
     // Each major bridge event -> one transcript bubble with expandable
@@ -1188,7 +1257,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     }
   });
   async function connect() {
-    if (live && live.isOpen()) return;
+    if (live && live.isOpen())
+      return;
     setConnection("connecting");
     setError(null);
     const apiKey = await _getApiKey();
@@ -1198,7 +1268,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       return;
     }
     const model = await _getModel();
-    if (setupTimer) clearTimeout(setupTimer);
+    if (setupTimer)
+      clearTimeout(setupTimer);
     setupTimer = setTimeout(() => {
       setupTimer = null;
       if (get2().connection === "connecting") {
@@ -1231,7 +1302,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       },
       onTurnComplete: () => {
         console.log("[voice] turn COMPLETE");
-        if (!player.isPlaying()) setSpeaking(false);
+        if (!player.isPlaying())
+          setSpeaking(false);
       },
       onInputTranscript: (t) => {
         console.log("[voice] input transcript chunk:", JSON.stringify({ text: t.text || "", finished: !!t.finished }).slice(0, 200));
@@ -1272,7 +1344,8 @@ The user may interrupt you any time. When that happens, stop talking and listen.
       },
       onError: (msg) => {
         console.warn("[voice]", msg);
-        if (!/^ws closed/.test(msg)) return;
+        if (!/^ws closed/.test(msg))
+          return;
         if (setupTimer) {
           clearTimeout(setupTimer);
           setupTimer = null;
@@ -1344,8 +1417,10 @@ The user may interrupt you any time. When that happens, stop talking and listen.
     "voiceClearTranscript"
   ]);
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (!msg || typeof msg.type !== "string") return;
-    if (!OFFSCREEN_MSG_TYPES.has(msg.type)) return;
+    if (!msg || typeof msg.type !== "string")
+      return;
+    if (!OFFSCREEN_MSG_TYPES.has(msg.type))
+      return;
     (async () => {
       try {
         switch (msg.type) {
