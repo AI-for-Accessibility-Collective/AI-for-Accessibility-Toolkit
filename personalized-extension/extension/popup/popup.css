@@ -436,6 +436,14 @@ footer {
 }
 .agent-input-row input[type="text"]::placeholder { color: var(--grey-500); font-style: italic; }
 .agent-input-row .btn { flex-shrink: 0; padding: 4px 8px; }
+.agent-input-row .agent-tab-mode {
+  flex-shrink: 0; padding: 4px 6px; font: inherit; font-size: 11px;
+  border: 1px solid var(--grey-200); border-radius: 6px;
+  background: var(--grey-50); color: var(--grey-700); cursor: pointer;
+}
+.agent-input-row .agent-tab-mode:focus {
+  border-color: var(--blue); outline: 2px solid var(--blue); outline-offset: -2px;
+}
 
 .agent-log {
   max-height: 180px; overflow-y: auto; overscroll-behavior: contain;
