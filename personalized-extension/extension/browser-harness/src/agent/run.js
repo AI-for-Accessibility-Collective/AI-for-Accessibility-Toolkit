@@ -100,7 +100,8 @@ export async function bhAgentRun(task, opts = {}) {
   // Bake the interaction-skills index into the system prompt once at the
   // start of the run -- the names don't change mid-run, so re-listing every
   // turn just spends prompt budget for no information gain.
-  setSystemPrompt(await _bhBuildSystemPrompt());
+  let systemPrompt = await _bhBuildSystemPrompt();
+  setSystemPrompt(systemPrompt);
 
   const H = globalThis.BrowserHarness;
   const maxSteps = opts.maxSteps ?? 50;
@@ -155,6 +156,35 @@ export async function bhAgentRun(task, opts = {}) {
   }
   setTabId(tabId);
   _bhAgentOwnedTabs.add(tabId);
+
+  // Demo trace: the Assistant (browser automation agent) starts a one-off task.
+  if (globalThis.aaDemoTrace) {
+    globalThis.aaDemoTrace('skill', 'user', 'one-off task');
+    globalThis.aaDemoTrace('skill', 'assistant', 'Assistant runs task');
+    globalThis.aaDemoTrace('skill', 'assistant_perform', task);
+  }
+
+  // Personalization: ask the Librarian what it knows about this user and
+  // (when acting on an existing page) this site, and fold it into the
+  // system prompt. Deterministic fast-lane call — no LLM, milliseconds.
+  let recallUrl = null;
+  try {
+    const t = await chrome.tabs.get(tabId);
+    if (t && t.url && !/^(chrome|about):/.test(t.url)) recallUrl = t.url;
+  } catch (_) {}
+  if (globalThis.Librarian) {
+    try {
+      const recall = await globalThis.Librarian.recall(recallUrl, task);
+      if (recall && recall.block) {
+        systemPrompt += '\n\n## User context (from the Librarian\'s memory)\n'
+          + recall.block
+          + '\nRespect these preferences and known patterns while completing the task.';
+        setSystemPrompt(systemPrompt);
+      }
+    } catch (e) {
+      console.warn('[BrowserAgent] librarian recall failed:', e.message);
+    }
+  }
 
   const initialLog = [];
   if (autonomyDecision) {
@@ -477,6 +507,7 @@ export async function bhAgentRun(task, opts = {}) {
         await _bhAgentPatch({ status: 'done', endedAt: Date.now(), summary });
         await _bhAgentLog({ kind: 'done', text: summary });
         _bhAgentNotify('done', task, summary);
+        _bhAgentObserveOutcome(task, summary, true);
         return { summary };
       }
     }
@@ -484,6 +515,7 @@ export async function bhAgentRun(task, opts = {}) {
     await _bhAgentPatch({ status: 'done', endedAt: Date.now(), summary });
     await _bhAgentLog({ kind: 'info', text: summary });
     _bhAgentNotify('done', task, summary);
+    _bhAgentObserveOutcome(task, summary, false);
     return { summary };
   } catch (e) {
     const msg = e.message || String(e);
@@ -506,6 +538,30 @@ export async function bhAgentRun(task, opts = {}) {
     resetRunState();
     if (Hf && Hf.setAgentBusy) Hf.setAgentBusy(false);
   }
+}
+
+// Feed the run outcome to the Librarian as an episodic observation. The
+// Librarian decides (LLM-gated, suppression-aware) whether anything durable
+// comes of it. Fire-and-forget: a memory failure must never fail a run.
+function _bhAgentObserveOutcome(task, summary, success) {
+  const L = globalThis.Librarian;
+  if (!L) return;
+  (async () => {
+    let url = null;
+    try {
+      const tabId = getTabId();
+      if (tabId) {
+        const t = await chrome.tabs.get(tabId);
+        if (t && t.url && !/^(chrome|about):/.test(t.url)) url = t.url;
+      }
+    } catch (_) {}
+    await L.logObservation({
+      type: 'agent-task',
+      url,
+      text: `Agent task "${task}" finished ${success ? 'successfully' : 'without completing'}: ${summary}`,
+      data: { task, summary, success },
+    });
+  })().catch(() => {});
 }
 
 export function bhAgentStop() { setStop(true); }

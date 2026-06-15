@@ -6,6 +6,30 @@ self.importScripts(
   'browser-harness/dist/agent.js'
 );
 
+// Toolkit datastore layer -- taxonomy (globalThis.AA_TAXONOMY) and the
+// generated built-in tools registry (globalThis.AA_TOOLS) must load before
+// datastore.js, which exposes both via Datastore.global.*.
+self.importScripts(
+  'lib/demo-trace.js',
+  'lib/taxonomy.js',
+  'lib/tools-registry.js',
+  'lib/datastore.js',
+  'lib/librarian.js'
+);
+
+// Lazy, idempotent store migrations. Safe to fire-and-forget: stores are
+// readable before this resolves (migration 1 is a stamp).
+Datastore.runMigrations().catch((e) =>
+  console.warn('[AgenticA11y] datastore migrations failed:', e.message));
+
+// Demo mode: when the live-diagram pages are open they flip this on, which
+// loosens the Librarian's proposal gating (forces agent-run success, bypasses
+// the weekly cap / dedup / suppression) so the scripted beats fire reliably
+// and are repeatable across rehearsals. Off in normal use. Mirrored onto the
+// service-worker global so the Librarian (same importScripts scope) reads it
+// synchronously without a storage round-trip.
+chrome.storage.local.get('aaDemoMode', (d) => { globalThis.AA_DEMO_MODE = !!(d && d.aaDemoMode); });
+
 const GEMINI_MODEL = 'gemini-3.1-flash-image-preview';
 const USER_SCRIPT_ID_PREFIX = 'aa-custom-';
 
@@ -44,6 +68,29 @@ function isDevModeError(err) {
   return /developer mode|user script/i.test(msg);
 }
 
+// Wrap a generated skill body for registration.
+//   - Always an IIFE: chrome.userScripts.register runs the code as a classic
+//     script, so a top-level `return` (which the prompt tells the generator
+//     to use for idempotency guards) would be a SyntaxError. Wrapping turns
+//     the body into a function where `return` is legal, and keeps any
+//     `var`/`const`/`function` declarations from colliding with other skills
+//     in the shared user-script world.
+//   - Scoped skills (built from "...on news sites") additionally gate on a
+//     background category check: the body only runs when the page matches the
+//     scope. messaging:true on the user-script world makes the round-trip
+//     possible. Unscoped skills run immediately as before.
+function wrapSkillCode(code, scope) {
+  if (!scope || scope === 'general') {
+    return `(function(){\n${code}\n})();`;
+  }
+  return `(function(){\n`
+    + `var __run=function(){\n${code}\n};\n`
+    + `try{chrome.runtime.sendMessage(`
+    + `{type:'aaScopeCheck',scope:${JSON.stringify(scope)},hostname:location.hostname},`
+    + `function(resp){if(chrome.runtime.lastError)return;if(resp&&resp.match){try{__run()}catch(e){}}});`
+    + `}catch(e){}\n})();`;
+}
+
 async function syncCustomUserScripts() {
   if (!userScriptsAvailable()) return;
   let data;
@@ -76,13 +123,7 @@ async function syncCustomUserScripts() {
     .filter(s => s.enabled !== false)
     .map(s => ({
       id: USER_SCRIPT_ID_PREFIX + s.id,
-      // Wrap in an IIFE: chrome.userScripts.register runs the code as a
-      // classic script, so a top-level `return` (which the prompt tells the
-      // generator to use for idempotency guards) would be a SyntaxError.
-      // Wrapping turns the body into a function, where `return` is legal,
-      // and also keeps any `var`/`const`/`function` declarations from
-      // colliding with other skills in the shared user-script world.
-      js: [{ code: `(function(){\n${s.code}\n})();` }],
+      js: [{ code: wrapSkillCode(s.code, s.scope) }],
       matches: ['<all_urls>'],
       runAt: 'document_idle',
       world: 'USER_SCRIPT',
@@ -334,6 +375,52 @@ if (globalThis.BrowserAgent) {
     return await callGemini(prompt, key, opts);
   });
 }
+
+// The Librarian's slow lane (extraction, reflection, playbooks) uses the
+// same key-resolving caller.
+if (globalThis.Librarian) {
+  globalThis.Librarian.setGeminiCaller(async (prompt) => {
+    const key = await getApiKey();
+    if (!key) throw new Error('No Gemini API key configured.');
+    return await callGemini(prompt, key);
+  });
+}
+
+// Observe explicit setting toggles as memory signal. One listener instead
+// of instrumenting every popup control: any sync-area change to a known
+// tool setting is a deliberate user action (weight 3) — the popup, the
+// onboarding finish, and profile "Apply" buttons all write through here.
+const OBSERVED_SETTING_KEYS = new Set([
+  'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands', 'motionReducer', 'focusMode',
+  'hideDistractions', 'showProgress', 'colorBlindMode', 'fontScale', 'lineHeight',
+  'letterSpacing', 'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus',
+  'readingGuide', 'speechRate', 'autoWcagFix', 'autoDescribe', 'autoSimplify',
+  'autoSummarize', 'autoFixLabels', 'autoCaptions', 'autoVideoDescribe',
+]);
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync' || !globalThis.Librarian) return;
+  const changed = Object.entries(changes).filter(([k]) => OBSERVED_SETTING_KEYS.has(k));
+  if (!changed.length) return;
+  (async () => {
+    let origin = null;
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.url) origin = new URL(tab.url).hostname;
+    } catch {}
+    for (const [key, { oldValue, newValue }] of changed) {
+      // Fast lane: make the change stick immediately (final say in the
+      // effective-preferences merge); the episodic observation below is the
+      // slow-lane signal for extraction/reflection.
+      await globalThis.Librarian.recordExplicitSetting(key, newValue, origin).catch(() => {});
+      await globalThis.Librarian.logObservation({
+        type: 'setting-change',
+        origin,
+        text: `User changed setting ${key} from ${JSON.stringify(oldValue)} to ${JSON.stringify(newValue)}`,
+        data: { key, oldValue, newValue },
+      }).catch(() => {});
+    }
+  })();
+});
 
 // Routed from BOTH chrome.runtime.onMessage (extension pages: popup, builder,
 // onboarding) AND chrome.runtime.onUserScriptMessage (user scripts running
@@ -638,7 +725,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       } catch (e) {
         if (isDevModeError(e)) {
           sendResponse({
-            error: 'Custom skills need Developer mode enabled. Open chrome://extensions and toggle Developer mode in the top-right, then try again.',
+            error: 'Custom adapters need Developer mode enabled. Open chrome://extensions and toggle Developer mode in the top-right, then try again.',
           });
         } else {
           sendResponse({ error: e.message });
@@ -704,57 +791,96 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  // Demo trace relay: page/content contexts can't reach the SW-global
+  // aaDemoTrace, so they message it here.
+  if (msg.type === 'aaDemoTrace') {
+    globalThis.aaDemoTrace(msg.diagram, msg.region, msg.label);
+    sendResponse({ ok: true });
+    return false;
+  }
+
+  // Scope gate for scoped custom skills: the wrapped skill asks whether the
+  // current page matches its scope before running its body. Deterministic
+  // (hostmap + cached classifications), so it's fast and adds no Gemini call.
+  if (msg.type === 'aaScopeCheck') {
+    (async () => {
+      try {
+        const scope = msg.scope || 'general';
+        const host = (msg.hostname || '').toLowerCase().replace(/^www\./, '');
+        let match = true;
+        if (scope.startsWith('origin:')) {
+          const want = scope.slice(7).toLowerCase().replace(/^www\./, '');
+          match = host === want || host.endsWith('.' + want);
+        } else if (scope.startsWith('category:')) {
+          const cat = await globalThis.Librarian.getSiteCategory(host, { allowLlm: false });
+          match = cat === scope.slice(9);
+        }
+        sendResponse({ match });
+      } catch (e) {
+        sendResponse({ match: false });
+      }
+    })();
+    return true;
+  }
+
+  // Demo control: the live-diagram pages flip demo mode on when opened.
+  if (msg.type === 'aaSetDemoMode') {
+    globalThis.AA_DEMO_MODE = !!msg.on;
+    chrome.storage.local.set({ aaDemoMode: !!msg.on }, () => sendResponse({ ok: true }));
+    return true;
+  }
+
+  // Demo reset: wipe the state that accumulates across rehearsals so the
+  // suggestion + adaptive-learning beats start clean every time — pending
+  // proposals, suppressions, the auto-created "… automations" profile, the
+  // episodic log, and the trace ring buffer. Leaves the user's onboarding
+  // profile and any hand-made profiles untouched.
+  if (msg.type === 'aaResetDemo') {
+    (async () => {
+      try {
+        await globalThis.Datastore.set('mine.proposals', []);
+        await globalThis.Datastore.set('mine.suppressions', []);
+        await globalThis.Datastore.patch('mine.episodicLog', (l) => ({ entries: [], cursor: (l && l.cursor) || 0 }));
+        const { customProfiles } = await chrome.storage.local.get('customProfiles');
+        const kept = (customProfiles || []).filter(p => !/ automations$/.test(p.name || ''));
+        await chrome.storage.local.set({ customProfiles: kept });
+        await chrome.storage.local.set({ aaDemoTrace: [] });
+        try { await chrome.action.setBadgeText({ text: '' }); } catch (_) {}
+        sendResponse({ ok: true, removedProfiles: (customProfiles || []).length - kept.length });
+      } catch (e) {
+        sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true;
+  }
+
   if (msg.type === 'saveUserProfile') {
     chrome.storage.local.set({ userProfile: msg.profile }, () => {
       sendResponse({ success: true });
     });
+    // Onboarding cold-start populates the personal profile/Librarian.
+    aaDemoTrace('personal', 'user', 'onboarding');
+    aaDemoTrace('personal', 'coldstart', 'support areas + free text');
+    aaDemoTrace('personal', 'profiledb', 'profile saved');
+    aaDemoTrace('personal', 'librarian', 'Librarian seeded');
     return true;
   }
 
   // --- AI Support: interpret natural language needs ---
   if (msg.type === 'interpretNeeds') {
+    // Diagram 2's explicit flow: the Librarian builds the prompt from the
+    // global tools registry (the "does this exist in the global db?" check
+    // is grounded in AA_TOOLS, not a duplicated list) and conditions it on
+    // the ability profile. Response shape is unchanged for the popup.
     (async () => {
       try {
         const apiKey = await getApiKey();
         if (!apiKey) { sendResponse({ error: 'No API key' }); return; }
-
-        const prompt = `You are an accessibility assistant for a browser extension. The user describes what they need in plain language. Map their description to specific extension settings.
-
-Available settings (use these exact keys):
-- darkMode (boolean): Dark theme
-- fontScale (number 50-200): Font size percentage
-- lineHeight (number 1.0-3.0): Line spacing
-- letterSpacing (number 0-0.5): Letter spacing in em
-- dyslexiaFont (boolean): OpenDyslexic font
-- largeCursor (boolean): Larger mouse cursor
-- enhanceFocus (boolean): Stronger focus indicators
-- readingGuide (boolean): Horizontal reading guide
-- focusMode (boolean): Highlight current paragraph
-- hideDistractions (boolean): Dim ads and popups
-- showProgress (boolean): Scroll progress bar
-- motionReducer (boolean): Stop animations
-- readerMode (boolean): Clean reading view
-- keyboardNav (boolean): Enhanced keyboard navigation
-- voiceCommands (boolean): Voice-controlled browsing
-- contrastMode (string: "none", "light", "yellow-black"): Contrast level
-- colorBlindMode (string: "none", "protanopia", "deuteranopia", "tritanopia"): Color filter
-- autoWcagFix (boolean): Auto-fix accessibility issues
-- autoDescribe (boolean): AI image descriptions
-- autoFixLabels (boolean): AI-generated form labels
-- autoCaptions (boolean): Auto captions on video
-- autoSimplify (boolean): Simplify complex text
-- autoSummarize (boolean): Add summaries to long content
-
-User says: "${msg.text}"
-
-Return ONLY valid JSON with:
-{
-  "summary": "One friendly sentence describing what you understood",
-  "settings": { /* only keys that should change, with their values */ },
-  "reasons": { /* same keys as settings, each with a short reason why */ },
-  "newSkills": [ /* ONLY if the user's need CANNOT be fully met by the settings above, suggest custom skills to build. Each object has "name" (short) and "description" (1-2 sentences of what it would do). Leave as empty array [] if existing settings are sufficient. */ ]
-}`;
-
+        // Explicit branch: Librarian consults the global tools db.
+        aaDemoTrace('skill', 'user', 'explicit request');
+        aaDemoTrace('skill', 'explicit', 'describe access needs');
+        aaDemoTrace('skill', 'globaldb_q', 'check global db');
+        const prompt = await globalThis.Librarian.interpretNeedsPrompt(msg.text);
         const result = await callGemini(prompt, apiKey);
         sendResponse({ result });
       } catch (e) {
@@ -796,53 +922,19 @@ Return ONLY valid JSON with:
   }
 
   // --- Site Classification ---
+  // Delegates to the Librarian's site index: hostMap/TLD first, then a
+  // one-time Gemini classification cached per origin (no more re-classifying
+  // the same host on every visit). User overrides are sticky.
   if (msg.type === 'classifySite') {
     (async () => {
       const hostname = msg.hostname || '';
       const title = msg.title || '';
 
-      const hostMap = {
-        'youtube.com': 'video', 'vimeo.com': 'video', 'twitch.tv': 'video', 'dailymotion.com': 'video',
-        'netflix.com': 'video', 'hulu.com': 'video', 'disneyplus.com': 'video',
-        'reddit.com': 'social', 'twitter.com': 'social', 'x.com': 'social',
-        'facebook.com': 'social', 'instagram.com': 'social', 'linkedin.com': 'social',
-        'tiktok.com': 'social', 'mastodon.social': 'social', 'threads.net': 'social',
-        'amazon.com': 'shopping', 'ebay.com': 'shopping', 'etsy.com': 'shopping',
-        'walmart.com': 'shopping', 'target.com': 'shopping', 'shopify.com': 'shopping',
-        'nytimes.com': 'news', 'cnn.com': 'news', 'bbc.com': 'news', 'bbc.co.uk': 'news',
-        'reuters.com': 'news', 'washingtonpost.com': 'news', 'theguardian.com': 'news',
-        'medium.com': 'news', 'substack.com': 'news',
-        'wikipedia.org': 'reference', 'stackoverflow.com': 'reference',
-        'docs.google.com': 'productivity', 'notion.so': 'productivity',
-        'github.com': 'productivity', 'gitlab.com': 'productivity',
-        'coursera.org': 'education', 'edx.org': 'education', 'khanacademy.org': 'education',
-        'udemy.com': 'education', 'canvas.instructure.com': 'education',
-      };
-
-      const domain = hostname.replace(/^www\./, '');
       let siteType = null;
-      for (const [pattern, type] of Object.entries(hostMap)) {
-        if (domain === pattern || domain.endsWith('.' + pattern)) {
-          siteType = type;
-          break;
-        }
-      }
-
-      if (!siteType) {
-        try {
-          const apiKey = await getApiKey();
-          if (apiKey) {
-            const result = await callGemini(
-              `Classify this website into exactly one category. Hostname: "${hostname}", Title: "${title}". Categories: news, social, video, shopping, education, productivity, reference, other. Return ONLY the category word, nothing else.`,
-              apiKey
-            );
-            const cleaned = result.trim().toLowerCase();
-            const valid = ['news', 'social', 'video', 'shopping', 'education', 'productivity', 'reference', 'other'];
-            siteType = valid.includes(cleaned) ? cleaned : 'other';
-          }
-        } catch (e) {
-          siteType = 'other';
-        }
+      try {
+        siteType = await globalThis.Librarian.getSiteCategory(hostname, { allowLlm: true, title });
+      } catch (e) {
+        console.warn('[AgenticA11y] classify failed:', e.message);
       }
 
       if (!siteType) siteType = 'other';
@@ -863,11 +955,68 @@ Return ONLY valid JSON with:
   }
 
   if (msg.type === 'openSkillBuilder') {
-    const url = msg.pendingSkills
-      ? chrome.runtime.getURL('skill-builder/builder.html') + '?pending=' + encodeURIComponent(JSON.stringify(msg.pendingSkills))
-      : chrome.runtime.getURL('skill-builder/builder.html');
+    let url = chrome.runtime.getURL('skill-builder/builder.html');
+    const params = new URLSearchParams();
+    if (msg.pendingSkills) params.set('pending', JSON.stringify(msg.pendingSkills));
+    // Carry the scope so a skill built from a scoped request ("...on news
+    // sites") is gated to those sites, matching the settings.
+    if (msg.scope && msg.scope !== 'general') params.set('scope', msg.scope);
+    const qs = params.toString();
+    if (qs) url += '?' + qs;
     chrome.tabs.create({ url });
     sendResponse({ success: true });
+    return true;
+  }
+
+  // --- Librarian (personal memory/profile agent) ---
+  // Fast lane: deterministic queries + mechanical writes. The slow lane
+  // (extract/reflect) runs on alarms; the *Now variants exist for debugging.
+  if (msg.type && msg.type.startsWith('librarian')) {
+    const L = globalThis.Librarian;
+    if (!L) { sendResponse({ error: 'librarian not loaded' }); return false; }
+    (async () => {
+      try {
+        switch (msg.type) {
+          case 'librarianGetProfile':
+            sendResponse({ profile: await L.getProfile() }); break;
+          case 'librarianSetProfileField':
+            sendResponse({ profile: await L.setProfileField(msg.path, msg.value) }); break;
+          case 'librarianRecordScopedSettings':
+            sendResponse({ ids: await L.recordScopedSettings(msg.scope, msg.settings || {}, msg.opts || {}) }); break;
+          case 'librarianGetSiteCategory':
+            sendResponse({ category: await L.getSiteCategory(msg.origin, msg.opts || {}) }); break;
+          case 'librarianSetSiteCategory':
+            await L.setSiteCategoryOverride(msg.origin, msg.category);
+            sendResponse({ success: true }); break;
+          case 'librarianEffectivePreferences':
+            sendResponse(await L.getEffectivePreferences(msg.url, msg.contexts || [])); break;
+          case 'librarianRecall':
+            sendResponse(await L.recall(msg.url, msg.task || '', msg.contexts || [])); break;
+          case 'librarianListMemories':
+            sendResponse(await L.listMemories(msg.filter || {})); break;
+          case 'librarianListProposals':
+            sendResponse({ proposals: await L.listProposals(msg.status ?? 'pending') }); break;
+          case 'librarianLogObservation':
+            sendResponse(await L.logObservation(msg.observation || {})); break;
+          case 'librarianRespondToProposal':
+            sendResponse(await L.respondToProposal(msg.id, msg.response)); break;
+          case 'librarianDeleteMemory':
+            sendResponse({ success: await L.deleteMemory(msg.id) }); break;
+          case 'librarianSetPause':
+            if (msg.origin) await L.setOriginPaused(msg.origin, msg.paused);
+            else await L.setMemoryPaused(msg.paused);
+            sendResponse({ success: true }); break;
+          case 'librarianExtractNow':
+            sendResponse(await L.extract()); break;
+          case 'librarianReflectNow':
+            sendResponse(await L.reflect()); break;
+          default:
+            sendResponse({ error: `unknown librarian message: ${msg.type}` });
+        }
+      } catch (e) {
+        sendResponse({ error: e.message });
+      }
+    })();
     return true;
   }
 
@@ -881,6 +1030,12 @@ Return ONLY valid JSON with:
       chrome.storage.local.set({ customProfiles: profiles }, () => {
         sendResponse({ success: true });
       });
+      // Saving a reusable action is strong, deliberate signal.
+      globalThis.Librarian?.logObservation({
+        type: 'saved-action',
+        text: `User saved reusable agent action "${msg.action?.name}" (prompt: ${msg.action?.prompt}) to profile "${profile.name}" for site types: ${(profile.siteTypes || []).join(', ')}`,
+        data: { profileId: profile.id, siteTypes: profile.siteTypes },
+      }).catch(() => {});
     });
     return true;
   }
