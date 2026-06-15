@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Memory Flows — live</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bar">
+    <h1>Personal ability profile / memory flows</h1>
+    <button id="reset">Reset</button>
+    <button id="resetDemo" title="Wipe accumulated proposals / auto-profiles so the demo starts clean">Reset demo</button>
+    <span id="status">waiting for activity…</span>
+  </div>
+  <div class="stage">
+    <div class="stage-inner">
+      <img id="diagram" src="personal.svg" alt="Personal memory architecture">
+      <div id="overlay"></div>
+    </div>
+  </div>
+  <script src="personal-config.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

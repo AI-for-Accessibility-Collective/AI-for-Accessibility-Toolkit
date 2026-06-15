@@ -48,6 +48,7 @@ const state = {
   iterationCount: 0,
   targetTabId: null,
   targetUrl: '',
+  scope: 'general',          // site scope for built skills (from a scoped request)
   useAI: false,              // whether the generated skill may call Gemini at runtime
   aiAssessment: null,        // last assessment payload from assessAINeed()
   prompts: { creator: '', refine: '' },
@@ -169,12 +170,17 @@ function parseEntryAndRoute() {
     pending = JSON.parse(decodeURIComponent(params.get('pending') || '[]'));
   } catch { pending = []; }
 
+  // Scope from a scoped popup request ("...on news sites"): applied to every
+  // skill built in this session so the saved skill is gated to those sites.
+  const scope = params.get('scope') || 'general';
+  state.scope = /^(general|category:[a-z-]+|context:[a-z-]+|origin:[a-z0-9.-]+)$/.test(scope) ? scope : 'general';
+
   if (Array.isArray(pending) && pending.length > 0) {
     state.mode = 'batch';
     state.queue = pending
       .filter(p => p && typeof p.description === 'string')
       .map(p => ({
-        name: typeof p.name === 'string' ? p.name : 'Untitled skill',
+        name: typeof p.name === 'string' ? p.name : 'Untitled adapter',
         description: p.description,
         supportAreas: Array.isArray(p.supportAreas) ? p.supportAreas : [],
         enabled: true,
@@ -235,7 +241,7 @@ function updateProgressStrip() {
   if (total <= 1) { strip.hidden = true; return; }
   strip.hidden = false;
   document.getElementById('progressLabel').textContent =
-    `Skill ${state.builtCount + 1} of ${total}`;
+    `Adapter ${state.builtCount + 1} of ${total}`;
 }
 
 // ============================================================
@@ -322,7 +328,7 @@ function setupIntentHandlers() {
   document.getElementById('intentNextBtn').addEventListener('click', () => {
     const description = document.getElementById('intentDescription').value.trim();
     if (description.length < 8) {
-      flashFieldError('intentDescription', 'Describe what the skill should do — a sentence or two is plenty.');
+      flashFieldError('intentDescription', 'Describe what the adapter should do — a sentence or two is plenty.');
       return;
     }
     let name = document.getElementById('intentName').value.trim();
@@ -353,7 +359,7 @@ function prefillIntent() {
     help.textContent = 'We pre-filled this from your onboarding answers. Edit anything that doesn\'t match what you wanted.';
     document.getElementById('exampleChips').hidden = true;
   } else {
-    help.textContent = 'Describe what you want the skill to do — in plain language, like you\'d describe it to a person.';
+    help.textContent = 'Describe what you want the adapter to do — in plain language, like you\'d describe it to a person.';
     renderExampleChips();
     document.getElementById('exampleChips').hidden = false;
   }
@@ -399,7 +405,7 @@ function guessName(desc) {
     }
     if (picked.length >= 5) break;
   }
-  return picked.join(' ').slice(0, 50) || 'Untitled skill';
+  return picked.join(' ').slice(0, 50) || 'Untitled adapter';
 }
 
 // ============================================================
@@ -634,13 +640,28 @@ async function runGenerate() {
   setStep('ai-generate', 'active');
   setStatusLine('Asking Gemini to write the code from your description… This usually takes 30–60 seconds.');
 
-  const prompt = state.prompts.creator
+  let prompt = state.prompts.creator
     .replace('{{DESCRIPTION}}', state.current.description)
     .replace('{{NAME}}', state.current.name)
     .replace('{{TARGET_INFO}}', state.targetUrl
       ? `EXAMPLE_PAGE: ${state.targetUrl}\n(This is one page the user happened to test on. Treat it as a sample, not a constraint. Do NOT add a hostname/path check that limits the skill to this URL unless the USER_DESCRIPTION explicitly asks to scope to a particular site.)`
       : 'EXAMPLE_PAGE: (not provided)')
     .replace('{{AI_MODE}}', aiModeDirective(state.useAI));
+
+  // The diagram's Engineer builds "from specs + user profile + task":
+  // condition generation on the Librarian's ability profile so e.g. a
+  // screen-reader user gets ARIA-careful DOM changes and a plain-language
+  // user gets simpler in-page text. Best-effort — generation proceeds
+  // without it if the Librarian isn't available.
+  try {
+    const resp = await sendMessage({ type: 'librarianGetProfile' });
+    const p = resp?.profile;
+    if (p && (p.supportAreas?.length || p.freeText)) {
+      prompt += `\n\nUSER_ACCESSIBILITY_PROFILE: support areas: ${p.supportAreas.join(', ') || 'unspecified'}.`
+        + (p.freeText ? ` In their words: "${p.freeText}".` : '')
+        + ' Tailor the skill to these needs (e.g. preserve ARIA/semantics for screen-reader users, prefer simple wording for plain-language users), but do not narrow the skill beyond the USER_DESCRIPTION.';
+    }
+  } catch (_) {}
 
   let raw;
   const t0 = performance.now();
@@ -653,6 +674,7 @@ async function runGenerate() {
   }
   setStep('ai-generate', 'done');
   setStatusLine(`Got the code from Gemini in ${Math.round((performance.now() - t0) / 100) / 10}s. Checking it now…`);
+  try { chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'skill', region: 'skillbuilder', label: 'Engineer built skill' }); } catch (_) {}
 
   // ---- Step 2: Lint ----
   setStep('lint', 'active');
@@ -685,7 +707,7 @@ async function runGenerate() {
 
   // ---- Step 5: Plain-English explanation ----
   setStep('explain', 'active');
-  setStatusLine('Asking Gemini to describe what this skill does, in plain language…');
+  setStatusLine('Asking Gemini to describe what this adapter does, in plain language…');
   try {
     await refreshExplanation();
     setStep('explain', 'done');
@@ -731,7 +753,7 @@ async function runOnTargetWithProgress(reload) {
 
   // ---- Step 4: Inject skill ----
   setStep('run', 'active');
-  setStatusLine('Injecting the skill into the test page…');
+  setStatusLine('Injecting the adapter into the test page…');
   const status = document.getElementById('tryStatus');
 
   try {
@@ -743,7 +765,7 @@ async function runOnTargetWithProgress(reload) {
     if (resp?.success) {
       setStep('run', 'done');
       setStatus(status, 'success',
-        'Done. Check the side window — a banner will tell you whether the skill actually changed the page.');
+        'Done. Check the side window — a banner will tell you whether the adapter actually changed the page.');
     } else {
       setStep('run', 'failed');
       setStatus(status, 'error', `That didn't run: ${resp?.error || 'unknown error'}.`);
@@ -766,7 +788,7 @@ async function runOnTargetWithProgress(reload) {
  *      match its selectors looks identical to a skill that worked.
  */
 function wrapForPreview(code, skillName) {
-  const safeName = JSON.stringify(skillName || 'this skill');
+  const safeName = JSON.stringify(skillName || 'this adapter');
   return `
 ;(function __aaSkillSnapshot() {
   try {
@@ -832,7 +854,7 @@ ${code}
       banner.setAttribute('role', 'status');
       banner.setAttribute('aria-live', 'polite');
       banner.textContent = applied
-        ? '✓ Skill applied: ' + name + ' — changes are now active on this page.'
+        ? '✓ Adapter applied: ' + name + ' — changes are now active on this page.'
         : '⚠ ' + name + ' ran but did not visibly change this page. Selectors may not match here — try refining the description or testing on a different URL.';
 
       Object.assign(banner.style, {
@@ -895,7 +917,7 @@ function lintGenerated(code, useAI) {
   for (const { re, msg } of bad) if (re.test(code)) issues.push(msg);
   // The user opted out of AI, so the skill must not call Gemini at runtime.
   if (!useAI && /chrome\.runtime\.sendMessage\s*\(/.test(code)) {
-    issues.push('uses runtime AI calls but you chose to skip AI for this skill');
+    issues.push('uses runtime AI calls but you chose to skip AI for this adapter');
   }
   return issues;
 }
@@ -933,7 +955,7 @@ async function refreshExplanation() {
   el.textContent = 'Generating a plain-language explanation…';
   const prompt =
     'In two short sentences, plain English, no jargon, explain what this JavaScript snippet does to a webpage. ' +
-    'Speak directly to a non-developer (use "this skill"/"it" rather than "the code"). Be concrete about what visibly changes. ' +
+    'Speak directly to a non-developer (use "this adapter"/"it" rather than "the code"). Be concrete about what visibly changes. ' +
     'Output only the two sentences.\n\n' +
     state.generatedCode;
   try {
@@ -955,7 +977,7 @@ function setupTryHandlers() {
     if (state.iterationCount >= MAX_ITERATIONS) {
       const counter = document.getElementById('iterCounter');
       counter.hidden = false;
-      counter.textContent = `You\'ve hit the ${MAX_ITERATIONS}-revision limit on this skill. Try "Different idea" to start fresh.`;
+      counter.textContent = `You\'ve hit the ${MAX_ITERATIONS}-revision limit on this adapter. Try "Different idea" to start fresh.`;
       return;
     }
     document.getElementById('refineGroup').hidden = false;
@@ -1057,7 +1079,7 @@ async function runRefine(feedback) {
 
   // ---- Step 5: Explanation ----
   setStep('explain', 'active');
-  setStatusLine('Asking Gemini to describe the revised skill in plain language…');
+  setStatusLine('Asking Gemini to describe the revised adapter in plain language…');
   await refreshExplanation();
   setStep('explain', 'done');
 
@@ -1107,7 +1129,7 @@ function prefillSave() {
 async function persistSkill() {
   const name = document.getElementById('saveName').value.trim();
   if (!name) {
-    flashFieldError('saveName', 'Please give the skill a name.');
+    flashFieldError('saveName', 'Please give the adapter a name.');
     return;
   }
   const areas = Array.from(document.querySelectorAll('#saveAreas .chip[aria-pressed="true"]'))
@@ -1122,6 +1144,9 @@ async function persistSkill() {
     supportAreas: areas,
     code: state.generatedCode,
     enabled: true,
+    // Site scope from a scoped request; 'general' = runs everywhere. The
+    // background translates this into a runtime gate at registration time.
+    scope: state.scope || 'general',
     createdAt: now,
     updatedAt: now,
   };
@@ -1130,7 +1155,7 @@ async function persistSkill() {
     const saveResp = await sendMessage({ type: 'saveCustomSkill', skill });
     if (!saveResp?.success) throw new Error('saveCustomSkill returned no success');
   } catch (e) {
-    showError('We couldn\'t save the skill: ' + e.message, true);
+    showError('We couldn\'t save the adapter: ' + e.message, true);
     return;
   }
 
@@ -1141,8 +1166,15 @@ async function persistSkill() {
   // raw "custom-foo" row in the wrong section.
 
   state.builtCount += 1;
+  const where = (() => {
+    const s = state.scope || 'general';
+    if (s.startsWith('category:')) return `on ${s.slice(9)} sites`;
+    if (s.startsWith('origin:')) return `on ${s.slice(7)}`;
+    if (s.startsWith('context:')) return `for ${s.slice(8)} content`;
+    return 'on every page';
+  })();
   document.getElementById('confirmMessage').textContent =
-    `“${name}” is saved. It will run automatically on every page until you turn it off from the popup.`;
+    `“${name}” is saved. It will run automatically ${where} until you turn it off from the popup.`;
 
   const hasMore = state.queue.length > 0;
   document.getElementById('confirmNextBtn').hidden = !hasMore;
@@ -1200,7 +1232,7 @@ function finishAll() {
       document.body.innerHTML =
         '<div style="padding:40px; max-width:500px; margin:auto; font-family:sans-serif;">' +
         '<h1 style="font-size:1.4rem; margin-bottom:12px;">All done.</h1>' +
-        '<p>You can close this tab now. Your saved skills will run automatically as you browse.</p>' +
+        '<p>You can close this tab now. Your saved adapters will run automatically as you browse.</p>' +
         '</div>';
     }
   }, 300);
@@ -1232,7 +1264,7 @@ function showApiError(err) {
   const msg = err?.message || String(err);
   if (/api key/i.test(msg)) {
     document.getElementById('errorMessage').innerHTML =
-      'We need a Gemini API key to generate skills, but none is configured. ' +
+      'We need a Gemini API key to generate adapters, but none is configured. ' +
       'Open the extension popup and paste your key into Settings, then come back. ' +
       '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a Gemini key</a>.';
     document.getElementById('errorRetryBtn').hidden = false;

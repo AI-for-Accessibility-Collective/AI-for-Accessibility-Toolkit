@@ -75,12 +75,12 @@
         <button type="button" class="btn btn-primary" id="quickStartBtn">Quick Start</button>
         <button type="button" class="btn btn-secondary" id="personalizeBtn">Personalize</button>
       </nav>
-      <p class="path-hint"><strong>Quick Start</strong> uses AI to recommend skills instantly. <strong>Personalize</strong> lets you pick skills for each support area.</p>
+      <p class="path-hint"><strong>Quick Start</strong> uses AI to recommend adapters instantly. <strong>Personalize</strong> lets you pick adapters for each support area.</p>
     </section>
 
     <!-- Quick Start: AI Recommendations -->
     <section class="page" id="page-recommendations" aria-label="AI Recommendations">
-      <h2 id="rec-heading">Your Recommended Skills</h2>
+      <h2 id="rec-heading">Your Recommended Adapters</h2>
       <p class="subtitle" id="recSubtitle">Based on your input, here is what we suggest.</p>
 
       <div id="loadingIndicator" class="loading" role="status" aria-live="polite" hidden>
@@ -89,12 +89,12 @@
       </div>
 
       <div id="recommendationsContainer" hidden>
-        <h3 class="section-label">Recommended Skills</h3>
+        <h3 class="section-label">Recommended Adapters</h3>
         <div class="skill-list" id="recommendedSkills" role="list"></div>
 
         <div id="newSkillsSection" hidden>
-          <h3 class="section-label new-skills-label">New Skills to Create</h3>
-          <p class="new-skills-desc">These needs are not covered by built-in skills. We can build them for you.</p>
+          <h3 class="section-label new-skills-label">New Adapters to Create</h3>
+          <p class="new-skills-desc">These needs are not covered by built-in adapters. We can build them for you.</p>
           <div class="skill-list" id="newSkills" role="list"></div>
         </div>
       </div>
@@ -120,14 +120,14 @@
     <!-- Summary (personalized path) -->
     <section class="page" id="page-summary" aria-label="Setup summary">
       <h2 id="summary-heading">Your Setup Summary</h2>
-      <p class="subtitle">Here are the skills you selected. You can change these anytime from the popup.</p>
+      <p class="subtitle">Here are the adapters you selected. You can change these anytime from the popup.</p>
 
-      <h3 class="section-label">Enabled Skills</h3>
+      <h3 class="section-label">Enabled Adapters</h3>
       <div class="skill-list" id="summarySkills" role="list"></div>
 
       <div id="summaryNewSection" hidden>
-        <h3 class="section-label new-skills-label">Skills to Create</h3>
-        <p class="new-skills-desc">These will be built in the Skill Builder.</p>
+        <h3 class="section-label new-skills-label">Adapters to Create</h3>
+        <p class="new-skills-desc">These will be built in the Adapter Creator.</p>
         <div class="skill-list" id="summaryNewSkills" role="list"></div>
       </div>
 
@@ -140,6 +140,7 @@
 
   </main>
 
+  <script src="../lib/tools-registry.js"></script>
   <script src="onboarding.js"></script>
 </body>
 </html>
