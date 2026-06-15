@@ -22,6 +22,12 @@
   </header>
 
   <main>
+    <!-- Pending suggestions surface at the very top so the consent prompt
+         ("Is this a reusable task?") is always seen first. Populated by
+         setupMemoryPanel(); mirrors the cards in the memory section. -->
+    <div id="proposalBanner" class="proposal-banner" hidden aria-live="polite"
+         role="region" aria-label="Suggestions awaiting your response"></div>
+
     <!-- Setup nudge (shown if onboarding not completed) -->
     <div class="setup-nudge" id="setupNudge" hidden role="status">
       <span>New here? Run the setup wizard to get personalized recommendations.</span>
@@ -112,6 +118,26 @@
         <span class="section-arrow">&#9660;</span>
       </div>
       <div class="section-body" id="myProfilesList"></div>
+    </section>
+
+    <!-- Memory (Librarian) -->
+    <section class="section" id="memorySection">
+      <div class="section-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="section-title">What I Know About You</span>
+        <span class="memory-badge" id="memoryBadge" hidden>0</span>
+        <span class="section-arrow">&#9660;</span>
+      </div>
+      <div class="section-body">
+        <div class="memory-pause-row">
+          <span>Remember how I browse</span>
+          <label class="switch small" aria-label="Remember how I browse">
+            <input type="checkbox" id="memoryPauseToggle" checked>
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div id="proposalList" aria-live="polite"></div>
+        <div id="memoryList"></div>
+      </div>
     </section>
 
     <!-- Access Needs -->
@@ -338,10 +364,10 @@
       </div>
     </section>
 
-    <!-- Custom Skills (dynamic) -->
+    <!-- Custom Adapters (dynamic) -->
     <section class="section" id="customSection" hidden>
       <div class="section-header" role="button" tabindex="0" aria-expanded="true">
-        <span class="section-title">Custom Skills</span>
+        <span class="section-title">Custom Adapters</span>
         <span class="section-count" id="customCount">0</span>
         <span class="section-arrow">&#9660;</span>
       </div>
@@ -365,8 +391,8 @@
     <button class="btn btn-secondary" id="saveProfileBtn" title="Save current settings as a profile"><span class="material-symbols-outlined" style="font-size:14px">verified</span> Save Profile</button>
     <div class="spacer"></div>
     <button class="btn btn-secondary" id="onboardBtn" title="Re-run setup wizard"><span class="material-symbols-outlined" style="font-size:14px">play_arrow</span> Setup</button>
-    <button class="btn btn-secondary" id="builderBtn" title="Open Skill Builder"><span class="material-symbols-outlined" style="font-size:14px">build</span> Skills</button>
-    <button class="btn btn-secondary" id="scanPage" title="Re-apply skills"><span class="material-symbols-outlined" style="font-size:14px">refresh</span> Rescan</button>
+    <button class="btn btn-secondary" id="builderBtn" title="Open Adapter Creator"><span class="material-symbols-outlined" style="font-size:14px">build</span> Adapters</button>
+    <button class="btn btn-secondary" id="scanPage" title="Re-apply adapters"><span class="material-symbols-outlined" style="font-size:14px">refresh</span> Rescan</button>
     <button class="btn btn-secondary" id="resetAll" title="Reset all settings"><span class="material-symbols-outlined" style="font-size:14px">restart_alt</span> Reset</button>
   </footer>
 
@@ -381,16 +407,9 @@
       </div>
       <fieldset style="margin-bottom:10px; border:none; padding:0;">
         <legend style="font-size:10px;color:var(--grey-500);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px">Auto-apply on site types (optional)</legend>
-        <div class="site-type-grid">
-          <label class="site-type-checkbox"><input type="checkbox" value="news"> News</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="social"> Social</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="video"> Video</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="shopping"> Shopping</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="education"> Education</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="productivity"> Productivity</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="reference"> Reference</label>
-          <label class="site-type-checkbox"><input type="checkbox" value="other"> Other</label>
-        </div>
+        <!-- Populated from AA_TAXONOMY.categories by popup.js so the
+             vocabulary stays single-sourced with lib/taxonomy.js -->
+        <div class="site-type-grid"></div>
       </fieldset>
       <div style="display:flex;gap:6px;justify-content:flex-end">
         <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
@@ -399,6 +418,7 @@
     </div>
   </div>
 
+  <script src="../lib/taxonomy.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

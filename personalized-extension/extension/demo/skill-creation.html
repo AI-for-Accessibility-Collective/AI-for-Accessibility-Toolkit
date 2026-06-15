@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Skill Creation Flows — live</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bar">
+    <h1>Skill creation flows</h1>
+    <button id="reset">Reset</button>
+    <button id="resetDemo" title="Wipe accumulated proposals / auto-profiles so the demo starts clean">Reset demo</button>
+    <span id="status">waiting for activity…</span>
+  </div>
+  <div class="stage">
+    <div class="stage-inner">
+      <img id="diagram" src="skill-creation.svg" alt="Skill creation architecture">
+      <div id="overlay"></div>
+    </div>
+  </div>
+  <script src="skill-config.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

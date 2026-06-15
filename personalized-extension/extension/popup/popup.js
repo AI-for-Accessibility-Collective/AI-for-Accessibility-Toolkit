@@ -30,7 +30,28 @@ function updateStatus(status) {
   if (text) text.textContent = status.text || (status.active ? 'Active' : 'Inactive');
 }
 
+// Build the save-profile modal's site-type checkboxes from the shared
+// taxonomy (lib/taxonomy.js) so the vocabulary can't drift from the
+// classifier's. Categories marked noMemoryDefault still appear — they gate
+// the Librarian's observation logging (Phase 1), not profile auto-apply.
+function renderSiteTypeGrid() {
+  const grid = document.querySelector('.site-type-grid');
+  if (!grid || !globalThis.AA_TAXONOMY) return;
+  grid.textContent = '';
+  for (const cat of AA_TAXONOMY.categories) {
+    const label = document.createElement('label');
+    label.className = 'site-type-checkbox';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = cat.id;
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' ' + cat.label));
+    grid.appendChild(label);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  renderSiteTypeGrid();
   const settings = await chrome.storage.sync.get([
     'enabled', 'autoWcagFix', 'autoDescribe', 'autoSimplify', 'autoSummarize',
     'autoFixLabels', 'autoCaptions', 'autoVideoDescribe',
@@ -40,6 +61,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'speechRate',
     'geminiKey', 'selectedProfiles', 'onboardingComplete', 'nudgeDismissed'
   ]);
+
+  // Overlay the Librarian's effective preferences for the CURRENT tab so the
+  // controls reflect what's actually applied on this page — e.g. a "150% on
+  // news sites" scoped preference — instead of only the global baseline. The
+  // values share the popup's units (fontScale %, lineHeight multiplier, …).
+  // `scopedKeys` tracks which controls are showing a site-scoped value so a
+  // later change writes it back to the right scope, not the global baseline.
+  const currentTabUrl = await (async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      return /^https?:/.test(tab?.url || '') ? tab.url : null;
+    } catch { return null; }
+  })();
+  // effProvenance: setting key -> scope its shown value came from. A change to
+  // a key whose value is site-scoped is written back to that scope.
+  let effProvenance = {};
+  if (currentTabUrl) {
+    const eff = await new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage(
+          { type: 'librarianEffectivePreferences', url: currentTabUrl, contexts: [] },
+          (r) => { void chrome.runtime.lastError; resolve(r || null); });
+      } catch { resolve(null); }
+    });
+    if (eff?.settings) {
+      Object.assign(settings, eff.settings);
+      effProvenance = eff.provenance || {};
+    }
+  }
+  // Persist a settings change to the scope its current value belongs to: if the
+  // value is site-scoped (category:/origin:), update that Librarian record;
+  // otherwise write the global baseline. Keeps "150% on news sites" from being
+  // overwritten globally when the user nudges the slider on a news page.
+  async function persistSetting(key, value) {
+    const scope = effProvenance[key];
+    if (scope && (scope.startsWith('category:') || scope.startsWith('origin:'))) {
+      await new Promise((resolve) => {
+        try {
+          chrome.runtime.sendMessage(
+            { type: 'librarianRecordScopedSettings', scope, settings: { [key]: value } },
+            () => { void chrome.runtime.lastError; resolve(); });
+        } catch { resolve(); }
+      });
+    } else {
+      await chrome.storage.sync.set({ [key]: value });
+    }
+  }
 
   // Show setup nudge if onboarding hasn't been completed
   const nudge = document.getElementById('setupNudge');
@@ -177,9 +245,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const el = document.getElementById(id);
     const eventType = el?.type === 'range' ? 'input' : 'change';
     el?.addEventListener(eventType, async () => {
-      if (el.type === 'checkbox') await chrome.storage.sync.set({ [id]: el.checked });
-      else if (el.type === 'range') await chrome.storage.sync.set({ [id]: parseFloat(el.value) });
-      else await chrome.storage.sync.set({ [id]: el.value });
+      const value = el.type === 'checkbox' ? el.checked
+        : el.type === 'range' ? parseFloat(el.value) : el.value;
+      await persistSetting(id, value);
       applyVisualAssist();
     });
   });
@@ -568,10 +636,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function scopeChipLabel(scope) {
+    if (!scope || scope === 'general') return 'Everywhere';
+    if (scope.startsWith('category:')) return 'On ' + scope.slice(9) + ' sites';
+    if (scope.startsWith('origin:')) return 'On ' + scope.slice(7);
+    if (scope.startsWith('context:')) return 'For ' + scope.slice(8) + ' content';
+    return scope;
+  }
+
   function showAISuggestions(result) {
     document.getElementById('aiSuggestionSummary').textContent = result.summary || 'Here are my suggestions:';
     const listEl = document.getElementById('aiSuggestionList');
     listEl.innerHTML = '';
+
+    // Show where these will apply, so scoping is visible before the user acts.
+    const scopeRow = document.createElement('div');
+    scopeRow.className = 'ai-suggestion-scope';
+    scopeRow.textContent = 'Applies: ' + scopeChipLabel(result.scope);
+    listEl.appendChild(scopeRow);
+
+    // Reflect "apply AND build" in the primary button when a skill is needed.
+    const applyBtn = document.getElementById('aiApplyBtn');
+    if (applyBtn) {
+      const hasSettings = result.settings && Object.keys(result.settings).length > 0;
+      const hasSkills = result.newSkills?.length > 0;
+      applyBtn.textContent = hasSkills
+        ? (hasSettings ? 'Apply & build adapter' : 'Build adapter')
+        : 'Apply suggestions';
+    }
 
     const settingLabels = {
       darkMode: 'Dark Mode', fontScale: 'Font Size', lineHeight: 'Line Height',
@@ -599,7 +691,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (result.newSkills?.length > 0) {
       const divider = document.createElement('div');
       divider.className = 'ai-suggestion-divider';
-      divider.textContent = 'These needs require a custom skill:';
+      divider.textContent = 'These needs require a custom adapter:';
       listEl.appendChild(divider);
 
       for (const skill of result.newSkills) {
@@ -608,28 +700,57 @@ document.addEventListener('DOMContentLoaded', async () => {
         item.innerHTML = `<span class="setting-name">${escapeHtml(skill.name)}</span><span class="setting-reason">${escapeHtml(skill.description)}</span>`;
         listEl.appendChild(item);
       }
-
-      const buildBtn = document.createElement('button');
-      buildBtn.className = 'btn btn-primary btn-sm ai-build-skill-btn';
-      buildBtn.style.marginTop = '6px';
-      buildBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">build</span> Open Skill Builder';
-      listEl.appendChild(buildBtn);
+      // The primary "Apply & build adapter" button drives the build; no separate
+      // inline button (it was an either/or that lost the scoped settings).
     }
 
     aiSuggestion.hidden = false;
   }
 
-  document.getElementById('aiApplyBtn').addEventListener('click', () => {
-    if (pendingAISuggestion?.settings) {
-      applyPreset(pendingAISuggestion.settings);
-      aiSuggestion.hidden = true;
-      aiInput.value = '';
+  // Apply the suggestion's built-in settings. A scoped request
+  // ("...on news sites") is stored as a scoped Librarian preference (applies
+  // only where it should) and pushed live to the current tab; an unscoped
+  // request writes the global baseline as before.
+  async function applySuggestionSettings(suggestion) {
+    if (!suggestion?.settings || !Object.keys(suggestion.settings).length) return;
+    const scope = suggestion.scope;
+    if (scope && scope !== 'general') {
+      await sendMessageSafe({
+        type: 'librarianRecordScopedSettings', scope, settings: suggestion.settings,
+      });
+      await sendToContent({ type: 'applyProfile', settings: suggestion.settings });
+    } else {
+      applyPreset(suggestion.settings);
     }
+  }
+
+  // Open the skill builder for the suggestion's custom skills, carrying the
+  // scope so the built skill is gated to the same sites as the settings.
+  function openBuilderForSuggestion(suggestion) {
+    const skills = suggestion?.newSkills || [];
+    chrome.runtime.sendMessage({
+      type: 'openSkillBuilder', pendingSkills: skills, scope: suggestion?.scope || 'general',
+    });
+    window.close();
+  }
+
+  document.getElementById('aiApplyBtn').addEventListener('click', async () => {
+    const sug = pendingAISuggestion;
+    if (!sug) return;
+    await applySuggestionSettings(sug);
+    aiInput.value = '';
+    // Apply AND build: when the request also needs a custom skill, proceed
+    // into the builder instead of forcing an either/or choice.
+    if (sug.newSkills?.length > 0) {
+      openBuilderForSuggestion(sug);
+      return;
+    }
+    aiSuggestion.hidden = true;
   });
 
-  document.getElementById('aiSaveProfileBtn').addEventListener('click', () => {
+  document.getElementById('aiSaveProfileBtn').addEventListener('click', async () => {
     if (pendingAISuggestion?.settings) {
-      applyPreset(pendingAISuggestion.settings);
+      await applySuggestionSettings(pendingAISuggestion);
       aiSuggestion.hidden = true;
       aiInput.value = '';
       openSaveProfileModal();
@@ -639,19 +760,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('aiDismissBtn').addEventListener('click', () => {
     aiSuggestion.hidden = true;
     pendingAISuggestion = null;
-  });
-
-  document.getElementById('aiSuggestionList').addEventListener('click', (e) => {
-    const btn = e.target.closest('.ai-build-skill-btn');
-    if (!btn) return;
-    const skills = pendingAISuggestion?.newSkills || [];
-    if (pendingAISuggestion?.settings && Object.keys(pendingAISuggestion.settings).length > 0) {
-      applyPreset(pendingAISuggestion.settings);
-    }
-    aiSuggestion.hidden = true;
-    aiInput.value = '';
-    chrome.runtime.sendMessage({ type: 'openSkillBuilder', pendingSkills: skills });
-    window.close();
   });
 
   aiBtn.addEventListener('click', () => submitSupportQuery(aiInput.value));
@@ -880,7 +988,162 @@ document.addEventListener('DOMContentLoaded', async () => {
   // pure UI: render-from-storage on open, subscribe to onChanged for live
   // updates, send messages to start/stop/clear.
   setupAgentPanel();
+
+  // What the Librarian knows: pending proposals (consent gate), learned
+  // memories grouped by where they apply, and standing "don't suggest"
+  // instructions. All plain language; raw records stay in storage.
+  setupMemoryPanel();
 });
+
+function sendMessageP(msg) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(msg, (resp) => {
+      if (chrome.runtime.lastError) { resolve(null); return; }
+      resolve(resp);
+    });
+  });
+}
+
+function setupMemoryPanel() {
+  const proposalList = document.getElementById('proposalList');
+  const proposalBanner = document.getElementById('proposalBanner');
+  const memoryList = document.getElementById('memoryList');
+  const badge = document.getElementById('memoryBadge');
+  const pauseToggle = document.getElementById('memoryPauseToggle');
+  if (!proposalList || !memoryList) return;
+
+  pauseToggle?.addEventListener('change', async () => {
+    await sendMessageP({ type: 'librarianSetPause', paused: !pauseToggle.checked });
+  });
+
+  function scopeLabel(scope) {
+    if (scope === 'general') return 'Everywhere';
+    if (scope.startsWith('category:')) return 'On ' + scope.slice(9) + ' sites';
+    if (scope.startsWith('origin:')) return 'On ' + scope.slice(7);
+    if (scope.startsWith('context:')) return 'For ' + scope.slice(8) + ' content';
+    if (scope.startsWith('tool:')) return 'Tool: ' + scope.slice(5);
+    return scope;
+  }
+
+  async function respond(id, response) {
+    await sendMessageP({ type: 'librarianRespondToProposal', id, response });
+    await render();
+  }
+
+  async function render() {
+    const [profResp, propResp, memResp] = await Promise.all([
+      sendMessageP({ type: 'librarianGetProfile' }),
+      sendMessageP({ type: 'librarianListProposals' }),
+      sendMessageP({ type: 'librarianListMemories', filter: { status: 'active' } }),
+    ]);
+
+    if (pauseToggle && profResp?.profile) {
+      pauseToggle.checked = !profResp.profile.memoryPaused;
+    }
+
+    // --- Proposals: the consent gate ---
+    // Rendered into the top-of-popup banner so a pending suggestion ("Is
+    // this a reusable task?") is the first thing seen, not buried under the
+    // settings sections. The in-section list is kept empty to avoid dupes.
+    const proposals = propResp?.proposals || [];
+    if (badge) {
+      badge.hidden = proposals.length === 0;
+      badge.textContent = String(proposals.length);
+    }
+    const buildCard = (p) => {
+      const card = document.createElement('div');
+      card.className = 'proposal-card';
+      const title = document.createElement('div');
+      title.className = 'proposal-title';
+      title.textContent = 'Suggestion: ' + (p.aspectLabel || p.aspect);
+      const why = document.createElement('div');
+      why.className = 'proposal-rationale';
+      why.textContent = p.rationale || '';
+      const actions = document.createElement('div');
+      actions.className = 'proposal-actions';
+      const mk = (label, response, cls) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-sm ' + cls;
+        b.textContent = label;
+        b.addEventListener('click', () => respond(p.id, response));
+        return b;
+      };
+      actions.appendChild(mk('Yes, apply', 'accept', 'btn-primary'));
+      actions.appendChild(mk('Not now', 'declineOnce', 'btn-secondary'));
+      actions.appendChild(mk("Don't suggest this", 'suppress', 'btn-secondary'));
+      card.appendChild(title);
+      card.appendChild(why);
+      card.appendChild(actions);
+      return card;
+    };
+    const target = proposalBanner || proposalList;
+    target.textContent = '';
+    if (proposalList !== target) proposalList.textContent = '';
+    for (const p of proposals) target.appendChild(buildCard(p));
+    if (proposalBanner) proposalBanner.hidden = proposals.length === 0;
+
+    // --- Memories grouped by scope, plus suppressions ---
+    memoryList.textContent = '';
+    const memories = memResp?.memories || [];
+    const suppressions = (memResp?.suppressions || []).filter(s => s.mode === 'permanent');
+    if (!memories.length && !suppressions.length && !proposals.length) {
+      const empty = document.createElement('div');
+      empty.className = 'memory-empty';
+      empty.textContent = 'Nothing learned yet. As you browse and use the agent, useful preferences will appear here for your review.';
+      memoryList.appendChild(empty);
+      return;
+    }
+    const groups = new Map();
+    for (const m of memories) {
+      const label = scopeLabel(m.scope);
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label).push(m);
+    }
+    const renderItem = (parent, id, text, title) => {
+      const row = document.createElement('div');
+      row.className = 'memory-item';
+      const span = document.createElement('span');
+      span.className = 'memory-text';
+      span.textContent = text;
+      if (title) span.title = title;
+      const del = document.createElement('button');
+      del.className = 'memory-delete';
+      del.textContent = '✕';
+      del.title = 'Forget this';
+      del.setAttribute('aria-label', 'Forget: ' + text);
+      del.addEventListener('click', async () => {
+        await sendMessageP({ type: 'librarianDeleteMemory', id });
+        await render();
+      });
+      row.appendChild(span);
+      row.appendChild(del);
+      parent.appendChild(row);
+    };
+    for (const [label, items] of groups) {
+      const h = document.createElement('div');
+      h.className = 'memory-group-title';
+      h.textContent = label;
+      memoryList.appendChild(h);
+      for (const m of items) {
+        renderItem(memoryList, m.id, m.text,
+          `Learned ${new Date(m.firstSeenAt).toLocaleDateString()} · seen ${m.occurrenceCount}×`);
+      }
+    }
+    if (suppressions.length) {
+      const h = document.createElement('div');
+      h.className = 'memory-group-title';
+      h.textContent = "Things you've told me not to suggest";
+      memoryList.appendChild(h);
+      for (const s of suppressions) {
+        renderItem(memoryList, s.id,
+          s.text || s.aspect,
+          'Since ' + new Date(s.createdAt).toLocaleDateString() + ' — delete to allow suggestions again');
+      }
+    }
+  }
+
+  render();
+}
 
 function setupAgentPanel() {
   const taskInput = document.getElementById('agentTaskInput');
@@ -1210,13 +1473,13 @@ function createCustomToggle(skill) {
   const enabled = skill.enabled !== false;
   const wrapper = document.createElement('label');
   wrapper.className = 'switch small';
-  wrapper.title = enabled ? 'Disable skill' : 'Enable skill';
+  wrapper.title = enabled ? 'Disable adapter' : 'Enable adapter';
 
   const input = document.createElement('input');
   input.type = 'checkbox';
   input.checked = enabled;
   input.setAttribute('aria-label',
-    `${enabled ? 'Disable' : 'Enable'} skill: ${skill.name || skill.id}`);
+    `${enabled ? 'Disable' : 'Enable'} adapter: ${skill.name || skill.id}`);
 
   const track = document.createElement('span');
   track.className = 'switch-track';
@@ -1231,9 +1494,9 @@ function createCustomToggle(skill) {
       updatedAt: new Date().toISOString(),
     };
     chrome.runtime.sendMessage({ type: 'saveCustomSkill', skill: updated }, () => {
-      wrapper.title = input.checked ? 'Disable skill' : 'Enable skill';
+      wrapper.title = input.checked ? 'Disable adapter' : 'Enable adapter';
       input.setAttribute('aria-label',
-        `${input.checked ? 'Disable' : 'Enable'} skill: ${skill.name || skill.id}`);
+        `${input.checked ? 'Disable' : 'Enable'} adapter: ${skill.name || skill.id}`);
     });
   });
   return wrapper;
@@ -1244,8 +1507,8 @@ function createCustomDeleteButton(skill) {
   btn.type = 'button';
   btn.className = 'skill-delete';
   btn.textContent = '✕';
-  btn.title = 'Delete skill';
-  btn.setAttribute('aria-label', `Delete skill: ${skill.name || skill.id}`);
+  btn.title = 'Delete adapter';
+  btn.setAttribute('aria-label', `Delete adapter: ${skill.name || skill.id}`);
 
   let confirmTimer = null;
   btn.addEventListener('click', () => {
@@ -1266,7 +1529,7 @@ function createCustomDeleteButton(skill) {
     confirmTimer = setTimeout(() => {
       btn.dataset.confirming = '';
       btn.textContent = '✕';
-      btn.setAttribute('aria-label', `Delete skill: ${skill.name || skill.id}`);
+      btn.setAttribute('aria-label', `Delete adapter: ${skill.name || skill.id}`);
     }, 4000);
   });
   return btn;

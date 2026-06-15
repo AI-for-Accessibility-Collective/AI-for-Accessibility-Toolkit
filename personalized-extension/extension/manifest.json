@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Agentic A11y",
   "version": "1.0.0",
-  "description": "AI-powered accessibility toolkit with dynamic skill recommendations and custom skill building.",
+  "description": "AI-powered accessibility toolkit with dynamic adapter recommendations and custom adapter building.",
   "permissions": [
     "activeTab",
     "alarms",
@@ -47,7 +47,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["onboarding/*", "skill-builder/*", "lib/OpenDyslexic-Regular.woff2"],
+      "resources": ["onboarding/*", "skill-builder/*", "demo/*", "lib/OpenDyslexic-Regular.woff2"],
       "matches": ["<all_urls>"]
     }
   ]
