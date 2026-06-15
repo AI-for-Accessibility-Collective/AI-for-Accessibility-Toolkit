@@ -354,6 +354,11 @@ footer {
 }
 .ai-new-skill .setting-name { color: var(--blue); }
 .ai-build-skill-btn { width: 100%; justify-content: center; gap: 4px; }
+.ai-suggestion-scope {
+  display: inline-block; margin: 2px 0 6px; padding: 2px 8px;
+  font-size: 10px; font-weight: 600; color: var(--blue);
+  background: var(--blue-light); border-radius: 10px;
+}
 
 .ai-loading {
   align-items: center; gap: 8px; padding: 12px;
@@ -498,3 +503,49 @@ footer {
   .btn:focus-visible { outline: 2px solid Highlight; }
   .modal { border: 2px solid ButtonText; }
 }
+
+/* Memory panel (Librarian) */
+.memory-badge {
+  font-size: 10px; font-weight: 700; min-width: 16px; text-align: center;
+  padding: 1px 5px; border-radius: 9px; background: var(--blue); color: white;
+}
+.memory-pause-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; font-size: 12px; color: var(--grey-700);
+  border-bottom: 1px solid var(--grey-100);
+}
+.proposal-card {
+  margin: 8px 10px; padding: 8px 10px; border-radius: 8px;
+  background: var(--blue-light); border: 1px solid var(--blue);
+}
+/* Top-of-popup suggestion banner — sticky so the consent prompt stays in
+   view, with a slightly stronger frame to read as an actionable callout. */
+.proposal-banner {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--white, #fff);
+  border-bottom: 1px solid var(--grey-100);
+  padding: 4px 0 6px;
+}
+.proposal-banner .proposal-card {
+  border-width: 2px;
+  box-shadow: 0 1px 4px rgba(26, 115, 232, 0.18);
+}
+.proposal-title { font-size: 12px; font-weight: 600; color: var(--grey-900); }
+.proposal-rationale { font-size: 11px; color: var(--grey-700); margin: 4px 0 6px; }
+.proposal-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.memory-group-title {
+  font-size: 10px; font-weight: 600; color: var(--grey-500);
+  text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 8px 10px 2px;
+}
+.memory-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 10px; font-size: 12px;
+}
+.memory-text { flex: 1; color: var(--grey-900); }
+.memory-delete {
+  flex-shrink: 0; border: none; background: none; cursor: pointer;
+  color: var(--grey-500); font-size: 11px; padding: 2px 4px; border-radius: 4px;
+}
+.memory-delete:hover { background: var(--grey-100); color: var(--red); }
+.memory-empty { padding: 10px; font-size: 11px; color: var(--grey-500); font-style: italic; }

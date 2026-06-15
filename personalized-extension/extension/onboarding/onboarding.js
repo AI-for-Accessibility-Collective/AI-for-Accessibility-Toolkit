@@ -1,20 +1,11 @@
-// -- Skill registry (inline to avoid module bundling for extension pages) --
-const REGISTRY = [
-  { id: 'auto-alt-text', name: 'Auto Alt Text', description: 'Generates descriptive alt text for images using AI.', supportAreas: ['vision'], siteRelevance: ['all'], icon: '\u{1F5BC}\uFE0F' },
-  { id: 'fix-contrast', name: 'Fix Contrast', description: 'Fixes poor color contrast to meet WCAG AA standards.', supportAreas: ['vision'], siteRelevance: ['all'], icon: '\u{1F3A8}' },
-  { id: 'simplify-text', name: 'Simplify Text', description: 'Rewrites complex text to a simpler reading level using AI.', supportAreas: ['cognitive', 'reading'], siteRelevance: ['news', 'education'], icon: '\u270F\uFE0F' },
-  { id: 'dark-mode', name: 'Dark Mode', description: 'Inverts the page to a dark theme, reducing eye strain.', supportAreas: ['vision', 'sensory'], siteRelevance: ['all'], icon: '\u{1F319}' },
-  { id: 'focus-mode', name: 'Focus Mode', description: 'Dims ads and distractions, highlights the paragraph you are reading.', supportAreas: ['cognitive', 'reading', 'sensory'], siteRelevance: ['news', 'education', 'social'], icon: '\u{1F3AF}' },
-  { id: 'reader-mode', name: 'Reader Mode', description: 'Shows article content in a clean, distraction-free overlay.', supportAreas: ['cognitive', 'reading', 'sensory'], siteRelevance: ['news', 'education'], icon: '\u{1F4C4}' },
-  { id: 'motion-reducer', name: 'Reduce Motion', description: 'Stops animations, GIFs, auto-playing videos, and parallax scrolling.', supportAreas: ['sensory', 'cognitive', 'vision'], siteRelevance: ['all'], icon: '\u23F8\uFE0F' },
-  { id: 'large-cursor', name: 'Large Cursor', description: 'Replaces the mouse cursor with a larger, more visible one.', supportAreas: ['vision', 'motor'], siteRelevance: ['all'], icon: '\u{1F5B1}\uFE0F' },
-  { id: 'dyslexia-font', name: 'Dyslexia Font', description: 'Applies OpenDyslexic font with wider spacing for dyslexic readers.', supportAreas: ['reading', 'cognitive'], siteRelevance: ['all'], icon: '\u{1F524}' },
-  { id: 'keyboard-nav', name: 'Keyboard Navigation', description: 'Adds skip links, focus indicators, and keyboard shortcuts.', supportAreas: ['motor', 'vision'], siteRelevance: ['all'], icon: '\u2328\uFE0F' },
-  { id: 'auto-captions', name: 'Auto Captions', description: 'Adds caption controls for video and audio without subtitles.', supportAreas: ['hearing'], siteRelevance: ['video', 'social', 'education'], icon: '\u{1F4AC}' },
-  { id: 'voice-commands', name: 'Voice Commands', description: 'Hands-free browsing via voice: scroll, click, navigate.', supportAreas: ['motor'], siteRelevance: ['all'], icon: '\u{1F399}\uFE0F' },
-  { id: 'color-filter', name: 'Color Blind Filter', description: 'Color correction for protanopia, deuteranopia, or tritanopia.', supportAreas: ['vision'], siteRelevance: ['all'], icon: '\u{1F3A8}' },
-  { id: 'visual-assist', name: 'Visual Assist', description: 'Adjustable font size, line height, letter spacing, and reading guide.', supportAreas: ['vision', 'reading'], siteRelevance: ['all'], icon: '\u{1F441}\uFE0F' },
-];
+// -- Skill registry --
+// Canonical source: skills/registry.js, baked into lib/tools-registry.js at
+// build time (globalThis.AA_TOOLS, loaded via <script> in onboarding.html).
+// Onboarding (grids + AI recommendation prompt) uses quickStart tools only,
+// matching the pre-unification inline registry. Cards render the emoji icon.
+const REGISTRY = globalThis.AA_TOOLS.list
+  .filter(s => s.quickStart)
+  .map(s => ({ ...s, icon: s.emoji }));
 
 const AREA_LABELS = {
   vision: 'Vision', cognitive: 'Cognitive', hearing: 'Hearing',
@@ -207,7 +198,7 @@ function renderRecommendations() {
   newList.innerHTML = '';
 
   if (recommendations.recommended.length === 0 && recommendations.newSkills.length === 0) {
-    recList.innerHTML = '<p class="empty-msg">No specific recommendations. You can enable skills from the popup anytime.</p>';
+    recList.innerHTML = '<p class="empty-msg">No specific recommendations. You can enable adapters from the popup anytime.</p>';
   }
 
   for (const rec of recommendations.recommended) {
@@ -308,7 +299,7 @@ function renderWizardStep() {
 
   const desc = document.createElement('p');
   desc.className = 'step-desc';
-  desc.textContent = 'Select the skills you want to enable for this area.';
+  desc.textContent = 'Select the adapters you want to enable for this area.';
 
   const list = document.createElement('div');
   list.className = 'skill-list';
@@ -402,7 +393,7 @@ function showSummary() {
   skillList.innerHTML = '';
 
   if (allSkills.size === 0) {
-    skillList.innerHTML = '<p class="empty-msg">No skills selected. You can enable them later from the popup.</p>';
+    skillList.innerHTML = '<p class="empty-msg">No adapters selected. You can enable them later from the popup.</p>';
   } else {
     for (const id of allSkills) {
       const skill = REGISTRY.find(s => s.id === id);
@@ -438,7 +429,7 @@ function showSummary() {
   showSummary._newSkills = newSkills;
 
   const finishBtn = document.getElementById('summaryFinishBtn');
-  finishBtn.textContent = newSkills.length > 0 ? 'Open Skill Builder' : 'Finish Setup';
+  finishBtn.textContent = newSkills.length > 0 ? 'Open Adapter Creator' : 'Finish Setup';
 
   showPage('page-summary');
 }
@@ -451,33 +442,14 @@ async function finishFromSummary() {
 // SHARED FINISH
 // ============================================================
 
-// Maps onboarding skill registry IDs to the chrome.storage.sync keys the popup/content use.
-const SKILL_TO_SETTINGS = {
-  'dark-mode':      { darkMode: true },
-  'focus-mode':     { focusMode: true, hideDistractions: true, showProgress: true },
-  'reader-mode':    { readerMode: true },
-  'motion-reducer': { motionReducer: true },
-  'keyboard-nav':   { keyboardNav: true },
-  'voice-commands': { voiceCommands: true },
-  'auto-alt-text':  { autoDescribe: true },
-  'fix-contrast':   { autoWcagFix: true },
-  'simplify-text':  { autoSimplify: true },
-  'auto-captions':  { autoCaptions: true },
-  'color-filter':   { colorBlindMode: 'protanopia' },
-  'large-cursor':   { largeCursor: true },
-  'dyslexia-font':  { dyslexiaFont: true, letterSpacing: 0.12, lineHeight: 2.0 },
-  'visual-assist':  { fontScale: 130, lineHeight: 1.8, enhanceFocus: true, readingGuide: true },
-  'generate-labels':   { autoFixLabels: true },
-  'generate-captions': { autoCaptions: true },
-  'wcag-fixes':        { autoWcagFix: true },
-  'read-aloud':        {},
-};
-
+// Tool → chrome.storage.sync settings mapping lives on each registry entry
+// (`settings` field in skills/registry.js). Numeric keys merge by max so
+// e.g. dyslexia-font's lineHeight 2.0 isn't clobbered by visual-assist's 1.8.
 function skillIdsToSyncSettings(enabledSkillIds) {
   const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
   const merged = {};
   for (const id of enabledSkillIds) {
-    const mapping = SKILL_TO_SETTINGS[id];
+    const mapping = globalThis.AA_TOOLS.byId(id)?.settings;
     if (!mapping) continue;
     for (const [key, value] of Object.entries(mapping)) {
       if (numericKeys.includes(key) && typeof value === 'number') {
@@ -499,6 +471,22 @@ async function saveAndFinish(enabledSkillIds, newSkills) {
 
   await sendMessageSafe({ type: 'saveUserProfile', profile });
   await sendMessageSafe({ type: 'setActiveSkills', skills: enabledSkillIds });
+
+  // Keep the Librarian's ability profile in step with onboarding ("onboarding
+  // + continual update" in the architecture). Explicit user input — no
+  // proposal gate. The observation gives extraction the full picture.
+  await sendMessageSafe({ type: 'librarianSetProfileField', path: 'supportAreas', value: profile.supportAreas });
+  await sendMessageSafe({ type: 'librarianSetProfileField', path: 'freeText', value: profile.freeText });
+  await sendMessageSafe({
+    type: 'librarianLogObservation',
+    observation: {
+      type: 'onboarding',
+      text: `Onboarding completed. Support areas: ${profile.supportAreas.join(', ') || 'none'}. `
+        + (profile.freeText ? `User wrote: "${profile.freeText}". ` : '')
+        + `Enabled tools: ${enabledSkillIds.join(', ') || 'none'}.`,
+      data: { supportAreas: profile.supportAreas, enabledSkillIds },
+    },
+  });
 
   const syncSettings = skillIdsToSyncSettings(enabledSkillIds);
   syncSettings.enabled = true;

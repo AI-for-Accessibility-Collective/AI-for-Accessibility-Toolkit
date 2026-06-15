@@ -1,3 +1,24 @@
+// Canonical built-in tools registry — the single source of truth for the
+// "global Tools db" tier of the toolkit datastore.
+//
+// Consumed two ways:
+//   1. Directly as ESM by node-side code (utils/recommender.js, tests).
+//   2. Generated into extension/lib/tools-registry.js (a classic script
+//      assigning globalThis.AA_TOOLS) by build.js, for extension pages and
+//      the background service worker, which cannot load ES modules.
+//
+// Do NOT redefine tool entries elsewhere (the old inline copy in
+// onboarding.js and its SKILL_TO_SETTINGS map are retired). Edit here, then
+// `npm run build`.
+//
+// Per-entry fields:
+//   settings   — chrome.storage.sync keys this tool sets when enabled
+//                (was onboarding's SKILL_TO_SETTINGS).
+//   emoji      — onboarding card icon. `icon` is the Material Symbols name
+//                used by the popup.
+//   quickStart — shown on the onboarding quick-start grid. AI
+//                recommendations may still suggest non-quickStart tools.
+
 export const skillRegistry = [
   {
     id: 'dark-mode',
@@ -7,6 +28,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'dark_mode',
+    emoji: '\u{1F319}',
+    quickStart: true,
+    settings: { darkMode: true },
   },
   {
     id: 'focus-mode',
@@ -16,6 +40,9 @@ export const skillRegistry = [
     siteRelevance: ['news', 'education', 'social'],
     requiresAI: false,
     icon: 'center_focus_strong',
+    emoji: '\u{1F3AF}',
+    quickStart: true,
+    settings: { focusMode: true, hideDistractions: true, showProgress: true },
   },
   {
     id: 'visual-assist',
@@ -25,6 +52,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'visibility',
+    emoji: '\u{1F441}️',
+    quickStart: true,
+    settings: { fontScale: 130, lineHeight: 1.8, enhanceFocus: true, readingGuide: true },
   },
   {
     id: 'motion-reducer',
@@ -34,6 +64,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'motion_photos_pause',
+    emoji: '⏸️',
+    quickStart: true,
+    settings: { motionReducer: true },
   },
   {
     id: 'reader-mode',
@@ -43,6 +76,9 @@ export const skillRegistry = [
     siteRelevance: ['news', 'education'],
     requiresAI: false,
     icon: 'article',
+    emoji: '\u{1F4C4}',
+    quickStart: true,
+    settings: { readerMode: true },
   },
   {
     id: 'keyboard-nav',
@@ -52,6 +88,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'keyboard',
+    emoji: '⌨️',
+    quickStart: true,
+    settings: { keyboardNav: true },
   },
   {
     id: 'auto-alt-text',
@@ -61,6 +100,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: true,
     icon: 'image',
+    emoji: '\u{1F5BC}️',
+    quickStart: true,
+    settings: { autoDescribe: true },
   },
   {
     id: 'fix-contrast',
@@ -70,6 +112,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'contrast',
+    emoji: '\u{1F3A8}',
+    quickStart: true,
+    settings: { autoWcagFix: true },
   },
   {
     id: 'simplify-text',
@@ -79,6 +124,9 @@ export const skillRegistry = [
     siteRelevance: ['news', 'education'],
     requiresAI: true,
     icon: 'edit_note',
+    emoji: '✏️',
+    quickStart: true,
+    settings: { autoSimplify: true },
   },
   {
     id: 'voice-commands',
@@ -88,6 +136,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'mic',
+    emoji: '\u{1F399}️',
+    quickStart: true,
+    settings: { voiceCommands: true },
   },
   {
     id: 'auto-captions',
@@ -97,6 +148,9 @@ export const skillRegistry = [
     siteRelevance: ['video', 'social', 'education'],
     requiresAI: false,
     icon: 'closed_caption',
+    emoji: '\u{1F4AC}',
+    quickStart: true,
+    settings: { autoCaptions: true },
   },
   {
     id: 'color-filter',
@@ -106,6 +160,33 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'palette',
+    emoji: '\u{1F3A8}',
+    quickStart: true,
+    settings: { colorBlindMode: 'protanopia' },
+  },
+  {
+    id: 'large-cursor',
+    name: 'Large Cursor',
+    description: 'Replaces the mouse cursor with a larger, more visible one.',
+    supportAreas: ['vision', 'motor'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'mouse',
+    emoji: '\u{1F5B1}️',
+    quickStart: true,
+    settings: { largeCursor: true },
+  },
+  {
+    id: 'dyslexia-font',
+    name: 'Dyslexia Font',
+    description: 'Applies OpenDyslexic font with wider spacing for dyslexic readers.',
+    supportAreas: ['reading', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'text_fields',
+    emoji: '\u{1F524}',
+    quickStart: true,
+    settings: { dyslexiaFont: true, letterSpacing: 0.12, lineHeight: 2.0 },
   },
   {
     id: 'read-aloud',
@@ -115,6 +196,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'volume_up',
+    emoji: '\u{1F50A}',
+    quickStart: false,
+    settings: {},
   },
   {
     id: 'generate-labels',
@@ -124,6 +208,9 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: true,
     icon: 'label',
+    emoji: '\u{1F3F7}️',
+    quickStart: false,
+    settings: { autoFixLabels: true },
   },
   {
     id: 'generate-captions',
@@ -133,6 +220,9 @@ export const skillRegistry = [
     siteRelevance: ['video', 'education'],
     requiresAI: true,
     icon: 'subtitles',
+    emoji: '\u{1F4AC}',
+    quickStart: false,
+    settings: { autoCaptions: true },
   },
   {
     id: 'wcag-fixes',
@@ -142,8 +232,43 @@ export const skillRegistry = [
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'verified',
+    emoji: '✅',
+    quickStart: false,
+    settings: { autoWcagFix: true },
   },
 ];
+
+// Typed vocabulary for every chrome.storage.sync setting the tools control.
+// Single source for prompts that let the LLM set values directly (e.g. the
+// popup's "what support do you need?" interpretNeeds call) — this replaces
+// the hand-maintained list that used to live inline in background.js.
+export const settingsMeta = {
+  darkMode:        { type: 'boolean', description: 'Dark theme' },
+  fontScale:       { type: 'number', range: [50, 200], description: 'Font size percentage' },
+  lineHeight:      { type: 'number', range: [1.0, 3.0], description: 'Line spacing' },
+  letterSpacing:   { type: 'number', range: [0, 0.5], description: 'Letter spacing in em' },
+  dyslexiaFont:    { type: 'boolean', description: 'OpenDyslexic font' },
+  largeCursor:     { type: 'boolean', description: 'Larger mouse cursor' },
+  enhanceFocus:    { type: 'boolean', description: 'Stronger focus indicators' },
+  readingGuide:    { type: 'boolean', description: 'Horizontal reading guide' },
+  focusMode:       { type: 'boolean', description: 'Highlight current paragraph' },
+  hideDistractions:{ type: 'boolean', description: 'Dim ads and popups' },
+  showProgress:    { type: 'boolean', description: 'Scroll progress bar' },
+  motionReducer:   { type: 'boolean', description: 'Stop animations' },
+  readerMode:      { type: 'boolean', description: 'Clean reading view' },
+  keyboardNav:     { type: 'boolean', description: 'Enhanced keyboard navigation' },
+  voiceCommands:   { type: 'boolean', description: 'Voice-controlled browsing' },
+  contrastMode:    { type: 'enum', options: ['none', 'light', 'yellow-black'], description: 'Contrast level' },
+  colorBlindMode:  { type: 'enum', options: ['none', 'protanopia', 'deuteranopia', 'tritanopia'], description: 'Color filter' },
+  speechRate:      { type: 'number', range: [0.5, 2.0], description: 'Text-to-speech rate' },
+  autoWcagFix:     { type: 'boolean', description: 'Auto-fix accessibility issues' },
+  autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
+  autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
+  autoCaptions:    { type: 'boolean', description: 'Auto captions on video' },
+  autoSimplify:    { type: 'boolean', description: 'Simplify complex text' },
+  autoSummarize:   { type: 'boolean', description: 'Add summaries to long content' },
+  autoVideoDescribe:{ type: 'boolean', description: 'AI video descriptions' },
+};
 
 export function getSkillById(id) {
   return skillRegistry.find(s => s.id === id);

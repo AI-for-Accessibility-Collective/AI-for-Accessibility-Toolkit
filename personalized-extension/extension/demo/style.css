@@ -1,0 +1,54 @@
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  display: flex; flex-direction: column;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f1f3f4; color: #202124;
+}
+.bar {
+  flex-shrink: 0; z-index: 10;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 14px; background: #fff; border-bottom: 1px solid #dadce0;
+}
+.bar h1 { font-size: 14px; margin: 0; font-weight: 600; }
+.bar #status { font-size: 13px; color: #1a73e8; font-weight: 500; margin-left: auto; }
+.bar button {
+  font: inherit; font-size: 12px; padding: 4px 10px; cursor: pointer;
+  border: 1px solid #dadce0; border-radius: 6px; background: #f8f9fa;
+}
+.stage {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; padding: 4px;
+}
+/* width/height set by viewer.js to fit the SVG's aspect ratio within the stage.
+   max-* are hard ceilings so the box can never exceed the stage even before JS
+   sizes it; object-fit keeps the image contained if the box aspect is ever off. */
+.stage-inner { position: relative; max-width: 100%; max-height: 100%; }
+.stage-inner img {
+  display: block; width: 100%; height: 100%;
+  max-width: 100%; max-height: 100%; object-fit: contain;
+}
+#overlay { position: absolute; inset: 0; pointer-events: none; }
+
+.hl {
+  position: absolute; border: 3px solid transparent; border-radius: 10px;
+  opacity: 0; transition: opacity .25s; background: transparent;
+}
+.hl.active {
+  opacity: 1; border-color: #ea4335; background: rgba(234,67,53,0.12);
+  animation: pulse 1.1s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(234,67,53,0.18);
+}
+.hl-tag {
+  position: absolute; top: -22px; left: -3px;
+  background: #ea4335; color: #fff; font-size: 11px; font-weight: 600;
+  padding: 1px 6px; border-radius: 5px; white-space: nowrap;
+  opacity: 0; transition: opacity .25s; max-width: 320px; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hl.active .hl-tag { opacity: 1; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(234,67,53,0.18); }
+  50%      { box-shadow: 0 0 0 9px rgba(234,67,53,0.05); }
+}

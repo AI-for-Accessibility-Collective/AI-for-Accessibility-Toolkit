@@ -349,17 +349,35 @@ function sendMessageAsync(msg) {
   });
 }
 
+// Content contexts present on this page — the scope dimension orthogonal to
+// site category (a news article with an embedded player gets `context:video`
+// preferences even though the SITE isn't a video site). Vocabulary lives in
+// lib/taxonomy.js; detection is deliberately cheap and conservative.
+function detectPageContexts() {
+  const contexts = [];
+  try {
+    if (document.querySelector('video, audio, iframe[src*="youtube.com"], iframe[src*="vimeo.com"], iframe[src*="player"]')) {
+      contexts.push('video');
+    }
+    const forms = document.querySelectorAll('form input, form select, form textarea');
+    if (forms.length >= 3) contexts.push('form');
+    const text = document.body ? (document.body.innerText || '') : '';
+    if (text.length > 8000) contexts.push('document');
+  } catch (_) {}
+  return contexts;
+}
+
 async function init() {
   try {
     const profilesResp = await sendMessageAsync({ type: 'getCustomProfiles' });
     const profiles = profilesResp?.profiles || [];
     const autoApplyProfiles = profiles.filter(p => p.autoApply && p.siteTypes?.length > 0);
+    const contexts = detectPageContexts();
 
-    if (autoApplyProfiles.length === 0) {
-      await initFromStorage();
-      return;
-    }
-
+    // Always classify the page (the background caches the result) so scoped
+    // Librarian preferences resolve even when the user has no auto-apply
+    // profile — otherwise a "150% on news sites" pref never applies on a site
+    // that nothing else triggered classification for.
     const meta = document.querySelector('meta[name="description"]');
     const classifyResp = await sendMessageAsync({
       type: 'classifySite',
@@ -368,18 +386,51 @@ async function init() {
       metaDescription: meta?.content || ''
     });
 
-    if (classifyResp?.matchingProfile?.settings) {
+    let appliedProfile = false;
+    if (autoApplyProfiles.length > 0 && classifyResp?.matchingProfile?.settings) {
       console.log(`[AI4A11y] Auto-applying profile "${classifyResp.matchingProfile.name}" for ${classifyResp.siteType} site`);
       applyProfileSettings(classifyResp.matchingProfile.settings);
+      appliedProfile = true;
+      chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'personal', region: 'adapt', label: 'profile auto-applied' });
       if (classifyResp.matchingProfile.actions?.length > 0) {
+        chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'skill', region: 'librarian_retrieves', label: 'retrieve saved skill' });
+        chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'skill', region: 'autoenable', label: 'auto-replay' });
         chrome.runtime.sendMessage({
           type: 'runProfileActions',
           actions: classifyResp.matchingProfile.actions,
           sourceUrl: location.href,
         });
       }
-    } else {
+    }
+    if (!appliedProfile) {
       await initFromStorage();
+    }
+
+    // Librarian layer: learned preferences for this page's scope chain
+    // (general → context → category → origin). Applied on top of the
+    // baseline so the most specific memory wins. The merge already folds
+    // in the matching custom profile, so when a profile applied above this
+    // mostly adds origin-level and context-level refinements.
+    const prefs = await sendMessageAsync({
+      type: 'librarianEffectivePreferences',
+      url: location.href,
+      contexts,
+    });
+    if (prefs?.settings && Object.keys(prefs.settings).length > 0) {
+      console.log('[AI4A11y] Applying Librarian preferences:', Object.keys(prefs.settings).join(', '));
+      // Overlay on the stored baseline: applyProfileSettings treats the
+      // visual-assist group as a whole (missing keys reset to defaults), so
+      // a partial prefs object like {dyslexiaFont:false} must not wipe the
+      // user's other stored visual settings.
+      const VA_KEYS = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
+        'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];
+      let overlay = prefs.settings;
+      if (VA_KEYS.some(k => overlay[k] !== undefined)) {
+        const baseline = await chrome.storage.sync.get(VA_KEYS);
+        overlay = { ...baseline, ...overlay };
+      }
+      applyProfileSettings(overlay);
+      chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'personal', region: 'adapt', label: 'learned preferences applied' });
     }
   } catch (e) {
     console.warn('[AI4A11y] Init failed, falling back to global settings:', e);
