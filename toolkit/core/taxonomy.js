@@ -1,0 +1,103 @@
+// Site-category taxonomy — the controlled vocabulary shared by site
+// classification (background classifySite), profile auto-apply
+// (customProfiles.siteTypes), the popup's site-type picker, and the
+// Librarian's category-scoped memories.
+//
+// Pure data + pure methods — no platform dependencies. The Chrome host wraps
+// this and assigns it to `globalThis.AA_TAXONOMY` (see
+// adapters/chrome/taxonomy.entry.js); other hosts import it directly or
+// supply their own object implementing the same shape.
+//
+// v2 adds finance / health / government. These are *no-memory zones by
+// default*: the Librarian must not log observations or extract memories on
+// them unless the user explicitly opts in (per-origin or per-category).
+// Note the zones gate MEMORY, not adaptation — a profile can still
+// auto-apply large text on a banking site.
+//
+// Versioning: bump `version` on any vocabulary change. Memories and site
+// classifications are keyed by these ids, so migration/compaction logic uses
+// the version to detect and repair out-of-vocabulary scopes.
+
+export const taxonomy = {
+  version: 2,
+
+  categories: [
+    { id: 'news',         label: 'News' },
+    { id: 'social',       label: 'Social' },
+    { id: 'video',        label: 'Video' },
+    { id: 'shopping',     label: 'Shopping' },
+    { id: 'education',    label: 'Education' },
+    { id: 'productivity', label: 'Productivity' },
+    { id: 'reference',    label: 'Reference' },
+    { id: 'finance',      label: 'Banking & Finance', noMemoryDefault: true },
+    { id: 'health',       label: 'Health',            noMemoryDefault: true },
+    { id: 'government',   label: 'Government',        noMemoryDefault: true },
+    { id: 'other',        label: 'Other' },
+  ],
+
+  // Content contexts — orthogonal to site category (a news article can
+  // contain a video). Reserved in v2 for the scope chain (`context:video`
+  // etc.); listed here so the vocabulary has one home.
+  contexts: [
+    { id: 'video',    label: 'Video content' },
+    { id: 'form',     label: 'Forms' },
+    { id: 'document', label: 'Long documents' },
+  ],
+
+  // Deterministic hostname → category map. Checked before any LLM
+  // classification; exact domain or any subdomain matches.
+  hostMap: {
+    'youtube.com': 'video', 'vimeo.com': 'video', 'twitch.tv': 'video', 'dailymotion.com': 'video',
+    'netflix.com': 'video', 'hulu.com': 'video', 'disneyplus.com': 'video',
+    'reddit.com': 'social', 'twitter.com': 'social', 'x.com': 'social',
+    'facebook.com': 'social', 'instagram.com': 'social', 'linkedin.com': 'social',
+    'tiktok.com': 'social', 'mastodon.social': 'social', 'threads.net': 'social',
+    'amazon.com': 'shopping', 'ebay.com': 'shopping', 'etsy.com': 'shopping',
+    'walmart.com': 'shopping', 'target.com': 'shopping', 'shopify.com': 'shopping',
+    'nytimes.com': 'news', 'cnn.com': 'news', 'bbc.com': 'news', 'bbc.co.uk': 'news',
+    'reuters.com': 'news', 'washingtonpost.com': 'news', 'theguardian.com': 'news',
+    'medium.com': 'news', 'substack.com': 'news',
+    'apnews.com': 'news', 'npr.org': 'news', 'foxnews.com': 'news', 'nbcnews.com': 'news',
+    'abcnews.go.com': 'news', 'cbsnews.com': 'news', 'usatoday.com': 'news', 'wsj.com': 'news',
+    'bloomberg.com': 'news', 'politico.com': 'news', 'axios.com': 'news', 'thehill.com': 'news',
+    'aljazeera.com': 'news', 'economist.com': 'news', 'forbes.com': 'news', 'time.com': 'news',
+    'newsweek.com': 'news', 'theatlantic.com': 'news', 'vox.com': 'news', 'cnbc.com': 'news',
+    'latimes.com': 'news', 'ft.com': 'news', 'businessinsider.com': 'news', 'huffpost.com': 'news',
+    'wikipedia.org': 'reference', 'stackoverflow.com': 'reference',
+    'docs.google.com': 'productivity', 'notion.so': 'productivity',
+    'github.com': 'productivity', 'gitlab.com': 'productivity',
+    'coursera.org': 'education', 'edx.org': 'education', 'khanacademy.org': 'education',
+    'udemy.com': 'education', 'canvas.instructure.com': 'education',
+    'paypal.com': 'finance', 'chase.com': 'finance', 'bankofamerica.com': 'finance',
+    'wellsfargo.com': 'finance', 'fidelity.com': 'finance', 'schwab.com': 'finance',
+    'venmo.com': 'finance', 'capitalone.com': 'finance', 'citi.com': 'finance',
+    'webmd.com': 'health', 'mayoclinic.org': 'health', 'nih.gov': 'health',
+    'healthcare.gov': 'health', 'mychart.com': 'health', 'cvs.com': 'health',
+    'walgreens.com': 'health',
+  },
+
+  categoryIds() {
+    return this.categories.map(c => c.id);
+  },
+
+  // Categories where the Librarian must not record observations unless the
+  // user explicitly opted in.
+  noMemoryCategories() {
+    return this.categories.filter(c => c.noMemoryDefault).map(c => c.id);
+  },
+
+  // Deterministic classification: hostMap first (exact domain or subdomain),
+  // then TLD heuristics. Returns null when only an LLM could tell — callers
+  // fall back to Gemini and should cache the answer (site index).
+  categoryForHost(hostname) {
+    const domain = (hostname || '').toLowerCase().replace(/^www\./, '');
+    if (!domain) return null;
+    for (const [pattern, type] of Object.entries(this.hostMap)) {
+      if (domain === pattern || domain.endsWith('.' + pattern)) return type;
+    }
+    if (/\.gov(\.[a-z]{2})?$/.test(domain) || /\.mil$/.test(domain)) return 'government';
+    return null;
+  },
+};
+
+export default taxonomy;
