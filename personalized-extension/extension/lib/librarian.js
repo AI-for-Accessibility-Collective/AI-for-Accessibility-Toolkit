@@ -17,6 +17,40 @@
     }
   };
 
+  // ../toolkit/core/units.js
+  var UNIT = Object.freeze({
+    percent: "percent",
+    // 100 = no change (fontScale)
+    ratio: "ratio",
+    // a unitless multiple (lineHeight, speechRate)
+    em: "em",
+    // typographic em (letterSpacing)
+    boolean: "boolean",
+    enum: "enum"
+  });
+  var SETTING_UNITS = Object.freeze({
+    fontScale: UNIT.percent,
+    lineHeight: UNIT.ratio,
+    letterSpacing: UNIT.em,
+    speechRate: UNIT.ratio
+  });
+  function coerceSetting(key, value, meta) {
+    const m = meta && meta[key];
+    if (!(m && m.type === "number" && Array.isArray(m.range) && typeof value === "number")) {
+      return value;
+    }
+    const [min, max] = m.range;
+    let val = value;
+    if (val < min && val * 100 >= min && val * 100 <= max) val = val * 100;
+    return Math.min(max, Math.max(min, val));
+  }
+  function coerceSettings(settings, meta) {
+    if (!settings || typeof settings !== "object") return settings;
+    const out = {};
+    for (const [k, v] of Object.entries(settings)) out[k] = coerceSetting(k, v, meta);
+    return out;
+  }
+
   // ../toolkit/core/librarian.js
   function createLibrarian({
     datastore,
@@ -93,19 +127,7 @@
         meta = DS().global.tools().settingsMeta || {};
       } catch (_) {
       }
-      const out = {};
-      for (const [k, v] of Object.entries(settings)) {
-        const m = meta[k];
-        if (m && m.type === "number" && Array.isArray(m.range) && typeof v === "number") {
-          const [min, max] = m.range;
-          let val = v;
-          if (val < min && val * 100 >= min && val * 100 <= max) val = val * 100;
-          out[k] = Math.min(max, Math.max(min, val));
-        } else {
-          out[k] = v;
-        }
-      }
-      return out;
+      return coerceSettings(settings, meta);
     }
     function normalizeRecord(raw, now) {
       const r = { ...raw };
@@ -114,6 +136,7 @@
       r.tier = ["profile", "preference", "site", "task"].includes(r.tier) ? r.tier : "preference";
       r.scope = VALID_SCOPE.test(r.scope || "") ? r.scope : "general";
       r.kind = ["preference", "procedural", "suppression", "rule", "observation"].includes(r.kind) ? r.kind : "preference";
+      r.strength = ["floor", "preference", "hint"].includes(r.strength) ? r.strength : "preference";
       r.importance = Math.min(10, Math.max(1, Number(r.importance) || 5));
       r.confidence = Math.min(1, Math.max(0, Number(r.confidence ?? 0.7)));
       r.decayClass = ["stable", "slow", "fast"].includes(r.decayClass) ? r.decayClass : "slow";
@@ -310,10 +333,18 @@
         const merged = {};
         const applied = [];
         const provenance = {};
-        const assign = (src, scope) => {
+        const STRENGTH_RANK = { hint: 0, preference: 1, floor: 2 };
+        const rankOf = (s) => STRENGTH_RANK[s] ?? STRENGTH_RANK.preference;
+        const strengthAt = {};
+        const assign = (src, scope, strength = "preference") => {
           const clean = sanitizeSettings(src) || {};
-          Object.assign(merged, clean);
-          for (const k of Object.keys(clean)) provenance[k] = scope;
+          const r = rankOf(strength);
+          for (const [k, v] of Object.entries(clean)) {
+            if (k in merged && r < (strengthAt[k] ?? STRENGTH_RANK.preference)) continue;
+            merged[k] = v;
+            provenance[k] = scope;
+            strengthAt[k] = r;
+          }
         };
         const explicit = [];
         const applyShard = (scope) => {
@@ -323,7 +354,7 @@
               explicit.push({ r, scope });
               continue;
             }
-            assign(r.settings, scope);
+            assign(r.settings, scope, r.strength);
             applied.push({ id: r.id, scope, text: r.text });
           }
         };
@@ -343,7 +374,7 @@
         const specificity = (sc) => sc.startsWith("origin:") ? 3 : sc.startsWith("category:") ? 2 : sc.startsWith("context:") ? 1 : 0;
         explicit.sort((a, b) => specificity(a.scope) - specificity(b.scope) || (a.r.updatedAt || 0) - (b.r.updatedAt || 0));
         for (const { r, scope } of explicit) {
-          assign(r.settings, scope);
+          assign(r.settings, scope, r.strength);
           applied.push({ id: r.id, scope, text: r.text, explicit: true });
         }
         return { settings: merged, applied, provenance, category, origin };
