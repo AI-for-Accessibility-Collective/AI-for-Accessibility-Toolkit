@@ -8,7 +8,8 @@
 import { createToolkit } from '../index.js';
 import { coerceSetting, coerceSettings, unitOf } from '../core/units.js';
 import { createSurfaceAdapter } from '../core/surface.js';
-import { createWebSurface } from '../adapters/chrome/web-surface.js';
+import { createWebSurface, deriveWebSettings, resolveWebPreferences } from '../adapters/chrome/web-surface.js';
+import { toAbilityModel } from '../core/ability.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -109,6 +110,95 @@ const strict = createSurfaceAdapter({
 });
 const s4 = strict.apply({ contrastMode: 'yellow-black' });
 check('strict surface reports not-representable', s4.unmet.length === 1 && s4.unmet[0].reason === 'not-representable');
+
+// ======================= 4. AbilityModel projector (increment 2) =======================
+const emptyProfile = { schemaVersion: 1, supportAreas: ['vision'], freeText: 'small text', fields: {}, metaPreferences: { language: 'plain' } };
+const am0 = toAbilityModel(emptyProfile);
+check('toAbilityModel: empty fields -> needs []', Array.isArray(am0.needs) && am0.needs.length === 0);
+check('toAbilityModel: carries supportAreas/freeText/language', am0.supportAreas[0] === 'vision' && am0.freeText === 'small text' && am0.language === 'plain');
+check('toAbilityModel: null profile is safe', toAbilityModel(null).needs.length === 0);
+const amN = toAbilityModel({ fields: { needs: [
+  { dimension: 'textSize', value: 1.6, strength: 'floor' },
+  { dimension: 'bogus', strength: 'WAT' },          // bad strength -> preference; kept (has dimension)
+  { value: 1 },                                      // no dimension -> dropped
+] } });
+check('toAbilityModel: drops needs without a dimension', amN.needs.length === 2);
+check('toAbilityModel: clamps bad strength to preference', amN.needs.find(n => n.dimension === 'bogus').strength === 'preference');
+
+// ======================= 5. deriveWebSettings (increment 2) =======================
+check('deriveWebSettings: empty needs is INERT', JSON.stringify(deriveWebSettings({ needs: [] })) === JSON.stringify({ settings: {}, strengthByKey: {}, unmet: [] }));
+check('deriveWebSettings: no model is inert', JSON.stringify(deriveWebSettings(null).settings) === '{}');
+const d1 = deriveWebSettings({ needs: [{ dimension: 'textSize', value: 1.6, strength: 'floor' }] });
+check('deriveWebSettings: textSize 1.6 -> fontScale 160', d1.settings.fontScale === 160 && d1.strengthByKey.fontScale === 'floor');
+const d2 = deriveWebSettings({ needs: [{ dimension: 'flyToMoon', value: 1 }] });
+check('deriveWebSettings: unknown dimension -> no setting, reported unmet',
+  Object.keys(d2.settings).length === 0 && d2.unmet.some(u => u.key === 'flyToMoon'));
+const d3 = deriveWebSettings({ needs: [
+  { dimension: 'textSize', value: 1.2, strength: 'preference' },
+  { dimension: 'textSize', value: 1.8, strength: 'floor' },
+] });
+check('deriveWebSettings: stronger need wins a collision', d3.settings.fontScale === 180);
+
+// ======================= 6. resolveWebPreferences (increment 2) =======================
+const { datastore: ds2, librarian: lib2 } = createToolkit({ kv: memKV(), toolsRegistry });
+await ds2.runMigrations();
+const rwpArgs = (url) => ({ librarian: lib2, settingsMeta, url, contexts: [] });
+
+// getAbilityModel must be READ-ONLY — never materialize mine.profile (it runs on
+// the per-navigation hot path). Verified on a fresh toolkit with no profile yet.
+const { datastore: dsRO, librarian: libRO } = createToolkit({ kv: memKV(), toolsRegistry });
+const amRO = await libRO.getAbilityModel();
+check('getAbilityModel: empty needs on fresh profile', amRO.needs.length === 0);
+check('getAbilityModel: READ-ONLY (does not materialize mine.profile)', (await dsRO.get('mine.profile')) === null);
+
+// IDENTITY: empty needs + a real record -> response.settings deep-equals the raw merge.
+await ds2.setMemoryShard('general', [rec('general', { fontScale: 140, darkMode: true })]);
+const raw = await lib2.getEffectivePreferences('https://news-x.test/', []);
+const resolved = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: settings deep-equal raw merge (identity)', JSON.stringify(resolved.settings) === JSON.stringify(raw.settings));
+check('resolveWebPreferences: satisfied + no unmet for web-native settings', resolved.surface.satisfied === true && resolved.surface.unmet.length === 0);
+check('resolveWebPreferences: preserves provenance + category', JSON.stringify(resolved.provenance) === JSON.stringify(raw.provenance));
+
+// ACTIVE: a structured need with no conflicting record -> derived baseline fills it.
+await lib2.setProfileField('fields.needs', [{ dimension: 'textSize', value: 1.5, strength: 'floor' }]);
+await ds2.setMemoryShard('general', []); // no records -> derived baseline is the only source
+const active = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: derived ability baseline applies when no record', active.settings.fontScale === 150);
+check('resolveWebPreferences: derived key gets ability provenance', active.provenance.fontScale === 'derived:ability');
+
+// COMPOSITION: a real record beats the derived baseline (identity-safe rule).
+await ds2.setMemoryShard('general', [rec('general', { fontScale: 120 })]);
+const composed = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: real record beats derived baseline', composed.settings.fontScale === 120);
+
+// DERIVED CLAMP: an out-of-range derived value is clamped to the registry bound.
+await lib2.setProfileField('fields.needs', [{ dimension: 'textSize', value: 5, strength: 'floor' }]); // 5x -> 500% -> 200
+await ds2.setMemoryShard('general', []);
+const clampD = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: derived out-of-range clamped to bound', clampD.settings.fontScale === 200);
+
+// IDENTITY HARDENING (from the adversarial review): the surface must NOT drop
+// keys the merge produced — an off-vocabulary extracted key and a string-typed
+// numeric both survive verbatim, and neither trips the cannot-satisfy branch.
+await lib2.setProfileField('fields.needs', []);
+await ds2.setMemoryShard('general', [rec('general', { fontScale: 140, autoSummaries: true })]); // autoSummaries not in settingsMeta
+const rawO = await lib2.getEffectivePreferences('https://news-x.test/', []);
+const resO = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: off-vocabulary key PRESERVED (not dropped)',
+  resO.settings.autoSummaries === true && JSON.stringify(resO.settings) === JSON.stringify(rawO.settings));
+check('resolveWebPreferences: off-vocab key does NOT trip cannot-satisfy', resO.surface.satisfied === true && resO.surface.unmet.length === 0);
+
+await ds2.setMemoryShard('general', [rec('general', { fontScale: '150' })]); // string numeric (LLM-style)
+const resS = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: string-numeric on a registry key PRESERVED', resS.settings.fontScale === '150' && resS.surface.satisfied === true);
+
+// CANNOT-SATISFY: comes from an ABILITY NEED with no web rendering, not merge keys.
+await lib2.setProfileField('fields.needs', [{ dimension: 'spatialAudio', value: true, strength: 'floor' }]);
+await ds2.setMemoryShard('general', []);
+const csN = await resolveWebPreferences(rwpArgs('https://news-x.test/'));
+check('resolveWebPreferences: unmappable ability need reported unmet',
+  csN.surface.unmet.some(u => u.key === 'spatialAudio') && csN.surface.satisfied === false);
+check('resolveWebPreferences: unmappable need does not pollute settings', !('spatialAudio' in csN.settings));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

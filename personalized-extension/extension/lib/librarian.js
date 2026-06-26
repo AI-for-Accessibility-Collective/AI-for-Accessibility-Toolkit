@@ -51,6 +51,42 @@
     return out;
   }
 
+  // ../toolkit/core/strength.js
+  var STRENGTH_RANK = Object.freeze({ hint: 0, preference: 1, floor: 2 });
+  function rankOf(strength) {
+    const r = STRENGTH_RANK[strength];
+    return r === void 0 ? STRENGTH_RANK.preference : r;
+  }
+
+  // ../toolkit/core/ability.js
+  var VALID_STRENGTH = ["floor", "preference", "hint"];
+  var VALID_UNIT = ["ratio", "em", "percent", "boolean", "enum"];
+  function normalizeNeed(n) {
+    if (!n || typeof n !== "object" || !n.dimension) return null;
+    const need = {
+      dimension: String(n.dimension),
+      value: n.value,
+      strength: VALID_STRENGTH.includes(n.strength) ? n.strength : "preference"
+    };
+    if (VALID_UNIT.includes(n.unit)) need.unit = n.unit;
+    if (n.confidence != null) need.confidence = n.confidence;
+    if (n.source) need.source = String(n.source);
+    return need;
+  }
+  function toAbilityModel(profile) {
+    const fields = profile && profile.fields || {};
+    const needs = Array.isArray(fields.needs) ? fields.needs.map(normalizeNeed).filter(Boolean) : [];
+    return {
+      schemaVersion: 1,
+      supportAreas: profile && profile.supportAreas || [],
+      freeText: profile && profile.freeText || "",
+      language: profile && profile.metaPreferences && profile.metaPreferences.language || "standard",
+      readingLevel: fields.readingLevel != null ? fields.readingLevel : null,
+      confidence: fields.confidence != null ? fields.confidence : null,
+      needs
+    };
+  }
+
   // ../toolkit/core/librarian.js
   function createLibrarian({
     datastore,
@@ -211,6 +247,23 @@
       async getProfile() {
         return await getOrInitProfile();
       },
+      // The modality-agnostic AbilityModel view (../core/ability). Pure read,
+      // fast lane — what a non-web surface (XR, ArtInsight) reads to derive its
+      // own rendering. Today's profiles project to an empty `needs[]`.
+      //
+      // READ-ONLY by design: it must NOT materialize mine.profile. It runs on the
+      // per-navigation effective-prefs hot path (via resolveWebPreferences); using
+      // getOrInitProfile() would add a first-call write to sync storage and race
+      // onboarding/popup. So we read the stored profile and, if absent, project
+      // the legacy seed in-memory without persisting anything.
+      async getAbilityModel() {
+        let p = await DS().get("mine.profile");
+        if (!p) {
+          const legacy = await DS().get("mine.onboardingProfile");
+          p = legacy ? { supportAreas: legacy.supportAreas || [], freeText: legacy.freeText || "", fields: {}, metaPreferences: {} } : null;
+        }
+        return toAbilityModel(p);
+      },
       // User-initiated edit — bypasses the proposal gate by design (the gate
       // exists for *inferred* changes; explicit user intent needs no consent).
       async setProfileField(path, value) {
@@ -333,8 +386,6 @@
         const merged = {};
         const applied = [];
         const provenance = {};
-        const STRENGTH_RANK = { hint: 0, preference: 1, floor: 2 };
-        const rankOf = (s) => STRENGTH_RANK[s] ?? STRENGTH_RANK.preference;
         const strengthAt = {};
         const assign = (src, scope, strength = "preference") => {
           const clean = sanitizeSettings(src) || {};

@@ -11,6 +11,8 @@
     "./core/librarian": "./core/librarian.js",
     "./core/units": "./core/units.js",
     "./core/surface": "./core/surface.js",
+    "./core/ability": "./core/ability.js",
+    "./core/strength": "./core/strength.js",
     "./adapters/chrome/web-surface": "./adapters/chrome/web-surface.js",
     "./ports": "./ports/index.js"
   },

@@ -46,6 +46,8 @@ export { createLibrarian } from './core/librarian.js';
 export { taxonomy } from './core/taxonomy.js';
 export { createSurfaceAdapter } from './core/surface.js';
 export { UNIT, SETTING_UNITS, unitOf, coerceSetting, coerceSettings } from './core/units.js';
+export { toAbilityModel, normalizeNeed } from './core/ability.js';
+export { STRENGTH_RANK, rankOf } from './core/strength.js';
 export * from './ports/index.js';
 
 export default createToolkit;

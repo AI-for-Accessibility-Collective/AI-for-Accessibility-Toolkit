@@ -206,6 +206,7 @@ function toolkitConfig(entry, outName) {
 const taxonomyConfig = toolkitConfig('taxonomy.entry.js', 'taxonomy.js');
 const datastoreConfig = toolkitConfig('datastore.entry.js', 'datastore.js');
 const librarianConfig = toolkitConfig('librarian.entry.js', 'librarian.js');
+const webSurfaceConfig = toolkitConfig('web-surface.entry.js', 'web-surface.js');
 
 async function build() {
   buildSkillsManifest();
@@ -220,6 +221,7 @@ async function build() {
       esbuild.context(taxonomyConfig),
       esbuild.context(datastoreConfig),
       esbuild.context(librarianConfig),
+      esbuild.context(webSurfaceConfig),
     ]);
     await Promise.all(ctxs.map((c) => c.watch()));
     console.log('Watching for changes...');
@@ -233,6 +235,7 @@ async function build() {
       esbuild.build(taxonomyConfig),
       esbuild.build(datastoreConfig),
       esbuild.build(librarianConfig),
+      esbuild.build(webSurfaceConfig),
     ]);
     console.log('Build complete.');
   }

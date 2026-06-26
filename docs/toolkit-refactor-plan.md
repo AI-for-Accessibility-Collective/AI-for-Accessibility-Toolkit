@@ -347,16 +347,14 @@ the settled "adapter/skill" vocabulary.
   Datastore` flow is unchanged. Full tally: **245 asserts, 0 failures.** This is
   the regression gate for the whole refactor.
 
-### Phase 1 — Split AbilityModel from SurfaceProfile  🟡 **IN PROGRESS**
+### Phase 1 — Split AbilityModel from SurfaceProfile  🟡 **IN PROGRESS (inc 1 + 2 done)**
 - Separate modality‑agnostic understanding (support areas, free text, inferred
   needs, reading level, language, confidence) from per‑app renderings.
-  **(increment 2 — not yet)**
+  **(increment 2 ✅)**
 - Introduce `SurfaceAdapter`; move today's web settings mapping
   (`fontScale/lineHeight/…`) into `adapters/chrome` as the *web* surface. Add the
   derivation `abilityModel → webSettings`. Behavior identical for web users.
-  **(increment 1 ✅: `SurfaceAdapter` seam + cannot‑satisfy + the web surface
-  landed; the `abilityModel → webSettings` derivation and wiring `content.js`
-  through the surface are increment 2.)**
+  **(increment 1 ✅ seam; increment 2 ✅ derivation + content.js wiring)**
 - Bake in the cheap safeguards here: add **`strength` (floor/preference/hint)** to
   records (floors applied last, never silently dropped); give every numeric value a
   **typed unit** (`fontScale:%`, `angularTextHeight:deg`, …) so XR↔web can't misread
@@ -375,11 +373,38 @@ the settled "adapter/skill" vocabulary.
 > precedence. With today's all‑`preference` data the merge is byte‑for‑byte
 > unchanged. The `>10` heuristic is *kept* (renamed/relocated into units) — it is
 > the safety net for untyped legacy/LLM values and can only be deleted once every
-> writer tags units (later in Phase 1). The web surface is **not yet wired into
-> `content.js`** (that's the deliberate behavior‑surface change in increment 2).
-> Gate: [phase1.test.mjs](../toolkit/test/phase1.test.mjs) **22/22** (pure core,
-> in‑memory KV — proves headless operation), Phase 0 gate still 69+14+116, plus
-> demo‑beats‑e2e **26/26** in real Chrome. Not yet committed.
+> writer tags units (later in Phase 1).
+
+> **Increment 2 landed (2026‑06‑26), behavior‑identical for web** — the
+> AbilityModel/SurfaceProfile split, designed via a 3‑approach panel + adversarial
+> review. **The core merge is left byte‑for‑byte untouched**; the new ability
+> derivation composes *outside* the core at the chrome boundary.
+> [core/ability.js](../toolkit/core/ability.js) `toAbilityModel(profile)` projects
+> the profile into a modality‑neutral `needs[]` view (reads only the fresh
+> `fields.needs/.readingLevel/.confidence` sub‑keys → empty `needs[]` for every
+> current user); `Librarian.getAbilityModel()` exposes it. The **web SurfaceProfile
+> is a pure derivation, not a store**:
+> [web-surface.js](../toolkit/adapters/chrome/web-surface.js) `deriveWebSettings`
+> maps neutral dimensions (`textSize`, `reduceMotion`, …) → web settings, and
+> `resolveWebPreferences` composes the derived baseline **under** the authoritative
+> merge (a real record at any strength beats it — the identity‑safe rule). It is
+> **identity by construction**: the response starts from `prefs.settings` verbatim
+> and never drops or alters a key the merge produced; `surface.unmet` reports only
+> *ability needs* the web has no rendering for (a cross‑app dimension) — empty for
+> every current user. `background.js` routes `librarianEffectivePreferences`
+> through it (fail‑open to the raw merge); `content.js` applies the same settings
+> and additionally logs `surface.unmet`. `STRENGTH_RANK`/`rankOf` extracted to
+> [core/strength.js](../toolkit/core/strength.js) and shared; `getAbilityModel()`
+> is a **read‑only** projection (must not materialize the profile on the hot path).
+> Designed via a 3‑approach panel and hardened by a 3‑lens adversarial review,
+> which caught three real identity gaps (a hot‑path profile write, and the surface
+> dropping off‑vocabulary / string‑numeric keys) — all fixed so identity holds by
+> construction, not by consumer‑whitelist luck. Gate:
+> [phase1.test.mjs](../toolkit/test/phase1.test.mjs) **46/46** (pure core, in‑memory
+> KV — incl. a deep‑equal identity check, off‑vocab/string‑numeric preservation,
+> and a read‑only‑projection check), Phase 0 gate still 69+14+116, demo‑beats‑e2e
+> **26/26** in real Chrome. The `abilityModel→webSettings` derivation is **inert**
+> today (no user has structured `needs`).
 
 ### Phase 2 — Name the memory taxonomy + harden reflection
 - Relabel shards as **episodic / semantic / procedural**; fold the skills/

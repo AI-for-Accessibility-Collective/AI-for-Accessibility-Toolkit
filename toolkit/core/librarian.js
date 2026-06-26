@@ -32,6 +32,8 @@
 
 import { noopDemo, noopConsent, noopScheduler } from '../ports/index.js';
 import { coerceSettings } from './units.js';
+import { STRENGTH_RANK, rankOf } from './strength.js';
+import { toAbilityModel } from './ability.js';
 
 /**
  * @param {Object} deps
@@ -229,6 +231,26 @@ export function createLibrarian({
       return await getOrInitProfile();
     },
 
+    // The modality-agnostic AbilityModel view (../core/ability). Pure read,
+    // fast lane — what a non-web surface (XR, ArtInsight) reads to derive its
+    // own rendering. Today's profiles project to an empty `needs[]`.
+    //
+    // READ-ONLY by design: it must NOT materialize mine.profile. It runs on the
+    // per-navigation effective-prefs hot path (via resolveWebPreferences); using
+    // getOrInitProfile() would add a first-call write to sync storage and race
+    // onboarding/popup. So we read the stored profile and, if absent, project
+    // the legacy seed in-memory without persisting anything.
+    async getAbilityModel() {
+      let p = await DS().get('mine.profile');
+      if (!p) {
+        const legacy = await DS().get('mine.onboardingProfile');
+        p = legacy
+          ? { supportAreas: legacy.supportAreas || [], freeText: legacy.freeText || '', fields: {}, metaPreferences: {} }
+          : null;
+      }
+      return toAbilityModel(p);
+    },
+
     // User-initiated edit — bypasses the proposal gate by design (the gate
     // exists for *inferred* changes; explicit user intent needs no consent).
     async setProfileField(path, value) {
@@ -358,9 +380,8 @@ export function createLibrarian({
       // never overwritten by a weaker one, regardless of scope specificity;
       // equal strength keeps the existing precedence (later assign wins). A
       // missing strength reads as 'preference', so today's all-preference data
-      // merges byte-for-byte as before.
-      const STRENGTH_RANK = { hint: 0, preference: 1, floor: 2 };
-      const rankOf = (s) => STRENGTH_RANK[s] ?? STRENGTH_RANK.preference;
+      // merges byte-for-byte as before. (STRENGTH_RANK / rankOf are shared with
+      // the surface derivations — see ./strength.js.)
       const strengthAt = {}; // key -> winning strength rank
       const assign = (src, scope, strength = 'preference') => {
         const clean = sanitizeSettings(src) || {};

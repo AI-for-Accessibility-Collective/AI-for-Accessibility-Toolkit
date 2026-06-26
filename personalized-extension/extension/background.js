@@ -14,7 +14,9 @@ self.importScripts(
   'lib/taxonomy.js',
   'lib/tools-registry.js',
   'lib/datastore.js',
-  'lib/librarian.js'
+  'lib/librarian.js',
+  // Web SurfaceAdapter + abilityModel→webSettings derivation (globalThis.WebSurface).
+  'lib/web-surface.js'
 );
 
 // Lazy, idempotent store migrations. Safe to fire-and-forget: stores are
@@ -988,8 +990,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           case 'librarianSetSiteCategory':
             await L.setSiteCategoryOverride(msg.origin, msg.category);
             sendResponse({ success: true }); break;
-          case 'librarianEffectivePreferences':
-            sendResponse(await L.getEffectivePreferences(msg.url, msg.contexts || [])); break;
+          case 'librarianEffectivePreferences': {
+            // Route the merged preferences through the web SurfaceAdapter so an
+            // unrenderable (e.g. cross-app) need is reported, not silently
+            // dropped — and so the derived ability baseline composes under the
+            // result. Fail open to the raw merge if the surface bundle or the
+            // settings registry isn't loaded (behaviour-identical fallback).
+            const settingsMeta = globalThis.AA_TOOLS && globalThis.AA_TOOLS.settingsMeta;
+            if (globalThis.WebSurface && settingsMeta) {
+              sendResponse(await globalThis.WebSurface.resolveWebPreferences({
+                librarian: L, settingsMeta, url: msg.url, contexts: msg.contexts || [],
+              }));
+            } else {
+              sendResponse(await L.getEffectivePreferences(msg.url, msg.contexts || []));
+            }
+            break;
+          }
           case 'librarianRecall':
             sendResponse(await L.recall(msg.url, msg.task || '', msg.contexts || [])); break;
           case 'librarianListMemories':
