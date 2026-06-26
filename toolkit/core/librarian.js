@@ -31,6 +31,7 @@
 // the extraction pipeline consults before drafting.
 
 import { noopDemo, noopConsent, noopScheduler } from '../ports/index.js';
+import { coerceSettings } from './units.js';
 
 /**
  * @param {Object} deps
@@ -128,19 +129,9 @@ export function createLibrarian({
     if (!settings || typeof settings !== 'object') return settings;
     let meta = {};
     try { meta = DS().global.tools().settingsMeta || {}; } catch (_) {}
-    const out = {};
-    for (const [k, v] of Object.entries(settings)) {
-      const m = meta[k];
-      if (m && m.type === 'number' && Array.isArray(m.range) && typeof v === 'number') {
-        const [min, max] = m.range;
-        let val = v;
-        if (val < min && val * 100 >= min && val * 100 <= max) val = val * 100;
-        out[k] = Math.min(max, Math.max(min, val));
-      } else {
-        out[k] = v;
-      }
-    }
-    return out;
+    // Normalize each value to its setting's canonical unit/range (see
+    // ../core/units). Behaviour-identical to the former inline heuristic.
+    return coerceSettings(settings, meta);
   }
 
   function normalizeRecord(raw, now) {
@@ -150,6 +141,12 @@ export function createLibrarian({
     r.tier = ['profile', 'preference', 'site', 'task'].includes(r.tier) ? r.tier : 'preference';
     r.scope = VALID_SCOPE.test(r.scope || '') ? r.scope : 'general';
     r.kind = ['preference', 'procedural', 'suppression', 'rule', 'observation'].includes(r.kind) ? r.kind : 'preference';
+    // Requirement strength (Phase 1): floor (a hard need — a screen-reader
+    // user's needs, Marta's captions) > preference (a soft choice) > hint (a
+    // weak nudge). Floors are applied so a narrower soft preference can't
+    // silently drop them. Defaults to 'preference' so existing data is
+    // unchanged.
+    r.strength = ['floor', 'preference', 'hint'].includes(r.strength) ? r.strength : 'preference';
     r.importance = Math.min(10, Math.max(1, Number(r.importance) || 5));
     r.confidence = Math.min(1, Math.max(0, Number(r.confidence ?? 0.7)));
     r.decayClass = ['stable', 'slow', 'fast'].includes(r.decayClass) ? r.decayClass : 'slow';
@@ -357,10 +354,23 @@ export function createLibrarian({
       // consumer (the popup) can write a change back to the same scope rather
       // than clobbering the global baseline.
       const provenance = {};
-      const assign = (src, scope) => {
+      // Strength gate: a stronger requirement (floor > preference > hint) is
+      // never overwritten by a weaker one, regardless of scope specificity;
+      // equal strength keeps the existing precedence (later assign wins). A
+      // missing strength reads as 'preference', so today's all-preference data
+      // merges byte-for-byte as before.
+      const STRENGTH_RANK = { hint: 0, preference: 1, floor: 2 };
+      const rankOf = (s) => STRENGTH_RANK[s] ?? STRENGTH_RANK.preference;
+      const strengthAt = {}; // key -> winning strength rank
+      const assign = (src, scope, strength = 'preference') => {
         const clean = sanitizeSettings(src) || {};
-        Object.assign(merged, clean);
-        for (const k of Object.keys(clean)) provenance[k] = scope;
+        const r = rankOf(strength);
+        for (const [k, v] of Object.entries(clean)) {
+          if (k in merged && r < (strengthAt[k] ?? STRENGTH_RANK.preference)) continue; // weaker: keep the stronger value
+          merged[k] = v;
+          provenance[k] = scope;
+          strengthAt[k] = r;
+        }
       };
       // Manual user choices (recordExplicitSetting) are deferred and applied
       // after everything else: a deliberate toggle must beat profiles and
@@ -376,7 +386,7 @@ export function createLibrarian({
           .sort((a, b) => (a.kind === 'rule') - (b.kind === 'rule')); // rules last
         for (const r of recs) {
           if (r.source === 'user-explicit') { explicit.push({ r, scope }); continue; }
-          assign(r.settings, scope);
+          assign(r.settings, scope, r.strength);
           applied.push({ id: r.id, scope, text: r.text });
         }
       };
@@ -401,7 +411,7 @@ export function createLibrarian({
       explicit.sort((a, b) => (specificity(a.scope) - specificity(b.scope))
         || ((a.r.updatedAt || 0) - (b.r.updatedAt || 0)));
       for (const { r, scope } of explicit) {
-        assign(r.settings, scope);
+        assign(r.settings, scope, r.strength);
         applied.push({ id: r.id, scope, text: r.text, explicit: true });
       }
       return { settings: merged, applied, provenance, category, origin };

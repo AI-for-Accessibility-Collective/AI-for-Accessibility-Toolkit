@@ -9,6 +9,9 @@
     "./core/taxonomy": "./core/taxonomy.js",
     "./core/datastore": "./core/datastore.js",
     "./core/librarian": "./core/librarian.js",
+    "./core/units": "./core/units.js",
+    "./core/surface": "./core/surface.js",
+    "./adapters/chrome/web-surface": "./adapters/chrome/web-surface.js",
     "./ports": "./ports/index.js"
   },
   "files": [

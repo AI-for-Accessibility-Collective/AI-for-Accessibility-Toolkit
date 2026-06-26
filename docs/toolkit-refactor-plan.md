@@ -347,17 +347,39 @@ the settled "adapter/skill" vocabulary.
   Datastore` flow is unchanged. Full tally: **245 asserts, 0 failures.** This is
   the regression gate for the whole refactor.
 
-### Phase 1 — Split AbilityModel from SurfaceProfile
+### Phase 1 — Split AbilityModel from SurfaceProfile  🟡 **IN PROGRESS**
 - Separate modality‑agnostic understanding (support areas, free text, inferred
   needs, reading level, language, confidence) from per‑app renderings.
+  **(increment 2 — not yet)**
 - Introduce `SurfaceAdapter`; move today's web settings mapping
   (`fontScale/lineHeight/…`) into `adapters/chrome` as the *web* surface. Add the
   derivation `abilityModel → webSettings`. Behavior identical for web users.
+  **(increment 1 ✅: `SurfaceAdapter` seam + cannot‑satisfy + the web surface
+  landed; the `abilityModel → webSettings` derivation and wiring `content.js`
+  through the surface are increment 2.)**
 - Bake in the cheap safeguards here: add **`strength` (floor/preference/hint)** to
   records (floors applied last, never silently dropped); give every numeric value a
   **typed unit** (`fontScale:%`, `angularTextHeight:deg`, …) so XR↔web can't misread
   each other and the old `>10` %‑vs‑multiplier heuristic can be deleted; make
   `SurfaceAdapter.apply` return **cannot‑satisfy**.
+  **(increment 1 ✅)**
+
+> **Increment 1 landed (2026‑06‑26), behavior‑identical for web** — new pure
+> toolkit modules [core/units.js](../toolkit/core/units.js) (typed units +
+> coercion), [core/surface.js](../toolkit/core/surface.js) (`createSurfaceAdapter`
+> → `{applied, unmet, degradedTo, satisfied}`), and
+> [adapters/chrome/web-surface.js](../toolkit/adapters/chrome/web-surface.js).
+> `strength` added to every record (defaults to `preference`) and the
+> `getEffectivePreferences` merge now strength‑gates overwrites: **floor > preference
+> > hint**, regardless of scope specificity, equal strength keeps the old
+> precedence. With today's all‑`preference` data the merge is byte‑for‑byte
+> unchanged. The `>10` heuristic is *kept* (renamed/relocated into units) — it is
+> the safety net for untyped legacy/LLM values and can only be deleted once every
+> writer tags units (later in Phase 1). The web surface is **not yet wired into
+> `content.js`** (that's the deliberate behavior‑surface change in increment 2).
+> Gate: [phase1.test.mjs](../toolkit/test/phase1.test.mjs) **22/22** (pure core,
+> in‑memory KV — proves headless operation), Phase 0 gate still 69+14+116, plus
+> demo‑beats‑e2e **26/26** in real Chrome. Not yet committed.
 
 ### Phase 2 — Name the memory taxonomy + harden reflection
 - Relabel shards as **episodic / semantic / procedural**; fold the skills/
