@@ -6,6 +6,13 @@
 that the Chrome extension, an XR app, ArtInsight, and mobile adaptations can all
 build on — with permission‑guarded flow of understanding *between* those apps.
 
+> **Scope: research prototype.** Safeguards are sized to protect study participants
+> and keep the demo honest — *not* for regulatory compliance or adversarial
+> multi‑party security. See
+> [toolkit-adversarial-analysis.md §1a](./toolkit-adversarial-analysis.md) for the
+> threat model and the keep/simplify/defer re‑rating this plan now reflects.
+> Anything tagged **[product‑hardening]** is real but deliberately deferred.
+
 ---
 
 ## 1. Why now / what we're really building
@@ -22,7 +29,7 @@ So this is not just a code move. It is three things:
 
 1. **Extract** the existing engine cleanly behind stable interfaces (mechanical, low‑risk — the bones are already good).
 2. **Generalize** the *ability model* away from web‑only settings so XR/iOS/mobile can render the same understanding differently.
-3. **Add** a cross‑app identity + sync + permission layer that does not exist yet — the genuinely new work.
+3. **Add** a *lightweight* cross‑app sharing + consent layer that does not exist yet — the genuinely new work (full identity/security is **[product‑hardening]**, not now).
 
 The good news from the audit: two of the three hard seams are **already in the
 code**. The LLM is injected (`Librarian.setGeminiCaller(fn)`,
@@ -68,7 +75,7 @@ own data).
 |---|---|---|
 | `chrome.storage.local/sync` | datastore.js backend | **KVStore** |
 | `chrome.alarms` (30‑min extract, 24‑h reflect) | background.js:1004‑1011 | **Scheduler** |
-| `chrome.action` badge (pending‑proposal count) | librarian.js ~L998 | **Notifier** |
+| `chrome.action` badge (pending‑proposal count) | librarian.js ~L998 | **Consent** (accessible proposal channel) |
 | `chrome.storage.sync` API key | background.js:207 | **SecretStore** |
 | `chrome.runtime.sendMessage` routing | background.js dispatcher L974‑1021 | **Transport** (host‑owned) |
 | `Date.now()` everywhere | core | **Clock** (also unblocks deterministic tests) |
@@ -164,7 +171,7 @@ Sources: [Reflective memory](https://medium.com/google-cloud/what-is-reflective-
                    │  Platform Ports (interfaces the core depends on)
 ┌──────────────────▼─────────────────────────────────────────────────────┐
 │  PLATFORM ADAPTERS (one bundle per host)                               │
-│  KVStore · Scheduler · LLM · Clock · SecretStore · Notifier ·          │
+│  KVStore · Scheduler · LLM · Clock · SecretStore · Consent ·           │
 │  Sensors? · Surface?                                                    │
 │                                                                        │
 │  Chrome : chrome.storage / chrome.alarms / Gemini / sync‑key / badge   │
@@ -178,9 +185,13 @@ Sources: [Reflective memory](https://medium.com/google-cloud/what-is-reflective-
 1. **Platform Ports** — what a host must *provide* to run the core:
    `KVStore{get,set,patch(name)}`, `Scheduler{every(id,interval,fn),cancel}`,
    `LLM{complete(prompt,opts), embed?(text)}`, `Clock{now()}`,
-   `SecretStore{get,set}`, `Notifier{pending(count|items)}`, and **optional**
+   `SecretStore{get,set}`, and **`Consent{present(proposal|grant), capture(response)}`**
+   — the accessible proposal/consent channel: renders through the host's own
+   reliable modality (TTS / live region / large‑target tap) and runs copy through
+   the plain‑language pass, superseding the old badge‑only notifier. **Optional:**
    `Sensors{read(kind)}` (XR FOV/gaze, device a11y settings) and
-   `Surface{apply(settings)}`.
+   `Surface{apply(settings) → {applied, unmet[], degradedTo, satisfied}}` — a
+   surface MUST be able to report **cannot‑satisfy** rather than fail silently.
 
 2. **Toolkit SDK** — what consumers *call* (the cleaned Librarian surface, now
    platform‑neutral; today's `librarian*` message types map 1:1):
@@ -191,38 +202,69 @@ Sources: [Reflective memory](https://medium.com/google-cloud/what-is-reflective-
    procedural: `listSkills` / `saveSkill` (scope‑gated); cross‑app:
    `requestGrant` / `exportUnderstanding(grant)` / `importInsight(insight,grant)`.
 
+**Built‑in safeguards (cheap, prototype‑scoped — in the core, not bolted on):**
+- **Soft / reversible by default** — applied changes are easy to undo, and a single
+  accept never hardens a high‑confidence trait; only deliberate, repeated, or
+  explicitly‑confirmed signals promote into the durable AbilityModel.
+- **Requirement strength** — every fact/preference carries `strength ∈ {floor,
+  preference, hint}`; floors (a screen‑reader user's needs, Marta's captions) are
+  applied last, may only tighten, and are never silently dropped by a narrower soft
+  preference nor decayed away.
+- **Honest failure** — preference resolution / surface application can return
+  **cannot‑satisfy**, surfaced in the user's own modality, instead of pretending.
+- **Acting user** — a lightweight "who's using this now?" selector partitions the
+  model so two people on one device/headset don't cross‑contaminate, plus a "helper
+  setup" mode for supported set‑up. (Not a formal supporter/principal model — that's
+  **[product‑hardening]**.)
+- **Privacy hygiene** — ability data is **local by default**; the no‑memory zones
+  stay; the privacy floor **fails safe** on unknown category; the core minimizes and
+  the user can see what free text is sent to the LLM.
+
 **Construction** becomes explicit DI:
-`const toolkit = createToolkit({ kv, scheduler, llm, clock, secrets, notifier, sensors?, surface? })`
+`const toolkit = createToolkit({ kv, scheduler, llm, clock, secrets, consent, sensors?, surface? })`
 — replacing today's implicit `globalThis.Librarian` + `importScripts`.
 
 ---
 
 ## 6. The new piece: cross‑app, permission‑guarded flow
 
-This does not exist today and is the highest‑design‑risk part. Principles, drawn
-straight from the framing notes ("people may not want to be asked", "avoiding
-judgement") and the articles' "scope enforcement before passing to the agent":
+This is the genuinely new work — but for the prototype it is **small**. The goal:
+let a trusted, first‑party app read the understanding instead of re‑interviewing,
+and contribute insights back **as proposals**, without silently doing something
+weird to a vulnerable participant. Drawn from the framing notes ("people may not
+want to be asked", "avoiding judgement").
 
-- **Identity.** One *person*, many *apps*. An app is a principal that holds a
-  **grant**. No global account is required to start (see transport options).
-- **Capability‑scoped grants (default deny, explicit, revocable, auditable).**
-  A grant names exactly what an app may **read** (e.g. `ability.categories`,
-  `reading.level`, `language`, `settings.text`) and what it may **write/observe**
-  (e.g. XR may write `ability.inference.fov→textSize`). Mirrors the article's
-  separation of caller vs runtime identity.
-- **Information classes by sensitivity** — enforced by the broker:
-  - *Ability categories & derived needs* → shareable per grant.
-  - *Concrete medical diagnoses* → **never inferred, never stored, never shared** (extends the existing no‑memory zones).
-  - *Raw observations / evidence* → **stay local, discarded after consolidation** (the "discard evidence" note). Only grounded facts can ever leave a device.
-  - *Derived settings/skills* → shareable per grant, but as **proposals on arrival**, not silent application ("avoiding judgement").
-- **Provenance & confidence travel with every shared insight.** An insight from
-  XR→web carries `{source: xr, kind: ability.inference, confidence, evidenceSummary}`;
-  the receiving app surfaces it through the *same* consent/proposal UI the user
-  already knows — it never auto‑applies.
-- **Transport, phased:**
-  1. **Local shared store** (same device, multiple apps via OS app‑group / shared container) — zero accounts, works for "XR + web on one headset/phone".
-  2. **User‑mediated export/import** (signed profile blob via file/QR/handoff) — cross‑device without a backend.
-  3. **Optional cloud sync** (end‑to‑end‑scoped, opt‑in) — designed for, not built first.
+**Prototype‑scoped design:**
+- **Trusted apps.** The consuming apps (web ext, XR, ArtInsight) are our own /
+  collaborators'. No adversarial‑consumer defenses — the threat model is *mistakes,
+  not malice*.
+- **Read = a grant the user can see.** An app asks for what it needs (e.g.
+  `ability.categories`, `reading.level`, `language`, `settings.text`); the user sees
+  a plain‑language summary and approves. A simple **"what each app can see"** panel
+  lists current grants; **revoke = local delete**. (Not a formal auditable grant
+  ledger — that's **[product‑hardening]**.)
+- **Write = a proposal, never silent.** A cross‑app insight (XR's FOV→text‑size,
+  ArtInsight's preferred description style) arrives carrying `{source, kind,
+  confidence}` and is surfaced through the **same** accessible consent/proposal path
+  the user already knows — it never auto‑applies, and the *sending* app can't resolve
+  its own proposal (only the local user surface can).
+- **Keep it local; keep it honest.** Ability data stays on‑device by default;
+  concrete diagnoses are never inferred or stored (ability *categories* only); raw
+  evidence is discarded after consolidation; what little leaves the device does so
+  only by the user's deliberate action.
+- **Transport (prototype):** (1) **local shared store** — same device, multiple apps
+  (the XR‑headset / phone case), zero accounts; (2) **user‑mediated export/import** —
+  a profile blob the user moves themselves for the XR⇄web demo. Plain
+  last‑write‑wins on the small synced AbilityModel; **SurfaceProfiles stay
+  device‑local**, so a phone's 200% and a desktop's 120% aren't a "conflict."
+
+**[product‑hardening] — deliberately *not* in the prototype:** signed insights &
+per‑app keypairs, per‑principal write quarantine, scope enforcement on the wire,
+encrypted recipient‑bound exports, tombstone revocation propagation, replay/version
+vectors, HLC/CRDT conflict resolution, GDPR/HIPAA/FERPA postures, DPIAs, formal
+grant ledgers. The full product‑grade analysis lives in
+[toolkit-adversarial-analysis.md §3–§5](./toolkit-adversarial-analysis.md) for
+if/when this productizes.
 
 ---
 
@@ -257,20 +299,53 @@ the settled "adapter/skill" vocabulary.
 
 ## 8. Phased migration (each phase ships; the extension keeps working throughout)
 
-### Phase 0 — Carve the seam, zero behavior change
-- Create `toolkit/` (reference TS). Move `librarian.js`, `datastore.js`,
-  `taxonomy.js`, `tools-registry.js` in as the **source of truth**.
-- Convert core from `globalThis`/`importScripts` to ES modules. Add a thin
-  `adapters/chrome` that re‑exposes `globalThis.Librarian` / `globalThis.Datastore`
-  so `background.js` is untouched. (esbuild already bundles — mechanical.)
-- Define **Platform Ports**; move the chrome.* bodies currently inside
-  datastore/background behind `KVStore / Scheduler / LLM / Clock / SecretStore /
-  Notifier`. Core stops referencing `chrome.*` and `Date.now()` directly.
-- **Exit check:** existing test suites
-  ([librarian-test.js](../personalized-extension/test/librarian-test.js) 69 asserts,
-  [demo-beats-e2e.js](../personalized-extension/test/demo-beats-e2e.js),
-  [ai-features-e2e.js](../personalized-extension/test/ai-features-e2e.js)) pass
-  unchanged. This is the regression gate for the whole refactor.
+### Phase 0 — Carve the seam, zero behavior change ✅ **IMPLEMENTED (2026‑06‑26)**
+- Created top‑level [`toolkit/`](../toolkit/) as the **source of truth**: pure
+  ES‑module cores ([core/taxonomy.js](../toolkit/core/taxonomy.js),
+  [core/datastore.js](../toolkit/core/datastore.js) `createDatastore(...)`,
+  [core/librarian.js](../toolkit/core/librarian.js) `createLibrarian(...)`), a
+  [ports contract](../toolkit/ports/index.js), a
+  [`createToolkit`](../toolkit/index.js) DI entry, and a Chrome adapter
+  ([adapters/chrome/](../toolkit/adapters/chrome/)).
+- Core converted from `globalThis`/`importScripts` to ES modules. The three
+  classic scripts the SW/popup/test load —
+  `extension/lib/{taxonomy,datastore,librarian}.js` — are now **generated**
+  esbuild IIFE shims (same pattern as `harness.js`/`agent.js`); `background.js`
+  is **untouched**. Edit `toolkit/`, then `npm run build`.
+- **Platform Ports** defined and the chrome.* bodies moved behind them:
+  `KVStore / Clock / Scheduler / Consent` + a small `demo` hook. The core no
+  longer references `chrome.*`, `Date.now()`, or `globalThis` (grep‑verified).
+  **Corrections to the original sketch:** (a) the LLM stays injected
+  post‑construction via `setGeminiCaller` (the pre‑existing seam) rather than a
+  constructor port; (b) `SecretStore` is host‑owned (the API‑key wiring stays in
+  `background.js`) and unused by the core in Phase 0; (c) **`tools-registry.js`
+  is *generated* from
+  [`skills/registry.js`](../personalized-extension/skills/registry.js) — it is
+  NOT moved as a source of truth, it keeps being generated**; (d) implemented in
+  **ES‑module JS, not TS** — TS‑ification is a mechanical follow‑up that doesn't
+  move the seam, deferred to keep behavior risk near zero. One latent bug
+  surfaced + fixed: `logObservation` declared `const origin` but the demo path
+  reassigns it (now `let`).
+- **Exit check (met):**
+  [librarian-test.js](../personalized-extension/test/librarian-test.js) (69
+  asserts) + new
+  [toolkit-ports-test.js](../personalized-extension/test/toolkit-ports-test.js)
+  (14 asserts — covers the refactored slow‑lane / shard‑scan paths the gate
+  missed) + [run-tests.js](../personalized-extension/test/run-tests.js) (116
+  structural) all green from a clean `npm run build`; both unit suites load the
+  **built** bundles, so they also prove the ESM source survives esbuild + `eval`
+  under the chrome mock. An independent adversarial diff review found no
+  Chrome‑host behavior change. **Both puppeteer e2e suites also ran green in
+  real Chrome for Testing:**
+  [demo-beats-e2e.js](../personalized-extension/test/demo-beats-e2e.js) **26/26**
+  (onboarding → Librarian profile → observation → proposal → popup "Yes, apply"
+  → saved profile → vimeo auto‑replay) and
+  [ai-features-e2e.js](../personalized-extension/test/ai-features-e2e.js)
+  **20/20** (live Gemini interpretNeeds, a real agent run turning on YouTube
+  captions, accept, and real Vimeo auto‑replay) — confirming the extension loads
+  the generated bundles and the whole `background.js` → `globalThis.Librarian/
+  Datastore` flow is unchanged. Full tally: **245 asserts, 0 failures.** This is
+  the regression gate for the whole refactor.
 
 ### Phase 1 — Split AbilityModel from SurfaceProfile
 - Separate modality‑agnostic understanding (support areas, free text, inferred
@@ -278,6 +353,11 @@ the settled "adapter/skill" vocabulary.
 - Introduce `SurfaceAdapter`; move today's web settings mapping
   (`fontScale/lineHeight/…`) into `adapters/chrome` as the *web* surface. Add the
   derivation `abilityModel → webSettings`. Behavior identical for web users.
+- Bake in the cheap safeguards here: add **`strength` (floor/preference/hint)** to
+  records (floors applied last, never silently dropped); give every numeric value a
+  **typed unit** (`fontScale:%`, `angularTextHeight:deg`, …) so XR↔web can't misread
+  each other and the old `>10` %‑vs‑multiplier heuristic can be deleted; make
+  `SurfaceAdapter.apply` return **cannot‑satisfy**.
 
 ### Phase 2 — Name the memory taxonomy + harden reflection
 - Relabel shards as **episodic / semantic / procedural**; fold the skills/
@@ -285,12 +365,22 @@ the settled "adapter/skill" vocabulary.
 - Add **reflection grounding** (facts cite `evidence[]` IDs) and the
   **evidence‑discard policy** post‑consolidation. Add the **behavior‑summary**
   view to the dream.
+- Fix the cheap **lifecycle‑correctness** bugs so the engine can't lock in a wrong
+  belief: drop the `Math.max` font ratchet (**allow downward correction**; an
+  explicit user value wins over a higher inferred one); base decay on
+  *last‑confirmed*, not *last‑accessed*; **lower** confidence on a contradicting user
+  edit instead of only ever raising it; don't auto‑`SUPERSEDE` a `floor`. (Skip the
+  append‑only lineage/tombstone log — **[product‑hardening]**.)
 
-### Phase 3 — Cross‑app identity, sync, permission broker (net‑new)
-- `toolkit/sync/`: identity, capability grants, signed export/import, broker that
-  enforces read scopes and routes all cross‑app writes through the proposal/
-  consent path. Implement **local shared‑store** transport first; design the
-  cloud interface without building it.
+### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)
+- `toolkit/sync/`: the lightweight layer from §6 — grants the user can see + a
+  **"what each app can see"** panel, **revoke = local delete**, cross‑app writes
+  routed through the accessible **proposal/consent** path, the **acting‑user**
+  switch, and a **global off switch**. Transport: **local shared store** first, then
+  **user‑mediated export/import** for the XR⇄web demo. Plain last‑write‑wins;
+  SurfaceProfiles stay device‑local.
+- **Not** in this phase (**[product‑hardening]**): signed/quarantined writes,
+  encrypted exports, tombstone propagation, HLC/CRDT sync, formal audit ledger.
 
 ### Phase 4 — Prove it with a second consumer
 - Wire one non‑web host end‑to‑end against the spec: **ArtInsight** is the
@@ -304,16 +394,33 @@ the settled "adapter/skill" vocabulary.
 ---
 
 ## 9. Risks & mitigations
+
+**Prototype risks (what can actually hurt a participant or break the demo):**
+- **Doing something weird silently** → soft/reversible by default; nothing hardens
+  on one tap; cross‑app writes arrive as proposals.
+- **Asking something they can't perceive/understand** → consent is an accessible
+  port + plain‑language pass (the research contribution, not an afterthought).
+- **Pretending to help while failing** → requirement‑strength floors +
+  cannot‑satisfy honesty.
+- **Locking in a false belief** → lifecycle‑correctness fixes (Phase 2); allow
+  downward correction; behavior summary is a *separate* view, never the fact store.
+- **Mixing up two people** on a shared device → acting‑user switch.
+- **Careless data handling** → local by default; no‑memory zones; fail‑safe unknown
+  category; transparent LLM payload.
 - **Consolidation is lossy** → keep ADD/UPDATE/SUPERSEDE/NOOP (no blanket
-  re‑summarize); behavior summary is a *separate* view, never the fact store.
-- **Privacy / over‑sharing** → default‑deny grants; diagnoses never stored;
-  evidence discarded post‑consolidation; cross‑app writes arrive as proposals.
-- **Multi‑language drift** → the spec (schema + protocol) is the contract and is
-  versioned; conformance tests run against TS and each native port.
-- **Scope creep on the extension** → Phase 0's exit check (all current tests
-  green) is the hard gate; no phase merges that regresses it.
-- **Naming collision** with root `tools/` (the auditor toolkit) → distinct
-  package name `@a11y-toolkit/core` and a one‑line note in the root README.
+  re‑summarize); never summarize away a `floor`/safety fact.
+- **Scope creep on the extension** → Phase 0's exit check (all current tests green)
+  is the hard gate; no phase merges that regresses it.
+- **Naming collision** with root `tools/` → distinct package `@a11y-toolkit/core` +
+  a one‑line note in the root README.
+
+**[product‑hardening] backlog (real, deferred until/unless this productizes):**
+adversarial‑consumer defenses (signed insights, per‑principal quarantine, on‑the‑wire
+scope enforcement), encrypted/recipient‑bound exports, revocation/deletion
+propagation (tombstones), HLC/CRDT multi‑device conflict resolution, a formal
+auditable grant ledger, and a regulatory posture (GDPR Art.9 / HIPAA / FERPA /
+COPPA, DPIA). Full analysis in
+[toolkit-adversarial-analysis.md](./toolkit-adversarial-analysis.md).
 
 ---
 
@@ -321,4 +428,4 @@ the settled "adapter/skill" vocabulary.
 1. **Spec + reference impl + native ports** (my recommendation, §7) — agree, or do you want a single‑language library and accept that ArtInsight/XR consume it over a service boundary only?
 2. **First non‑web consumer** to actually wire in Phase 4: ArtInsight (iOS), the XR app, or just a stub harness?
 3. **Cross‑app transport** to build first: local shared‑store only, or do you already need cross‑device (export/import) for the XR⇄web demo?
-4. **Scope of this pass:** produce Phase 0 as a real PR now, or keep iterating on this plan first?
+4. ~~**Scope of this pass:** produce Phase 0 as a real PR now, or keep iterating on this plan first?~~ → **Done: Phase 0 is implemented** on `main` (uncommitted working tree; toolkit/ + generated lib shims + port‑seam test). Next decision: commit Phase 0 as its own PR and start **Phase 1** (AbilityModel/SurfaceProfile split), or fold the TS‑ification follow‑up in first?
