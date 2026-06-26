@@ -31,7 +31,7 @@
 // the extraction pipeline consults before drafting.
 
 import { noopDemo, noopConsent, noopScheduler } from '../ports/index.js';
-import { coerceSettings } from './units.js';
+import { coerceSettings, clampSettings } from './units.js';
 import { STRENGTH_RANK, rankOf } from './strength.js';
 import { toAbilityModel } from './ability.js';
 
@@ -127,13 +127,26 @@ export function createLibrarian({
   // the pipeline expects a percentage (`150`); applied raw, 1.5 / 100 collapses
   // the font. A value far below its range whose ×100 lands in range is treated
   // as a multiplier; everything is then clamped to range.
+  function settingsMeta() {
+    try { return DS().global.tools().settingsMeta || {}; } catch (_) { return {}; }
+  }
+
+  // INGEST normalizer — runs where untrusted/raw values enter (record writes,
+  // LLM extract ops). Coerces to canonical units incl. the multiplier guess
+  // (e.g. a model emitting fontScale:1.5 → 150) so nothing non-canonical is
+  // ever stored.
   function sanitizeSettings(settings) {
     if (!settings || typeof settings !== 'object') return settings;
-    let meta = {};
-    try { meta = DS().global.tools().settingsMeta || {}; } catch (_) {}
-    // Normalize each value to its setting's canonical unit/range (see
-    // ../core/units). Behaviour-identical to the former inline heuristic.
-    return coerceSettings(settings, meta);
+    return coerceSettings(settings, settingsMeta());
+  }
+
+  // READ/merge normalizer — clamp-only. The old `>10` %-vs-multiplier heuristic
+  // used to run here on every read; now that writes coerce at ingest (and a
+  // one-time migration normalized legacy data), the read path trusts the unit
+  // tags and only bounds to range. This is the deleted read-side heuristic.
+  function clampForRead(settings) {
+    if (!settings || typeof settings !== 'object') return settings;
+    return clampSettings(settings, settingsMeta());
   }
 
   function normalizeRecord(raw, now) {
@@ -302,7 +315,7 @@ export function createLibrarian({
         const text = `You set ${key} to ${JSON.stringify(value)}${where}.`;
         let rec = shard.find(r => r.source === 'user-explicit' && r.aspect === aspect && r.status === 'active');
         if (rec) {
-          rec.settings = { [key]: value };
+          rec.settings = sanitizeSettings({ [key]: value }); // coerce at the write boundary
           rec.text = text;
           rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
           rec.updatedAt = now;
@@ -384,7 +397,7 @@ export function createLibrarian({
       // the surface derivations — see ./strength.js.)
       const strengthAt = {}; // key -> winning strength rank
       const assign = (src, scope, strength = 'preference') => {
-        const clean = sanitizeSettings(src) || {};
+        const clean = clampForRead(src) || {};
         const r = rankOf(strength);
         for (const [k, v] of Object.entries(clean)) {
           if (k in merged && r < (strengthAt[k] ?? STRENGTH_RANK.preference)) continue; // weaker: keep the stronger value
@@ -398,9 +411,9 @@ export function createLibrarian({
       // learned records at any scope, or the user's change reverts on the
       // next page load.
       const explicit = [];
-      // sanitizeSettings defensively here too: records written before the
-      // unit-coercion fix may still hold a multiplier (fontScale 1.5), and we
-      // must not collapse the font on read.
+      // clampForRead bounds values to range on the way out; it trusts the unit
+      // tags (writes coerce at ingest + the migration normalized legacy data),
+      // so it no longer guesses multipliers here.
       const applyShard = (scope) => {
         const recs = (shards[scope] || [])
           .filter(r => r.status === 'active' && r.settings && conditionsMet(r, now))
@@ -847,7 +860,7 @@ Rules:
               r.updatedAt = now;
             } else if (op.op === 'UPDATE') {
               if (op.text) r.text = String(op.text).slice(0, 500);
-              if (op.settings && typeof op.settings === 'object') r.settings = op.settings;
+              if (op.settings && typeof op.settings === 'object') r.settings = sanitizeSettings(op.settings); // coerce LLM output at ingest
               r.occurrenceCount = (r.occurrenceCount || 1) + 1;
               r.confidence = Math.min(1, (r.confidence ?? 0.7) + 0.05);
               r.updatedAt = now;

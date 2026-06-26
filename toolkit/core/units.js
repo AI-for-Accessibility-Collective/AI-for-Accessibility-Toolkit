@@ -57,10 +57,33 @@ export function coerceSetting(key, value, meta) {
   return Math.min(max, Math.max(min, val));
 }
 
-/** Coerce every key in a settings object. Non-object input passes through. */
+/** Coerce every key in a settings object. Non-object input passes through.
+ *  This is the INGEST normalizer — run once where untrusted/raw values enter
+ *  (record writes, the LLM extract ops, the one-time migration). */
 export function coerceSettings(settings, meta) {
   if (!settings || typeof settings !== 'object') return settings;
   const out = {};
   for (const [k, v] of Object.entries(settings)) out[k] = coerceSetting(k, v, meta);
+  return out;
+}
+
+// Clamp-only normalization for the READ/merge path. Trusts that values were
+// already coerced to canonical units at write time (the typed-unit contract),
+// so it does NOT guess multipliers — it only bounds a numeric to its declared
+// range. This is what replaced the old read-side `>10` %-vs-multiplier heuristic.
+export function clampSetting(key, value, meta) {
+  const m = meta && meta[key];
+  if (!(m && m.type === 'number' && Array.isArray(m.range) && typeof value === 'number')) {
+    return value;
+  }
+  const [min, max] = m.range;
+  return Math.min(max, Math.max(min, value));
+}
+
+/** Clamp every key in a settings object. Non-object input passes through. */
+export function clampSettings(settings, meta) {
+  if (!settings || typeof settings !== 'object') return settings;
+  const out = {};
+  for (const [k, v] of Object.entries(settings)) out[k] = clampSetting(k, v, meta);
   return out;
 }
