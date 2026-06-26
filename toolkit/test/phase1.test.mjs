@@ -6,7 +6,7 @@
 //
 //   node toolkit/test/phase1.test.mjs
 import { createToolkit } from '../index.js';
-import { coerceSetting, coerceSettings, unitOf } from '../core/units.js';
+import { coerceSetting, coerceSettings, clampSetting, unitOf } from '../core/units.js';
 import { createSurfaceAdapter } from '../core/surface.js';
 import { createWebSurface, deriveWebSettings, resolveWebPreferences } from '../adapters/chrome/web-surface.js';
 import { toAbilityModel } from '../core/ability.js';
@@ -55,6 +55,11 @@ check('coerce passes through booleans', coerceSetting('darkMode', true, settings
 check('coerce passes through unknown keys', coerceSetting('angularTextHeight', 5, settingsMeta) === 5);
 check('coerceSettings maps all keys',
   JSON.stringify(coerceSettings({ fontScale: 1.5, darkMode: true }, settingsMeta)) === JSON.stringify({ fontScale: 150, darkMode: true }));
+// clampSetting is the READ-path normalizer: clamp-only, NO multiplier guess.
+check('clampSetting: in-range untouched', clampSetting('fontScale', 150, settingsMeta) === 150);
+check('clampSetting: above range clamped to max', clampSetting('fontScale', 999, settingsMeta) === 200);
+check('clampSetting: does NOT guess multiplier (1.5 -> clamp 50)', clampSetting('fontScale', 1.5, settingsMeta) === 50);
+check('clampSetting: passes through booleans + unknown keys', clampSetting('darkMode', true, settingsMeta) === true && clampSetting('zzz', 7, settingsMeta) === 7);
 
 // ======================= 2. requirement strength =======================
 const { datastore: ds, librarian: lib } = createToolkit({ kv: memKV(), toolsRegistry });

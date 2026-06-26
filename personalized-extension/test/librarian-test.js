@@ -41,7 +41,7 @@ function check(name, cond) {
 (async () => {
   // 1. Migrations stamp
   const meta = await DS.runMigrations();
-  check('migrations stamp lastMigration=1', meta.lastMigration === 1);
+  check('migrations stamp lastMigration=2', meta.lastMigration === 2); // id 2 = legacy settings-unit normalization
   check('migrations record taxonomy version', meta.taxonomyVersion === 2);
 
   // 2. Profile init + explicit edit
@@ -279,16 +279,17 @@ function check(name, cond) {
   check('invalid scope falls back to general',
     genShard3.some(r => r.aspect === 'setting.darkMode' && r.settings.darkMode === true));
 
-  // 14. Settings unit sanitization: an LLM-extracted memory that wrote
-  // fontScale as a multiplier (1.5) must not collapse the font — it should be
-  // read back as the canonical percentage (150). lineHeight 1.5 is already in
-  // range and must be left alone.
+  // 14. Settings unit handling. Coercion (incl. the multiplier guess) now lives
+  // at the WRITE boundary + a one-time migration; the READ path is clamp-only
+  // (the `>10` heuristic was deleted from reads). So a RAW record inserted
+  // post-migration with a multiplier is no longer second-guessed on read — it
+  // is clamped to range. lineHeight 1.5 is already in range and is left alone.
   await DS.setMemoryShard('general', []);
   await DS.setMemoryShard('category:news', []);
   const badRec = mk('general', { fontScale: 1.5, lineHeight: 1.5 }, { id: 'm-bad-units', source: 'inferred' });
   await DS.setMemoryShard('general', [badRec]);
   const sanePrefs = await L.getEffectivePreferences('https://unknown-sanitize.io/', []);
-  check('fontScale multiplier coerced to percentage on read', sanePrefs.settings.fontScale === 150);
+  check('raw sub-range value clamped on read (no read-side multiplier guess)', sanePrefs.settings.fontScale === 50);
   check('lineHeight in-range value untouched', sanePrefs.settings.lineHeight === 1.5);
   // normalizeRecord coerces on write too (recordScopedSettings path)
   await DS.setMemoryShard('category:news', []);

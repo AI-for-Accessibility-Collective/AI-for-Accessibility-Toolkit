@@ -50,6 +50,20 @@
     for (const [k, v] of Object.entries(settings)) out[k] = coerceSetting(k, v, meta);
     return out;
   }
+  function clampSetting(key, value, meta) {
+    const m = meta && meta[key];
+    if (!(m && m.type === "number" && Array.isArray(m.range) && typeof value === "number")) {
+      return value;
+    }
+    const [min, max] = m.range;
+    return Math.min(max, Math.max(min, value));
+  }
+  function clampSettings(settings, meta) {
+    if (!settings || typeof settings !== "object") return settings;
+    const out = {};
+    for (const [k, v] of Object.entries(settings)) out[k] = clampSetting(k, v, meta);
+    return out;
+  }
 
   // ../toolkit/core/strength.js
   var STRENGTH_RANK = Object.freeze({ hint: 0, preference: 1, floor: 2 });
@@ -156,14 +170,20 @@
       return true;
     }
     const VALID_SCOPE = /^(general|category:[a-z-]+|context:[a-z-]+|origin:[a-z0-9.-]+|tool:[a-zA-Z0-9_-]+)$/;
+    function settingsMeta() {
+      try {
+        return DS().global.tools().settingsMeta || {};
+      } catch (_) {
+        return {};
+      }
+    }
     function sanitizeSettings(settings) {
       if (!settings || typeof settings !== "object") return settings;
-      let meta = {};
-      try {
-        meta = DS().global.tools().settingsMeta || {};
-      } catch (_) {
-      }
-      return coerceSettings(settings, meta);
+      return coerceSettings(settings, settingsMeta());
+    }
+    function clampForRead(settings) {
+      if (!settings || typeof settings !== "object") return settings;
+      return clampSettings(settings, settingsMeta());
     }
     function normalizeRecord(raw, now) {
       const r = { ...raw };
@@ -309,7 +329,7 @@
           const text = `You set ${key} to ${JSON.stringify(value)}${where}.`;
           let rec = shard.find((r) => r.source === "user-explicit" && r.aspect === aspect && r.status === "active");
           if (rec) {
-            rec.settings = { [key]: value };
+            rec.settings = sanitizeSettings({ [key]: value });
             rec.text = text;
             rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
             rec.updatedAt = now;
@@ -388,7 +408,7 @@
         const provenance = {};
         const strengthAt = {};
         const assign = (src, scope, strength = "preference") => {
-          const clean = sanitizeSettings(src) || {};
+          const clean = clampForRead(src) || {};
           const r = rankOf(strength);
           for (const [k, v] of Object.entries(clean)) {
             if (k in merged && r < (strengthAt[k] ?? STRENGTH_RANK.preference)) continue;
@@ -796,7 +816,7 @@ Rules:
                 r.updatedAt = now;
               } else if (op.op === "UPDATE") {
                 if (op.text) r.text = String(op.text).slice(0, 500);
-                if (op.settings && typeof op.settings === "object") r.settings = op.settings;
+                if (op.settings && typeof op.settings === "object") r.settings = sanitizeSettings(op.settings);
                 r.occurrenceCount = (r.occurrenceCount || 1) + 1;
                 r.confidence = Math.min(1, (r.confidence ?? 0.7) + 0.05);
                 r.updatedAt = now;

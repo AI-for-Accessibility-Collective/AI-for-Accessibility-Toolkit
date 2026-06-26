@@ -30,6 +30,8 @@
  * @param {Object|null} [deps.toolsRegistry]  The built-in tools registry (AA_TOOLS), or null.
  * @returns the Datastore facade.
  */
+import { coerceSettings } from './units.js';
+
 export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
   if (!kv) throw new Error('createDatastore: kv port is required');
   if (!clock) throw new Error('createDatastore: clock port is required');
@@ -99,6 +101,30 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
       id: 1,
       // Baseline: stamp meta so future migrations know where they started.
       run: async () => { /* no-op — stamping happens in runMigrations */ },
+    },
+    {
+      id: 2,
+      // Normalize legacy memory-record settings to canonical units. The read
+      // path is now clamp-only (the `>10` %-vs-multiplier heuristic was deleted
+      // from reads), so any value an old un-coerced writer stored as a
+      // multiplier (e.g. fontScale:1.5) is normalized once here (→ 150) instead
+      // of being second-guessed on every read. Idempotent: canonical values are
+      // unchanged by coercion.
+      run: async (ds) => {
+        const meta = (ds.global.tools() && ds.global.tools().settingsMeta) || {};
+        if (!Object.keys(meta).length) return; // no registry → nothing to normalize
+        const shards = await ds.allMemoryShards();
+        for (const [scope, recs] of Object.entries(shards)) {
+          let dirty = false;
+          for (const r of (recs || [])) {
+            if (r && r.settings && typeof r.settings === 'object') {
+              const norm = coerceSettings(r.settings, meta);
+              if (JSON.stringify(norm) !== JSON.stringify(r.settings)) { r.settings = norm; dirty = true; }
+            }
+          }
+          if (dirty) await ds.setMemoryShard(scope, recs);
+        }
+      },
     },
   ];
 
