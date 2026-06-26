@@ -432,6 +432,14 @@ async function init() {
       applyProfileSettings(overlay);
       chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'personal', region: 'adapt', label: 'learned preferences applied' });
     }
+    // Honest cannot-satisfy: if the web SurfaceAdapter flagged needs it can't
+    // render (e.g. a cross-app dimension with no web mapping), surface it
+    // rather than failing silently. Never fires for web-native settings.
+    if (prefs?.surface?.unmet?.length) {
+      const keys = prefs.surface.unmet.map(u => u.key);
+      console.warn('[AI4A11y] surface cannot satisfy:', keys);
+      chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'personal', region: 'adapt', label: 'cannot-satisfy: ' + keys.join(',') });
+    }
   } catch (e) {
     console.warn('[AI4A11y] Init failed, falling back to global settings:', e);
     await initFromStorage();
