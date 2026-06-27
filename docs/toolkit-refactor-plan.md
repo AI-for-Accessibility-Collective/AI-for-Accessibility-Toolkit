@@ -347,7 +347,7 @@ the settled "adapter/skill" vocabulary.
   Datastore` flow is unchanged. Full tally: **245 asserts, 0 failures.** This is
   the regression gate for the whole refactor.
 
-### Phase 1 — Split AbilityModel from SurfaceProfile  🟡 **IN PROGRESS (inc 1 + 2 done)**
+### Phase 1 — Split AbilityModel from SurfaceProfile  ✅ **COMPLETE (inc 1 + 2 + tail)**
 - Separate modality‑agnostic understanding (support areas, free text, inferred
   needs, reading level, language, confidence) from per‑app renderings.
   **(increment 2 ✅)**
@@ -371,9 +371,21 @@ the settled "adapter/skill" vocabulary.
 > `getEffectivePreferences` merge now strength‑gates overwrites: **floor > preference
 > > hint**, regardless of scope specificity, equal strength keeps the old
 > precedence. With today's all‑`preference` data the merge is byte‑for‑byte
-> unchanged. The `>10` heuristic is *kept* (renamed/relocated into units) — it is
-> the safety net for untyped legacy/LLM values and can only be deleted once every
-> writer tags units (later in Phase 1).
+> unchanged.
+
+> **Tail landed (2026‑06‑26): the `>10` read‑side heuristic is deleted.** Coercion
+> (the %‑vs‑multiplier guess) is now confined to the **write/ingest boundary** —
+> [units.js](../toolkit/core/units.js) `coerceSettings` (ingest) vs new
+> `clampSettings` (read); the two un‑coerced writers the review found (the extract
+> `UPDATE` op, the `recordScopedSettings` existing‑record update) now coerce. The
+> read/merge path is **clamp‑only** (`clampForRead`) — it trusts the unit tags
+> instead of guessing. A one‑time datastore **migration (id 2)** normalizes any
+> legacy multiplier records so no participant's font silently shrinks. Behavior‑
+> identical for real data (adversarial review CLEAN; `customProfile` fontScale is
+> always canonical percent). Two `librarian-test` asserts were deliberately
+> updated to the new contract (`lastMigration=2`; a raw post‑migration multiplier
+> clamps on read rather than upscaling). Gate: librarian 69, phase1 50, toolkit‑
+> ports 14, run‑tests 116, demo‑beats‑e2e 26/26 real Chrome.
 
 > **Increment 2 landed (2026‑06‑26), behavior‑identical for web** — the
 > AbilityModel/SurfaceProfile split, designed via a 3‑approach panel + adversarial
@@ -406,18 +418,37 @@ the settled "adapter/skill" vocabulary.
 > **26/26** in real Chrome. The `abilityModel→webSettings` derivation is **inert**
 > today (no user has structured `needs`).
 
-### Phase 2 — Name the memory taxonomy + harden reflection
+### Phase 2 — Name the memory taxonomy + harden reflection  🟡 **IN PROGRESS (inc 1 done)**
 - Relabel shards as **episodic / semantic / procedural**; fold the skills/
-  reusable‑action registry under procedural.
+  reusable‑action registry under procedural. **(increment 2 — additive label)**
 - Add **reflection grounding** (facts cite `evidence[]` IDs) and the
   **evidence‑discard policy** post‑consolidation. Add the **behavior‑summary**
-  view to the dream.
+  view to the dream. **(increments 3–4)**
 - Fix the cheap **lifecycle‑correctness** bugs so the engine can't lock in a wrong
   belief: drop the `Math.max` font ratchet (**allow downward correction**; an
   explicit user value wins over a higher inferred one); base decay on
   *last‑confirmed*, not *last‑accessed*; **lower** confidence on a contradicting user
   edit instead of only ever raising it; don't auto‑`SUPERSEDE` a `floor`. (Skip the
-  append‑only lineage/tombstone log — **[product‑hardening]**.)
+  append‑only lineage/tombstone log — **[product‑hardening]**.)  **(increment 1 ✅)**
+
+> **Increment 1 landed (2026‑06‑26): lifecycle‑correctness**, designed via a
+> 3‑lens panel + adversarial review (which came back CLEAN). The "`Math.max`
+> ratchet" turned out to be a **misattribution** — the only `Math.max` on a font
+> value is preset‑union sugar in `popup.js` that never writes to memory; downward
+> correction is already delivered by the explicit‑final‑say merge (proven by a new
+> deterministic test: an explicit *lower* `fontScale` beats a higher inferred one).
+> The three real fixes, all in [librarian.js](../toolkit/core/librarian.js): (1)
+> **decay now ages from `lastConfirmedAt`, not `lastAccessed`** (`recall` bumped
+> the latter every navigation, so a never‑reconfirmed belief stayed "fresh"
+> forever) — new field, bumped only on genuine reconfirmation, with **migration
+> id 3** backfilling it; (2) a new **`CONTRADICT`** extract op that *lowers* a
+> contradicted belief's confidence (the engine could previously only ever grow
+> *more* sure); (3) the extract **`SUPERSEDE` branch refuses to retire a `floor`**
+> record (a hard need is never auto‑dropped by one LLM judgement — it downgrades to
+> a confidence drop). `reflect()` hygiene deliberately still ages off `updatedAt`
+> (the GC clock, distinct from the belief clock). Gate: librarian **71**, toolkit‑
+> ports **19** (CONTRADICT/floor‑guard via a fake LLM), phase1 **53**, run‑tests
+> **116**, demo‑beats‑e2e **26/26** real Chrome.
 
 ### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)
 - `toolkit/sync/`: the lightweight layer from §6 — grants the user can see + a

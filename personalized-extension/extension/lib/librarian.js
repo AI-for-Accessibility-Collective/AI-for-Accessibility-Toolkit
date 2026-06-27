@@ -151,7 +151,7 @@
     };
     function scoreRecord(r, now) {
       const half = DECAY_HALF_LIFE[r.decayClass] || DECAY_HALF_LIFE.slow;
-      const age = now - (r.lastAccessed || r.updatedAt || r.createdAt || now);
+      const age = now - (r.lastConfirmedAt || r.updatedAt || r.createdAt || now);
       const recency = half === Infinity ? 1 : Math.pow(0.5, age / half);
       return recency * ((r.importance || 5) / 10) * (r.confidence ?? 0.7);
     }
@@ -204,6 +204,7 @@
       r.createdAt = r.createdAt || now;
       r.updatedAt = now;
       r.lastAccessed = r.lastAccessed || now;
+      r.lastConfirmedAt = r.lastConfirmedAt || r.createdAt || now;
       r.status = ["active", "superseded", "expired"].includes(r.status) ? r.status : "active";
       r.supersededBy = r.supersededBy || null;
       r.source = r.source || "inferred";
@@ -334,6 +335,7 @@
             rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
             rec.updatedAt = now;
             rec.lastAccessed = now;
+            rec.lastConfirmedAt = now;
           } else {
             rec = normalizeRecord({
               kind: "preference",
@@ -700,6 +702,7 @@ Return ONLY valid JSON with:
               const r = (recs || []).find((x) => x.id === evId);
               if (r) {
                 r.confidence = Math.min(1, (r.confidence ?? 0.7) + 0.1);
+                r.lastConfirmedAt = now;
                 await DS().setMemoryShard(scope, recs);
               }
             }
@@ -784,7 +787,7 @@ ${JSON.stringify(activeSuppressed)}
 Rules:
 - Extract only durable, useful facts: preferences, repeated patterns, how-to knowledge. Ignore one-off low-weight noise (a single weight-1 event is exploration, not preference).
 - scope: "general" | "category:<${TAX().categoryIds().join("|")}>" | "origin:<hostname>" | "context:<video|form|document>". Prefer the narrowest scope the evidence supports.
-- For each candidate, compare to existing memories: same fact \u2192 {"op":"NOOP","id":<existing id>} (we bump its count); refines/strengthens \u2192 {"op":"UPDATE","id":...,"text":...,"settings":...}; contradicts \u2192 {"op":"SUPERSEDE","id":...,"record":{...}}; genuinely new \u2192 {"op":"ADD","record":{...}}.
+- For each candidate, compare to existing memories: same fact \u2192 {"op":"NOOP","id":<existing id>} (we bump its count); refines/strengthens \u2192 {"op":"UPDATE","id":...,"text":...,"settings":...}; CONFIDENTLY contradicts and should replace \u2192 {"op":"SUPERSEDE","id":...,"record":{...}}; the user did the OPPOSITE of an inferred record but you are NOT sure it's permanent \u2192 {"op":"CONTRADICT","id":<existing id>} (lowers its confidence, no replacement); genuinely new \u2192 {"op":"ADD","record":{...}}.
 - record fields: text (one plain sentence), tier ("preference"|"site"|"task"), scope, kind ("preference"|"procedural"), importance 1-10, confidence 0-1, decayClass ("stable"|"slow"|"fast"), settings (object of extension setting keys like fontScale/darkMode/autoCaptions if directly actionable, else null).
 - Changes to the user's ABILITY PROFILE (their disability/needs themselves, not site preferences) must NOT be memory records. Emit them under "proposals" instead: {aspect:"profile.<field>", aspectLabel:"plain words", change:{op:"profile-set",path:"fields.<field>",value:...}, rationale:"<1 plain sentence why>", evidence:[]}. Only propose when evidence is strong and repeated.
 - Return ONLY JSON: {"operations":[...], "proposals":[...]}`;
@@ -796,7 +799,7 @@ Rules:
           return { ran: false, reason: e.message };
         }
         if (!parsed) return { ran: false, reason: "unparseable" };
-        const applied = { ADD: 0, UPDATE: 0, SUPERSEDE: 0, NOOP: 0 };
+        const applied = { ADD: 0, UPDATE: 0, SUPERSEDE: 0, NOOP: 0, CONTRADICT: 0 };
         for (const op of parsed.operations || []) {
           try {
             if (op.op === "ADD" && op.record) {
@@ -805,7 +808,7 @@ Rules:
               shard.push(rec);
               await DS().setMemoryShard(rec.scope, shard);
               applied.ADD++;
-            } else if ((op.op === "UPDATE" || op.op === "NOOP" || op.op === "SUPERSEDE") && op.id) {
+            } else if ((op.op === "UPDATE" || op.op === "NOOP" || op.op === "SUPERSEDE" || op.op === "CONTRADICT") && op.id) {
               const target = existing.find((x) => x.id === op.id);
               if (!target) continue;
               const shard = await DS().getMemoryShard(target.scope);
@@ -813,21 +816,31 @@ Rules:
               if (!r) continue;
               if (op.op === "NOOP") {
                 r.occurrenceCount = (r.occurrenceCount || 1) + 1;
+                r.lastConfirmedAt = now;
                 r.updatedAt = now;
               } else if (op.op === "UPDATE") {
                 if (op.text) r.text = String(op.text).slice(0, 500);
                 if (op.settings && typeof op.settings === "object") r.settings = sanitizeSettings(op.settings);
                 r.occurrenceCount = (r.occurrenceCount || 1) + 1;
                 r.confidence = Math.min(1, (r.confidence ?? 0.7) + 0.05);
+                r.lastConfirmedAt = now;
+                r.updatedAt = now;
+              } else if (op.op === "CONTRADICT") {
+                r.confidence = Math.max(0, (r.confidence ?? 0.7) - 0.2);
                 r.updatedAt = now;
               } else if (op.op === "SUPERSEDE" && op.record) {
-                const rec = normalizeRecord(op.record, now);
-                r.status = "superseded";
-                r.supersededBy = rec.id;
-                r.updatedAt = now;
-                const destShard = rec.scope === target.scope ? shard : await DS().getMemoryShard(rec.scope);
-                destShard.push(rec);
-                if (rec.scope !== target.scope) await DS().setMemoryShard(rec.scope, destShard);
+                if (r.strength === "floor") {
+                  r.confidence = Math.max(0, (r.confidence ?? 0.7) - 0.2);
+                  r.updatedAt = now;
+                } else {
+                  const rec = normalizeRecord(op.record, now);
+                  r.status = "superseded";
+                  r.supersededBy = rec.id;
+                  r.updatedAt = now;
+                  const destShard = rec.scope === target.scope ? shard : await DS().getMemoryShard(rec.scope);
+                  destShard.push(rec);
+                  if (rec.scope !== target.scope) await DS().setMemoryShard(rec.scope, destShard);
+                }
               }
               await DS().setMemoryShard(target.scope, shard);
               applied[op.op]++;

@@ -126,6 +126,25 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
         }
       },
     },
+    {
+      id: 3,
+      // Backfill lastConfirmedAt (Phase 2: decay now measures last CONFIRMATION,
+      // not last surfacing). Idempotent: only stamps records missing the field;
+      // seeds it from updatedAt/createdAt so existing records keep their age.
+      run: async (ds) => {
+        const shards = await ds.allMemoryShards();
+        for (const [scope, recs] of Object.entries(shards)) {
+          let dirty = false;
+          for (const r of (recs || [])) {
+            if (r && r.lastConfirmedAt == null) {
+              r.lastConfirmedAt = r.updatedAt || r.createdAt || null;
+              dirty = true;
+            }
+          }
+          if (dirty) await ds.setMemoryShard(scope, recs);
+        }
+      },
+    },
   ];
 
   async function runMigrations() {

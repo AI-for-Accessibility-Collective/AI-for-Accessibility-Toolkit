@@ -41,7 +41,7 @@ function check(name, cond) {
 (async () => {
   // 1. Migrations stamp
   const meta = await DS.runMigrations();
-  check('migrations stamp lastMigration=2', meta.lastMigration === 2); // id 2 = legacy settings-unit normalization
+  check('migrations stamp lastMigration=3', meta.lastMigration === 3); // id 2 = settings-unit normalization, id 3 = lastConfirmedAt backfill
   check('migrations record taxonomy version', meta.taxonomyVersion === 2);
 
   // 2. Profile init + explicit edit
@@ -318,6 +318,33 @@ function check(name, cond) {
   const offNews = await L.getEffectivePreferences('https://example-unknown-7.io/', []);
   check('off-category falls back to general explicit', offNews.settings.fontScale === 120
     && offNews.provenance.fontScale === 'general');
+
+  // 16. Lifecycle correctness (Phase 2). (a) Downward correction: an explicit
+  // user value beats a HIGHER inferred one (no LLM — explicit records get final
+  // say in the merge; this is what "drop the Math.max ratchet" actually means).
+  stores.local.customProfiles = [];
+  await DS.setMemoryShard('general', []);
+  await DS.setMemoryShard('category:news', []);
+  await DS.setMemoryShard('origin:nytimes.com',
+    [mk('origin:nytimes.com', { fontScale: 150 }, { id: 'm-inf-fs', source: 'inferred' })]);
+  await L.recordExplicitSetting('fontScale', 90, 'nytimes.com');
+  const downPrefs = await L.getEffectivePreferences('https://www.nytimes.com/x', []);
+  check('explicit LOWER value beats higher inferred (downward correction)', downPrefs.settings.fontScale === 90);
+
+  // (b) Decay measures last-confirmed, not last-accessed: a stale-but-recently-
+  // surfaced record must NOT outrank a freshly-confirmed one.
+  const dayMs = 24 * 3600 * 1000;
+  await DS.setMemoryShard('general', [
+    mk('general', { a: 1 }, { id: 'm-stale-conf', decayClass: 'fast', importance: 5, confidence: 0.9,
+      lastConfirmedAt: now - 60 * dayMs, lastAccessed: now, updatedAt: now }),
+    mk('general', { b: 1 }, { id: 'm-fresh-conf', decayClass: 'fast', importance: 5, confidence: 0.9,
+      lastConfirmedAt: now, lastAccessed: now - 60 * dayMs, updatedAt: now }),
+  ]);
+  const rl = await L.recall('https://unknown-decay-9.io/', '', []);
+  const sIdx = rl.facts.findIndex(f => f.id === 'm-stale-conf');
+  const fIdx = rl.facts.findIndex(f => f.id === 'm-fresh-conf');
+  check('fresh-confirmed outranks stale-confirmed despite recent access',
+    fIdx >= 0 && (sIdx === -1 || fIdx < sIdx));
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

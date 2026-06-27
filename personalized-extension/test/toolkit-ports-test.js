@@ -121,6 +121,36 @@ const mk = (scope, settings, extra = {}) => ({
   check('demo fallback proposed a reusable action', dprops.length === 1 && dprops[0].change.siteTypes.join() === 'video');
   globalThis.AA_DEMO_MODE = false;
 
+  // E. Phase 2 lifecycle ops (LLM-gated, so exercised here via the fake caller):
+  //    CONTRADICT lowers confidence; SUPERSEDE refuses to retire a `floor`;
+  //    NOOP/UPDATE bump lastConfirmedAt.
+  await DS.setMemoryShard('origin:nytimes.com', [
+    mk('origin:nytimes.com', { darkMode: true }, { id: 'c-pref', confidence: 0.7, strength: 'preference' }),
+    mk('origin:nytimes.com', { autoCaptions: true }, { id: 'c-floor', confidence: 0.9, strength: 'floor', lastConfirmedAt: now - 100000 }),
+    mk('origin:nytimes.com', { motionReducer: true }, { id: 'c-noop', confidence: 0.7, lastConfirmedAt: now - 100000 }),
+  ]);
+  stores.local['aa.mine.episodicLog'] = { cursor: 1000, entries: [
+    { id: 1001, t: now, type: 'setting-change', weight: 3, origin: 'nytimes.com', category: 'news', data: {}, text: 'flipped some things' },
+  ] };
+  L.setGeminiCaller(async () => JSON.stringify({ operations: [
+    { op: 'CONTRADICT', id: 'c-pref' },
+    { op: 'SUPERSEDE', id: 'c-floor', record: { text: 'no captions', scope: 'origin:nytimes.com', settings: { autoCaptions: false } } },
+    { op: 'NOOP', id: 'c-noop' },
+  ], proposals: [] }));
+  const exL = await L.extract();
+  const shardL = await DS.getMemoryShard('origin:nytimes.com');
+  const cPref = shardL.find(r => r.id === 'c-pref');
+  const cFloor = shardL.find(r => r.id === 'c-floor');
+  const cNoop = shardL.find(r => r.id === 'c-noop');
+  check('extract counted the CONTRADICT op', exL.applied.CONTRADICT === 1);
+  check('CONTRADICT lowered confidence (0.7 -> 0.5), record stays active',
+    Math.abs(cPref.confidence - 0.5) < 1e-9 && cPref.status === 'active');
+  check('SUPERSEDE refused on a floor record (still active, not superseded)',
+    cFloor.status === 'active' && !cFloor.supersededBy);
+  check('floor SUPERSEDE downgraded to a confidence drop (0.9 -> 0.7)',
+    Math.abs(cFloor.confidence - 0.7) < 1e-9);
+  check('NOOP reconfirmation bumped lastConfirmedAt', cNoop.lastConfirmedAt >= now);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('CRASH:', e); process.exit(1); });
