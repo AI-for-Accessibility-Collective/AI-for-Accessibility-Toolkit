@@ -109,6 +109,50 @@
     return "semantic";
   }
 
+  // ../toolkit/sync/grants.js
+  var GRANT_SCOPES = [
+    "ability.categories",
+    // coarse support-area labels (vision/hearing/motor/cognitive)
+    "reading.level",
+    // the reading-level hint
+    "language",
+    // 'standard' | 'plain'
+    "settings.text"
+    // structured, modality-NEUTRAL display needs (needs[]) — never web fontScale
+  ];
+  var SCOPE_PROJECTION = {
+    "ability.categories": (am) => ({ supportAreas: Array.isArray(am.supportAreas) ? am.supportAreas.map(String) : [] }),
+    "reading.level": (am) => ({ readingLevel: am.readingLevel ?? null }),
+    "language": (am) => ({ language: am.language || "standard" }),
+    "settings.text": (am) => ({ needs: Array.isArray(am.needs) ? am.needs.map((n) => ({ ...n })) : [] })
+  };
+  function validateScopes(scopes) {
+    if (!Array.isArray(scopes) || scopes.length === 0) return false;
+    return scopes.every((s) => GRANT_SCOPES.includes(s));
+  }
+  function normalizeGrant(raw) {
+    const g = raw || {};
+    return {
+      id: g.id || null,
+      appId: String(g.appId || ""),
+      appLabel: String(g.appLabel || g.appId || ""),
+      scopes: Array.isArray(g.scopes) ? g.scopes.filter((s) => GRANT_SCOPES.includes(s)) : [],
+      grantedAt: Number(g.grantedAt) || 0
+    };
+  }
+  function isActive(grant) {
+    return !!(grant && grant.appId && Array.isArray(grant.scopes) && grant.scopes.length > 0);
+  }
+  function filterAbilityModelByScopes(abilityModel, scopes) {
+    const am = abilityModel || {};
+    const out = { schemaVersion: am.schemaVersion ?? 1 };
+    for (const s of scopes || []) {
+      const project = SCOPE_PROJECTION[s];
+      if (project) Object.assign(out, project(am));
+    }
+    return out;
+  }
+
   // ../toolkit/core/librarian.js
   function createLibrarian({
     datastore,
@@ -531,6 +575,67 @@
         const props = await DS().get("mine.proposals");
         return status ? props.filter((p) => p.status === status) : props;
       },
+      // ====================== CROSS-APP GRANTS (Phase 3) ======================
+      // A first-party app reads a scoped, modality-neutral slice of the
+      // AbilityModel ONLY behind a grant the user approved and can see.
+      // DEFAULT-DENY: no grant, no read. A request is NOT a grant — it is drafted
+      // as an ordinary proposal through the SAME consent machinery (suppression /
+      // cooldown / weekly cap), and only respondToProposal('accept') on the local
+      // user surface mints the grant. The requesting app has no code path that
+      // resolves its own request (sender-cannot-self-resolve, structurally).
+      // Ask the user (via a proposal) for read access to `scopes` of the
+      // AbilityModel. Validates against the closed GRANT_SCOPES whitelist; if an
+      // active grant already covers every requested scope, does nothing. Returns
+      // the pending proposal's id, or {ok:false} when rejected/suppressed.
+      async requestGrant(appId, scopes, opts = {}) {
+        appId = String(appId || "").trim();
+        if (!appId) return { ok: false, reason: "bad-app" };
+        if (!validateScopes(scopes)) return { ok: false, reason: "bad-scope" };
+        const grants = await DS().get("mine.grants") || [];
+        const existing = grants.find((g) => g.appId === appId && isActive(g));
+        if (existing && scopes.every((s) => existing.scopes.includes(s))) {
+          return { ok: false, reason: "already-granted" };
+        }
+        const appLabel = String(opts.appLabel || appId).slice(0, 100);
+        const now = clock.now();
+        const suppressions = await DS().get("mine.suppressions");
+        const profile = await getOrInitProfile();
+        await this._draftProposals([{
+          aspect: `grant:${appId}`,
+          aspectLabel: `let ${appLabel} read your ${scopes.join(", ")}`,
+          change: { op: "grant-request", appId, appLabel, scopes },
+          rationale: String(opts.rationale || `${appLabel} wants to read part of your accessibility profile so it can adapt itself for you.`).slice(0, 300),
+          evidence: []
+        }], { suppressions, profile, now });
+        await updateBadge();
+        const props = await DS().get("mine.proposals");
+        const pending = props.find((p) => p.status === "pending" && p.aspect === `grant:${appId}` && p.change && p.change.op === "grant-request");
+        return pending ? { ok: true, proposalId: pending.id } : { ok: false, reason: "suppressed" };
+      },
+      // The "what each app can see" panel's data: live (active) grants only —
+      // revoke is a delete, so anything still stored is active.
+      async listGrants() {
+        const grants = await DS().get("mine.grants") || [];
+        return grants.filter(isActive);
+      },
+      // Revoke = LOCAL DELETE (no tombstone, no propagation). Idempotent.
+      async revokeGrant(appId) {
+        appId = String(appId || "").trim();
+        await DS().patch("mine.grants", (grants) => (grants || []).filter((g) => g.appId !== appId));
+        return { ok: true };
+      },
+      // Read-only, default-deny export of the granted AbilityModel slice. No
+      // active grant for `appId` → no data. Never writes; never includes a
+      // SurfaceProfile (web fontScale etc.) — only the modality-neutral,
+      // categories-only AbilityModel, filtered to the grant's scopes.
+      async exportAbilityModel(appId) {
+        appId = String(appId || "").trim();
+        const grants = await DS().get("mine.grants") || [];
+        const grant = grants.find((g) => g.appId === appId && isActive(g));
+        if (!grant) return { ok: false, reason: "no-grant" };
+        const abilityModel = await this.getAbilityModel();
+        return { ok: true, abilityModel: filterAbilityModelByScopes(abilityModel, grant.scopes) };
+      },
       // Prompt for the popup's "what support do you need?" flow. The Librarian
       // owns it so the "does this exist in the global db?" decision is grounded
       // in the actual tools registry (Datastore.global.tools) and conditioned
@@ -705,6 +810,13 @@ Return ONLY valid JSON with:
             const shard = await DS().getMemoryShard(rec.scope);
             shard.push(rec);
             await DS().setMemoryShard(rec.scope, shard);
+          } else if (prop.change?.op === "grant-request") {
+            const { appId, appLabel, scopes } = prop.change;
+            await DS().patch("mine.grants", (grants) => {
+              grants = (grants || []).filter((g) => g.appId !== appId);
+              grants.push(normalizeGrant({ id: newId("grant"), appId, appLabel, scopes, grantedAt: now }));
+              return grants;
+            });
           }
           for (const evId of prop.evidence || []) {
             const shards = await DS().allMemoryShards();

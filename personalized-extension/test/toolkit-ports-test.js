@@ -207,6 +207,25 @@ const mk = (scope, settings, extra = {}) => ({
   check('post-prune observation got an id above the cursor',
     logNew.entries[logNew.entries.length - 1].id > logNew.cursor);
 
+  // G. Phase 3 inc 1: cross-app grant flow against the BUILT bundle (proves the
+  //    toolkit/sync module bundles + works under esbuild + classic-script eval).
+  await L.setProfileField('supportAreas', ['vision']);
+  await L.setProfileField('metaPreferences.language', 'plain');
+  const gReq = await L.requestGrant('xr-headset', ['ability.categories', 'language'], { appLabel: 'XR Reader' });
+  check('grant: requestGrant drafts a pending proposal', gReq.ok === true && !!gReq.proposalId);
+  check('grant: default-deny before accept', (await L.exportAbilityModel('xr-headset')).ok === false);
+  await L.respondToProposal(gReq.proposalId, 'accept');
+  const gList = await L.listGrants();
+  check('grant: accept minted the grant', gList.some(g => g.appId === 'xr-headset'));
+  const gExp = await L.exportAbilityModel('xr-headset');
+  check('grant: scoped export returns granted aspects only',
+    gExp.ok === true && JSON.stringify(gExp.abilityModel.supportAreas) === JSON.stringify(['vision'])
+    && gExp.abilityModel.language === 'plain' && !('readingLevel' in gExp.abilityModel));
+  check('grant: export never leaks a SurfaceProfile key', !('fontScale' in gExp.abilityModel));
+  await L.revokeGrant('xr-headset');
+  check('grant: revoke = delete (export now denied)', (await L.exportAbilityModel('xr-headset')).ok === false);
+  check('grant store lives in the sync area', DS.catalog()['mine.grants'].area === 'sync');
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('CRASH:', e); process.exit(1); });

@@ -62,7 +62,14 @@
       "mine.siteIndex": { area: "local", key: "aa.mine.siteIndex", version: 1, def: {}, reserved: true },
       // Materialized presentation views (core memory block, review-page
       // groups, category playbooks) rendered by the reflection job.
-      "mine.views": { area: "local", key: "aa.mine.views", version: 1, def: {}, reserved: true }
+      "mine.views": { area: "local", key: "aa.mine.views", version: 1, def: {}, reserved: true },
+      // Cross-app read grants (Phase 3): per-app, user-approved, scoped read
+      // access to the AbilityModel. Sync so an approved grant roams across the
+      // user's devices like the profile/suppressions. Revoke = local delete (no
+      // tombstone). No migration needed — `def: []` reads as empty lazily and
+      // `storeVersions` auto-picks-up the new entry, exactly like every other
+      // reserved store.
+      "mine.grants": { area: "sync", key: "aa.mine.grants", version: 1, def: [], reserved: true }
     };
     const MEMORY_SHARD_PREFIX = "aa.mine.memory.";
     const MEMORY_VERSION = 1;
