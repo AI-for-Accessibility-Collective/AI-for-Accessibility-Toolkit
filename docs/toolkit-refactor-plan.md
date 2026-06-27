@@ -418,7 +418,7 @@ the settled "adapter/skill" vocabulary.
 > **26/26** in real Chrome. The `abilityModel→webSettings` derivation is **inert**
 > today (no user has structured `needs`).
 
-### Phase 2 — Name the memory taxonomy + harden reflection  🟡 **IN PROGRESS (inc 1 done)**
+### Phase 2 — Name the memory taxonomy + harden reflection  ✅ **COMPLETE (inc 1–4 done)**
 - Relabel shards as **episodic / semantic / procedural**; fold the skills/
   reusable‑action registry under procedural. **(increment 2 — additive label)**
 - Add **reflection grounding** (facts cite `evidence[]` IDs) and the
@@ -449,6 +449,37 @@ the settled "adapter/skill" vocabulary.
 > (the GC clock, distinct from the belief clock). Gate: librarian **71**, toolkit‑
 > ports **19** (CONTRADICT/floor‑guard via a fake LLM), phase1 **53**, run‑tests
 > **116**, demo‑beats‑e2e **26/26** real Chrome.
+
+> **Increments 2–4 landed (2026‑06‑26): taxonomy label + reflection grounding +
+> behavior‑summary/evidence‑discard**, all in
+> [librarian.js](../toolkit/core/librarian.js) plus a new pure module
+> [memory‑class.js](../toolkit/core/memory-class.js). 3‑lens adversarial review
+> came back **CLEAN** (0 mustFix; it independently re‑derived every safety
+> property). **(inc 2 — taxonomy label)** `memoryClassOf(record)` maps `kind` →
+> CoALA class (`observation`→episodic, `procedural`→procedural, else semantic);
+> stamped as a *derived, non‑persisted* field on `recall()` facts (`_memoryClass`)
+> and `listMemories()` output (`memoryClass`) — no rename, no migration, no stored
+> column. **(inc 3 — reflection grounding)** every derived fact now cites the
+> *episodic‑log entry ids* it was distilled from in a new `record.evidence` array
+> (a **separate id‑space** from a proposal's `evidence`, which still carries
+> memory‑record ids for the accept‑boost — the two never conflate, so the
+> accept‑boost is untouched). `extract` stamps `pending.map(e=>e.id)` on ADD /
+> SUPERSEDE‑new and unions it into UPDATE / NOOP (cap `slice(-20)`); `reflect`
+> promotion inherits the union of its source records' evidence (transitive
+> lineage survives the origin‑copy supersede). Additive (`normalizeRecord`
+> defaults `[]`, no migration). **(inc 4 — behavior‑summary + evidence‑discard,
+> the one intentional behavior change)** `reflect` now builds a **deterministic
+> `views.behaviorSummary`** (no LLM — counts by class, modal top settings, adapted
+> categories, pending‑observation count; the lossy human digest kept distinct from
+> the lossless fact store) and runs an **evidence‑discard prune**: a processed
+> episodic entry (`id<=cursor`) is dropped only when it is past a 7‑day grace AND
+> uncited by any *active* record's `evidence[]` (scanned over a **fresh**
+> `allMemoryShards()` so a just‑promoted category fact's lineage is honored);
+> unprocessed entries and the 500‑cap backstop are untouched. The id allocator was
+> floored at the cursor (`Math.max(lastId, cursor)+1`) so a pruned tail can never
+> reissue an id `<=cursor` that `extract` would silently skip. Gate: phase1 **60**,
+> toolkit‑ports **29**, librarian **71**, run‑tests **116**, demo‑beats‑e2e
+> **26/26** real Chrome, ai‑features‑e2e **20/20** real Chrome + Gemini.
 
 ### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)
 - `toolkit/sync/`: the lightweight layer from §6 — grants the user can see + a
