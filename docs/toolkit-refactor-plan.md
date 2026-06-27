@@ -481,7 +481,7 @@ the settled "adapter/skill" vocabulary.
 > toolkit‑ports **29**, librarian **71**, run‑tests **116**, demo‑beats‑e2e
 > **26/26** real Chrome, ai‑features‑e2e **20/20** real Chrome + Gemini.
 
-### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)
+### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)  🟡 **IN PROGRESS (inc 1 done)**
 - `toolkit/sync/`: the lightweight layer from §6 — grants the user can see + a
   **"what each app can see"** panel, **revoke = local delete**, cross‑app writes
   routed through the accessible **proposal/consent** path, the **acting‑user**
@@ -490,6 +490,39 @@ the settled "adapter/skill" vocabulary.
   SurfaceProfiles stay device‑local.
 - **Not** in this phase (**[product‑hardening]**): signed/quarantined writes,
   encrypted exports, tombstone propagation, HLC/CRDT sync, formal audit ledger.
+
+> **Increment plan (locked via a 3‑stance design panel, 2026‑06‑26):** (1)
+> grant model + read‑as‑a‑visible‑grant; (2) acting‑user partition (namespace
+> the `mine.*` stores by `actingUserId` — landed early because it can't be
+> retrofitted once data moves); (3) cross‑app insight as a write‑proposal +
+> global off switch; (4) Consent port `present()`/`capture()` + the popup
+> grants/insights UI; (5) local‑shared‑store transport; (6) user‑mediated
+> export/import blob (XR⇄web); (7) cross‑consumer stub + Phase 3 regression
+> trace. The hard‑to‑retrofit safety seams (default‑deny, consent‑reuse,
+> sender‑can't‑self‑resolve, acting‑user partition) are front‑loaded; transport
+> is deliberately deferred (nothing to transport until grants + a scoped export
+> exist).
+
+> **Increment 1 landed (2026‑06‑26): the cross‑app GRANT model**, on the
+> EXISTING proposal/consent machinery — only one net‑new store (`mine.grants`).
+> New pure module [toolkit/sync/grants.js](../toolkit/sync/grants.js)
+> (`GRANT_SCOPES` whitelist, `validateScopes`, `normalizeGrant`, `isActive`,
+> `filterAbilityModelByScopes`) + a [sync barrel](../toolkit/sync/index.js).
+> [librarian.js](../toolkit/core/librarian.js) gains `requestGrant` (drafts a
+> `grant-request` proposal via `_draftProposals` — suppression/cooldown/cap
+> apply for free; never mints a grant itself), `listGrants`, `revokeGrant`
+> (= local delete), and `exportAbilityModel` (default‑deny: no active grant →
+> `{ok:false}`; else a scope‑filtered, **read‑only, categories‑only** slice —
+> never `freeText`/`confidence`, never a SurfaceProfile). A grant is minted
+> ONLY by `respondToProposal('accept')` (new `grant-request` branch). `mine.grants`
+> is a `sync` catalog entry with no migration (lazy `def:[]`, like every reserved
+> store — `lastMigration` stays 3). A 3‑lens adversarial review caught one real
+> defect — the export **aliased** the stored `supportAreas` array, so an
+> in‑process consumer (the XR/ArtInsight target) could mutate it and write back
+> into the user's profile; fixed by copying every array/object at the projection
+> boundary (locked by an isolation test). Gate: phase3 **43** (new pure suite),
+> phase1 **60**, toolkit‑ports **36**, librarian **71**, run‑tests **116**,
+> demo‑beats‑e2e **26/26** real Chrome.
 
 ### Phase 4 — Prove it with a second consumer
 - Wire one non‑web host end‑to‑end against the spec: **ArtInsight** is the
