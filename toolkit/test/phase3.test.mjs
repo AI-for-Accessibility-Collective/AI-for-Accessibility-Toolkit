@@ -144,5 +144,58 @@ check('re-request during cooldown is suppressed (no new pending proposal)',
   req3.ok === false && req3.reason === 'suppressed'
   && (await lib.listProposals('pending')).filter(p => p.aspect === 'grant:artinsight').length === 0);
 
+// ======================= 4. acting-user partition (inc 2) =======================
+const kvP = memKV();
+const { datastore: dsP, librarian: libP } = createToolkit({ kv: kvP, clock, toolsRegistry });
+await dsP.runMigrations();
+
+check('default acting user is null (single-user)', libP.getActingUser().id === null);
+
+// Write data in the DEFAULT (null) partition.
+await libP.recordScopedSettings('general', { darkMode: true });
+await libP.setProfileField('supportAreas', ['vision']);
+const nullReq = await libP.requestGrant('app-a', ['language']);
+await libP.respondToProposal(nullReq.proposalId, 'accept');
+check('null partition has its data',
+  (await libP.getEffectivePreferences('https://x.test/', [])).settings.darkMode === true
+  && (await libP.listGrants()).length === 1);
+
+// Switch to a NAMED partition -> a clean slate (isolation).
+const sw = await libP.setActingUser('alice');
+check('setActingUser alice ok', sw.ok === true && sw.id === 'alice' && libP.getActingUser().id === 'alice');
+check('alice partition is empty (profile/grants/prefs isolated)',
+  (await libP.getEffectivePreferences('https://x.test/', [])).settings.darkMode === undefined
+  && (await libP.listGrants()).length === 0
+  && (await libP.getProfile()).supportAreas.length === 0);
+check('alice sees no general memory shard', (await dsP.getMemoryShard('general')).length === 0);
+check('alice allMemoryShards excludes the null partition', Object.keys(await dsP.allMemoryShards()).length === 0);
+
+// Write alice-specific data, then round-trip back to null.
+await libP.recordScopedSettings('general', { fontScale: 150 });
+check('alice can write her own partition', (await libP.getEffectivePreferences('https://x.test/', [])).settings.fontScale === 150);
+await libP.setActingUser(null);
+const back = await libP.getEffectivePreferences('https://x.test/', []);
+check('null data intact after round-trip; alice data not visible',
+  back.settings.darkMode === true && back.settings.fontScale === undefined
+  && (await libP.listGrants()).length === 1
+  && (await libP.getProfile()).supportAreas[0] === 'vision');
+
+// bad id rejected; partition unchanged.
+const badId = await libP.setActingUser('has spaces!');
+check('bad acting-user id rejected, partition unchanged', badId.ok === false && badId.reason === 'bad-id' && libP.getActingUser().id === null);
+
+// Physical layout: null = ORIGINAL keys (no migration); alice under the prefix.
+check('null partition at original key (back-compat, no migration)', (await kvP.get('sync', 'aa.mine.grants')).length === 1);
+check('alice data under the aa.u.alice:: prefix', (await kvP.get('local', 'aa.u.alice::aa.mine.memory.general')) !== undefined);
+check('null grant key contains no partition leak', JSON.stringify(await kvP.get('sync', 'aa.mine.grants')).indexOf('alice') === -1);
+
+// helperMode flag + persistence across a fresh datastore (reload).
+await libP.setActingUser('bob', { helperMode: true });
+check('helperMode flag set on bob', libP.getActingUser().id === 'bob' && libP.getActingUser().helperMode === true);
+const { datastore: dsP2, librarian: libP2 } = createToolkit({ kv: kvP, clock, toolsRegistry });
+await dsP2.runMigrations(); // loadActingUser() restores the pointer
+check('acting user persists across a fresh datastore (reload -> bob)', libP2.getActingUser().id === 'bob' && libP2.getActingUser().helperMode === true);
+check('migrations stamp the partition scheme', (await dsP2.runMigrations()).partitionScheme === 1);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

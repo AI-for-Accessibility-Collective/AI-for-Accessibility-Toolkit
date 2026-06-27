@@ -88,6 +88,27 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
 
   const META_KEY = 'aa.meta'; // local: { storeVersions, taxonomyVersion, lastMigratedAt }
 
+  // --- Acting-user partition (Phase 3) -------------------------------------
+  // A lightweight "who's using this now?" partition so two people on one
+  // device/headset never cross-contaminate. The user-owned stores (every
+  // catalog entry + the dynamic memory shards) are NAMESPACED by the active
+  // partition; the null partition (default single user) is byte-identical to
+  // the pre-partition keys, so existing data needs NO data migration. The
+  // pointer to the active partition is itself stored here — local and NEVER
+  // partitioned (chicken-and-egg) — alongside a `helperMode` flag for
+  // helper-assisted setup. helperMode is intentionally a GLOBAL session flag
+  // (it describes the assisted-setup session, not a per-user property), so it
+  // is not partitioned. The global tier (tools/taxonomy) and META are never
+  // partitioned either.
+  const ACTING_USER_KEY = 'aa.actingUser'; // local, NON-partitioned: { id, helperMode }
+  // Excluding ':' (and '.') is what makes the `aa.u.<id>::` separator
+  // unforgeable: a validated id can never contain '::', so the (id, key) →
+  // physical-key mapping is injective and no id can alias another namespace.
+  const VALID_ACTING_ID = /^[A-Za-z0-9_-]{1,32}$/;
+  const PARTITION_SCHEME = 1;
+  let _actingUserId = null;  // active partition; null = default single-user (today's keys)
+  let _helperMode = false;
+
   // --- KVStore promise helpers ---------------------------------------------
   async function rawGet(area, key, def) {
     const v = await kv.get(area, key);
@@ -96,6 +117,23 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
 
   async function rawSet(area, key, value) {
     await kv.set(area, key, value);
+  }
+
+  // Physical-key derivation for the active partition. A named partition
+  // prefixes every user-owned key with `aa.u.<id>::` — a namespace disjoint
+  // from the null partition because no catalog/shard key starts with `aa.u.`
+  // (so the null partition's prefix scans can never see a named partition's
+  // data, and vice-versa). null partition → key unchanged.
+  function partitionKey(physKey) {
+    return _actingUserId ? `aa.u.${_actingUserId}::${physKey}` : physKey;
+  }
+
+  // Load the persisted active-partition pointer into memory. Called at the top
+  // of runMigrations (host startup), before any partitioned access.
+  async function loadActingUser() {
+    const rec = await rawGet('local', ACTING_USER_KEY, null);
+    _actingUserId = rec && typeof rec.id === 'string' && VALID_ACTING_ID.test(rec.id) ? rec.id : null;
+    _helperMode = !!(rec && rec.helperMode);
   }
 
   // --- Migrations scaffold ---------------------------------------------------
@@ -155,6 +193,13 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
   ];
 
   async function runMigrations() {
+    // Restore the active partition BEFORE migrating so data migrations target
+    // the right partition. NOTE: migrations run against the ACTIVE partition
+    // only. In the prototype the only legacy data is the null partition
+    // (migrated in the single-user era); named partitions are born after the
+    // migrations exist, so their writes are already current-schema. A
+    // per-partition migration sweep is product-hardening, not prototype work.
+    await loadActingUser();
     const meta = (await rawGet('local', META_KEY, null)) || { lastMigration: 0 };
     let applied = false;
     for (const m of MIGRATIONS) {
@@ -167,6 +212,7 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
       Object.entries(CATALOG).map(([n, d]) => [n, d.version])
     );
     meta.memoryVersion = MEMORY_VERSION;
+    meta.partitionScheme = PARTITION_SCHEME; // records the acting-user key scheme (no data migration)
     meta.taxonomyVersion = taxonomy ? taxonomy.version : null;
     if (applied || !meta.lastMigratedAt) meta.lastMigratedAt = clock.now();
     await rawSet('local', META_KEY, meta);
@@ -183,13 +229,13 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     async get(name) {
       const d = CATALOG[name];
       if (!d) throw new Error(`Datastore: unknown store "${name}"`);
-      return await rawGet(d.area, d.key, structuredClone(d.def));
+      return await rawGet(d.area, partitionKey(d.key), structuredClone(d.def));
     },
 
     async set(name, value) {
       const d = CATALOG[name];
       if (!d) throw new Error(`Datastore: unknown store "${name}"`);
-      await rawSet(d.area, d.key, value);
+      await rawSet(d.area, partitionKey(d.key), value);
     },
 
     // Read-modify-write. fn receives the current value and returns the new
@@ -213,25 +259,52 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     },
 
     async getMemoryShard(scope) {
-      return await rawGet('local', this.memoryShardKey(scope), []);
+      return await rawGet('local', partitionKey(this.memoryShardKey(scope)), []);
     },
 
     async setMemoryShard(scope, records) {
-      await rawSet('local', this.memoryShardKey(scope), records);
+      await rawSet('local', partitionKey(this.memoryShardKey(scope)), records);
     },
 
-    // Every memory shard, as { scope: records }. Replaces the Librarian's
-    // former direct `chrome.storage.local.get(null)` scans, keeping the
-    // facade the single place that knows the shard prefix.
+    // Every memory shard of the ACTIVE partition, as { scope: records }.
+    // Replaces the Librarian's former direct `chrome.storage.local.get(null)`
+    // scans, keeping the facade the single place that knows the shard prefix.
+    // The partitioned prefix isolates partitions: the null partition's prefix
+    // (`aa.mine.memory.`) never matches a named partition's `aa.u.<id>::…` key,
+    // and a named partition's prefix matches only its own.
     async allMemoryShards() {
       const all = await kv.getAll('local');
+      const prefix = partitionKey(MEMORY_SHARD_PREFIX);
       const out = {};
       for (const [key, recs] of Object.entries(all || {})) {
-        if (key.startsWith(MEMORY_SHARD_PREFIX)) {
-          out[key.slice(MEMORY_SHARD_PREFIX.length)] = recs || [];
+        if (key.startsWith(prefix)) {
+          out[key.slice(prefix.length)] = recs || [];
         }
       }
       return out;
+    },
+
+    // ---- acting-user partition (Phase 3) ----
+    // Switch the active partition. `id=null` restores the default single-user
+    // data (today's keys, unchanged). A named id (`[A-Za-z0-9_-]{1,32}`) gives
+    // a disjoint, lazily-created partition. Persists the pointer (local,
+    // non-partitioned) so it survives a service-worker restart. Returns
+    // {ok, id, helperMode} or {ok:false, reason:'bad-id'}.
+    async setActingUser(id, opts = {}) {
+      if (id != null && !(typeof id === 'string' && VALID_ACTING_ID.test(id))) {
+        return { ok: false, reason: 'bad-id' };
+      }
+      _actingUserId = id == null ? null : id;
+      if (opts.helperMode != null) _helperMode = !!opts.helperMode;
+      await rawSet('local', ACTING_USER_KEY, { id: _actingUserId, helperMode: _helperMode });
+      return { ok: true, id: _actingUserId, helperMode: _helperMode };
+    },
+
+    // The active partition + helper-mode flag. In-memory: only correct AFTER
+    // loadActingUser() has run (top of runMigrations) — a caller before startup
+    // completes sees the default-null partition, which is the safe default.
+    getActingUser() {
+      return { id: _actingUserId, helperMode: _helperMode };
     },
 
     // Global tier — read-only, supplied by the host at construction.

@@ -74,12 +74,25 @@
     const MEMORY_SHARD_PREFIX = "aa.mine.memory.";
     const MEMORY_VERSION = 1;
     const META_KEY = "aa.meta";
+    const ACTING_USER_KEY = "aa.actingUser";
+    const VALID_ACTING_ID = /^[A-Za-z0-9_-]{1,32}$/;
+    const PARTITION_SCHEME = 1;
+    let _actingUserId = null;
+    let _helperMode = false;
     async function rawGet(area, key, def) {
       const v = await kv.get(area, key);
       return v === void 0 ? def : v;
     }
     async function rawSet(area, key, value) {
       await kv.set(area, key, value);
+    }
+    function partitionKey(physKey) {
+      return _actingUserId ? `aa.u.${_actingUserId}::${physKey}` : physKey;
+    }
+    async function loadActingUser() {
+      const rec = await rawGet("local", ACTING_USER_KEY, null);
+      _actingUserId = rec && typeof rec.id === "string" && VALID_ACTING_ID.test(rec.id) ? rec.id : null;
+      _helperMode = !!(rec && rec.helperMode);
     }
     const MIGRATIONS = [
       {
@@ -136,6 +149,7 @@
       }
     ];
     async function runMigrations() {
+      await loadActingUser();
       const meta = await rawGet("local", META_KEY, null) || { lastMigration: 0 };
       let applied = false;
       for (const m of MIGRATIONS) {
@@ -148,6 +162,7 @@
         Object.entries(CATALOG).map(([n, d]) => [n, d.version])
       );
       meta.memoryVersion = MEMORY_VERSION;
+      meta.partitionScheme = PARTITION_SCHEME;
       meta.taxonomyVersion = taxonomy ? taxonomy.version : null;
       if (applied || !meta.lastMigratedAt) meta.lastMigratedAt = clock.now();
       await rawSet("local", META_KEY, meta);
@@ -160,12 +175,12 @@
       async get(name) {
         const d = CATALOG[name];
         if (!d) throw new Error(`Datastore: unknown store "${name}"`);
-        return await rawGet(d.area, d.key, structuredClone(d.def));
+        return await rawGet(d.area, partitionKey(d.key), structuredClone(d.def));
       },
       async set(name, value) {
         const d = CATALOG[name];
         if (!d) throw new Error(`Datastore: unknown store "${name}"`);
-        await rawSet(d.area, d.key, value);
+        await rawSet(d.area, partitionKey(d.key), value);
       },
       // Read-modify-write. fn receives the current value and returns the new
       // one (or mutates and returns the same reference). KVStore writes are
@@ -186,23 +201,48 @@
         return MEMORY_SHARD_PREFIX + scope;
       },
       async getMemoryShard(scope) {
-        return await rawGet("local", this.memoryShardKey(scope), []);
+        return await rawGet("local", partitionKey(this.memoryShardKey(scope)), []);
       },
       async setMemoryShard(scope, records) {
-        await rawSet("local", this.memoryShardKey(scope), records);
+        await rawSet("local", partitionKey(this.memoryShardKey(scope)), records);
       },
-      // Every memory shard, as { scope: records }. Replaces the Librarian's
-      // former direct `chrome.storage.local.get(null)` scans, keeping the
-      // facade the single place that knows the shard prefix.
+      // Every memory shard of the ACTIVE partition, as { scope: records }.
+      // Replaces the Librarian's former direct `chrome.storage.local.get(null)`
+      // scans, keeping the facade the single place that knows the shard prefix.
+      // The partitioned prefix isolates partitions: the null partition's prefix
+      // (`aa.mine.memory.`) never matches a named partition's `aa.u.<id>::…` key,
+      // and a named partition's prefix matches only its own.
       async allMemoryShards() {
         const all = await kv.getAll("local");
+        const prefix = partitionKey(MEMORY_SHARD_PREFIX);
         const out = {};
         for (const [key, recs] of Object.entries(all || {})) {
-          if (key.startsWith(MEMORY_SHARD_PREFIX)) {
-            out[key.slice(MEMORY_SHARD_PREFIX.length)] = recs || [];
+          if (key.startsWith(prefix)) {
+            out[key.slice(prefix.length)] = recs || [];
           }
         }
         return out;
+      },
+      // ---- acting-user partition (Phase 3) ----
+      // Switch the active partition. `id=null` restores the default single-user
+      // data (today's keys, unchanged). A named id (`[A-Za-z0-9_-]{1,32}`) gives
+      // a disjoint, lazily-created partition. Persists the pointer (local,
+      // non-partitioned) so it survives a service-worker restart. Returns
+      // {ok, id, helperMode} or {ok:false, reason:'bad-id'}.
+      async setActingUser(id, opts = {}) {
+        if (id != null && !(typeof id === "string" && VALID_ACTING_ID.test(id))) {
+          return { ok: false, reason: "bad-id" };
+        }
+        _actingUserId = id == null ? null : id;
+        if (opts.helperMode != null) _helperMode = !!opts.helperMode;
+        await rawSet("local", ACTING_USER_KEY, { id: _actingUserId, helperMode: _helperMode });
+        return { ok: true, id: _actingUserId, helperMode: _helperMode };
+      },
+      // The active partition + helper-mode flag. In-memory: only correct AFTER
+      // loadActingUser() has run (top of runMigrations) — a caller before startup
+      // completes sees the default-null partition, which is the safe default.
+      getActingUser() {
+        return { id: _actingUserId, helperMode: _helperMode };
       },
       // Global tier — read-only, supplied by the host at construction.
       global: {

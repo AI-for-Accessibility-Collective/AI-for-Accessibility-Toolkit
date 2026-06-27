@@ -636,6 +636,21 @@
         const abilityModel = await this.getAbilityModel();
         return { ok: true, abilityModel: filterAbilityModelByScopes(abilityModel, grant.scopes) };
       },
+      // ====================== ACTING USER (Phase 3) ======================
+      // A lightweight "who's using this now?" partition so two people on one
+      // device/headset never cross-contaminate. The datastore owns the physical
+      // key-derivation (every mine.* store + memory shard is namespaced by the
+      // active partition; null = the default single-user data, unchanged); the
+      // Librarian just exposes the switch and refreshes the badge, since the
+      // pending-proposal count is per-partition.
+      async setActingUser(id, opts = {}) {
+        const res = await DS().setActingUser(id, opts);
+        await updateBadge();
+        return res;
+      },
+      getActingUser() {
+        return DS().getActingUser();
+      },
       // Prompt for the popup's "what support do you need?" flow. The Librarian
       // owns it so the "does this exist in the global db?" decision is grounded
       // in the actual tools registry (Datastore.global.tools) and conditioned
