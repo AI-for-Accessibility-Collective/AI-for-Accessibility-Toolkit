@@ -226,6 +226,18 @@ const mk = (scope, settings, extra = {}) => ({
   check('grant: revoke = delete (export now denied)', (await L.exportAbilityModel('xr-headset')).ok === false);
   check('grant store lives in the sync area', DS.catalog()['mine.grants'].area === 'sync');
 
+  // H. Phase 3 inc 2: acting-user partition against the BUILT bundle (proves
+  //    the datastore's key-derivation survives esbuild + classic-script eval).
+  check('default acting user is null', L.getActingUser().id === null);
+  await L.setActingUser('guest');
+  check('switched to guest partition', L.getActingUser().id === 'guest');
+  await L.recordScopedSettings('origin:guesttest.com', { fontScale: 175 });
+  check('guest sees its own write', (await L.getEffectivePreferences('https://guesttest.com/', [])).settings.fontScale === 175);
+  check('guest data stored under the aa.u.guest:: prefix', stores.local['aa.u.guest::aa.mine.memory.origin:guesttest.com'] !== undefined);
+  await L.setActingUser(null);
+  check('null partition does NOT see the guest write (isolation)',
+    (await L.getEffectivePreferences('https://guesttest.com/', [])).settings.fontScale === undefined);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('CRASH:', e); process.exit(1); });

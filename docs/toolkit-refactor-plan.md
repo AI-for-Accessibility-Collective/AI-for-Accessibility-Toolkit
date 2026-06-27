@@ -524,6 +524,27 @@ the settled "adapter/skill" vocabulary.
 > phase1 **60**, toolkit‑ports **36**, librarian **71**, run‑tests **116**,
 > demo‑beats‑e2e **26/26** real Chrome.
 
+> **Increment 2 landed (2026‑06‑26): the acting‑user partition** — a "who's
+> using this now?" selector so two people on one device/headset never
+> cross‑contaminate. Implemented at the datastore's physical key‑derivation
+> layer ([datastore.js](../toolkit/core/datastore.js)): `partitionKey(physKey)`
+> returns the key **byte‑identical** for the null (default single‑user) partition
+> — so existing data needs **no migration** — and prefixes `aa.u.<id>::` for a
+> named partition. `get`/`set`/`getMemoryShard`/`setMemoryShard`/`allMemoryShards`
+> all route through it; the null and named namespaces are **provably disjoint**
+> (no catalog/shard key starts with `aa.u.`), so the prefix scan can't leak across
+> partitions. `setActingUser(id, {helperMode})` (validated `[A-Za-z0-9_-]{1,32}`,
+> persisted to a non‑partitioned `aa.actingUser` pointer, reloaded at the top of
+> `runMigrations`) / `getActingUser()`; `Librarian` delegates + refreshes the
+> per‑partition badge. A 3‑lens adversarial review (**MINOR‑ONLY**, 0 mustFix)
+> verified total isolation / back‑compat / key‑injection safety / persistence.
+> **Known limitation (documented in [CLAUDE.md](../CLAUDE.md)):** background
+> jobs (debounced `extract`/`reflect`, grant export) run against the partition
+> active at fire‑time, not enqueue‑time — bounded by single‑user‑default + rare
+> switching; **inc 3 must anchor jobs to a captured partition** before cross‑app
+> switching becomes routine. Gate: phase3 **58**, phase1 60, toolkit‑ports **41**,
+> librarian 71, run‑tests 116, demo‑beats‑e2e **26/26** real Chrome.
+
 ### Phase 4 — Prove it with a second consumer
 - Wire one non‑web host end‑to‑end against the spec: **ArtInsight** is the
   cleanest target — its LLM calls are centralized in `OpenAIService`/`Request`,
