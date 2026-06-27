@@ -205,5 +205,15 @@ check('resolveWebPreferences: unmappable ability need reported unmet',
   csN.surface.unmet.some(u => u.key === 'spatialAudio') && csN.surface.satisfied === false);
 check('resolveWebPreferences: unmappable need does not pollute settings', !('spatialAudio' in csN.settings));
 
+// ======================= 7. migration id 3 backfills lastConfirmedAt =======================
+const { datastore: dsMig } = createToolkit({ kv: memKV(), toolsRegistry });
+// Insert a record with NO lastConfirmedAt BEFORE migrating (fresh toolkit → id 1,2,3 run now).
+await dsMig.setMemoryShard('general', [{ id: 'mig-x', settings: { fontScale: 150 }, status: 'active', updatedAt: 1000, createdAt: 500 }]);
+const mig = await dsMig.runMigrations();
+check('migrations reach id 3', mig.lastMigration === 3);
+const migShard = await dsMig.getMemoryShard('general');
+check('migration id 3 backfills lastConfirmedAt from updatedAt', migShard[0].lastConfirmedAt === 1000);
+check('migration id 2 left canonical settings untouched', migShard[0].settings.fontScale === 150);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
