@@ -151,6 +151,62 @@ const mk = (scope, settings, extra = {}) => ({
     Math.abs(cFloor.confidence - 0.7) < 1e-9);
   check('NOOP reconfirmation bumped lastConfirmedAt', cNoop.lastConfirmedAt >= now);
 
+  // F. Phase 2 inc 3-4: reflection grounding, memoryClass label, behavior-
+  //    summary view, and the evidence-discard prune.
+  // F1. Grounding — an ADDed fact cites the episodic-log ids it was distilled
+  //     from (episodic id-space, distinct from a proposal's record-id evidence).
+  await DS.setMemoryShard('category:education', []);
+  stores.local['aa.mine.episodicLog'] = { cursor: 2000, entries: [
+    { id: 2001, t: now, type: 'setting-change', weight: 3, origin: 'coursera.org', category: 'education', data: {}, text: 'enabled dark mode' },
+    { id: 2002, t: now, type: 'setting-change', weight: 3, origin: 'coursera.org', category: 'education', data: {}, text: 'enabled dark mode again' },
+  ] };
+  L.setGeminiCaller(async () => JSON.stringify({ operations: [
+    { op: 'ADD', record: { text: 'prefers dark mode on education sites', scope: 'category:education', settings: { darkMode: true }, tier: 'preference', kind: 'preference', importance: 6, confidence: 0.8, decayClass: 'slow' } },
+  ], proposals: [] }));
+  await L.extract();
+  const eduShard = await DS.getMemoryShard('category:education');
+  const grounded = eduShard.find(r => r.settings && r.settings.darkMode === true);
+  check('grounding: ADDed fact cites the consumed episodic entry ids',
+    grounded && JSON.stringify(grounded.evidence) === JSON.stringify([2001, 2002]));
+
+  // F2. listMemories stamps the derived memoryClass (additive, non-persisted).
+  const lmEdu = await L.listMemories({ scope: 'category:education' });
+  check('listMemories stamps memoryClass=semantic on a preference',
+    lmEdu.memories.find(m => m.id === grounded.id)?.memoryClass === 'semantic');
+  check('memoryClass is NOT persisted to the shard',
+    (await DS.getMemoryShard('category:education'))[0].memoryClass === undefined);
+
+  // F3 + F4. One reflect() that exercises BOTH the behavior-summary view and
+  //          the evidence-discard prune. Discard scenario: 3001 is old +
+  //          processed + uncited (drop); 3002 is old + processed but cited by an
+  //          active record (keep its lineage); 3003 is unprocessed (keep).
+  const OLD = now - 40 * 24 * 3600 * 1000; // outside the 7-day grace
+  stores.local['aa.mine.episodicLog'] = { cursor: 3002, entries: [
+    { id: 3001, t: OLD, type: 'observation', weight: 1, origin: 'x.test', category: null, data: {}, text: 'old uncited' },
+    { id: 3002, t: OLD, type: 'observation', weight: 1, origin: 'x.test', category: null, data: {}, text: 'old but cited' },
+    { id: 3003, t: now, type: 'observation', weight: 1, origin: 'x.test', category: null, data: {}, text: 'unprocessed' },
+  ] };
+  await DS.setMemoryShard('origin:x.test', [mk('origin:x.test', { darkMode: true }, { id: 'cite-r', evidence: [3002] })]);
+  const rfl = await L.reflect();
+  const views = await DS.get('mine.views');
+  check('reflect builds a deterministic behaviorSummary view',
+    views.behaviorSummary && typeof views.behaviorSummary.text === 'string' && views.behaviorSummary.counts.semantic >= 1);
+  check('behaviorSummary lists the education category adaptation',
+    views.behaviorSummary.categories.includes('education'));
+  const logAfter = await DS.get('mine.episodicLog');
+  const idsAfter = logAfter.entries.map(e => e.id);
+  check('evidence-discard dropped the old, processed, UNCITED entry', !idsAfter.includes(3001));
+  check('evidence-discard KEPT the still-cited entry (lineage)', idsAfter.includes(3002));
+  check('evidence-discard KEPT the unprocessed entry', idsAfter.includes(3003));
+  check('reflect reports a discarded count', rfl.discarded >= 1);
+
+  // F5. id-allocator guard: after a prune, a new observation must get an id
+  //     strictly above the cursor (never reissue a pruned id <= cursor).
+  await L.logObservation({ type: 'setting-change', text: 'post-prune', origin: 'x.test' });
+  const logNew = await DS.get('mine.episodicLog');
+  check('post-prune observation got an id above the cursor',
+    logNew.entries[logNew.entries.length - 1].id > logNew.cursor);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('CRASH:', e); process.exit(1); });

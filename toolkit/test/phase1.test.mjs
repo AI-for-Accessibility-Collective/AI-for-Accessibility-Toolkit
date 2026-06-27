@@ -10,6 +10,7 @@ import { coerceSetting, coerceSettings, clampSetting, unitOf } from '../core/uni
 import { createSurfaceAdapter } from '../core/surface.js';
 import { createWebSurface, deriveWebSettings, resolveWebPreferences } from '../adapters/chrome/web-surface.js';
 import { toAbilityModel } from '../core/ability.js';
+import { memoryClassOf, MEMORY_CLASSES } from '../core/memory-class.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -214,6 +215,17 @@ check('migrations reach id 3', mig.lastMigration === 3);
 const migShard = await dsMig.getMemoryShard('general');
 check('migration id 3 backfills lastConfirmedAt from updatedAt', migShard[0].lastConfirmedAt === 1000);
 check('migration id 2 left canonical settings untouched', migShard[0].settings.fontScale === 150);
+
+// ======================= 8. memory-class label (Phase 2 inc 2) =======================
+// Pure derivation over `kind`, total over any input (additive, non-persisted).
+check('memoryClassOf: observation -> episodic', memoryClassOf({ kind: 'observation' }) === 'episodic');
+check('memoryClassOf: procedural -> procedural', memoryClassOf({ kind: 'procedural' }) === 'procedural');
+check('memoryClassOf: preference -> semantic', memoryClassOf({ kind: 'preference' }) === 'semantic');
+check('memoryClassOf: rule -> semantic', memoryClassOf({ kind: 'rule' }) === 'semantic');
+check('memoryClassOf: suppression -> semantic', memoryClassOf({ kind: 'suppression' }) === 'semantic');
+check('memoryClassOf: unknown/missing/null -> semantic (safe default)',
+  memoryClassOf({ kind: 'zzz' }) === 'semantic' && memoryClassOf({}) === 'semantic' && memoryClassOf(null) === 'semantic');
+check('MEMORY_CLASSES enumerates the three classes', MEMORY_CLASSES.join(',') === 'episodic,semantic,procedural');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

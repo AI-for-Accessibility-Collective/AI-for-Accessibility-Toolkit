@@ -34,6 +34,7 @@ import { noopDemo, noopConsent, noopScheduler } from '../ports/index.js';
 import { coerceSettings, clampSettings } from './units.js';
 import { STRENGTH_RANK, rankOf } from './strength.js';
 import { toAbilityModel } from './ability.js';
+import { memoryClassOf } from './memory-class.js';
 
 /**
  * @param {Object} deps
@@ -180,6 +181,12 @@ export function createLibrarian({
     r.status = ['active', 'superseded', 'expired'].includes(r.status) ? r.status : 'active';
     r.supersededBy = r.supersededBy || null;
     r.source = r.source || 'inferred';
+    // Reflection grounding (Phase 2): the episodic-log entry ids this derived
+    // fact was distilled from. Lineage only — a separate id-space from a
+    // proposal's `evidence` (which carries memory-record ids for the accept
+    // confidence boost). Additive: absent on legacy records, defaults to []
+    // (no migration). Capped so a long-lived record can't grow it unbounded.
+    r.evidence = Array.isArray(r.evidence) ? r.evidence.slice(-20) : [];
     return r;
   }
 
@@ -469,7 +476,9 @@ export function createLibrarian({
       for (const s of scopes) {
         for (const r of (shards[s] || [])) {
           if (r.status !== 'active' || r.kind === 'suppression' || !conditionsMet(r, now)) continue;
-          facts.push({ ...r, _scope: s, _score: scoreRecord(r, now) });
+          // _memoryClass is a derived CoALA label (episodic/semantic/procedural),
+          // additive and non-persisted — see ./memory-class.js.
+          facts.push({ ...r, _scope: s, _score: scoreRecord(r, now), _memoryClass: memoryClassOf(r) });
         }
       }
       facts.sort((a, b) => b._score - a._score);
@@ -511,7 +520,8 @@ export function createLibrarian({
         for (const r of (recs || [])) {
           if (filter.status && r.status !== filter.status) continue;
           if (filter.scope && scope !== filter.scope) continue;
-          out.push({ ...r, scope });
+          // memoryClass: derived CoALA label, additive (see ./memory-class.js).
+          out.push({ ...r, scope, memoryClass: memoryClassOf(r) });
         }
       }
       const supp = await DS().get('mine.suppressions');
@@ -602,7 +612,13 @@ Return ONLY valid JSON with:
       // exploration (setting-flipping).
       const WEIGHTS = { 'setting-change': 3, 'profile-applied': 3, 'saved-action': 3, onboarding: 3, 'agent-task': 2 };
       await DS().patch('mine.episodicLog', (log) => {
-        const id = (log.entries.length ? log.entries[log.entries.length - 1].id : log.cursor) + 1;
+        // id must stay strictly above BOTH the last entry and the cursor. The
+        // cursor floor matters once the evidence-discard prune (reflect) can
+        // drop processed tail entries: without it, a pruned log could reissue an
+        // id <= cursor, and extract (which only sees id > cursor) would silently
+        // skip the new observation. Monotonic by construction.
+        const lastId = log.entries.length ? log.entries[log.entries.length - 1].id : 0;
+        const id = Math.max(lastId, log.cursor) + 1;
         log.entries.push({
           id,
           t: clock.now(),
@@ -845,11 +861,17 @@ Rules:
       }
       if (!parsed) return { ran: false, reason: 'unparseable' };
 
+      // Reflection grounding: the raw episodic entries this extraction batch
+      // consumed. Every fact ADDed/UPDATEd/superseded in this run cites them as
+      // its evidence (episodic-log id-space) so the evidence-discard policy can
+      // later tell which raw observations a surviving fact still depends on.
+      const evidenceIds = pending.map(e => e.id);
+
       const applied = { ADD: 0, UPDATE: 0, SUPERSEDE: 0, NOOP: 0, CONTRADICT: 0 };
       for (const op of (parsed.operations || [])) {
         try {
           if (op.op === 'ADD' && op.record) {
-            const rec = normalizeRecord(op.record, now);
+            const rec = normalizeRecord({ ...op.record, evidence: evidenceIds }, now);
             const shard = await DS().getMemoryShard(rec.scope);
             shard.push(rec);
             await DS().setMemoryShard(rec.scope, shard);
@@ -863,6 +885,7 @@ Rules:
             if (op.op === 'NOOP') {
               r.occurrenceCount = (r.occurrenceCount || 1) + 1;
               r.lastConfirmedAt = now; // a repeat sighting reconfirms the belief
+              r.evidence = [...new Set([...(r.evidence || []), ...evidenceIds])].slice(-20);
               r.updatedAt = now;
             } else if (op.op === 'UPDATE') {
               if (op.text) r.text = String(op.text).slice(0, 500);
@@ -870,6 +893,7 @@ Rules:
               r.occurrenceCount = (r.occurrenceCount || 1) + 1;
               r.confidence = Math.min(1, (r.confidence ?? 0.7) + 0.05);
               r.lastConfirmedAt = now; // a refinement reconfirms the belief
+              r.evidence = [...new Set([...(r.evidence || []), ...evidenceIds])].slice(-20);
               r.updatedAt = now;
             } else if (op.op === 'CONTRADICT') {
               // The user did the OPPOSITE of an inferred belief but not
@@ -887,7 +911,7 @@ Rules:
                 r.confidence = Math.max(0, (r.confidence ?? 0.7) - 0.2);
                 r.updatedAt = now;
               } else {
-                const rec = normalizeRecord(op.record, now);
+                const rec = normalizeRecord({ ...op.record, evidence: evidenceIds }, now);
                 r.status = 'superseded';
                 r.supersededBy = rec.id;
                 r.updatedAt = now;
@@ -982,6 +1006,10 @@ Rules:
           importance: 6, confidence: 0.85, decayClass: 'slow',
           settings: { [k]: v }, source: 'reflection-promotion',
           occurrenceCount: group.length,
+          // Transitive grounding: a promoted category fact inherits the episodic
+          // evidence of the origin records it consolidates, so its lineage to raw
+          // observations survives even after those origin copies are superseded.
+          evidence: [...new Set(group.flatMap(g => g.record.evidence || []))].slice(-20),
         }, now);
         catShard.push(rec);
         await DS().setMemoryShard(catScope, catShard);
@@ -1053,6 +1081,65 @@ Rules:
           } catch { /* keep old playbook */ }
         }
       }
+      // 3b. Behavior-summary view (deterministic, NO LLM — works offline and is
+      //     demo-reliable). A lossy, human-facing digest of HOW the user adapts
+      //     pages, deliberately distinct from the lossless fact store: counts by
+      //     memory class, the settings they most consistently choose, and the
+      //     site categories they adapt. Naive LLM summarization drops ~20% of
+      //     facts, so the digest is derived, the shards stay the source of truth.
+      // Read the CURRENT shard set (not the stale `shards` snapshot from the
+      // top of reflect): a fact promotion just created in step 1 should be
+      // counted in this run's digest, not only the next one.
+      const summaryShards = await DS().allMemoryShards();
+      const activeRecs = [];
+      for (const [scope, recs] of Object.entries(summaryShards)) {
+        for (const r of (recs || [])) {
+          if (r.status === 'active') activeRecs.push({ ...r, _scope: scope });
+        }
+      }
+      const classCounts = { episodic: 0, semantic: 0, procedural: 0 };
+      const settingTally = {};       // key -> { JSON(value) -> count }
+      const categoriesAdapted = new Set();
+      for (const r of activeRecs) {
+        classCounts[memoryClassOf(r)]++;
+        if (r._scope.startsWith('category:')) categoriesAdapted.add(r._scope.slice('category:'.length));
+        for (const [k, v] of Object.entries(r.settings || {})) {
+          (settingTally[k] = settingTally[k] || {});
+          const vk = JSON.stringify(v);
+          settingTally[k][vk] = (settingTally[k][vk] || 0) + 1;
+        }
+      }
+      // Modal value per setting key, most-used first.
+      const topSettings = Object.entries(settingTally).map(([key, vals]) => {
+        const [vk, count] = Object.entries(vals).sort((a, b) => b[1] - a[1])[0];
+        return { key, value: JSON.parse(vk), count };
+      }).sort((a, b) => b.count - a.count).slice(0, 8);
+      const reflectLog = await DS().get('mine.episodicLog');
+      const pendingObs = reflectLog.entries.filter(e => e.id > reflectLog.cursor).length;
+      // The line reports semantic + procedural only: episodic memory lives in
+      // the LOG, not the shards (a consolidated record is never kind
+      // 'observation'), so classCounts.episodic is structurally 0 here — the
+      // episodic dimension surfaces instead as `pendingObservations`.
+      const summaryLines = [
+        `Tracking ${activeRecs.length} consolidated ${activeRecs.length === 1 ? 'memory' : 'memories'}`
+        + ` (${classCounts.semantic} preference, ${classCounts.procedural} how-to)`
+        + (pendingObs ? `; ${pendingObs} new observation${pendingObs === 1 ? '' : 's'} awaiting consolidation.` : '.'),
+      ];
+      if (topSettings.length) {
+        summaryLines.push('Most consistent adaptations:');
+        for (const s of topSettings) summaryLines.push(`- ${s.key} = ${JSON.stringify(s.value)} (${s.count}×)`);
+      }
+      if (categoriesAdapted.size) {
+        summaryLines.push(`Site-specific adaptations on: ${[...categoriesAdapted].sort().join(', ')}.`);
+      }
+      views.behaviorSummary = {
+        text: summaryLines.join('\n'),
+        counts: { ...classCounts, pendingObservations: pendingObs },
+        topSettings,
+        categories: [...categoriesAdapted].sort(),
+        renderedAt: now,
+      };
+
       views.renderedAt = now;
       await DS().set('mine.views', views);
 
@@ -1067,8 +1154,44 @@ Rules:
         if (dirty) await DS().setMemoryShard(scope, recs);
       }
 
+      // 5. Evidence-discard policy (the XR note "store all observations →
+      //    validate → discard evidence"). Once an observation has been
+      //    consolidated, the raw episodic entry is redundant with the grounded
+      //    fact — UNLESS a surviving fact still cites it. So we drop a processed
+      //    entry (id <= cursor) only when it is (a) past a 7-day grace AND (b)
+      //    not cited by any ACTIVE record's evidence[]. Unprocessed entries
+      //    (id > cursor) are always kept; the 500-cap on write is the hard
+      //    backstop. Runs LAST so it sees the post-promotion/hygiene shard state:
+      //    a superseded origin copy no longer cites its evidence, but the
+      //    promoted category fact that inherited that evidence still does.
+      // Scan the CURRENT shard set, not the stale `shards` snapshot from the top
+      // of reflect(): promotion (step 1) may have just created a new category
+      // shard whose promoted fact carries inherited evidence. Missing that scope
+      // here would wrongly discard raw entries a live fact still grounds — and
+      // discard is destructive, so completeness matters.
+      const cited = new Set();
+      const freshShards = await DS().allMemoryShards();
+      for (const recs of Object.values(freshShards)) {
+        for (const r of (recs || [])) {
+          if (r.status === 'active' && Array.isArray(r.evidence)) {
+            for (const id of r.evidence) cited.add(id);
+          }
+        }
+      }
+      const grace = DECAY_HALF_LIFE.fast; // ~7 days
+      let discarded = 0;
+      await DS().patch('mine.episodicLog', (log) => {
+        const before = log.entries.length;
+        log.entries = log.entries.filter(e =>
+          e.id > log.cursor            // unprocessed: always keep
+          || cited.has(e.id)           // still grounds a live fact: keep its lineage
+          || (now - e.t) < grace);     // within the grace window: keep
+        discarded = before - log.entries.length;
+        return log;
+      });
+
       await updateBadge();
-      return { ran: true, promoted, expired, purged };
+      return { ran: true, promoted, expired, purged, discarded };
     },
   };
 

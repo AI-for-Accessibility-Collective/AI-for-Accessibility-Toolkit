@@ -101,6 +101,14 @@
     };
   }
 
+  // ../toolkit/core/memory-class.js
+  function memoryClassOf(record) {
+    const kind = record && record.kind;
+    if (kind === "observation") return "episodic";
+    if (kind === "procedural") return "procedural";
+    return "semantic";
+  }
+
   // ../toolkit/core/librarian.js
   function createLibrarian({
     datastore,
@@ -208,6 +216,7 @@
       r.status = ["active", "superseded", "expired"].includes(r.status) ? r.status : "active";
       r.supersededBy = r.supersededBy || null;
       r.source = r.source || "inferred";
+      r.evidence = Array.isArray(r.evidence) ? r.evidence.slice(-20) : [];
       return r;
     }
     function scopesFor(url, contexts) {
@@ -464,7 +473,7 @@
         for (const s of scopes) {
           for (const r of shards[s] || []) {
             if (r.status !== "active" || r.kind === "suppression" || !conditionsMet(r, now)) continue;
-            facts.push({ ...r, _scope: s, _score: scoreRecord(r, now) });
+            facts.push({ ...r, _scope: s, _score: scoreRecord(r, now), _memoryClass: memoryClassOf(r) });
           }
         }
         facts.sort((a, b) => b._score - a._score);
@@ -499,7 +508,7 @@
           for (const r of recs || []) {
             if (filter.status && r.status !== filter.status) continue;
             if (filter.scope && scope !== filter.scope) continue;
-            out.push({ ...r, scope });
+            out.push({ ...r, scope, memoryClass: memoryClassOf(r) });
           }
         }
         const supp = await DS().get("mine.suppressions");
@@ -577,7 +586,8 @@ Return ONLY valid JSON with:
         }
         const WEIGHTS = { "setting-change": 3, "profile-applied": 3, "saved-action": 3, onboarding: 3, "agent-task": 2 };
         await DS().patch("mine.episodicLog", (log) => {
-          const id = (log.entries.length ? log.entries[log.entries.length - 1].id : log.cursor) + 1;
+          const lastId = log.entries.length ? log.entries[log.entries.length - 1].id : 0;
+          const id = Math.max(lastId, log.cursor) + 1;
           log.entries.push({
             id,
             t: clock.now(),
@@ -799,11 +809,12 @@ Rules:
           return { ran: false, reason: e.message };
         }
         if (!parsed) return { ran: false, reason: "unparseable" };
+        const evidenceIds = pending.map((e) => e.id);
         const applied = { ADD: 0, UPDATE: 0, SUPERSEDE: 0, NOOP: 0, CONTRADICT: 0 };
         for (const op of parsed.operations || []) {
           try {
             if (op.op === "ADD" && op.record) {
-              const rec = normalizeRecord(op.record, now);
+              const rec = normalizeRecord({ ...op.record, evidence: evidenceIds }, now);
               const shard = await DS().getMemoryShard(rec.scope);
               shard.push(rec);
               await DS().setMemoryShard(rec.scope, shard);
@@ -817,6 +828,7 @@ Rules:
               if (op.op === "NOOP") {
                 r.occurrenceCount = (r.occurrenceCount || 1) + 1;
                 r.lastConfirmedAt = now;
+                r.evidence = [.../* @__PURE__ */ new Set([...r.evidence || [], ...evidenceIds])].slice(-20);
                 r.updatedAt = now;
               } else if (op.op === "UPDATE") {
                 if (op.text) r.text = String(op.text).slice(0, 500);
@@ -824,6 +836,7 @@ Rules:
                 r.occurrenceCount = (r.occurrenceCount || 1) + 1;
                 r.confidence = Math.min(1, (r.confidence ?? 0.7) + 0.05);
                 r.lastConfirmedAt = now;
+                r.evidence = [.../* @__PURE__ */ new Set([...r.evidence || [], ...evidenceIds])].slice(-20);
                 r.updatedAt = now;
               } else if (op.op === "CONTRADICT") {
                 r.confidence = Math.max(0, (r.confidence ?? 0.7) - 0.2);
@@ -833,7 +846,7 @@ Rules:
                   r.confidence = Math.max(0, (r.confidence ?? 0.7) - 0.2);
                   r.updatedAt = now;
                 } else {
-                  const rec = normalizeRecord(op.record, now);
+                  const rec = normalizeRecord({ ...op.record, evidence: evidenceIds }, now);
                   r.status = "superseded";
                   r.supersededBy = rec.id;
                   r.updatedAt = now;
@@ -926,7 +939,11 @@ Rules:
             decayClass: "slow",
             settings: { [k]: v },
             source: "reflection-promotion",
-            occurrenceCount: group.length
+            occurrenceCount: group.length,
+            // Transitive grounding: a promoted category fact inherits the episodic
+            // evidence of the origin records it consolidates, so its lineage to raw
+            // observations survives even after those origin copies are superseded.
+            evidence: [...new Set(group.flatMap((g) => g.record.evidence || []))].slice(-20)
           }, now);
           catShard.push(rec);
           await DS().setMemoryShard(catScope, catShard);
@@ -994,6 +1011,48 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
             }
           }
         }
+        const summaryShards = await DS().allMemoryShards();
+        const activeRecs = [];
+        for (const [scope, recs] of Object.entries(summaryShards)) {
+          for (const r of recs || []) {
+            if (r.status === "active") activeRecs.push({ ...r, _scope: scope });
+          }
+        }
+        const classCounts = { episodic: 0, semantic: 0, procedural: 0 };
+        const settingTally = {};
+        const categoriesAdapted = /* @__PURE__ */ new Set();
+        for (const r of activeRecs) {
+          classCounts[memoryClassOf(r)]++;
+          if (r._scope.startsWith("category:")) categoriesAdapted.add(r._scope.slice("category:".length));
+          for (const [k, v] of Object.entries(r.settings || {})) {
+            settingTally[k] = settingTally[k] || {};
+            const vk = JSON.stringify(v);
+            settingTally[k][vk] = (settingTally[k][vk] || 0) + 1;
+          }
+        }
+        const topSettings = Object.entries(settingTally).map(([key, vals]) => {
+          const [vk, count] = Object.entries(vals).sort((a, b) => b[1] - a[1])[0];
+          return { key, value: JSON.parse(vk), count };
+        }).sort((a, b) => b.count - a.count).slice(0, 8);
+        const reflectLog = await DS().get("mine.episodicLog");
+        const pendingObs = reflectLog.entries.filter((e) => e.id > reflectLog.cursor).length;
+        const summaryLines = [
+          `Tracking ${activeRecs.length} consolidated ${activeRecs.length === 1 ? "memory" : "memories"} (${classCounts.semantic} preference, ${classCounts.procedural} how-to)` + (pendingObs ? `; ${pendingObs} new observation${pendingObs === 1 ? "" : "s"} awaiting consolidation.` : ".")
+        ];
+        if (topSettings.length) {
+          summaryLines.push("Most consistent adaptations:");
+          for (const s of topSettings) summaryLines.push(`- ${s.key} = ${JSON.stringify(s.value)} (${s.count}\xD7)`);
+        }
+        if (categoriesAdapted.size) {
+          summaryLines.push(`Site-specific adaptations on: ${[...categoriesAdapted].sort().join(", ")}.`);
+        }
+        views.behaviorSummary = {
+          text: summaryLines.join("\n"),
+          counts: { ...classCounts, pendingObservations: pendingObs },
+          topSettings,
+          categories: [...categoriesAdapted].sort(),
+          renderedAt: now
+        };
         views.renderedAt = now;
         await DS().set("mine.views", views);
         for (const scope of Object.keys(shards)) {
@@ -1008,8 +1067,25 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
           }
           if (dirty) await DS().setMemoryShard(scope, recs);
         }
+        const cited = /* @__PURE__ */ new Set();
+        const freshShards = await DS().allMemoryShards();
+        for (const recs of Object.values(freshShards)) {
+          for (const r of recs || []) {
+            if (r.status === "active" && Array.isArray(r.evidence)) {
+              for (const id of r.evidence) cited.add(id);
+            }
+          }
+        }
+        const grace = DECAY_HALF_LIFE.fast;
+        let discarded = 0;
+        await DS().patch("mine.episodicLog", (log) => {
+          const before = log.entries.length;
+          log.entries = log.entries.filter((e) => e.id > log.cursor || cited.has(e.id) || now - e.t < grace);
+          discarded = before - log.entries.length;
+          return log;
+        });
         await updateBadge();
-        return { ran: true, promoted, expired, purged };
+        return { ran: true, promoted, expired, purged, discarded };
       }
     };
     function scheduleExtraction() {
