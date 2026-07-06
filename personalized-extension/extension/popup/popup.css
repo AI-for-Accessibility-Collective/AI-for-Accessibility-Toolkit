@@ -549,3 +549,17 @@ footer {
 }
 .memory-delete:hover { background: var(--grey-100); color: var(--red); }
 .memory-empty { padding: 10px; font-size: 11px; color: var(--grey-500); font-style: italic; }
+
+/* Cross-app sharing panel (Phase 3) */
+.acting-user-row {
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+}
+.acting-user-row input[type="text"] {
+  flex: 1; min-width: 0; font-size: 12px; padding: 5px 8px;
+  border: 1px solid var(--grey-300); border-radius: 6px;
+}
+#actingUserStatus { padding: 2px 10px 8px; font-size: 11px; color: var(--grey-500); }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0;
+}

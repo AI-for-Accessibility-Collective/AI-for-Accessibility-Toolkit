@@ -137,6 +137,41 @@
         </div>
         <div id="proposalList" aria-live="polite"></div>
         <div id="memoryList"></div>
+
+        <!-- Cross-app sharing (Phase 3): the "what each app can see" panel,
+             the global sharing switch, and the acting-user selector. -->
+        <div class="collapsible" id="sharingSection">
+          <div class="collapsible-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--grey-500)">share</span>
+            <span style="flex:1;font-size:12px">App sharing</span>
+            <span class="coll-arrow material-symbols-outlined">chevron_right</span>
+          </div>
+          <div class="collapsible-body">
+            <div class="memory-pause-row">
+              <span>Allow apps to share with each other</span>
+              <label class="switch small" aria-label="Allow apps to share with each other">
+                <input type="checkbox" id="sharingToggle" checked>
+                <span class="switch-track"></span>
+              </label>
+            </div>
+            <div class="memory-group-title">What each app can see</div>
+            <div id="grantList" aria-live="polite"></div>
+            <div class="memory-group-title">Who is using this</div>
+            <div class="acting-user-row">
+              <label for="actingUserInput" class="visually-hidden">Switch person</label>
+              <input type="text" id="actingUserInput" placeholder="default" aria-label="Person name (blank for default)">
+              <button class="btn btn-secondary" id="actingUserSwitch">Switch</button>
+            </div>
+            <div id="actingUserStatus" role="status" aria-live="polite"></div>
+            <div class="memory-group-title">Move your profile</div>
+            <div class="acting-user-row">
+              <button class="btn btn-secondary" id="exportProfileBtn">Export profile</button>
+              <button class="btn btn-secondary" id="importProfileBtn">Import profile</button>
+              <input type="file" id="importProfileFile" accept="application/json,.json" hidden>
+            </div>
+            <div id="blobStatus" role="status" aria-live="polite"></div>
+          </div>
+        </div>
       </div>
     </section>
 

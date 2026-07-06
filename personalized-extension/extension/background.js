@@ -1026,6 +1026,31 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse(await L.extract()); break;
           case 'librarianReflectNow':
             sendResponse(await L.reflect()); break;
+          // --- Cross-app sharing (Phase 3): grants, insights, off switch,
+          //     acting user. Resolution of grant/insight proposals stays on
+          //     librarianRespondToProposal — the LOCAL user surface — so a
+          //     consuming app can never approve its own request.
+          case 'librarianListGrants':
+            sendResponse({ grants: await L.listGrants() }); break;
+          case 'librarianRevokeGrant':
+            sendResponse(await L.revokeGrant(msg.appId)); break;
+          case 'librarianSetSharingPaused':
+            await L.setSharingPaused(msg.paused);
+            sendResponse({ success: true }); break;
+          case 'librarianRequestGrant':
+            sendResponse(await L.requestGrant(msg.appId, msg.scopes || [], msg.opts || {})); break;
+          case 'librarianImportInsight':
+            sendResponse(await L.importInsight(msg.appId, msg.insight || {})); break;
+          case 'librarianExportAbilityModel':
+            sendResponse(await L.exportAbilityModel(msg.appId)); break;
+          case 'librarianGetActingUser':
+            sendResponse({ actingUser: L.getActingUser() }); break;
+          case 'librarianSetActingUser':
+            sendResponse(await L.setActingUser(msg.id ?? null, msg.opts || {})); break;
+          case 'librarianExportProfileBlob':
+            sendResponse({ blob: await L.exportProfileBlob() }); break;
+          case 'librarianImportProfileBlob':
+            sendResponse(await L.importProfileBlob(msg.blob)); break;
           default:
             sendResponse({ error: `unknown librarian message: ${msg.type}` });
         }

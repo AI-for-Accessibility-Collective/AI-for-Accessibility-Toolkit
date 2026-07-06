@@ -194,6 +194,38 @@ server.listen(PORT, async () => {
     }
   }
 
+  // Test 9b: cross-app sharing UI (Phase 3 inc 4) — the grants panel, the
+  // sharing switch, the acting-user selector, and their background routes.
+  const sharingControls = ['sharingToggle', 'grantList', 'actingUserInput', 'actingUserSwitch',
+    'exportProfileBtn', 'importProfileBtn'];
+  for (const ctrl of sharingControls) {
+    if (popupHtml.includes(`id="${ctrl}"`) && popupCode.includes(ctrl)) {
+      console.log(`PASS: popup has sharing control '${ctrl}'`);
+    } else {
+      console.log(`FAIL: popup missing sharing control '${ctrl}'`);
+    }
+  }
+  const bgPath = path.join(ROOT, 'extension/background.js');
+  const bgCode = fs.readFileSync(bgPath, 'utf8');
+  const sharingRoutes = ['librarianListGrants', 'librarianRevokeGrant', 'librarianSetSharingPaused',
+    'librarianRequestGrant', 'librarianImportInsight', 'librarianExportAbilityModel',
+    'librarianGetActingUser', 'librarianSetActingUser',
+    'librarianExportProfileBlob', 'librarianImportProfileBlob'];
+  for (const r of sharingRoutes) {
+    if (bgCode.includes(`case '${r}'`)) {
+      console.log(`PASS: background routes '${r}'`);
+    } else {
+      console.log(`FAIL: background missing route '${r}'`);
+    }
+  }
+  // The popup resolves grant/insight proposals ONLY via the shared proposal
+  // cards (librarianRespondToProposal) — no bespoke approve path.
+  if (!popupCode.includes('librarianApproveGrant') && popupCode.includes('librarianRespondToProposal')) {
+    console.log('PASS: grants resolve through the shared proposal/consent path');
+  } else {
+    console.log('FAIL: grants must resolve via librarianRespondToProposal only');
+  }
+
   // Test 10: Check that the bundle function constructor doesn't throw
   // (This validates the bundled code is syntactically valid in a broader context)
   const bundleCode2 = fs.readFileSync(bundlePath, 'utf8');

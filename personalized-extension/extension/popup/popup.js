@@ -993,6 +993,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // memories grouped by where they apply, and standing "don't suggest"
   // instructions. All plain language; raw records stay in storage.
   setupMemoryPanel();
+
+  // Cross-app sharing: grants panel, sharing switch, acting-user selector.
+  setupSharingPanel();
 });
 
 function sendMessageP(msg) {
@@ -1141,6 +1144,124 @@ function setupMemoryPanel() {
       }
     }
   }
+
+  render();
+}
+
+// Cross-app sharing panel (Phase 3): the "what each app can see" grants list
+// (revoke = one tap = local delete), the global sharing switch, and the
+// acting-user selector. Grant-request / insight proposals themselves render
+// through the SAME proposal cards as everything else (setupMemoryPanel) — the
+// consent surface the user already knows.
+function setupSharingPanel() {
+  const section = document.getElementById('sharingSection');
+  const grantList = document.getElementById('grantList');
+  const sharingToggle = document.getElementById('sharingToggle');
+  const actingInput = document.getElementById('actingUserInput');
+  const actingSwitch = document.getElementById('actingUserSwitch');
+  const actingStatus = document.getElementById('actingUserStatus');
+  if (!section || !grantList) return;
+
+  section.addEventListener('click', (e) => {
+    if (e.target.closest('.collapsible-header')) section.classList.toggle('open');
+  });
+
+  sharingToggle?.addEventListener('change', async () => {
+    await sendMessageP({ type: 'librarianSetSharingPaused', paused: !sharingToggle.checked });
+  });
+
+  async function render() {
+    const [grantsResp, profResp, actingResp] = await Promise.all([
+      sendMessageP({ type: 'librarianListGrants' }),
+      sendMessageP({ type: 'librarianGetProfile' }),
+      sendMessageP({ type: 'librarianGetActingUser' }),
+    ]);
+    if (sharingToggle && profResp?.profile) {
+      sharingToggle.checked = !profResp.profile.sharingPaused;
+    }
+    if (actingStatus) {
+      const id = actingResp?.actingUser?.id;
+      actingStatus.textContent = id
+        ? `Using this as: ${id}${actingResp.actingUser.helperMode ? ' (helper setup)' : ''}`
+        : 'Using this as: default';
+    }
+    grantList.textContent = '';
+    const grants = grantsResp?.grants || [];
+    if (!grants.length) {
+      const empty = document.createElement('div');
+      empty.className = 'memory-empty';
+      empty.textContent = 'No apps can see your profile. When an app asks, you will get a suggestion card to approve first.';
+      grantList.appendChild(empty);
+      return;
+    }
+    for (const g of grants) {
+      const row = document.createElement('div');
+      row.className = 'memory-item';
+      const span = document.createElement('span');
+      span.className = 'memory-text';
+      span.textContent = `${g.appLabel || g.appId} can read: ${g.scopes.join(', ')}`;
+      span.title = 'Since ' + new Date(g.grantedAt).toLocaleDateString();
+      const del = document.createElement('button');
+      del.className = 'memory-delete';
+      del.textContent = '✕';
+      del.title = 'Stop sharing with this app';
+      del.setAttribute('aria-label', 'Stop sharing with ' + (g.appLabel || g.appId));
+      del.addEventListener('click', async () => {
+        await sendMessageP({ type: 'librarianRevokeGrant', appId: g.appId });
+        await render();
+      });
+      row.appendChild(span);
+      row.appendChild(del);
+      grantList.appendChild(row);
+    }
+  }
+
+  actingSwitch?.addEventListener('click', async () => {
+    const raw = (actingInput?.value || '').trim();
+    const resp = await sendMessageP({ type: 'librarianSetActingUser', id: raw || null });
+    if (resp && resp.ok === false) {
+      if (actingStatus) actingStatus.textContent = 'Names can only use letters, numbers, - and _ (max 32).';
+      return;
+    }
+    // The whole popup reflects the new person's data — simplest honest
+    // refresh is a reload (matches how profile switches re-render elsewhere).
+    location.reload();
+  });
+
+  // Export/import the portable profile blob (user-mediated transport, §6b).
+  const blobStatus = document.getElementById('blobStatus');
+  const exportBtn = document.getElementById('exportProfileBtn');
+  const importBtn = document.getElementById('importProfileBtn');
+  const importFile = document.getElementById('importProfileFile');
+  exportBtn?.addEventListener('click', async () => {
+    const resp = await sendMessageP({ type: 'librarianExportProfileBlob' });
+    if (!resp?.blob) { if (blobStatus) blobStatus.textContent = 'Could not export.'; return; }
+    const url = URL.createObjectURL(new Blob([JSON.stringify(resp.blob, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'accessibility-profile.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    if (blobStatus) blobStatus.textContent = 'Profile exported. Move the file to your other device or app.';
+  });
+  importBtn?.addEventListener('click', () => importFile?.click());
+  importFile?.addEventListener('change', async () => {
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+    try {
+      const blob = JSON.parse(await file.text());
+      const resp = await sendMessageP({ type: 'librarianImportProfileBlob', blob });
+      if (blobStatus) {
+        blobStatus.textContent = resp?.ok
+          ? (resp.merged ? 'Profile imported.' : 'Your profile is already up to date.')
+          : 'That file is not a valid accessibility profile.';
+      }
+      if (resp?.merged) location.reload();
+    } catch {
+      if (blobStatus) blobStatus.textContent = 'That file could not be read.';
+    } finally {
+      importFile.value = '';
+    }
+  });
 
   render();
 }
