@@ -3,7 +3,7 @@
 // callbacks the entry point passes in.
 
 export function mountControls({
-  startBtn, micBtn, endBtn, restartBtn, bgWrapper, bgToggle,
+  startBtn, micBtn, endBtn, restartBtn, bgWrapper, bgToggle, textForm,
   onStart, onEnd, onRestart, onMicToggle, onBackgroundChange,
 }) {
   startBtn.addEventListener('click', () => onStart());
@@ -14,6 +14,11 @@ export function mountControls({
 
   function render(snap) {
     const live = snap.connection === 'live' || snap.connection === 'connecting';
+    // Typed input follows the same visibility as the mic: it goes through
+    // the live session as a user turn, so it needs a connection.
+    if (textForm) {
+      textForm.hidden = snap.connection !== 'live';
+    }
     // Restart is also useful next to Resume: a cached resumption handle
     // means the user can either continue the prior conversation or wipe
     // it for a fresh one. Show the button in both states.

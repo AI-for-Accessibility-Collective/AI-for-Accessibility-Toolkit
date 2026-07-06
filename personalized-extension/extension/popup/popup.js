@@ -183,7 +183,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (settings.focusMode) focusOptions.classList.add('show');
   ['hideDistractions', 'showProgress'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.checked = settings[id] === true;
+    // showProgress defaults ON (matching content.js init and the voice route's
+    // `showProgress !== false`); hideDistractions defaults OFF. Without this
+    // split, an unset showProgress rendered unchecked here and any focus-mode
+    // interaction would push showProgress:false, hiding the bar the page shows.
+    if (el) el.checked = id === 'showProgress' ? settings[id] !== false : settings[id] === true;
   });
 
   focusModeEl.addEventListener('change', async (e) => {

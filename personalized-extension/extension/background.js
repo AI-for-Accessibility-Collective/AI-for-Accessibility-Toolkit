@@ -19,6 +19,11 @@ self.importScripts(
   'lib/web-surface.js'
 );
 
+// Voice-mode data routes (offscreen tool calls that need chrome.tabs /
+// chrome.scripting / Librarian). Own onMessage listener, voice* data types
+// only. Loaded after lib/ so the toolkit globals it reads exist.
+self.importScripts('voice-routes.js');
+
 // Lazy, idempotent store migrations. Safe to fire-and-forget: stores are
 // readable before this resolves (migration 1 is a stamp).
 Datastore.runMigrations().catch((e) =>

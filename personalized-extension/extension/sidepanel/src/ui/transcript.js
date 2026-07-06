@@ -1,9 +1,13 @@
-// Renders the running transcript. Three role types:
-//   - user   : transcribed user speech
+// Renders the running transcript. Four role types:
+//   - user   : transcribed user speech (or typed input)
 //   - agent  : transcribed model speech
 //   - event  : browser-agent milestone bubble (from the bridge), with
 //              an expandable details section showing the underlying
 //              log entries. Each major event = one event bubble.
+//   - action : tool-call confirmation chip ("✓ Text size: 150%"). The
+//              NEWEST undoable chip carries an Undo button while the
+//              session is live (the undo stack lives in the offscreen
+//              page and dies with it).
 //
 // We re-render the whole list on every snapshot. Transcripts are
 // bounded (200 entries) so this is cheap, and idempotency means we
@@ -14,7 +18,7 @@
 
 const _openDetails = new Set();
 
-export function mountTranscript(rootEl, emptyEl) {
+export function mountTranscript(rootEl, emptyEl, { onUndo } = {}) {
   function render(snap) {
     const list = snap.transcript || [];
     // Live "Listening..." placeholder while the mic is picking up
@@ -34,15 +38,32 @@ export function mountTranscript(rootEl, emptyEl) {
       return;
     }
     emptyEl.hidden = true;
+    // Only the newest undoable action chip gets the Undo button, and only
+    // while connected (the offscreen undo stack is gone otherwise) and not
+    // while an undo is already in flight (the button is re-created enabled on
+    // every re-render, so double activation would revert an older change).
+    let newestUndoable = null;
+    if (snap.connection === 'live' && !snap.undoInFlight) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        const e = list[i];
+        if (e.role === 'action' && e.undoable && e.ok) { newestUndoable = e; break; }
+        // An undo chip means the change below it was already reverted.
+        if (e.role === 'action' && e.tool === 'undo_last_change') break;
+      }
+    }
+    // Autoscroll only when the user is already at the bottom — don't yank them
+    // down if they scrolled up to re-read while the model streams.
+    const scroller = rootEl.parentElement;
+    const atBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 40;
     const frag = document.createDocumentFragment();
     for (const entry of list) {
-      frag.appendChild(_renderEntry(entry));
+      frag.appendChild(_renderEntry(entry, { canUndo: entry === newestUndoable, onUndo }));
     }
     if (showListening) {
       frag.appendChild(_renderListeningPlaceholder());
     }
     rootEl.replaceChildren(frag);
-    rootEl.parentElement.scrollTop = rootEl.parentElement.scrollHeight;
+    if (atBottom) scroller.scrollTop = scroller.scrollHeight;
   }
   return { render };
 }
@@ -63,9 +84,34 @@ function _renderListeningPlaceholder() {
   return li;
 }
 
-function _renderEntry(entry) {
+function _renderEntry(entry, opts = {}) {
   if (entry.role === 'event') return _renderEventBubble(entry);
+  if (entry.role === 'action') return _renderActionChip(entry, opts);
   return _renderSpeechBubble(entry);
+}
+
+function _renderActionChip(entry, { canUndo, onUndo } = {}) {
+  const li = document.createElement('li');
+  li.className = 'vp-msg vp-msg-action' + (entry.ok ? '' : ' vp-msg-action-failed');
+  const icon = document.createElement('span');
+  icon.className = 'vp-action-icon';
+  icon.textContent = entry.ok ? '✓' : '⚠';
+  icon.setAttribute('aria-hidden', 'true');
+  li.appendChild(icon);
+  const text = document.createElement('span');
+  text.className = 'vp-action-text';
+  text.textContent = entry.text || '(action)';
+  li.appendChild(text);
+  if (canUndo && typeof onUndo === 'function') {
+    const btn = document.createElement('button');
+    btn.className = 'vp-btn vp-undo-btn';
+    btn.textContent = 'Undo';
+    btn.setAttribute('aria-label', `Undo: ${entry.text || 'last change'}`);
+    btn.addEventListener('click', () => { btn.disabled = true; onUndo(entry); });
+    li.appendChild(btn);
+  }
+  li.appendChild(_timeEl(entry.ts));
+  return li;
 }
 
 function _renderSpeechBubble(entry) {

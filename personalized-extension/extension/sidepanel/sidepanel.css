@@ -219,3 +219,77 @@ body {
   color: #4b5563;
   margin-left: auto;
 }
+
+/* Action chips: compact tool-call confirmations ("✓ Text size: 150%").
+   Full-width neutral rows so they read as system feedback, not speech. */
+.vp-msg-action {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  align-self: stretch;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.vp-action-icon { color: #059669; font-weight: 700; flex-shrink: 0; }
+.vp-msg-action-failed .vp-action-icon { color: #b45309; }
+.vp-msg-action-failed { background: #fffbeb; border-color: #fde68a; }
+.vp-action-text { flex: 1; word-break: break-word; }
+.vp-msg-action .vp-msg-time { margin-top: 0; flex-shrink: 0; }
+.vp-undo-btn {
+  padding: 3px 10px;
+  font-size: 12px;
+  flex-shrink: 0;
+  min-height: 24px;
+}
+.vp-undo-btn:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
+
+/* Pending-suggestions pill in the header. */
+.vp-pill {
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: 8px;
+}
+.vp-pill:hover { background: #e0e7ff; }
+
+/* Type-instead-of-speak form. */
+.vp-text-form {
+  display: flex;
+  gap: 6px;
+  flex: 1 1 100%;
+  order: -1;           /* row above the buttons in the wrapping footer */
+  margin-bottom: 4px;
+}
+.vp-text-form input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.vp-text-form input:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
+.vp-controls { flex-wrap: wrap; }
+.vp-privacy {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

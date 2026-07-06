@@ -8,6 +8,7 @@
 <body>
   <header class="vp-header">
     <span class="vp-title">🎤 Voice</span>
+    <button id="vp-proposals" class="vp-pill" hidden role="status" title="Suggestions waiting for your OK"></button>
     <span id="vp-status" class="vp-status disconnected">disconnected</span>
   </header>
 
@@ -16,15 +17,23 @@
     <button id="vp-open-mic-settings" class="vp-btn vp-btn-link" hidden>Open mic settings</button>
 
     <div id="vp-empty" class="vp-empty">
-      Press <strong>Start</strong> and speak a task. The voice agent will
-      narrate what the browser agent does. The voice agent can start tasks
-      but can't redirect them mid-run.
+      Press <strong>Start</strong> and just talk. Try:
+      <em>"make the text bigger"</em>, <em>"what's on this page?"</em>,
+      <em>"I have trouble reading small text — what can help?"</em>, or
+      <em>"what do you remember about me?"</em>. You can also type below.
+      <span class="vp-privacy">Voice and page text are processed by Google
+      Gemini using your own API key.</span>
     </div>
 
     <ul id="vp-transcript" class="vp-transcript" aria-live="polite"></ul>
   </main>
 
   <footer class="vp-controls">
+    <form id="vp-text-form" class="vp-text-form" hidden>
+      <label class="sr-only" for="vp-text-input">Type a message to the voice assistant</label>
+      <input id="vp-text-input" type="text" autocomplete="off" placeholder="Type instead of speaking…">
+      <button type="submit" class="vp-btn" aria-label="Send typed message">Send</button>
+    </form>
     <button id="vp-start" class="vp-btn vp-btn-primary">Start</button>
     <button id="vp-mic" class="vp-btn vp-btn-icon" hidden title="Mute / unmute mic" aria-label="Toggle microphone">
       <span class="vp-mic-icon">🎙️</span>

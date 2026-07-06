@@ -19,12 +19,13 @@
 import { createLiveClient } from './live/client.js';
 import { createMicCapture } from './live/audio-input.js';
 import { createAudioPlayer } from './live/audio-output.js';
-import { dispatchToolCall } from './live/tools.js';
+import { dispatchToolCall, describeAction, resetSessionState, undoLastFromUi } from './live/tools.js';
+import { buildSystemInstruction } from './live/prompt.js';
 import { createAgentBridge } from './bridge/agent-bridge.js';
 import { createEventRouter } from './bridge/event-router.js';
 import * as voiceState from './state.js';
 import * as storage from './storage.js';
-import { clearHandle } from './live/session.js';
+import { clearHandle, hasPersistedHandle } from './live/session.js';
 
 // Bound the wait for setupComplete after the WS handshake succeeds. If
 // the server doesn't respond within this window the request is hung;
@@ -35,6 +36,11 @@ const SETUP_TIMEOUT_MS = 15000;
 
 let live = null;
 let setupTimer = null;
+// Guards against two connect() calls racing (a second panel clicking Start, or
+// the goAway reconnect timer firing while a manual restart is mid-flight) and
+// opening two concurrent, billed Live sessions with one WebSocket orphaned.
+let connecting = false;
+let goAwayTimer = null;
 
 // Wall-clock of the last audio chunk we received from the model.
 // Combined with player.isPlaying() this gives a robust "is the model
@@ -113,10 +119,62 @@ const bridge = createAgentBridge({
   },
 });
 
+// ---- session context (system-instruction grounding) --------------------
+
+function _sendMessage(msg) {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage(msg, (resp) => {
+        void chrome.runtime.lastError;
+        resolve(resp || null);
+      });
+    } catch { resolve(null); }
+  });
+}
+
+function _withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((r) => setTimeout(() => r(null), ms))]);
+}
+
+// Ground the session in real state (current tab, active settings, profile,
+// pending-proposal count). Every fetch is bounded and optional — a slow or
+// failed source just drops its section rather than delaying the connect.
+async function fetchSessionContext() {
+  const [context, memory] = await Promise.all([
+    _withTimeout(_sendMessage({ type: 'voiceGetContext' }), 1500),
+    _withTimeout(_sendMessage({ type: 'voiceGetMemory' }), 1500),
+  ]);
+  const ctx = {};
+  if (context && !context.error) {
+    ctx.tab = context.tab || null;
+    ctx.activeSettings = context.activeSettings || null;
+    if (typeof context.zoomPercent === 'number') ctx.zoomPercent = context.zoomPercent;
+  }
+  if (memory && !memory.error) {
+    const lines = [];
+    if (memory.profile?.supportAreas?.length) lines.push(`support areas: ${memory.profile.supportAreas.join(', ')}`);
+    if (memory.profile?.notes) lines.push(memory.profile.notes);
+    if (lines.length) ctx.profileLines = lines;
+    if (Array.isArray(memory.pendingProposals)) ctx.pendingProposals = memory.pendingProposals.length;
+  }
+  return ctx;
+}
+
 // ---- connect / disconnect ---------------------------------------------
 
 async function connect() {
-  if (live && live.isOpen()) return;
+  // isOpen() is false for the whole connect window (WS handshake + the
+  // session-context fetch), so guard with an explicit in-flight flag too.
+  if (connecting || (live && live.isOpen())) return;
+  connecting = true;
+  try {
+    await _connectInner();
+  } finally {
+    connecting = false;
+  }
+}
+
+async function _connectInner() {
   voiceState.setConnection('connecting');
   voiceState.setError(null);
 
@@ -127,6 +185,11 @@ async function connect() {
     return;
   }
   const model = await _getModel();
+  // A brand-new conversation (no resumption handle) must not inherit the
+  // previous session's undo stack or seen-id gates.
+  if (!(await hasPersistedHandle())) resetSessionState();
+  let systemInstruction = null;
+  try { systemInstruction = buildSystemInstruction(await fetchSessionContext()); } catch {}
 
   // If setupComplete doesn't arrive, mark error rather than hang.
   if (setupTimer) clearTimeout(setupTimer);
@@ -143,6 +206,7 @@ async function connect() {
   live = createLiveClient({
     apiKey,
     model,
+    systemInstruction,
     onAudio: (b64, rate) => {
       if (Date.now() - lastAudioChunkAt > SPEAKING_GRACE_MS) {
         console.log('[voice] turn START');
@@ -183,8 +247,15 @@ async function connect() {
     onOutputTranscript: (t) => {
       voiceState.appendTranscript({ role: 'agent', text: t.text || '', finished: t.finished });
     },
-    onToolCall: async (fc) => {
-      return await dispatchToolCall(fc.name, fc.args || {});
+    onToolCall: async (fc, signal) => {
+      const result = await dispatchToolCall(fc.name, fc.args || {}, signal);
+      // State-changing tools get a confirmation chip in the panel transcript
+      // (describeAction returns null for read-only ones).
+      try {
+        const chip = describeAction(fc.name, fc.args || {}, result);
+        if (chip) voiceState.appendAction({ tool: fc.name, text: chip.summary, ok: chip.ok, undoable: chip.undoable });
+      } catch {}
+      return result;
     },
     onToolCallCancellation: () => {
       // No long-running tools today; nothing to undo.
@@ -197,10 +268,16 @@ async function connect() {
       try { live?.close(); } catch {}
       live = null;
       // Brief pause so the server-side close completes before reconnect.
-      setTimeout(() => connect().catch((e) => {
-        voiceState.setConnection('error');
-        voiceState.setError(`reconnect failed: ${e.message || e}`);
-      }), 250);
+      // Tracked so disconnect()/restart() can cancel a pending reconnect and
+      // not race a fresh session.
+      if (goAwayTimer) clearTimeout(goAwayTimer);
+      goAwayTimer = setTimeout(() => {
+        goAwayTimer = null;
+        connect().catch((e) => {
+          voiceState.setConnection('error');
+          voiceState.setError(`reconnect failed: ${e.message || e}`);
+        });
+      }, 250);
     },
     onSetupComplete: () => {
       if (setupTimer) { clearTimeout(setupTimer); setupTimer = null; }
@@ -237,6 +314,7 @@ async function connect() {
 }
 
 async function disconnect() {
+  if (goAwayTimer) { clearTimeout(goAwayTimer); goAwayTimer = null; }
   bridge.stop();
   mic.stop();
   player.flush();
@@ -254,6 +332,7 @@ async function disconnect() {
 // reopen. The offscreen page itself stays alive (cheaper than full
 // teardown + recreate) and the existing mic permission is reused.
 async function restart() {
+  if (goAwayTimer) { clearTimeout(goAwayTimer); goAwayTimer = null; }
   bridge.stop();
   mic.stop();
   player.flush();
@@ -263,6 +342,9 @@ async function restart() {
   }
   await clearHandle();
   voiceState.clearTranscript();
+  // Fresh conversation: a new session must not be able to undo changes or
+  // delete memories the user handled in the previous one.
+  resetSessionState();
   voiceState.setError(null);
   voiceState.setRecording(false);
   voiceState.setSpeaking(false);
@@ -307,7 +389,26 @@ const OFFSCREEN_MSG_TYPES = new Set([
   'voiceMicToggle',
   'voiceBackgroundMode',
   'voiceClearTranscript',
+  'voiceTextTurn',
+  'voiceUndoLast',
+  'voiceDebugToolCall',
 ]);
+
+// The panel's Undo button and the undo_last_change tool share one stack;
+// this path also tells the model what happened so it can't quote stale state.
+async function undoFromUi() {
+  const result = await undoLastFromUi();
+  try {
+    const chip = describeAction('undo_last_change', {}, result);
+    if (chip) voiceState.appendAction({ tool: 'undo_last_change', text: chip.summary, ok: chip.ok, undoable: false });
+  } catch {}
+  if (live && live.isOpen() && result && !result.error) {
+    const what = Object.entries(result.reverted || {}).map(([k, v]) => `${k}=${v}`).join(', ');
+    if (voiceState.get().speaking) { player.flush(); voiceState.setSpeaking(false); }
+    live.sendTextTurn(`[UI update] The user pressed Undo: settings reverted to ${what}. Acknowledge in one short sentence.`);
+  }
+  return result;
+}
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || typeof msg.type !== 'string') return;
@@ -351,6 +452,36 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           voiceState.clearTranscript();
           sendResponse({ ok: true });
           break;
+        case 'voiceTextTurn': {
+          // Typed input from the side panel — an accessibility path for users
+          // who can't (or don't want to) speak, and a deterministic driver
+          // for tests. Same barge-in semantics as spoken input.
+          const text = (msg.text || '').trim();
+          if (!text) { sendResponse({ error: 'empty message' }); break; }
+          if (!live || !live.isOpen()) { sendResponse({ error: 'not connected' }); break; }
+          voiceState.appendTranscript({ role: 'user', text, finished: true });
+          if (voiceState.get().speaking) {
+            player.flush();
+            voiceState.setSpeaking(false);
+          }
+          live.sendTextTurn(text);
+          sendResponse({ ok: true });
+          break;
+        }
+        case 'voiceUndoLast':
+          sendResponse({ ok: true, result: await undoFromUi() });
+          break;
+        case 'voiceDebugToolCall': {
+          // Prototype-scoped test hook: run a tool exactly as the model
+          // would (dispatch + action chip), without a paid Live session.
+          const result = await dispatchToolCall(msg.name, msg.args || {});
+          try {
+            const chip = describeAction(msg.name, msg.args || {}, result);
+            if (chip) voiceState.appendAction({ tool: msg.name, text: chip.summary, ok: chip.ok, undoable: chip.undoable });
+          } catch {}
+          sendResponse({ ok: true, result });
+          break;
+        }
       }
     } catch (e) {
       // Log full stack to the offscreen-page DevTools console so the

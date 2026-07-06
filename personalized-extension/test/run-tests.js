@@ -226,6 +226,71 @@ server.listen(PORT, async () => {
     console.log('FAIL: grants must resolve via librarianRespondToProposal only');
   }
 
+  // Test 9c: voice mode — full toolkit control. The tool surface, the SW
+  // data routes, the prompt's grounding, and the panel affordances have to
+  // stay wired together; each check pins one seam.
+  const voiceToolsCode = fs.readFileSync(path.join(ROOT, 'extension/offscreen/src/live/tools.js'), 'utf8');
+  const voicePromptCode = fs.readFileSync(path.join(ROOT, 'extension/offscreen/src/live/prompt.js'), 'utf8');
+  const voiceRoutesCode = fs.readFileSync(path.join(ROOT, 'extension/voice-routes.js'), 'utf8');
+  const offscreenIndexCode = fs.readFileSync(path.join(ROOT, 'extension/offscreen/src/index.js'), 'utf8');
+  const sidepanelHtml = fs.readFileSync(path.join(ROOT, 'extension/sidepanel/sidepanel.html'), 'utf8');
+  const sidepanelStore = fs.readFileSync(path.join(ROOT, 'extension/sidepanel/src/store.js'), 'utf8');
+  const sidepanelTranscript = fs.readFileSync(path.join(ROOT, 'extension/sidepanel/src/ui/transcript.js'), 'utf8');
+
+  const voiceTools = [
+    'get_context', 'adjust_settings', 'undo_last_change', 'get_page_content',
+    'start_browser_task', 'get_browser_status', 'stop_browser_task',
+    'suggest_capabilities', 'get_memory', 'remember', 'forget_memory', 'respond_to_proposal',
+  ];
+  for (const t of voiceTools) {
+    if (voiceToolsCode.includes(`'${t}'`)) console.log(`PASS: voice tool '${t}' declared`);
+    else console.log(`FAIL: voice tool '${t}' missing from tools.js`);
+  }
+  for (const t of voiceTools) {
+    if (voicePromptCode.includes(t)) console.log(`PASS: prompt mentions '${t}'`);
+    else console.log(`FAIL: prompt never mentions tool '${t}'`);
+  }
+  if (voicePromptCode.includes('settingsPromptLines') && voiceToolsCode.includes("skills/registry.js'")) {
+    console.log('PASS: prompt + tool schema generated from skills/registry.js (single vocabulary source)');
+  } else {
+    console.log('FAIL: voice vocabulary must come from skills/registry.js');
+  }
+  if (/read the exact memory back|forget_memory is permanent/i.test(voicePromptCode) && /explicit yes/i.test(voicePromptCode)) {
+    console.log('PASS: prompt enforces read-back + explicit yes before forget');
+  } else {
+    console.log('FAIL: prompt missing forget confirmation rules');
+  }
+  for (const r of ['voiceGetContext', 'voiceApplySettings', 'voiceReadPage', 'voiceSuggestCapabilities', 'voiceGetMemory']) {
+    if (voiceRoutesCode.includes(`'${r}'`)) console.log(`PASS: SW voice route '${r}'`);
+    else console.log(`FAIL: SW missing voice route '${r}'`);
+  }
+  if (bgCode.includes("importScripts('voice-routes.js')")) {
+    console.log('PASS: background imports voice-routes.js');
+  } else {
+    console.log('FAIL: background must importScripts voice-routes.js');
+  }
+  for (const t of ['voiceTextTurn', 'voiceUndoLast', 'voiceDebugToolCall']) {
+    if (offscreenIndexCode.includes(`'${t}'`)) console.log(`PASS: offscreen handles '${t}'`);
+    else console.log(`FAIL: offscreen missing message type '${t}'`);
+  }
+  if (sidepanelHtml.includes('vp-text-input') && sidepanelHtml.includes('vp-proposals')) {
+    console.log('PASS: side panel has typed input + proposal pill');
+  } else {
+    console.log('FAIL: side panel missing typed input or proposal pill');
+  }
+  if (sidepanelStore.includes("role === 'action'") && sidepanelTranscript.includes('vp-msg-action')) {
+    console.log('PASS: side panel renders action chips');
+  } else {
+    console.log('FAIL: side panel action-chip pipeline incomplete');
+  }
+  // VisualAssist live-apply must always send the full merged group (a
+  // partial patch clobbers the other visual settings).
+  if (/VisualAssist/.test(voiceRoutesCode) && /readingGuide: merged\('readingGuide'\)/.test(voiceRoutesCode)) {
+    console.log('PASS: voice route sends the full merged VisualAssist group');
+  } else {
+    console.log('FAIL: voice route must merge the full VisualAssist options object');
+  }
+
   // Test 10: Check that the bundle function constructor doesn't throw
   // (This validates the bundled code is syntactically valid in a broader context)
   const bundleCode2 = fs.readFileSync(bundlePath, 'utf8');
