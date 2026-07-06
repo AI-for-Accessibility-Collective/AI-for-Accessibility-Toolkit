@@ -415,6 +415,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
       if (tab?.url) origin = new URL(tab.url).hostname;
     } catch {}
     for (const [key, { oldValue, newValue }] of changed) {
+      // A REMOVE (newValue === undefined) means "revert to default" — e.g. a
+      // voice undo of a change that first introduced this key. Don't mint a
+      // durable user-explicit record for it (that would defeat the undo and
+      // leave a final-say record pinning the default); the undo path removes
+      // any existing record explicitly.
+      if (newValue === undefined) continue;
+      // This listener is async (it awaited tabs.query above), so by now a
+      // faster follow-up write — most importantly a voice UNDO that removed the
+      // key we're about to record — may have superseded newValue. Re-read the
+      // live value and skip if it no longer matches, so we don't re-mint a
+      // stale final-say record after an undo already deleted it.
+      let fresh;
+      try { fresh = (await chrome.storage.sync.get(key))[key]; } catch { fresh = newValue; }
+      if (fresh !== newValue) continue;
       // Fast lane: make the change stick immediately (final say in the
       // effective-preferences merge); the episodic observation below is the
       // slow-lane signal for extraction/reflection.

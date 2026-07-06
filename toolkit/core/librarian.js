@@ -372,6 +372,43 @@ export function createLibrarian({
       return ids;
     },
 
+    // Whether a durable user-explicit record for `setting.<key>` exists at
+    // `scope`. Lets a caller (e.g. voice undo) tell whether a write CREATED a
+    // record or updated an existing one.
+    async hasScopedSetting(scope, key) {
+      scope = VALID_SCOPE.test(scope || '') ? scope : 'general';
+      const shard = await DS().getMemoryShard(scope);
+      const aspect = `setting.${key}`;
+      return shard.some(r => r.source === 'user-explicit' && r.aspect === aspect && r.status === 'active');
+    },
+
+    // The current value of the user-explicit `setting.<key>` record at `scope`,
+    // or undefined if none. Lets voice undo verify a record it created still
+    // holds the value it wrote before deleting it (so a later re-confirmation
+    // via the popup isn't blown away).
+    async getScopedSetting(scope, key) {
+      scope = VALID_SCOPE.test(scope || '') ? scope : 'general';
+      const shard = await DS().getMemoryShard(scope);
+      const aspect = `setting.${key}`;
+      const rec = shard.find(r => r.source === 'user-explicit' && r.aspect === aspect && r.status === 'active');
+      return rec && rec.settings ? rec.settings[key] : undefined;
+    },
+
+    // Delete the durable user-explicit record for `setting.<key>` at `scope` —
+    // the true inverse of recordScopedSettings (which only ever upserts). Used
+    // to UNDO a change that created a record: restoring the old value would
+    // leave a shadowing record behind, so a created record is removed outright.
+    // Returns { removed } (idempotent).
+    async removeScopedSetting(scope, key) {
+      scope = VALID_SCOPE.test(scope || '') ? scope : 'general';
+      const aspect = `setting.${key}`;
+      const shard = await DS().getMemoryShard(scope);
+      const next = shard.filter(r => !(r.source === 'user-explicit' && r.aspect === aspect && r.status === 'active'));
+      if (next.length === shard.length) return { removed: false };
+      await DS().setMemoryShard(scope, next);
+      return { removed: true };
+    },
+
     // Classify once, cache forever; user override wins and is sticky.
     // Deterministic by default — pass {allowLlm: true, title} to let the
     // background's classify handler fall through to Gemini for unknown hosts.

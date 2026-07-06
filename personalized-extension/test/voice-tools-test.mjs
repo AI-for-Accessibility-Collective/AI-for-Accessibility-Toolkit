@@ -37,7 +37,13 @@ globalThis.chrome = {
     onMessage: { addListener(fn) { onMessageListeners.push(fn); } },
   },
   storage: {
-    local: { async get(keys) { return { ...localStore }; }, async set(v) { Object.assign(localStore, v); } },
+    local: {
+      async get(keys) {
+        if (typeof keys === 'string') return (keys in localStore) ? { [keys]: localStore[keys] } : {};
+        return { ...localStore };
+      },
+      async set(v) { Object.assign(localStore, v); },
+    },
     sync: {
       async get(keys) {
         if (typeof keys === 'string') keys = [keys];
@@ -46,13 +52,15 @@ globalThis.chrome = {
         return out;
       },
       async set(v) { syncStore.__writes = (syncStore.__writes || 0) + 1; Object.assign(syncStore, v); },
+      async remove(keys) { for (const k of [].concat(keys)) delete syncStore[k]; },
     },
   },
   tabs: {
     async query() { return currentTab ? [currentTab] : []; },
     async getZoom() { return zoomFactor; },
     async setZoom(id, f) { if (id !== 7 && id !== 8) throw new Error('No tab with id ' + id); zoomFactor = f; },
-    async sendMessage(_id, msg) { tabMessages.push(msg); },
+    // Reject when the tab has no content script — lets liveApplied honesty be tested.
+    async sendMessage(_id, msg) { if (globalThis.__noContentScript) throw new Error('no receiver'); tabMessages.push(msg); },
   },
   scripting: {
     async executeScript({ func }) { return [{ result: globalThis.__pageExtract }]; },
@@ -63,7 +71,7 @@ globalThis.chrome = {
 // Part 1 — offscreen tools.js
 // ===========================================================================
 const tools = await import('../extension/offscreen/src/live/tools.js');
-const { TOOL_DECLARATIONS, TOOL_NAMES, dispatchToolCall, describeAction, resetSessionState, hasUndo } = tools;
+const { TOOL_DECLARATIONS, TOOL_NAMES, dispatchToolCall, describeAction, resetSessionState } = tools;
 
 const declared = TOOL_DECLARATIONS[0].functionDeclarations.map((d) => d.name);
 check('12 tools declared', declared.length === 12, declared);
@@ -75,64 +83,32 @@ check('enum settings carry their options', JSON.stringify(adj.parameters.propert
 
 check('unknown tool -> error', (await dispatchToolCall('rm_rf', {})).error?.includes('unknown tool'));
 
-// adjust_settings + undo stack. The mock stands in for the real route: a
-// normal change echoes applied/previous/scopesUsed; a restore replay echoes
-// the plan's values back as `applied` (what undo reports as `reverted`).
-responders.voiceApplySettings = (msg) => {
-  if (msg.restore) {
-    const applied = {};
-    for (const w of msg.restore.writes || []) applied[w.key] = w.value;
-    if (msg.restore.pageZoom) applied.pageZoom = msg.restore.pageZoom.value;
-    return { applied, scopesUsed: Object.fromEntries((msg.restore.writes || []).map((w) => [w.key, w.scope])) };
-  }
-  return {
-    applied: msg.changes,
-    previous: Object.fromEntries(Object.keys(msg.changes).map((k) => [k, 'PREV_' + k])),
-    scopesUsed: Object.fromEntries(Object.keys(msg.changes).map((k) => [k, msg.scope || 'general'])),
-  };
-};
+// tools.js forwards to the SW routes (the journal itself lives in the SW —
+// exercised for real in Part 2). Here: forwarding, chips, reset, honesty.
+responders.voiceApplySettings = (msg) => ({
+  applied: msg.changes, scopesUsed: Object.fromEntries(Object.keys(msg.changes).map((k) => [k, msg.scope || 'general'])), liveApplied: true,
+});
+responders.voiceUndoLast = () => ({ reverted: { fontScale: 100 }, remainingUndos: 0 });
+responders.voiceResetUndo = () => ({ ok: true });
 check('adjust_settings without changes -> error', !!(await dispatchToolCall('adjust_settings', {})).error);
 let r = await dispatchToolCall('adjust_settings', { changes: { fontScale: 150 } });
-check('adjust_settings returns applied', r.applied?.fontScale === 150);
-check('adjust_settings pushed an undo entry', hasUndo());
-await dispatchToolCall('adjust_settings', { changes: { darkMode: true }, scope: 'category:news' });
+check('adjust_settings returns applied', r.applied?.fontScale === 150 && r.appliedToPage === true);
+check('adjust_settings does NOT keep a local undo stack (SW owns it)',
+  !sentMessages.some((m) => m.type === 'voiceApplySettings' && m.restore));
 r = await dispatchToolCall('undo_last_change', {});
-check('undo pops LIFO (newest first)', r.reverted?.darkMode === 'PREV_darkMode', r);
-{
-  // The undo entry carries the RESOLVED per-key scope (scopesUsed), not the
-  // model's raw arg — so a revert always targets the exact record it changed.
-  const restoreMsg = sentMessages.filter((m) => m.type === 'voiceApplySettings').pop();
-  check('undo replays an explicit per-key restore plan', !!restoreMsg.restore && !restoreMsg.changes);
-  check('restore plan pins the resolved scope', restoreMsg.restore.writes[0].scope === 'category:news' && restoreMsg.restore.writes[0].value === 'PREV_darkMode');
-}
-r = await dispatchToolCall('undo_last_change', {});
-check('second undo steps further back', r.reverted?.fontScale === 'PREV_fontScale');
-r = await dispatchToolCall('undo_last_change', {});
-check('empty undo stack -> friendly error, not throw', /nothing to undo/.test(r.error || ''));
-
-// undo peeks then pops only on success — a failed replay keeps the entry.
-{
-  await dispatchToolCall('adjust_settings', { changes: { fontScale: 175 } });
-  const orig = responders.voiceApplySettings;
-  responders.voiceApplySettings = (msg) => msg.restore ? { error: 'storage boom' } : orig(msg);
-  r = await dispatchToolCall('undo_last_change', {});
-  check('failed undo surfaces the error', /storage boom/.test(r.error || ''));
-  check('failed undo did NOT drop the entry', hasUndo());
-  responders.voiceApplySettings = orig;
-  r = await dispatchToolCall('undo_last_change', {});
-  check('retry after a failed undo reverts the same change', r.reverted?.fontScale === 'PREV_fontScale');
-}
-
-// partial-save: route returns previous even WITH an error → undo still records.
-{
-  responders.voiceApplySettings = (msg) => msg.restore
-    ? { applied: Object.fromEntries((msg.restore.writes || []).map((w) => [w.key, w.value])) }
-    : { applied: { lineHeight: 2 }, previous: { lineHeight: 1.5 }, scopesUsed: { lineHeight: 'general' }, error: 'could not save: quota' };
-  r = await dispatchToolCall('adjust_settings', { changes: { lineHeight: 2 } });
-  check('partial-save error is surfaced to the model', /could not save/.test(r.error || ''));
-  check('partial-save still pushed an undo entry (the write landed)', hasUndo());
-  await dispatchToolCall('undo_last_change', {});
-}
+check('undo_last_change forwards to the SW voiceUndoLast route',
+  sentMessages.some((m) => m.type === 'voiceUndoLast') && r.reverted?.fontScale === 100);
+// liveApplied:false must surface an honest "reload" note to the model.
+responders.voiceApplySettings = (msg) => ({ applied: msg.changes, scopesUsed: {}, liveApplied: false });
+r = await dispatchToolCall('adjust_settings', { changes: { darkMode: true } });
+check('adjust_settings is honest when the page did not receive it live',
+  r.appliedToPage === false && /reload/.test(r.note || ''));
+// resetSessionState clears the SW journal too.
+sentMessages.length = 0;
+resetSessionState();
+await new Promise((res) => setTimeout(res, 0));
+check('resetSessionState clears the SW undo journal', sentMessages.some((m) => m.type === 'voiceResetUndo'));
+responders.voiceApplySettings = (msg) => ({ applied: msg.changes, scopesUsed: {}, liveApplied: true });
 
 // gates: forget_memory / respond_to_proposal require ids seen via get_memory
 r = await dispatchToolCall('forget_memory', { id: 'mem-1' });
@@ -157,11 +133,9 @@ check('invalid proposal response enum is refused', /must be accept/.test(r.error
 r = await dispatchToolCall('respond_to_proposal', { id: 'prop-1', response: 'accept' });
 check('respond works after get_memory returned the id', r.resolved === true && r.status === 'accepted');
 
-// resetSessionState clears gates + undo
-await dispatchToolCall('adjust_settings', { changes: { fontScale: 120 } });
+// resetSessionState clears the model-facing gates.
 await dispatchToolCall('get_memory', {});
 resetSessionState();
-check('reset clears undo stack', !hasUndo());
 r = await dispatchToolCall('respond_to_proposal', { id: 'prop-1', response: 'accept' });
 check('reset clears seen-proposal gate', /unknown proposal id/.test(r.error || ''));
 
@@ -226,10 +200,24 @@ let scopedCalls = [];
 let effective = { settings: {}, provenance: {} };
 let siteCategory = 'news';
 let proposalList = [{ id: 'p1', aspectLabel: 'Dark mode at night', rationale: 'r'.repeat(500) }];
+// A tiny in-memory record store so created-detection + delete-on-undo are
+// observable: scopedRecords[scope] = Map of setting key -> value.
+let scopedRecords = {};
+const recKey = (scope) => (scopedRecords[scope] = scopedRecords[scope] || new Map());
 globalThis.AA_TAXONOMY = { categoryIds: () => ['news', 'video', 'shopping', 'social'] };
 globalThis.Librarian = {
   async getEffectivePreferences() { return effective; },
-  async recordScopedSettings(scope, settings) { scopedCalls.push({ scope, settings }); return ['id']; },
+  async recordScopedSettings(scope, settings) {
+    scopedCalls.push({ scope, settings });
+    for (const [k, v] of Object.entries(settings)) recKey(scope).set(k, v);
+    return ['id'];
+  },
+  async hasScopedSetting(scope, key) { return recKey(scope).has(key); },
+  async getScopedSetting(scope, key) { return recKey(scope).get(key); },
+  async removeScopedSetting(scope, key) {
+    const had = recKey(scope).delete(key);
+    return { removed: had };
+  },
   async getSiteCategory() { return siteCategory; },
   async getProfile() { return { supportAreas: ['vision'], freeText: 'notes here', memoryPaused: false }; },
   async listMemories() {
@@ -302,13 +290,14 @@ tabMessages.length = 0;
 await callRoute({ type: 'voiceApplySettings', changes: { darkMode: false } });
 check('boolean off -> disableTool message', tabMessages.some((m) => m.type === 'disableTool' && m.tool === 'DarkMode'));
 
-// pageZoom
-zoomFactor = 1;
+// pageZoom + journaled undo of it (reverts the pinned tab, not the active one)
+localStore.voiceUndoStack = []; zoomFactor = 1;
 r = await callRoute({ type: 'voiceApplySettings', changes: { pageZoom: 150 } });
 check('pageZoom drives tabs.setZoom', zoomFactor === 1.5 && r.applied.pageZoom === 150);
-check('pageZoom previous captured for undo', r.previous.pageZoom === 100);
 r = await callRoute({ type: 'voiceApplySettings', changes: { pageZoom: 9999 } });
 check('pageZoom clamps to 500', zoomFactor === 5);
+r = await callRoute({ type: 'voiceUndoLast' });
+check('undo reverts the zoom to its pinned previous value', zoomFactor === 1.5 && r.reverted.pageZoom === 150);
 
 // scoped live-apply guard: an explicitly OUT-OF-SCOPE change must NOT re-style
 // the current tab (persist still goes to the scoped record).
@@ -319,19 +308,97 @@ check('out-of-scope change still persists to the scoped record', scopedCalls.som
 check('out-of-scope change does NOT live-apply to the current tab', !tabMessages.some((m) => m.tool === 'VisualAssist'));
 siteCategory = 'news';
 
-// restore path (undo): writes each key to its EXACT recorded scope, reverts the
-// SAME tab's zoom — no re-resolution against the current tab.
-scopedCalls = []; syncStore = {}; zoomFactor = 2;
-r = await callRoute({ type: 'voiceApplySettings', restore: {
-  writes: [{ key: 'fontScale', value: 120, scope: 'category:news' }, { key: 'darkMode', value: false, scope: 'general' }],
-  pageZoom: { value: 100, tabId: 7 },
-} });
-check('restore writes the scoped key to its exact record', scopedCalls.some((c) => c.scope === 'category:news' && c.settings.fontScale === 120));
-check('restore writes the general key to sync', syncStore.darkMode === false);
-check('restore reverts the pinned tab zoom', zoomFactor === 1 && r.applied.pageZoom === 100);
-// restore whose zoom tab is gone reports rejected, not silent success.
-r = await callRoute({ type: 'voiceApplySettings', restore: { writes: [], pageZoom: { value: 100, tabId: 999 } } });
-check('restore of a closed tab reports pageZoom rejected (no false success)', (r.rejected || []).includes('pageZoom'));
+// ---- SW-owned undo journal: created-vs-updated + delete-on-undo ----
+// (a) A change that CREATES a new scoped record → undo DELETES it (no shadow).
+localStore.voiceUndoStack = []; scopedRecords = {}; scopedCalls = [];
+effective = { settings: {}, provenance: {} }; // fontScale currently unscoped → explicit scope creates
+r = await callRoute({ type: 'voiceApplySettings', changes: { fontScale: 175 }, scope: 'category:news' });
+check('creating a scoped record records the write', recKey('category:news').has('fontScale'));
+check('undo entry was journaled by the SW', (localStore.voiceUndoStack || []).length === 1);
+r = await callRoute({ type: 'voiceUndoLast' });
+check('undo DELETES the record the change created (not a shadow value)', !recKey('category:news').has('fontScale'));
+check('undo reports the key reverted to its default', r.reverted.fontScale === 100);
+check('journal popped after a successful undo', (localStore.voiceUndoStack || []).length === 0);
+
+// (b) A change that UPDATES an existing scoped record → undo RESTORES the value.
+scopedRecords = { 'category:news': new Map([['fontScale', 130]]) };
+effective = { settings: { fontScale: 130 }, provenance: { fontScale: 'category:news' } };
+localStore.voiceUndoStack = []; scopedCalls = [];
+await callRoute({ type: 'voiceApplySettings', changes: { fontScale: 175 } }); // provenance routes to category:news
+// post-undo effective reflects the restored 130
+effective = { settings: { fontScale: 130 }, provenance: { fontScale: 'category:news' } };
+r = await callRoute({ type: 'voiceUndoLast' });
+check('undo of an UPDATE restores the prior value to the same record',
+  scopedCalls.some((c) => c.scope === 'category:news' && c.settings.fontScale === 130) && recKey('category:news').has('fontScale'));
+check('undo of an update reports the restored value', r.reverted.fontScale === 130);
+
+// (c) A NEW global key → undo removes it from sync AND removes the general record.
+localStore.voiceUndoStack = []; syncStore = {}; scopedRecords = {};
+effective = { settings: {}, provenance: {} };
+await callRoute({ type: 'voiceApplySettings', changes: { fontScale: 150 } }); // general, was unset → created
+check('new global key written to sync', syncStore.fontScale === 150);
+r = await callRoute({ type: 'voiceUndoLast' });
+check('undo of a created global key REMOVES it from sync (not set to default)', !('fontScale' in syncStore));
+
+// (c2) undo of a CREATED scoped record reports the true LOWER-SCOPE fallback,
+// not the global default (review finding 2).
+localStore.voiceUndoStack = []; syncStore = {}; scopedRecords = {};
+effective = { settings: {}, provenance: {} };
+await callRoute({ type: 'voiceApplySettings', changes: { fontScale: 200 }, scope: 'category:news' }); // creates
+// after the scoped record is deleted, a general fontScale=130 still applies
+effective = { settings: { fontScale: 130 }, provenance: { fontScale: 'general' } };
+r = await callRoute({ type: 'voiceUndoLast' });
+check('undo reports the lower-scope fallback value, not the default', r.reverted.fontScale === 130);
+
+// (c3) undo must NOT delete a created record a later out-of-band edit folded
+// into (review finding 1): the record now holds a newer value than we wrote.
+localStore.voiceUndoStack = []; syncStore = {}; scopedRecords = {};
+effective = { settings: {}, provenance: {} };
+await callRoute({ type: 'voiceApplySettings', changes: { fontScale: 150 } }); // created general, setValue=150
+syncStore.fontScale = 175; // simulate a later popup edit folding into the same key
+r = await callRoute({ type: 'voiceUndoLast' });
+check('undo SKIPS deleting a record a later edit changed', (r.skipped || []).includes('fontScale'));
+check('the later edit survives the undo', syncStore.fontScale === 175);
+
+// (c4) concurrent applies are serialized — no lost journal entry (review 4/5).
+localStore.voiceUndoStack = []; syncStore = {}; scopedRecords = {};
+effective = { settings: {}, provenance: {} };
+await Promise.all([
+  callRoute({ type: 'voiceApplySettings', changes: { fontScale: 150 } }),
+  callRoute({ type: 'voiceApplySettings', changes: { lineHeight: 2 } }),
+]);
+check('concurrent applies both journal an entry (serialized, none lost)', (localStore.voiceUndoStack || []).length === 2);
+
+// (d) failed undo keeps the entry (peek, pop-on-success semantics, SW-side).
+// An UPDATE to a global key (stored value present → created=false) reverts via
+// sync.set; make that throw during undo and confirm the entry survives.
+localStore.voiceUndoStack = []; syncStore = { lineHeight: 1.5 }; scopedRecords = {};
+effective = { settings: {}, provenance: {} };
+await callRoute({ type: 'voiceApplySettings', changes: { lineHeight: 2 } }); // update, sync now 2
+const origSyncSet = chrome.storage.sync.set;
+chrome.storage.sync.set = async () => { throw new Error('quota'); };
+r = await callRoute({ type: 'voiceUndoLast' });
+check('a failed undo surfaces the error', /could not save|quota/.test(r.error || ''));
+check('a failed undo keeps the journal entry', (localStore.voiceUndoStack || []).length === 1);
+chrome.storage.sync.set = origSyncSet;
+r = await callRoute({ type: 'voiceUndoLast' });
+check('retry after a failed undo succeeds', !r.error && r.reverted.lineHeight === 1.5);
+
+// (e) voiceResetUndo clears the journal.
+localStore.voiceUndoStack = [{ writes: [{ key: 'x', value: 1, scope: 'general' }] }];
+await callRoute({ type: 'voiceResetUndo' });
+check('voiceResetUndo empties the journal', (localStore.voiceUndoStack || []).length === 0);
+check('undo on an empty journal is a friendly error', /nothing to undo/.test((await callRoute({ type: 'voiceUndoLast' })).error || ''));
+
+// (f) liveApplied honesty: no content script on the page → liveApplied false.
+localStore.voiceUndoStack = []; syncStore = {}; scopedRecords = {};
+effective = { settings: {}, provenance: {} };
+globalThis.__noContentScript = true;
+r = await callRoute({ type: 'voiceApplySettings', changes: { darkMode: true } });
+check('liveApplied is false when the page has no content script', r.liveApplied === false);
+globalThis.__noContentScript = false;
+r = await callRoute({ type: 'voiceApplySettings', changes: { darkMode: false } });
+check('liveApplied is true when the page received the message', r.liveApplied === true);
 
 // getContext
 syncStore = { fontScale: 150, darkMode: false };

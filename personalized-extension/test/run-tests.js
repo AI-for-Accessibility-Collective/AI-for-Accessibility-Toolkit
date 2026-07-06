@@ -260,9 +260,27 @@ server.listen(PORT, async () => {
   } else {
     console.log('FAIL: prompt missing forget confirmation rules');
   }
-  for (const r of ['voiceGetContext', 'voiceApplySettings', 'voiceReadPage', 'voiceSuggestCapabilities', 'voiceGetMemory']) {
+  for (const r of ['voiceGetContext', 'voiceApplySettings', 'voiceUndoLast', 'voiceResetUndo', 'voiceReadPage', 'voiceSuggestCapabilities', 'voiceGetMemory']) {
     if (voiceRoutesCode.includes(`'${r}'`)) console.log(`PASS: SW voice route '${r}'`);
     else console.log(`FAIL: SW missing voice route '${r}'`);
+  }
+  // Undo journal is SW-owned (survives a lost response) and uses the Librarian
+  // delete primitive so a created record is removed, not shadowed.
+  if (voiceRoutesCode.includes('UNDO_STACK_KEY') && voiceRoutesCode.includes('removeScopedSetting')) {
+    console.log('PASS: SW owns the undo journal + deletes created records on undo');
+  } else {
+    console.log('FAIL: undo journal must be SW-owned and use removeScopedSetting');
+  }
+  const librarianSrc = fs.readFileSync(path.join(ROOT, '..', 'toolkit/core/librarian.js'), 'utf8');
+  if (librarianSrc.includes('removeScopedSetting') && librarianSrc.includes('hasScopedSetting')) {
+    console.log('PASS: Librarian exposes the scoped-setting delete primitive');
+  } else {
+    console.log('FAIL: Librarian missing removeScopedSetting/hasScopedSetting');
+  }
+  if (/appliedToPage|reload/.test(voicePromptCode)) {
+    console.log('PASS: prompt tells the model to relay the "applies on reload" case');
+  } else {
+    console.log('FAIL: prompt missing the not-applied-live honesty rule');
   }
   if (bgCode.includes("importScripts('voice-routes.js')")) {
     console.log('PASS: background imports voice-routes.js');

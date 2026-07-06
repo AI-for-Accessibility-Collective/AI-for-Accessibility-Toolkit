@@ -18,7 +18,6 @@
 // is small).
 
 import { settingsMeta } from '../../../../skills/registry.js';
-import { createUndoStack } from './undo.js';
 import * as storage from '../storage.js';
 
 const SEND_TIMEOUT_MS = 30000;
@@ -198,19 +197,24 @@ export const TOOL_DECLARATIONS = [
 
 // ---- session state ---------------------------------------------------------
 
-// Reset on restart() so a fresh conversation can't undo or delete things the
-// user approved in a previous one.
-const undoStack = createUndoStack(10);
+// The undo stack lives in the SW (voice-routes.js, chrome.storage.local) so a
+// write that lands but whose response is lost stays undoable and survives an
+// offscreen teardown. Only the model-facing gates live here. Reset on a fresh
+// conversation so it can't undo or delete things approved in a previous one.
 const seenMemoryIds = new Set();
 const seenProposalIds = new Set();
 // id -> memory text, so forget_memory's confirmation chip can name what died.
 const seenMemoryText = new Map();
 
 export function resetSessionState() {
-  undoStack.clear();
   seenMemoryIds.clear();
   seenProposalIds.clear();
   seenMemoryText.clear();
+  // Clear the SW-owned undo journal too. Returns the promise so the caller can
+  // AWAIT it before opening the new session — otherwise a straggler write from
+  // the previous conversation could land after the reset and leak an
+  // undoable entry across sessions.
+  return sendRuntime({ type: 'voiceResetUndo' }).catch(() => {});
 }
 
 // ---- dispatcher --------------------------------------------------------------
@@ -225,43 +229,33 @@ export async function dispatchToolCall(name, args, signal) {
       const changes = (args && typeof args.changes === 'object' && args.changes) || null;
       if (!changes || !Object.keys(changes).length) return { error: 'changes is required (an object of setting: value)' };
       const scope = (args && typeof args.scope === 'string' && args.scope) || null;
+      // The SW route journals the undo entry itself (survives a lost response),
+      // detects created-vs-updated records so undo can delete what it created,
+      // and reports whether the current page received the change live.
       const resp = await sendRuntime({ type: 'voiceApplySettings', changes, scope: scope || undefined });
-      // Build a precise undo entry: each key reverts to its captured previous
-      // value AT THE EXACT SCOPE it was written to (resp.scopesUsed), and zoom
-      // reverts the SAME tab. Re-resolving scope at undo time (the old bug)
-      // could clobber a different scope. Push even on a partial error — the
-      // committed writes still need to be undoable.
-      if (resp && resp.previous && Object.keys(resp.previous).length) {
-        const writes = [];
-        for (const [key, value] of Object.entries(resp.previous)) {
-          if (key === 'pageZoom') continue;
-          writes.push({ key, value, scope: (resp.scopesUsed && resp.scopesUsed[key]) || 'general' });
-        }
-        const pageZoom = (resp.previous.pageZoom != null && resp.pageZoomTabId != null)
-          ? { value: resp.previous.pageZoom, tabId: resp.pageZoomTabId } : null;
-        undoStack.push({ writes, pageZoom });
-      }
       if (resp && resp.error) return resp;
+      const notes = [];
+      if (resp.rejected) notes.push('some keys were invalid or out of range');
+      // Honest about the live page: false only when the current tab had no
+      // content script to receive it (the change is saved and applies on reload).
+      if (resp.liveApplied === false) notes.push('saved, but this page will show it after you reload');
       return {
         applied: resp.applied,
         scopesUsed: resp.scopesUsed,
-        ...(resp.rejected ? { rejected: resp.rejected, note: 'rejected keys were invalid or out of range' } : {}),
+        appliedToPage: resp.liveApplied !== false,
+        ...(resp.rejected ? { rejected: resp.rejected } : {}),
+        ...(notes.length ? { note: notes.join('; ') } : {}),
       };
     }
 
     case 'undo_last_change': {
-      // Peek, not pop: only consume the entry once the revert actually lands,
-      // so a failed undo (storage error / timeout) doesn't silently drop it
-      // and skip a step on the next "undo".
-      const entry = undoStack.peek();
-      if (!entry) return { error: 'nothing to undo in this session' };
-      const resp = await sendRuntime({ type: 'voiceApplySettings', restore: { writes: entry.writes, pageZoom: entry.pageZoom } });
+      // The SW owns the journal: it peeks, reverts to the exact scope/tab, and
+      // pops only on success (a failed undo keeps the step).
+      const resp = await sendRuntime({ type: 'voiceUndoLast' });
       if (resp && resp.error) return resp;
-      undoStack.pop();
-      const reverted = { ...(resp.applied || {}) };
       return {
-        reverted,
-        remainingUndos: undoStack.size(),
+        reverted: { ...(resp.reverted || {}) },
+        remainingUndos: resp.remainingUndos,
         ...(resp.rejected ? { rejected: resp.rejected } : {}),
       };
     }
@@ -435,12 +429,11 @@ export function describeAction(name, args, result) {
   }
 }
 
-// The panel's Undo button pops the same stack the undo_last_change tool uses.
+// The panel's Undo button drives the same SW journal the undo_last_change tool
+// uses.
 export async function undoLastFromUi() {
   return await dispatchToolCall('undo_last_change', {});
 }
-
-export function hasUndo() { return undoStack.size() > 0; }
 
 // ---- SW messaging ------------------------------------------------------------
 

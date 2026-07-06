@@ -279,6 +279,25 @@ function check(name, cond) {
   check('invalid scope falls back to general',
     genShard3.some(r => r.aspect === 'setting.darkMode' && r.settings.darkMode === true));
 
+  // 13b. Delete primitive: hasScopedSetting reflects presence; removeScopedSetting
+  // is the true inverse of recordScopedSettings (deletes the record, not shadows it).
+  await DS.setMemoryShard('general', []);
+  await DS.setMemoryShard('category:news', []);
+  check('hasScopedSetting is false before any write', (await L.hasScopedSetting('category:news', 'fontScale')) === false);
+  check('getScopedSetting is undefined before any write', (await L.getScopedSetting('category:news', 'fontScale')) === undefined);
+  await L.recordScopedSettings('category:news', { fontScale: 175 });
+  check('hasScopedSetting is true after a write', (await L.hasScopedSetting('category:news', 'fontScale')) === true);
+  check('getScopedSetting returns the written value', (await L.getScopedSetting('category:news', 'fontScale')) === 175);
+  const rem = await L.removeScopedSetting('category:news', 'fontScale');
+  check('removeScopedSetting reports it removed a record', rem.removed === true);
+  check('removeScopedSetting deletes the record (no shadow left)',
+    (await DS.getMemoryShard('category:news')).every(r => r.aspect !== 'setting.fontScale'));
+  const remPrefs = await L.getEffectivePreferences('https://www.nytimes.com/article', []);
+  check('a removed scoped setting no longer applies', remPrefs.settings.fontScale === undefined);
+  check('removeScopedSetting is idempotent', (await L.removeScopedSetting('category:news', 'fontScale')).removed === false);
+  check('removeScopedSetting on an invalid scope does not throw',
+    (await L.removeScopedSetting('bad!!scope', 'fontScale')).removed === false);
+
   // 14. Settings unit handling. Coercion (incl. the multiplier guess) now lives
   // at the WRITE boundary + a one-time migration; the READ path is clamp-only
   // (the `>10` heuristic was deleted from reads). So a RAW record inserted
