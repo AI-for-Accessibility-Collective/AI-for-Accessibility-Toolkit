@@ -27,7 +27,13 @@
 
 export const EXPORT_PREFIX = 'aa.shared.export.'; // + appId
 export const INBOX_KEY = 'aa.shared.inbox';
+export const PUBLISHED_INDEX_KEY = 'aa.shared.published'; // [appId] currently published
 export const ENVELOPE_VERSION = 1;
+
+// A drain failure is TERMINAL (the entry can never succeed — drop it) vs
+// TRANSIENT (would succeed once the user unpauses / switches back — keep it to
+// retry). sharing-paused and partition-switched are transient.
+const TRANSIENT_REASONS = new Set(['sharing-paused', 'partition-switched']);
 
 async function removeKey(shared, key) {
   if (typeof shared.remove === 'function') await shared.remove(key);
@@ -48,12 +54,15 @@ export function createSharedTransport({ shared, clock }) {
 
     // Refresh the shared copies: one envelope per app that currently passes
     // exportAbilityModel (active grant + sharing not paused); every other
-    // app's envelope is deleted. `appIds` is the set to reconcile — pass the
-    // union of currently-granted apps and any previously published ones so
-    // revocations retract.
+    // app's envelope is DELETED (retracted). The transport OWNS reconciliation
+    // via a persisted published-index, so a revoked app is always visited and
+    // retracted even if the caller doesn't name it (revoke=delete removes it
+    // from listGrants, but its stale envelope must not linger). `appIds` is an
+    // optional extra set to consider (e.g. apps requesting for the first time).
     async publishExports(librarian, appIds = null) {
       const grants = await librarian.listGrants();
-      const ids = new Set([...(appIds || []), ...grants.map(g => g.appId)]);
+      const prevIndex = (await shared.get(PUBLISHED_INDEX_KEY)) || [];
+      const ids = new Set([...(appIds || []), ...prevIndex, ...grants.map(g => g.appId)]);
       const published = [], retracted = [];
       for (const appId of ids) {
         const res = await librarian.exportAbilityModel(appId);
@@ -68,26 +77,29 @@ export function createSharedTransport({ shared, clock }) {
           retracted.push(appId);
         }
       }
+      await shared.set(PUBLISHED_INDEX_KEY, published);
       return { published, retracted };
     },
 
     // Feed every posted insight through the Librarian's grant-gated,
-    // never-silent import. Malformed entries are dropped; the inbox is
-    // cleared regardless (a failed insight is reported, not retried forever).
+    // never-silent import. Terminally-failed (malformed / no-grant / bad-insight)
+    // and succeeded entries are consumed; TRANSIENTLY-failed entries (sharing
+    // paused, partition switched) are KEPT so the next drain retries them once
+    // the user unpauses — a paused-window insight is deferred, not lost.
     async drainInbox(librarian) {
-      const inbox = (await shared.get(INBOX_KEY)) || [];
-      const results = [];
+      const raw = await shared.get(INBOX_KEY);
+      const inbox = Array.isArray(raw) ? raw : [];
+      const results = [], keep = [];
       for (const entry of inbox) {
         if (!entry || typeof entry.sourceAppId !== 'string' || !entry.insight) {
           results.push({ ok: false, reason: 'malformed' });
           continue;
         }
-        results.push({
-          sourceAppId: entry.sourceAppId,
-          ...(await librarian.importInsight(entry.sourceAppId, entry.insight)),
-        });
+        const r = { sourceAppId: entry.sourceAppId, ...(await librarian.importInsight(entry.sourceAppId, entry.insight)) };
+        results.push(r);
+        if (!r.ok && TRANSIENT_REASONS.has(r.reason)) keep.push(entry);
       }
-      await shared.set(INBOX_KEY, []);
+      await shared.set(INBOX_KEY, keep);
       return results;
     },
 

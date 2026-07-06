@@ -21,30 +21,43 @@
 export const BLOB_KIND = 'aa-profile-blob';
 export const BLOB_VERSION = 1;
 
+// Only the ability-model SOURCE keys travel — the exact keys toAbilityModel
+// reads (core/ability.js), so the blob's minimization matches the model it
+// mirrors and no unrelated `fields.*` legacy data can ride along.
+const EXPORTED_FIELD_KEYS = ['needs', 'readingLevel', 'confidence'];
+
 /** Build the portable blob from a stored profile + its AbilityModel view. */
 export function buildProfileBlob(profile, abilityModel, now) {
   const p = profile || {};
+  const srcFields = (p.fields && typeof p.fields === 'object') ? p.fields : {};
+  const fields = {};
+  for (const k of EXPORTED_FIELD_KEYS) {
+    if (k in srcFields) fields[k] = JSON.parse(JSON.stringify(srcFields[k]));
+  }
   return {
     kind: BLOB_KIND,
     v: BLOB_VERSION,
     exportedAt: now,
     abilityModel: abilityModel || null,
     profile: {
-      supportAreas: Array.isArray(p.supportAreas) ? [...p.supportAreas] : [],
-      freeText: String(p.freeText || ''),
-      fields: p.fields ? JSON.parse(JSON.stringify(p.fields)) : {},
+      supportAreas: Array.isArray(p.supportAreas) ? p.supportAreas.filter(x => typeof x === 'string').slice(0, 20) : [],
+      freeText: String(p.freeText || '').slice(0, 2000),
+      fields,
       metaPreferences: { language: (p.metaPreferences && p.metaPreferences.language) || 'standard' },
       updatedAt: p.updatedAt || null,
     },
   };
 }
 
-/** True iff `blob` is a structurally valid profile blob this version reads. */
+/** True iff `blob` is a structurally valid profile blob this version reads.
+ *  `exportedAt` MUST be a finite positive number — a NaN/Infinity timestamp
+ *  would defeat the last-write-wins guard (all comparisons against NaN are
+ *  false; Infinity freezes the device), so it is rejected here. */
 export function validateProfileBlob(blob) {
   return !!(blob
     && blob.kind === BLOB_KIND
     && blob.v === BLOB_VERSION
-    && typeof blob.exportedAt === 'number'
+    && Number.isFinite(blob.exportedAt) && blob.exportedAt > 0
     && blob.profile && typeof blob.profile === 'object'
     && Array.isArray(blob.profile.supportAreas));
 }

@@ -1248,14 +1248,29 @@ function setupSharingPanel() {
     const file = importFile.files && importFile.files[0];
     if (!file) return;
     try {
-      const blob = JSON.parse(await file.text());
-      const resp = await sendMessageP({ type: 'librarianImportProfileBlob', blob });
-      if (blobStatus) {
-        blobStatus.textContent = resp?.ok
-          ? (resp.merged ? 'Profile imported.' : 'Your profile is already up to date.')
-          : 'That file is not a valid accessibility profile.';
+      const parsed = JSON.parse(await file.text());
+      // The file is either a profile blob (another device/app → here) or an
+      // insight OUTBOX (a consumer app like ArtInsight → here). Each insight in
+      // an outbox still becomes a consent card via importInsight.
+      if (parsed && parsed.kind === 'aa-insight-outbox') {
+        const resp = await sendMessageP({ type: 'librarianImportInsightOutbox', outbox: parsed });
+        const drafted = (resp?.results || []).filter(r => r.ok).length;
+        if (blobStatus) {
+          blobStatus.textContent = resp?.ok
+            ? (drafted ? `${drafted} suggestion${drafted === 1 ? '' : 's'} added for your review.`
+                       : 'No new suggestions to review (or that app is not allowed to share).')
+            : 'That file is not a valid suggestions file.';
+        }
+        if (drafted) await new Promise(r => setTimeout(r, 200)); // let the badge update
+      } else {
+        const resp = await sendMessageP({ type: 'librarianImportProfileBlob', blob: parsed });
+        if (blobStatus) {
+          blobStatus.textContent = resp?.ok
+            ? (resp.merged ? 'Profile imported.' : 'Your profile is already up to date.')
+            : 'That file is not a valid accessibility profile.';
+        }
+        if (resp?.merged) location.reload();
       }
-      if (resp?.merged) location.reload();
     } catch {
       if (blobStatus) blobStatus.textContent = 'That file could not be read.';
     } finally {

@@ -83,20 +83,27 @@ const artView = await transport.readExport('artinsight');
 check('ArtInsight can read its granted, scoped slice from the shared store',
   !!artView && artView.abilityModel.needs.some(n => n.dimension === 'textSize'));
 check('ArtInsight slice includes granted language scope', 'language' in artView.abilityModel);
-// Revocation retracts the shared copy on the next publish.
+// Revocation retracts the shared copy on the next publish — WITHOUT the caller
+// re-naming the revoked app (the transport's published-index owns reconciliation).
 await web.revokeGrant('artinsight');
-await transport.publishExports(web, ['artinsight']);
-check('revoke → the shared export copy is retracted', (await transport.readExport('artinsight')) === null);
+await transport.publishExports(web);
+check('revoke → the shared export copy is retracted (index-driven, no re-pass)', (await transport.readExport('artinsight')) === null);
 check('XR export still published (revocation is per-app)', !!(await transport.readExport('xr-headset')));
 
 // ======================= 5. sharing OFF switch hard-stops the transport =======================
 await web.setSharingPaused(true);
-await transport.publishExports(web, ['xr-headset']);
+await transport.publishExports(web);
 check('global OFF switch retracts even active-grant exports', (await transport.readExport('xr-headset')) === null);
-await transport.postInsight('xr-headset', { kind: 'k', change: { op: 'profile-set', path: 'fields.x', value: 1 } });
+await transport.postInsight('xr-headset', { kind: 'k', change: { op: 'profile-set', path: 'fields.contrast', value: 'high' } });
 const drainedPaused = await transport.drainInbox(web);
 check('global OFF switch blocks inbox imports', drainedPaused[0].reason === 'sharing-paused');
 await web.setSharingPaused(false);
+// The paused-window insight was DEFERRED (kept), not lost — a re-drain applies it.
+const drainedResume = await transport.drainInbox(web);
+check('paused-window insight is retried after unpause (not silently lost)', drainedResume.length === 1 && drainedResume[0].ok === true);
+check('inbox is empty after a successful drain', (await transport.drainInbox(web)).length === 0);
+// republish so XR's export is back for the blob section's later reads.
+await transport.publishExports(web);
 
 // ======================= 6. user-mediated blob (XR⇄web, no shared store) =======================
 const blob = await web.exportProfileBlob();
@@ -112,11 +119,44 @@ check('second device now has the same neutral need', (await phone.getAbilityMode
 // Older/equal blob is ignored (LWW).
 check('re-importing the same blob is a no-op (idempotent LWW)', (await phone.importProfileBlob(blob)).merged === false);
 check('a malformed blob is refused', (await phone.importProfileBlob({ kind: 'nope' })).reason === 'bad-blob');
+// A non-finite exportedAt must be refused — it would otherwise defeat LWW.
+check('a NaN-timestamp blob is refused (LWW poison guarded)', (await phone.importProfileBlob({ ...blob, exportedAt: NaN })).reason === 'bad-blob');
+check('an Infinity-timestamp blob is refused', (await phone.importProfileBlob({ ...blob, exportedAt: Infinity })).reason === 'bad-blob');
+// A language-only local edit must NOT be reverted by an older blob (the LWW
+// "meaningful" set includes metaPreferences.language).
+const { datastore: ds3, librarian: dev3 } = createToolkit({ kv: memKV(), clock, toolsRegistry });
+await ds3.runMigrations();
+T += 100; await dev3.setProfileField('metaPreferences.language', 'plain'); // a real, recent local choice
+const olderBlob = { ...blob, exportedAt: T - 50, profile: { ...blob.profile, metaPreferences: { language: 'standard' } } };
+await dev3.importProfileBlob(olderBlob);
+check('older blob does NOT revert a real local language edit', (await dev3.getProfile()).metaPreferences.language === 'plain');
 // The phone's own SurfaceProfile (fontScale) is NOT overwritten by the blob.
 await phone.recordScopedSettings('general', { fontScale: 200 });
 await phone.importProfileBlob({ ...blob, exportedAt: T + 10 });
 check('blob import leaves the device-local SurfaceProfile untouched',
   (await phone.getEffectivePreferences('https://x.test/', [])).settings.fontScale === 200);
+
+// ======================= 7. ArtInsight → web: user-carried insight outbox =======================
+// A consumer app (ArtInsight) exports an outbox of what it learned; the user
+// carries it home; each insight is still grant-gated + never-silent.
+const artGrant = await web.requestGrant('artinsight', ['language'], { appLabel: 'ArtInsight' });
+await web.respondToProposal(artGrant.proposalId, 'accept');
+const outbox = {
+  kind: 'aa-insight-outbox', v: 1, sourceAppId: 'artinsight', exportedAt: T,
+  insights: [
+    { kind: 'verbosity.preference', confidence: 0.7, label: 'Prefers detailed descriptions',
+      change: { op: 'add-memory', record: { text: 'Prefers detailed image descriptions' } } },
+  ],
+};
+const ob = await web.importInsightOutbox(outbox);
+check('outbox import drafts a grant-gated consent proposal', ob.ok === true && ob.results[0].ok === true);
+check('outbox insight NOT applied before consent', !(await web.listMemories()).memories.some(m => /detailed image/.test(m.text)));
+await web.respondToProposal(ob.results[0].proposalId, 'accept');
+check('user approved the ArtInsight suggestion → it is now a memory', (await web.listMemories()).memories.some(m => /detailed image/.test(m.text)));
+// An outbox from an app with NO grant is refused per-insight.
+const ob2 = await web.importInsightOutbox({ kind: 'aa-insight-outbox', v: 1, sourceAppId: 'ungranted', exportedAt: T, insights: [{ kind: 'k', change: { op: 'add-memory', record: { text: 't' } } }] });
+check('outbox from an ungranted app is refused (no-grant)', ob2.results[0].reason === 'no-grant');
+check('a malformed outbox is refused', (await web.importInsightOutbox({ kind: 'nope' })).reason === 'bad-outbox');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

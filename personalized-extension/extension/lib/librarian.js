@@ -156,24 +156,30 @@
   // ../toolkit/sync/blob.js
   var BLOB_KIND = "aa-profile-blob";
   var BLOB_VERSION = 1;
+  var EXPORTED_FIELD_KEYS = ["needs", "readingLevel", "confidence"];
   function buildProfileBlob(profile, abilityModel, now) {
     const p = profile || {};
+    const srcFields = p.fields && typeof p.fields === "object" ? p.fields : {};
+    const fields = {};
+    for (const k of EXPORTED_FIELD_KEYS) {
+      if (k in srcFields) fields[k] = JSON.parse(JSON.stringify(srcFields[k]));
+    }
     return {
       kind: BLOB_KIND,
       v: BLOB_VERSION,
       exportedAt: now,
       abilityModel: abilityModel || null,
       profile: {
-        supportAreas: Array.isArray(p.supportAreas) ? [...p.supportAreas] : [],
-        freeText: String(p.freeText || ""),
-        fields: p.fields ? JSON.parse(JSON.stringify(p.fields)) : {},
+        supportAreas: Array.isArray(p.supportAreas) ? p.supportAreas.filter((x) => typeof x === "string").slice(0, 20) : [],
+        freeText: String(p.freeText || "").slice(0, 2e3),
+        fields,
         metaPreferences: { language: p.metaPreferences && p.metaPreferences.language || "standard" },
         updatedAt: p.updatedAt || null
       }
     };
   }
   function validateProfileBlob(blob) {
-    return !!(blob && blob.kind === BLOB_KIND && blob.v === BLOB_VERSION && typeof blob.exportedAt === "number" && blob.profile && typeof blob.profile === "object" && Array.isArray(blob.profile.supportAreas));
+    return !!(blob && blob.kind === BLOB_KIND && blob.v === BLOB_VERSION && Number.isFinite(blob.exportedAt) && blob.exportedAt > 0 && blob.profile && typeof blob.profile === "object" && Array.isArray(blob.profile.supportAreas));
   }
 
   // ../toolkit/core/librarian.js
@@ -728,6 +734,20 @@
         const pending = props.find((p) => p.status === "pending" && p.aspect === `insight:${sourceAppId}:${kind}` && p.change && p.change.op === "cross-app-insight");
         return pending ? { ok: true, proposalId: pending.id } : { ok: false, reason: "suppressed" };
       },
+      // Batch entry for a user-carried insight OUTBOX (the ArtInsight→web return
+      // path, or any consumer app's export). Each insight still goes through the
+      // SAME grant-gated, never-silent importInsight — the outbox is just a
+      // transport, it grants nothing. Returns per-insight results.
+      async importInsightOutbox(outbox) {
+        if (!outbox || outbox.kind !== "aa-insight-outbox" || typeof outbox.sourceAppId !== "string" || !Array.isArray(outbox.insights)) {
+          return { ok: false, reason: "bad-outbox" };
+        }
+        const results = [];
+        for (const insight of outbox.insights.slice(0, 50)) {
+          results.push(await this.importInsight(outbox.sourceAppId, insight));
+        }
+        return { ok: true, results };
+      },
       // ====================== ACTING USER (Phase 3) ======================
       // A lightweight "who's using this now?" partition so two people on one
       // device/headset never cross-contaminate. The datastore owns the physical
@@ -763,13 +783,13 @@
       async importProfileBlob(blob) {
         if (!validateProfileBlob(blob)) return { ok: false, reason: "bad-blob" };
         const local = await getOrInitProfile();
-        const localMeaningful = Array.isArray(local.supportAreas) && local.supportAreas.length || local.freeText && local.freeText.length || local.fields && Object.keys(local.fields).length;
+        const localMeaningful = Array.isArray(local.supportAreas) && local.supportAreas.length || local.freeText && local.freeText.length || local.fields && Object.keys(local.fields).length || local.metaPreferences && local.metaPreferences.language && local.metaPreferences.language !== "standard";
         const localAt = local.updatedAt || 0;
         if (localMeaningful && blob.exportedAt <= localAt) return { ok: true, merged: false, reason: "older-or-equal" };
         await DS().patch("mine.profile", (p) => {
           p = p || structuredClone(PROFILE_DEFAULTS);
           const bp = blob.profile;
-          p.supportAreas = Array.isArray(bp.supportAreas) ? bp.supportAreas.slice() : p.supportAreas;
+          p.supportAreas = Array.isArray(bp.supportAreas) ? bp.supportAreas.filter((x) => typeof x === "string") : p.supportAreas;
           p.freeText = typeof bp.freeText === "string" ? bp.freeText : p.freeText;
           if (bp.fields && typeof bp.fields === "object") {
             p.fields = JSON.parse(JSON.stringify(bp.fields));

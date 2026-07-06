@@ -712,6 +712,22 @@ export function createLibrarian({
       return pending ? { ok: true, proposalId: pending.id } : { ok: false, reason: 'suppressed' };
     },
 
+    // Batch entry for a user-carried insight OUTBOX (the ArtInsight→web return
+    // path, or any consumer app's export). Each insight still goes through the
+    // SAME grant-gated, never-silent importInsight — the outbox is just a
+    // transport, it grants nothing. Returns per-insight results.
+    async importInsightOutbox(outbox) {
+      if (!outbox || outbox.kind !== 'aa-insight-outbox' || typeof outbox.sourceAppId !== 'string'
+        || !Array.isArray(outbox.insights)) {
+        return { ok: false, reason: 'bad-outbox' };
+      }
+      const results = [];
+      for (const insight of outbox.insights.slice(0, 50)) {
+        results.push(await this.importInsight(outbox.sourceAppId, insight));
+      }
+      return { ok: true, results };
+    },
+
     // ====================== ACTING USER (Phase 3) ======================
     // A lightweight "who's using this now?" partition so two people on one
     // device/headset never cross-contaminate. The datastore owns the physical
@@ -761,15 +777,20 @@ export function createLibrarian({
       // would otherwise always beat an older blob and break the very case this
       // path exists for (import onto a new device). An unwritten default always
       // yields to an import.
+      // The "meaningful" set MUST match the set the merge overwrites, or an
+      // older blob could silently revert a real local edit to a field the guard
+      // ignored. Includes metaPreferences.language (a user-owned, exported field
+      // the merge writes).
       const localMeaningful = (Array.isArray(local.supportAreas) && local.supportAreas.length)
         || (local.freeText && local.freeText.length)
-        || (local.fields && Object.keys(local.fields).length);
+        || (local.fields && Object.keys(local.fields).length)
+        || (local.metaPreferences && local.metaPreferences.language && local.metaPreferences.language !== 'standard');
       const localAt = local.updatedAt || 0;
       if (localMeaningful && blob.exportedAt <= localAt) return { ok: true, merged: false, reason: 'older-or-equal' };
       await DS().patch('mine.profile', (p) => {
         p = p || structuredClone(PROFILE_DEFAULTS);
         const bp = blob.profile;
-        p.supportAreas = Array.isArray(bp.supportAreas) ? bp.supportAreas.slice() : p.supportAreas;
+        p.supportAreas = Array.isArray(bp.supportAreas) ? bp.supportAreas.filter(x => typeof x === 'string') : p.supportAreas;
         p.freeText = typeof bp.freeText === 'string' ? bp.freeText : p.freeText;
         // fields (the ability-model source) — imported wholesale, but sanitized
         // through the same prototype-safe path constraints (plain object only).
