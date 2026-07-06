@@ -1,5 +1,5 @@
 (() => {
-  // skills/registry.js
+  // personalized-extension/skills/registry.js
   var settingsMeta = {
     darkMode: { type: "boolean", description: "Dark theme" },
     fontScale: { type: "number", range: [50, 200], description: "Font size percentage" },
@@ -48,33 +48,7 @@
     return lines;
   }
 
-  // extension/offscreen/src/live/undo.js
-  function createUndoStack(max = 10) {
-    const stack = [];
-    return {
-      push(entry) {
-        const hasWrites = entry && Array.isArray(entry.writes) && entry.writes.length;
-        const hasZoom = entry && entry.pageZoom;
-        if (!hasWrites && !hasZoom) return;
-        stack.push(entry);
-        if (stack.length > max) stack.shift();
-      },
-      pop() {
-        return stack.pop() || null;
-      },
-      peek() {
-        return stack[stack.length - 1] || null;
-      },
-      size() {
-        return stack.length;
-      },
-      clear() {
-        stack.length = 0;
-      }
-    };
-  }
-
-  // extension/offscreen/src/storage.js
+  // personalized-extension/extension/offscreen/src/storage.js
   var HAS_STORAGE = !!(globalThis.chrome && chrome.storage);
   if (!HAS_STORAGE) {
     console.info("[voice] chrome.storage not exposed to offscreen; using SW-proxy fallback (this is expected on some Chrome builds).");
@@ -162,7 +136,7 @@
     return () => _changeListeners.delete(fn);
   }
 
-  // extension/offscreen/src/live/tools.js
+  // personalized-extension/extension/offscreen/src/live/tools.js
   var SEND_TIMEOUT_MS = 3e4;
   var PAGE_ZOOM = { range: [25, 500], description: "Whole-page zoom percent (magnifies everything; remembered per site). 100 = normal." };
   function changesSchema() {
@@ -304,15 +278,15 @@
       ]
     }
   ];
-  var undoStack = createUndoStack(10);
   var seenMemoryIds = /* @__PURE__ */ new Set();
   var seenProposalIds = /* @__PURE__ */ new Set();
   var seenMemoryText = /* @__PURE__ */ new Map();
   function resetSessionState() {
-    undoStack.clear();
     seenMemoryIds.clear();
     seenProposalIds.clear();
     seenMemoryText.clear();
+    return sendRuntime({ type: "voiceResetUndo" }).catch(() => {
+    });
   }
   async function dispatchToolCall(name, args, signal) {
     if (signal?.aborted) return { error: "cancelled" };
@@ -324,32 +298,24 @@
         if (!changes || !Object.keys(changes).length) return { error: "changes is required (an object of setting: value)" };
         const scope = args && typeof args.scope === "string" && args.scope || null;
         const resp = await sendRuntime({ type: "voiceApplySettings", changes, scope: scope || void 0 });
-        if (resp && resp.previous && Object.keys(resp.previous).length) {
-          const writes = [];
-          for (const [key, value] of Object.entries(resp.previous)) {
-            if (key === "pageZoom") continue;
-            writes.push({ key, value, scope: resp.scopesUsed && resp.scopesUsed[key] || "general" });
-          }
-          const pageZoom = resp.previous.pageZoom != null && resp.pageZoomTabId != null ? { value: resp.previous.pageZoom, tabId: resp.pageZoomTabId } : null;
-          undoStack.push({ writes, pageZoom });
-        }
         if (resp && resp.error) return resp;
+        const notes = [];
+        if (resp.rejected) notes.push("some keys were invalid or out of range");
+        if (resp.liveApplied === false) notes.push("saved, but this page will show it after you reload");
         return {
           applied: resp.applied,
           scopesUsed: resp.scopesUsed,
-          ...resp.rejected ? { rejected: resp.rejected, note: "rejected keys were invalid or out of range" } : {}
+          appliedToPage: resp.liveApplied !== false,
+          ...resp.rejected ? { rejected: resp.rejected } : {},
+          ...notes.length ? { note: notes.join("; ") } : {}
         };
       }
       case "undo_last_change": {
-        const entry = undoStack.peek();
-        if (!entry) return { error: "nothing to undo in this session" };
-        const resp = await sendRuntime({ type: "voiceApplySettings", restore: { writes: entry.writes, pageZoom: entry.pageZoom } });
+        const resp = await sendRuntime({ type: "voiceUndoLast" });
         if (resp && resp.error) return resp;
-        undoStack.pop();
-        const reverted = { ...resp.applied || {} };
         return {
-          reverted,
-          remainingUndos: undoStack.size(),
+          reverted: { ...resp.reverted || {} },
+          remainingUndos: resp.remainingUndos,
           ...resp.rejected ? { rejected: resp.rejected } : {}
         };
       }
@@ -521,7 +487,7 @@
     return Promise.race([call, timeout]).finally(() => clearTimeout(timer));
   }
 
-  // extension/offscreen/src/live/prompt.js
+  // personalized-extension/extension/offscreen/src/live/prompt.js
   var BASE_INSTRUCTION = `You are the voice assistant built into an accessibility browser extension. The user speaks (or types) to you; you speak back briefly and use tools to act. Many users are not technical and rely on this extension to make the web usable. Be warm, concrete, and short.
 
 VOICE STYLE
@@ -544,6 +510,7 @@ ${settingsPromptLines().join("\n")}
 
 SETTINGS RULES
 - Apply the change immediately with adjust_settings, then confirm in one sentence that includes the new value and mentions undo. Example: "Text is now at 150 percent \u2014 say undo if that's too big."
+- If the result says appliedToPage is false (or carries a "reload" note), the change was saved but the current page can't show it until it reloads \u2014 tell the user that plainly instead of claiming it already changed.
 - Batch related changes into one adjust_settings call.
 - If the user just says "bigger" or "smaller", take a moderate step (about 25 points of text size) and offer to go further.
 - Suggest, don't dump. When the user describes their abilities or asks for help ("my eyes get tired", "I keep losing my place"), offer the one or two most relevant capabilities and ask if they want them on. Never recite the full list.
@@ -595,7 +562,7 @@ ${lines.join("\n")}`;
   }
   var SYSTEM_INSTRUCTION = BASE_INSTRUCTION;
 
-  // extension/offscreen/src/live/session.js
+  // personalized-extension/extension/offscreen/src/live/session.js
   var STORAGE_KEY = "voiceResumeHandle";
   var WRITE_DEBOUNCE_MS = 1e3;
   var _handle = null;
@@ -635,7 +602,7 @@ ${lines.join("\n")}`;
     }, WRITE_DEBOUNCE_MS);
   }
 
-  // extension/offscreen/src/live/client.js
+  // personalized-extension/extension/offscreen/src/live/client.js
   var LIVE_WS_BASE = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
   var DEFAULT_MODEL = "gemini-3.1-flash-live-preview";
   function createLiveClient({
@@ -878,7 +845,7 @@ ${lines.join("\n")}`;
     return btoa(s);
   }
 
-  // extension/offscreen/src/live/audio-input.js
+  // personalized-extension/extension/offscreen/src/live/audio-input.js
   var SILENCE_RMS_THRESHOLD = 0.012;
   var SILENT_FRAMES_TO_END = 10;
   function createMicCapture({ onAudio, onSpeechStart, onSpeechEnd }) {
@@ -973,7 +940,7 @@ ${lines.join("\n")}`;
     };
   }
 
-  // extension/offscreen/src/live/audio-output.js
+  // personalized-extension/extension/offscreen/src/live/audio-output.js
   function createAudioPlayer({ sampleRate = 24e3 } = {}) {
     let ctx = null;
     let nextPlayTime = 0;
@@ -1060,7 +1027,7 @@ ${lines.join("\n")}`;
     };
   }
 
-  // extension/offscreen/src/bridge/agent-bridge.js
+  // personalized-extension/extension/offscreen/src/bridge/agent-bridge.js
   var NOTABLE_LOG_KINDS = /* @__PURE__ */ new Set(["action"]);
   var NOISY_ACTIONS = /* @__PURE__ */ new Set([
     "wait",
@@ -1201,7 +1168,7 @@ ${lines.join("\n")}`;
     return { start, stop };
   }
 
-  // extension/offscreen/src/bridge/event-router.js
+  // personalized-extension/extension/offscreen/src/bridge/event-router.js
   var SILENT_WAIT_MS = 400;
   var MINOR_FLUSH_MS = 7e3;
   var MAX_DEFER_MS = 12e3;
@@ -1428,7 +1395,7 @@ ${lines.join("\n")}`;
     return rows;
   }
 
-  // extension/offscreen/src/state.js
+  // personalized-extension/extension/offscreen/src/state.js
   var STATE_KEY = "voiceState";
   var TRANSCRIPT_LIMIT = 200;
   var _state = {
@@ -1608,7 +1575,7 @@ ${lines.join("\n")}`;
     _persist();
   }
 
-  // extension/offscreen/src/index.js
+  // personalized-extension/extension/offscreen/src/index.js
   var SETUP_TIMEOUT_MS = 15e3;
   var live = null;
   var setupTimer = null;
@@ -1708,7 +1675,7 @@ ${lines.join("\n")}`;
       return;
     }
     const model = await _getModel();
-    if (!await hasPersistedHandle()) resetSessionState();
+    if (!await hasPersistedHandle()) await resetSessionState();
     let systemInstruction = null;
     try {
       systemInstruction = buildSystemInstruction(await fetchSessionContext());
@@ -1852,7 +1819,7 @@ ${lines.join("\n")}`;
     }
     await clearHandle();
     clearTranscript();
-    resetSessionState();
+    await resetSessionState();
     setError(null);
     setRecording(false);
     setSpeaking(false);

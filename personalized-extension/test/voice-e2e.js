@@ -142,6 +142,24 @@ async function main() {
     await debugTool('undo_last_change', {});
 
     // ============================================================
+    // Beat 1c — undo DELETES a record it created (real Librarian):
+    // create an origin-scoped setting, undo, confirm the record is gone —
+    // not left as a shadowing value (review finding 10 + delete primitive)
+    // ============================================================
+    console.log('\n--- Beat 1c: undo deletes a created scoped record ---');
+    const scopedFor = (fn) => sendMsg({ type: 'librarianListMemories', filter: { status: 'active' } }).then(fn);
+    const created = await debugTool('adjust_settings', { changes: { letterSpacing: 0.25 }, scope: 'origin:localhost' });
+    check('scoped create reports the origin scope', created?.result?.scopesUsed?.letterSpacing === 'origin:localhost');
+    const afterCreate = await scopedFor((m) => (m?.memories || []).some(
+      (x) => x.scope === 'origin:localhost' && x.aspect === 'setting.letterSpacing'));
+    check('a durable origin-scoped record now exists', afterCreate === true);
+    const undoCreate = await debugTool('undo_last_change', {});
+    check('undo of a created record reverts it to default', undoCreate?.result?.reverted?.letterSpacing === 0);
+    const afterUndo = await scopedFor((m) => (m?.memories || []).some(
+      (x) => x.scope === 'origin:localhost' && x.aspect === 'setting.letterSpacing'));
+    check('undo DELETED the created record (no shadow left behind)', afterUndo === false);
+
+    // ============================================================
     // Beat 2 — get_page_content reads the active tab
     // ============================================================
     console.log('\n--- Beat 2: get_page_content ---');
@@ -169,8 +187,10 @@ async function main() {
     const undo1 = await debugTool('undo_last_change', {});
     check('first undo reverts the zoom', undo1?.result?.reverted?.pageZoom === 100, JSON.stringify(undo1?.result || {}));
     const undo2 = await debugTool('undo_last_change', {});
-    check('second undo reverts fontScale to its previous value', undo2?.result?.reverted?.fontScale === 100, JSON.stringify(undo2?.result || {}));
-    check('fontScale back to 100 in storage', (await getSync('fontScale')) === 100);
+    check('second undo reverts fontScale to its default', undo2?.result?.reverted?.fontScale === 100, JSON.stringify(undo2?.result || {}));
+    // fontScale=150 was a NEWLY-created global key, so undo REMOVES it (reverts
+    // to default) rather than pinning a durable 100 — the delete-primitive fix.
+    check('fontScale removed from storage (reverted to default, not pinned)', (await getSync('fontScale')) === undefined);
     const undo3 = await debugTool('undo_last_change', {});
     check('empty undo stack is a friendly error', /nothing to undo/.test(undo3?.result?.error || ''));
 

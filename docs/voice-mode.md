@@ -116,26 +116,57 @@ the fixed ones:
   of control characters before it can reach the system instruction.
 - **Concurrent connect / goAway reconnect race**: an in-flight `connecting`
   guard + cancellable goAway timer prevent two billed Live sessions.
-- Also: `forget_memory` chip now names the deleted memory; partial-save still
-  records an undo entry; `get_browser_status` uses the storage shim; the panel
-  Undo button has a double-activation guard; autoscroll only when at bottom.
+- Also: `forget_memory` chip names the deleted memory; `get_browser_status`
+  uses the storage shim; the panel Undo button has a double-activation guard;
+  autoscroll only when at bottom.
+
+### Follow-up fixes (undo becomes truly reversible)
+
+A second pass turned the remaining undo residuals into real fixes:
+
+- **Delete primitive** — the Librarian gained `hasScopedSetting` and
+  `removeScopedSetting` (the true inverse of the upsert-only
+  `recordScopedSettings`). Undo now *deletes* a record the change created rather
+  than shadowing it with a stale value; a set+undo of a previously-unset key is
+  a genuine no-op. A created *global* key is `sync.remove`d (not pinned to the
+  default), and the observation listener skips removes so it can't re-mint a
+  durable record.
+- **SW-owned undo journal (17)** — the undo stack moved from the offscreen page
+  into `chrome.storage.local` (`voiceUndoStack`), written as part of the apply
+  commit *before* the response is sent. A write that lands but whose response is
+  lost (a 30s client timeout, the panel closing) is still undoable, and undo
+  history survives an offscreen teardown+resume. The journal records
+  created-vs-updated per key so undo takes the right action for each.
+- **liveApplied honesty (13)** — `liveApply` reports real success; when the
+  current page had no content script to receive the change, the tool result
+  says so and the prompt has the model tell the user it applies on reload.
+- **Render dedup (20)** — the side panel skips the storage-echo re-render when
+  nothing the UI shows actually changed.
+
+A follow-up adversarial review of that work found and fixed further edge cases:
+the voice apply/undo/reset routes are **serialized** (a promise chain) so
+concurrent tool-calls in one Live turn can't lose a journal entry or clobber a
+same-scope record; the observation listener **re-checks the live value** before
+minting a record, so an undo that already removed a key can't be shadowed by a
+late re-mint; undo of a created record **verifies the record still holds what
+the change wrote** (via `getScopedSetting`) before deleting, so a later popup
+edit folded into the same record isn't destroyed; undo **reports and previews
+the true post-delete effective value** (a lower-scope fallback, not the global
+default); and `voiceResetUndo` is **awaited before a new session opens**.
 
 ## Accepted limitations (prototype-scoped)
 
-- **Undo of a newly-created scoped record can't truly delete it** — the
-  Librarian has no delete-record primitive, so undo writes the prior value back
-  into the correct scope rather than removing the record. It reverts the right
-  place (the cross-scope corruption is fixed); a set+undo of a
-  previously-unset key is not a perfect no-op.
 - `storage.sync` write quota (120/min): writes are batched per tool call;
   quota errors surface as tool errors. A pathologically chatty model is an
   accepted residual.
-- A tool cancelled (`toolCallCancellation`) or timed out (30s) after its write
-  landed: the write commits; the undo entry is still recorded from the
-  route's returned `previous`. A true SW crash mid-write (no response) can't be
-  reconstructed client-side — accepted residual.
-- The undo stack dies with the offscreen page; the panel hides the Undo button
-  when not connected, and a fresh (no-handle) connect resets the session gates.
+- A true SW crash in the sub-millisecond window *between* the setting commit and
+  the journal push can still lose one undo entry — unavoidable without a
+  write-ahead log, accepted for a prototype. The 30s-timeout / lost-response
+  cases are now covered.
+- Undo is not transactional across the sync + Librarian stores: if a storage
+  write fails partway through a multi-key undo, the revert can be partial (the
+  journal entry is kept, so re-issuing "undo" retries). A rare storage-error
+  edge on a first-party prototype.
 - `start_browser_task`/`remember`/`adjust_settings` remain immediate (no
   mechanical confirm dialog); page text is defended by the untrusted-data
   framing + the narrate+undo contract, not a gate. First-party threat model.

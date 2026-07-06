@@ -186,8 +186,9 @@ async function _connectInner() {
   }
   const model = await _getModel();
   // A brand-new conversation (no resumption handle) must not inherit the
-  // previous session's undo stack or seen-id gates.
-  if (!(await hasPersistedHandle())) resetSessionState();
+  // previous session's undo stack or seen-id gates. Await the journal reset so
+  // it's ordered before the new session can issue its first change.
+  if (!(await hasPersistedHandle())) await resetSessionState();
   let systemInstruction = null;
   try { systemInstruction = buildSystemInstruction(await fetchSessionContext()); } catch {}
 
@@ -343,8 +344,9 @@ async function restart() {
   await clearHandle();
   voiceState.clearTranscript();
   // Fresh conversation: a new session must not be able to undo changes or
-  // delete memories the user handled in the previous one.
-  resetSessionState();
+  // delete memories the user handled in the previous one. Await so the journal
+  // reset is ordered before connect() opens the new session.
+  await resetSessionState();
   voiceState.setError(null);
   voiceState.setRecording(false);
   voiceState.setSpeaking(false);

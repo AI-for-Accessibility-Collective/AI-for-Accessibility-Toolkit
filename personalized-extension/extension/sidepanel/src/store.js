@@ -84,16 +84,35 @@ export function installListener() {
     if (STATE_KEY in changes) {
       const s = changes[STATE_KEY].newValue;
       if (s) {
+        // The offscreen broadcasts every state change over runtime AND writes
+        // it to storage, so this onChanged is usually an echo of a delta the
+        // runtime path already applied. Apply the fields (cheap) but only
+        // re-render when something the UI shows actually differs — otherwise a
+        // speaking/partial-transcript flurry would double every render.
+        const differs =
+          s.connection !== _store.connection || !!s.recording !== _store.recording ||
+          !!s.speaking !== _store.speaking || !!s.backgroundMode !== _store.backgroundMode ||
+          (s.error || null) !== _store.error ||
+          (Array.isArray(s.transcript) && _transcriptDiffers(s.transcript, _store.transcript));
         _store.connection = s.connection || 'disconnected';
         _store.recording = !!s.recording;
         _store.speaking = !!s.speaking;
         _store.backgroundMode = !!s.backgroundMode;
         _store.error = s.error || null;
         if (Array.isArray(s.transcript)) _store.transcript = s.transcript.slice();
-        _emit();
+        if (differs) _emit();
       }
     }
   });
+}
+
+// Cheap transcript equality: same length and same last-entry identity/content.
+// Enough to catch the storage echo of a delta the runtime path already applied.
+function _transcriptDiffers(a, b) {
+  if (a.length !== b.length) return true;
+  if (!a.length) return false;
+  const x = a[a.length - 1], y = b[b.length - 1];
+  return x.ts !== y.ts || x.text !== y.text || x.role !== y.role;
 }
 
 function _appendTranscript({ role, text, finished, details, ts, tool, ok, undoable, actionId }) {

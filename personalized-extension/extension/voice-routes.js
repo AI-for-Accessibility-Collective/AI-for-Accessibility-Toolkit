@@ -18,6 +18,8 @@
   const VOICE_DATA_ROUTES = new Set([
     'voiceGetContext',
     'voiceApplySettings',
+    'voiceUndoLast',
+    'voiceResetUndo',
     'voiceReadPage',
     'voiceSuggestCapabilities',
     'voiceGetMemory',
@@ -54,6 +56,44 @@
   const PAGE_ZOOM_RANGE = [25, 500];
   const TEXT_CHUNK = 4000;      // 'text' mode chunk size (chars)
   const OUTLINE_TEXT = 1500;    // opening-text size in 'outline' mode
+
+  // The undo journal lives in the SW (chrome.storage.local), not the offscreen
+  // page: it is pushed as part of the apply commit, BEFORE the response is
+  // sent, so a write that lands but whose response is lost (a 30s client
+  // timeout, or the panel closing) is still undoable. It also survives an
+  // offscreen teardown+resume without losing history. Session-scoped: cleared
+  // on a fresh voice conversation (voiceResetUndo).
+  const UNDO_STACK_KEY = 'voiceUndoStack';
+  const UNDO_STACK_MAX = 10;
+
+  async function readUndoStack() {
+    try {
+      const d = await chrome.storage.local.get(UNDO_STACK_KEY);
+      return Array.isArray(d[UNDO_STACK_KEY]) ? d[UNDO_STACK_KEY] : [];
+    } catch { return []; }
+  }
+  async function writeUndoStack(stack) {
+    try { await chrome.storage.local.set({ [UNDO_STACK_KEY]: stack.slice(-UNDO_STACK_MAX) }); } catch {}
+  }
+  async function pushUndo(entry) {
+    const hasWrites = entry && Array.isArray(entry.writes) && entry.writes.length;
+    if (!hasWrites && !(entry && entry.pageZoom)) return;
+    const stack = await readUndoStack();
+    stack.push(entry);
+    await writeUndoStack(stack);
+  }
+
+  // Serialize the settings write / undo / reset operations. The Live client
+  // dispatches the function-calls in one toolCall batch concurrently, so two
+  // adjust_settings in a single turn could otherwise interleave their
+  // read-modify-write of the journal (and of a same-scope Librarian shard) and
+  // drop an entry/record. A simple promise chain gives one-at-a-time ordering.
+  let _opChain = Promise.resolve();
+  function serialize(fn) {
+    const run = _opChain.then(fn, fn);
+    _opChain = run.then(() => {}, () => {});
+    return run;
+  }
 
   function settingsMeta() {
     return (globalThis.AA_TOOLS && globalThis.AA_TOOLS.settingsMeta) || {};
@@ -191,19 +231,8 @@
   }
 
   // ---- voiceApplySettings --------------------------------------------------
-  //
-  // Two entry shapes:
-  //   { changes, scope? }        — a normal voice change; provenance decides
-  //                                where each key lands (unless scope is given).
-  //   { restore }                — an undo replay carrying an EXPLICIT per-key
-  //                                plan captured at change time, so it reverts
-  //                                the exact records/tab the change touched
-  //                                rather than re-resolving against the current
-  //                                tab (which could clobber a different scope).
 
-  async function applySettings(changes, scope, restore) {
-    if (restore) return await applyRestore(restore);
-
+  async function applySettings(changes, scope) {
     const meta = settingsMeta();
     const sv = validateScope(scope);
     if (!sv.ok) return { error: sv.error };
@@ -263,13 +292,26 @@
         || ((typeof prov === 'string' && /^(category:|origin:)/.test(prov)) ? prov : 'general');
     }
 
-    // 4. Persist. Report `previous`/`scopesUsed` even on a partial failure so
-    // the caller can still record an undo entry for whatever committed (a
-    // scoped write that landed before a later sync.set quota error must not be
-    // left un-undoable).
+    // 4. Detect, per key, whether this write CREATES a durable record or
+    // updates an existing one — so undo can DELETE a record it created rather
+    // than leave a shadowing one behind. General keys mirror sync presence;
+    // scoped keys ask the Librarian.
+    const createdMap = {};
+    for (const key of Object.keys(clean)) {
+      const target = scopesUsed[key];
+      if (target === 'general') createdMap[key] = stored[key] === undefined;
+      else {
+        try { createdMap[key] = !(await globalThis.Librarian.hasScopedSetting(target, key)); }
+        catch { createdMap[key] = false; }
+      }
+    }
+
+    // 5. Persist. `persistPlan` reports failure but still lets us journal
+    // whatever committed (a scoped write that landed before a later sync.set
+    // quota error must remain undoable).
     const persistErr = await persistPlan(clean, scopesUsed, origin);
 
-    // 5. Page zoom (active tab; Chrome persists zoom per-origin). Record the
+    // 6. Page zoom (active tab; Chrome persists zoom per-origin). Record the
     // tab id so undo can revert the SAME tab, not whatever is active later.
     let pageZoomTabId = null;
     if (zoomPct != null) {
@@ -282,10 +324,26 @@
       } else { rejected.push('pageZoom'); zoomPct = null; }
     }
 
-    // 6. Live-apply to the active tab — but only keys whose scope actually
-    // applies to it, so an explicitly out-of-scope change doesn't visibly
-    // re-style the current site.
-    let liveApplied = false;
+    // 7. Journal the undo entry NOW (before responding) so a lost response — a
+    // 30s client timeout, the panel closing — still leaves the change
+    // undoable. This is SW-side, so it survives an offscreen teardown too.
+    const undoEntry = { writes: [], pageZoom: null };
+    for (const key of Object.keys(clean)) {
+      // `setValue` (what this write set) lets undo verify a created record still
+      // holds our value before deleting it — so a later popup edit that folded
+      // into the same record isn't blown away.
+      undoEntry.writes.push({ key, value: previous[key], setValue: clean[key], scope: scopesUsed[key], created: !!createdMap[key] });
+    }
+    if (previous.pageZoom != null && pageZoomTabId != null) {
+      undoEntry.pageZoom = { value: previous.pageZoom, tabId: pageZoomTabId };
+    }
+    await pushUndo(undoEntry);
+
+    // 8. Live-apply to the active tab — only keys whose scope actually applies
+    // to it, so an explicitly out-of-scope change doesn't re-style the current
+    // site. `liveApplied` is honest: false when the page had no content script
+    // to receive the messages (persistence still lands; it applies on reload).
+    let liveApplied = null;
     if (url && tab.id != null) {
       const inScope = {};
       for (const [key, value] of Object.entries(clean)) {
@@ -299,7 +357,7 @@
 
     const applied = { ...clean };
     if (zoomPct != null) applied.pageZoom = zoomPct;
-    const result = { applied, previous, scopesUsed, pageZoomTabId, liveApplied };
+    const result = { applied, previous, scopesUsed, liveApplied };
     if (rejected.length) result.rejected = rejected;
     if (persistErr) result.error = persistErr;
     return result;
@@ -326,67 +384,117 @@
     }
   }
 
-  // Undo replay: apply an explicit per-key plan to the exact scopes/tab the
-  // original change touched. `restore` = { writes: [{key,value,scope}],
-  // pageZoom?: {value, tabId} }.
-  async function applyRestore(restore) {
-    const writes = Array.isArray(restore.writes) ? restore.writes : [];
-    const clean = {}, scopesUsed = {};
-    for (const w of writes) {
-      if (!w || typeof w.key !== 'string') continue;
-      clean[w.key] = w.value;
-      scopesUsed[w.key] = w.scope || 'general';
-    }
-    const rejected = [];
+  // ---- voiceUndoLast -------------------------------------------------------
+  //
+  // Pop the SW-owned journal and revert the last change to the EXACT scope/tab
+  // it touched: a record the change CREATED is deleted (not overwritten with a
+  // stale value); a record it UPDATED is restored to its prior value; the
+  // page zoom reverts on its original tab.
+  async function undoLast() {
+    const stack = await readUndoStack();
+    if (!stack.length) return { error: 'nothing to undo in this session' };
+    const entry = stack[stack.length - 1];
 
-    let origin = null;
     const tab = await activeTab();
     const url = tab && isWebUrl(tab.url) ? tab.url : null;
-    if (url) origin = hostnameOf(url);
+    const origin = url ? hostnameOf(url) : null;
 
-    const persistErr = Object.keys(clean).length ? await persistPlan(clean, scopesUsed, origin) : null;
+    const writes = Array.isArray(entry.writes) ? entry.writes : [];
+    const restoreClean = {}, restoreScopes = {};
+    const settingKeys = [];
+    const rejected = [], skipped = [];
+    let hadError = null;
 
-    // Zoom reverts the SAME tab the change zoomed (if it still exists),
-    // never whatever is active now.
-    const applied = { ...clean };
-    if (restore.pageZoom && restore.pageZoom.tabId != null) {
-      try {
-        await chrome.tabs.setZoom(restore.pageZoom.tabId, Number(restore.pageZoom.value) / 100);
-        applied.pageZoom = restore.pageZoom.value;
-      } catch { rejected.push('pageZoom'); }
-    } else if (restore.pageZoom) {
-      rejected.push('pageZoom');
+    for (const w of writes) {
+      if (!w || typeof w.key !== 'string') continue;
+      settingKeys.push(w.key);
+      const target = w.scope || 'general';
+      if (w.created) {
+        // The change introduced this record — delete it rather than pin a
+        // stale value. But only if it STILL holds what we wrote: a later popup
+        // edit or re-confirmation may have folded a newer value into the same
+        // record, and undo must not blow that away.
+        let stillOurs = true;
+        if (w.setValue !== undefined) {
+          try {
+            const cur = target === 'general'
+              ? (await chrome.storage.sync.get(w.key))[w.key]
+              : await globalThis.Librarian.getScopedSetting(target, w.key);
+            stillOurs = cur === undefined || cur === w.setValue;
+          } catch {}
+        }
+        if (!stillOurs) { skipped.push(w.key); continue; }
+        try {
+          if (target === 'general') { await removeSync(w.key); await globalThis.Librarian.removeScopedSetting('general', w.key); }
+          else await globalThis.Librarian.removeScopedSetting(target, w.key);
+        } catch (e) { hadError = `could not undo: ${e.message}`; }
+      } else {
+        restoreClean[w.key] = w.value;
+        restoreScopes[w.key] = target;
+      }
+    }
+    if (Object.keys(restoreClean).length) {
+      const err = await persistPlan(restoreClean, restoreScopes, origin);
+      if (err) hadError = err;
     }
 
-    // Live-preview only the in-scope keys on the current tab. The unchanged
-    // siblings in a full-merge group (VisualAssist/FocusMode) must come from
-    // the tab's EFFECTIVE prefs — same precedence the normal path uses — so an
-    // undo doesn't visually collapse a site-scoped sibling.
-    if (url && tab.id != null) {
+    // Zoom reverts its original tab (per-origin), never whatever is active now.
+    if (entry.pageZoom && entry.pageZoom.tabId != null) {
+      try {
+        await chrome.tabs.setZoom(entry.pageZoom.tabId, Number(entry.pageZoom.value) / 100);
+      } catch { rejected.push('pageZoom'); }
+    }
+
+    // Only consume the entry once the revert actually lands, so a failed undo
+    // doesn't silently drop a step.
+    if (!hadError) { stack.pop(); await writeUndoStack(stack); }
+
+    // Report + live-preview the TRUE post-undo state, recomputed from effective
+    // prefs — so deleting a scoped record correctly falls back to a lower-scope
+    // value (not the global default), and a skipped key shows its kept value.
+    const reverted = {};
+    let postEff = {};
+    if (url) { try { postEff = (await effectivePrefsFor(url)).settings || {}; } catch {} }
+    const stored = await chrome.storage.sync.get([...new Set([...VA_KEYS, ...FOCUS_KEYS, ...settingKeys])]).catch(() => ({}));
+    const effVal = (key) => (key in postEff) ? postEff[key]
+      : (stored[key] !== undefined ? stored[key] : SETTING_DEFAULTS[key]);
+    for (const key of settingKeys) reverted[key] = effVal(key);
+    if (entry.pageZoom && !rejected.includes('pageZoom')) reverted.pageZoom = entry.pageZoom.value;
+
+    if (url && tab.id != null && settingKeys.length) {
       const inScope = {};
-      for (const [key, value] of Object.entries(clean)) {
-        if (await scopeMatchesTab(scopesUsed[key], origin)) inScope[key] = value;
+      for (const w of writes) {
+        if (!w || skipped.includes(w.key)) continue;
+        if (await scopeMatchesTab(w.scope || 'general', origin)) inScope[w.key] = effVal(w.key);
       }
       if (Object.keys(inScope).length) {
-        let effSettings = {};
-        try { effSettings = (await effectivePrefsFor(url)).settings || {}; } catch {}
-        const stored = await chrome.storage.sync.get([...new Set([...VA_KEYS, ...FOCUS_KEYS])]).catch(() => ({}));
-        const merged = (key) => (key in inScope) ? inScope[key]
-          : (key in effSettings) ? effSettings[key]
-            : (stored[key] !== undefined ? stored[key] : SETTING_DEFAULTS[key]);
+        const merged = (key) => (key in inScope) ? inScope[key] : effVal(key);
         await liveApply(tab.id, inScope, merged);
       }
     }
 
-    const result = { applied, scopesUsed };
+    if (hadError) return { error: hadError };
+    const result = { reverted, remainingUndos: stack.length };
     if (rejected.length) result.rejected = rejected;
-    if (persistErr) result.error = persistErr;
+    if (skipped.length) result.skipped = skipped;
     return result;
   }
 
+  async function removeSync(key) {
+    try { await chrome.storage.sync.remove(key); } catch {}
+  }
+
+  // Returns true if the content script received our messages, false if none
+  // did (no content script on the page — the change still persists and applies
+  // on the next load). A tab with a content script resolves sendMessage; one
+  // without rejects. We report the honest outcome so the model can tell the
+  // user "it'll take effect when you reload" instead of claiming it's applied.
   async function liveApply(tabId, clean, merged) {
-    const send = (message) =>
-      chrome.tabs.sendMessage(tabId, message).catch(() => {});
+    let anySent = false, anyFailed = false;
+    const send = async (message) => {
+      try { await chrome.tabs.sendMessage(tabId, message); anySent = true; }
+      catch { anyFailed = true; }
+    };
 
     for (const [key, tool] of Object.entries(SIMPLE_TOOLS)) {
       if (key in clean) {
@@ -438,7 +546,9 @@
     for (const k of AI_KEYS) if (k in clean) ai[k] = clean[k];
     if (Object.keys(ai).length) await send({ type: 'settingsChanged', settings: ai });
 
-    return true;
+    // Applied if at least one message got through; not-applied if we tried and
+    // every send failed (no receiver on the page).
+    return anySent || !anyFailed;
   }
 
   // ---- voiceReadPage -------------------------------------------------------
@@ -586,7 +696,11 @@
           case 'voiceGetContext':
             sendResponse(await getContext()); break;
           case 'voiceApplySettings':
-            sendResponse(await applySettings(msg.changes, msg.scope, msg.restore)); break;
+            sendResponse(await serialize(() => applySettings(msg.changes, msg.scope))); break;
+          case 'voiceUndoLast':
+            sendResponse(await serialize(() => undoLast())); break;
+          case 'voiceResetUndo':
+            sendResponse(await serialize(async () => { await writeUndoStack([]); return { ok: true }; })); break;
           case 'voiceReadPage':
             sendResponse(await readPage(msg.mode, msg.chunk)); break;
           case 'voiceSuggestCapabilities':

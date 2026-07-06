@@ -1,5 +1,5 @@
 (() => {
-  // extension/sidepanel/src/store.js
+  // personalized-extension/extension/sidepanel/src/store.js
   var STATE_KEY = "voiceState";
   var RESUME_HANDLE_KEY = "voiceResumeHandle";
   var _store = {
@@ -74,16 +74,23 @@
       if (STATE_KEY in changes) {
         const s = changes[STATE_KEY].newValue;
         if (s) {
+          const differs = s.connection !== _store.connection || !!s.recording !== _store.recording || !!s.speaking !== _store.speaking || !!s.backgroundMode !== _store.backgroundMode || (s.error || null) !== _store.error || Array.isArray(s.transcript) && _transcriptDiffers(s.transcript, _store.transcript);
           _store.connection = s.connection || "disconnected";
           _store.recording = !!s.recording;
           _store.speaking = !!s.speaking;
           _store.backgroundMode = !!s.backgroundMode;
           _store.error = s.error || null;
           if (Array.isArray(s.transcript)) _store.transcript = s.transcript.slice();
-          _emit();
+          if (differs) _emit();
         }
       }
     });
+  }
+  function _transcriptDiffers(a, b) {
+    if (a.length !== b.length) return true;
+    if (!a.length) return false;
+    const x = a[a.length - 1], y = b[b.length - 1];
+    return x.ts !== y.ts || x.text !== y.text || x.role !== y.role;
   }
   function _appendTranscript({ role, text, finished, details, ts, tool, ok, undoable, actionId }) {
     if (role === "event") {
@@ -120,7 +127,7 @@
     }
   }
 
-  // extension/sidepanel/src/ui/transcript.js
+  // personalized-extension/extension/sidepanel/src/ui/transcript.js
   var _openDetails = /* @__PURE__ */ new Set();
   function mountTranscript(rootEl, emptyEl, { onUndo } = {}) {
     function render(snap) {
@@ -263,7 +270,7 @@
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   }
 
-  // extension/sidepanel/src/ui/status.js
+  // personalized-extension/extension/sidepanel/src/ui/status.js
   function mountStatus(statusEl, errorEl) {
     function render(snap) {
       statusEl.className = `vp-status ${snap.connection || "disconnected"}`;
@@ -279,7 +286,7 @@
     return { render };
   }
 
-  // extension/sidepanel/src/ui/controls.js
+  // personalized-extension/extension/sidepanel/src/ui/controls.js
   function mountControls({
     startBtn,
     micBtn,
@@ -329,7 +336,7 @@
     return { render };
   }
 
-  // extension/sidepanel/src/index.js
+  // personalized-extension/extension/sidepanel/src/index.js
   var $ = (id) => document.getElementById(id);
   async function main() {
     chrome.runtime.connect({ name: "voice-ui" });

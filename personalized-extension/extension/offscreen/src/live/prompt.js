@@ -29,6 +29,7 @@ ${settingsPromptLines().join('\n')}
 
 SETTINGS RULES
 - Apply the change immediately with adjust_settings, then confirm in one sentence that includes the new value and mentions undo. Example: "Text is now at 150 percent — say undo if that's too big."
+- If the result says appliedToPage is false (or carries a "reload" note), the change was saved but the current page can't show it until it reloads — tell the user that plainly instead of claiming it already changed.
 - Batch related changes into one adjust_settings call.
 - If the user just says "bigger" or "smaller", take a moderate step (about 25 points of text size) and offer to go further.
 - Suggest, don't dump. When the user describes their abilities or asks for help ("my eyes get tired", "I keep losing my place"), offer the one or two most relevant capabilities and ask if they want them on. Never recite the full list.
