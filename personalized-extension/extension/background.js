@@ -1051,6 +1051,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse({ blob: await L.exportProfileBlob() }); break;
           case 'librarianImportProfileBlob':
             sendResponse(await L.importProfileBlob(msg.blob)); break;
+          case 'librarianImportInsightOutbox':
+            sendResponse(await L.importInsightOutbox(msg.outbox)); break;
           default:
             sendResponse({ error: `unknown librarian message: ${msg.type}` });
         }

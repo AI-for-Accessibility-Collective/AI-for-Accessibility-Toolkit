@@ -87,10 +87,31 @@
  *   Emit a diagram trace; no-op when no demo surface is attached.
  */
 
+/**
+ * @typedef {Object} Sensors
+ * OPTIONAL. A host that can MEASURE the user (XR field-of-view / gaze, a
+ * device's own accessibility settings, a phone's Dynamic Type size) supplies
+ * this so a measured signal can become a modality-neutral ability need. The
+ * core never reads a sensor directly — a host reads it, maps it to a `need`,
+ * and contributes it through the normal consent path (importInsight /
+ * logObservation), so a measurement is a PROPOSAL like any other, never a
+ * silent write. Purely a host concern; named here so every conformer speaks
+ * the same shape. (Phase 4 — the XR FOV→text-size loop is the reference use.)
+ * @property {(kind: string) => Promise<any>} read
+ *   Read a named sensor (e.g. 'fov.textSizeMultiplier', 'device.dynamicType').
+ *   Resolves to the raw reading, or null if the host can't measure it.
+ */
+
 /** A DemoHook that does nothing — the default for every non-demo host. */
 export const noopDemo = {
   isOn: () => false,
   trace: () => {},
+};
+
+/** A Sensors port that measures nothing — the default for hosts with no
+ *  measurement capability (the web extension, a headless test). */
+export const noopSensors = {
+  read: async () => null,
 };
 
 /** A Consent port that silently ignores the count — for headless/test hosts. */

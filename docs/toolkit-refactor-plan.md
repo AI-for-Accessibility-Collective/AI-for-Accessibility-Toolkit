@@ -481,7 +481,7 @@ the settled "adapter/skill" vocabulary.
 > toolkit‑ports **29**, librarian **71**, run‑tests **116**, demo‑beats‑e2e
 > **26/26** real Chrome, ai‑features‑e2e **20/20** real Chrome + Gemini.
 
-### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)  🟡 **IN PROGRESS (inc 1 done)**
+### Phase 3 — Cross‑app sharing + consent (net‑new, prototype‑scoped)  ✅ **COMPLETE (inc 1–7)**
 - `toolkit/sync/`: the lightweight layer from §6 — grants the user can see + a
   **"what each app can see"** panel, **revoke = local delete**, cross‑app writes
   routed through the accessible **proposal/consent** path, the **acting‑user**
@@ -545,7 +545,44 @@ the settled "adapter/skill" vocabulary.
 > switching becomes routine. Gate: phase3 **58**, phase1 60, toolkit‑ports **41**,
 > librarian 71, run‑tests 116, demo‑beats‑e2e **26/26** real Chrome.
 
-### Phase 4 — Prove it with a second consumer
+> **Increments 3–7 landed (2026‑07‑05): the cross‑app WRITE path + both
+> transports + the accessible consent UI.** The write half went through a
+> 3‑lens **Fable** adversarial review that found four real defects (all
+> reachable by honest first‑party error) — all fixed + tested. **(inc 3)**
+> `importInsight(appId, insight)` is grant‑gated, **never‑silent** (drafts a
+> `cross-app-insight` proposal via the existing `_draftProposals` gate) and
+> whitelisted: `profile-set` only on `fields.*` (with a per‑segment
+> prototype‑pollution guard at both the gate and the `setProfileField` sink) or
+> `add-memory` (clamped to a soft, non‑floor `preference`, confidence ≤ 0.9,
+> control kinds refused). Global **off switch** `profile.sharingPaused` checked
+> first in every cross‑app entry point (grants kept, not revoked). **Job
+> anchoring closes CLAUDE.md tradeoff #2**: the debounced `extract` is anchored
+> to its enqueue partition; a slow‑lane drain gate wraps
+> `extract`/`reflect`/`requestGrant`/`importInsight`/`respondToProposal`/
+> `recordScopedSettings` so `setActingUser` waits for in‑flight writes;
+> migrations run against an explicit **partition‑bound view** (no shared‑state
+> mutation) with a **migrate‑on‑activation** sweep. **(inc 4)** the Consent port
+> grows an optional `present()`/`capture()` for push‑based hosts; the popup gains
+> the accessible **"What each app can see"** grants panel (one‑tap revoke), the
+> sharing switch, the acting‑user selector, and export/import — and cross‑app
+> grant/insight proposals render through the **same** consent cards as everything
+> else. **(inc 5)** [`sync/transport.js`](../toolkit/sync/transport.js) — a local
+> shared‑store transport (`publishExports` with index‑driven retraction on
+> revoke/pause; `drainInbox` routing each insight through `importInsight`, with
+> transient‑failure retry). **(inc 6)** [`sync/blob.js`](../toolkit/sync/blob.js)
+> + `exportProfileBlob`/`importProfileBlob` — the user‑mediated profile blob,
+> plain last‑write‑wins (finite‑timestamp guarded; a fresh device yields to an
+> import; a real local edit is never reverted), carrying **only** the
+> modality‑neutral ability profile. **(inc 7)**
+> [`test/phase3-crossapp.test.mjs`](../toolkit/test/phase3-crossapp.test.mjs)
+> drives the flagship **XR→insight→approve→ArtInsight‑reads** loop + both
+> transports + the off switch + the ArtInsight→web insight outbox end‑to‑end
+> against the real core. A second 3‑lens review of the transport/blob/UI layer
+> confirmed the consent boundary sound and found two blob‑LWW mustFixes (both
+> fixed). Gate: phase3 **87**, cross‑app **30**, phase1 60, toolkit‑ports **46**,
+> librarian 71, run‑tests **133**, demo‑beats‑e2e **26/26** real Chrome.
+
+### Phase 4 — Prove it with a second consumer  ✅ **COMPLETE (ArtInsight conformer)**
 - Wire one non‑web host end‑to‑end against the spec: **ArtInsight** is the
   cleanest target — its LLM calls are centralized in `OpenAIService`/`Request`,
   it has *no* existing profile layer (clean slate), and the highest‑value hook is
@@ -553,6 +590,27 @@ the settled "adapter/skill" vocabulary.
   emphasis` → append to the describe prompt; observe edit/recording patterns →
   write back as proposals). Optionally stub the XR FOV→text‑size loop to exercise
   a `Sensors` port and the cross‑app insight flow.
+
+> **Landed (2026‑07‑05): ArtInsight as a native Swift *conformer*** — not an
+> embed. It implements the toolkit **spec** (the blob schema, the AbilityModel
+> shape, the read‑grant / write‑proposal consent contract) in Swift, proving a
+> non‑JS host can join without porting the consolidation engine (plan §7). New
+> additive group `Toolkit/` in the app ([ToolkitProfile.swift] Codable mirror +
+> the pure neutral‑model→ArtInsight‑surface projection; [ToolkitStore.swift]
+> persistence + the two flows; [ToolkitSettingsView.swift] the file‑import/export
+> UI) plus one marked edit to `OpenAI+Request.swift` that appends the imported
+> profile's context to the describe prompt (empty ⇒ unchanged behavior). READ:
+> the user grants `artinsight` + exports their profile on the web, imports it in
+> ArtInsight, and every describe call adapts verbosity/reading‑level/language —
+> **no re‑interview**. WRITE: ArtInsight records interaction signals into an
+> **insight outbox** the user carries back, where `Librarian.importInsightOutbox`
+> drains each entry through the **same** grant‑gated, never‑silent `importInsight`
+> (added the `Sensors` port + `noopSensors` for the XR measurement analogue).
+> Full wiring in [docs/artinsight-integration.md](./artinsight-integration.md).
+> (The Swift compiles against the app's existing SwiftUI/Codable idioms; no Xcode
+> toolchain here to build it, so it is verified by the JS‑side cross‑consumer
+> stub `phase3-crossapp.test.mjs`, which stands in for the XR + ArtInsight
+> clients against the real core.)
 
 ---
 
