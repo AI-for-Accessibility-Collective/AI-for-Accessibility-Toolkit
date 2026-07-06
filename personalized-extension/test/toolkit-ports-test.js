@@ -238,6 +238,22 @@ const mk = (scope, settings, extra = {}) => ({
   check('null partition does NOT see the guest write (isolation)',
     (await L.getEffectivePreferences('https://guesttest.com/', [])).settings.fontScale === undefined);
 
+  // I. Phase 3 inc 3: cross-app insight write + global off switch (BUILT bundle).
+  const gArt = await L.requestGrant('artapp', ['language'], { appLabel: 'ArtInsight' });
+  await L.respondToProposal(gArt.proposalId, 'accept');
+  const insB = await L.importInsight('artapp', {
+    kind: 'reading.level', confidence: 0.8,
+    change: { op: 'profile-set', path: 'fields.readingLevel', value: 'simple' },
+  });
+  check('insight drafted as a proposal via built bundle', insB.ok === true && !!insB.proposalId);
+  check('insight is NOT applied before accept', ((await L.getProfile()).fields || {}).readingLevel === undefined);
+  await L.respondToProposal(insB.proposalId, 'accept');
+  check('accepted insight applied readingLevel', (await L.getProfile()).fields.readingLevel === 'simple');
+  await L.setSharingPaused(true);
+  check('sharingPaused blocks export (bundle)', (await L.exportAbilityModel('artapp')).reason === 'sharing-paused');
+  await L.setSharingPaused(false);
+  check('unpause restores the grant (bundle)', (await L.exportAbilityModel('artapp')).ok === true);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('CRASH:', e); process.exit(1); });
