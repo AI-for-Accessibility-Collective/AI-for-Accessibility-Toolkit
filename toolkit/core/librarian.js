@@ -36,6 +36,7 @@ import { STRENGTH_RANK, rankOf } from './strength.js';
 import { toAbilityModel } from './ability.js';
 import { memoryClassOf } from './memory-class.js';
 import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes } from '../sync/grants.js';
+import { buildProfileBlob, validateProfileBlob } from '../sync/blob.js';
 
 /**
  * @param {Object} deps
@@ -122,6 +123,17 @@ export function createLibrarian({
   }
 
   const VALID_SCOPE = /^(general|category:[a-z-]+|context:[a-z-]+|origin:[a-z0-9.-]+|tool:[a-zA-Z0-9_-]+)$/;
+
+  // A cross-app `profile-set` may only touch `fields.*`, and every dot-segment
+  // must be a plain identifier — never a prototype slot. This is the gate half
+  // of the prototype-pollution defense (the sink half lives in setProfileField).
+  const PROTO_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+  function isSafeFieldsPath(path) {
+    if (typeof path !== 'string') return false;
+    const parts = path.split('.');
+    if (parts.length < 2 || parts[0] !== 'fields') return false;
+    return parts.every(seg => /^[A-Za-z0-9_]+$/.test(seg) && !PROTO_SEGMENTS.has(seg));
+  }
 
   // Coerce a settings object into the canonical units/ranges declared in the
   // registry's settingsMeta. Guards against LLM-written values in the wrong
@@ -226,6 +238,11 @@ export function createLibrarian({
       maxProposalsPerWeek: 30,
     },
     memoryPaused: false,
+    // Global cross-app OFF switch (Phase 3): checked FIRST in every cross-app
+    // entry point (requestGrant / exportAbilityModel / importInsight). Local
+    // single-device operation is unaffected. Absent on older profiles → falsy
+    // → sharing allowed (the per-app default-deny grant gate is the floor).
+    sharingPaused: false,
   };
 
   async function getOrInitProfile() {
@@ -279,12 +296,20 @@ export function createLibrarian({
     // User-initiated edit — bypasses the proposal gate by design (the gate
     // exists for *inferred* changes; explicit user intent needs no consent).
     async setProfileField(path, value) {
+      const parts = String(path).split('.');
+      // Prototype-pollution guard at the SINK: no path segment may name a
+      // prototype slot, so neither the local extract profile-set path nor a
+      // cross-app insight can walk into Object.prototype. Silently no-op a
+      // poisoned path rather than throwing into the caller.
+      if (parts.some(seg => seg === '__proto__' || seg === 'prototype' || seg === 'constructor')) {
+        return await DS().get('mine.profile');
+      }
       return await DS().patch('mine.profile', async (p) => {
         p = p || structuredClone(PROFILE_DEFAULTS);
-        const parts = String(path).split('.');
         let obj = p;
         for (let i = 0; i < parts.length - 1; i++) {
-          if (typeof obj[parts[i]] !== 'object' || obj[parts[i]] == null) obj[parts[i]] = {};
+          if (typeof obj[parts[i]] !== 'object' || obj[parts[i]] == null
+            || !Object.prototype.hasOwnProperty.call(obj, parts[i])) obj[parts[i]] = {};
           obj = obj[parts[i]];
         }
         obj[parts[parts.length - 1]] = value;
@@ -567,6 +592,12 @@ export function createLibrarian({
       appId = String(appId || '').trim();
       if (!appId) return { ok: false, reason: 'bad-app' };
       if (!validateScopes(scopes)) return { ok: false, reason: 'bad-scope' };
+      // Anchor to the partition active at entry: if the acting user switches
+      // while this runs, fail safe rather than drafting into the wrong
+      // partition (CLAUDE.md tradeoff #2).
+      const partitionAt = DS().getActingUser().id;
+      const profile = await getOrInitProfile();
+      if (profile.sharingPaused) return { ok: false, reason: 'sharing-paused' };
       const grants = (await DS().get('mine.grants')) || [];
       const existing = grants.find(g => g.appId === appId && isActive(g));
       if (existing && scopes.every(s => existing.scopes.includes(s))) {
@@ -575,7 +606,7 @@ export function createLibrarian({
       const appLabel = String(opts.appLabel || appId).slice(0, 100); // bound like rationale; guards the sync quota
       const now = clock.now();
       const suppressions = await DS().get('mine.suppressions');
-      const profile = await getOrInitProfile();
+      if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: 'partition-switched' };
       // Reuse the existing draft gate: suppression / cooldown / weekly-cap /
       // dedup-against-pending all apply to a `grant:<appId>` aspect for free.
       await this._draftProposals([{
@@ -585,6 +616,7 @@ export function createLibrarian({
         rationale: String(opts.rationale
           || `${appLabel} wants to read part of your accessibility profile so it can adapt itself for you.`).slice(0, 300),
         evidence: [],
+        source: appId, // the requesting app — it can never resolve its own request
       }], { suppressions, profile, now });
       await updateBadge();
       // Reflect reality: the draft may have been dropped (suppressed/cooldown)
@@ -615,11 +647,69 @@ export function createLibrarian({
     // categories-only AbilityModel, filtered to the grant's scopes.
     async exportAbilityModel(appId) {
       appId = String(appId || '').trim();
+      const partitionAt = DS().getActingUser().id;
+      const profile = await DS().get('mine.profile'); // read-only: no init write
+      if (profile && profile.sharingPaused) return { ok: false, reason: 'sharing-paused' };
       const grants = (await DS().get('mine.grants')) || [];
       const grant = grants.find(g => g.appId === appId && isActive(g));
       if (!grant) return { ok: false, reason: 'no-grant' };
       const abilityModel = await this.getAbilityModel();
+      // Fail safe if the acting user switched mid-read: never hand one
+      // partition's data out under another partition's grant.
+      if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: 'partition-switched' };
       return { ok: true, abilityModel: filterAbilityModelByScopes(abilityModel, grant.scopes) };
+    },
+
+    // ====================== CROSS-APP INSIGHT WRITE (Phase 3) ======================
+    // The write half of cross-app flow: a granted app contributes something it
+    // learned (XR's FOV→text-size, ArtInsight's preferred description style).
+    // WRITE = A PROPOSAL, NEVER SILENT: the insight is drafted through the same
+    // consent machinery as everything else, carries its source app, and NEVER
+    // auto-applies. The sending app has no code path that resolves it — only
+    // the local user surface (respondToProposal) can.
+    //
+    // insight = { kind: 'visual.textSize', confidence: 0..1, label?, rationale?,
+    //             change: {op:'profile-set', path:'fields.…', value} |
+    //                     {op:'add-memory', record:{…}} }
+    // The inner change is whitelisted: profile-set may only touch `fields.*`
+    // (the ability fields) — never metaPreferences / memoryPaused /
+    // sharingPaused, so a cross-app write can't propose to loosen the user's
+    // own safety switches.
+    async importInsight(sourceAppId, insight = {}) {
+      sourceAppId = String(sourceAppId || '').trim();
+      if (!sourceAppId) return { ok: false, reason: 'bad-app' };
+      const partitionAt = DS().getActingUser().id;
+      const profile = await getOrInitProfile();
+      if (profile.sharingPaused) return { ok: false, reason: 'sharing-paused' };
+      // Writing requires the same visible grant reading does: an app the user
+      // never approved can't even ask.
+      const grants = (await DS().get('mine.grants')) || [];
+      const grant = grants.find(g => g.appId === sourceAppId && isActive(g));
+      if (!grant) return { ok: false, reason: 'no-grant' };
+      const kind = String(insight.kind || '').slice(0, 60);
+      const confidence = Math.min(1, Math.max(0, Number(insight.confidence ?? 0.5)));
+      const change = insight.change;
+      const validChange = change && (
+        (change.op === 'profile-set' && isSafeFieldsPath(change.path))
+        || (change.op === 'add-memory' && change.record && typeof change.record === 'object'));
+      if (!kind || !validChange) return { ok: false, reason: 'bad-insight' };
+      const suppressions = await DS().get('mine.suppressions');
+      const now = clock.now();
+      if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: 'partition-switched' };
+      await this._draftProposals([{
+        aspect: `insight:${sourceAppId}:${kind}`,
+        aspectLabel: String(insight.label || `${grant.appLabel} suggests an update to ${kind}`).slice(0, 120),
+        change: { op: 'cross-app-insight', appId: sourceAppId, appLabel: grant.appLabel, kind, confidence, change },
+        rationale: String(insight.rationale
+          || `${grant.appLabel} noticed this while you used it. Nothing changes unless you say yes.`).slice(0, 300),
+        evidence: [],
+        source: sourceAppId,
+      }], { suppressions, profile, now });
+      await updateBadge();
+      const props = await DS().get('mine.proposals');
+      const pending = props.find(p => p.status === 'pending'
+        && p.aspect === `insight:${sourceAppId}:${kind}` && p.change && p.change.op === 'cross-app-insight');
+      return pending ? { ok: true, proposalId: pending.id } : { ok: false, reason: 'suppressed' };
     },
 
     // ====================== ACTING USER (Phase 3) ======================
@@ -630,6 +720,13 @@ export function createLibrarian({
     // Librarian just exposes the switch and refreshes the badge, since the
     // pending-proposal count is per-partition.
     async setActingUser(id, opts = {}) {
+      // Wait for any in-flight slow-lane job (extract/reflect) to finish so a
+      // partition switch can never interleave with a job's awaited writes and
+      // land data in the wrong partition (CLAUDE.md tradeoff #2 — this is the
+      // "anchor jobs" half; the debounce-skip in scheduleExtraction is the
+      // other). A new job can't start in between: the switch proceeds in the
+      // same microtask turn the lane drains.
+      await slowLaneDrained();
       const res = await DS().setActingUser(id, opts);
       await updateBadge();
       return res;
@@ -637,6 +734,56 @@ export function createLibrarian({
 
     getActingUser() {
       return DS().getActingUser();
+    },
+
+    // ====================== USER-MEDIATED PROFILE BLOB (Phase 3) ======================
+    // §6 transport (b): the user deliberately exports a portable JSON blob on
+    // one device/app and imports it on another (the XR⇄web demo). The button
+    // IS the consent, so this is NOT gated on sharingPaused (that switch
+    // governs app-to-app flow, not the user moving their OWN data by hand).
+    // Only the modality-neutral ability profile travels — never memories,
+    // grants, proposals, or any SurfaceProfile (device-local by design).
+    async exportProfileBlob() {
+      const profile = await getOrInitProfile();
+      const abilityModel = await this.getAbilityModel();
+      return buildProfileBlob(profile, abilityModel, clock.now());
+    },
+
+    // Merge an imported blob into the ACTIVE partition's profile. Plain
+    // last-write-wins by the blob's exportedAt vs the local profile.updatedAt
+    // (plan §6 — no CRDT). Returns {ok, merged, reason?}. Never overwrites
+    // with older data, never touches memories/grants/surfaces.
+    async importProfileBlob(blob) {
+      if (!validateProfileBlob(blob)) return { ok: false, reason: 'bad-blob' };
+      const local = await getOrInitProfile();
+      // LWW compares against the local profile's MEANINGFUL last write, not its
+      // init timestamp: a fresh device auto-seeds a default profile at now, which
+      // would otherwise always beat an older blob and break the very case this
+      // path exists for (import onto a new device). An unwritten default always
+      // yields to an import.
+      const localMeaningful = (Array.isArray(local.supportAreas) && local.supportAreas.length)
+        || (local.freeText && local.freeText.length)
+        || (local.fields && Object.keys(local.fields).length);
+      const localAt = local.updatedAt || 0;
+      if (localMeaningful && blob.exportedAt <= localAt) return { ok: true, merged: false, reason: 'older-or-equal' };
+      await DS().patch('mine.profile', (p) => {
+        p = p || structuredClone(PROFILE_DEFAULTS);
+        const bp = blob.profile;
+        p.supportAreas = Array.isArray(bp.supportAreas) ? bp.supportAreas.slice() : p.supportAreas;
+        p.freeText = typeof bp.freeText === 'string' ? bp.freeText : p.freeText;
+        // fields (the ability-model source) — imported wholesale, but sanitized
+        // through the same prototype-safe path constraints (plain object only).
+        if (bp.fields && typeof bp.fields === 'object') {
+          p.fields = JSON.parse(JSON.stringify(bp.fields));
+        }
+        p.metaPreferences = p.metaPreferences || {};
+        if (bp.metaPreferences && typeof bp.metaPreferences.language === 'string') {
+          p.metaPreferences.language = bp.metaPreferences.language;
+        }
+        p.updatedAt = blob.exportedAt; // adopt the blob's clock so re-import is idempotent
+        return p;
+      });
+      return { ok: true, merged: true };
     },
 
     // Prompt for the popup's "what support do you need?" flow. The Librarian
@@ -784,6 +931,18 @@ Return ONLY valid JSON with:
       });
     },
 
+    // The global cross-app OFF switch. Hard-stops every cross-app read and
+    // write (grant requests, exports, insight imports) while set; existing
+    // grants are kept (paused, not revoked) so unpausing restores them.
+    async setSharingPaused(paused) {
+      await DS().patch('mine.profile', (p) => {
+        p = p || structuredClone(PROFILE_DEFAULTS);
+        p.sharingPaused = !!paused;
+        p.updatedAt = clock.now();
+        return p;
+      });
+    },
+
     async setOriginPaused(origin, paused) {
       origin = (origin || '').toLowerCase().replace(/^www\./, '');
       await DS().patch('mine.siteIndex', (cur) => {
@@ -855,6 +1014,31 @@ Return ONLY valid JSON with:
             grants.push(normalizeGrant({ id: newId('grant'), appId, appLabel, scopes, grantedAt: now }));
             return grants;
           });
+        } else if (prop.change?.op === 'cross-app-insight' && prop.change.change) {
+          // Cross-app insight (Phase 3): applying the inner change happens ONLY
+          // here, on the local user surface. The inner op is re-validated at
+          // apply time (the whitelist importInsight enforced), so a stored
+          // proposal can't smuggle a wider op in.
+          const inner = prop.change.change;
+          if (inner.op === 'profile-set' && isSafeFieldsPath(inner.path)) {
+            await this.setProfileField(inner.path, inner.value);
+          } else if (inner.op === 'add-memory' && inner.record && typeof inner.record === 'object') {
+            // Soft-by-default: a cross-app insight never arrives as certainty
+            // (confidence capped) and never as a hard, un-retirable requirement
+            // (strength forced to 'preference', tier to 'preference', and the
+            // control kinds suppression/rule refused). It carries its source app
+            // for provenance. The user's OWN floors always dominate it.
+            const insrec = { ...inner.record };
+            insrec.source = `cross-app:${prop.change.appId}`;
+            insrec.confidence = Math.min(0.9, Number(prop.change.confidence ?? 0.7));
+            insrec.strength = 'preference';
+            insrec.tier = 'preference';
+            if (insrec.kind === 'suppression' || insrec.kind === 'rule') insrec.kind = 'preference';
+            const rec = normalizeRecord(insrec, now);
+            const shard = await DS().getMemoryShard(rec.scope);
+            shard.push(rec);
+            await DS().setMemoryShard(rec.scope, shard);
+          }
         }
         // Validated inference → boost the evidence memories' confidence.
         for (const evId of (prop.evidence || [])) {
@@ -1061,6 +1245,10 @@ Rules:
           change: d.change,
           rationale: String(d.rationale || '').slice(0, 300),
           evidence: d.evidence || [],
+          // Cross-app provenance (Phase 3): the appId that originated this
+          // proposal, or null for locally-drafted ones. Display-only here —
+          // resolution is always the local user surface.
+          source: d.source || null,
           status: 'pending',
           createdAt: now,
           respondedAt: null,
@@ -1300,8 +1488,29 @@ Rules:
   // Debounced extraction after observation bursts + periodic safety nets.
   // The host background may die before the debounce fires; the periodic jobs
   // are the guarantee, the debounce is the fast path.
+  //
+  // Slow-lane gate: extract/reflect register as in-flight so a partition
+  // switch (setActingUser) waits for them to drain — a job's awaited writes
+  // must never straddle a switch. Single JS thread + this gate = a job always
+  // completes against the partition it started in.
+  let _slowLaneRuns = 0;
+  const _slowLaneWaiters = [];
+  function slowLaneEnter() { _slowLaneRuns++; }
+  function slowLaneExit() {
+    if (--_slowLaneRuns === 0) _slowLaneWaiters.splice(0).forEach(resolve => resolve());
+  }
+  function slowLaneDrained() {
+    return _slowLaneRuns === 0 ? Promise.resolve() : new Promise(r => _slowLaneWaiters.push(r));
+  }
+
   function scheduleExtraction() {
+    // Anchor the debounced run to the partition that enqueued it: if the
+    // acting user switched during the 20s window, skip — the observation sits
+    // safely in ITS partition's log and the periodic net drains it when that
+    // partition is next active (CLAUDE.md tradeoff #2).
+    const enqueuedFor = DS().getActingUser().id;
     scheduler.debounce('aaLibrarianExtract', 20000, () => {
+      if (DS().getActingUser().id !== enqueuedFor) return;
       Librarian.extract().catch(e => console.warn('[Librarian] extract failed:', e.message));
     });
   }
@@ -1313,7 +1522,25 @@ Rules:
     } catch { /* no consent surface in some contexts */ }
   }
 
+  // Register the partition-sensitive jobs with the drain gate: every call
+  // holds the lane open until it completes, and setActingUser waits for the
+  // lane to drain before flipping the partition. This covers not just the slow
+  // lane (extract/reflect) but every method whose read→write spans an await
+  // boundary and would otherwise straddle a switch (the cross-app writes and
+  // proposal resolution do a get→…→set on partitioned stores). None of these
+  // call setActingUser, so the wait can't deadlock. setActingUser itself is
+  // NOT wrapped (it IS the switch).
+  for (const job of ['extract', 'reflect', 'requestGrant', 'importInsight', 'respondToProposal', 'recordScopedSettings']) {
+    const inner = Librarian[job].bind(Librarian);
+    Librarian[job] = async (...args) => {
+      slowLaneEnter();
+      try { return await inner(...args); } finally { slowLaneExit(); }
+    };
+  }
+
   // Periodic safety nets: drain the log every 30 min, consolidate daily.
+  // These are partition-agnostic by design: they drain whatever partition is
+  // active when they fire — each partition's log simply waits its turn.
   scheduler.every('aaLibrarianExtract', 30, () => {
     Librarian.extract().catch(e => console.warn('[Librarian] extract failed:', e.message));
   });

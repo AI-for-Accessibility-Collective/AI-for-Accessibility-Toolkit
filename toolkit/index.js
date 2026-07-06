@@ -48,7 +48,8 @@ export { createSurfaceAdapter } from './core/surface.js';
 export { UNIT, SETTING_UNITS, unitOf, coerceSetting, coerceSettings, clampSetting, clampSettings } from './core/units.js';
 export { toAbilityModel, normalizeNeed } from './core/ability.js';
 export { STRENGTH_RANK, rankOf } from './core/strength.js';
-export { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes } from './sync/index.js';
+export { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes,
+  buildProfileBlob, validateProfileBlob, createSharedTransport } from './sync/index.js';
 export * from './ports/index.js';
 
 export default createToolkit;

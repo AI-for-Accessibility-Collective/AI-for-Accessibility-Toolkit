@@ -86,8 +86,47 @@
     async function rawSet(area, key, value) {
       await kv.set(area, key, value);
     }
-    function partitionKey(physKey) {
-      return _actingUserId ? `aa.u.${_actingUserId}::${physKey}` : physKey;
+    function partitionKey(physKey, pid = _actingUserId) {
+      return pid ? `aa.u.${pid}::${physKey}` : physKey;
+    }
+    function partitionView(pid) {
+      const shardKey = (scope) => Datastore.memoryShardKey(scope);
+      const view = {
+        global: Datastore.global,
+        memoryShardKey: shardKey,
+        async get(name) {
+          const d = CATALOG[name];
+          if (!d) throw new Error(`Datastore: unknown store "${name}"`);
+          return await rawGet(d.area, partitionKey(d.key, pid), structuredClone(d.def));
+        },
+        async set(name, value) {
+          const d = CATALOG[name];
+          if (!d) throw new Error(`Datastore: unknown store "${name}"`);
+          await rawSet(d.area, partitionKey(d.key, pid), value);
+        },
+        async patch(name, fn) {
+          const cur = await view.get(name);
+          const next = await fn(cur);
+          await view.set(name, next === void 0 ? cur : next);
+          return next === void 0 ? cur : next;
+        },
+        async getMemoryShard(scope) {
+          return await rawGet("local", partitionKey(shardKey(scope), pid), []);
+        },
+        async setMemoryShard(scope, records) {
+          await rawSet("local", partitionKey(shardKey(scope), pid), records);
+        },
+        async allMemoryShards() {
+          const all = await kv.getAll("local");
+          const prefix = partitionKey(MEMORY_SHARD_PREFIX, pid);
+          const out = {};
+          for (const [key, recs] of Object.entries(all || {})) {
+            if (key.startsWith(prefix)) out[key.slice(prefix.length)] = recs || [];
+          }
+          return out;
+        }
+      };
+      return view;
     }
     async function loadActingUser() {
       const rec = await rawGet("local", ACTING_USER_KEY, null);
@@ -148,13 +187,37 @@
         }
       }
     ];
+    const PARTITION_META_KEY = "aa.partitionMeta";
+    let _migrateChain = Promise.resolve();
+    async function migrateActivePartition(pid = _actingUserId) {
+      if (!pid) return;
+      const run = _migrateChain.then(async () => {
+        const key = partitionKey(PARTITION_META_KEY, pid);
+        const pm = await rawGet("local", key, null) || { lastMigration: 0 };
+        const maxId = MIGRATIONS[MIGRATIONS.length - 1].id;
+        if ((pm.lastMigration || 0) >= maxId) return;
+        const view = partitionView(pid);
+        for (const m of MIGRATIONS) {
+          if (m.id <= (pm.lastMigration || 0)) continue;
+          await m.run(view);
+          pm.lastMigration = m.id;
+        }
+        pm.migratedAt = clock.now();
+        await rawSet("local", key, pm);
+      });
+      _migrateChain = run.catch(() => {
+      });
+      return run;
+    }
     async function runMigrations() {
       await loadActingUser();
-      const meta = await rawGet("local", META_KEY, null) || { lastMigration: 0 };
+      const activePid = _actingUserId;
+      const nullView = partitionView(null);
+      let meta = await rawGet("local", META_KEY, null) || { lastMigration: 0 };
       let applied = false;
       for (const m of MIGRATIONS) {
         if (m.id <= (meta.lastMigration || 0)) continue;
-        await m.run(Datastore);
+        await m.run(nullView);
         meta.lastMigration = m.id;
         applied = true;
       }
@@ -166,6 +229,7 @@
       meta.taxonomyVersion = taxonomy ? taxonomy.version : null;
       if (applied || !meta.lastMigratedAt) meta.lastMigratedAt = clock.now();
       await rawSet("local", META_KEY, meta);
+      await migrateActivePartition(activePid);
       return meta;
     }
     const Datastore = {
@@ -236,6 +300,7 @@
         _actingUserId = id == null ? null : id;
         if (opts.helperMode != null) _helperMode = !!opts.helperMode;
         await rawSet("local", ACTING_USER_KEY, { id: _actingUserId, helperMode: _helperMode });
+        await migrateActivePartition();
         return { ok: true, id: _actingUserId, helperMode: _helperMode };
       },
       // The active partition + helper-mode flag. In-memory: only correct AFTER

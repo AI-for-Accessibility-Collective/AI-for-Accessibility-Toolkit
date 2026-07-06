@@ -52,14 +52,29 @@
 
 /**
  * @typedef {Object} Consent
- * The accessible channel for surfacing pending proposals to the user. In
- * Phase 0 the only need is the unread-proposal indicator (today: the toolbar
- * badge). The richer `present(proposal|grant)` / `capture(response)` surface
- * from the plan is Phase 3 and not defined yet — keeping this honest about
- * what actually exists.
+ * The accessible channel for surfacing pending consent items (proposals,
+ * cross-app grant requests, cross-app insights) to the user.
+ *
+ * REQUIRED: `notifyPending` — the indicator that something awaits a decision.
+ * The Chrome host is PULL-based: the badge notifies, and the popup lists and
+ * resolves items through the librarian's own methods, so notifyPending is all
+ * it needs (or implements).
+ *
+ * OPTIONAL (Phase 3): `present` / `capture` — for PUSH-based hosts whose
+ * reliable modality is not a visual list (XR TTS prompt, a screen-reader live
+ * region, a large-target dialog). A host that implements them surfaces each
+ * pending item itself and feeds the user's decision back through the SAME
+ * `respondToProposal` path, so the consent semantics (never auto-apply,
+ * sender-can't-self-resolve, suppression/cooldown) are identical on every
+ * host. Copy shown to the user should respect the profile's
+ * `metaPreferences.language` ('plain' → plain-language pass).
  * @property {(count: number) => (void | Promise<void>)} notifyPending
- *   Reflect that `count` proposals await the user's decision (0 clears it).
+ *   Reflect that `count` items await the user's decision (0 clears it).
  *   MUST NOT throw into the caller; failures are swallowed by the adapter.
+ * @property {(item: {type: 'proposal'|'grant-request'|'cross-app-insight', proposal: object}) => Promise<void>} [present]
+ *   Surface one pending item in the host's accessible modality.
+ * @property {(proposalId: string) => Promise<'accept'|'declineOnce'|'suppress'|null>} [capture]
+ *   Collect the user's decision for a presented item (null = no decision yet).
  */
 
 /**

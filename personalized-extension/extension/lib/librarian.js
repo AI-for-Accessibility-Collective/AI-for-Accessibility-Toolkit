@@ -153,6 +153,29 @@
     return out;
   }
 
+  // ../toolkit/sync/blob.js
+  var BLOB_KIND = "aa-profile-blob";
+  var BLOB_VERSION = 1;
+  function buildProfileBlob(profile, abilityModel, now) {
+    const p = profile || {};
+    return {
+      kind: BLOB_KIND,
+      v: BLOB_VERSION,
+      exportedAt: now,
+      abilityModel: abilityModel || null,
+      profile: {
+        supportAreas: Array.isArray(p.supportAreas) ? [...p.supportAreas] : [],
+        freeText: String(p.freeText || ""),
+        fields: p.fields ? JSON.parse(JSON.stringify(p.fields)) : {},
+        metaPreferences: { language: p.metaPreferences && p.metaPreferences.language || "standard" },
+        updatedAt: p.updatedAt || null
+      }
+    };
+  }
+  function validateProfileBlob(blob) {
+    return !!(blob && blob.kind === BLOB_KIND && blob.v === BLOB_VERSION && typeof blob.exportedAt === "number" && blob.profile && typeof blob.profile === "object" && Array.isArray(blob.profile.supportAreas));
+  }
+
   // ../toolkit/core/librarian.js
   function createLibrarian({
     datastore,
@@ -222,6 +245,13 @@
       return true;
     }
     const VALID_SCOPE = /^(general|category:[a-z-]+|context:[a-z-]+|origin:[a-z0-9.-]+|tool:[a-zA-Z0-9_-]+)$/;
+    const PROTO_SEGMENTS = /* @__PURE__ */ new Set(["__proto__", "prototype", "constructor"]);
+    function isSafeFieldsPath(path) {
+      if (typeof path !== "string") return false;
+      const parts = path.split(".");
+      if (parts.length < 2 || parts[0] !== "fields") return false;
+      return parts.every((seg) => /^[A-Za-z0-9_]+$/.test(seg) && !PROTO_SEGMENTS.has(seg));
+    }
     function settingsMeta() {
       try {
         return DS().global.tools().settingsMeta || {};
@@ -296,7 +326,12 @@
         // 'standard' | 'plain'
         maxProposalsPerWeek: 30
       },
-      memoryPaused: false
+      memoryPaused: false,
+      // Global cross-app OFF switch (Phase 3): checked FIRST in every cross-app
+      // entry point (requestGrant / exportAbilityModel / importInsight). Local
+      // single-device operation is unaffected. Absent on older profiles → falsy
+      // → sharing allowed (the per-app default-deny grant gate is the floor).
+      sharingPaused: false
     };
     async function getOrInitProfile() {
       let p = await DS().get("mine.profile");
@@ -341,12 +376,15 @@
       // User-initiated edit — bypasses the proposal gate by design (the gate
       // exists for *inferred* changes; explicit user intent needs no consent).
       async setProfileField(path, value) {
+        const parts = String(path).split(".");
+        if (parts.some((seg) => seg === "__proto__" || seg === "prototype" || seg === "constructor")) {
+          return await DS().get("mine.profile");
+        }
         return await DS().patch("mine.profile", async (p) => {
           p = p || structuredClone(PROFILE_DEFAULTS);
-          const parts = String(path).split(".");
           let obj = p;
           for (let i = 0; i < parts.length - 1; i++) {
-            if (typeof obj[parts[i]] !== "object" || obj[parts[i]] == null) obj[parts[i]] = {};
+            if (typeof obj[parts[i]] !== "object" || obj[parts[i]] == null || !Object.prototype.hasOwnProperty.call(obj, parts[i])) obj[parts[i]] = {};
             obj = obj[parts[i]];
           }
           obj[parts[parts.length - 1]] = value;
@@ -591,6 +629,9 @@
         appId = String(appId || "").trim();
         if (!appId) return { ok: false, reason: "bad-app" };
         if (!validateScopes(scopes)) return { ok: false, reason: "bad-scope" };
+        const partitionAt = DS().getActingUser().id;
+        const profile = await getOrInitProfile();
+        if (profile.sharingPaused) return { ok: false, reason: "sharing-paused" };
         const grants = await DS().get("mine.grants") || [];
         const existing = grants.find((g) => g.appId === appId && isActive(g));
         if (existing && scopes.every((s) => existing.scopes.includes(s))) {
@@ -599,13 +640,15 @@
         const appLabel = String(opts.appLabel || appId).slice(0, 100);
         const now = clock.now();
         const suppressions = await DS().get("mine.suppressions");
-        const profile = await getOrInitProfile();
+        if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: "partition-switched" };
         await this._draftProposals([{
           aspect: `grant:${appId}`,
           aspectLabel: `let ${appLabel} read your ${scopes.join(", ")}`,
           change: { op: "grant-request", appId, appLabel, scopes },
           rationale: String(opts.rationale || `${appLabel} wants to read part of your accessibility profile so it can adapt itself for you.`).slice(0, 300),
-          evidence: []
+          evidence: [],
+          source: appId
+          // the requesting app — it can never resolve its own request
         }], { suppressions, profile, now });
         await updateBadge();
         const props = await DS().get("mine.proposals");
@@ -630,11 +673,60 @@
       // categories-only AbilityModel, filtered to the grant's scopes.
       async exportAbilityModel(appId) {
         appId = String(appId || "").trim();
+        const partitionAt = DS().getActingUser().id;
+        const profile = await DS().get("mine.profile");
+        if (profile && profile.sharingPaused) return { ok: false, reason: "sharing-paused" };
         const grants = await DS().get("mine.grants") || [];
         const grant = grants.find((g) => g.appId === appId && isActive(g));
         if (!grant) return { ok: false, reason: "no-grant" };
         const abilityModel = await this.getAbilityModel();
+        if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: "partition-switched" };
         return { ok: true, abilityModel: filterAbilityModelByScopes(abilityModel, grant.scopes) };
+      },
+      // ====================== CROSS-APP INSIGHT WRITE (Phase 3) ======================
+      // The write half of cross-app flow: a granted app contributes something it
+      // learned (XR's FOV→text-size, ArtInsight's preferred description style).
+      // WRITE = A PROPOSAL, NEVER SILENT: the insight is drafted through the same
+      // consent machinery as everything else, carries its source app, and NEVER
+      // auto-applies. The sending app has no code path that resolves it — only
+      // the local user surface (respondToProposal) can.
+      //
+      // insight = { kind: 'visual.textSize', confidence: 0..1, label?, rationale?,
+      //             change: {op:'profile-set', path:'fields.…', value} |
+      //                     {op:'add-memory', record:{…}} }
+      // The inner change is whitelisted: profile-set may only touch `fields.*`
+      // (the ability fields) — never metaPreferences / memoryPaused /
+      // sharingPaused, so a cross-app write can't propose to loosen the user's
+      // own safety switches.
+      async importInsight(sourceAppId, insight = {}) {
+        sourceAppId = String(sourceAppId || "").trim();
+        if (!sourceAppId) return { ok: false, reason: "bad-app" };
+        const partitionAt = DS().getActingUser().id;
+        const profile = await getOrInitProfile();
+        if (profile.sharingPaused) return { ok: false, reason: "sharing-paused" };
+        const grants = await DS().get("mine.grants") || [];
+        const grant = grants.find((g) => g.appId === sourceAppId && isActive(g));
+        if (!grant) return { ok: false, reason: "no-grant" };
+        const kind = String(insight.kind || "").slice(0, 60);
+        const confidence = Math.min(1, Math.max(0, Number(insight.confidence ?? 0.5)));
+        const change = insight.change;
+        const validChange = change && (change.op === "profile-set" && isSafeFieldsPath(change.path) || change.op === "add-memory" && change.record && typeof change.record === "object");
+        if (!kind || !validChange) return { ok: false, reason: "bad-insight" };
+        const suppressions = await DS().get("mine.suppressions");
+        const now = clock.now();
+        if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: "partition-switched" };
+        await this._draftProposals([{
+          aspect: `insight:${sourceAppId}:${kind}`,
+          aspectLabel: String(insight.label || `${grant.appLabel} suggests an update to ${kind}`).slice(0, 120),
+          change: { op: "cross-app-insight", appId: sourceAppId, appLabel: grant.appLabel, kind, confidence, change },
+          rationale: String(insight.rationale || `${grant.appLabel} noticed this while you used it. Nothing changes unless you say yes.`).slice(0, 300),
+          evidence: [],
+          source: sourceAppId
+        }], { suppressions, profile, now });
+        await updateBadge();
+        const props = await DS().get("mine.proposals");
+        const pending = props.find((p) => p.status === "pending" && p.aspect === `insight:${sourceAppId}:${kind}` && p.change && p.change.op === "cross-app-insight");
+        return pending ? { ok: true, proposalId: pending.id } : { ok: false, reason: "suppressed" };
       },
       // ====================== ACTING USER (Phase 3) ======================
       // A lightweight "who's using this now?" partition so two people on one
@@ -644,12 +736,52 @@
       // Librarian just exposes the switch and refreshes the badge, since the
       // pending-proposal count is per-partition.
       async setActingUser(id, opts = {}) {
+        await slowLaneDrained();
         const res = await DS().setActingUser(id, opts);
         await updateBadge();
         return res;
       },
       getActingUser() {
         return DS().getActingUser();
+      },
+      // ====================== USER-MEDIATED PROFILE BLOB (Phase 3) ======================
+      // §6 transport (b): the user deliberately exports a portable JSON blob on
+      // one device/app and imports it on another (the XR⇄web demo). The button
+      // IS the consent, so this is NOT gated on sharingPaused (that switch
+      // governs app-to-app flow, not the user moving their OWN data by hand).
+      // Only the modality-neutral ability profile travels — never memories,
+      // grants, proposals, or any SurfaceProfile (device-local by design).
+      async exportProfileBlob() {
+        const profile = await getOrInitProfile();
+        const abilityModel = await this.getAbilityModel();
+        return buildProfileBlob(profile, abilityModel, clock.now());
+      },
+      // Merge an imported blob into the ACTIVE partition's profile. Plain
+      // last-write-wins by the blob's exportedAt vs the local profile.updatedAt
+      // (plan §6 — no CRDT). Returns {ok, merged, reason?}. Never overwrites
+      // with older data, never touches memories/grants/surfaces.
+      async importProfileBlob(blob) {
+        if (!validateProfileBlob(blob)) return { ok: false, reason: "bad-blob" };
+        const local = await getOrInitProfile();
+        const localMeaningful = Array.isArray(local.supportAreas) && local.supportAreas.length || local.freeText && local.freeText.length || local.fields && Object.keys(local.fields).length;
+        const localAt = local.updatedAt || 0;
+        if (localMeaningful && blob.exportedAt <= localAt) return { ok: true, merged: false, reason: "older-or-equal" };
+        await DS().patch("mine.profile", (p) => {
+          p = p || structuredClone(PROFILE_DEFAULTS);
+          const bp = blob.profile;
+          p.supportAreas = Array.isArray(bp.supportAreas) ? bp.supportAreas.slice() : p.supportAreas;
+          p.freeText = typeof bp.freeText === "string" ? bp.freeText : p.freeText;
+          if (bp.fields && typeof bp.fields === "object") {
+            p.fields = JSON.parse(JSON.stringify(bp.fields));
+          }
+          p.metaPreferences = p.metaPreferences || {};
+          if (bp.metaPreferences && typeof bp.metaPreferences.language === "string") {
+            p.metaPreferences.language = bp.metaPreferences.language;
+          }
+          p.updatedAt = blob.exportedAt;
+          return p;
+        });
+        return { ok: true, merged: true };
       },
       // Prompt for the popup's "what support do you need?" flow. The Librarian
       // owns it so the "does this exist in the global db?" decision is grounded
@@ -770,6 +902,17 @@ Return ONLY valid JSON with:
           return p;
         });
       },
+      // The global cross-app OFF switch. Hard-stops every cross-app read and
+      // write (grant requests, exports, insight imports) while set; existing
+      // grants are kept (paused, not revoked) so unpausing restores them.
+      async setSharingPaused(paused) {
+        await DS().patch("mine.profile", (p) => {
+          p = p || structuredClone(PROFILE_DEFAULTS);
+          p.sharingPaused = !!paused;
+          p.updatedAt = clock.now();
+          return p;
+        });
+      },
       async setOriginPaused(origin, paused) {
         origin = (origin || "").toLowerCase().replace(/^www\./, "");
         await DS().patch("mine.siteIndex", (cur) => {
@@ -832,6 +975,22 @@ Return ONLY valid JSON with:
               grants.push(normalizeGrant({ id: newId("grant"), appId, appLabel, scopes, grantedAt: now }));
               return grants;
             });
+          } else if (prop.change?.op === "cross-app-insight" && prop.change.change) {
+            const inner = prop.change.change;
+            if (inner.op === "profile-set" && isSafeFieldsPath(inner.path)) {
+              await this.setProfileField(inner.path, inner.value);
+            } else if (inner.op === "add-memory" && inner.record && typeof inner.record === "object") {
+              const insrec = { ...inner.record };
+              insrec.source = `cross-app:${prop.change.appId}`;
+              insrec.confidence = Math.min(0.9, Number(prop.change.confidence ?? 0.7));
+              insrec.strength = "preference";
+              insrec.tier = "preference";
+              if (insrec.kind === "suppression" || insrec.kind === "rule") insrec.kind = "preference";
+              const rec = normalizeRecord(insrec, now);
+              const shard = await DS().getMemoryShard(rec.scope);
+              shard.push(rec);
+              await DS().setMemoryShard(rec.scope, shard);
+            }
           }
           for (const evId of prop.evidence || []) {
             const shards = await DS().allMemoryShards();
@@ -1020,6 +1179,10 @@ Rules:
             change: d.change,
             rationale: String(d.rationale || "").slice(0, 300),
             evidence: d.evidence || [],
+            // Cross-app provenance (Phase 3): the appId that originated this
+            // proposal, or null for locally-drafted ones. Display-only here —
+            // resolution is always the local user surface.
+            source: d.source || null,
             status: "pending",
             createdAt: now,
             respondedAt: null
@@ -1215,8 +1378,21 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
         return { ran: true, promoted, expired, purged, discarded };
       }
     };
+    let _slowLaneRuns = 0;
+    const _slowLaneWaiters = [];
+    function slowLaneEnter() {
+      _slowLaneRuns++;
+    }
+    function slowLaneExit() {
+      if (--_slowLaneRuns === 0) _slowLaneWaiters.splice(0).forEach((resolve) => resolve());
+    }
+    function slowLaneDrained() {
+      return _slowLaneRuns === 0 ? Promise.resolve() : new Promise((r) => _slowLaneWaiters.push(r));
+    }
     function scheduleExtraction() {
+      const enqueuedFor = DS().getActingUser().id;
       scheduler.debounce("aaLibrarianExtract", 2e4, () => {
+        if (DS().getActingUser().id !== enqueuedFor) return;
         Librarian.extract().catch((e) => console.warn("[Librarian] extract failed:", e.message));
       });
     }
@@ -1226,6 +1402,17 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
         await consent.notifyPending(pending.length);
       } catch {
       }
+    }
+    for (const job of ["extract", "reflect", "requestGrant", "importInsight", "respondToProposal", "recordScopedSettings"]) {
+      const inner = Librarian[job].bind(Librarian);
+      Librarian[job] = async (...args) => {
+        slowLaneEnter();
+        try {
+          return await inner(...args);
+        } finally {
+          slowLaneExit();
+        }
+      };
     }
     scheduler.every("aaLibrarianExtract", 30, () => {
       Librarian.extract().catch((e) => console.warn("[Librarian] extract failed:", e.message));

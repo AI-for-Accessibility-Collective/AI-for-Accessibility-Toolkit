@@ -119,15 +119,60 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     await kv.set(area, key, value);
   }
 
-  // Physical-key derivation for the active partition. A named partition
-  // prefixes every user-owned key with `aa.u.<id>::` — a namespace disjoint
-  // from the null partition because no catalog/shard key starts with `aa.u.`
-  // (so the null partition's prefix scans can never see a named partition's
-  // data, and vice-versa). null partition → key unchanged.
-  function partitionKey(physKey) {
-    return _actingUserId ? `aa.u.${_actingUserId}::${physKey}` : physKey;
+  // Physical-key derivation for a partition. A named partition prefixes every
+  // user-owned key with `aa.u.<id>::` — a namespace disjoint from the null
+  // partition because no catalog/shard key starts with `aa.u.` (so the null
+  // partition's prefix scans can never see a named partition's data, and
+  // vice-versa). null partition → key unchanged. `pid` defaults to the live
+  // active partition; migrations pass an EXPLICIT pid (via a bound view) so
+  // they target a specific partition WITHOUT mutating the shared _actingUserId
+  // that concurrent traffic reads.
+  function partitionKey(physKey, pid = _actingUserId) {
+    return pid ? `aa.u.${pid}::${physKey}` : physKey;
   }
 
+  // A datastore facade pinned to an explicit partition — the surface a
+  // migration runs against. Keeps _actingUserId untouched so a message
+  // processed mid-migration still routes to the true active partition
+  // (closes the fire-and-forget-migration isolation window).
+  function partitionView(pid) {
+    const shardKey = (scope) => Datastore.memoryShardKey(scope);
+    const view = {
+      global: Datastore.global,
+      memoryShardKey: shardKey,
+      async get(name) {
+        const d = CATALOG[name];
+        if (!d) throw new Error(`Datastore: unknown store "${name}"`);
+        return await rawGet(d.area, partitionKey(d.key, pid), structuredClone(d.def));
+      },
+      async set(name, value) {
+        const d = CATALOG[name];
+        if (!d) throw new Error(`Datastore: unknown store "${name}"`);
+        await rawSet(d.area, partitionKey(d.key, pid), value);
+      },
+      async patch(name, fn) {
+        const cur = await view.get(name);
+        const next = await fn(cur);
+        await view.set(name, next === undefined ? cur : next);
+        return next === undefined ? cur : next;
+      },
+      async getMemoryShard(scope) { return await rawGet('local', partitionKey(shardKey(scope), pid), []); },
+      async setMemoryShard(scope, records) { await rawSet('local', partitionKey(shardKey(scope), pid), records); },
+      async allMemoryShards() {
+        const all = await kv.getAll('local');
+        const prefix = partitionKey(MEMORY_SHARD_PREFIX, pid);
+        const out = {};
+        for (const [key, recs] of Object.entries(all || {})) {
+          if (key.startsWith(prefix)) out[key.slice(prefix.length)] = recs || [];
+        }
+        return out;
+      },
+    };
+    return view;
+  }
+
+  // Load the persisted active-partition pointer into memory. Called at the top
+  // of runMigrations (host startup), before any partitioned access.
   // Load the persisted active-partition pointer into memory. Called at the top
   // of runMigrations (host startup), before any partitioned access.
   async function loadActingUser() {
@@ -192,19 +237,53 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     },
   ];
 
+  // Per-partition migration stamp for NAMED partitions, stored INSIDE the
+  // partition (routed through partitionKey). The null partition is governed by
+  // the global META_KEY as it always was. Sweeping on activation keeps a
+  // long-lived named partition current even when a new migration ships while a
+  // different partition is active. Migrations are idempotent and no-ops on
+  // empty stores, so a freshly born partition just runs them all once cheaply
+  // and is stamped current.
+  const PARTITION_META_KEY = 'aa.partitionMeta';
+
+  // Serialize partition sweeps so two overlapping activations can never stamp
+  // one partition 'migrated' while ops ran against another.
+  let _migrateChain = Promise.resolve();
+
+  async function migrateActivePartition(pid = _actingUserId) {
+    if (!pid) return; // null partition: global meta governs
+    const run = _migrateChain.then(async () => {
+      const key = partitionKey(PARTITION_META_KEY, pid);
+      const pm = (await rawGet('local', key, null)) || { lastMigration: 0 };
+      const maxId = MIGRATIONS[MIGRATIONS.length - 1].id;
+      if ((pm.lastMigration || 0) >= maxId) return;
+      const view = partitionView(pid); // targets pid explicitly; _actingUserId untouched
+      for (const m of MIGRATIONS) {
+        if (m.id <= (pm.lastMigration || 0)) continue;
+        await m.run(view);
+        pm.lastMigration = m.id;
+      }
+      pm.migratedAt = clock.now();
+      await rawSet('local', key, pm);
+    });
+    _migrateChain = run.catch(() => {}); // a failed sweep never wedges the chain
+    return run;
+  }
+
   async function runMigrations() {
-    // Restore the active partition BEFORE migrating so data migrations target
-    // the right partition. NOTE: migrations run against the ACTIVE partition
-    // only. In the prototype the only legacy data is the null partition
-    // (migrated in the single-user era); named partitions are born after the
-    // migrations exist, so their writes are already current-schema. A
-    // per-partition migration sweep is product-hardening, not prototype work.
     await loadActingUser();
-    const meta = (await rawGet('local', META_KEY, null)) || { lastMigration: 0 };
+    const activePid = _actingUserId;
+    // Global migrations ALWAYS target the null partition — the only place
+    // legacy (pre-partition) data lives — via a null-bound VIEW rather than by
+    // mutating the shared _actingUserId. So a librarian message processed
+    // during this loop still routes to the true active partition (the prior
+    // mutate-and-restore approach mis-partitioned concurrent traffic).
+    const nullView = partitionView(null);
+    let meta = (await rawGet('local', META_KEY, null)) || { lastMigration: 0 };
     let applied = false;
     for (const m of MIGRATIONS) {
       if (m.id <= (meta.lastMigration || 0)) continue;
-      await m.run(Datastore);
+      await m.run(nullView);
       meta.lastMigration = m.id;
       applied = true;
     }
@@ -216,6 +295,7 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     meta.taxonomyVersion = taxonomy ? taxonomy.version : null;
     if (applied || !meta.lastMigratedAt) meta.lastMigratedAt = clock.now();
     await rawSet('local', META_KEY, meta);
+    await migrateActivePartition(activePid); // no-op when null or already current
     return meta;
   }
 
@@ -297,6 +377,10 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
       _actingUserId = id == null ? null : id;
       if (opts.helperMode != null) _helperMode = !!opts.helperMode;
       await rawSet('local', ACTING_USER_KEY, { id: _actingUserId, helperMode: _helperMode });
+      // Migrate-on-activation: a named partition is brought current (or born
+      // current) the moment it becomes active, so a migration shipped while
+      // another partition was active can never leave it stale.
+      await migrateActivePartition();
       return { ok: true, id: _actingUserId, helperMode: _helperMode };
     },
 
