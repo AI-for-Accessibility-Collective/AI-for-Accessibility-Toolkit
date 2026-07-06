@@ -29,7 +29,23 @@ async function main() {
   await hydrate();
   installListener();
 
-  const transcript = mountTranscript($('vp-transcript'), $('vp-empty'));
+  // Guard against double-activating Undo: the button is re-created enabled on
+  // every re-render (which fires several times a second while the model
+  // speaks), so a second click would revert an older, unrelated change. Hold a
+  // flag until the round-trip lands (an undo action chip arrives) or a safety
+  // timeout elapses.
+  let undoInFlight = false;
+  let undoTimer = null;
+  const transcript = mountTranscript($('vp-transcript'), $('vp-empty'), {
+    onUndo: async () => {
+      if (undoInFlight) return;
+      undoInFlight = true;
+      transcript.render({ ...getStore(), undoInFlight });
+      if (undoTimer) clearTimeout(undoTimer);
+      undoTimer = setTimeout(() => { undoInFlight = false; transcript.render({ ...getStore(), undoInFlight }); }, 8000);
+      await send({ type: 'voiceUndoLast' });
+    },
+  });
   const status = mountStatus($('vp-status'), $('vp-error'));
   const controls = mountControls({
     startBtn: $('vp-start'),
@@ -38,12 +54,44 @@ async function main() {
     restartBtn: $('vp-restart'),
     bgWrapper: $('vp-bg-wrapper'),
     bgToggle: $('vp-bg-toggle'),
+    textForm: $('vp-text-form'),
     onStart: handleStart,
     onEnd: handleEnd,
     onRestart: handleRestart,
     onMicToggle: handleMicToggle,
     onBackgroundChange: handleBackgroundChange,
   });
+
+  // Type-instead-of-speak: same conversation, no mic needed. Useful for
+  // speech-impaired users, noisy rooms, and deterministic testing.
+  const textForm = $('vp-text-form');
+  const textInput = $('vp-text-input');
+  textForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = textInput.value.trim();
+    if (!text) return;
+    textInput.value = '';
+    const resp = await send({ type: 'voiceTextTurn', text });
+    if (resp && resp.error) await _writeError(`Send failed: ${resp.error}`);
+  });
+
+  // Pending-proposal pill: a lightweight nudge toward suggestions waiting
+  // for consent. Clicking it (while live) asks the agent to read them out —
+  // the visual consent cards stay in the popup.
+  const proposalPill = $('vp-proposals');
+  async function refreshProposalPill() {
+    const resp = await send({ type: 'librarianListProposals', status: 'pending' });
+    const n = (resp && resp.proposals && resp.proposals.length) || 0;
+    proposalPill.hidden = n === 0;
+    proposalPill.textContent = n === 1 ? '1 suggestion' : `${n} suggestions`;
+  }
+  proposalPill.addEventListener('click', async () => {
+    if (getStore().connection === 'live') {
+      await send({ type: 'voiceTextTurn', text: 'What suggestions are waiting for me?' });
+    }
+  });
+  refreshProposalPill();
+  setInterval(refreshProposalPill, 60000);
 
   // "Open mic settings" deep-link. Visible only after a mic-permission
   // failure (handleStart sets _showMicSettings via the side effect of
@@ -54,13 +102,34 @@ async function main() {
     chrome.tabs.create({ url: 'chrome://settings/content/microphone' });
   });
 
+  let _lastMemoryActionId = null;
+  let _lastUndoActionId = null;
   subscribe((snap) => {
-    transcript.render(snap);
+    // Clear the in-flight undo lock once its result chip lands.
+    const newestAction = [...snap.transcript].reverse().find((e) => e.role === 'action');
+    if (undoInFlight && newestAction && newestAction.tool === 'undo_last_change'
+        && newestAction.actionId !== _lastUndoActionId) {
+      _lastUndoActionId = newestAction.actionId;
+      undoInFlight = false;
+      if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+    }
+    transcript.render({ ...snap, undoInFlight });
     status.render(snap);
     controls.render(snap);
     // Show the deep-link whenever the active error involves mic perms.
     const showMic = !!snap.error && /micropho|mic settings/i.test(snap.error);
     micSettingsBtn.hidden = !showMic;
+    // A memory-tool chip means the pending-proposal count may have changed.
+    const memoryTools = new Set(['respond_to_proposal', 'forget_memory', 'remember']);
+    for (let i = snap.transcript.length - 1; i >= 0; i--) {
+      const e = snap.transcript[i];
+      if (e.role !== 'action') continue;
+      if (memoryTools.has(e.tool) && e.actionId !== _lastMemoryActionId) {
+        _lastMemoryActionId = e.actionId;
+        refreshProposalPill();
+      }
+      break;
+    }
   });
 }
 

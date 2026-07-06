@@ -36,6 +36,7 @@ const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
 export function createLiveClient({
   apiKey,
   model = DEFAULT_MODEL,
+  systemInstruction,        // composed per-connect (session context); falls back to the static base
   onAudio,                  // (base64Pcm, mimeRate) -- model audio chunk
   onInputTranscript,        // ({text, finished}) -- user speech transcript
   onOutputTranscript,       // ({text, finished}) -- model speech transcript
@@ -86,7 +87,7 @@ export function createLiveClient({
             },
           },
           systemInstruction: {
-            parts: [{ text: SYSTEM_INSTRUCTION }],
+            parts: [{ text: systemInstruction || SYSTEM_INSTRUCTION }],
           },
           tools: TOOL_DECLARATIONS,
           // Both transcription configs always on for UI captions; cheap.

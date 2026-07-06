@@ -112,6 +112,41 @@ export function appendEvent({ summary, details, ts }) {
   });
 }
 
+// Append an "action chip" entry -- one per state-changing tool call
+// (settings change, undo, task start/stop, memory edit). Rendered by the
+// panel as a compact confirmation chip; the newest undoable one carries the
+// Undo button while the session is live.
+export function appendAction({ tool, text, ok, undoable, actionId, ts }) {
+  const entry = {
+    role: 'action',
+    text: text || '',
+    tool: tool || null,
+    ok: ok !== false,
+    undoable: !!undoable,
+    actionId: actionId || `act-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+    ts: ts || Date.now(),
+  };
+  _state.transcript.push(entry);
+  while (_state.transcript.length > TRANSCRIPT_LIMIT) _state.transcript.shift();
+  try {
+    chrome.runtime.sendMessage({
+      type: 'voiceTranscript',
+      delta: { role: entry.role, text: entry.text, tool: entry.tool, ok: entry.ok, undoable: entry.undoable, actionId: entry.actionId, finished: true, ts: entry.ts },
+    }).catch(() => {});
+  } catch {}
+  _writeStorage({
+    [STATE_KEY]: {
+      connection: _state.connection,
+      recording: _state.recording,
+      speaking: _state.speaking,
+      backgroundMode: _state.backgroundMode,
+      error: _state.error,
+      transcript: _state.transcript.slice(-TRANSCRIPT_LIMIT),
+    },
+  });
+  return entry;
+}
+
 // Append or extend the most recent transcript entry. Live transcription
 // emits multiple `finished:false` partials before a final `finished:true`
 // chunk -- we replace the running buffer until finished, then snapshot.

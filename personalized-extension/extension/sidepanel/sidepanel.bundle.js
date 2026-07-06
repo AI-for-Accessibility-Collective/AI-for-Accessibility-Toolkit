@@ -85,12 +85,24 @@
       }
     });
   }
-  function _appendTranscript({ role, text, finished, details, ts }) {
+  function _appendTranscript({ role, text, finished, details, ts, tool, ok, undoable, actionId }) {
     if (role === "event") {
       _store.transcript.push({
         role,
         text,
         details: Array.isArray(details) ? details : [],
+        ts: ts || Date.now()
+      });
+      return;
+    }
+    if (role === "action") {
+      _store.transcript.push({
+        role,
+        text,
+        tool: tool || null,
+        ok: ok !== false,
+        undoable: !!undoable,
+        actionId: actionId || null,
         ts: ts || Date.now()
       });
       return;
@@ -110,7 +122,7 @@
 
   // extension/sidepanel/src/ui/transcript.js
   var _openDetails = /* @__PURE__ */ new Set();
-  function mountTranscript(rootEl, emptyEl) {
+  function mountTranscript(rootEl, emptyEl, { onUndo } = {}) {
     function render(snap) {
       const list = snap.transcript || [];
       const last = list[list.length - 1];
@@ -122,15 +134,28 @@
         return;
       }
       emptyEl.hidden = true;
+      let newestUndoable = null;
+      if (snap.connection === "live" && !snap.undoInFlight) {
+        for (let i = list.length - 1; i >= 0; i--) {
+          const e = list[i];
+          if (e.role === "action" && e.undoable && e.ok) {
+            newestUndoable = e;
+            break;
+          }
+          if (e.role === "action" && e.tool === "undo_last_change") break;
+        }
+      }
+      const scroller = rootEl.parentElement;
+      const atBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 40;
       const frag = document.createDocumentFragment();
       for (const entry of list) {
-        frag.appendChild(_renderEntry(entry));
+        frag.appendChild(_renderEntry(entry, { canUndo: entry === newestUndoable, onUndo }));
       }
       if (showListening) {
         frag.appendChild(_renderListeningPlaceholder());
       }
       rootEl.replaceChildren(frag);
-      rootEl.parentElement.scrollTop = rootEl.parentElement.scrollHeight;
+      if (atBottom) scroller.scrollTop = scroller.scrollHeight;
     }
     return { render };
   }
@@ -146,9 +171,36 @@
     li.appendChild(text);
     return li;
   }
-  function _renderEntry(entry) {
+  function _renderEntry(entry, opts = {}) {
     if (entry.role === "event") return _renderEventBubble(entry);
+    if (entry.role === "action") return _renderActionChip(entry, opts);
     return _renderSpeechBubble(entry);
+  }
+  function _renderActionChip(entry, { canUndo, onUndo } = {}) {
+    const li = document.createElement("li");
+    li.className = "vp-msg vp-msg-action" + (entry.ok ? "" : " vp-msg-action-failed");
+    const icon = document.createElement("span");
+    icon.className = "vp-action-icon";
+    icon.textContent = entry.ok ? "\u2713" : "\u26A0";
+    icon.setAttribute("aria-hidden", "true");
+    li.appendChild(icon);
+    const text = document.createElement("span");
+    text.className = "vp-action-text";
+    text.textContent = entry.text || "(action)";
+    li.appendChild(text);
+    if (canUndo && typeof onUndo === "function") {
+      const btn = document.createElement("button");
+      btn.className = "vp-btn vp-undo-btn";
+      btn.textContent = "Undo";
+      btn.setAttribute("aria-label", `Undo: ${entry.text || "last change"}`);
+      btn.addEventListener("click", () => {
+        btn.disabled = true;
+        onUndo(entry);
+      });
+      li.appendChild(btn);
+    }
+    li.appendChild(_timeEl(entry.ts));
+    return li;
   }
   function _renderSpeechBubble(entry) {
     const li = document.createElement("li");
@@ -235,6 +287,7 @@
     restartBtn,
     bgWrapper,
     bgToggle,
+    textForm,
     onStart,
     onEnd,
     onRestart,
@@ -248,6 +301,9 @@
     bgToggle.addEventListener("change", (e) => onBackgroundChange(!!e.target.checked));
     function render(snap) {
       const live = snap.connection === "live" || snap.connection === "connecting";
+      if (textForm) {
+        textForm.hidden = snap.connection !== "live";
+      }
       const showRestart = live || !live && !!snap.hasResumeHandle;
       startBtn.hidden = live;
       micBtn.hidden = !live;
@@ -279,7 +335,21 @@
     chrome.runtime.connect({ name: "voice-ui" });
     await hydrate();
     installListener();
-    const transcript = mountTranscript($("vp-transcript"), $("vp-empty"));
+    let undoInFlight = false;
+    let undoTimer = null;
+    const transcript = mountTranscript($("vp-transcript"), $("vp-empty"), {
+      onUndo: async () => {
+        if (undoInFlight) return;
+        undoInFlight = true;
+        transcript.render({ ...get(), undoInFlight });
+        if (undoTimer) clearTimeout(undoTimer);
+        undoTimer = setTimeout(() => {
+          undoInFlight = false;
+          transcript.render({ ...get(), undoInFlight });
+        }, 8e3);
+        await send({ type: "voiceUndoLast" });
+      }
+    });
     const status = mountStatus($("vp-status"), $("vp-error"));
     const controls = mountControls({
       startBtn: $("vp-start"),
@@ -288,22 +358,68 @@
       restartBtn: $("vp-restart"),
       bgWrapper: $("vp-bg-wrapper"),
       bgToggle: $("vp-bg-toggle"),
+      textForm: $("vp-text-form"),
       onStart: handleStart,
       onEnd: handleEnd,
       onRestart: handleRestart,
       onMicToggle: handleMicToggle,
       onBackgroundChange: handleBackgroundChange
     });
+    const textForm = $("vp-text-form");
+    const textInput = $("vp-text-input");
+    textForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = textInput.value.trim();
+      if (!text) return;
+      textInput.value = "";
+      const resp = await send({ type: "voiceTextTurn", text });
+      if (resp && resp.error) await _writeError(`Send failed: ${resp.error}`);
+    });
+    const proposalPill = $("vp-proposals");
+    async function refreshProposalPill() {
+      const resp = await send({ type: "librarianListProposals", status: "pending" });
+      const n = resp && resp.proposals && resp.proposals.length || 0;
+      proposalPill.hidden = n === 0;
+      proposalPill.textContent = n === 1 ? "1 suggestion" : `${n} suggestions`;
+    }
+    proposalPill.addEventListener("click", async () => {
+      if (get().connection === "live") {
+        await send({ type: "voiceTextTurn", text: "What suggestions are waiting for me?" });
+      }
+    });
+    refreshProposalPill();
+    setInterval(refreshProposalPill, 6e4);
     const micSettingsBtn = $("vp-open-mic-settings");
     micSettingsBtn.addEventListener("click", () => {
       chrome.tabs.create({ url: "chrome://settings/content/microphone" });
     });
+    let _lastMemoryActionId = null;
+    let _lastUndoActionId = null;
     subscribe((snap) => {
-      transcript.render(snap);
+      const newestAction = [...snap.transcript].reverse().find((e) => e.role === "action");
+      if (undoInFlight && newestAction && newestAction.tool === "undo_last_change" && newestAction.actionId !== _lastUndoActionId) {
+        _lastUndoActionId = newestAction.actionId;
+        undoInFlight = false;
+        if (undoTimer) {
+          clearTimeout(undoTimer);
+          undoTimer = null;
+        }
+      }
+      transcript.render({ ...snap, undoInFlight });
       status.render(snap);
       controls.render(snap);
       const showMic = !!snap.error && /micropho|mic settings/i.test(snap.error);
       micSettingsBtn.hidden = !showMic;
+      const memoryTools = /* @__PURE__ */ new Set(["respond_to_proposal", "forget_memory", "remember"]);
+      for (let i = snap.transcript.length - 1; i >= 0; i--) {
+        const e = snap.transcript[i];
+        if (e.role !== "action") continue;
+        if (memoryTools.has(e.tool) && e.actionId !== _lastMemoryActionId) {
+          _lastMemoryActionId = e.actionId;
+          refreshProposalPill();
+        }
+        break;
+      }
     });
   }
   async function handleStart() {

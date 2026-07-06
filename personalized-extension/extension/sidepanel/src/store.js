@@ -96,13 +96,22 @@ export function installListener() {
   });
 }
 
-function _appendTranscript({ role, text, finished, details, ts }) {
+function _appendTranscript({ role, text, finished, details, ts, tool, ok, undoable, actionId }) {
   // Event bubbles never stream and never collapse onto each other --
   // each is its own row with a `details` array that the UI exposes via
   // an expand toggle.
   if (role === 'event') {
     _store.transcript.push({
       role, text, details: Array.isArray(details) ? details : [], ts: ts || Date.now(),
+    });
+    return;
+  }
+  // Action chips (tool-call confirmations) are complete rows too — never
+  // streamed, never collapsed.
+  if (role === 'action') {
+    _store.transcript.push({
+      role, text, tool: tool || null, ok: ok !== false, undoable: !!undoable,
+      actionId: actionId || null, ts: ts || Date.now(),
     });
     return;
   }

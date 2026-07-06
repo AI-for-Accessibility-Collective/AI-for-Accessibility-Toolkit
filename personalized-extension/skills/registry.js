@@ -270,6 +270,33 @@ export const settingsMeta = {
   autoVideoDescribe:{ type: 'boolean', description: 'AI video descriptions' },
 };
 
+// Grouped, prompt-ready rendering of settingsMeta for LLM system prompts
+// (voice mode's capability vocabulary). One line per setting so registry
+// edits flow into every prompt automatically.
+const PROMPT_GROUPS = [
+  ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor']],
+  ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'dyslexiaFont', 'readingGuide', 'readerMode', 'speechRate']],
+  ['Focus & motion', ['focusMode', 'hideDistractions', 'showProgress', 'motionReducer', 'enhanceFocus']],
+  ['Motor & input', ['keyboardNav', 'voiceCommands']],
+  ["AI-powered (need the user's API key)", ['autoWcagFix', 'autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify', 'autoSummarize', 'autoVideoDescribe']],
+];
+
+export function settingsPromptLines() {
+  const lines = [];
+  for (const [header, keys] of PROMPT_GROUPS) {
+    lines.push(`${header}:`);
+    for (const key of keys) {
+      const m = settingsMeta[key];
+      if (!m) continue;
+      const kind = m.type === 'enum'
+        ? `one of ${m.options.map(o => `"${o}"`).join(', ')}`
+        : m.range ? `${m.type} ${m.range[0]}-${m.range[1]}` : m.type;
+      lines.push(`- ${key} (${kind}): ${m.description}`);
+    }
+  }
+  return lines;
+}
+
 export function getSkillById(id) {
   return skillRegistry.find(s => s.id === id);
 }

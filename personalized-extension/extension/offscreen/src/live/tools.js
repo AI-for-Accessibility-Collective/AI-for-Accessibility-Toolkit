@@ -1,22 +1,109 @@
-// Tool surface exposed to the Live model. Two tools only -- this is the
-// "explain mode" scope; control beyond starting a task is deliberately
-// out of scope.
+// Tool surface exposed to the Live model — the voice agent's hands. Every
+// tool that touches the browser routes through the SW via
+// chrome.runtime.sendMessage (this page has no chrome.tabs/scripting); the
+// voice* data routes live in extension/voice-routes.js, the librarian*/bh*
+// routes in background.js.
 //
-//   start_browser_task(task)   - kicks off BrowserAgent.run(task) in the SW
-//   get_browser_status()       - returns the latest persisted bhAgent snapshot
+// Consent model:
+//   - adjust_settings / undo_last_change / remember are IMMEDIATE — a spoken
+//     request is explicit local user intent, same as tapping the popup. The
+//     contract (prompt-enforced) is narrate + undo.
+//   - forget_memory / respond_to_proposal are CONFIRM class: the prompt makes
+//     the model read the item aloud and get a verbal yes, and a mechanical
+//     seen-id gate here refuses ids that this session never fetched via
+//     get_memory — a hallucinated or stale id cannot delete anything.
 //
-// FunctionCall.id MUST be echoed back on FunctionResponse for the Gemini
-// Developer API. Each dispatch returns a single response (no streaming);
-// for long-running calls we'd use will_continue=true, but neither tool
-// here qualifies.
+// FunctionCall.id is echoed on FunctionResponse by client.js. Each dispatch
+// returns one response object; responses are kept compact (the Live context
+// is small).
+
+import { settingsMeta } from '../../../../skills/registry.js';
+import { createUndoStack } from './undo.js';
+import * as storage from '../storage.js';
+
+const SEND_TIMEOUT_MS = 30000;
+const PAGE_ZOOM = { range: [25, 500], description: 'Whole-page zoom percent (magnifies everything; remembered per site). 100 = normal.' };
+
+// ---- generated schema ----------------------------------------------------
+
+function changesSchema() {
+  const props = {};
+  for (const [key, m] of Object.entries(settingsMeta)) {
+    if (m.type === 'boolean') {
+      props[key] = { type: 'boolean', description: m.description };
+    } else if (m.type === 'number') {
+      props[key] = { type: 'number', description: `${m.description} (${m.range[0]}-${m.range[1]})` };
+    } else if (m.type === 'enum') {
+      props[key] = { type: 'string', enum: m.options, description: m.description };
+    }
+  }
+  props.pageZoom = { type: 'number', description: `${PAGE_ZOOM.description} (${PAGE_ZOOM.range[0]}-${PAGE_ZOOM.range[1]})` };
+  return { type: 'object', properties: props };
+}
+
+export const TOOL_NAMES = [
+  'get_context',
+  'adjust_settings',
+  'undo_last_change',
+  'get_page_content',
+  'start_browser_task',
+  'get_browser_status',
+  'stop_browser_task',
+  'suggest_capabilities',
+  'get_memory',
+  'remember',
+  'forget_memory',
+  'respond_to_proposal',
+];
 
 export const TOOL_DECLARATIONS = [
   {
     functionDeclarations: [
       {
+        name: 'get_context',
+        description:
+          'Snapshot of the current tab: page title/site, page zoom, which accessibility settings are currently on (and which are site-specific), and whether memory is paused. Call before changing settings or when the user asks about the current state.',
+        parameters: { type: 'object', properties: {} },
+      },
+      {
+        name: 'adjust_settings',
+        description:
+          'Change one or more accessibility settings and/or page zoom. Applies immediately to the current page and persists. Batch related changes into ONE call. Afterwards, tell the user what changed and that they can say "undo".',
+        parameters: {
+          type: 'object',
+          properties: {
+            changes: changesSchema(),
+            scope: {
+              type: 'string',
+              description:
+                "Optional. Only when the user limits the change to a kind of site: 'category:<id>' (e.g. category:news, category:video) or 'origin:<hostname>' (e.g. origin:youtube.com). Omit to change it where its current value lives.",
+            },
+          },
+          required: ['changes'],
+        },
+      },
+      {
+        name: 'undo_last_change',
+        description:
+          'Revert the most recent settings/zoom change made in this voice session. Call again to step further back.',
+        parameters: { type: 'object', properties: {} },
+      },
+      {
+        name: 'get_page_content',
+        description:
+          "Read the current page so you can answer questions about it. mode 'outline' (default) = title, headings, selected text, and the opening text; mode 'text' = the main text in chunks (pass chunk to continue). Answer only from what it returns.",
+        parameters: {
+          type: 'object',
+          properties: {
+            mode: { type: 'string', enum: ['outline', 'text'], description: "Default 'outline'." },
+            chunk: { type: 'number', description: "Chunk index for mode 'text' (0-based)." },
+          },
+        },
+      },
+      {
         name: 'start_browser_task',
         description:
-          'Start the browser agent on a single concise task. Returns once the task has been launched (the agent runs asynchronously after this call). Call this once per user-initiated task; do NOT call it again to "stop" or "redirect" -- you have no such capability.',
+          'Start the browser agent on a single concise task. Returns once launched (the agent runs asynchronously; you will receive [Browser update] messages). Call once per user-initiated task.',
         parameters: {
           type: 'object',
           properties: {
@@ -24,6 +111,11 @@ export const TOOL_DECLARATIONS = [
               type: 'string',
               description:
                 'A one-sentence description of what the user wants done, in their words. Example: "find the top trending Python repo on GitHub".',
+            },
+            use_current_tab: {
+              type: 'boolean',
+              description:
+                'Set true when the task is about the page the user is on ("this page", "here"). Default false = the agent picks or opens a tab.',
             },
           },
           required: ['task'],
@@ -35,23 +127,165 @@ export const TOOL_DECLARATIONS = [
           'Read the current browser-agent state. Use when the user asks what is happening or you need to confirm a state before responding. Returns task, status, and the last log entry.',
         parameters: { type: 'object', properties: {} },
       },
+      {
+        name: 'stop_browser_task',
+        description: 'Stop the running browser-agent task. Use when the user says stop or cancel.',
+        parameters: { type: 'object', properties: {} },
+      },
+      {
+        name: 'suggest_capabilities',
+        description:
+          "Map what the user says about their abilities or difficulties (e.g. \"I can't read small text\", \"pages overwhelm me\") to concrete settings this extension offers. Read the returned summary aloud and get a yes before applying anything via adjust_settings. Takes a few seconds — tell the user you're checking.",
+        parameters: {
+          type: 'object',
+          properties: {
+            need: { type: 'string', description: "The user's own words describing the difficulty or need." },
+          },
+          required: ['need'],
+        },
+      },
+      {
+        name: 'get_memory',
+        description:
+          "What the extension remembers about this user: profile summary, stored memories (each with an id), and pending suggestions awaiting the user's consent. Optional topic filters by subject.",
+        parameters: {
+          type: 'object',
+          properties: {
+            topic: { type: 'string', description: 'Optional subject filter, e.g. "text size" or "news sites".' },
+          },
+        },
+      },
+      {
+        name: 'remember',
+        description:
+          'Record something the user explicitly asked you to remember, in their words. Say back what you will save and get a yes first (unless they dictated it verbatim).',
+        parameters: {
+          type: 'object',
+          properties: {
+            note: { type: 'string', description: 'The fact to remember, one plain sentence.' },
+          },
+          required: ['note'],
+        },
+      },
+      {
+        name: 'forget_memory',
+        description:
+          'Permanently delete one memory by id. ONLY after get_memory returned that id in this session AND you read the memory text aloud AND the user explicitly confirmed deletion.',
+        parameters: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', description: 'The memory id from get_memory.' },
+          },
+          required: ['id'],
+        },
+      },
+      {
+        name: 'respond_to_proposal',
+        description:
+          "Resolve a pending suggestion the user has just heard read aloud. 'accept' applies it, 'declineOnce' means not now (asks again after a while), 'suppress' means never suggest this again (confirm that explicitly first).",
+        parameters: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', description: 'The proposal id from get_memory.' },
+            response: { type: 'string', enum: ['accept', 'declineOnce', 'suppress'] },
+          },
+          required: ['id', 'response'],
+        },
+      },
     ],
   },
 ];
 
-// Dispatcher. tools.js only knows the tool names + the SW message API; it
-// does not import bridge/state directly so it stays testable.
-export async function dispatchToolCall(name, args) {
+// ---- session state ---------------------------------------------------------
+
+// Reset on restart() so a fresh conversation can't undo or delete things the
+// user approved in a previous one.
+const undoStack = createUndoStack(10);
+const seenMemoryIds = new Set();
+const seenProposalIds = new Set();
+// id -> memory text, so forget_memory's confirmation chip can name what died.
+const seenMemoryText = new Map();
+
+export function resetSessionState() {
+  undoStack.clear();
+  seenMemoryIds.clear();
+  seenProposalIds.clear();
+  seenMemoryText.clear();
+}
+
+// ---- dispatcher --------------------------------------------------------------
+
+export async function dispatchToolCall(name, args, signal) {
+  if (signal?.aborted) return { error: 'cancelled' };
   switch (name) {
+    case 'get_context':
+      return await sendRuntime({ type: 'voiceGetContext' });
+
+    case 'adjust_settings': {
+      const changes = (args && typeof args.changes === 'object' && args.changes) || null;
+      if (!changes || !Object.keys(changes).length) return { error: 'changes is required (an object of setting: value)' };
+      const scope = (args && typeof args.scope === 'string' && args.scope) || null;
+      const resp = await sendRuntime({ type: 'voiceApplySettings', changes, scope: scope || undefined });
+      // Build a precise undo entry: each key reverts to its captured previous
+      // value AT THE EXACT SCOPE it was written to (resp.scopesUsed), and zoom
+      // reverts the SAME tab. Re-resolving scope at undo time (the old bug)
+      // could clobber a different scope. Push even on a partial error — the
+      // committed writes still need to be undoable.
+      if (resp && resp.previous && Object.keys(resp.previous).length) {
+        const writes = [];
+        for (const [key, value] of Object.entries(resp.previous)) {
+          if (key === 'pageZoom') continue;
+          writes.push({ key, value, scope: (resp.scopesUsed && resp.scopesUsed[key]) || 'general' });
+        }
+        const pageZoom = (resp.previous.pageZoom != null && resp.pageZoomTabId != null)
+          ? { value: resp.previous.pageZoom, tabId: resp.pageZoomTabId } : null;
+        undoStack.push({ writes, pageZoom });
+      }
+      if (resp && resp.error) return resp;
+      return {
+        applied: resp.applied,
+        scopesUsed: resp.scopesUsed,
+        ...(resp.rejected ? { rejected: resp.rejected, note: 'rejected keys were invalid or out of range' } : {}),
+      };
+    }
+
+    case 'undo_last_change': {
+      // Peek, not pop: only consume the entry once the revert actually lands,
+      // so a failed undo (storage error / timeout) doesn't silently drop it
+      // and skip a step on the next "undo".
+      const entry = undoStack.peek();
+      if (!entry) return { error: 'nothing to undo in this session' };
+      const resp = await sendRuntime({ type: 'voiceApplySettings', restore: { writes: entry.writes, pageZoom: entry.pageZoom } });
+      if (resp && resp.error) return resp;
+      undoStack.pop();
+      const reverted = { ...(resp.applied || {}) };
+      return {
+        reverted,
+        remainingUndos: undoStack.size(),
+        ...(resp.rejected ? { rejected: resp.rejected } : {}),
+      };
+    }
+
+    case 'get_page_content':
+      return await sendRuntime({
+        type: 'voiceReadPage',
+        mode: args && args.mode === 'text' ? 'text' : 'outline',
+        chunk: (args && Number(args.chunk)) || 0,
+      });
+
     case 'start_browser_task': {
       const task = (args && typeof args.task === 'string') ? args.task.trim() : '';
       if (!task) return { error: 'no task supplied' };
-      const resp = await sendRuntime({ type: 'bhAgentStart', task });
+      const tabMode = args && args.use_current_tab ? 'current' : 'auto';
+      const resp = await sendRuntime({ type: 'bhAgentStart', task, tabMode });
       if (resp && resp.error) return { error: resp.error };
       return { status: 'started', task };
     }
+
     case 'get_browser_status': {
-      const data = await chrome.storage.local.get('bhAgent');
+      // Via the storage shim: some Chrome builds don't expose chrome.storage
+      // to offscreen docs (the shim falls back to the SW proxy).
+      const data = await storage.get('local', 'bhAgent');
       const s = data.bhAgent || {};
       const lastLog = (s.log && s.log.length) ? s.log[s.log.length - 1] : null;
       return {
@@ -59,22 +293,169 @@ export async function dispatchToolCall(name, args) {
         status: s.status || 'idle',
         startedAt: s.startedAt || null,
         endedAt: s.endedAt || null,
-        summary: s.summary || null,
+        summary: s.summary ? String(s.summary).slice(0, 500) : null,
         error: s.error || null,
-        lastLog: lastLog ? { kind: lastLog.kind, text: lastLog.text } : null,
+        lastLog: lastLog ? { kind: lastLog.kind, text: String(lastLog.text || '').slice(0, 300) } : null,
       };
     }
+
+    case 'stop_browser_task': {
+      const resp = await sendRuntime({ type: 'bhAgentStop' });
+      if (resp && resp.error) return { error: resp.error };
+      return { status: 'stopping' };
+    }
+
+    case 'suggest_capabilities': {
+      const need = (args && typeof args.need === 'string') ? args.need.trim() : '';
+      if (!need) return { error: 'need is required' };
+      return await sendRuntime({ type: 'voiceSuggestCapabilities', need });
+    }
+
+    case 'get_memory': {
+      const resp = await sendRuntime({ type: 'voiceGetMemory', topic: (args && args.topic) || undefined });
+      if (resp && !resp.error) {
+        for (const m of resp.memories || []) if (m.id) { seenMemoryIds.add(m.id); seenMemoryText.set(m.id, m.text || ''); }
+        for (const p of resp.pendingProposals || []) if (p.id) seenProposalIds.add(p.id);
+      }
+      return resp;
+    }
+
+    case 'remember': {
+      const note = (args && typeof args.note === 'string') ? args.note.trim() : '';
+      if (!note) return { error: 'note is required' };
+      const resp = await sendRuntime({
+        type: 'librarianLogObservation',
+        observation: { type: 'voice', weight: 3, text: `User asked to remember (voice): ${note}`.slice(0, 400) },
+      });
+      if (resp && resp.error) return { error: resp.error };
+      if (resp && resp.logged === false) {
+        return { saved: false, reason: resp.reason, note: 'memory is paused, so nothing was saved' };
+      }
+      return { saved: true, note: 'saved — it will be distilled into long-term memory' };
+    }
+
+    case 'forget_memory': {
+      const id = (args && typeof args.id === 'string') ? args.id : '';
+      if (!seenMemoryIds.has(id)) {
+        return { error: 'unknown memory id — call get_memory first, read the memory to the user, and confirm before deleting' };
+      }
+      const resp = await sendRuntime({ type: 'librarianDeleteMemory', id });
+      if (resp && resp.error) return { error: resp.error };
+      if (!resp || resp.success !== true) return { error: 'that memory no longer exists' };
+      const text = seenMemoryText.get(id) || '';
+      seenMemoryIds.delete(id);
+      seenMemoryText.delete(id);
+      return { deleted: true, id, text };
+    }
+
+    case 'respond_to_proposal': {
+      const id = (args && typeof args.id === 'string') ? args.id : '';
+      const response = args && args.response;
+      if (!['accept', 'declineOnce', 'suppress'].includes(response)) {
+        return { error: 'response must be accept, declineOnce, or suppress' };
+      }
+      if (!seenProposalIds.has(id)) {
+        return { error: 'unknown proposal id — call get_memory first and read the suggestion to the user before resolving it' };
+      }
+      const resp = await sendRuntime({ type: 'librarianRespondToProposal', id, response });
+      if (resp && resp.error) return { error: resp.error };
+      seenProposalIds.delete(id);
+      return { resolved: true, response, ...(resp && resp.status ? { status: resp.status } : {}) };
+    }
+
     default:
       return { error: `unknown tool ${name}` };
   }
 }
 
+// ---- action chips ----------------------------------------------------------
+
+// Pure phrasing helper for the side panel's action chips. Returns null for
+// read-only tools (no chip); {summary, ok, undoable} for state-changing ones.
+const KEY_LABELS = {
+  fontScale: 'Text size', pageZoom: 'Page zoom', lineHeight: 'Line spacing',
+  letterSpacing: 'Letter spacing', speechRate: 'Speech rate',
+};
+
+function labelFor(key) {
+  if (KEY_LABELS[key]) return KEY_LABELS[key];
+  const m = settingsMeta[key];
+  return (m && m.description) || key;
+}
+
+function renderValue(key, value) {
+  if (typeof value === 'boolean') return value ? 'on' : 'off';
+  if (key === 'fontScale' || key === 'pageZoom') return `${Math.round(Number(value))}%`;
+  return String(value);
+}
+
+function describeChanges(changes) {
+  return Object.entries(changes || {})
+    .map(([k, v]) => `${labelFor(k)}: ${renderValue(k, v)}`)
+    .join(', ');
+}
+
+export function describeAction(name, args, result) {
+  if (result && result.error) {
+    const failures = {
+      adjust_settings: 'Could not change settings',
+      undo_last_change: 'Could not undo',
+      start_browser_task: 'Could not start the task',
+      stop_browser_task: 'Could not stop the task',
+      remember: 'Could not save the memory',
+      forget_memory: 'Could not delete the memory',
+      respond_to_proposal: 'Could not resolve the suggestion',
+    };
+    if (!(name in failures)) return null;
+    return { summary: `${failures[name]}: ${String(result.error).slice(0, 120)}`, ok: false, undoable: false };
+  }
+  switch (name) {
+    case 'adjust_settings':
+      return { summary: describeChanges(result && result.applied), ok: true, undoable: true };
+    case 'undo_last_change':
+      return { summary: `Undid: ${describeChanges(result && result.reverted)}`, ok: true, undoable: false };
+    case 'start_browser_task':
+      return { summary: `Task started: ${String((result && result.task) || '').slice(0, 80)}`, ok: true, undoable: false };
+    case 'stop_browser_task':
+      return { summary: 'Task stopped', ok: true, undoable: false };
+    case 'remember':
+      return result && result.saved === false
+        ? { summary: 'Not saved — memory is paused', ok: false, undoable: false }
+        : { summary: `Remembered: ${String((args && args.note) || '').slice(0, 80)}`, ok: true, undoable: false };
+    case 'forget_memory': {
+      const t = result && result.text ? String(result.text).slice(0, 80) : '';
+      return { summary: t ? `Memory deleted: ${t}` : 'Memory deleted', ok: true, undoable: false };
+    }
+    case 'respond_to_proposal': {
+      const verb = { accept: 'accepted', declineOnce: 'declined for now', suppress: 'turned off' };
+      return { summary: `Suggestion ${verb[(args && args.response)] || 'resolved'}`, ok: true, undoable: false };
+    }
+    default:
+      return null; // read-only tools: no chip
+  }
+}
+
+// The panel's Undo button pops the same stack the undo_last_change tool uses.
+export async function undoLastFromUi() {
+  return await dispatchToolCall('undo_last_change', {});
+}
+
+export function hasUndo() { return undoStack.size() > 0; }
+
+// ---- SW messaging ------------------------------------------------------------
+
 function sendRuntime(msg) {
-  return new Promise((resolve) => {
+  const call = new Promise((resolve) => {
     chrome.runtime.sendMessage(msg, (resp) => {
       const err = chrome.runtime.lastError;
       if (err) return resolve({ error: err.message });
       resolve(resp || {});
     });
   });
+  // A hung SW call would otherwise hold the Live turn open forever.
+  let timer = null;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve({ error: 'tool timed out' }), SEND_TIMEOUT_MS);
+  });
+  return Promise.race([call, timeout]).finally(() => clearTimeout(timer));
 }
