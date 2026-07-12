@@ -1,4 +1,40 @@
 let _provider = null;
+let _announceSuppressed = false;
+
+// ---------------------------------------------------------------------------
+// Concurrency limiter: max 3 Gemini calls in-flight at once, FIFO queue.
+// Prevents per-element sweep stampedes from opening unbounded concurrent fetches.
+// Applied inside sendToBackground for 'gemini'-type calls only.
+// ---------------------------------------------------------------------------
+const _MAX_CONCURRENT = 3;
+let _inFlight = 0;
+const _queue = [];
+
+function _acquireSlot() {
+  if (_inFlight < _MAX_CONCURRENT) {
+    _inFlight++;
+    return Promise.resolve();
+  }
+  return new Promise(resolve => _queue.push(resolve));
+}
+
+function _releaseSlot() {
+  if (_queue.length > 0) {
+    const next = _queue.shift();
+    next(); // keeps _inFlight count stable (next caller inherits the slot)
+  } else {
+    _inFlight--;
+  }
+}
+
+// Exposed for testing.
+export function _concurrencyState() {
+  return { inFlight: _inFlight, queued: _queue.length };
+}
+
+export function setAnnounceSuppressed(suppressed) {
+  _announceSuppressed = suppressed;
+}
 
 export function setAIProvider(provider) {
   _provider = provider;
@@ -76,17 +112,36 @@ export async function describeElement(element, context) {
 }
 
 export function announce(message) {
+  if (_announceSuppressed) return;
   if (_provider?.announce) {
     _provider.announce(message);
   }
 }
 
+export async function isAIConfigured() {
+  if (!_provider) return false;
+  // Ask the background to check whether an API key is stored.
+  // This is the same path as sendToBackground but a lightweight probe — no key returned.
+  return new Promise(resolve => {
+    if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) {
+      resolve(false);
+      return;
+    }
+    chrome.runtime.sendMessage({ type: 'aiStatus' }, response => {
+      if (chrome.runtime.lastError || !response) { resolve(false); return; }
+      resolve(!!response.configured);
+    });
+  });
+}
+
 export function createChromeAIProvider() {
   function sendToBackground(prompt, images) {
-    return new Promise((resolve, reject) => {
+    // Acquire a concurrency slot before opening the fetch to prevent stampedes.
+    return _acquireSlot().then(() => new Promise((resolve, reject) => {
       const msg = { type: 'gemini', prompt };
       if (images) msg.images = images;
       chrome.runtime.sendMessage(msg, (response) => {
+        _releaseSlot();
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -97,7 +152,7 @@ export function createChromeAIProvider() {
         }
         resolve(response?.result || '');
       });
-    });
+    }));
   }
 
   return {

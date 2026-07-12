@@ -1,8 +1,8 @@
 import { describeImage, describeVideo } from '../../utils/ai.js';
 import { markProcessed, wasProcessed } from '../../utils/dom.js';
 
-const logFix = globalThis.ai4a11yLogFix || (() => {});
-const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+const logFix = (...a) => (globalThis.ai4a11yLogFix || (() => {}))(...a);
+const incrementStat = (...a) => (globalThis.ai4a11yIncrementStat || (() => {}))(...a);
 
 async function imageToDataUrl(img) {
   try {
@@ -36,13 +36,13 @@ async function captureVideoFrames(video, count = 6) {
 }
 
 export async function generateImageAlt(img) {
-  if (wasProcessed(img)) return null;
-  markProcessed(img, 'pending');
+  if (wasProcessed(img, 'alt')) return null;
+  markProcessed(img, 'pending', 'alt');
 
   try {
     const dataUrl = await imageToDataUrl(img);
     if (!dataUrl) {
-      markProcessed(img, 'failed');
+      markProcessed(img, 'failed', 'alt');
       return null;
     }
 
@@ -51,25 +51,25 @@ export async function generateImageAlt(img) {
     if (result) {
       const altText = result;
       img.setAttribute('alt', altText);
-      markProcessed(img, 'done');
+      markProcessed(img, 'done', 'alt');
       incrementStat('images');
       logFix('alt text', img, '(empty)', altText);
       console.log('[AI4A11y] Generated alt:', altText);
       return altText;
     }
 
-    markProcessed(img, 'failed');
+    markProcessed(img, 'failed', 'alt');
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to generate alt:', e);
-    markProcessed(img, 'failed');
+    markProcessed(img, 'failed', 'alt');
     return null;
   }
 }
 
 export async function generateCanvasDescription(canvas) {
-  if (wasProcessed(canvas)) return null;
-  markProcessed(canvas, 'pending');
+  if (wasProcessed(canvas, 'alt')) return null;
+  markProcessed(canvas, 'pending', 'alt');
 
   try {
     const dataUrl = canvas.toDataURL('image/png');
@@ -78,24 +78,24 @@ export async function generateCanvasDescription(canvas) {
     if (description) {
       canvas.setAttribute('aria-label', description);
       canvas.setAttribute('role', 'img');
-      markProcessed(canvas, 'done');
+      markProcessed(canvas, 'done', 'alt');
       incrementStat('images');
       logFix('canvas description', canvas, '(none)', description);
       return description;
     }
 
-    markProcessed(canvas, 'failed');
+    markProcessed(canvas, 'failed', 'alt');
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to describe canvas:', e);
-    markProcessed(canvas, 'failed');
+    markProcessed(canvas, 'failed', 'alt');
     return null;
   }
 }
 
 export async function generateSvgDescription(svg) {
-  if (wasProcessed(svg)) return null;
-  markProcessed(svg, 'pending');
+  if (wasProcessed(svg, 'alt')) return null;
+  markProcessed(svg, 'pending', 'alt');
 
   try {
     const serializer = new XMLSerializer();
@@ -113,17 +113,17 @@ export async function generateSvgDescription(svg) {
       title.textContent = description;
 
       svg.setAttribute('role', 'img');
-      markProcessed(svg, 'done');
+      markProcessed(svg, 'done', 'alt');
       incrementStat('images');
       logFix('svg description', svg, '(none)', description);
       return description;
     }
 
-    markProcessed(svg, 'failed');
+    markProcessed(svg, 'failed', 'alt');
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to describe SVG:', e);
-    markProcessed(svg, 'failed');
+    markProcessed(svg, 'failed', 'alt');
     return null;
   }
 }

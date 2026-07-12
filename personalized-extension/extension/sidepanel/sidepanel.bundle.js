@@ -1,5 +1,5 @@
 (() => {
-  // personalized-extension/extension/sidepanel/src/store.js
+  // extension/sidepanel/src/store.js
   var STATE_KEY = "voiceState";
   var RESUME_HANDLE_KEY = "voiceResumeHandle";
   var _store = {
@@ -127,7 +127,7 @@
     }
   }
 
-  // personalized-extension/extension/sidepanel/src/ui/transcript.js
+  // extension/sidepanel/src/ui/transcript.js
   var _openDetails = /* @__PURE__ */ new Set();
   function mountTranscript(rootEl, emptyEl, { onUndo } = {}) {
     function render(snap) {
@@ -270,7 +270,7 @@
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   }
 
-  // personalized-extension/extension/sidepanel/src/ui/status.js
+  // extension/sidepanel/src/ui/status.js
   function mountStatus(statusEl, errorEl) {
     function render(snap) {
       statusEl.className = `vp-status ${snap.connection || "disconnected"}`;
@@ -286,7 +286,7 @@
     return { render };
   }
 
-  // personalized-extension/extension/sidepanel/src/ui/controls.js
+  // extension/sidepanel/src/ui/controls.js
   function mountControls({
     startBtn,
     micBtn,
@@ -336,7 +336,7 @@
     return { render };
   }
 
-  // personalized-extension/extension/sidepanel/src/index.js
+  // extension/sidepanel/src/index.js
   var $ = (id) => document.getElementById(id);
   async function main() {
     chrome.runtime.connect({ name: "voice-ui" });

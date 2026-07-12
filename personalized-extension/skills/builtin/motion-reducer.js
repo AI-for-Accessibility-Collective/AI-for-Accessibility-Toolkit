@@ -1,8 +1,10 @@
 import { announce } from '../../utils/ai.js';
+import { registerSweep } from '../../utils/observe.js';
 
 export const MotionReducer = {
   styleId: 'ai4a11y-motion-reducer-styles',
   enabled: false,
+  _unregisterSweep: null,
   currentSettings: {
     stopAnimations: true,
     pauseVideos: true,
@@ -80,6 +82,13 @@ export const MotionReducer = {
       pauseAnimations();
     }
 
+    // Register sweep so newly added videos/GIFs also get paused/frozen.
+    this._unregisterSweep = registerSweep('motion-reducer', () => {
+      if (!this.enabled) return;
+      if (s.pauseVideos) this.pauseAllVideos();
+      if (s.stopGifs) this.stopGifs();
+    }, { debounceMs: 600 });
+
     console.log('[AI4A11y] Motion Reducer enabled');
     announce('Motion reduced');
   },
@@ -87,6 +96,7 @@ export const MotionReducer = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+    if (this._unregisterSweep) { this._unregisterSweep(); this._unregisterSweep = null; }
     document.getElementById(this.styleId)?.remove();
 
     document.querySelectorAll('[data-ai4a11y-gif-src]').forEach(canvas => {

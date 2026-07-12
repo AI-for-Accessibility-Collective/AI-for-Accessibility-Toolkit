@@ -137,7 +137,7 @@ server.listen(PORT, async () => {
       console.log(`FAIL: content.js TOOL_MAP missing '${tool}'`);
     }
   }
-  const aiMapChecks = ['autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoCaptions', 'autoSimplify'];
+  const aiMapChecks = ['fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoCaptions', 'autoSimplify'];
   for (const key of aiMapChecks) {
     if (contentCode.includes(key)) {
       console.log(`PASS: content.js AI_TOOL_MAP has '${key}'`);
@@ -173,7 +173,7 @@ server.listen(PORT, async () => {
 
   const popupControls = ['dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
     'darkMode', 'readerMode', 'focusMode', 'keyboardNav', 'voiceCommands', 'motionReducer',
-    'autoWcagFix', 'autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify',
+    'fixContrast', 'autoWcagFix', 'autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify',
     'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode', 'colorBlindMode'];
   for (const ctrl of popupControls) {
     if (popupHtml.includes(`id="${ctrl}"`) && popupCode.includes(ctrl)) {
@@ -321,6 +321,98 @@ server.listen(PORT, async () => {
     console.log('PASS: Bundle is valid JS with browser globals');
   } catch (e) {
     console.log('FAIL: Bundle validation error:', e.message);
+  }
+
+  // Test 11: Wiring guard tests
+  // -----------------------------------------------------------------------
+  // Parse registry entries from source text (registry.js is ESM; run-tests is
+  // CJS so we extract the settings blocks via regex rather than dynamic import).
+  function extractRegistryEntries(src) {
+    // Extract each entry's id and settings keys via simple regex scan.
+    const entries = [];
+    const idRe = /id:\s*'([^']+)'/g;
+    const settingsBlockRe = /settings:\s*\{([^}]*)\}/g;
+    // Find all id: and settings: occurrences and pair them by index proximity.
+    const ids = []; let m;
+    while ((m = idRe.exec(src)) !== null) ids.push({ id: m[1], idx: m.index });
+    const settingsBlocks = [];
+    while ((m = settingsBlockRe.exec(src)) !== null) settingsBlocks.push({ keys: Object.keys(new Function(`return {${m[1]}}`)() || {}), idx: m.index });
+    // Pair each id with the next settings block
+    for (let i = 0; i < ids.length; i++) {
+      const nextBlock = settingsBlocks.find(s => s.idx > ids[i].idx && (i + 1 >= ids.length || s.idx < ids[i + 1].idx));
+      entries.push({ id: ids[i].id, settingsKeys: nextBlock ? nextBlock.keys : [] });
+    }
+    return entries;
+  }
+
+  // (a) No two registry entries share a settings key.
+  //     Documented allowlist:
+  //       - autoCaptions: shared by auto-captions/generate-captions until the
+  //         W3 merge (same module wired, not a bug)
+  //       - lineHeight, letterSpacing, dyslexiaFont: visual-assist piggyback
+  //         keys also set by the dyslexia-font registry entry
+  const SHARED_KEY_ALLOWLIST = new Set([
+    'autoCaptions',    // auto-captions + generate-captions until merged
+    'lineHeight',      // dyslexia-font piggybacks visual-assist keys
+    'letterSpacing',   // dyslexia-font piggybacks visual-assist keys
+    'dyslexiaFont',    // dyslexia-font piggybacks visual-assist keys
+  ]);
+  {
+    const entries = extractRegistryEntries(registryContent);
+    const keyToEntryIds = {};
+    for (const entry of entries) {
+      for (const key of entry.settingsKeys) {
+        if (!keyToEntryIds[key]) keyToEntryIds[key] = [];
+        keyToEntryIds[key].push(entry.id);
+      }
+    }
+    let sharedOk = true;
+    for (const [key, ids] of Object.entries(keyToEntryIds)) {
+      if (ids.length > 1 && !SHARED_KEY_ALLOWLIST.has(key)) {
+        console.log(`FAIL: settings key '${key}' shared by [${ids.join(', ')}] — not in allowlist`);
+        sharedOk = false;
+      }
+    }
+    if (sharedOk) console.log('PASS: no unexpected shared settings keys across registry entries');
+  }
+
+  // (b) Every registry entry has at least one settings key with an enable
+  //     path in content.js source. Entries with empty settings ({}) are exempt
+  //     (read-aloud has no persistent toggle key — it is triggered imperatively).
+  {
+    const entries = extractRegistryEntries(registryContent);
+    for (const entry of entries) {
+      const keys = entry.settingsKeys;
+      if (keys.length === 0) {
+        console.log(`PASS: ${entry.id} has no settings keys (imperative trigger — exempt)`);
+        continue;
+      }
+      const hasEnablePath = keys.some(k => contentCode.includes(k));
+      if (hasEnablePath) {
+        console.log(`PASS: ${entry.id} has a settings key wired in content.js`);
+      } else {
+        console.log(`FAIL: ${entry.id} settings keys [${keys.join(', ')}] have no enable path in content.js`);
+      }
+    }
+  }
+
+  // (c) Builtins use call-time logFix — no module-scope const capture pattern.
+  //     The bad pattern: `const logFix = globalThis.ai4a11yLogFix || ...`
+  //     (captured at import time before content.js assigns the global).
+  {
+    const builtinDir = path.join(ROOT, 'skills/builtin');
+    const builtinFiles = fs.readdirSync(builtinDir).filter(f => f.endsWith('.js'));
+    // Match: start of line (after any whitespace), then `const logFix = globalThis.`
+    const badPattern = /^\s*const\s+(logFix|incrementStat)\s*=\s*globalThis\./m;
+    let allCallTime = true;
+    for (const file of builtinFiles) {
+      const code = fs.readFileSync(path.join(builtinDir, file), 'utf8');
+      if (badPattern.test(code)) {
+        console.log(`FAIL: ${file} uses module-scope globalThis capture for logFix/incrementStat`);
+        allCallTime = false;
+      }
+    }
+    if (allCallTime) console.log('PASS: all builtins use call-time logFix/incrementStat lookup');
   }
 
   console.log('\n=== DONE ===');

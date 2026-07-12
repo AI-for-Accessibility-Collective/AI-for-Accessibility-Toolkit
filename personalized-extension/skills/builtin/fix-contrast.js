@@ -2,12 +2,12 @@ import { fixContrast as aiFixContrast } from '../../utils/ai.js';
 import { getLuminance, getEffectiveBackground } from '../../utils/color.js';
 import { markProcessed, wasProcessed } from '../../utils/dom.js';
 
-const logFix = globalThis.ai4a11yLogFix || (() => {});
-const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+const logFix = (...a) => (globalThis.ai4a11yLogFix || (() => {}))(...a);
+const incrementStat = (...a) => (globalThis.ai4a11yIncrementStat || (() => {}))(...a);
 
 export async function fixLowContrast(element, color, background) {
-  if (wasProcessed(element)) return null;
-  markProcessed(element, 'pending');
+  if (wasProcessed(element, 'contrast')) return null;
+  markProcessed(element, 'pending', 'contrast');
 
   if (!background || background === 'transparent') {
     background = getEffectiveBackground(element);
@@ -31,7 +31,7 @@ export async function fixLowContrast(element, color, background) {
 
   element.style.color = fixedColor;
   element.classList.add('ai4a11y-contrast-fixed');
-  markProcessed(element, 'done');
+  markProcessed(element, 'done', 'contrast');
   incrementStat('wcag');
   logFix('contrast', element, color, fixedColor);
   console.log('[AI4A11y] Fixed contrast:', color, '->', fixedColor);
@@ -40,8 +40,8 @@ export async function fixLowContrast(element, color, background) {
 }
 
 export function fixIndistinguishableLink(link) {
-  if (wasProcessed(link)) return;
-  markProcessed(link, 'done');
+  if (wasProcessed(link, 'contrast')) return;
+  markProcessed(link, 'done', 'contrast');
 
   link.style.textDecoration = 'underline';
   incrementStat('wcag');
@@ -77,7 +77,7 @@ export const FixContrast = {
   run() {
     const textEls = document.querySelectorAll('p, span, li, td, th, h1, h2, h3, h4, h5, h6, a, label, div');
     for (const el of textEls) {
-      if (wasProcessed(el) || !el.textContent?.trim()) continue;
+      if (wasProcessed(el, 'contrast') || !el.textContent?.trim()) continue;
       const style = getComputedStyle(el);
       const color = style.color;
       const background = getEffectiveBackground(el);
