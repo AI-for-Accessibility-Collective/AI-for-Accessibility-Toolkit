@@ -50,11 +50,12 @@ let enabledTools = new Set();
 let aiSettings = {};
 let extensionEnabled = true;
 
-// OS-signal auto-activation state (reducedMotion only in Wave 1b).
-// _osAutoMotion is true when MotionReducer is enabled solely by the OS signal
-// (not by an explicit user choice), so we can cleanly reverse it when the
-// OS signal goes away.  Never written to storage.
+// OS-signal auto-activation state.
+// _osAutoMotion: MotionReducer auto-enabled by OS signal (Wave 1b).
+// _osAutoDark: DarkMode auto-enabled by OS prefers-color-scheme:dark (Phase 3).
+// Neither is written to storage — auto-activation never overrides explicit choice.
 let _osAutoMotion = false;
+let _osAutoDark = false;
 
 // AI-configured cache: checked once per page load via the background aiStatus
 // probe so we avoid per-element round-trips when no API key is set.
@@ -655,10 +656,12 @@ async function init() {
     //   reducedTransparency: Wave 2a — no adapter yet
     watchSystemPrefs(async (prefs) => {
       if (!extensionEnabled) return;
-      // Check whether the user has an explicit motionReducer setting.
-      const stored = await chrome.storage.sync.get('motionReducer').catch(() => ({}));
-      const userExplicit = 'motionReducer' in stored;
-      if (prefs.reducedMotion && !userExplicit) {
+      // Check whether the user has explicit settings for each signal we act on.
+      const stored = await chrome.storage.sync.get(['motionReducer', 'darkMode']).catch(() => ({}));
+
+      // --- reducedMotion → MotionReducer ---
+      const motionExplicit = 'motionReducer' in stored;
+      if (prefs.reducedMotion && !motionExplicit) {
         // OS says reduce motion, user has no explicit setting: auto-enable.
         if (!enabledTools.has('MotionReducer')) {
           setAnnounceSuppressed(true);
@@ -669,10 +672,28 @@ async function init() {
         // OS signal cleared and we auto-enabled it: reverse it.
         disableTool('MotionReducer');
         _osAutoMotion = false;
-      } else if (prefs.reducedMotion && userExplicit) {
-        // OS says reduce but user has an explicit choice — their choice wins,
-        // nothing to do here (initFromStorage already applied it).
+      } else if (prefs.reducedMotion && motionExplicit) {
+        // OS says reduce but user has an explicit choice — their choice wins.
         _osAutoMotion = false;
+      }
+
+      // --- prefers-color-scheme:dark → DarkMode (Phase 3) ---
+      // Auto-enable only when the OS is dark AND the user has never explicitly
+      // set darkMode. Announce-suppressed (session-only, no storage write).
+      const darkExplicit = 'darkMode' in stored;
+      if (prefs.dark && !darkExplicit) {
+        if (!enabledTools.has('DarkMode')) {
+          setAnnounceSuppressed(true);
+          try { enableTool('DarkMode'); } finally { setAnnounceSuppressed(false); }
+          _osAutoDark = true;
+        }
+      } else if (!prefs.dark && _osAutoDark) {
+        // OS switched back to light: undo the auto-enabled dark mode.
+        disableTool('DarkMode');
+        _osAutoDark = false;
+      } else if (prefs.dark && darkExplicit) {
+        // User has an explicit preference — their choice wins.
+        _osAutoDark = false;
       }
     });
 

@@ -264,6 +264,17 @@ textarea:focus { outline: 2px solid var(--blue); outline-offset: -2px; border-co
 /* -- Empty state -- */
 .empty-msg { font-size: 13px; color: var(--grey-700); padding: 16px 0; }
 
+/* -- Retired-adapter moved note (Phase 3) -- */
+.retired-adapters-note {
+  font-size: 12px;
+  color: var(--grey-700);
+  background: var(--grey-50, #f8f9fa);
+  border-left: 3px solid var(--grey-300, #dee2e6);
+  padding: 8px 12px;
+  margin-top: 16px;
+  border-radius: 0 4px 4px 0;
+}
+
 /* -- Windows High Contrast support -- */
 @media (forced-colors: active) {
   .chip input:checked + .chip-body { border: 3px solid ButtonText; }
