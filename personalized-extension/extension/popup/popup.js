@@ -155,9 +155,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.addEventListener('change', async (e) => {
         await chrome.storage.sync.set({ [id]: e.target.checked });
         sendToContent({ type: 'settingsChanged', settings: { [id]: e.target.checked } });
+        // Show/hide scan row when autoWcagFix changes.
+        if (id === 'autoWcagFix') {
+          const row = document.getElementById('axeScanRow');
+          if (row) row.style.display = e.target.checked ? 'block' : 'none';
+        }
       });
     }
   });
+
+  // Show scan row if autoWcagFix is on at load time.
+  {
+    const wcagEl = document.getElementById('autoWcagFix');
+    const scanRow = document.getElementById('axeScanRow');
+    if (wcagEl && scanRow) scanRow.style.display = wcagEl.checked ? 'block' : 'none';
+  }
+
+  // Scan & Fix button — triggers axe-core audit via background SW.
+  const axeScanBtn = document.getElementById('axeScanBtn');
+  if (axeScanBtn) {
+    axeScanBtn.addEventListener('click', async () => {
+      axeScanBtn.disabled = true;
+      axeScanBtn.textContent = 'Scanning…';
+      try {
+        await chrome.runtime.sendMessage({ type: 'runAxeAudit' });
+        // Stats will arrive via the fixAdded message from content.js.
+        setTimeout(() => queryStats(), 500);
+      } catch (e) {
+        console.warn('[AI4A11y] runAxeAudit error:', e);
+      } finally {
+        axeScanBtn.disabled = false;
+        axeScanBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle">search</span> Scan &amp; Fix Page';
+      }
+    });
+  }
 
   // Simple tool toggles
   const simpleTools = {
@@ -1540,13 +1571,42 @@ function updateFixesPanel(stats, fixes) {
   panel.style.display = 'block';
 
   if (!fixes || !Array.isArray(fixes)) fixes = [];
-  list.innerHTML = fixes.map(fix => `
-    <div class="fix-item">
+
+  // Render each fix item with an optional Undo button for revertable fixes.
+  list.innerHTML = '';
+  fixes.forEach(fix => {
+    const item = document.createElement('div');
+    item.className = 'fix-item';
+    item.innerHTML = `
       <span class="fix-type">${escapeHtml(fix.type)} · ${escapeHtml(fix.element)}</span>
       <span class="fix-old">${escapeHtml(fix.old)}</span>
       <span class="fix-new">${escapeHtml(fix.new)}</span>
-    </div>
-  `).join('');
+    `;
+    if (fix.revertable) {
+      const undoBtn = document.createElement('button');
+      undoBtn.className = 'btn btn-secondary fix-undo-btn';
+      undoBtn.style.cssText = 'font-size:10px;padding:1px 6px;margin-left:4px;vertical-align:middle';
+      undoBtn.textContent = 'Undo';
+      undoBtn.setAttribute('aria-label', `Undo ${escapeHtml(fix.type)} fix`);
+      undoBtn.addEventListener('click', async () => {
+        try {
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (!tab?.id) return;
+          const resp = await chrome.tabs.sendMessage(tab.id, {
+            type: 'revertFix',
+            fixIndex: fix.fixIndex,
+          }).catch(() => null);
+          if (resp?.success) {
+            item.remove();
+          }
+        } catch (e) {
+          console.warn('[AI4A11y] revertFix failed:', e);
+        }
+      });
+      item.appendChild(undoBtn);
+    }
+    list.appendChild(item);
+  });
 
   const header = document.getElementById('fixesHeader');
   if (header && !header._bound) {

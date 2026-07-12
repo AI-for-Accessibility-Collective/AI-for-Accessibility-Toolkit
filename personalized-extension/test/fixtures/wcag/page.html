@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  WCAG fixture page for test/wcag-e2e.js
+  Contains deliberate WCAG violations to exercise the tiered fixer sweep.
+-->
+<html lang="fa">
+<head>
+  <meta charset="utf-8">
+  <title>WCAG Fixture Page</title>
+  <!--
+    NOTE: A user-scalable=0 viewport meta is intentionally NOT placed here
+    because it would break the test page itself. Instead the e2e test injects
+    a dynamic <meta name="viewport" content="user-scalable=0"> via evaluate()
+    before testing fixViewportMeta, then cleans up afterwards.
+  -->
+</head>
+<body>
+
+  <!-- Duplicate IDs: label[for] points at "field1" (the FIRST occurrence).
+       fixDuplicateId should rename the SECOND element (form-field) only and
+       NOT re-point the label — it must still resolve to the first element. -->
+  <label for="field1">First Name</label>
+  <input type="text" id="field1" name="first">
+  <input type="text" id="field1" name="second">
+
+  <!-- Valid BCP-47 subtag on a subtree element — must NOT be rewritten. -->
+  <p lang="pt-BR">Este texto está em português do Brasil.</p>
+
+  <!-- target=_blank link without rel — fixTargetBlank should add noopener noreferrer -->
+  <a href="https://example.com" target="_blank" id="extLink">External link</a>
+
+  <!-- Obsolete element — replaceObsoleteElement should replace with div -->
+  <marquee id="marqueeEl">Breaking news ticker</marquee>
+
+  <!-- Positive tabindex — fixPositiveTabindex should set to 0 -->
+  <button tabindex="5" id="highTabindex">Click me</button>
+
+  <!-- Heading skip h1 → h4 (risky tier — only fixed when wcagRiskyFixes on) -->
+  <h1>Main Title</h1>
+  <h4 id="skippedHeading">Subsection (skips h2/h3)</h4>
+
+  <!-- div with role=checkbox but no aria-checked — should NOT get aria-checked
+       backfilled (fixMissingAriaAttrs was deleted) -->
+  <div role="checkbox" id="fakeCheckbox" tabindex="0">Custom checkbox</div>
+
+  <!-- Image without alt (for axe bridge smoke test) -->
+  <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" id="noAltImg">
+
+</body>
+</html>

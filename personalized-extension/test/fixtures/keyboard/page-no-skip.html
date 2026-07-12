@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keyboard Nav Test - Page Without Skip Link</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; }
+    nav { background: #333; padding: 1rem; }
+    nav a { color: white; margin-right: 1rem; }
+    main { padding: 2rem; }
+    #fixed-btn { position: fixed; top: 10px; right: 10px; }
+  </style>
+</head>
+<body>
+  <nav id="site-nav">
+    <a href="/home">Home</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </nav>
+
+  <main id="main">
+    <h1>Page Title</h1>
+    <h2>Section One</h2>
+    <p>Some content here.</p>
+    <h3>Subsection</h3>
+    <p>More content.</p>
+
+    <!-- Positive-tabindex elements: tabbable order should be First(1), Second(2), Third(3) -->
+    <button tabindex="3" id="btn-third">Third</button>
+    <button tabindex="1" id="btn-first">First</button>
+    <button tabindex="2" id="btn-second">Second</button>
+
+    <!-- Natural-order interactive elements -->
+    <input type="text" id="text-input" placeholder="Text input">
+    <div contenteditable="true" id="editable">Edit me</div>
+    <span tabindex="0" id="author-zero">Author tabindex zero</span>
+  </main>
+
+  <!-- Position-fixed button -->
+  <button id="fixed-btn">Fixed</button>
+</body>
+</html>

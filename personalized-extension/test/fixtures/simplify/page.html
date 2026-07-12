@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simplify-Text Fixture</title>
+</head>
+<body>
+  <!-- ===================================================================
+       CONTENT PARAGRAPHS — long enough (≥100 chars) and outside boilerplate.
+       These should be simplified by the adapter.
+       =================================================================== -->
+
+  <main id="main-content">
+    <!-- Para 1: long paragraph with inline links and em — the DOM-preserving
+         wrapper must keep these live nodes; restoreOriginal must restore them. -->
+    <p id="para-long-links">
+      The mitochondrion is a double-membrane-bound organelle found in most
+      eukaryotic organisms. Mitochondria generate most of the cell's supply of
+      adenosine triphosphate (ATP), which is used as a source of chemical energy.
+      The <a href="https://example.com/krebs">Krebs cycle</a> and
+      <em>oxidative phosphorylation</em> are the primary pathways through which
+      this energy is produced in aerobic respiration, making the organelle
+      indispensable to cellular metabolism.
+    </p>
+
+    <!-- Para 2: another long paragraph, no special inline elements. -->
+    <p id="para-long-plain">
+      The process of photosynthesis converts light energy, usually from the sun,
+      into chemical energy that can be later released to fuel the organism's
+      activities. This energy is stored in carbohydrate molecules, such as sugars,
+      which are synthesized from carbon dioxide and water. Oxygen is released as a
+      byproduct of this reaction, a fact that profoundly shaped the evolution of
+      life on Earth and the composition of its atmosphere over billions of years.
+    </p>
+
+    <!-- Para 3: long paragraph with strong and a nested link. -->
+    <p id="para-long-strong">
+      <strong>Quantum entanglement</strong> is a phenomenon in quantum physics
+      where two particles become interconnected such that the state of one
+      instantaneously influences the state of the other, regardless of the
+      distance separating them. This was famously described by
+      <a href="https://example.com/einstein">Albert Einstein</a> as
+      "spooky action at a distance," and has since been experimentally confirmed
+      through a series of <em>Bell test experiments</em> conducted over several
+      decades by physicists around the world.
+    </p>
+
+    <!-- Short paragraph — MUST BE SKIPPED (< 100 chars). -->
+    <p id="para-short">Short paragraph. Should not be simplified.</p>
+
+    <!-- Para with nested div — must be skipped (structural container). -->
+    <p id="para-nested-div">
+      <div>This paragraph has a nested div and should be skipped by the adapter
+      because it contains block-level child elements which indicate it is a
+      structural container rather than a prose paragraph suitable for simplification.</div>
+    </p>
+  </main>
+
+  <!-- ===================================================================
+       NAV — long li text inside a nav must be SKIPPED (boilerplate region).
+       =================================================================== -->
+  <nav id="site-nav" aria-label="Site navigation">
+    <ul>
+      <li id="nav-li-long">
+        This navigation item text is deliberately very long indeed, well over one
+        hundred characters, to verify that the adapter correctly skips all list
+        items found inside a nav landmark and does not attempt to simplify them.
+      </li>
+      <li>Short nav item</li>
+    </ul>
+  </nav>
+
+  <!-- ===================================================================
+       TABLE — td must be UNTOUCHED even if text is long.
+       (The selector is p, li only — td was dropped to prevent data corruption.)
+       =================================================================== -->
+  <table id="data-table">
+    <caption>Financial Data</caption>
+    <thead>
+      <tr><th>Quarter</th><th>Revenue</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Q1 2026</td>
+        <td>$4.2M</td>
+        <td id="td-long">
+          Revenue for the first quarter of fiscal year 2026 exceeded analyst
+          expectations by a significant margin, driven primarily by a surge in
+          enterprise subscriptions and a favorable foreign-exchange rate environment
+          that benefited international sales operations substantially.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ===================================================================
+       FOOTER — long paragraph inside footer must be SKIPPED.
+       =================================================================== -->
+  <footer id="site-footer">
+    <p id="footer-para-long">
+      This footer paragraph is deliberately long enough to exceed the one hundred
+      character threshold, but it resides inside a footer element and must therefore
+      be excluded from simplification to preserve the extension's content budget for
+      actual article prose rather than navigational boilerplate or legal notices.
+    </p>
+  </footer>
+
+  <!-- ===================================================================
+       ASIDE — long paragraph inside aside must be SKIPPED.
+       =================================================================== -->
+  <aside id="sidebar" aria-label="Related articles">
+    <p id="aside-para-long">
+      This sidebar paragraph is also quite long, definitely over one hundred characters,
+      and should be excluded from the simplify sweep because it lives inside an aside
+      landmark element, which is treated as boilerplate for the purposes of content
+      budget allocation by the accessibility adapter.
+    </p>
+  </aside>
+
+  <!-- ===================================================================
+       ROLE=navigation — long li inside a role=navigation div must be SKIPPED.
+       =================================================================== -->
+  <div role="navigation" id="role-nav">
+    <li id="role-nav-li-long">
+      This list item sits inside a div with role="navigation" and its text
+      exceeds one hundred characters, so the adapter should skip it just as
+      it skips items inside a native nav element. The selector test must not
+      rely on the element tag alone but on the role attribute as well.
+    </li>
+  </div>
+</body>
+</html>

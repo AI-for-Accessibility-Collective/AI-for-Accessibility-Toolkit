@@ -21,6 +21,7 @@
     speechRate: { type: "number", range: [0.5, 2], description: "Text-to-speech rate" },
     fixContrast: { type: "boolean", description: "Fix low-contrast text" },
     autoWcagFix: { type: "boolean", description: "Auto-fix accessibility issues" },
+    wcagRiskyFixes: { type: "boolean", description: "Enable risky WCAG fixes (heading re-tag, ARIA strip, target size) \u2014 default off" },
     autoDescribe: { type: "boolean", description: "AI image descriptions" },
     autoFixLabels: { type: "boolean", description: "AI-generated form labels" },
     autoCaptions: { type: "boolean", description: "Auto captions on video" },
@@ -28,7 +29,7 @@
     autoSummarize: { type: "boolean", description: "Add summaries to long content" }
   };
   var PROMPT_GROUPS = [
-    ["Vision & color", ["darkMode", "contrastMode", "colorBlindMode", "largeCursor", "fixContrast", "autoWcagFix"]],
+    ["Vision & color", ["darkMode", "contrastMode", "colorBlindMode", "largeCursor", "fixContrast", "autoWcagFix", "wcagRiskyFixes"]],
     ["Text & reading", ["fontScale", "lineHeight", "letterSpacing", "dyslexiaFont", "readingGuide", "readerMode", "speechRate"]],
     ["Focus & motion", ["focusMode", "hideDistractions", "showProgress", "motionReducer", "enhanceFocus"]],
     ["Motor & input", ["keyboardNav", "voiceCommands"]],

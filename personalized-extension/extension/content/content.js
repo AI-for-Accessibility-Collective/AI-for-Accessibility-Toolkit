@@ -16,7 +16,11 @@ import { VoiceCommands } from '../../skills/builtin/voice-commands.js';
 import { ReadAloud } from '../../skills/builtin/read-aloud.js';
 import { GenerateLabels } from '../../skills/builtin/generate-labels.js';
 import { GenerateCaptions } from '../../skills/builtin/generate-captions.js';
-import { WcagFixes } from '../../skills/builtin/wcag-fixes.js';
+import { WcagFixes, axeHandlers as wcagAxeHandlers, RISKY_AXE_RULES } from '../../skills/builtin/wcag-fixes.js';
+import { axeHandlers as contrastAxeHandlers } from '../../skills/builtin/fix-contrast.js';
+import { axeHandlers as altTextAxeHandlers } from '../../skills/builtin/auto-alt-text.js';
+import { axeHandlers as labelsAxeHandlers } from '../../skills/builtin/generate-labels.js';
+import { axeHandlers as captionsAxeHandlers } from '../../skills/builtin/generate-captions.js';
 
 setAIProvider(createChromeAIProvider());
 
@@ -60,14 +64,48 @@ let _aiConfigured = null;
 const stats = { wcag: 0, images: 0, labels: 0, text: 0, captions: 0 };
 const fixes = [];
 
-function reportFix(type, element, oldVal, newVal) {
+// ---------------------------------------------------------------------------
+// Combined axe handler map (all builtin modules)
+// ---------------------------------------------------------------------------
+// Merged at init so __ai4a11yAxeDispatch can route any axe violation.id to the
+// right fixer. Module-level maps are static; override order: wcag < contrast <
+// alt-text < labels < captions (later wins if rule IDs overlap — none do).
+const _combinedAxeHandlers = Object.assign(
+  {},
+  wcagAxeHandlers,
+  contrastAxeHandlers,
+  altTextAxeHandlers,
+  labelsAxeHandlers,
+  captionsAxeHandlers
+);
+
+// reportFix signature: (type, selector, oldVal, newVal, inverseDescriptor?)
+// inverseDescriptor: { selector, attr, prior } | { selector, style } | null
+function reportFix(type, elementOrSelector, oldVal, newVal, inverseDescriptor) {
   if (type === 'wcag') stats.wcag++;
   else if (type === 'image') stats.images++;
   else if (type === 'label') stats.labels++;
   else if (type === 'text') stats.text++;
   else if (type === 'caption') stats.captions++;
-  fixes.push({ type, element: element || '', old: oldVal || '', new: newVal || '' });
-  chrome.runtime.sendMessage({ type: 'fixAdded', stats: { ...stats }, fixes: [...fixes] }).catch(() => {});
+  const entry = {
+    type,
+    element: (typeof elementOrSelector === 'string' ? elementOrSelector : '') || '',
+    old: oldVal || '',
+    new: newVal || '',
+    _descriptor: inverseDescriptor || null,
+  };
+  fixes.push(entry);
+  // Send a serializable copy (omit _descriptor from the panel message — popup
+  // will receive it separately via the fixIndex).
+  chrome.runtime.sendMessage({
+    type: 'fixAdded',
+    stats: { ...stats },
+    fixes: fixes.map((f, i) => ({
+      type: f.type, element: f.element, old: f.old, new: f.new,
+      fixIndex: i,
+      revertable: !!(f._descriptor),
+    }))
+  }).catch(() => {});
 }
 
 // Assign the audit-trail hooks before any builtin module runs its enable().
@@ -79,6 +117,39 @@ globalThis.ai4a11yIncrementStat = (type) => {
   else if (type === 'label') stats.labels++;
   else if (type === 'text') stats.text++;
   else if (type === 'caption') stats.captions++;
+};
+
+// ---------------------------------------------------------------------------
+// Axe bridge dispatch global
+// ---------------------------------------------------------------------------
+// Published so the SW-injected axe runner can call it after `axe.run()`.
+// Per-node dedup via namespaced marks ('wcag') prevents double-fixing.
+// Risky-tier rules are gated on the wcagRiskyFixes session flag.
+let _axeRiskyEnabled = false;
+
+// Populated once by initFromStorage / applyAISettings — lets __ai4a11yAxeDispatch
+// apply the risky gate consistently for the lifetime of this content script.
+// Exposed on the global so the axe runner (injected after init) reads it.
+window.__ai4a11yAxeDispatch = async function(violations) {
+  if (!Array.isArray(violations)) return;
+  for (const violation of violations) {
+    const handler = _combinedAxeHandlers[violation.id];
+    if (!handler) continue;
+    // Gate risky-tier rules
+    if (RISKY_AXE_RULES.has(violation.id) && !_axeRiskyEnabled) continue;
+    for (const node of (violation.nodes || [])) {
+      // node.target is an array of CSS selectors (axe format)
+      for (const sel of (node.target || [])) {
+        try {
+          const el = document.querySelector(sel);
+          if (!el) continue;
+          await handler(el);
+        } catch (e) {
+          console.warn('[AI4A11y] axe handler error for', violation.id, e);
+        }
+      }
+    }
+  }
 };
 
 function enableTool(toolName, options) {
@@ -180,10 +251,14 @@ async function applyAISettings(newSettings, fromSettingsChange = false) {
   }
 
   // autoWcagFix is a non-AI structural sweep — no API key required, not gated.
-  if (newSettings.autoWcagFix !== undefined) {
-    if (newSettings.autoWcagFix) {
-      try { await WcagFixes.enable(); } catch (e) { console.warn('[AI4A11y] WcagFixes error:', e); }
-    } else if (WcagFixes.disable) WcagFixes.disable();
+  if (newSettings.autoWcagFix !== undefined || newSettings.wcagRiskyFixes !== undefined) {
+    const wcagOn = newSettings.autoWcagFix !== undefined ? newSettings.autoWcagFix : aiSettings.autoWcagFix;
+    if (wcagOn) {
+      if (newSettings.wcagRiskyFixes !== undefined) _axeRiskyEnabled = !!newSettings.wcagRiskyFixes;
+      try { await WcagFixes.enable({ wcagRiskyFixes: _axeRiskyEnabled }); } catch (e) { console.warn('[AI4A11y] WcagFixes error:', e); }
+    } else if (newSettings.autoWcagFix === false && WcagFixes.disable) {
+      WcagFixes.disable();
+    }
   }
 
   if (newSettings.autoFixLabels !== undefined) {
@@ -233,7 +308,7 @@ async function initFromStorage() {
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
       'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
-      'fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
+      'fixContrast', 'autoWcagFix', 'wcagRiskyFixes', 'autoFixLabels', 'autoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
 
@@ -301,7 +376,11 @@ async function initFromStorage() {
       }
     }
     // autoWcagFix is non-AI (structural), always runs regardless of key.
-    if (aiSettings.autoWcagFix) { try { await WcagFixes.enable(); } catch (e) {} }
+    // wcagRiskyFixes is additive — only active when autoWcagFix is also on.
+    if (aiSettings.autoWcagFix) {
+      _axeRiskyEnabled = settings.wcagRiskyFixes === true;
+      try { await WcagFixes.enable({ wcagRiskyFixes: _axeRiskyEnabled }); } catch (e) {}
+    }
 
     console.log('[AI4A11y] Initialized from stored settings');
   } catch (e) {
@@ -337,7 +416,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   } else if (msg.type === 'getToolStates') {
     sendResponse({ states: getToolStates() });
   } else if (msg.type === 'getStats') {
-    sendResponse({ success: true, stats: { ...stats }, fixes: [...fixes] });
+    sendResponse({
+      success: true,
+      stats: { ...stats },
+      fixes: fixes.map((f, i) => ({
+        type: f.type, element: f.element, old: f.old, new: f.new,
+        fixIndex: i,
+        revertable: !!(f._descriptor),
+      }))
+    });
   } else if (msg.type === 'speakPage') {
     ReadAloud.speakPage({ rate: msg.rate || 1 });
     enabledTools.add('ReadAloud');
@@ -351,6 +438,45 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       applyProfileSettings(msg.settings);
     }
     sendResponse({ success: true });
+  } else if (msg.type === 'revertFix') {
+    // Apply the inverse descriptor stored at fix time.
+    // msg.fixIndex — index into the fixes array (from popup's fixIndex field).
+    const fixIndex = msg.fixIndex;
+    if (typeof fixIndex !== 'number' || !fixes[fixIndex]) {
+      sendResponse({ success: false, reason: 'fix not found' }); return;
+    }
+    const entry = fixes[fixIndex];
+    const desc = entry._descriptor;
+    if (!desc || !desc.selector) { sendResponse({ success: false, reason: 'not revertable' }); return; }
+    try {
+      const el = document.querySelector(desc.selector);
+      if (!el) { sendResponse({ success: false, reason: 'element not found' }); return; }
+      if (desc.attr !== undefined) {
+        if (desc.prior === null || desc.prior === undefined) {
+          el.removeAttribute(desc.attr);
+        } else {
+          el.setAttribute(desc.attr, desc.prior);
+        }
+      } else if (desc.style) {
+        // Style restore (target-size)
+        for (const [prop, val] of Object.entries(desc.style)) {
+          el.style[prop] = val || '';
+        }
+      }
+      // Remove this fix from the local array and notify popup.
+      fixes.splice(fixIndex, 1);
+      chrome.runtime.sendMessage({
+        type: 'fixAdded',
+        stats: { ...stats },
+        fixes: fixes.map((f, i) => ({
+          type: f.type, element: f.element, old: f.old, new: f.new,
+          fixIndex: i, revertable: !!(f._descriptor),
+        }))
+      }).catch(() => {});
+      sendResponse({ success: true });
+    } catch (e) {
+      sendResponse({ success: false, reason: e.message });
+    }
   }
   // No `return true` here: every matched branch above calls sendResponse
   // synchronously, and an unconditional `return true` would tell Chrome to
@@ -432,7 +558,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     motionReducer: 'MotionReducer'
   };
   const aiSettingKeys = new Set([
-    'fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
+    'fixContrast', 'autoWcagFix', 'wcagRiskyFixes', 'autoFixLabels', 'autoDescribe',
     'autoCaptions', 'autoSimplify', 'autoSummarize'
   ]);
 

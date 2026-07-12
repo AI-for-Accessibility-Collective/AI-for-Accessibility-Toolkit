@@ -177,6 +177,24 @@ export function createChromeAIProvider() {
     },
 
     async summarizeText(text) {
+      // Feature-detect the Chrome Summarizer API (on-device, key-free).
+      // Spec: Summarizer.availability() → 'readily'|'after-download'|'no'
+      //       Summarizer.create()       → summarizer instance
+      //       summarizer.summarize(text) → string
+      // Guard with try/catch; fall back to cloud path on any failure.
+      if (typeof self !== 'undefined' && 'Summarizer' in self) {
+        try {
+          const availability = await self.Summarizer.availability();
+          if (availability !== 'no') {
+            const summarizer = await self.Summarizer.create();
+            const result = await summarizer.summarize(text);
+            if (result && result.trim()) return result.trim();
+          }
+        } catch (e) {
+          // Chrome Summarizer unavailable or failed — fall through to cloud.
+          console.warn('[AI4A11y] Chrome Summarizer API failed, falling back to cloud:', e);
+        }
+      }
       return sendToBackground(`Summarize the following text in 2-3 concise sentences. Return ONLY the summary.\n\n${text}`);
     },
 
