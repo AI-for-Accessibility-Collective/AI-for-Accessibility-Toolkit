@@ -54,8 +54,7 @@
 <!-- 3. WAAPI animation -->
 <div id="waapi-box" style="width:50px;height:50px;background:red;" role="presentation"></div>
 
-<!-- 4. Animated GIF (data URI — 2-frame 1x1 GIF, same-origin) -->
-<!-- Tiny 2-frame animated GIF (generated: 2 frames, 1x1 px, alternating black/white) -->
+<!-- 4a. Named animated GIF (data URI — same-origin) -->
 <img id="test-gif" alt="animated test gif"
   src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   width="50" height="50" style="image-rendering:pixelated;width:50px;height:50px;">
@@ -64,6 +63,11 @@
      of actual frame count in freeze logic, since ImageDecoder may not be
      available in Puppeteer/headless. The freeze attempts and either succeeds
      or falls back gracefully. -->
+
+<!-- 4b. Decorative animated GIF (alt="" — must freeze to aria-hidden canvas, no role) -->
+<img id="test-gif-decorative" alt=""
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  width="50" height="50" style="image-rendering:pixelated;width:50px;height:50px;">
 
 <!-- 5. Transform-positioned carousel (must keep transform after motion-reducer) -->
 <div id="carousel">

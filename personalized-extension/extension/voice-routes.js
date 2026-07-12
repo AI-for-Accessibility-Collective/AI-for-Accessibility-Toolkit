@@ -51,6 +51,11 @@
   const VA_KEYS = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];
   const FOCUS_KEYS = ['focusMode', 'hideDistractions', 'showProgress'];
+  // #16: fixContrast and autoWcagFix are deterministic (requiresAI:false).
+  // They must be routed through settingsChanged like the other AI keys so the
+  // content-script's applyAISettings handles them — but they are NOT gated on
+  // the Gemini key (content.js now enables them unconditionally). Keeping them
+  // here is correct: they reach applyAISettings which no longer key-gates them.
   const AI_KEYS = ['fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
     'autoCaptions', 'autoSimplify', 'autoSummarize'];
 

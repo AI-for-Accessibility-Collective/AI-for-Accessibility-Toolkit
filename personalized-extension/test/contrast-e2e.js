@@ -1,23 +1,30 @@
 // contrast-e2e.js — Puppeteer E2E tests for fix-contrast.js
 //
-// Serves the fixture page on a local HTTP server, injects the bundled adapter
-// and utils into the page context, then exercises enable/disable/re-enable.
+// Drives the REAL adapter via the same load-unpacked-extension pattern used by
+// reader-e2e.js and visual-assist-e2e.js.  fix-contrast is deterministic
+// (requiresAI:false) so no Gemini API key is needed.
 //
-// Checks:
-//   1. Failing elements reach ≥4.5:1 after enable.
-//   2. Passing element (#pass-black-on-white) is untouched.
-//   3. Background-image element is skipped (data-ai4a11y-contrast-state).
-//   4. Dark-body text did NOT become black-on-near-black (actual color changed).
-//   5. Disable restores exact original computed colors.
-//   6. Re-enable fixes again (marks cleared on disable).
+// ── REAL-PATH BEATS (drive the actual fix-contrast.js enable/disable/re-enable) ──
+//   Beat A: failing text (#fail-gray-on-white) reaches ≥4.5:1 after enable.
+//            State mark data-ai4a11y-contrast="done" is set.
+//   Beat B: passing element (#pass-black-on-white) is UNTOUCHED (ratio already ≥4.5).
+//   Beat C: bg-image element is SKIPPED (data-ai4a11yContrastState="skipped-bgimage").
+//   Beat D: dark-body text (#dark-section p) color was changed (not stuck on near-black).
+//   Beat E: disable() restores exact original computed colors; marks cleared.
+//   Beat F: re-enable re-fixes (marks cleared on disable → adapter re-sweeps).
+//
+// ── MATH SECTION (kept for WCAG formula regression coverage) ──
+//   Verifies fixture baseline ratios (confirming fixture is meaningful).
 //
 // Run: node test/contrast-e2e.js
 
+const puppeteer = require('puppeteer');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer');
+const os = require('os');
 
+const EXT_PATH = path.resolve(__dirname, '..', 'extension');
 const ROOT = path.resolve(__dirname, '..');
 const PORT = 8773;
 
@@ -28,8 +35,8 @@ const MIME = {
 };
 
 // ---------------------------------------------------------------------------
-// Minimal contrast ratio helper injected into the page for assertions.
-// Matches WCAG 2.x formula so we can verify in-page.
+// Minimal contrast ratio helper — used in the math section and Beat A assertion.
+// Matches WCAG 2.x formula exactly.
 // ---------------------------------------------------------------------------
 const IN_PAGE_CONTRAST_FN = `
 function _inPageLuminance(r, g, b) {
@@ -38,13 +45,6 @@ function _inPageLuminance(r, g, b) {
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   });
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-}
-function _inPageContrast(colorStr) {
-  // parse rgb(r g b) or rgb(r, g, b) or rgba(r,g,b,a)
-  const m = colorStr.match(/rgba?\\((\\d+)[,\\s]+(\\d+)[,\\s]+(\\d+)/);
-  if (!m) return null;
-  const [r, g, b] = [+m[1], +m[2], +m[3]];
-  return r + g + b; // return as combined so caller can use it
 }
 function inPageContrastRatio(fgCss, bgCss) {
   function lum(css) {
@@ -59,7 +59,7 @@ function inPageContrastRatio(fgCss, bgCss) {
 `;
 
 // ---------------------------------------------------------------------------
-// Server
+// Server (serves fixture + extension source files for http:// origin)
 // ---------------------------------------------------------------------------
 function startServer() {
   return new Promise(resolve => {
@@ -89,344 +89,336 @@ function check(name, ok, detail) {
   results.push({ name, ok, detail });
   console.log(`${ok ? 'PASS' : 'FAIL'}: ${name}${!ok && detail !== undefined ? ' — ' + JSON.stringify(detail) : ''}`);
 }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function wirePage(page, tag) {
+  page.on('pageerror', e => console.log(`  [${tag} pageerror] ${e.message}`));
+  page.on('console', m => {
+    if (m.type() === 'error') console.log(`  [${tag} console.error] ${m.text()}`);
+  });
+  return page;
+}
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 async function main() {
   const server = await startServer();
-  console.log(`Server on http://localhost:${PORT}\n`);
+  console.log(`Fixture server on http://localhost:${PORT}\n`);
 
+  const FIXTURE_URL = `http://localhost:${PORT}/test/fixtures/contrast/page.html`;
+
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aa-contrast-e2e-'));
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    headless: false,
+    userDataDir,
+    args: [
+      `--disable-extensions-except=${EXT_PATH}`,
+      `--load-extension=${EXT_PATH}`,
+      '--no-first-run',
+      '--window-size=1400,900',
+    ],
+    defaultViewport: null,
   });
 
   try {
-    const page = await browser.newPage();
-    page.on('pageerror', e => console.log(`  [pageerror] ${e.message}`));
-    page.on('console', m => {
-      if (m.type() === 'error') console.log(`  [console.error] ${m.text()}`);
-    });
+    // ── Wait for extension service worker ──────────────────────────────────
+    const swTarget = await browser.waitForTarget(
+      t => t.type() === 'service_worker' && t.url().includes('background'),
+      { timeout: 15000 }
+    );
+    const worker = await swTarget.worker();
+    const extId = new URL(swTarget.url()).host;
+    console.log(`Extension loaded: ${extId}\n`);
 
-    await page.goto(`http://localhost:${PORT}/test/fixtures/contrast/page.html`, {
-      waitUntil: 'networkidle0',
-      timeout: 30000,
-    });
+    const swEval = (fn, ...args) => worker.evaluate(fn, ...args);
 
-    // ── Inject the bundled content (built output includes color.js + fix-contrast.js) ──
-    // We load the pre-built bundle. This tests the actual shipped code path.
-    const bundlePath = path.join(ROOT, 'extension/content/content.bundle.js');
-    const bundleCode = fs.readFileSync(bundlePath, 'utf8');
+    // Open the side-panel page as a driver (first-party extension page can
+    // call chrome.tabs.sendMessage; SW-originated messages cannot reach content scripts).
+    const driver = wirePage(await browser.newPage(), 'driver');
+    await driver.goto(`chrome-extension://${extId}/sidepanel/sidepanel.html`);
 
-    await page.evaluate((code) => {
-      // The bundle is IIFE-wrapped and assigns globals; we eval it.
-      // Suppress chrome.* calls by providing stubs for the minimum needed.
-      window.chrome = window.chrome || {
-        storage: {
-          sync: { get: (_, cb) => cb({}), set: () => {}, onChanged: { addListener: () => {} } },
-          local: { get: (_, cb) => cb({}), set: () => {}, onChanged: { addListener: () => {} } },
-        },
-        runtime: {
-          sendMessage: () => {},
-          onMessage: { addListener: () => {} },
-          getURL: (p) => p,
-        },
-      };
-      // Stub logFix so we can count fixes
-      window.ai4a11yFixLog = [];
-      window.ai4a11yLogFix = (...args) => window.ai4a11yFixLog.push(args);
-      window.ai4a11yIncrementStat = () => {};
-      try { new Function(code)(); } catch (e) { console.error('Bundle eval error:', e.message); }
-    }, bundleCode);
+    const sendToTab = (tabId, msg) =>
+      driver.evaluate((id, m) => new Promise(r =>
+        chrome.tabs.sendMessage(id, m, resp => { void chrome.runtime.lastError; r(resp ?? null); })
+      ), tabId, msg);
 
-    // Inject the in-page contrast helper
-    await page.evaluate(IN_PAGE_CONTRAST_FN);
+    // ── Seed chrome.storage.sync with {fixContrast: true} BEFORE loading the
+    //    fixture page so initFromStorage() picks it up and calls FixContrast.enable()
+    //    at document_idle without needing a Gemini API key. ──────────────────
+    await swEval(() => new Promise(r =>
+      chrome.storage.sync.set({ fixContrast: true }, r)
+    ));
+    console.log('Seeded chrome.storage.sync {fixContrast: true}\n');
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Capture original computed colors BEFORE enable
-    // ────────────────────────────────────────────────────────────────────────
-    const before = await page.evaluate(() => ({
-      grayOnWhite:   getComputedStyle(document.getElementById('fail-gray-on-white')).color,
-      darkBodyText:  getComputedStyle(document.querySelector('#dark-section p')).color,
-      passBlack:     getComputedStyle(document.getElementById('pass-black-on-white')).color,
-      bgImage:       getComputedStyle(document.getElementById('bg-image-element')).color,
-      passWhiteDark: getComputedStyle(document.getElementById('pass-white-on-dark')).color,
-    }));
-    console.log('Before enable:', JSON.stringify(before, null, 2));
+    // ── Open fixture page ──────────────────────────────────────────────────
+    const fixturePage = wirePage(await browser.newPage(), 'fixture');
+    await fixturePage.goto(FIXTURE_URL, { waitUntil: 'networkidle2' });
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Enable FixContrast
-    // ────────────────────────────────────────────────────────────────────────
-    await page.evaluate(() => {
-      // FixContrast is registered in AI_TOOL_MAP as 'fixContrast'.
-      // Access it via the module-scope export or the global dispatch.
-      // Since the bundle IIFE doesn't expose FixContrast globally, we enable
-      // it via the same mechanism content.js uses: simulating a settings change.
-      // The bundle sets up a message listener on chrome.storage.onChanged.
-      // Instead, we trigger FixContrast directly via the dispatch map —
-      // the bundle exposes window.__ai4a11yEnableAdapter for testing.
-      if (window.__ai4a11yEnableAdapter) {
-        window.__ai4a11yEnableAdapter('fixContrast', true);
-      } else {
-        // Fallback: dispatch a storage-change event if the hook is wired
-        // or call the module directly if accessible
-        console.warn('[contrast-e2e] __ai4a11yEnableAdapter not found — trying direct');
-      }
-    });
+    // content script runs at document_idle; give initFromStorage + sweep time
+    await sleep(2000);
 
-    // Give the synchronous sweep time to complete
-    await new Promise(r => setTimeout(r, 500));
+    // Inject the contrast ratio helper for in-page assertions
+    await fixturePage.evaluate(IN_PAGE_CONTRAST_FN);
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Check 1: failing gray on white now passes AA
-    // ────────────────────────────────────────────────────────────────────────
-    const afterEnable = await page.evaluate(() => {
+    // ── Get the fixture tab ID (needed for sendToTab) ──────────────────────
+    const tabId = await swEval((url) =>
+      new Promise(r => chrome.tabs.query({ url }, tabs => r(tabs[0]?.id ?? null)))
+    , FIXTURE_URL);
+
+    check('Got fixture tab ID', !!tabId, String(tabId));
+
+    // ==========================================================================
+    // Beat A — failing text reaches ≥4.5:1 after enable (real adapter path)
+    // ==========================================================================
+    console.log('\n--- Beat A: failing text fixed ---');
+
+    const afterEnable = await fixturePage.evaluate(() => {
       const el = document.getElementById('fail-gray-on-white');
+      if (!el) return null;
       const fg = getComputedStyle(el).color;
       const bg = 'rgb(255, 255, 255)';
-      return { fg, ratio: inPageContrastRatio(fg, bg), state: el.getAttribute('data-ai4a11y-contrast') };
-    });
-
-    // Check if the adapter was actually enabled (state should be 'done' or element was processed)
-    // If __ai4a11yEnableAdapter isn't wired, the test still validates the API shape.
-    const adapterEnabled = afterEnable.state === 'done';
-
-    if (adapterEnabled) {
-      check('enable: fail-gray-on-white reaches ≥4.5:1', afterEnable.ratio >= 4.5, afterEnable);
-    } else {
-      // The bundle may not expose the enable hook — verify the bundle parsed correctly
-      check('enable: bundle loaded (adapter not directly invokable from test)',
-        afterEnable.state !== 'error',
-        { note: 'Direct adapter invocation requires __ai4a11yEnableAdapter hook; bundle structure check only', afterEnable }
-      );
-    }
-
-    // ────────────────────────────────────────────────────────────────────────
-    // Direct API test — inject and run the adapter directly via ESM-compatible
-    // inline script to test the logic without the bundle wiring.
-    // ────────────────────────────────────────────────────────────────────────
-    // We test the adapter by directly calling the sweep functions with a
-    // mocked colorjs.io environment. Since the full color math is tested in
-    // contrast-test.mjs (Node unit test), here we focus on:
-    //   - DOM mutation correctness
-    //   - disable restores
-    //   - re-enable re-fixes
-    // We implement these as in-page tests using the bundled code.
-
-    // Reset page and test via direct DOM manipulation
-    await page.reload({ waitUntil: 'networkidle0' });
-    await page.evaluate(IN_PAGE_CONTRAST_FN);
-
-    // Capture baseline
-    const baseline = await page.evaluate(() => {
       return {
-        grayFg: getComputedStyle(document.getElementById('fail-gray-on-white')).color,
-        passBlack: getComputedStyle(document.getElementById('pass-black-on-white')).color,
-        darkBody: getComputedStyle(document.querySelector('#dark-section p')).color,
-        bgImageColor: getComputedStyle(document.getElementById('bg-image-element')).color,
+        fg,
+        ratio: inPageContrastRatio(fg, bg),
+        state: el.getAttribute('data-ai4a11y-contrast'),       // 'done' when fixed
+        contrastState: el.dataset.ai4a11yContrastState,        // undef or 'skipped-bgimage'
+        hasClass: el.classList.contains('ai4a11y-contrast-fixed'),
+        hasOriginalDataset: 'ai4a11yOriginalColor' in el.dataset,
       };
     });
 
-    // Simulate what fix-contrast does: inline the core algorithm for direct testing
-    const testResult = await page.evaluate(() => {
-      // ── Inline luminance + contrast ratio (mirrors WCAG 2.x) ──
-      function luminance(r, g, b) {
-        return [r, g, b].map(c => {
-          c = c / 255;
-          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-        }).reduce((sum, v, i) => sum + [0.2126, 0.7152, 0.0722][i] * v, 0);
-      }
+    check('Beat A: fix-contrast.js ran (data-ai4a11y-contrast="done" on failing element)',
+      afterEnable?.state === 'done',
+      afterEnable ? `state=${afterEnable.state} fg=${afterEnable.fg}` : 'element not found');
 
-      function parseRGB(css) {
-        const m = css.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
-        if (!m) return null;
-        return [+m[1], +m[2], +m[3]];
-      }
+    check('Beat A: failing text reaches ≥4.5:1 after enable',
+      afterEnable?.ratio >= 4.5,
+      afterEnable ? `ratio=${afterEnable.ratio?.toFixed(2)} fg=${afterEnable.fg}` : 'null');
 
-      function contrastRatio(fg, bg) {
-        const fRGB = parseRGB(fg), bRGB = parseRGB(bg);
-        if (!fRGB || !bRGB) return null;
-        const L1 = Math.max(luminance(...fRGB), luminance(...bRGB));
-        const L2 = Math.min(luminance(...fRGB), luminance(...bRGB));
-        return (L1 + 0.05) / (L2 + 0.05);
-      }
+    check('Beat A: ai4a11y-contrast-fixed class set on fixed element',
+      afterEnable?.hasClass === true,
+      afterEnable ? `hasClass=${afterEnable.hasClass}` : 'null');
 
-      const results = {};
+    check('Beat A: ai4a11yOriginalColor dataset saved for later restore',
+      afterEnable?.hasOriginalDataset === true,
+      afterEnable ? `hasDataset=${afterEnable.hasOriginalDataset}` : 'null');
 
-      // ── Test: gray on white should fail (contrast < 4.5) ──
+    // ==========================================================================
+    // Beat B — passing element untouched
+    // ==========================================================================
+    console.log('\n--- Beat B: passing element untouched ---');
+
+    const passEl = await fixturePage.evaluate(() => {
+      const el = document.getElementById('pass-black-on-white');
+      if (!el) return null;
+      const fg = getComputedStyle(el).color;
+      const bg = 'rgb(255, 255, 255)';
+      return {
+        fg,
+        ratio: inPageContrastRatio(fg, bg),
+        state: el.getAttribute('data-ai4a11y-contrast'),
+        hasClass: el.classList.contains('ai4a11y-contrast-fixed'),
+      };
+    });
+
+    check('Beat B: passing element (black on white) already ≥4.5:1',
+      passEl?.ratio >= 4.5,
+      passEl ? `ratio=${passEl.ratio?.toFixed(2)}` : 'null');
+
+    // The adapter marks passing elements as 'done' too (they were processed and passed),
+    // but must NOT add the fix class or change the color.
+    check('Beat B: passing element does NOT have ai4a11y-contrast-fixed class (color unchanged)',
+      passEl?.hasClass === false,
+      passEl ? `hasClass=${passEl.hasClass}` : 'null');
+
+    // ==========================================================================
+    // Beat C — bg-image element skipped
+    // ==========================================================================
+    console.log('\n--- Beat C: bg-image element skipped ---');
+
+    const bgImgEl = await fixturePage.evaluate(() => {
+      const el = document.getElementById('bg-image-element');
+      if (!el) return null;
+      return {
+        state: el.getAttribute('data-ai4a11y-contrast'),
+        contrastState: el.dataset.ai4a11yContrastState,
+        hasClass: el.classList.contains('ai4a11y-contrast-fixed'),
+      };
+    });
+
+    check('Beat C: bg-image element state is "done" (processed and skipped)',
+      bgImgEl?.state === 'done',
+      bgImgEl ? `state=${bgImgEl.state} contrastState=${bgImgEl.contrastState}` : 'null');
+
+    check('Beat C: bg-image element has skipped-bgimage marker',
+      bgImgEl?.contrastState === 'skipped-bgimage',
+      bgImgEl ? `contrastState=${bgImgEl.contrastState}` : 'null');
+
+    check('Beat C: bg-image element NOT given fix class (color not modified)',
+      bgImgEl?.hasClass === false,
+      bgImgEl ? `hasClass=${bgImgEl.hasClass}` : 'null');
+
+    // ==========================================================================
+    // Beat D — dark-body text was changed (not stuck near-black on dark bg)
+    // ==========================================================================
+    console.log('\n--- Beat D: dark-body text color changed ---');
+
+    const darkEl = await fixturePage.evaluate(() => {
+      const el = document.querySelector('#dark-section p');
+      if (!el) return null;
+      const fg = getComputedStyle(el).color;
+      const bg = 'rgb(26, 26, 46)'; // known dark-section bg
+      return {
+        fg,
+        ratio: inPageContrastRatio(fg, bg),
+        state: el.getAttribute('data-ai4a11y-contrast'),
+        hasClass: el.classList.contains('ai4a11y-contrast-fixed'),
+      };
+    });
+
+    check('Beat D: dark-body text now reaches ≥4.5:1 on dark background',
+      darkEl?.ratio >= 4.5,
+      darkEl ? `ratio=${darkEl.ratio?.toFixed(2)} fg=${darkEl.fg}` : 'null');
+
+    check('Beat D: dark-body text has ai4a11y-contrast-fixed class',
+      darkEl?.hasClass === true,
+      darkEl ? `hasClass=${darkEl.hasClass}` : 'null');
+
+    // ==========================================================================
+    // Beat E — disable() restores exact original computed colors; marks cleared
+    // ==========================================================================
+    console.log('\n--- Beat E: disable restores exact original colors ---');
+
+    // Record the CURRENT colors (post-enable) before we disable, to verify
+    // change did happen. Also record the pre-enable baseline from the fixture CSS.
+    const preDisable = await fixturePage.evaluate(() => {
       const grayEl = document.getElementById('fail-gray-on-white');
-      const grayFg = getComputedStyle(grayEl).color;
-      const whiteBg = 'rgb(255, 255, 255)';
-      const grayRatio = contrastRatio(grayFg, whiteBg);
-      results.grayOnWhiteFailsBefore = grayRatio !== null && grayRatio < 4.5;
-      results.grayRatioBefore = grayRatio;
-
-      // ── Test: black on white passes (21:1) ──
-      const passEl = document.getElementById('pass-black-on-white');
-      const blackFg = getComputedStyle(passEl).color;
-      const passRatio = contrastRatio(blackFg, whiteBg);
-      results.blackOnWhitePassesBefore = passRatio !== null && passRatio >= 4.5;
-
-      // ── Test: dark-body text fails on dark background ──
       const darkEl = document.querySelector('#dark-section p');
-      const darkFg = getComputedStyle(darkEl).color;
-      const darkBg = getComputedStyle(document.getElementById('dark-section')).backgroundColor;
-      const darkRatio = contrastRatio(darkFg, darkBg);
-      results.darkBodyFailsBefore = darkRatio !== null && darkRatio < 4.5;
-      results.darkRatioBefore = darkRatio;
-
-      // ── Test: bg-image element exists ──
-      const bgImgEl = document.getElementById('bg-image-element');
-      const bgImgStyle = getComputedStyle(bgImgEl).backgroundImage;
-      results.bgImageHasImage = bgImgStyle !== 'none';
-
-      // ── Simulate what fix-contrast disable/restore would do ──
-      // Save, modify, restore, verify
-      const origInline = grayEl.style.color || '';
-      grayEl.dataset.ai4a11yOriginalColor = origInline;
-      grayEl.style.color = 'rgb(50, 50, 50)'; // pretend we fixed it
-
-      // Verify it was changed
-      results.grayChangedToFixed = getComputedStyle(grayEl).color === 'rgb(50, 50, 50)';
-
-      // Now simulate disable restore
-      const toRestore = grayEl.dataset.ai4a11yOriginalColor;
-      if (toRestore === '') {
-        grayEl.style.removeProperty('color');
-      } else {
-        grayEl.style.color = toRestore;
-      }
-      delete grayEl.dataset.ai4a11yOriginalColor;
-
-      // Verify restored
-      const restoredFg = getComputedStyle(grayEl).color;
-      results.grayRestored = restoredFg;
-      results.grayRestoredToOriginal = restoredFg === grayFg;
-
-      return results;
+      return {
+        grayFg: getComputedStyle(grayEl).color,
+        darkFg: getComputedStyle(darkEl).color,
+        grayHasClass: grayEl.classList.contains('ai4a11y-contrast-fixed'),
+      };
     });
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Report test results
-    // ────────────────────────────────────────────────────────────────────────
+    // Send disable via the messaging path the popup uses
+    const disableResp = await sendToTab(tabId, { type: 'settingsChanged', settings: { fixContrast: false } });
+    check('Beat E: disable message delivered', !!disableResp, JSON.stringify(disableResp));
+    await sleep(500); // give synchronous disable() time to complete
 
-    check('fixture: gray on white fails AA before fix', testResult.grayOnWhiteFailsBefore,
-      `ratio=${testResult.grayRatioBefore}`);
-
-    check('fixture: black on white passes AA (21:1)', testResult.blackOnWhitePassesBefore, null);
-
-    check('fixture: dark-body text fails AA before fix', testResult.darkBodyFailsBefore,
-      `ratio=${testResult.darkRatioBefore}`);
-
-    check('fixture: bg-image element has background-image', testResult.bgImageHasImage, null);
-
-    check('simulate: color changed to fixed value', testResult.grayChangedToFixed, null);
-
-    check('simulate: disable restores original computed color', testResult.grayRestoredToOriginal,
-      { restored: testResult.grayRestored, originalFg: baseline.grayFg });
-
-    // ────────────────────────────────────────────────────────────────────────
-    // Test 4: dark-body text check — after a fix, the result should NOT be
-    // black (which would give near-zero contrast on a dark background).
-    // nearestAccessibleColor tested in unit tests; here we verify the heuristic.
-    // ────────────────────────────────────────────────────────────────────────
-    const darkBodyResult = await page.evaluate(() => {
-      function luminance(r, g, b) {
-        return [r, g, b].map(c => {
-          c = c / 255;
-          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-        }).reduce((sum, v, i) => sum + [0.2126, 0.7152, 0.0722][i] * v, 0);
-      }
-      function contrastRatio(fg, bg) {
-        function lum(css) {
-          const m = css.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
-          if (!m) return 0;
-          return luminance(+m[1], +m[2], +m[3]);
-        }
-        const L1 = Math.max(lum(fg), lum(bg));
-        const L2 = Math.min(lum(fg), lum(bg));
-        return (L1 + 0.05) / (L2 + 0.05);
-      }
-
-      const darkBg = 'rgb(26, 26, 46)';
-      // Verify that pure black on dark bg fails AA (it should)
-      const blackRatio = contrastRatio('rgb(0, 0, 0)', darkBg);
-      // Verify that white on dark bg passes AA
-      const whiteRatio = contrastRatio('rgb(255, 255, 255)', darkBg);
-      return { blackRatio, whiteRatio };
+    const afterDisable = await fixturePage.evaluate(() => {
+      const grayEl = document.getElementById('fail-gray-on-white');
+      const darkEl = document.querySelector('#dark-section p');
+      return {
+        grayFg: getComputedStyle(grayEl).color,
+        darkFg: getComputedStyle(darkEl).color,
+        grayHasClass: grayEl.classList.contains('ai4a11y-contrast-fixed'),
+        grayMark: grayEl.getAttribute('data-ai4a11y-contrast'),
+        darkMark: darkEl.getAttribute('data-ai4a11y-contrast'),
+        // Fixture CSS: #fail-gray-on-white { color: #cccccc; } = rgb(204, 204, 204)
+        grayIsOriginal: getComputedStyle(grayEl).color === 'rgb(204, 204, 204)',
+        // Fixture CSS: #dark-section p { color: #334466; } = rgb(51, 68, 102)
+        darkIsOriginal: getComputedStyle(darkEl).color === 'rgb(51, 68, 102)',
+      };
     });
 
-    check('dark-body: black-on-dark-bg fails AA (confirms fixer must pick light color)',
-      darkBodyResult.blackRatio < 3.0, `blackRatio=${darkBodyResult.blackRatio}`);
-    check('dark-body: white-on-dark-bg passes AA',
-      darkBodyResult.whiteRatio >= 4.5, `whiteRatio=${darkBodyResult.whiteRatio}`);
+    check('Beat E: gray element color restored to fixture original (#cccccc)',
+      afterDisable.grayIsOriginal,
+      `color=${afterDisable.grayFg} expected=rgb(204, 204, 204)`);
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Test 5: re-enable — after a simulated second enable, elements that were
-    // cleared of their marks should be re-processed.
-    // ────────────────────────────────────────────────────────────────────────
-    const reEnableResult = await page.evaluate(() => {
+    check('Beat E: dark-body text color restored to fixture original (#334466)',
+      afterDisable.darkIsOriginal,
+      `color=${afterDisable.darkFg} expected=rgb(51, 68, 102)`);
+
+    check('Beat E: ai4a11y-contrast-fixed class removed after disable',
+      afterDisable.grayHasClass === false,
+      `hasClass=${afterDisable.grayHasClass}`);
+
+    check('Beat E: data-ai4a11y-contrast mark cleared after disable',
+      afterDisable.grayMark === null && afterDisable.darkMark === null,
+      `grayMark=${afterDisable.grayMark} darkMark=${afterDisable.darkMark}`);
+
+    // ==========================================================================
+    // Beat F — re-enable re-fixes (marks cleared → adapter re-sweeps)
+    // ==========================================================================
+    console.log('\n--- Beat F: re-enable re-fixes ---');
+
+    const reEnableResp = await sendToTab(tabId, { type: 'settingsChanged', settings: { fixContrast: true } });
+    check('Beat F: re-enable message delivered', !!reEnableResp, JSON.stringify(reEnableResp));
+    await sleep(1000); // give enable() + sweep time
+
+    await fixturePage.evaluate(IN_PAGE_CONTRAST_FN); // re-inject helper (page context)
+    const afterReEnable = await fixturePage.evaluate(() => {
       const el = document.getElementById('fail-gray-on-white');
-      // Simulate cleared marks (as disable() does)
-      el.removeAttribute('data-ai4a11y-contrast');
-      el.classList.remove('ai4a11y-contrast-fixed');
-      const hasNoMark = !el.hasAttribute('data-ai4a11y-contrast');
-      // Also ensure it would be picked up by the selector TEXT_SELECTOR
-      const matchesSelector = el.matches('p, span, li, td, th, h1, h2, h3, h4, h5, h6, a, label, button, caption, figcaption, blockquote, dt, dd, cite, time, mark, abbr, code, pre, legend, summary');
-      return { hasNoMark, matchesSelector };
+      if (!el) return null;
+      const fg = getComputedStyle(el).color;
+      const bg = 'rgb(255, 255, 255)';
+      return {
+        fg,
+        ratio: inPageContrastRatio(fg, bg),
+        state: el.getAttribute('data-ai4a11y-contrast'),
+        hasClass: el.classList.contains('ai4a11y-contrast-fixed'),
+      };
     });
 
-    check('re-enable: marks cleared so element is re-processable', reEnableResult.hasNoMark, null);
-    check('re-enable: element matches TEXT_SELECTOR', reEnableResult.matchesSelector, null);
+    check('Beat F: re-enable re-fixes failing element (state=done)',
+      afterReEnable?.state === 'done',
+      afterReEnable ? `state=${afterReEnable.state}` : 'null');
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Test 6: rgba overlay — rgba(0,0,0,0.4) on white should be detected as failing
-    // ────────────────────────────────────────────────────────────────────────
-    const rgbaResult = await page.evaluate(() => {
-      // rgba(0,0,0,0.4) composited over white = rgb(153,153,153) ≈ 2.5:1 — fails
-      function compositeAlpha(fg_rgba, bg_rgb) {
-        const m1 = fg_rgba.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s]+([\d.]+))?\)/);
-        const m2 = bg_rgb.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
-        if (!m1 || !m2) return null;
-        const alpha = m1[4] !== undefined ? parseFloat(m1[4]) : 1;
-        const r = Math.round(+m1[1] * alpha + +m2[1] * (1 - alpha));
-        const g = Math.round(+m1[2] * alpha + +m2[2] * (1 - alpha));
-        const b = Math.round(+m1[3] * alpha + +m2[3] * (1 - alpha));
-        return `rgb(${r}, ${g}, ${b})`;
-      }
-      function luminance(r, g, b) {
-        return [r, g, b].map(c => {
-          c = c / 255;
-          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-        }).reduce((sum, v, i) => sum + [0.2126, 0.7152, 0.0722][i] * v, 0);
-      }
-      function contrastRatio(fg, bg) {
-        function lum(css) {
-          const m = css.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
-          if (!m) return 0;
-          return luminance(+m[1], +m[2], +m[3]);
-        }
-        const L1 = Math.max(lum(fg), lum(bg));
-        const L2 = Math.min(lum(fg), lum(bg));
-        return (L1 + 0.05) / (L2 + 0.05);
-      }
-      const effectiveFg = compositeAlpha('rgba(0, 0, 0, 0.2)', 'rgb(255, 255, 255)');
-      const ratio = effectiveFg ? contrastRatio(effectiveFg, 'rgb(255, 255, 255)') : null;
-      return { effectiveFg, ratio, fails: ratio !== null && ratio < 4.5 };
-    });
+    check('Beat F: re-enable: failing element again reaches ≥4.5:1',
+      afterReEnable?.ratio >= 4.5,
+      afterReEnable ? `ratio=${afterReEnable.ratio?.toFixed(2)} fg=${afterReEnable.fg}` : 'null');
 
-    check('rgba overlay: rgba(0,0,0,0.2) on white fails AA (needs compositing)',
-      rgbaResult.fails, `effectiveFg=${rgbaResult.effectiveFg} ratio=${rgbaResult.ratio}`);
+    // ==========================================================================
+    // ── MATH SECTION: WCAG formula regression checks ──
+    //    Pure Node.js checks using fixture's known CSS values (no browser page needed).
+    //    The extension always runs on new tabs so a browser-based "before-fix" check
+    //    races with initFromStorage.  Instead, verify the WCAG formula directly against
+    //    the hardcoded fixture hex values — these break if the fixture changes.
+    // ==========================================================================
+    console.log('\n--- Math section: fixture baseline ratio verification (Node WCAG math) ---');
+
+    function nodeLuminance(r, g, b) {
+      return [r, g, b].map(c => {
+        c = c / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      }).reduce((s, v, i) => s + [0.2126, 0.7152, 0.0722][i] * v, 0);
+    }
+    function nodeContrastRatio(r1,g1,b1, r2,g2,b2) {
+      const L1 = Math.max(nodeLuminance(r1,g1,b1), nodeLuminance(r2,g2,b2));
+      const L2 = Math.min(nodeLuminance(r1,g1,b1), nodeLuminance(r2,g2,b2));
+      return (L1 + 0.05) / (L2 + 0.05);
+    }
+
+    // Fixture: #cccccc (204,204,204) on #ffffff (255,255,255) — fails AA at ~1.6:1
+    const grayRatio = nodeContrastRatio(204, 204, 204, 255, 255, 255);
+    check('Math: gray-on-white fixture CSS (#cccccc on #fff) fails AA (ratio < 4.5)',
+      grayRatio < 4.5, `ratio=${grayRatio.toFixed(3)}`);
+
+    // Fixture: #000000 on #ffffff — passes AA at 21:1
+    const blackRatio = nodeContrastRatio(0, 0, 0, 255, 255, 255);
+    check('Math: black-on-white fixture already passes AA (ratio ≈ 21)',
+      blackRatio >= 4.5, `ratio=${blackRatio.toFixed(2)}`);
+
+    // Fixture: #334466 (51,68,102) on #1a1a2e (26,26,46) — fails AA at ~1.75:1
+    const darkRatio = nodeContrastRatio(51, 68, 102, 26, 26, 46);
+    check('Math: dark-body fixture CSS (#334466 on #1a1a2e) fails AA (ratio < 4.5)',
+      darkRatio < 4.5, `ratio=${darkRatio.toFixed(3)}`);
+
+    // Confirm the WCAG threshold constant (sanity: borderline black-on-50%-gray)
+    const borderlineRatio = nodeContrastRatio(0, 0, 0, 119, 119, 119);
+    check('Math: WCAG formula sanity — black on ~mid-gray is near 4.5:1',
+      borderlineRatio >= 4.0 && borderlineRatio <= 5.0, `ratio=${borderlineRatio.toFixed(3)}`);
 
   } finally {
     await browser.close();
     server.close();
   }
 
-  // ────────────────────────────────────────────────────────────────────────
+  // ---------------------------------------------------------------------------
   // Summary
-  // ────────────────────────────────────────────────────────────────────────
+  // ---------------------------------------------------------------------------
   const failed = results.filter(r => !r.ok);
   console.log(`\n=== contrast-e2e.js: ${results.length - failed.length} pass, ${failed.length} fail ===`);
   if (failed.length > 0) {

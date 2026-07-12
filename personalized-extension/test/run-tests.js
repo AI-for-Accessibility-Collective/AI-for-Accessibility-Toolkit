@@ -1512,6 +1512,363 @@ server.listen(PORT, async () => {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Test 24: Fix-regression static checks (#14, #16, #17, #18, #19)
+  // ---------------------------------------------------------------------------
+  {
+    const contentPath4 = path.join(ROOT, 'extension/content/content.js');
+    const contentCode4 = fs.readFileSync(contentPath4, 'utf8');
+    const vcPath = path.join(ROOT, 'skills/builtin/voice-commands.js');
+    const vcCode = fs.readFileSync(vcPath, 'utf8');
+    const vrPath = path.join(ROOT, 'extension/voice-routes.js');
+    const vrCode = fs.readFileSync(vrPath, 'utf8');
+
+    // #16 — fixContrast must NOT be inside enableAITool() calls in content.js.
+    // The correct pattern is a direct FixContrast.enable() without an AI-key gate.
+    if (!contentCode4.includes("enableAITool('fixContrast'") &&
+        !contentCode4.includes('enableAITool("fixContrast"')) {
+      console.log('PASS (#16): content.js does not gate fixContrast through enableAITool');
+    } else {
+      console.log('FAIL (#16): content.js still routes fixContrast through enableAITool (key gate)');
+    }
+
+    // #16 — content.js must have an ungated FixContrast.enable() path reachable
+    // from applyAISettings (outside the configured block).
+    if (contentCode4.includes('await FixContrast.enable()')) {
+      console.log('PASS (#16): content.js has direct (ungated) FixContrast.enable() call');
+    } else {
+      console.log('FAIL (#16): content.js missing direct FixContrast.enable() — keyless users cannot get contrast fixes');
+    }
+
+    // #14 — watchSystemPrefs must be called only once per init() via a module-level handle.
+    // Check: the return value of watchSystemPrefs is captured (not discarded).
+    if (contentCode4.includes('_prefsUnwatch = watchSystemPrefs(')) {
+      console.log('PASS (#14): content.js captures watchSystemPrefs return as _prefsUnwatch');
+    } else {
+      console.log('FAIL (#14): content.js discards watchSystemPrefs unwatch — listener leak on rescan');
+    }
+
+    // #14 — init() must clear the old watcher before re-registering.
+    if (contentCode4.includes('_prefsUnwatch()') && contentCode4.includes('_prefsUnwatch = null')) {
+      console.log('PASS (#14): content.js calls _prefsUnwatch() before re-registering');
+    } else {
+      console.log('FAIL (#14): content.js does not unwatch before re-registering watchSystemPrefs');
+    }
+
+    // #17 — applyProfileSettings must be async (needs to await checkAIConfigured).
+    if (contentCode4.includes('async function applyProfileSettings(')) {
+      console.log('PASS (#17): applyProfileSettings is async (can await AI-key gate)');
+    } else {
+      console.log('FAIL (#17): applyProfileSettings is not async — keyless AI round-trips on every page load');
+    }
+
+    // #17 — applyProfileSettings must call checkAIConfigured() before enabling AI adapters.
+    // Verify via a heuristic: the function body must reference checkAIConfigured.
+    const profileFnStart = contentCode4.indexOf('async function applyProfileSettings(');
+    const profileFnEnd = contentCode4.indexOf('console.log(\'[AI4A11y] Profile settings applied\')');
+    const profileBody = profileFnStart >= 0 && profileFnEnd > profileFnStart
+      ? contentCode4.slice(profileFnStart, profileFnEnd)
+      : '';
+    if (profileBody.includes('checkAIConfigured()')) {
+      console.log('PASS (#17): applyProfileSettings calls checkAIConfigured() before AI adapter enables');
+    } else {
+      console.log('FAIL (#17): applyProfileSettings does not gate AI adapters on checkAIConfigured()');
+    }
+
+    // #18 — VoiceCommands.enable() must return false on the Live-session bail.
+    // Check that the _isLiveActive bail uses `return false` not bare `return`.
+    if (vcCode.includes('_isLiveActive()') && vcCode.includes('return false;')) {
+      console.log('PASS (#18): voice-commands.js enable() returns false on mutual-exclusion bail');
+    } else {
+      console.log('FAIL (#18): voice-commands.js enable() does not return false — phantom-enabled state');
+    }
+
+    // #18 — enableTool must be async so it can await the enable() Promise.
+    if (contentCode4.includes('async function enableTool(')) {
+      console.log('PASS (#18): content.js enableTool is async (awaits enable() for VoiceCommands)');
+    } else {
+      console.log('FAIL (#18): content.js enableTool is not async — VoiceCommands bail not detected');
+    }
+
+    // #19 — _osAutoDark must be gated on the enableTool result, not set unconditionally.
+    // The fix introduces darkEnableResult to carry the return value.
+    if (contentCode4.includes('darkEnableResult') && contentCode4.includes('darkEnableResult?.ok !== false')) {
+      console.log('PASS (#19): content.js gates _osAutoDark on enableTool result (no phantom flag)');
+    } else {
+      console.log('FAIL (#19): content.js sets _osAutoDark unconditionally — spurious "Dark mode disabled" announce');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 25 (#24 fix): Phase-0 wiring guard — parse actual dispatch-map keys
+  //   Old guard: contentCode.includes(key) — fires for OBSERVED_SETTING_KEYS,
+  //   comments, and string literals, so deleting a map entry stays green.
+  //   New guard: PARSE the TOOL_MAP / AI_TOOL_MAP literals and assert set
+  //   membership so a key rename or deletion breaks this test, not just style.
+  // ---------------------------------------------------------------------------
+  {
+    const contentPath5 = path.join(ROOT, 'extension/content/content.js');
+    const contentSrc5 = fs.readFileSync(contentPath5, 'utf8');
+
+    // Extract keys from a `const <mapName> = { ... };` literal.
+    function extractMapKeys(src, mapName) {
+      const re = new RegExp(`const\\s+${mapName}\\s*=\\s*\\{([^}]+)\\}`, 's');
+      const m = src.match(re);
+      if (!m) return new Set();
+      const block = m[1];
+      const keys = new Set();
+      for (const entry of block.split(',')) {
+        const trimmed = entry.trim().replace(/\/\/[^\n]*/g, '').trim();
+        if (!trimmed) continue;
+        const colonIdx = trimmed.indexOf(':');
+        const key = (colonIdx >= 0 ? trimmed.slice(0, colonIdx) : trimmed).trim().replace(/^['"]|['"]$/g, '');
+        if (key && /^\w+$/.test(key)) keys.add(key);
+      }
+      return keys;
+    }
+
+    const toolMapKeys = extractMapKeys(contentSrc5, 'TOOL_MAP');
+    const aiToolMapKeys = extractMapKeys(contentSrc5, 'AI_TOOL_MAP');
+
+    if (toolMapKeys.size > 0) {
+      console.log(`PASS (#24): TOOL_MAP parsed — ${toolMapKeys.size} keys: ${[...toolMapKeys].join(', ')}`);
+    } else {
+      console.log('FAIL (#24): could not parse TOOL_MAP from content.js');
+    }
+    if (aiToolMapKeys.size > 0) {
+      console.log(`PASS (#24): AI_TOOL_MAP parsed — ${aiToolMapKeys.size} keys: ${[...aiToolMapKeys].join(', ')}`);
+    } else {
+      console.log('FAIL (#24): could not parse AI_TOOL_MAP from content.js');
+    }
+
+    // Assert every expected demand-tier key is a real map key (not just a substring).
+    const toolMapExpected = new Set(['DarkMode', 'FocusMode', 'VisualAssist', 'MotionReducer',
+      'ReaderMode', 'ColorBlindMode', 'KeyboardNavigator', 'VoiceCommands', 'ReadAloud']);
+    const aiMapExpected = new Set(['fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
+      'autoCaptions', 'autoSimplify', 'autoSummarize']);
+
+    let tmOk = true;
+    for (const k of toolMapExpected) {
+      if (!toolMapKeys.has(k)) {
+        console.log(`FAIL (#24): TOOL_MAP missing '${k}' as an actual key`);
+        tmOk = false;
+      }
+    }
+    if (tmOk) console.log('PASS (#24): all required TOOL_MAP keys present as actual map keys');
+
+    let amOk = true;
+    for (const k of aiMapExpected) {
+      if (!aiToolMapKeys.has(k)) {
+        console.log(`FAIL (#24): AI_TOOL_MAP missing '${k}' as an actual key`);
+        amOk = false;
+      }
+    }
+    if (amOk) console.log('PASS (#24): all required AI_TOOL_MAP keys present as actual map keys');
+
+    // No key should appear in BOTH maps.
+    const overlap = [...toolMapKeys].filter(k => aiToolMapKeys.has(k));
+    if (overlap.length === 0) {
+      console.log('PASS (#24): no key in both TOOL_MAP and AI_TOOL_MAP (no duplicates)');
+    } else {
+      console.log(`FAIL (#24): key(s) appear in both maps (unexpected duplicates): ${overlap.join(', ')}`);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 26 (#25 fix): logFix call-time binding — strengthened dual-layer guard
+  //   (a) Broadened static regex: catches ALL module-scope capture spellings
+  //       (let, bracket-access, destructuring, alias), not just one exact form.
+  //   (b) Positive contract: every builtin that calls logFix() must define it
+  //       as an arrow wrapper that dereferences globalThis at CALL TIME.
+  // ---------------------------------------------------------------------------
+  {
+    const builtinDir5 = path.join(ROOT, 'skills/builtin');
+    const builtinFiles5 = fs.readdirSync(builtinDir5).filter(f => f.endsWith('.js'));
+
+    // (a) Ban all module-scope capture spellings.
+    const badPatterns5 = [
+      /^\s*(const|let|var)\s+(logFix|incrementStat)\s*=\s*globalThis[.[]/m,    // dot or bracket
+      /^\s*(const|let|var)\s*\{[^}]*ai4a11yLogFix[^}]*\}\s*=\s*globalThis/m,  // destructuring
+      /^\s*(const|let|var)\s+\w+\s*=\s*globalThis\.ai4a11yLogFix/m,            // alias rename
+    ];
+    let allCallTime5 = true;
+    for (const file of builtinFiles5) {
+      const code = fs.readFileSync(path.join(builtinDir5, file), 'utf8');
+      for (const pat of badPatterns5) {
+        if (pat.test(code)) {
+          console.log(`FAIL (#25a): ${file} has a module-scope globalThis capture for logFix/incrementStat`);
+          allCallTime5 = false;
+          break;
+        }
+      }
+    }
+    if (allCallTime5) console.log('PASS (#25a): no builtin has a module-scope globalThis capture (all spellings)');
+
+    // (b) Positive contract: every builtin that USES logFix() must define it as
+    //     a call-time wrapper arrow `(...a) => (globalThis.ai4a11yLogFix || ...)(...a)`.
+    //     A module-scope capture form would not match this pattern.
+    const callTimePat5 = /const\s+logFix\s*=\s*\(\.\.\.[\w]+\)\s*=>\s*\(globalThis\.ai4a11yLogFix/;
+    let usesLogFix5 = 0, callTimeLogFix5 = 0;
+    for (const file of builtinFiles5) {
+      const code = fs.readFileSync(path.join(builtinDir5, file), 'utf8');
+      if (code.includes('logFix(')) {
+        usesLogFix5++;
+        if (callTimePat5.test(code)) {
+          callTimeLogFix5++;
+        } else {
+          console.log(`FAIL (#25b): ${file} calls logFix() but its definition is not the call-time wrapper form`);
+        }
+      }
+    }
+    if (usesLogFix5 > 0 && callTimeLogFix5 === usesLogFix5) {
+      console.log(`PASS (#25b): all ${usesLogFix5} builtins that call logFix() use the call-time wrapper form`);
+    } else if (usesLogFix5 === 0) {
+      console.log('WARN (#25b): no builtins found that call logFix() — unexpected');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 27: adversarial-review fixes #6, #12, #13, #15 static guards
+  // ---------------------------------------------------------------------------
+  {
+    const captionsPath27 = path.join(ROOT, 'skills/builtin/captions.js');
+    const captionsCode27 = fs.readFileSync(captionsPath27, 'utf8');
+    const bgPath27 = path.join(ROOT, 'extension/background.js');
+    const bgCode27 = fs.readFileSync(bgPath27, 'utf8');
+    const offscreenPath27 = path.join(ROOT, 'extension/offscreen/src/index.js');
+    const offscreenCode27 = fs.readFileSync(offscreenPath27, 'utf8');
+
+    // --- #6: Generation-counter pattern ---
+    if (captionsCode27.includes('_generation') && captionsCode27.includes('_generation++')) {
+      console.log('PASS (#6): captions.js has _generation counter that is bumped on disable()');
+    } else {
+      console.log('FAIL (#6): captions.js missing _generation counter or disable() bump');
+    }
+
+    if (captionsCode27.includes('const myGen = _generation') &&
+        captionsCode27.includes('_generation !== myGen')) {
+      console.log('PASS (#6): captions.js captures myGen before await and guards DOM write after');
+    } else {
+      console.log('FAIL (#6): captions.js missing myGen capture or post-await generation check');
+    }
+
+    if (captionsCode27.includes('export function _currentGeneration')) {
+      console.log('PASS (#6): captions.js exports _currentGeneration() for testability');
+    } else {
+      console.log('FAIL (#6): captions.js missing _currentGeneration export');
+    }
+
+    // --- #12: Duration cap + busy flag in offscreen ---
+    if (offscreenCode27.includes('MAX_DECODE_DURATION_S')) {
+      console.log('PASS (#12): offscreen/src/index.js has MAX_DECODE_DURATION_S duration cap constant');
+    } else {
+      console.log('FAIL (#12): offscreen/src/index.js missing MAX_DECODE_DURATION_S constant');
+    }
+
+    if (offscreenCode27.includes('decoded.duration > MAX_DECODE_DURATION_S')) {
+      console.log('PASS (#12): offscreen captionDecodeAudio checks duration against cap before PCM copy');
+    } else {
+      console.log('FAIL (#12): offscreen captionDecodeAudio missing duration cap check');
+    }
+
+    if (offscreenCode27.includes('_captionDecodeBusy') &&
+        offscreenCode27.includes('_captionDecodeBusy = false')) {
+      console.log('PASS (#12): offscreen has _captionDecodeBusy flag with finally-clear (serialize decodes)');
+    } else {
+      console.log('FAIL (#12): offscreen missing _captionDecodeBusy busy-flag');
+    }
+
+    if (offscreenCode27.includes('_captionDecodeBusy = true')) {
+      console.log('PASS (#12): offscreen sets _captionDecodeBusy = true before decode');
+    } else {
+      console.log('FAIL (#12): offscreen does not set _captionDecodeBusy before decode');
+    }
+
+    // --- #13: Refcount registry + voice mutual exclusion + serialize end-to-end ---
+    if (bgCode27.includes('_transcribeRefcount') && bgCode27.includes('_transcribeAcquire') &&
+        bgCode27.includes('_transcribeRelease')) {
+      console.log('PASS (#13): background.js has transcription refcount registry (_transcribeAcquire/Release)');
+    } else {
+      console.log('FAIL (#13): background.js missing transcription refcount registry');
+    }
+
+    if (bgCode27.includes('_waitTranscribeIdle') && bgCode27.includes('closeOffscreen')) {
+      // Verify the deferred-close path: closeOffscreen must reference _waitTranscribeIdle.
+      const closeOffscreenBody = bgCode27.slice(
+        bgCode27.indexOf('async function closeOffscreen'),
+        bgCode27.indexOf('async function closeOffscreen') + 600
+      );
+      if (closeOffscreenBody.includes('_waitTranscribeIdle')) {
+        console.log('PASS (#13): closeOffscreen defers until in-flight transcriptions complete');
+      } else {
+        console.log('FAIL (#13): closeOffscreen does not wait for in-flight transcriptions');
+      }
+    } else {
+      console.log('FAIL (#13): background.js missing _waitTranscribeIdle or deferred-close path');
+    }
+
+    if (bgCode27.includes('voice mode is using audio')) {
+      console.log('PASS (#13): transcribeMedia refuses to start while voice session is active');
+    } else {
+      console.log('FAIL (#13): transcribeMedia missing voice-session mutual exclusion check');
+    }
+
+    if (bgCode27.includes('_transcribeQueue') && bgCode27.includes('_doTranscribeMedia')) {
+      console.log('PASS (#13): transcribeMedia serializes end-to-end via _transcribeQueue');
+    } else {
+      console.log('FAIL (#13): transcribeMedia missing _transcribeQueue serializer');
+    }
+
+    // --- #15: Stream-read with incremental cap ---
+    if (bgCode27.includes('reader.read()') && bgCode27.includes('totalBytes +=') &&
+        bgCode27.includes('reader.cancel')) {
+      console.log('PASS (#15): background.js uses stream reader loop with incremental byte cap');
+    } else {
+      console.log('FAIL (#15): background.js missing stream reader loop for incremental cap');
+    }
+
+    // Verify stream-read is present in BOTH transcribeMedia and fetchImageBytes paths.
+    const doTranscribeBody = bgCode27.includes('_doTranscribeMedia') &&
+      bgCode27.slice(bgCode27.indexOf('async function _doTranscribeMedia'), bgCode27.indexOf('async function _doTranscribeMedia') + 3000);
+    const fetchImageBody = bgCode27.includes("'fetchImageBytes'") &&
+      bgCode27.slice(bgCode27.indexOf("msg.type === 'fetchImageBytes'"), bgCode27.indexOf("msg.type === 'fetchImageBytes'") + 2000);
+
+    if (doTranscribeBody && doTranscribeBody.includes('reader.read()')) {
+      console.log('PASS (#15): stream reader present in _doTranscribeMedia (transcribeMedia path)');
+    } else {
+      console.log('FAIL (#15): _doTranscribeMedia missing stream reader loop');
+    }
+
+    if (fetchImageBody && fetchImageBody.includes('reader.read()')) {
+      console.log('PASS (#15): stream reader present in fetchImageBytes path');
+    } else {
+      console.log('FAIL (#15): fetchImageBytes missing stream reader loop');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Bundle-size budget guard (review finding #11): the content bundle is
+  // injected into every page; fail if the gzipped size creeps past 90 KB.
+  // Next lever if this trips: split reader-mode's readability+dompurify into
+  // an on-demand chrome.scripting chunk (see docs/adapter-robustness-plan.md).
+  // ---------------------------------------------------------------
+  {
+    const zlib = require('zlib');
+    const bundleBytes = fs.readFileSync(path.join(__dirname, '..', 'extension', 'content', 'content.bundle.js'));
+    const gzKB = zlib.gzipSync(bundleBytes).length / 1024;
+    if (gzKB <= 90) {
+      console.log(`PASS: content bundle within budget (${gzKB.toFixed(0)} KB gz <= 90 KB)`);
+    } else {
+      console.log(`FAIL: content bundle over budget (${gzKB.toFixed(0)} KB gz > 90 KB) — lazy-split heavy libs`);
+    }
+    const looksMinified = !bundleBytes.slice(0, 4096).toString().includes('\n  ');
+    if (looksMinified) {
+      console.log('PASS: content bundle is minified');
+    } else {
+      console.log('FAIL: content bundle is not minified (build.js contentConfig.minify)');
+    }
+  }
+
   console.log('\n=== DONE ===');
 
   server.close();

@@ -375,6 +375,72 @@ async function main() {
       profileRatio >= 1.1 && profileRatio <= 1.3,
       `ratio=${profileRatio.toFixed(3)} (${paaSizeAfterProfile}px / ${baselineParaSize}px)`);
 
+    // ── J: Regression #9 — font-scale idempotency + no child double-scaling ──
+    console.log('\n--- J: font-scale idempotency + dynamic-child double-scale regression ---');
+
+    // Reset to a clean state first.
+    await sendToContent({ type: 'disableTool', tool: 'VisualAssist' });
+    await sleep(500);
+
+    // Apply fontScale 1.5.
+    await sendToContent({
+      type: 'enableTool', tool: 'VisualAssist',
+      options: { fontScale: 1.5, contrastMode: 'none', lineHeight: 1.5,
+                 letterSpacing: 0, dyslexiaFont: false, largeCursor: false,
+                 enhanceFocus: false, readingGuide: false }
+    });
+    await sleep(2000); // wait for chunked traversal
+
+    // Record para size after first sweep.
+    const sizeAfterFirstSweep = await getPx('#baseline-para', 'fontSize');
+
+    // Run the sweep a second time by re-enabling with the same scale.
+    // This simulates what happens when a MutationObserver fires and
+    // _applyFontScale is called again on an already-scaled DOM.
+    await sendToContent({
+      type: 'enableTool', tool: 'VisualAssist',
+      options: { fontScale: 1.5, contrastMode: 'none', lineHeight: 1.5,
+                 letterSpacing: 0, dyslexiaFont: false, largeCursor: false,
+                 enhanceFocus: false, readingGuide: false }
+    });
+    await sleep(2000);
+
+    const sizeAfterSecondSweep = await getPx('#baseline-para', 'fontSize');
+    check('J1: font-scale sweep is idempotent (same size after running twice)',
+      Math.abs(sizeAfterSecondSweep - sizeAfterFirstSweep) <= 1,
+      `first=${sizeAfterFirstSweep}px second=${sizeAfterSecondSweep}px`);
+
+    // J2: dynamically-added child span in a scaled paragraph must NOT double-scale.
+    // Inject a span into #baseline-para while the scale is active, then
+    // trigger the MutationObserver sweep (via the registered sweep callback),
+    // and check the span's computed size is ~1.5× the baseline (not ~2.25×).
+    const baselineSizeForJ = await getPx('#baseline-para', 'fontSize');
+
+    // Inject the span into the page DOM (in the page context).
+    await page.evaluate(() => {
+      const para = document.getElementById('baseline-para');
+      if (para) {
+        const span = document.createElement('span');
+        span.id = 'dynamic-child-span';
+        span.textContent = ' (dynamic child)';
+        para.appendChild(span);
+      }
+    });
+
+    // Wait for the MutationObserver + debounce to trigger the sweep.
+    // The sweep debounce is 500ms; add buffer.
+    await sleep(1500);
+
+    // The span's computed size should be ~sizeAfterFirstSweep (i.e. the para's
+    // scaled size), not ~sizeAfterFirstSweep * 1.5 (double-scaled).
+    const dynamicSpanSize = await getPx('#dynamic-child-span', 'fontSize');
+    // Allow ±2px tolerance.  The expected value is the para's scaled size
+    // (baselineSizeForJ), not baselinePx * 1.5 * 1.5.
+    const spanDelta = Math.abs(dynamicSpanSize - baselineSizeForJ);
+    check('J2: dynamically-added child span NOT double-scaled (size ≈ parent scaled size)',
+      spanDelta <= 2,
+      `spanSize=${dynamicSpanSize}px parentScaledSize=${baselineSizeForJ}px delta=${spanDelta.toFixed(1)}px`);
+
   } finally {
     if (!KEEP) {
       await browser.close();

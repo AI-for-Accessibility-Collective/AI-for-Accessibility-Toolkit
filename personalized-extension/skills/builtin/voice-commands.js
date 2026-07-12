@@ -109,12 +109,20 @@ export const VoiceCommands = {
   async enable(options = {}) {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       announce('Voice recognition not supported in this browser');
-      return;
+      // #18: Return false so enableTool does not phantom-add 'VoiceCommands' to
+      // enabledTools when the browser lacks speech recognition support.
+      return false;
     }
     // Mutual exclusion: don't start if a Live session is already active.
+    // #18: Return false so enableTool does not phantom-add 'VoiceCommands' to
+    // enabledTools. The user-toggle should fail honestly rather than report ON
+    // when the recognizer never started. If the user wants voice commands after
+    // the Live session ends, they can toggle the control again at that point —
+    // this is simpler and safer than arming a hidden auto-resume listener that
+    // would activate unexpectedly.
     if (await this._isLiveActive()) {
       announce('Voice mode is already listening — say things there instead');
-      return;
+      return false;
     }
 
     this.settings = { ...this.settings, ...options };

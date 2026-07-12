@@ -78,7 +78,7 @@ globalThis.chrome = {
 
 // Import after stubs are set.
 const captionsModule = await import('../skills/builtin/captions.js');
-const { buildVTT, axeHandlers } = captionsModule;
+const { buildVTT, axeHandlers, _currentGeneration } = captionsModule;
 
 // ---------------------------------------------------------------------------
 // 1. VTT builder tests
@@ -252,6 +252,8 @@ check('axeHandlers exports audio-caption key', typeof axeHandlers['audio-caption
 // ---------------------------------------------------------------------------
 
 const captionsCode = fs.readFileSync(path.join(__dirname, '../skills/builtin/captions.js'), 'utf8');
+const bgCode = fs.readFileSync(path.join(__dirname, '../extension/background.js'), 'utf8');
+const offscreenCode = fs.readFileSync(path.join(__dirname, '../extension/offscreen/src/index.js'), 'utf8');
 
 check('Track label mentions AI-generated', captionsCode.includes("'AI-generated (may contain errors)'"));
 check('Notice string present in captions.js', captionsCode.includes("Can't reach this player"));
@@ -261,6 +263,122 @@ check('Real chunk offsets used in VTT (buildVTT takes chunks with startSec/endSe
 check('No dataset.ai4a11yCaptioned permanent latch', !captionsCode.includes("dataset.ai4a11yCaptioned = 'failed'"));
 check('pagehide self-disable removed', !captionsCode.includes("'pagehide'"));
 check('wrapper position restored on disable (origWrapperPosition)', captionsCode.includes('origWrapperPosition'));
+
+// ---------------------------------------------------------------------------
+// 7b. Generation-counter static checks (finding #6)
+// ---------------------------------------------------------------------------
+
+check('_generation counter declared in captions.js', captionsCode.includes('_generation'));
+check('_currentGeneration exported from captions.js', captionsCode.includes('export function _currentGeneration'));
+check('_generation is bumped in disable() (_generation++)', captionsCode.includes('_generation++'));
+check('myGen captured before await in _processMedia', captionsCode.includes('const myGen = _generation'));
+check('Generation check after cloud await', captionsCode.includes('_generation !== myGen'));
+
+// ---------------------------------------------------------------------------
+// 7c. Generation-counter live test — _currentGeneration() is importable
+// ---------------------------------------------------------------------------
+
+{
+  const genBefore = _currentGeneration();
+  check('_currentGeneration() returns a number', typeof genBefore === 'number');
+  // Captions.disable() increments _generation. We can call disable() even when
+  // not enabled (it returns early) — but the counter only bumps when enabled.
+  // So just verify the helper is callable and consistent across calls.
+  const genAgain = _currentGeneration();
+  check('_currentGeneration() is stable across calls when idle', genBefore === genAgain);
+}
+
+// ---------------------------------------------------------------------------
+// 7d. Duration-cap static checks (finding #12)
+// ---------------------------------------------------------------------------
+
+check('MAX_DECODE_DURATION_S constant present in offscreen/src/index.js',
+  offscreenCode.includes('MAX_DECODE_DURATION_S'));
+check('Duration cap check in captionDecodeAudio (decoded.duration > MAX_DECODE_DURATION_S)',
+  offscreenCode.includes('decoded.duration > MAX_DECODE_DURATION_S'));
+check('_captionDecodeBusy busy-flag in offscreen/src/index.js',
+  offscreenCode.includes('_captionDecodeBusy'));
+check('Busy flag set to false in finally block (offscreen)',
+  offscreenCode.includes('_captionDecodeBusy = false'));
+
+// ---------------------------------------------------------------------------
+// 7e. Duration-cap decision unit test (pure function simulation)
+// ---------------------------------------------------------------------------
+
+{
+  const MAX_DECODE_DURATION_S = 20 * 60; // 1200s — matches the constant in index.js
+
+  function durationCapDecision(durationS) {
+    return durationS > MAX_DECODE_DURATION_S ? 'reject' : 'accept';
+  }
+
+  check('Duration cap: 5 min audio accepted', durationCapDecision(5 * 60) === 'accept');
+  check('Duration cap: 20 min audio accepted (boundary)', durationCapDecision(20 * 60) === 'accept');
+  check('Duration cap: 20 min + 1 s rejected', durationCapDecision(20 * 60 + 1) === 'reject');
+  check('Duration cap: 60 min audio rejected', durationCapDecision(60 * 60) === 'reject');
+  check('Duration cap: 53 min (50MB mp3 at 128kbps) rejected', durationCapDecision(53 * 60) === 'reject');
+}
+
+// ---------------------------------------------------------------------------
+// 7f. Stream-read cap static checks (finding #15)
+// ---------------------------------------------------------------------------
+
+check('Stream reader loop present in background.js (reader.read())',
+  bgCode.includes('reader.read()'));
+check('Incremental byte counter in background.js (totalBytes +=)',
+  bgCode.includes('totalBytes +='));
+check('Stream abort on cap exceeded in background.js (reader.cancel)',
+  bgCode.includes('reader.cancel'));
+check('Stream reader used in transcribeMedia path',
+  bgCode.includes('_doTranscribeMedia'));
+check('Stream reader used in fetchImageBytes path',
+  bgCode.includes('resp.body.getReader()'));
+
+// ---------------------------------------------------------------------------
+// 7g. Stream-read accumulator unit test (pure function with fake chunks)
+// ---------------------------------------------------------------------------
+
+{
+  const MAX_CAP = 8 * 1024 * 1024; // 8MB — matches fetchImageBytes
+
+  /**
+   * Simulates stream accumulation with incremental cap check.
+   * Returns { aborted, totalBytes } mimicking the reader loop logic.
+   */
+  function simulateStreamRead(chunkSizes, cap) {
+    let totalBytes = 0;
+    let aborted = false;
+    for (const size of chunkSizes) {
+      totalBytes += size;
+      if (totalBytes > cap) {
+        aborted = true;
+        break;
+      }
+    }
+    return { aborted, totalBytes };
+  }
+
+  // Four 2MB chunks → 8MB total, exactly at the cap: accepted.
+  const r1 = simulateStreamRead([2097152, 2097152, 2097152, 2097152], MAX_CAP);
+  check('Stream accumulator: four 2MB chunks (=8MB) accepted', !r1.aborted && r1.totalBytes === MAX_CAP);
+
+  // Five 2MB chunks → 10MB total, exceeds cap at chunk 5: aborted.
+  const r2 = simulateStreamRead([2097152, 2097152, 2097152, 2097152, 2097152], MAX_CAP);
+  check('Stream accumulator: five 2MB chunks (>8MB) aborted', r2.aborted);
+  check('Stream accumulator: abort happens at correct cumulative size', r2.totalBytes === 5 * 2097152);
+
+  // Single chunk at cap + 1: aborted immediately.
+  const r3 = simulateStreamRead([MAX_CAP + 1], MAX_CAP);
+  check('Stream accumulator: single chunk one byte over cap is aborted', r3.aborted);
+
+  // No chunks: accepted with zero bytes.
+  const r4 = simulateStreamRead([], MAX_CAP);
+  check('Stream accumulator: empty stream accepted with 0 bytes', !r4.aborted && r4.totalBytes === 0);
+
+  // Many small chunks summing to just under cap: accepted.
+  const r5 = simulateStreamRead(new Array(100).fill(80 * 1024), MAX_CAP); // 100 × 80KB = 8000KB < 8192KB
+  check('Stream accumulator: 100 × 80KB (< 8MB) accepted', !r5.aborted);
+}
 
 // ---------------------------------------------------------------------------
 // Summary

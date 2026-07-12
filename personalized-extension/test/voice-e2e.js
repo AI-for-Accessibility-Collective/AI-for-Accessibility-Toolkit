@@ -117,15 +117,30 @@ async function main() {
     const page = wirePage(await browser.newPage(), 'fixture');
     await page.goto('http://localhost:8791/', { waitUntil: 'networkidle2' });
     await sleep(1200); // content script runs at document_idle + async init
-    // fontScale is applied as chunked inline text scaling (W2a replaced html{zoom});
-    // scaled elements carry data-ai4a11y-font-scale and a ~1.5x computed font-size.
-    const vaScale = await page.evaluate(() => {
+    // fontScale is applied as chunked inline text scaling (W2a replaced html{zoom}).
+    // Each scaled element carries:
+    //   dataset.ai4a11yFontScale = String(scale) — pinned to the EXACT factor written
+    //   computed font-size ≈ baseline × scale
+    // (#23 fix) Assert the exact factor 1.5 that adjust_settings({fontScale:150}) wrote,
+    // AND verify the computed size is within ±1px of baseline × 1.5 (16px default → 24px).
+    const vaScaleInfo = await page.evaluate(() => {
       const el = document.querySelector('[data-ai4a11y-font-scale]');
       if (!el) return null;
-      return parseFloat(getComputedStyle(el).fontSize);
+      return {
+        factor: el.dataset.ai4a11yFontScale,   // exact string written by visual-assist.js
+        px: parseFloat(getComputedStyle(el).fontSize),
+        baselineGuess: parseFloat(getComputedStyle(el).fontSize) / 1.5, // approximate
+      };
     });
-    check('content script applied VisualAssist from the voice-written setting',
-      vaScale !== null && vaScale >= 20, `computed font-size: ${vaScale}px`);
+    // (#23) Primary assertion: the EXACT scale-factor dataset value must be '1.5'
+    check('content script applied VisualAssist from the voice-written setting — factor=1.5',
+      vaScaleInfo !== null && vaScaleInfo.factor === '1.5',
+      vaScaleInfo ? `factor=${vaScaleInfo.factor}` : 'no scaled element found');
+    // (#23) Secondary assertion: computed px ≈ baseline (16px) × 1.5 = 24px, allow ±1px
+    const expectedPx = 24; // fixture <p> inherits UA default 16px; 16 × 1.5 = 24
+    check('content script font-size ≈ 24px (16px baseline × 1.5)',
+      vaScaleInfo !== null && Math.abs(vaScaleInfo.px - expectedPx) <= 1,
+      vaScaleInfo ? `computed=${vaScaleInfo.px}px expected=${expectedPx}px` : 'no scaled element found');
 
     // ============================================================
     // Beat 1b — an explicitly out-of-scope change persists but does NOT

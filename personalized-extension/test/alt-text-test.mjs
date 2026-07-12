@@ -30,9 +30,29 @@ function check(name, cond, detail) {
 // them.  We stub at module scope before the dynamic import.
 // ---------------------------------------------------------------------------
 
-// dom-accessibility-api references window/document in its module body.
-// Provide minimal stubs so the import succeeds in Node.
+// ---------------------------------------------------------------------------
+// (#22 fix) Import the REAL exported functions from auto-alt-text.js so
+// test assertions bind to the shipped implementation, not a private copy.
+//
+// Blocker analysis: auto-alt-text.js imports utils/observe.js, whose module
+// body calls window.addEventListener('popstate', ...) at top level. That is
+// the sole import-time browser side effect that blocks a plain Node import.
+// The dom-accessibility-api comment below was a misdiagnosis — that package is
+// imported at the module level of auto-alt-text.js but computeAccessibleName
+// is only CALLED inside shouldDescribe's callers, not in shouldDescribe itself,
+// and the ESM import of dom-accessibility-api itself does not call browser APIs
+// at module-evaluation time in recent versions.
+//
+// Fix: add window.addEventListener stub BEFORE the dynamic import so observe.js
+// does not throw. The rest of the existing stubs (window, document, chrome, etc.)
+// already satisfy the other top-level references.
+// ---------------------------------------------------------------------------
+
+// Stubs must be set BEFORE the dynamic import below executes.
 globalThis.window = globalThis.window || {};
+// (#22 fix) observe.js calls window.addEventListener at module-evaluation time.
+globalThis.window.addEventListener = globalThis.window.addEventListener || (() => {});
+globalThis.window.removeEventListener = globalThis.window.removeEventListener || (() => {});
 globalThis.document = globalThis.document || {
   createElement: () => ({ getContext: () => null, toDataURL: () => '' }),
   createElementNS: () => ({}),
@@ -48,80 +68,22 @@ globalThis.getComputedStyle = globalThis.getComputedStyle || (() => ({
   display: 'block', visibility: 'visible', opacity: '1'
 }));
 
-// Stub computeAccessibleName from dom-accessibility-api before importing our module.
-// We intercept the module path by providing a stub through globalThis.
-// The real function is not needed here — shouldDescribe receives pre-computed values.
-// We use a Node import hook workaround: since dom-accessibility-api is an ESM
-// package, we must fake it at the loader level.  The easiest approach is to
-// re-export a stub module using --experimental-vm-modules — but that adds
-// a flag.  Instead, we test shouldDescribe by importing it directly with
-// the dependency on computeAccessibleName satisfied through a minimal shim in
-// the module file itself (the function receives accessibleName as a string in
-// elInfo, so computeAccessibleName is never called by shouldDescribe).
-//
-// We therefore load the module with a minimal override of the import map.
-// Since we can't patch ESM imports directly in Node without loader hooks,
-// we instead replicate the pure logic of the three exported functions here
-// (they are self-contained; no browser API is called inside the pure path).
-// This mirrors the pattern used in foundations-test.mjs (inlines the logic).
-
-// ---------------------------------------------------------------------------
-// Replicated pure logic (matches the exported functions exactly)
-// ---------------------------------------------------------------------------
-
-// --- isConfidentDescription ---
-
-const REFUSAL_PREFIXES = ['I cannot', "I'm unable", 'I am unable', 'Sorry', 'I cannot describe', 'Unfortunately'];
-const UNCERTAINTY_TERMS = ['unsure', "I don't know", 'unclear', 'I cannot tell', 'cannot determine'];
-const GENERIC_JUNK = new Set(['image', 'picture', 'photo', 'photograph', 'graphic', 'icon', 'logo', 'img']);
-
-function isConfidentDescription(text) {
-  if (typeof text !== 'string') return false;
-  const t = text.trim();
-  if (t.length < 3 || t.length > 300) return false;
-  if (GENERIC_JUNK.has(t.toLowerCase())) return false;
-  for (const prefix of REFUSAL_PREFIXES) {
-    if (t.startsWith(prefix)) return false;
+// Import the REAL pure exports. If the import throws, abort immediately with a
+// clear message so the failure is not mistaken for test failures.
+const autoAltTextPath = new URL('../skills/builtin/auto-alt-text.js', import.meta.url).href;
+let isConfidentDescription, fitDimensions, shouldDescribe;
+try {
+  const mod = await import(autoAltTextPath);
+  isConfidentDescription = mod.isConfidentDescription;
+  fitDimensions = mod.fitDimensions;
+  shouldDescribe = mod.shouldDescribe;
+  if (typeof isConfidentDescription !== 'function' || typeof fitDimensions !== 'function' || typeof shouldDescribe !== 'function') {
+    throw new Error(`Missing exports: isConfidentDescription=${typeof isConfidentDescription}, fitDimensions=${typeof fitDimensions}, shouldDescribe=${typeof shouldDescribe}`);
   }
-  for (const term of UNCERTAINTY_TERMS) {
-    if (t.includes(term)) return false;
-  }
-  return true;
-}
-
-// --- fitDimensions ---
-
-const MAX_LONG_EDGE = 512;
-
-function fitDimensions(naturalWidth, naturalHeight) {
-  const w = Math.max(naturalWidth, 1);
-  const h = Math.max(naturalHeight, 1);
-  const scale = Math.min(1, MAX_LONG_EDGE / Math.max(w, h));
-  return { w: Math.round(w * scale), h: Math.round(h * scale) };
-}
-
-// --- shouldDescribe ---
-
-function shouldDescribe(elInfo) {
-  const {
-    hasAltAttr,
-    isEmptyAlt,
-    isAriaHidden,
-    role,
-    renderedWidth = 0,
-    renderedHeight = 0,
-    isElementVisible = true,
-    accessibleName = '',
-  } = elInfo;
-
-  if (isEmptyAlt) return { skip: true, reason: 'decorative alt="" (author intent)' };
-  if (isAriaHidden) return { skip: true, reason: 'aria-hidden ancestor' };
-  if (role === 'presentation' || role === 'none') return { skip: true, reason: `role="${role}"` };
-  if (renderedWidth < 32 || renderedHeight < 32) return { skip: true, reason: `rendered size ${renderedWidth}×${renderedHeight} < 32×32` };
-  if (!isElementVisible) return { skip: true, reason: 'element not visible' };
-  if (accessibleName.trim().length > 0) return { skip: true, reason: 'already has accessible name' };
-
-  return { skip: false, reason: '' };
+  console.log('PASS: imported real isConfidentDescription / fitDimensions / shouldDescribe from auto-alt-text.js');
+} catch (err) {
+  console.error('FAIL: could not import auto-alt-text.js —', err.message);
+  process.exit(1);
 }
 
 // ---------------------------------------------------------------------------
@@ -289,6 +251,105 @@ function shouldDescribe(elInfo) {
   const combo = shouldDescribe(el({ isAriaHidden: true, renderedWidth: 8, renderedHeight: 8 }));
   check('shouldDescribe: aria-hidden + tiny → skip (aria-hidden wins)', combo.skip, combo);
   check('shouldDescribe: aria-hidden reason cited', combo.reason.includes('aria-hidden'), combo.reason);
+}
+
+// ---------------------------------------------------------------------------
+// 4. SVG prev-role restore decision logic (#4)
+//
+// We replicate the sentinel logic from generateSvgDescription / disable() here,
+// which is consistent with this file's pattern for the pure-logic exports.
+// Tests the decision tree:
+//   - svg had no role → sentinel stored → revert removes role
+//   - svg had role="img" (the axe-triggered case) → stored → revert restores
+//   - svg had a different author role → stored → revert restores that role
+//   - no marker (defensive) → revert removes role (same as sentinel)
+// ---------------------------------------------------------------------------
+{
+  const EMPTY_SENTINEL = '\x00';
+  const PREV_ROLE_ATTR = 'data-ai4a11y-prev-role';
+
+  // Minimal mock element.
+  function makeSvg(attrs = {}) {
+    const el = {
+      _attrs: { ...attrs },
+      getAttribute(n) { return this._attrs[n] ?? null; },
+      setAttribute(n, v) { this._attrs[n] = v; },
+      removeAttribute(n) { delete this._attrs[n]; },
+      hasAttribute(n) { return n in this._attrs; },
+    };
+    return el;
+  }
+
+  // Replicate generateSvgDescription's role-provenance write logic.
+  function applyRole(svg) {
+    const priorRole = svg.hasAttribute('role')
+      ? (svg.getAttribute('role') || EMPTY_SENTINEL)
+      : EMPTY_SENTINEL;
+    svg.setAttribute(PREV_ROLE_ATTR, priorRole);
+    if (priorRole === EMPTY_SENTINEL) {
+      svg.setAttribute('role', 'img');
+    }
+  }
+
+  // Replicate disable()'s SVG revert logic.
+  function revertRole(svg) {
+    const prevRole = svg.getAttribute(PREV_ROLE_ATTR);
+    if (prevRole === null || prevRole === EMPTY_SENTINEL) {
+      svg.removeAttribute('role');
+    } else {
+      svg.setAttribute('role', prevRole);
+    }
+    svg.removeAttribute(PREV_ROLE_ATTR);
+  }
+
+  // Case A: SVG had no role → we add role="img" → revert removes it.
+  {
+    const svg = makeSvg({});
+    check('prev-role (A): svg with no role has no role attr before apply', !svg.hasAttribute('role'));
+    applyRole(svg);
+    check('prev-role (A): role="img" set after apply (was absent)', svg.getAttribute('role') === 'img');
+    check('prev-role (A): sentinel stored in prev-role', svg.getAttribute(PREV_ROLE_ATTR) === EMPTY_SENTINEL);
+    revertRole(svg);
+    check('prev-role (A): role removed after revert (sentinel → removeAttribute)', !svg.hasAttribute('role'));
+    check('prev-role (A): prev-role marker removed after revert', !svg.hasAttribute(PREV_ROLE_ATTR));
+  }
+
+  // Case B: SVG already had role="img" (exactly what the svg-img-alt axe rule flags) →
+  //   we do NOT re-set role → revert restores the original role="img".
+  {
+    const svg = makeSvg({ role: 'img' });
+    applyRole(svg);
+    check('prev-role (B): prior role="img" stored (not sentinel)',
+      svg.getAttribute(PREV_ROLE_ATTR) === 'img');
+    check('prev-role (B): role unchanged after apply (still "img")',
+      svg.getAttribute('role') === 'img');
+    revertRole(svg);
+    check('prev-role (B): role restored to "img" after revert (not removed)',
+      svg.getAttribute('role') === 'img');
+    check('prev-role (B): prev-role marker removed', !svg.hasAttribute(PREV_ROLE_ATTR));
+  }
+
+  // Case C: SVG had a different author role (e.g. "graphics-document").
+  {
+    const svg = makeSvg({ role: 'graphics-document' });
+    applyRole(svg);
+    check('prev-role (C): prior "graphics-document" stored',
+      svg.getAttribute(PREV_ROLE_ATTR) === 'graphics-document');
+    check('prev-role (C): role unchanged after apply (still "graphics-document")',
+      svg.getAttribute('role') === 'graphics-document');
+    revertRole(svg);
+    check('prev-role (C): role restored to "graphics-document" after revert',
+      svg.getAttribute('role') === 'graphics-document');
+  }
+
+  // Case D: No prev-role marker present (defensive — guard: treat like sentinel).
+  {
+    const svg = makeSvg({ role: 'img' });
+    // Deliberately skip applyRole — simulate missing marker.
+    revertRole(svg);
+    check('prev-role (D): no marker → role removed (defensive, same as sentinel)',
+      !svg.hasAttribute('role'));
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -243,6 +243,41 @@ const OFFSCREEN_PATH = 'offscreen/offscreen.html';
 const OFFSCREEN_REASONS = ['USER_MEDIA', 'AUDIO_PLAYBACK'];
 let _offscreenCreating = null;
 
+// ---------------------------------------------------------------------------
+// Transcription refcount registry (finding #13)
+// ---------------------------------------------------------------------------
+// Tracks the number of in-flight transcribeMedia jobs so that a side-panel
+// close (which calls closeOffscreen via voice port disconnect) does not abort
+// captions that are mid-decode. closeOffscreen is deferred until the refcount
+// reaches zero or a 60-second grace period expires.
+//
+// Also used to enforce concurrency=1 end-to-end: the second caller waits for
+// the first to finish before proceeding (serialize decodes).
+let _transcribeRefcount = 0;
+let _transcribeIdleCallbacks = []; // resolved when _transcribeRefcount hits 0
+
+function _transcribeAcquire() {
+  _transcribeRefcount++;
+}
+
+function _transcribeRelease() {
+  _transcribeRefcount = Math.max(0, _transcribeRefcount - 1);
+  if (_transcribeRefcount === 0) {
+    const cbs = _transcribeIdleCallbacks.splice(0);
+    for (const cb of cbs) cb();
+  }
+}
+
+/** Returns a promise that resolves when all in-flight transcriptions finish. */
+function _waitTranscribeIdle() {
+  if (_transcribeRefcount === 0) return Promise.resolve();
+  return new Promise((resolve) => { _transcribeIdleCallbacks.push(resolve); });
+}
+
+// Serialize end-to-end: only one full transcribeMedia job runs at a time.
+// The queue contains { run: () => Promise<void> } items.
+let _transcribeQueue = Promise.resolve();
+
 async function _hasOffscreen() {
   if (!chrome.offscreen) return false;
   // hasDocument is supported on Chrome 116+. Fallback uses getContexts.
@@ -270,6 +305,16 @@ async function ensureOffscreen() {
 
 async function closeOffscreen() {
   if (!(await _hasOffscreen())) return;
+  // If captions transcription is in flight, wait for it to finish before
+  // tearing down the shared offscreen page (finding #13). Cap at 60 s so a
+  // hung LLM call can't prevent the page from ever closing.
+  if (_transcribeRefcount > 0) {
+    const CLOSE_DEFER_MS = 60_000;
+    await Promise.race([
+      _waitTranscribeIdle(),
+      new Promise((r) => setTimeout(r, CLOSE_DEFER_MS)),
+    ]);
+  }
   try { await chrome.offscreen.closeDocument(); } catch {}
 }
 
@@ -564,6 +609,134 @@ function handleBrowserHarnessMessage(msg, sendResponse) {
     }
   })();
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// _doTranscribeMedia — inner worker for the transcribeMedia message handler.
+// Extracted so it can be called through the serialize queue without the outer
+// voice-mutual-exclusion + refcount boilerplate. Calls sendResponse directly.
+// (finding #13 + #15)
+// ---------------------------------------------------------------------------
+async function _doTranscribeMedia(url, apiKey, MAX_MEDIA_BYTES, CHUNK_CONCURRENT, sendResponse) {
+  // Step 1: fetch media bytes via streaming reader with incremental size cap
+  // (finding #15 — content-length is missing for chunked responses, so we
+  // must count bytes as they arrive rather than relying on the header alone).
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+  let mediaResp;
+  try {
+    mediaResp = await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  if (!mediaResp.ok) {
+    sendResponse({ error: `transcribeMedia: fetch failed ${mediaResp.status}` });
+    return;
+  }
+
+  // Pre-check content-length when present (fast-path reject for large files).
+  const contentLength = parseInt(mediaResp.headers.get('content-length') || '0', 10);
+  if (contentLength > MAX_MEDIA_BYTES) {
+    sendResponse({ error: 'transcribeMedia: media too large (>50MB)' });
+    return;
+  }
+
+  // Stream-read with an incremental byte counter so chunked/no-header
+  // responses are also capped before the full body is in memory.
+  let arrayBuffer;
+  {
+    const reader = mediaResp.body.getReader();
+    const chunks = [];
+    let totalBytes = 0;
+    let aborted = false;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > MAX_MEDIA_BYTES) {
+          aborted = true;
+          reader.cancel().catch(() => {});
+          break;
+        }
+        chunks.push(value);
+      }
+    } catch (e) {
+      reader.cancel().catch(() => {});
+      throw e;
+    }
+    if (aborted) {
+      sendResponse({ error: 'transcribeMedia: media too large (>50MB)' });
+      return;
+    }
+    // Assemble into a single ArrayBuffer.
+    const combined = new Uint8Array(totalBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      combined.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    arrayBuffer = combined.buffer;
+  }
+
+  // Step 2: ensure offscreen doc exists.
+  await ensureOffscreen();
+
+  // Step 3: send bytes to offscreen for decode+chunk.
+  // Transfer as ArrayBuffer via structured clone (not base64 — avoids 33% overhead
+  // for a buffer that may be tens of MB).
+  const decodeResp = await new Promise((resolve) => {
+    chrome.runtime.sendMessage(
+      { type: 'captionDecodeAudio', buffer: arrayBuffer },
+      (r) => { resolve(r || {}); }
+    );
+  });
+  if (decodeResp.error) {
+    sendResponse({ error: `transcribeMedia: decode error: ${decodeResp.error}` });
+    return;
+  }
+  const wavChunks = decodeResp.chunks; // [{startSec, endSec, wavBase64}]
+  if (!Array.isArray(wavChunks) || !wavChunks.length) {
+    sendResponse({ error: 'transcribeMedia: no audio chunks returned' });
+    return;
+  }
+
+  // Step 4: transcribe each chunk via Gemini (2 concurrent).
+  const results = new Array(wavChunks.length);
+  const queue = wavChunks.map((c, i) => ({ ...c, index: i }));
+
+  async function processChunk(item) {
+    const { startSec, endSec, wavBase64, index } = item;
+    try {
+      const text = await callGemini(
+        'Transcribe this audio exactly. Return only the transcript text, nothing else.',
+        apiKey,
+        { audioParts: [{ mimeType: 'audio/wav', data: wavBase64 }] }
+      );
+      results[index] = { startSec, endSec, text: (text || '').trim() };
+    } catch (e) {
+      console.warn('[AI4A11y] chunk transcription error:', e.message);
+      results[index] = { startSec, endSec, text: '' };
+    }
+  }
+
+  // Sliding window of CHUNK_CONCURRENT.
+  let qi = 0;
+  async function runWorker() {
+    while (qi < queue.length) {
+      const item = queue[qi++];
+      await processChunk(item);
+    }
+  }
+  const workers = [];
+  for (let w = 0; w < Math.min(CHUNK_CONCURRENT, queue.length); w++) {
+    workers.push(runWorker());
+  }
+  await Promise.all(workers);
+
+  // Filter empty chunks, return the rest.
+  const chunks = results.filter(c => c && c.text);
+  sendResponse({ chunks });
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -970,88 +1143,33 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           return;
         }
 
-        // Step 1: fetch media bytes.
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
-        let mediaResp;
+        // Mutual exclusion with voice Live session (finding #13): if the voice
+        // WebSocket is active, the shared offscreen AudioContext is in use for
+        // mic capture / playback. Attempting to decode media audio on top would
+        // stack AudioContexts and risk disrupting the session. Return a retryable
+        // error so the adapter shows an honest notice to the user.
+        const { voiceState: vs } = await chrome.storage.local.get('voiceState');
+        if (vs && vs.connection !== 'disconnected' && vs.connection) {
+          sendResponse({
+            error: 'transcribeMedia: voice mode is using audio — try again after the voice session ends',
+            retryable: true,
+          });
+          return;
+        }
+
+        // Serialize end-to-end: queue this job behind any already-running decode
+        // (finding #13 — concurrent per-video decodes stack AudioContexts).
+        let resolveJob;
+        const jobPromise = new Promise((r) => { resolveJob = r; });
+        _transcribeQueue = _transcribeQueue.then(() => jobPromise);
+
+        _transcribeAcquire();
         try {
-          mediaResp = await fetch(url, { signal: controller.signal });
+          await _doTranscribeMedia(url, apiKey, MAX_MEDIA_BYTES, CHUNK_CONCURRENT, sendResponse);
         } finally {
-          clearTimeout(timeoutId);
+          _transcribeRelease();
+          resolveJob();
         }
-        if (!mediaResp.ok) {
-          sendResponse({ error: `transcribeMedia: fetch failed ${mediaResp.status}` });
-          return;
-        }
-        const contentLength = parseInt(mediaResp.headers.get('content-length') || '0', 10);
-        if (contentLength > MAX_MEDIA_BYTES) {
-          sendResponse({ error: 'transcribeMedia: media too large (>50MB)' });
-          return;
-        }
-        const arrayBuffer = await mediaResp.arrayBuffer();
-        if (arrayBuffer.byteLength > MAX_MEDIA_BYTES) {
-          sendResponse({ error: 'transcribeMedia: media too large (>50MB)' });
-          return;
-        }
-
-        // Step 2: ensure offscreen doc exists.
-        await ensureOffscreen();
-
-        // Step 3: send bytes to offscreen for decode+chunk.
-        // Transfer as ArrayBuffer via structured clone (not base64 — avoids 33% overhead
-        // for a buffer that may be tens of MB).
-        const decodeResp = await new Promise((resolve) => {
-          chrome.runtime.sendMessage(
-            { type: 'captionDecodeAudio', buffer: arrayBuffer },
-            (r) => { resolve(r || {}); }
-          );
-        });
-        if (decodeResp.error) {
-          sendResponse({ error: `transcribeMedia: decode error: ${decodeResp.error}` });
-          return;
-        }
-        const wavChunks = decodeResp.chunks; // [{startSec, endSec, wavBase64}]
-        if (!Array.isArray(wavChunks) || !wavChunks.length) {
-          sendResponse({ error: 'transcribeMedia: no audio chunks returned' });
-          return;
-        }
-
-        // Step 4: transcribe each chunk via Gemini (2 concurrent).
-        const results = new Array(wavChunks.length);
-        const queue = wavChunks.map((c, i) => ({ ...c, index: i }));
-
-        async function processChunk(item) {
-          const { startSec, endSec, wavBase64, index } = item;
-          try {
-            const text = await callGemini(
-              'Transcribe this audio exactly. Return only the transcript text, nothing else.',
-              apiKey,
-              { audioParts: [{ mimeType: 'audio/wav', data: wavBase64 }] }
-            );
-            results[index] = { startSec, endSec, text: (text || '').trim() };
-          } catch (e) {
-            console.warn('[AI4A11y] chunk transcription error:', e.message);
-            results[index] = { startSec, endSec, text: '' };
-          }
-        }
-
-        // Sliding window of CHUNK_CONCURRENT.
-        let qi = 0;
-        async function runWorker() {
-          while (qi < queue.length) {
-            const item = queue[qi++];
-            await processChunk(item);
-          }
-        }
-        const workers = [];
-        for (let w = 0; w < Math.min(CHUNK_CONCURRENT, queue.length); w++) {
-          workers.push(runWorker());
-        }
-        await Promise.all(workers);
-
-        // Filter empty chunks, return the rest.
-        const chunks = results.filter(c => c && c.text);
-        sendResponse({ chunks });
       } catch (e) {
         sendResponse({ error: e.message || String(e) });
       }
@@ -1080,10 +1198,39 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           clearTimeout(timeoutId);
         }
         if (!resp.ok) { sendResponse({ error: `fetch failed: ${resp.status}` }); return; }
+        // Pre-check content-length when available (fast path).
         const contentLength = parseInt(resp.headers.get('content-length') || '0', 10);
         if (contentLength > MAX_BYTES) { sendResponse({ error: 'image too large' }); return; }
-        const arrayBuffer = await resp.arrayBuffer();
-        if (arrayBuffer.byteLength > MAX_BYTES) { sendResponse({ error: 'image too large' }); return; }
+        // Stream-read with incremental byte counter so chunked/no-header
+        // responses are also capped before the full body buffers (finding #15).
+        let arrayBuffer;
+        {
+          const reader = resp.body.getReader();
+          const chunks = [];
+          let totalBytes = 0;
+          let aborted = false;
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              totalBytes += value.byteLength;
+              if (totalBytes > MAX_BYTES) {
+                aborted = true;
+                reader.cancel().catch(() => {});
+                break;
+              }
+              chunks.push(value);
+            }
+          } catch (e) {
+            reader.cancel().catch(() => {});
+            throw e;
+          }
+          if (aborted) { sendResponse({ error: 'image too large' }); return; }
+          const combined = new Uint8Array(totalBytes);
+          let off = 0;
+          for (const chunk of chunks) { combined.set(chunk, off); off += chunk.byteLength; }
+          arrayBuffer = combined.buffer;
+        }
         // Convert to base64
         const bytes = new Uint8Array(arrayBuffer);
         let binary = '';

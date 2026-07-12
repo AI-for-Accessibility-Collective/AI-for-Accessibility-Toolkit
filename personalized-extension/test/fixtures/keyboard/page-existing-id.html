@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Keyboard Nav Test - Pre-existing id on main</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; }
+    main { padding: 2rem; }
+  </style>
+</head>
+<body>
+  <!-- main has a pre-existing id="existing" — keyboard-nav must NOT overwrite it -->
+  <main id="existing">
+    <h1>Pre-Existing ID Page</h1>
+    <p>The main element already has id="existing".</p>
+    <input type="text" id="text-input" placeholder="Text input">
+  </main>
+</body>
+</html>

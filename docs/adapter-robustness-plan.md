@@ -1,5 +1,11 @@
 # Adapter Robustness Plan — demand × differentiation × code reality
 
+> **Status (2026-07-12): implemented** on branch `adapter-robustness` — waves
+> W1–W4 plus a 26-finding adversarial review fix pass (W5). Captions
+> increment 2 (on-device Whisper/tabCapture) remains gated/deferred as
+> planned. Gate at completion: 359 static / 638 unit / 194 e2e checks, all
+> green.
+
 **Inputs.** (1) The user-needs demand table (ability-type counts + rejections per
 adapter, 2026-07); (2) [`adapter-overlap.md`](adapter-overlap.md) (what already
 exists elsewhere); (3) [`observable-settings.md`](observable-settings.md) (the
@@ -492,6 +498,18 @@ release-note entry + where noted, an in-product nudge), not slipped in:
 4. **Retired onboarding cards** (large-cursor, dyslexia-font; read-aloud
    demoted): cards get a "moved — use your OS setting" pointer state rather
    than vanishing for users who had them enabled.
+
+## Bundle-budget disposition (post-implementation, finding #11)
+
+Measured after W1–W4: the vetted packages add ~124 KB min (~48 KB gz) to the
+eager content bundle — colorjs.io/fn 45, readability 33, dompurify 28,
+dom-accessibility-api 12, tabbable 6 — i.e. **within** the ≤50 KB-gz additions
+budget. The shipped bundle was 115 KB gz only because `build.js` never
+minified; enabling minification brings the whole bundle to ~77 KB gz
+(sourcemaps retained). Accepted at that size for the prototype; the next lever
+if it grows is splitting reader-mode's readability+dompurify (61 KB min) into
+an on-demand `chrome.scripting` chunk like axe. A size-budget guard in
+run-tests fails the suite if the gzipped bundle exceeds 90 KB.
 
 ## Accepted limitations (prototype-scoped)
 

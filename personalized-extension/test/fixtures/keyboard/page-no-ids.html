@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Keyboard Nav Test - No ids on main/nav</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; }
+    nav { background: #333; padding: 1rem; }
+    main { padding: 2rem; }
+  </style>
+</head>
+<body>
+  <!-- nav and main have NO id attribute — keyboard-nav should inject one -->
+  <nav>
+    <a href="/home">Home</a>
+    <a href="/about">About</a>
+  </nav>
+
+  <main>
+    <h1>No-ID Page</h1>
+    <p>This page has a main and nav with no id attributes.</p>
+    <input type="text" id="text-input" placeholder="Text input">
+  </main>
+</body>
+</html>
