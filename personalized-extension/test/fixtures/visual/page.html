@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Assist Test Fixture</title>
+  <style>
+    /* Fixed navbar — must stay at the top regardless of font scaling */
+    #navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: #333;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 1000;
+    }
+
+    body {
+      margin: 0;
+      padding: 60px 20px 20px;
+      font-family: sans-serif;
+      font-size: 16px;
+    }
+
+    /* Sprite-icon button — background-image must survive contrast preset */
+    #sprite-btn {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+      background-size: cover;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    /* Text with known inline font-size — used to test that scaling compounds
+       correctly from the original computed value, not the already-scaled value */
+    #inline-size-para {
+      font-size: 20px;
+    }
+
+    .form-section {
+      margin-top: 24px;
+    }
+
+    label {
+      display: block;
+      margin-top: 8px;
+    }
+
+    input, textarea {
+      display: block;
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    .content-div {
+      letter-spacing: 0;
+      line-height: 1.4;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 8px;
+      background: #eee;
+    }
+
+    /* Simulate Material Icons CSS (in production this comes from Google Fonts).
+       These rules ensure icon ligature spans use the correct font when the
+       page's own CSS is present — which is the realistic case the guard tests. */
+    .material-icons {
+      font-family: 'Material Icons', sans-serif;
+      font-size: 24px;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined', sans-serif;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fixed navbar — position must not be skewed by font scaling -->
+  <nav id="navbar" role="navigation">
+    <span>Test Site Navigation</span>
+    <!-- Material-style icon span (ligature text) — font-family must NOT change
+         when dyslexiaFont is enabled -->
+    <span class="material-icons" aria-hidden="true">menu</span>
+    <span class="material-symbols-outlined" aria-hidden="true">home</span>
+  </nav>
+
+  <main>
+    <h1 id="heading-1">Visual Assist E2E Fixture</h1>
+
+    <!-- Sprite-icon button — background-image must survive contrast preset -->
+    <button id="sprite-btn" aria-label="Sprite icon action"></button>
+
+    <h2 id="heading-2">Typography Section</h2>
+
+    <!-- Paragraph with no inline style — baseline for scaling test -->
+    <p id="baseline-para">This paragraph has no inline font-size set. Its computed size
+    should be scaled by the fontScale factor from the element's computed style, not
+    from a hard-coded default.</p>
+
+    <!-- Paragraph with an explicit inline font-size — scaling must use its
+         original computed value, not compound on each re-apply -->
+    <p id="inline-size-para">This paragraph has an inline font-size of 20px. After
+    fontScale 1.5 is applied, it should render at approximately 30px.</p>
+
+    <h2 id="heading-3">Layout and Spacing</h2>
+
+    <!-- A div to verify letter-spacing and line-height coverage -->
+    <div id="content-div" class="content-div">
+      <p>Letter spacing and line-height should apply to div children too, not just
+      the body element. This text is inside a div to exercise that selector coverage.</p>
+    </div>
+
+    <span id="span-text">This span should also pick up letter-spacing and line-height
+    overrides when those settings are active.</span>
+
+    <h2 id="heading-4">Icon Fonts</h2>
+
+    <!-- Icon font elements — must NOT get font-family override from dyslexiaFont -->
+    <p>Icon font test elements:</p>
+    <i class="fa fa-home" aria-hidden="true">&#xf015;</i>
+    <span class="icon-star" aria-hidden="true">star</span>
+    <span aria-hidden="true" id="aria-hidden-icon">X</span>
+
+    <!-- A regular span that SHOULD get dyslexia font -->
+    <span id="regular-span">This span has no icon class and should receive the
+    dyslexia font when enabled.</span>
+
+    <h2 id="heading-5">Form Elements</h2>
+
+    <div class="form-section">
+      <form id="test-form">
+        <label for="name-input">Full name</label>
+        <input type="text" id="name-input" name="name" placeholder="Enter your name">
+
+        <label for="email-input">Email address</label>
+        <input type="email" id="email-input" name="email" placeholder="you@example.com">
+
+        <label for="message-input">Message</label>
+        <textarea id="message-input" name="message" rows="3" placeholder="Your message"></textarea>
+
+        <button type="submit" id="submit-btn">Submit</button>
+      </form>
+    </div>
+
+    <h2 id="heading-6">Paragraphs for Chunked Scaling</h2>
+
+    <!-- Many paragraphs to exercise the chunked requestIdleCallback path -->
+    <p>Paragraph 1: The quick brown fox jumps over the lazy dog.</p>
+    <p>Paragraph 2: Accessibility is about removing barriers for all users.</p>
+    <p>Paragraph 3: Font scaling should not break page layout or fixed elements.</p>
+    <p>Paragraph 4: Each paragraph here exercises the chunked DOM traversal.</p>
+    <p>Paragraph 5: The reading guide should track both mouse and keyboard focus.</p>
+    <p>Paragraph 6: Contrast presets must preserve background-image on sprite icons.</p>
+    <p>Paragraph 7: Dyslexia font overrides must exempt Material Icons and FontAwesome.</p>
+    <p>Paragraph 8: Focus indicators use :focus-visible, not bare :focus.</p>
+    <p>Paragraph 9: Letter spacing and line height now apply to div and span too.</p>
+    <p>Paragraph 10: Disabling visual assist must fully restore all computed styles.</p>
+
+    <!-- Focusable element to test keyboard reading guide -->
+    <a href="#heading-1" id="test-link">Jump to top (focusable link for keyboard guide test)</a>
+
+  </main>
+
+  <footer id="footer-el">
+    <p>Footer content — structural element for contrast background testing.</p>
+  </footer>
+
+</body>
+</html>

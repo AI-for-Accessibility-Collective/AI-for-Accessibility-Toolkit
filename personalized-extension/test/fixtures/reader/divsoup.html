@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — AppSuite Pro</title>
+</head>
+<body>
+  <!-- A typical SaaS dashboard: lots of divs, no article/main/semantic structure.
+       isProbablyReaderable returns false for this page, so the reader-mode
+       extraction should fail gracefully with a friendly announcement. -->
+
+  <div id="app-shell">
+    <div class="sidebar">
+      <div class="nav-item">Dashboard</div>
+      <div class="nav-item">Reports</div>
+      <div class="nav-item">Settings</div>
+    </div>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div class="topbar-title">Dashboard</div>
+        <div class="topbar-actions">
+          <div class="btn">New Report</div>
+          <div class="btn">Export</div>
+        </div>
+      </div>
+
+      <div class="widgets-grid">
+        <div class="widget">
+          <div class="widget-header">Total Users</div>
+          <div class="widget-value">14,302</div>
+          <div class="widget-delta">+3.2%</div>
+        </div>
+        <div class="widget">
+          <div class="widget-header">Active Sessions</div>
+          <div class="widget-value">872</div>
+          <div class="widget-delta">-1.1%</div>
+        </div>
+        <div class="widget">
+          <div class="widget-header">Revenue (MTD)</div>
+          <div class="widget-value">$48,190</div>
+          <div class="widget-delta">+8.7%</div>
+        </div>
+      </div>
+
+      <div class="chart-area">
+        <div class="chart-placeholder">
+          <!-- SVG chart would go here -->
+        </div>
+      </div>
+
+      <div class="table-area">
+        <div class="table-row table-header">
+          <div class="cell">User</div>
+          <div class="cell">Status</div>
+          <div class="cell">Last Login</div>
+        </div>
+        <div class="table-row">
+          <div class="cell">alice@example.com</div>
+          <div class="cell">Active</div>
+          <div class="cell">2026-07-11</div>
+        </div>
+        <div class="table-row">
+          <div class="cell">bob@example.com</div>
+          <div class="cell">Inactive</div>
+          <div class="cell">2026-06-28</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ai4a11y-announcer" aria-live="polite" aria-atomic="true"
+       style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+</body>
+</html>

@@ -415,6 +415,230 @@ server.listen(PORT, async () => {
     if (allCallTime) console.log('PASS: all builtins use call-time logFix/incrementStat lookup');
   }
 
+  // ---------------------------------------------------------------------------
+  // Test 12: reader-mode static checks (1.1 implementation guard)
+  // ---------------------------------------------------------------------------
+  {
+    const readerPath = path.join(ROOT, 'skills/builtin/reader-mode.js');
+    const readerCode = fs.readFileSync(readerPath, 'utf8');
+
+    // (a) Imports @mozilla/readability (both named exports used).
+    if (/from\s+['"]@mozilla\/readability['"]/. test(readerCode) &&
+        readerCode.includes('Readability') &&
+        readerCode.includes('isProbablyReaderable')) {
+      console.log('PASS: reader-mode.js imports @mozilla/readability (Readability + isProbablyReaderable)');
+    } else {
+      console.log('FAIL: reader-mode.js missing @mozilla/readability import');
+    }
+
+    // (b) Imports dompurify.
+    if (/from\s+['"]dompurify['"]/i.test(readerCode) &&
+        readerCode.includes('DOMPurify')) {
+      console.log('PASS: reader-mode.js imports dompurify');
+    } else {
+      console.log('FAIL: reader-mode.js missing dompurify import');
+    }
+
+    // (c) No hand-rolled sanitizer remnants: the old javascript:-scheme
+    //     scrubbing block is gone (it was 23 lines of manual attribute checks).
+    const hasJsSchemeBlock = /javascript:\s*['"]/i.test(readerCode) &&
+                              readerCode.includes('vbscript:') &&
+                              readerCode.includes('dangerousUrlAttrs');
+    if (!hasJsSchemeBlock) {
+      console.log('PASS: reader-mode.js has no hand-rolled javascript:/vbscript: sanitizer block');
+    } else {
+      console.log('FAIL: reader-mode.js still contains the old hand-rolled sanitizer — replace with DOMPurify');
+    }
+
+    // (d) Uses inert attribute for SR safety (load-bearing: page background
+    //     must be unreachable to Tab + SR virtual cursor while overlay is open).
+    if (readerCode.includes("setAttribute('inert'") || readerCode.includes('setAttribute("inert"')) {
+      console.log("PASS: reader-mode.js uses inert attribute for SR-safe background isolation");
+    } else {
+      console.log("FAIL: reader-mode.js missing inert attribute usage for SR safety");
+    }
+
+    // (e) Protects the #ai4a11y-announcer from being inerted (would silence
+    //     announce() for screen-reader users — this is load-bearing).
+    if (readerCode.includes('ai4a11y-announcer')) {
+      console.log('PASS: reader-mode.js explicitly spares #ai4a11y-announcer from inert');
+    } else {
+      console.log('FAIL: reader-mode.js must skip #ai4a11y-announcer when setting inert');
+    }
+
+    // (f) Uses a closed shadow root (page CSS isolation).
+    if (readerCode.includes("mode: 'closed'") || readerCode.includes('mode:"closed"') || readerCode.includes("mode: \"closed\"")) {
+      console.log("PASS: reader-mode.js attaches a closed shadow root");
+    } else {
+      console.log("FAIL: reader-mode.js missing closed shadow root — page CSS can restyle content");
+    }
+
+    // (g) SPA teardown via registerSweep from observe.js.
+    if (readerCode.includes('registerSweep') && readerCode.includes('observe.js')) {
+      console.log('PASS: reader-mode.js registers SPA URL-change sweep via observe.js');
+    } else {
+      console.log('FAIL: reader-mode.js missing registerSweep(observe.js) for SPA teardown');
+    }
+
+    // (h) Dead originalContent capture is gone (was line 33 of the old file).
+    if (!readerCode.includes('originalContent')) {
+      console.log('PASS: reader-mode.js has no dead originalContent capture');
+    } else {
+      console.log('FAIL: reader-mode.js still references originalContent — remove it');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 13: visual-assist static checks (1.4 implementation guard)
+  // ---------------------------------------------------------------------------
+  {
+    const vaPath = path.join(ROOT, 'skills/builtin/visual-assist.js');
+    const vaCode = fs.readFileSync(vaPath, 'utf8');
+
+    // (a) No html { zoom } rule — fontScale must use computed-style traversal.
+    if (!vaCode.includes('html { zoom') && !vaCode.includes('html{zoom')) {
+      console.log('PASS: visual-assist.js has no html { zoom } rule (fontScale uses computed-style traversal)');
+    } else {
+      console.log('FAIL: visual-assist.js still contains html { zoom } — must use computed-style traversal');
+    }
+
+    // (b) :focus-visible is present and bare *:focus { is absent.
+    const hasFocusVisible = vaCode.includes(':focus-visible');
+    const hasBareStarFocus = /\*:focus\s*[,{]/.test(vaCode);
+    if (hasFocusVisible && !hasBareStarFocus) {
+      console.log('PASS: visual-assist.js uses :focus-visible only (no bare *:focus { )');
+    } else if (!hasFocusVisible) {
+      console.log('FAIL: visual-assist.js missing :focus-visible selector');
+    } else {
+      console.log('FAIL: visual-assist.js contains bare *:focus { — must be :focus-visible only');
+    }
+
+    // (c) applyProfileSettings in content.js merges baseline before building the
+    //     VA options object (profile-wipe fix). Look for the chrome.storage.sync.get
+    //     call inside the vaKeys block.
+    const contentPath = path.join(ROOT, 'extension/content/content.js');
+    const contentSrc = fs.readFileSync(contentPath, 'utf8');
+    // The fix introduces a chrome.storage.sync.get(vaKeys, ...) callback inside
+    // the vaKeys block; the old code had a direct object literal with hardcoded defaults.
+    if (contentSrc.includes('chrome.storage.sync.get(vaKeys') &&
+        contentSrc.includes('Merge the stored baseline')) {
+      console.log('PASS: applyProfileSettings merges stored baseline before applying VA settings');
+    } else {
+      console.log('FAIL: applyProfileSettings missing stored-baseline merge for VA keys (profile-wipe bug)');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 14: motion-reducer static guards (1.5 implementation guard)
+  // ---------------------------------------------------------------------------
+  {
+    const mrPath = path.join(ROOT, 'skills/builtin/motion-reducer.js');
+    const mrCode = fs.readFileSync(mrPath, 'utf8');
+
+    // (a) No class-substring transform:none rule
+    if (!/\[class\*=["'](?:scroll|slide|carousel|animate|motion|move)["']\]/.test(mrCode)) {
+      console.log('PASS: no class-substring transform:none rule in motion-reducer');
+    } else {
+      console.log('FAIL: motion-reducer still has class-substring transform:none heuristic — breaks layout');
+    }
+
+    // (b) getAnimations referenced (WAAPI support)
+    if (mrCode.includes('getAnimations')) {
+      console.log('PASS: motion-reducer calls document.getAnimations() for WAAPI');
+    } else {
+      console.log('FAIL: motion-reducer missing document.getAnimations() — WAAPI animations not handled');
+    }
+
+    // (c) aria-label set on frozen canvas (not just alt which confers no name)
+    if (mrCode.includes('aria-label')) {
+      console.log('PASS: motion-reducer sets aria-label on frozen canvas');
+    } else {
+      console.log('FAIL: motion-reducer missing aria-label on frozen canvas — canvas alt confers no accessible name');
+    }
+
+    // (d) Extension UI exemption in CSS
+    if (mrCode.includes('ai4a11y-') && (mrCode.includes(':not(') || mrCode.includes('not('))) {
+      console.log('PASS: motion-reducer CSS exempts extension UI elements');
+    } else {
+      console.log('FAIL: motion-reducer CSS missing extension UI exemption');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 15: background.js has fetchImageBytes route
+  // ---------------------------------------------------------------------------
+  {
+    if (bgCode.includes("'fetchImageBytes'") || bgCode.includes('"fetchImageBytes"')) {
+      console.log('PASS: background.js has fetchImageBytes route for cross-origin image freeze');
+    } else {
+      console.log('FAIL: background.js missing fetchImageBytes route');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 16: fix-contrast static checks (1.2 implementation guard)
+  // ---------------------------------------------------------------------------
+  {
+    const fcPath = path.join(ROOT, 'skills/builtin/fix-contrast.js');
+    const fcCode = fs.readFileSync(fcPath, 'utf8');
+    const colorPath = path.join(ROOT, 'utils/color.js');
+    const colorCode = fs.readFileSync(colorPath, 'utf8');
+
+    // (a) fix-contrast imports from utils/color.js (not just ai.js)
+    if (fcCode.includes("from '../../utils/color.js'") || fcCode.includes('from "../../utils/color.js"')) {
+      console.log('PASS: fix-contrast imports from utils/color.js');
+    } else {
+      console.log('FAIL: fix-contrast must import from utils/color.js');
+    }
+
+    // (b) No aiFixContrast in the sweep path — deterministic path has no LLM call.
+    //     Allow it only if it's in a dead-code comment or stub, not a live call.
+    const sweepSection = fcCode.replace(/\/\/.*$/mg, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (!sweepSection.includes('aiFixContrast(')) {
+      console.log('PASS: no aiFixContrast call in the fix-contrast sweep path');
+    } else {
+      console.log('FAIL: fix-contrast sweep path must not call aiFixContrast (deterministic path only)');
+    }
+
+    // (c) meetsContrastAA referenced in fix-contrast
+    if (fcCode.includes('meetsContrastAA')) {
+      console.log('PASS: meetsContrastAA referenced in fix-contrast.js');
+    } else {
+      console.log('FAIL: fix-contrast.js does not reference meetsContrastAA — AA gate missing');
+    }
+
+    // (d) utils/color.js exports meetsContrastAA (the function exists, was imported by nothing before)
+    if (colorCode.includes('export function meetsContrastAA')) {
+      console.log('PASS: utils/color.js exports meetsContrastAA');
+    } else {
+      console.log('FAIL: utils/color.js missing meetsContrastAA export');
+    }
+
+    // (e) utils/color.js exports the new API surface
+    for (const fn of ['parseColor', 'contrastWCAG21', 'compositeOver', 'nearestAccessibleColor', 'contrastAPCA']) {
+      if (colorCode.includes(`export function ${fn}`)) {
+        console.log(`PASS: utils/color.js exports ${fn}`);
+      } else {
+        console.log(`FAIL: utils/color.js missing export ${fn}`);
+      }
+    }
+
+    // (f) No import of aiFixContrast in fix-contrast.js
+    const hasAiImport = /import[^;]*aiFixContrast[^;]*from/.test(fcCode);
+    if (!hasAiImport) {
+      console.log('PASS: fix-contrast.js does not import aiFixContrast');
+    } else {
+      console.log('FAIL: fix-contrast.js must not import aiFixContrast (deterministic, no LLM in correctness path)');
+    }
+
+    // (g) registerSweep imported from observe.js for incremental re-scan
+    if (fcCode.includes("from '../../utils/observe.js'") || fcCode.includes('from "../../utils/observe.js"')) {
+      console.log('PASS: fix-contrast imports registerSweep from observe.js');
+    } else {
+      console.log('FAIL: fix-contrast missing registerSweep import from observe.js');
+    }
+  }
+
   console.log('\n=== DONE ===');
 
   server.close();

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrast Fixture</title>
+  <style>
+    body {
+      background: #ffffff;
+      margin: 0;
+      padding: 20px;
+      font-family: sans-serif;
+    }
+
+    /* ── Case 1: light gray on white — fails AA (≈1.3:1) ── */
+    #fail-gray-on-white {
+      color: #cccccc;
+      background: #ffffff;
+    }
+
+    /* ── Case 2: low-contrast link in body text — fails AA (≈2.4:1) ── */
+    #fail-link-text {
+      color: #aaaaaa;
+    }
+
+    /* ── Case 3: rgba overlay — semi-transparent text on white (~1.6:1 effective) ── */
+    #fail-rgba-text {
+      color: rgba(0, 0, 0, 0.2);
+      background: #ffffff;
+    }
+
+    /* ── Case 4: dark body section — dim text (fails on dark background) ── */
+    #dark-section {
+      background: #1a1a2e;
+      padding: 20px;
+    }
+    #dark-section p {
+      /* dim blue on near-black — fails (~1.7:1) */
+      color: #334466;
+    }
+
+    /* ── Case 5: element that already passes AA (black on white = 21:1) ── */
+    #pass-black-on-white {
+      color: #000000;
+      background: #ffffff;
+    }
+
+    /* ── Case 6: element with background-image — should be skipped ── */
+    #bg-image-element {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>');
+      color: #aaaaaa;
+      padding: 20px;
+    }
+
+    /* ── Case 7: white text on dark background (passes AA at 16.1:1) ── */
+    #pass-white-on-dark {
+      background: #222222;
+      color: #ffffff;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <p id="fail-gray-on-white">Light gray on white — this should get fixed (fails AA ~1.3:1).</p>
+
+  <p>Normal body text with a
+    <a id="fail-link-text" href="#">low-contrast link</a>
+    embedded in it — this link should get fixed.
+  </p>
+
+  <p id="fail-rgba-text">Semi-transparent text rgba(0,0,0,0.2) on white — effective contrast too low.</p>
+
+  <section id="dark-section">
+    <p>Dark body section: dim blue (#334466) on near-black background — should be fixed to readable light color.</p>
+  </section>
+
+  <p id="pass-black-on-white">Black on white — already passes AA (21:1). Must NOT be touched.</p>
+
+  <p id="bg-image-element">Background-image present — should be SKIPPED (state: skipped-bgimage).</p>
+
+  <p id="pass-white-on-dark">White text on dark background — should NOT be touched.</p>
+
+</body>
+</html>

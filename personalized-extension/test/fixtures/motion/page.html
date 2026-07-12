@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Motion Reducer Fixture</title>
+<style>
+/* CSS keyframes animation */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#css-anim-box {
+  width: 50px; height: 50px; background: blue;
+  animation: spin 1s linear infinite;
+}
+
+/* CSS transition on hover */
+#transition-box {
+  width: 50px; height: 50px; background: green;
+  transition: transform 0.3s ease;
+}
+#transition-box:hover { transform: scale(1.2); }
+
+/* Transform-positioned carousel — must NOT lose its layout */
+#carousel {
+  width: 300px; overflow: hidden; position: relative;
+}
+#carousel-inner {
+  display: flex;
+  /* Positioned via transform — this must survive motion-reducer */
+  transform: translateX(-100px);
+}
+.carousel-item {
+  width: 100px; flex-shrink: 0;
+  height: 60px; background: #eee;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Extension UI element that must keep animating */
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+#ai4a11y-test-pulse {
+  width: 20px; height: 20px; background: purple; border-radius: 50%;
+  animation: pulse 1s ease infinite;
+}
+</style>
+</head>
+<body>
+
+<h1>Motion Reducer Test Fixture</h1>
+
+<!-- 1. CSS keyframes animation -->
+<div id="css-anim-box" role="presentation"></div>
+
+<!-- 2. CSS transition-on-hover -->
+<div id="transition-box" role="presentation"></div>
+
+<!-- 3. WAAPI animation -->
+<div id="waapi-box" style="width:50px;height:50px;background:red;" role="presentation"></div>
+
+<!-- 4. Animated GIF (data URI — 2-frame 1x1 GIF, same-origin) -->
+<!-- Tiny 2-frame animated GIF (generated: 2 frames, 1x1 px, alternating black/white) -->
+<img id="test-gif" alt="animated test gif"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  width="50" height="50" style="image-rendering:pixelated;width:50px;height:50px;">
+<!-- Note: the above is a single-frame GIF for simplicity; the motion-e2e test
+     checks that the img->canvas swap happens for .gif src patterns regardless
+     of actual frame count in freeze logic, since ImageDecoder may not be
+     available in Puppeteer/headless. The freeze attempts and either succeeds
+     or falls back gracefully. -->
+
+<!-- 5. Transform-positioned carousel (must keep transform after motion-reducer) -->
+<div id="carousel">
+  <div id="carousel-inner">
+    <div class="carousel-item">Slide 1</div>
+    <div class="carousel-item">Slide 2</div>
+    <div class="carousel-item">Slide 3</div>
+  </div>
+</div>
+
+<!-- 6. Fake extension UI element — must keep animating -->
+<div id="ai4a11y-test-pulse"></div>
+
+<!-- 7. Autoplay muted looping video (using a data URI video or empty src) -->
+<!-- We use a minimal inline video; if src fails to load, the element still
+     tests the pause/resume logic -->
+<video id="test-video" autoplay muted loop playsinline
+  width="100" height="60" style="background:#000;">
+  <source src="data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJtcDQxaXNvbWlzbzIAAAA=" type="video/mp4">
+</video>
+
+<script>
+// WAAPI animation -- started on page load
+const waapiEl = document.getElementById('waapi-box');
+const waapiAnim = waapiEl.animate(
+  [{ transform: 'translateX(0px)' }, { transform: 'translateX(100px)' }],
+  { duration: 1000, iterations: Infinity }
+);
+// Expose for test assertions
+window.__waapiAnim = waapiAnim;
+</script>
+</body>
+</html>
