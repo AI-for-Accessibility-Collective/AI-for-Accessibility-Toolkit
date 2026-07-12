@@ -59,7 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'hideDistractions', 'showProgress', 'colorBlindMode',
     'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'speechRate',
-    'geminiKey', 'selectedProfiles', 'onboardingComplete', 'nudgeDismissed'
+    'geminiKey', 'selectedProfiles', 'onboardingComplete', 'nudgeDismissed',
+    'contrastNudgeDismissed',
   ]);
 
   // Overlay the Librarian's effective preferences for the CURRENT tab so the
@@ -121,6 +122,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       nudge.hidden = true;
       await chrome.storage.sync.set({ nudgeDismissed: true });
     });
+  }
+
+  // User-visible change item 2 (Phase 3): fix-contrast migration nudge.
+  // Users who enabled the old "Fix Contrast" tile were actually running
+  // autoWcagFix:true (the tile was mis-wired). After Phase 0 rewiring, they
+  // get neither until they re-toggle. Show a one-time dismissible notice if
+  // autoWcagFix was true but fixContrast is not yet set.
+  {
+    const contrastNudge = document.getElementById('contrastMigrationNudge');
+    if (contrastNudge &&
+        settings.autoWcagFix === true &&
+        settings.fixContrast !== true &&
+        !settings.contrastNudgeDismissed) {
+      contrastNudge.hidden = false;
+      document.getElementById('contrastNudgeDismiss')?.addEventListener('click', async () => {
+        contrastNudge.hidden = true;
+        await chrome.storage.sync.set({ contrastNudgeDismissed: true });
+      });
+    }
   }
 
   const fontScale = document.getElementById('fontScale');

@@ -23,7 +23,7 @@ export const skillRegistry = [
   {
     id: 'dark-mode',
     name: 'Dark Mode',
-    description: 'Inverts page colors to a dark theme using DarkReader or CSS fallback, with configurable brightness, contrast, sepia, and grayscale.',
+    description: 'Inverts page colors to a dark theme via CSS filter (invert + hue-rotate). Respects prefers-color-scheme:dark automatically. Conflicts with color-filter — color-filter takes precedence.',
     supportAreas: ['vision', 'sensory'],
     siteRelevance: ['all'],
     requiresAI: false,
@@ -35,7 +35,7 @@ export const skillRegistry = [
   {
     id: 'focus-mode',
     name: 'Focus Mode',
-    description: 'Dims distracting elements like ads and popups, optionally dims non-main content, highlights the paragraph you are reading, and shows a scroll progress bar.',
+    description: 'Dims distracting elements like ads and popups when hideDistractions is on, and shows a scroll progress bar. Progress bar re-attaches on SPA navigation.',
     supportAreas: ['cognitive', 'reading', 'sensory'],
     siteRelevance: ['news', 'education', 'social'],
     requiresAI: false,
@@ -155,7 +155,7 @@ export const skillRegistry = [
   {
     id: 'color-filter',
     name: 'Color Blind Filter',
-    description: 'Applies SVG color correction filters for protanopia, deuteranopia, or tritanopia color vision deficiencies.',
+    description: 'Applies LMS-daltonization correction (error-redistribution) for protanopia, deuteranopia, or tritanopia — redistributes the invisible color signal into channels the user can see. Not simulation.',
     supportAreas: ['vision'],
     siteRelevance: ['all'],
     requiresAI: false,
@@ -164,34 +164,17 @@ export const skillRegistry = [
     quickStart: true,
     settings: { colorBlindMode: 'protanopia' },
   },
-  {
-    id: 'large-cursor',
-    name: 'Large Cursor',
-    description: 'Replaces the mouse cursor with a larger, more visible one.',
-    supportAreas: ['vision', 'motor'],
-    siteRelevance: ['all'],
-    requiresAI: false,
-    icon: 'mouse',
-    emoji: '\u{1F5B1}️',
-    quickStart: true,
-    settings: { largeCursor: true },
-  },
-  {
-    id: 'dyslexia-font',
-    name: 'Dyslexia Font',
-    description: 'Applies OpenDyslexic font with wider spacing for dyslexic readers.',
-    supportAreas: ['reading', 'cognitive'],
-    siteRelevance: ['all'],
-    requiresAI: false,
-    icon: 'text_fields',
-    emoji: '\u{1F524}',
-    quickStart: true,
-    settings: { dyslexiaFont: true, letterSpacing: 0.12, lineHeight: 2.0 },
-  },
+  // large-cursor retired in Phase 3: use your OS pointer settings for a
+  // system-wide larger cursor (System Preferences / Settings → Accessibility
+  // → Display → Cursor size). The largeCursor VA sub-setting remains active
+  // for existing users via visual-assist; settingsMeta and PROMPT_GROUPS intact.
+  // dyslexia-font retired in Phase 3: letter spacing and line height are
+  // available under Visual Assist. The dyslexiaFont VA sub-setting remains
+  // active for existing users; settingsMeta and PROMPT_GROUPS intact.
   {
     id: 'read-aloud',
     name: 'Read Aloud',
-    description: 'Text-to-speech with word boundary tracking, voice selection, rate/pitch controls, and presets (slow, normal, fast).',
+    description: 'Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. No further investment: for richer reading support use your OS/browser built-in read-aloud tools or voice mode\'s read-page command.',
     supportAreas: ['vision', 'reading', 'cognitive'],
     siteRelevance: ['all'],
     requiresAI: false,

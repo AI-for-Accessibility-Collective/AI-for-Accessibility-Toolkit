@@ -1,15 +1,22 @@
 import { announce } from '../../utils/ai.js';
+import { registerSweep } from '../../utils/observe.js';
+
+// focus-mode — Phase 3 subtractive cleanup:
+//   - Removed always-on hover-highlight (p:hover/li:hover/td:hover rule).
+//     It fired even when all options were false and was unreadable on dark themes.
+//   - Removed dead dimBackground code branch (option had no settingsMeta key
+//     and no caller — only hideDistractions and showProgress are active).
+//   - Progress bar re-appended via registerSweep if SPA body replacement detaches it.
 
 export const FocusMode = {
   styleId: 'ai4a11y-focus-mode-styles',
   enabled: false,
   progressEl: null,
   progressHandler: null,
+  _unwatchSweep: null,
   currentSettings: {
     hideDistractions: false,
-    dimBackground: false,
     dimOpacity: 0.5,
-    highlightColor: '#fff3cd',
     showProgress: true
   },
 
@@ -24,6 +31,7 @@ export const FocusMode = {
   enable(options = {}) {
     document.getElementById(this.styleId)?.remove();
     this.disableProgressIndicator();
+    if (this._unwatchSweep) { this._unwatchSweep(); this._unwatchSweep = null; }
 
     this.currentSettings = { ...this.currentSettings, ...options };
     this.enabled = true;
@@ -43,34 +51,30 @@ export const FocusMode = {
       `;
     }
 
-    if (s.dimBackground) {
-      css += `
-        body > *:not(main):not(article):not([role="main"]):not(#ai4a11y-focus-mode-styles):not(#ai4a11y-progress) {
-          opacity: ${s.dimOpacity + 0.3} !important;
-        }
-        main, article, [role="main"], .article, .post, .content, .entry-content {
-          opacity: 1 !important;
-          position: relative;
-          z-index: 10;
-        }
-      `;
-    }
+    // NOTE: dimBackground option is intentionally absent — no settingsMeta key
+    // or caller exists. The dead code branch was removed in Phase 3.
 
-    css += `
-      p:hover, li:hover, td:hover {
-        background-color: ${s.highlightColor} !important;
-        transition: background-color 0.2s ease !important;
-      }
-    `;
+    // NOTE: the always-on hover-highlight rule (p:hover/li:hover/td:hover) was
+    // removed in Phase 3 — it fired even with all options false and was
+    // unreadable on dark themes.
 
     if (s.showProgress) {
       this.enableProgressIndicator();
     }
 
-    const style = document.createElement('style');
-    style.id = this.styleId;
-    style.textContent = css;
-    document.head.appendChild(style);
+    if (css) {
+      const style = document.createElement('style');
+      style.id = this.styleId;
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+
+    // Re-append progress bar if SPA body replacement detaches it.
+    this._unwatchSweep = registerSweep('focus-mode', () => {
+      if (this.enabled && this.progressEl && !document.contains(this.progressEl)) {
+        document.body.appendChild(this.progressEl);
+      }
+    });
 
     console.log('[AI4A11y] Focus Mode enabled', this.currentSettings);
     announce('Focus mode enabled');
@@ -80,6 +84,7 @@ export const FocusMode = {
     this.enabled = false;
     document.getElementById(this.styleId)?.remove();
     this.disableProgressIndicator();
+    if (this._unwatchSweep) { this._unwatchSweep(); this._unwatchSweep = null; }
     console.log('[AI4A11y] Focus Mode disabled');
     announce('Focus mode disabled');
   },

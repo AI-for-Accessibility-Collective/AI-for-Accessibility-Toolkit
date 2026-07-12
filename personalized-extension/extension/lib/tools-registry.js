@@ -7,7 +7,7 @@ globalThis.AA_TOOLS = {
   {
     "id": "dark-mode",
     "name": "Dark Mode",
-    "description": "Inverts page colors to a dark theme using DarkReader or CSS fallback, with configurable brightness, contrast, sepia, and grayscale.",
+    "description": "Inverts page colors to a dark theme via CSS filter (invert + hue-rotate). Respects prefers-color-scheme:dark automatically. Conflicts with color-filter — color-filter takes precedence.",
     "supportAreas": [
       "vision",
       "sensory"
@@ -26,7 +26,7 @@ globalThis.AA_TOOLS = {
   {
     "id": "focus-mode",
     "name": "Focus Mode",
-    "description": "Dims distracting elements like ads and popups, optionally dims non-main content, highlights the paragraph you are reading, and shows a scroll progress bar.",
+    "description": "Dims distracting elements like ads and popups when hideDistractions is on, and shows a scroll progress bar. Progress bar re-attaches on SPA navigation.",
     "supportAreas": [
       "cognitive",
       "reading",
@@ -226,7 +226,7 @@ globalThis.AA_TOOLS = {
   {
     "id": "color-filter",
     "name": "Color Blind Filter",
-    "description": "Applies SVG color correction filters for protanopia, deuteranopia, or tritanopia color vision deficiencies.",
+    "description": "Applies LMS-daltonization correction (error-redistribution) for protanopia, deuteranopia, or tritanopia — redistributes the invisible color signal into channels the user can see. Not simulation.",
     "supportAreas": [
       "vision"
     ],
@@ -242,49 +242,9 @@ globalThis.AA_TOOLS = {
     }
   },
   {
-    "id": "large-cursor",
-    "name": "Large Cursor",
-    "description": "Replaces the mouse cursor with a larger, more visible one.",
-    "supportAreas": [
-      "vision",
-      "motor"
-    ],
-    "siteRelevance": [
-      "all"
-    ],
-    "requiresAI": false,
-    "icon": "mouse",
-    "emoji": "🖱️",
-    "quickStart": true,
-    "settings": {
-      "largeCursor": true
-    }
-  },
-  {
-    "id": "dyslexia-font",
-    "name": "Dyslexia Font",
-    "description": "Applies OpenDyslexic font with wider spacing for dyslexic readers.",
-    "supportAreas": [
-      "reading",
-      "cognitive"
-    ],
-    "siteRelevance": [
-      "all"
-    ],
-    "requiresAI": false,
-    "icon": "text_fields",
-    "emoji": "🔤",
-    "quickStart": true,
-    "settings": {
-      "dyslexiaFont": true,
-      "letterSpacing": 0.12,
-      "lineHeight": 2
-    }
-  },
-  {
     "id": "read-aloud",
     "name": "Read Aloud",
-    "description": "Text-to-speech with word boundary tracking, voice selection, rate/pitch controls, and presets (slow, normal, fast).",
+    "description": "Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. No further investment: for richer reading support use your OS/browser built-in read-aloud tools or voice mode's read-page command.",
     "supportAreas": [
       "vision",
       "reading",

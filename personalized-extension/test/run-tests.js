@@ -98,7 +98,8 @@ server.listen(PORT, async () => {
     }
   }
 
-  // Test 5: Check registry has all 15 skills (W3 merge: 16→15)
+  // Test 5: Check registry has all 13 skills (W3 merge: 16→15; Phase 3 retirement: 15→13)
+  // Retired: large-cursor, dyslexia-font (entries removed; settingsMeta keys kept).
   const registryPath = path.join(ROOT, 'skills/registry.js');
   const registryContent = fs.readFileSync(registryPath, 'utf8');
   for (const skill of expectedSkills) {
@@ -118,6 +119,23 @@ server.listen(PORT, async () => {
     console.log("FAIL: registry still has old 'generate-captions' entry — should be merged into 'captions'");
   } else {
     console.log("PASS: registry no longer has 'generate-captions' entry");
+  }
+  // Phase 3 retirement: large-cursor and dyslexia-font entries removed.
+  if (registryContent.includes("id: 'large-cursor'")) {
+    console.log("FAIL: registry still has 'large-cursor' entry — should be retired (Phase 3)");
+  } else {
+    console.log("PASS: 'large-cursor' registry entry correctly retired");
+  }
+  if (registryContent.includes("id: 'dyslexia-font'")) {
+    console.log("FAIL: registry still has 'dyslexia-font' entry — should be retired (Phase 3)");
+  } else {
+    console.log("PASS: 'dyslexia-font' registry entry correctly retired");
+  }
+  // settingsMeta keys must still be present (VA sub-settings for existing users).
+  if (registryContent.includes('largeCursor:') && registryContent.includes('dyslexiaFont:')) {
+    console.log("PASS: settingsMeta retains largeCursor and dyslexiaFont keys for VA sub-settings");
+  } else {
+    console.log("FAIL: settingsMeta lost largeCursor or dyslexiaFont — required for existing user VA settings");
   }
 
   // Test 6: Check content.js imports all 15 skills (W3 captions merge)
@@ -369,16 +387,14 @@ server.listen(PORT, async () => {
   }
 
   // (a) No two registry entries share a settings key.
-  //     Documented allowlist:
-  //       - lineHeight, letterSpacing, dyslexiaFont: visual-assist piggyback
-  //         keys also set by the dyslexia-font registry entry
+  //     Documented allowlist: empty after Phase 3 retirement.
+  //       - lineHeight, letterSpacing, dyslexiaFont were previously shared
+  //         between visual-assist and the now-retired dyslexia-font entry.
+  //         With dyslexia-font retired, those keys are no longer shared.
   //     Note: autoCaptions collision (auto-captions + generate-captions) was
-  //     removed in W3 merge — now a single 'captions' entry. The allowlist
-  //     entry for autoCaptions is intentionally absent.
+  //     removed in W3 merge — now a single 'captions' entry.
   const SHARED_KEY_ALLOWLIST = new Set([
-    'lineHeight',      // dyslexia-font piggybacks visual-assist keys
-    'letterSpacing',   // dyslexia-font piggybacks visual-assist keys
-    'dyslexiaFont',    // dyslexia-font piggybacks visual-assist keys
+    // (empty — no shared keys expected post Phase 3)
   ]);
   {
     const entries = extractRegistryEntries(registryContent);
@@ -1365,6 +1381,134 @@ server.listen(PORT, async () => {
       console.log("PASS: test/fixtures/captions/page.html exists");
     } else {
       console.log("FAIL: test/fixtures/captions/page.html not found");
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 23: Phase 3 low/no-demand tier static checks
+  // ---------------------------------------------------------------------------
+  {
+    const cfPath = path.join(ROOT, 'skills/builtin/color-filter.js');
+    const cfCode = fs.readFileSync(cfPath, 'utf8');
+    const rdPath = path.join(ROOT, 'skills/builtin/read-aloud.js');
+    const rdCode = fs.readFileSync(rdPath, 'utf8');
+    const fmPath = path.join(ROOT, 'skills/builtin/focus-mode.js');
+    const fmCode = fs.readFileSync(fmPath, 'utf8');
+    const dmPath = path.join(ROOT, 'skills/builtin/dark-mode.js');
+    const dmCode = fs.readFileSync(dmPath, 'utf8');
+    const regCode = fs.readFileSync(path.join(ROOT, 'skills/registry.js'), 'utf8');
+
+    // (a) color-filter: daltonization comment present.
+    if (cfCode.includes('daltonization') || cfCode.includes('error-redistribution')) {
+      console.log('PASS: color-filter.js has daltonization/error-redistribution comment');
+    } else {
+      console.log('FAIL: color-filter.js missing daltonization comment');
+    }
+
+    // (b) color-filter: old simulation values gone.
+    if (!cfCode.includes('0.567 0.433 0')) {
+      console.log('PASS: color-filter.js no longer has old protanopia simulation value');
+    } else {
+      console.log('FAIL: color-filter.js still has old protanopia simulation (0.567 0.433 0)');
+    }
+
+    // (c) color-filter: anchored to documentElement.
+    if (cfCode.includes('document.documentElement.appendChild')) {
+      console.log('PASS: color-filter.js appends SVG filter to documentElement');
+    } else {
+      console.log('FAIL: color-filter.js must append SVG filter to documentElement, not body');
+    }
+
+    // (d) focus-mode: no hover-highlight rule.
+    if (!/p:hover\s*,\s*li:hover\s*,\s*td:hover/.test(fmCode)) {
+      console.log('PASS: focus-mode.js has no p:hover/li:hover/td:hover hover-highlight rule');
+    } else {
+      console.log('FAIL: focus-mode.js still has always-on hover-highlight rule — remove it');
+    }
+
+    // (e) focus-mode: no dimBackground in active code (only in comments is OK).
+    const fmNoComments = fmCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (!fmNoComments.includes('dimBackground')) {
+      console.log('PASS: focus-mode.js has no dead dimBackground code in active code');
+    } else {
+      console.log('FAIL: focus-mode.js still has dead dimBackground code branch in active code');
+    }
+
+    // (f) dark-mode: no DarkReader reference in active code.
+    const dmNoComments = dmCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (!dmNoComments.includes('DarkReader')) {
+      console.log('PASS: dark-mode.js has no DarkReader reference (dead code removed)');
+    } else {
+      console.log('FAIL: dark-mode.js still references DarkReader in active code');
+    }
+
+    // (g) dark-mode: single img/video rule (no duplicate) — check in code only.
+    // dmNoComments already declared above.
+    const imgRuleCount = (dmNoComments.match(/img[\s\S]{0,100}filter:/g) || []).length;
+    if (imgRuleCount === 1) {
+      console.log('PASS: dark-mode.js has single img/video filter rule');
+    } else {
+      console.log(`FAIL: dark-mode.js has ${imgRuleCount} img filter rules in active code — expected 1`);
+    }
+
+    // (h) dark-mode: color-filter arbitration.
+    if (dmCode.includes('_colorFilterStyleId') || dmCode.includes('color-filter')) {
+      console.log('PASS: dark-mode.js checks for color-filter arbitration');
+    } else {
+      console.log('FAIL: dark-mode.js missing color-filter arbitration check');
+    }
+
+    // (i) read-aloud: no "Reading started" announce.
+    if (!rdCode.includes("announce('Reading started')") && !rdCode.includes('announce("Reading started")')) {
+      console.log('PASS: read-aloud.js has no "Reading started" announce (double-speak fix)');
+    } else {
+      console.log('FAIL: read-aloud.js still announces "Reading started" — double-speak with TTS');
+    }
+
+    // (j) read-aloud: sentenceChunks present.
+    if (rdCode.includes('sentenceChunks')) {
+      console.log('PASS: read-aloud.js has sentenceChunks for Chrome remote-voice stall fix');
+    } else {
+      console.log('FAIL: read-aloud.js missing sentenceChunks function');
+    }
+
+    // (k) registry: large-cursor and dyslexia-font entries retired.
+    if (!regCode.includes("id: 'large-cursor'")) {
+      console.log("PASS: 'large-cursor' registry entry correctly retired");
+    } else {
+      console.log("FAIL: 'large-cursor' registry entry still present — should be retired");
+    }
+    if (!regCode.includes("id: 'dyslexia-font'")) {
+      console.log("PASS: 'dyslexia-font' registry entry correctly retired");
+    } else {
+      console.log("FAIL: 'dyslexia-font' registry entry still present — should be retired");
+    }
+
+    // (l) onboarding has retired-adapters-note.
+    const onboardingHtmlPath = path.join(ROOT, 'extension/onboarding/onboarding.html');
+    const onboardingHtml = fs.readFileSync(onboardingHtmlPath, 'utf8');
+    if (onboardingHtml.includes('retired-adapters-note')) {
+      console.log('PASS: onboarding.html has retired-adapters-note for moved cards');
+    } else {
+      console.log('FAIL: onboarding.html missing retired-adapters-note');
+    }
+
+    // (m) popup.js has contrastMigrationNudge.
+    const popupJsPath = path.join(ROOT, 'extension/popup/popup.js');
+    const popupJsCode = fs.readFileSync(popupJsPath, 'utf8');
+    if (popupJsCode.includes('contrastMigrationNudge') && popupJsCode.includes('contrastNudgeDismissed')) {
+      console.log('PASS: popup.js has fix-contrast migration nudge');
+    } else {
+      console.log('FAIL: popup.js missing fix-contrast migration nudge');
+    }
+
+    // (n) content.js has _osAutoDark for dark-mode auto-respect.
+    const contentPath3 = path.join(ROOT, 'extension/content/content.js');
+    const contentCode3 = fs.readFileSync(contentPath3, 'utf8');
+    if (contentCode3.includes('_osAutoDark') && contentCode3.includes('prefs.dark')) {
+      console.log('PASS: content.js has dark-mode prefers-color-scheme auto-respect');
+    } else {
+      console.log('FAIL: content.js missing dark-mode prefers-color-scheme auto-respect');
     }
   }
 
