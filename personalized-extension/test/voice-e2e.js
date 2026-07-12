@@ -117,10 +117,15 @@ async function main() {
     const page = wirePage(await browser.newPage(), 'fixture');
     await page.goto('http://localhost:8791/', { waitUntil: 'networkidle2' });
     await sleep(1200); // content script runs at document_idle + async init
-    const vaCss = await page.evaluate(() =>
-      document.getElementById('ai4a11y-visual-assist')?.textContent || null);
+    // fontScale is applied as chunked inline text scaling (W2a replaced html{zoom});
+    // scaled elements carry data-ai4a11y-font-scale and a ~1.5x computed font-size.
+    const vaScale = await page.evaluate(() => {
+      const el = document.querySelector('[data-ai4a11y-font-scale]');
+      if (!el) return null;
+      return parseFloat(getComputedStyle(el).fontSize);
+    });
     check('content script applied VisualAssist from the voice-written setting',
-      !!vaCss && /zoom:\s*1\.5/.test(vaCss), String(vaCss).slice(0, 120));
+      vaScale !== null && vaScale >= 20, `computed font-size: ${vaScale}px`);
 
     // ============================================================
     // Beat 1b — an explicitly out-of-scope change persists but does NOT

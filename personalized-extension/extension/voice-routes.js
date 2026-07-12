@@ -23,6 +23,7 @@
     'voiceReadPage',
     'voiceSuggestCapabilities',
     'voiceGetMemory',
+    'voicePageAction',
   ]);
 
   // Baseline value per setting when nothing is stored. Mirrors content.js
@@ -686,6 +687,27 @@
     };
   }
 
+  // ---- voicePageAction -------------------------------------------------------
+
+  // Forward a page_action tool call to the content script's pageCommand handler.
+  // Not wrapped in serialize() — this is a page action on the active tab,
+  // same trust class as voiceReadPage. No shared mutable state to serialize.
+  async function handlePageAction(action, target, text) {
+    const tab = await activeTab();
+    if (!tab || tab.id == null) return { ok: false, detail: 'no active tab' };
+    try {
+      const resp = await chrome.tabs.sendMessage(tab.id, {
+        type: 'pageCommand',
+        ...(action !== undefined ? { action } : {}),
+        ...(target !== undefined ? { target } : {}),
+        ...(text !== undefined ? { text } : {}),
+      });
+      return resp || { ok: false, detail: 'no response' };
+    } catch (e) {
+      return { ok: false, detail: e.message || String(e) };
+    }
+  }
+
   // ---- listener --------------------------------------------------------------
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -707,6 +729,8 @@
             sendResponse(await suggestCapabilities(msg.need)); break;
           case 'voiceGetMemory':
             sendResponse(await getMemory(msg.topic)); break;
+          case 'voicePageAction':
+            sendResponse(await handlePageAction(msg.action, msg.target, msg.text)); break;
         }
       } catch (e) {
         sendResponse({ error: e.message || String(e) });

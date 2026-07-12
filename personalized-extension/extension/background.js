@@ -168,15 +168,18 @@ ensureUserScriptWorld().then(syncCustomUserScripts);
 
 // callGemini supports two third-arg shapes for backward compatibility:
 //   - an array of image data URLs (legacy from main: multimodal vision calls)
-//   - an options object: { images?: string[], mimeType?: string }
+//   - an options object: { images?: string[], mimeType?: string, model?: string,
+//                          audioParts?: [{mimeType, data}] }
 // New callers should use the object form; mimeType (e.g. 'application/json')
 // asks Gemini to emit only valid JSON, which the skill-builder relies on for
 // runtime AI calls inside saved skills.
+// audioParts: array of {mimeType, data} for audio transcription (Increment 1
+// captions). Uses the same inlineData path as images.
 async function callGemini(prompt, apiKey, optsOrImages) {
   const opts = Array.isArray(optsOrImages)
     ? { images: optsOrImages }
     : (optsOrImages || {});
-  const { images, mimeType, model } = opts;
+  const { images, mimeType, model, audioParts } = opts;
 
   const parts = [{ text: prompt }];
   if (images && images.length > 0) {
@@ -186,6 +189,14 @@ async function callGemini(prompt, apiKey, optsOrImages) {
         parts.push({
           inlineData: { mimeType: match[1], data: match[2] }
         });
+      }
+    }
+  }
+  // Audio parts: pre-extracted {mimeType, data} objects from the decode pipeline.
+  if (audioParts && audioParts.length > 0) {
+    for (const ap of audioParts) {
+      if (ap.mimeType && ap.data) {
+        parts.push({ inlineData: { mimeType: ap.mimeType, data: ap.data } });
       }
     }
   }
@@ -921,6 +932,126 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         });
 
         sendResponse({ ok: true });
+      } catch (e) {
+        sendResponse({ error: e.message || String(e) });
+      }
+    })();
+    return true;
+  }
+
+  // -------------------------------------------------------------------------
+  // transcribeMedia — captions adapter Increment 1
+  // -------------------------------------------------------------------------
+  // 1. Fetch media bytes under host_permissions (size-capped at 50MB).
+  // 2. Ensure the offscreen document is up (reuse ensureOffscreen).
+  // 3. Send bytes to the offscreen doc for AudioContext.decodeAudioData →
+  //    slice into ~15s PCM chunks → re-encode each as WAV base64.
+  // 4. Call Gemini per chunk (audio/wav inlineData, same callGemini path as
+  //    images but with an audio MIME type part).
+  // 5. Return [{startSec, endSec, text}] to the caller.
+  //
+  // Concurrency: 2 chunks at a time to avoid stampeding Gemini.
+  // Overall AbortSignal timeout: 5 minutes for large files.
+  if (msg.type === 'transcribeMedia') {
+    (async () => {
+      const MAX_MEDIA_BYTES = 50 * 1024 * 1024; // 50MB
+      const CHUNK_CONCURRENT = 2;
+
+      try {
+        const url = msg.url;
+        if (!url || typeof url !== 'string' || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+          sendResponse({ error: 'transcribeMedia: invalid url' });
+          return;
+        }
+
+        const apiKey = await getApiKey();
+        if (!apiKey) {
+          sendResponse({ error: 'No Gemini API key configured.' });
+          return;
+        }
+
+        // Step 1: fetch media bytes.
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+        let mediaResp;
+        try {
+          mediaResp = await fetch(url, { signal: controller.signal });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        if (!mediaResp.ok) {
+          sendResponse({ error: `transcribeMedia: fetch failed ${mediaResp.status}` });
+          return;
+        }
+        const contentLength = parseInt(mediaResp.headers.get('content-length') || '0', 10);
+        if (contentLength > MAX_MEDIA_BYTES) {
+          sendResponse({ error: 'transcribeMedia: media too large (>50MB)' });
+          return;
+        }
+        const arrayBuffer = await mediaResp.arrayBuffer();
+        if (arrayBuffer.byteLength > MAX_MEDIA_BYTES) {
+          sendResponse({ error: 'transcribeMedia: media too large (>50MB)' });
+          return;
+        }
+
+        // Step 2: ensure offscreen doc exists.
+        await ensureOffscreen();
+
+        // Step 3: send bytes to offscreen for decode+chunk.
+        // Transfer as ArrayBuffer via structured clone (not base64 — avoids 33% overhead
+        // for a buffer that may be tens of MB).
+        const decodeResp = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { type: 'captionDecodeAudio', buffer: arrayBuffer },
+            (r) => { resolve(r || {}); }
+          );
+        });
+        if (decodeResp.error) {
+          sendResponse({ error: `transcribeMedia: decode error: ${decodeResp.error}` });
+          return;
+        }
+        const wavChunks = decodeResp.chunks; // [{startSec, endSec, wavBase64}]
+        if (!Array.isArray(wavChunks) || !wavChunks.length) {
+          sendResponse({ error: 'transcribeMedia: no audio chunks returned' });
+          return;
+        }
+
+        // Step 4: transcribe each chunk via Gemini (2 concurrent).
+        const results = new Array(wavChunks.length);
+        const queue = wavChunks.map((c, i) => ({ ...c, index: i }));
+
+        async function processChunk(item) {
+          const { startSec, endSec, wavBase64, index } = item;
+          try {
+            const text = await callGemini(
+              'Transcribe this audio exactly. Return only the transcript text, nothing else.',
+              apiKey,
+              { audioParts: [{ mimeType: 'audio/wav', data: wavBase64 }] }
+            );
+            results[index] = { startSec, endSec, text: (text || '').trim() };
+          } catch (e) {
+            console.warn('[AI4A11y] chunk transcription error:', e.message);
+            results[index] = { startSec, endSec, text: '' };
+          }
+        }
+
+        // Sliding window of CHUNK_CONCURRENT.
+        let qi = 0;
+        async function runWorker() {
+          while (qi < queue.length) {
+            const item = queue[qi++];
+            await processChunk(item);
+          }
+        }
+        const workers = [];
+        for (let w = 0; w < Math.min(CHUNK_CONCURRENT, queue.length); w++) {
+          workers.push(runWorker());
+        }
+        await Promise.all(workers);
+
+        // Filter empty chunks, return the rest.
+        const chunks = results.filter(c => c && c.text);
+        sendResponse({ chunks });
       } catch (e) {
         sendResponse({ error: e.message || String(e) });
       }

@@ -394,6 +394,8 @@ const OFFSCREEN_MSG_TYPES = new Set([
   'voiceTextTurn',
   'voiceUndoLast',
   'voiceDebugToolCall',
+  // Captions Increment 1: audio decode+chunk for transcription pipeline.
+  'captionDecodeAudio',
 ]);
 
 // The panel's Undo button and the undo_last_change tool share one stack;
@@ -482,6 +484,92 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             if (chip) voiceState.appendAction({ tool: msg.name, text: chip.summary, ok: chip.ok, undoable: chip.undoable });
           } catch {}
           sendResponse({ ok: true, result });
+          break;
+        }
+        case 'captionDecodeAudio': {
+          // Captions Increment 1 — audio decode + chunk.
+          // The background sends an ArrayBuffer (via structured clone) of the
+          // raw media bytes. We decode with AudioContext.decodeAudioData, slice
+          // into ~15s PCM chunks, re-encode each as a WAV base64 string, and
+          // return [{startSec, endSec, wavBase64}].
+          //
+          // Why offscreen (not content script): host_permissions fetch + AudioContext
+          // decode in one place, no CORS constraints from the page origin.
+          try {
+            const buffer = msg.buffer;
+            if (!buffer || !(buffer instanceof ArrayBuffer)) {
+              sendResponse({ error: 'captionDecodeAudio: no buffer provided' });
+              break;
+            }
+            const CHUNK_DURATION_S = 15;
+            // Use the existing AudioContext from the voice audio pipeline if
+            // available (avoids creating a duplicate context), or create a
+            // temporary one. Either way we just need decodeAudioData.
+            const ctx = new AudioContext();
+            let decoded;
+            try {
+              decoded = await ctx.decodeAudioData(buffer.slice(0)); // slice to detach safely
+            } finally {
+              ctx.close().catch(() => {});
+            }
+            const { sampleRate, duration, numberOfChannels } = decoded;
+            const chunkSamples = Math.ceil(CHUNK_DURATION_S * sampleRate);
+            const totalSamples = decoded.length;
+            const chunks = [];
+            for (let offset = 0; offset < totalSamples; offset += chunkSamples) {
+              const chunkLen = Math.min(chunkSamples, totalSamples - offset);
+              const startSec = offset / sampleRate;
+              const endSec = Math.min(startSec + CHUNK_DURATION_S, duration);
+              // Encode chunk as 16-bit PCM WAV (mono — mix down if stereo to
+              // reduce payload size; Gemini handles mono WAV fine).
+              const numChannelsOut = 1;
+              const pcm = new Float32Array(chunkLen);
+              // Mix down all channels to mono.
+              for (let ch = 0; ch < numberOfChannels; ch++) {
+                const channelData = decoded.getChannelData(ch);
+                for (let i = 0; i < chunkLen; i++) {
+                  pcm[i] += channelData[offset + i] / numberOfChannels;
+                }
+              }
+              // Build WAV header + 16-bit PCM samples.
+              const bitsPerSample = 16;
+              const byteRate = sampleRate * numChannelsOut * bitsPerSample / 8;
+              const blockAlign = numChannelsOut * bitsPerSample / 8;
+              const dataSize = chunkLen * blockAlign;
+              const wavBuffer = new ArrayBuffer(44 + dataSize);
+              const view = new DataView(wavBuffer);
+              function writeStr(off, s) { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); }
+              writeStr(0, 'RIFF');
+              view.setUint32(4, 36 + dataSize, true);
+              writeStr(8, 'WAVE');
+              writeStr(12, 'fmt ');
+              view.setUint32(16, 16, true);
+              view.setUint16(20, 1, true); // PCM
+              view.setUint16(22, numChannelsOut, true);
+              view.setUint32(24, sampleRate, true);
+              view.setUint32(28, byteRate, true);
+              view.setUint16(32, blockAlign, true);
+              view.setUint16(34, bitsPerSample, true);
+              writeStr(36, 'data');
+              view.setUint32(40, dataSize, true);
+              // Convert float32 PCM → int16.
+              let off = 44;
+              for (let i = 0; i < chunkLen; i++) {
+                const s = Math.max(-1, Math.min(1, pcm[i]));
+                view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                off += 2;
+              }
+              // Base64-encode for structured-clone-safe return.
+              const bytes = new Uint8Array(wavBuffer);
+              let bin = '';
+              for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+              const wavBase64 = btoa(bin);
+              chunks.push({ startSec, endSec, wavBase64 });
+            }
+            sendResponse({ chunks });
+          } catch (e) {
+            sendResponse({ error: e.message || String(e) });
+          }
           break;
         }
       }

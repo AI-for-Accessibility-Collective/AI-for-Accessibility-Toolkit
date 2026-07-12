@@ -45,6 +45,7 @@ export const TOOL_NAMES = [
   'adjust_settings',
   'undo_last_change',
   'get_page_content',
+  'page_action',
   'start_browser_task',
   'get_browser_status',
   'stop_browser_task',
@@ -97,6 +98,30 @@ export const TOOL_DECLARATIONS = [
             mode: { type: 'string', enum: ['outline', 'text'], description: "Default 'outline'." },
             chunk: { type: 'number', description: "Chunk index for mode 'text' (0-based)." },
           },
+        },
+      },
+      {
+        name: 'page_action',
+        description:
+          'Perform a quick page action: scroll, click a button or link by its text, type text into the focused field, or move focus. Use this for single-step page interactions. For multi-step tasks (fill a form, navigate across several pages) use start_browser_task instead.',
+        parameters: {
+          type: 'object',
+          properties: {
+            action: {
+              type: 'string',
+              enum: ['scroll_down', 'scroll_up', 'page_down', 'page_up', 'top', 'bottom', 'back', 'forward', 'click', 'focus_next_link', 'focus_prev_link', 'focus_next_button', 'type'],
+              description: 'The action to perform.',
+            },
+            target: {
+              type: 'string',
+              description: "For action 'click': the visible text, value, or aria-label of the element to click.",
+            },
+            text: {
+              type: 'string',
+              description: "For action 'type': the text to type into the currently focused field.",
+            },
+          },
+          required: ['action'],
         },
       },
       {
@@ -267,6 +292,14 @@ export async function dispatchToolCall(name, args, signal) {
         chunk: (args && Number(args.chunk)) || 0,
       });
 
+    case 'page_action': {
+      const action = (args && typeof args.action === 'string') ? args.action : '';
+      if (!action) return { error: 'action is required' };
+      const target = (args && typeof args.target === 'string') ? args.target : undefined;
+      const text = (args && typeof args.text === 'string') ? args.text : undefined;
+      return await sendRuntime({ type: 'voicePageAction', action, ...(target !== undefined ? { target } : {}), ...(text !== undefined ? { text } : {}) });
+    }
+
     case 'start_browser_task': {
       const task = (args && typeof args.task === 'string') ? args.task.trim() : '';
       if (!task) return { error: 'no task supplied' };
@@ -394,6 +427,7 @@ export function describeAction(name, args, result) {
     const failures = {
       adjust_settings: 'Could not change settings',
       undo_last_change: 'Could not undo',
+      page_action: 'Could not perform page action',
       start_browser_task: 'Could not start the task',
       stop_browser_task: 'Could not stop the task',
       remember: 'Could not save the memory',
@@ -404,6 +438,10 @@ export function describeAction(name, args, result) {
     return { summary: `${failures[name]}: ${String(result.error).slice(0, 120)}`, ok: false, undoable: false };
   }
   switch (name) {
+    case 'page_action': {
+      const result_detail = result && result.detail ? String(result.detail).slice(0, 120) : args && args.action;
+      return { summary: `✓ ${result_detail}`, ok: true, undoable: false };
+    }
     case 'adjust_settings':
       return { summary: describeChanges(result && result.applied), ok: true, undoable: true };
     case 'undo_last_change':
