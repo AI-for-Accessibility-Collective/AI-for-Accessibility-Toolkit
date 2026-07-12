@@ -101,9 +101,9 @@ export async function transcribeVideo(videoUrl) {
   return _provider.transcribeVideo(videoUrl);
 }
 
-export async function transcribeAudio(audioUrl) {
+export async function transcribeAudio(audioUrl, opts) {
   if (!_provider?.transcribeAudio) return null;
-  return _provider.transcribeAudio(audioUrl);
+  return _provider.transcribeAudio(audioUrl, opts);
 }
 
 export async function describeElement(element, context) {
@@ -231,8 +231,29 @@ export function createChromeAIProvider() {
       return null;
     },
 
-    async transcribeAudio(audioUrl) {
-      return null;
+    // transcribeAudio — real implementation for Increment 1.
+    // Sends a 'transcribeMedia' message to the background, which fetches the
+    // media bytes under host_permissions and delegates audio decoding+chunking
+    // to the offscreen document, then calls Gemini per ~15s chunk.
+    // Returns [{startSec, endSec, text}] or null on failure.
+    async transcribeAudio(audioUrl, opts) {
+      if (!audioUrl || typeof audioUrl !== 'string') return null;
+      // Only handle http(s) URLs; blob:/mediasource: are not fetchable.
+      if (!audioUrl.startsWith('http://') && !audioUrl.startsWith('https://')) return null;
+      return _acquireSlot().then(() => new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: 'transcribeMedia', url: audioUrl }, (response) => {
+          _releaseSlot();
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (response?.error) {
+            reject(new Error(response.error));
+            return;
+          }
+          resolve(response?.chunks || null);
+        });
+      }));
     },
 
     async describeElement(element, context) {

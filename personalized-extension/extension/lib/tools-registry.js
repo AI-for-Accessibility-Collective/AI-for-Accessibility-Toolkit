@@ -188,7 +188,7 @@ globalThis.AA_TOOLS = {
   {
     "id": "voice-commands",
     "name": "Voice Commands",
-    "description": "Hands-free browsing with voice commands, visual feedback HUD, interim results, and an expandable command set.",
+    "description": "Web Speech API fallback for hands-free browsing when voice mode is not available. Voice mode (Gemini Live) provides better speech understanding including for non-standard speech. Fixes: word-boundary command matching, mic-denied loop prevention, mutual exclusion with voice mode.",
     "supportAreas": [
       "motor"
     ],
@@ -198,15 +198,15 @@ globalThis.AA_TOOLS = {
     "requiresAI": false,
     "icon": "mic",
     "emoji": "🎙️",
-    "quickStart": true,
+    "quickStart": false,
     "settings": {
       "voiceCommands": true
     }
   },
   {
-    "id": "auto-captions",
-    "name": "Auto Captions",
-    "description": "Live caption overlay for videos with CC toggle button, YouTube caption auto-enable, and MutationObserver for dynamically added media.",
+    "id": "captions",
+    "name": "Captions",
+    "description": "Auto-enables native CC on YouTube pages and iframes. For reachable http(s) media, transcribes audio in ~15s chunks via cloud AI and attaches an AI-generated caption track or expandable transcript (requires Gemini API key). blob:/DRM/MSE media shows a notice to try Chrome Live Caption instead. Not live captioning.",
     "supportAreas": [
       "hearing"
     ],
@@ -215,7 +215,7 @@ globalThis.AA_TOOLS = {
       "social",
       "education"
     ],
-    "requiresAI": false,
+    "requiresAI": true,
     "icon": "closed_caption",
     "emoji": "💬",
     "quickStart": true,
@@ -316,25 +316,6 @@ globalThis.AA_TOOLS = {
     "quickStart": false,
     "settings": {
       "autoFixLabels": true
-    }
-  },
-  {
-    "id": "generate-captions",
-    "name": "Generate Captions",
-    "description": "AI-powered caption generation for videos (WebVTT tracks) and audio elements (expandable transcripts).",
-    "supportAreas": [
-      "hearing"
-    ],
-    "siteRelevance": [
-      "video",
-      "education"
-    ],
-    "requiresAI": true,
-    "icon": "subtitles",
-    "emoji": "💬",
-    "quickStart": false,
-    "settings": {
-      "autoCaptions": true
     }
   },
   {

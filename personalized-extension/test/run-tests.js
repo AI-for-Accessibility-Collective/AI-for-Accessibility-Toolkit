@@ -48,12 +48,13 @@ server.listen(PORT, async () => {
   }
 
   // Test 2: Check all skill files exist and are non-empty
+  // W3 captions merge: auto-captions.js + generate-captions.js → captions.js (16→15 files).
   const skillDir = path.join(ROOT, 'skills/builtin');
   const expectedSkills = [
     'dark-mode', 'focus-mode', 'visual-assist', 'motion-reducer',
     'reader-mode', 'keyboard-nav', 'auto-alt-text', 'fix-contrast',
-    'simplify-text', 'voice-commands', 'auto-captions', 'color-filter',
-    'read-aloud', 'generate-labels', 'generate-captions', 'wcag-fixes'
+    'simplify-text', 'voice-commands', 'captions', 'color-filter',
+    'read-aloud', 'generate-labels', 'wcag-fixes'
   ];
 
   for (const skill of expectedSkills) {
@@ -71,7 +72,8 @@ server.listen(PORT, async () => {
   }
 
   // Test 3: Check deleted files don't exist
-  for (const old of ['large-cursor.js', 'dyslexia-font.js']) {
+  // W3 captions merge: auto-captions.js and generate-captions.js deleted.
+  for (const old of ['large-cursor.js', 'dyslexia-font.js', 'auto-captions.js', 'generate-captions.js']) {
     const fp = path.join(skillDir, old);
     if (fs.existsSync(fp)) {
       console.log(`FAIL: ${old} should be deleted but still exists`);
@@ -96,7 +98,7 @@ server.listen(PORT, async () => {
     }
   }
 
-  // Test 5: Check registry has all 16 skills
+  // Test 5: Check registry has all 15 skills (W3 merge: 16→15)
   const registryPath = path.join(ROOT, 'skills/registry.js');
   const registryContent = fs.readFileSync(registryPath, 'utf8');
   for (const skill of expectedSkills) {
@@ -106,17 +108,27 @@ server.listen(PORT, async () => {
       console.log(`FAIL: registry missing '${skill}'`);
     }
   }
+  // Verify old caption IDs are gone.
+  if (registryContent.includes("id: 'auto-captions'")) {
+    console.log("FAIL: registry still has old 'auto-captions' entry — should be merged into 'captions'");
+  } else {
+    console.log("PASS: registry no longer has 'auto-captions' entry");
+  }
+  if (registryContent.includes("id: 'generate-captions'")) {
+    console.log("FAIL: registry still has old 'generate-captions' entry — should be merged into 'captions'");
+  } else {
+    console.log("PASS: registry no longer has 'generate-captions' entry");
+  }
 
-  // Test 6: Check content.js imports all 16 skills
+  // Test 6: Check content.js imports all 15 skills (W3 captions merge)
   const contentPath = path.join(ROOT, 'extension/content/content.js');
   const contentCode = fs.readFileSync(contentPath, 'utf8');
   const importChecks = {
     'DarkMode': 'dark-mode', 'FocusMode': 'focus-mode', 'VisualAssist': 'visual-assist',
     'MotionReducer': 'motion-reducer', 'ReaderMode': 'reader-mode', 'KeyboardNav': 'keyboard-nav',
     'AutoAltText': 'auto-alt-text', 'FixContrast': 'fix-contrast', 'SimplifyText': 'simplify-text',
-    'VoiceCommands': 'voice-commands', 'AutoCaptions': 'auto-captions', 'ColorFilter': 'color-filter',
-    'ReadAloud': 'read-aloud', 'GenerateLabels': 'generate-labels',
-    'GenerateCaptions': 'generate-captions', 'WcagFixes': 'wcag-fixes'
+    'VoiceCommands': 'voice-commands', 'Captions': 'captions', 'ColorFilter': 'color-filter',
+    'ReadAloud': 'read-aloud', 'GenerateLabels': 'generate-labels', 'WcagFixes': 'wcag-fixes'
   };
 
   for (const [cls, file] of Object.entries(importChecks)) {
@@ -125,6 +137,17 @@ server.listen(PORT, async () => {
     } else {
       console.log(`FAIL: content.js missing import for ${cls}/${file}`);
     }
+  }
+  // Verify dead imports are gone.
+  if (contentCode.includes("AutoCaptions") && contentCode.includes("auto-captions")) {
+    console.log("FAIL: content.js still imports AutoCaptions from auto-captions.js — deleted in W3 merge");
+  } else {
+    console.log("PASS: content.js does not import AutoCaptions/auto-captions (correctly deleted)");
+  }
+  if (contentCode.includes("GenerateCaptions") && contentCode.includes("generate-captions")) {
+    console.log("FAIL: content.js still imports GenerateCaptions from generate-captions.js — deleted in W3 merge");
+  } else {
+    console.log("PASS: content.js does not import GenerateCaptions/generate-captions (correctly deleted)");
   }
 
   // Test 7: Check content.js has TOOL_MAP and AI_TOOL_MAP with key modules
@@ -347,12 +370,12 @@ server.listen(PORT, async () => {
 
   // (a) No two registry entries share a settings key.
   //     Documented allowlist:
-  //       - autoCaptions: shared by auto-captions/generate-captions until the
-  //         W3 merge (same module wired, not a bug)
   //       - lineHeight, letterSpacing, dyslexiaFont: visual-assist piggyback
   //         keys also set by the dyslexia-font registry entry
+  //     Note: autoCaptions collision (auto-captions + generate-captions) was
+  //     removed in W3 merge — now a single 'captions' entry. The allowlist
+  //     entry for autoCaptions is intentionally absent.
   const SHARED_KEY_ALLOWLIST = new Set([
-    'autoCaptions',    // auto-captions + generate-captions until merged
     'lineHeight',      // dyslexia-font piggybacks visual-assist keys
     'letterSpacing',   // dyslexia-font piggybacks visual-assist keys
     'dyslexiaFont',    // dyslexia-font piggybacks visual-assist keys
@@ -1112,6 +1135,236 @@ server.listen(PORT, async () => {
       }
     } else {
       console.log('FAIL: utils/aria-tables.gen.js not found — run npm run build');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 22: voice-commands 2.1 static checks
+  // ---------------------------------------------------------------------------
+  {
+    const vcPath = path.join(ROOT, 'skills/builtin/voice-commands.js');
+    const vcCode = fs.readFileSync(vcPath, 'utf8');
+    const paPath = path.join(ROOT, 'skills/builtin/page-actions.js');
+    const paCode = fs.existsSync(paPath) ? fs.readFileSync(paPath, 'utf8') : '';
+
+    // (a) page-actions.js exists
+    if (fs.existsSync(paPath)) {
+      console.log('PASS: skills/builtin/page-actions.js exists');
+    } else {
+      console.log('FAIL: skills/builtin/page-actions.js not found');
+    }
+
+    // (b) voice-commands.js imports from page-actions.js
+    if (vcCode.includes('./page-actions.js') || vcCode.includes("'./page-actions'")) {
+      console.log('PASS: voice-commands.js imports from page-actions.js');
+    } else {
+      console.log('FAIL: voice-commands.js does not import page-actions.js');
+    }
+
+    // (c) HUD transcript span has no aria-live
+    // The feedbackElement or the interim text span must NOT have aria-live="polite"
+    // on the transcript/text element. (A separate state region may have it.)
+    const vcNoComments = vcCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    // The text span (.ai4a11y-voice-text) must not be followed by aria-live.
+    // Check: 'ai4a11y-voice-text' + 'aria-live' within the createFeedbackElement function.
+    const feedbackFnMatch = vcNoComments.match(/createFeedbackElement[\s\S]*?(?=\n  [a-z_]|\n\})/);
+    const feedbackFnCode = feedbackFnMatch ? feedbackFnMatch[0] : vcNoComments;
+    const hasAriaLiveOnTranscript = /ai4a11y-voice-text[\s\S]{0,200}aria-live/.test(feedbackFnCode) ||
+      /aria-live[\s\S]{0,200}ai4a11y-voice-text/.test(feedbackFnCode);
+    if (!hasAriaLiveOnTranscript) {
+      console.log('PASS: voice-commands.js HUD transcript element has no aria-live');
+    } else {
+      console.log('FAIL: voice-commands.js HUD transcript element must not have aria-live (SR echo)');
+    }
+
+    // (d) quickStart: false in registry for voice-commands
+    const registryCode = fs.readFileSync(path.join(ROOT, 'skills/registry.js'), 'utf8');
+    // Find the voice-commands entry and check quickStart
+    const vcEntryMatch = registryCode.match(/id:\s*'voice-commands'[\s\S]*?(?=\},\s*\{|\}\s*\])/);
+    if (vcEntryMatch && /quickStart:\s*false/.test(vcEntryMatch[0])) {
+      console.log('PASS: voice-commands registry entry has quickStart: false');
+    } else {
+      console.log('FAIL: voice-commands registry entry must have quickStart: false');
+    }
+
+    // (e) voicePageAction in voice-routes.js whitelist
+    if (voiceRoutesCode.includes("'voicePageAction'")) {
+      console.log("PASS: voice-routes.js has 'voicePageAction' in the whitelist");
+    } else {
+      console.log("FAIL: voice-routes.js missing 'voicePageAction' route");
+    }
+
+    // (f) page_action in TOOL_DECLARATIONS in tools.js
+    if (voiceToolsCode.includes("'page_action'")) {
+      console.log("PASS: tools.js has 'page_action' declared");
+    } else {
+      console.log("FAIL: tools.js missing 'page_action' declaration");
+    }
+
+    // (g) prompt.js mentions page_action
+    if (voicePromptCode.includes('page_action')) {
+      console.log('PASS: prompt.js mentions page_action');
+    } else {
+      console.log('FAIL: prompt.js does not mention page_action');
+    }
+
+    // (h) content.js has pageCommand branch
+    if (contentCode.includes("'pageCommand'") || contentCode.includes('"pageCommand"')) {
+      console.log('PASS: content.js has pageCommand message branch');
+    } else {
+      console.log('FAIL: content.js missing pageCommand message branch');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 22: captions.js (W3 merge) static checks
+  // ---------------------------------------------------------------------------
+  {
+    const captionsPath = path.join(ROOT, 'skills/builtin/captions.js');
+    const captionsCode = fs.readFileSync(captionsPath, 'utf8');
+    const captionsNoComments = captionsCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+    // (a) captions.js exists and is non-empty.
+    if (fs.existsSync(captionsPath) && fs.statSync(captionsPath).size > 500) {
+      console.log('PASS: skills/builtin/captions.js exists and is non-empty');
+    } else {
+      console.log('FAIL: skills/builtin/captions.js missing or too small');
+    }
+
+    // (b) No createSimpleVTT fixed-cadence code (old bad pattern deleted).
+    if (!captionsCode.includes('createSimpleVTT') && !captionsCode.includes('secondsPerChunk')) {
+      console.log('PASS: captions.js has no createSimpleVTT fixed-cadence pattern');
+    } else {
+      console.log('FAIL: captions.js still has createSimpleVTT or secondsPerChunk — must use real chunk offsets');
+    }
+
+    // (c) Real chunk offsets used (buildVTT takes startSec/endSec).
+    if (captionsCode.includes('startSec') && captionsCode.includes('endSec') && captionsCode.includes('buildVTT')) {
+      console.log('PASS: captions.js uses real chunk offsets (startSec/endSec) in buildVTT');
+    } else {
+      console.log('FAIL: captions.js missing real chunk offsets — must use chunk.startSec/endSec');
+    }
+
+    // (d) Track label mentions AI-generated.
+    if (captionsCode.includes("AI-generated (may contain errors)")) {
+      console.log("PASS: captions.js track label mentions 'AI-generated (may contain errors)'");
+    } else {
+      console.log("FAIL: captions.js track label must say 'AI-generated (may contain errors)'");
+    }
+
+    // (e) Honest notice string for blob:/MSE/DRM media.
+    if (captionsCode.includes("Can't reach this player") && captionsCode.includes('Chrome Live Caption')) {
+      console.log("PASS: captions.js has honest notice string for unreachable media");
+    } else {
+      console.log("FAIL: captions.js missing notice string for blob:/MSE/DRM media");
+    }
+
+    // (f) Namespaced marks used ('captions' namespace).
+    if (captionsCode.includes("markProcessed") && captionsCode.includes("'captions'")) {
+      console.log("PASS: captions.js uses namespaced marks (ns='captions')");
+    } else {
+      console.log("FAIL: captions.js missing namespaced marks");
+    }
+
+    // (g) No dataset.ai4a11yCaptioned permanent latch (old bad pattern).
+    if (!captionsNoComments.includes("dataset.ai4a11yCaptioned = 'failed'")) {
+      console.log("PASS: captions.js has no dataset.ai4a11yCaptioned permanent latch");
+    } else {
+      console.log("FAIL: captions.js still uses dataset.ai4a11yCaptioned='failed' latch — should use namespaced marks");
+    }
+
+    // (h) pagehide self-disable removed.
+    if (!captionsNoComments.includes("'pagehide'")) {
+      console.log("PASS: captions.js has no pagehide self-disable (SPA-safe: sweep handles navigation)");
+    } else {
+      console.log("FAIL: captions.js still has pagehide self-disable — must be removed (sweep handles SPA nav)");
+    }
+
+    // (i) wrapper position:relative restore on disable.
+    if (captionsCode.includes('origWrapperPosition')) {
+      console.log("PASS: captions.js records/restores wrapper position style on disable");
+    } else {
+      console.log("FAIL: captions.js missing origWrapperPosition — wrapper position leak on disable");
+    }
+
+    // (j) axeHandlers exported with correct keys.
+    if (captionsCode.includes("'video-caption'") && captionsCode.includes("'audio-caption'")) {
+      console.log("PASS: captions.js exports axeHandlers with video-caption and audio-caption keys");
+    } else {
+      console.log("FAIL: captions.js axeHandlers missing video-caption or audio-caption key");
+    }
+
+    // (k) registerSweep used for SPA navigation.
+    if (captionsCode.includes('registerSweep') && captionsCode.includes('observe.js')) {
+      console.log("PASS: captions.js uses registerSweep from observe.js for SPA navigation");
+    } else {
+      console.log("FAIL: captions.js missing registerSweep from observe.js");
+    }
+
+    // (l) No WCAG stat increment for machine output.
+    //     logFix is called with type 'caption' (not 'wcag') — wcag counter stays clean.
+    const logFixCalls = captionsNoComments.match(/logFix\([^)]+\)/g) || [];
+    const hasWcagIncrement = captionsNoComments.includes("incrementStat('wcag')") || captionsNoComments.includes('incrementStat("wcag")');
+    if (!hasWcagIncrement) {
+      console.log("PASS: captions.js does not increment wcag stat for machine output");
+    } else {
+      console.log("FAIL: captions.js must not increment wcag stat for machine output");
+    }
+
+    // (m) background.js has transcribeMedia route.
+    const bgPath = path.join(ROOT, 'extension/background.js');
+    const bgCode = fs.readFileSync(bgPath, 'utf8');
+    if (bgCode.includes("'transcribeMedia'") && bgCode.includes('captionDecodeAudio')) {
+      console.log("PASS: background.js has transcribeMedia route and captionDecodeAudio plumbing");
+    } else {
+      console.log("FAIL: background.js missing transcribeMedia route or captionDecodeAudio");
+    }
+
+    // (n) offscreen/src/index.js has captionDecodeAudio handler.
+    const offscreenIndexPath = path.join(ROOT, 'extension/offscreen/src/index.js');
+    const offscreenCode = fs.readFileSync(offscreenIndexPath, 'utf8');
+    if (offscreenCode.includes("'captionDecodeAudio'") && offscreenCode.includes('AudioContext')) {
+      console.log("PASS: offscreen/src/index.js handles captionDecodeAudio with AudioContext");
+    } else {
+      console.log("FAIL: offscreen/src/index.js missing captionDecodeAudio handler");
+    }
+
+    // (o) content.js imports Captions from captions.js (not old modules).
+    const contentPath2 = path.join(ROOT, 'extension/content/content.js');
+    const contentCode2 = fs.readFileSync(contentPath2, 'utf8');
+    if (contentCode2.includes("Captions") && contentCode2.includes("captions.js") &&
+        contentCode2.includes("autoCaptions: Captions")) {
+      console.log("PASS: content.js AI_TOOL_MAP routes autoCaptions to Captions (merged module)");
+    } else {
+      console.log("FAIL: content.js AI_TOOL_MAP not updated — autoCaptions must route to Captions");
+    }
+
+    // (p) utils/ai.js transcribeAudio sends 'transcribeMedia' to background (not null stub).
+    const aiPath = path.join(ROOT, 'utils/ai.js');
+    const aiCode = fs.readFileSync(aiPath, 'utf8');
+    if (aiCode.includes("'transcribeMedia'") && aiCode.includes('transcribeAudio')) {
+      console.log("PASS: utils/ai.js transcribeAudio sends transcribeMedia message to background");
+    } else {
+      console.log("FAIL: utils/ai.js transcribeAudio still returns null stub — must send transcribeMedia");
+    }
+
+    // (q) test/captions-test.mjs and test/captions-e2e.js exist.
+    if (fs.existsSync(path.join(ROOT, 'test/captions-test.mjs'))) {
+      console.log("PASS: test/captions-test.mjs exists");
+    } else {
+      console.log("FAIL: test/captions-test.mjs not found");
+    }
+    if (fs.existsSync(path.join(ROOT, 'test/captions-e2e.js'))) {
+      console.log("PASS: test/captions-e2e.js exists");
+    } else {
+      console.log("FAIL: test/captions-e2e.js not found");
+    }
+
+    // (r) test/fixtures/captions/page.html exists.
+    if (fs.existsSync(path.join(ROOT, 'test/fixtures/captions/page.html'))) {
+      console.log("PASS: test/fixtures/captions/page.html exists");
+    } else {
+      console.log("FAIL: test/fixtures/captions/page.html not found");
     }
   }
 

@@ -1,5 +1,6 @@
 import { setAIProvider, createChromeAIProvider, setAnnounceSuppressed, isAIConfigured, announce } from '../../utils/ai.js';
 import { clearMarks } from '../../utils/dom.js';
+import { scrollBy, scrollToTop, scrollToBottom, goBack, goForward, clickByText, focusNextLink, focusPrevLink, focusNextButton, typeText, readPage, stopReading } from '../../skills/builtin/page-actions.js';
 import { watchSystemPrefs } from '../../utils/system-prefs.js';
 import { DarkMode } from '../../skills/builtin/dark-mode.js';
 import { FocusMode } from '../../skills/builtin/focus-mode.js';
@@ -11,16 +12,15 @@ import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
 import { FixContrast } from '../../skills/builtin/fix-contrast.js';
 import { SimplifyText } from '../../skills/builtin/simplify-text.js';
-import { AutoCaptions } from '../../skills/builtin/auto-captions.js';
+import { Captions } from '../../skills/builtin/captions.js';
 import { VoiceCommands } from '../../skills/builtin/voice-commands.js';
 import { ReadAloud } from '../../skills/builtin/read-aloud.js';
 import { GenerateLabels } from '../../skills/builtin/generate-labels.js';
-import { GenerateCaptions } from '../../skills/builtin/generate-captions.js';
 import { WcagFixes, axeHandlers as wcagAxeHandlers, RISKY_AXE_RULES } from '../../skills/builtin/wcag-fixes.js';
 import { axeHandlers as contrastAxeHandlers } from '../../skills/builtin/fix-contrast.js';
 import { axeHandlers as altTextAxeHandlers } from '../../skills/builtin/auto-alt-text.js';
 import { axeHandlers as labelsAxeHandlers } from '../../skills/builtin/generate-labels.js';
-import { axeHandlers as captionsAxeHandlers } from '../../skills/builtin/generate-captions.js';
+import { axeHandlers as captionsAxeHandlers } from '../../skills/builtin/captions.js';
 
 setAIProvider(createChromeAIProvider());
 
@@ -41,7 +41,7 @@ const AI_TOOL_MAP = {
   autoWcagFix: WcagFixes,
   autoFixLabels: GenerateLabels,
   autoDescribe: AutoAltText,
-  autoCaptions: GenerateCaptions,
+  autoCaptions: Captions,
   autoSimplify: SimplifyText,
   autoSummarize: SimplifyText,
 };
@@ -76,7 +76,7 @@ const _combinedAxeHandlers = Object.assign(
   contrastAxeHandlers,
   altTextAxeHandlers,
   labelsAxeHandlers,
-  captionsAxeHandlers
+  captionsAxeHandlers  // video-caption, audio-caption handlers from captions.js
 );
 
 // reportFix signature: (type, selector, oldVal, newVal, inverseDescriptor?)
@@ -275,8 +275,12 @@ async function applyAISettings(newSettings, fromSettingsChange = false) {
 
   if (newSettings.autoCaptions !== undefined) {
     if (newSettings.autoCaptions) {
-      await enableAITool('autoCaptions', () => GenerateCaptions.enable(), () => GenerateCaptions.disable?.(), fromSettingsChange);
-    } else if (GenerateCaptions.disable) GenerateCaptions.disable();
+      // Special case: Captions enables in youtubeOnly mode even without a key.
+      const configured = await checkAIConfigured();
+      try { await Captions.enable({ youtubeOnly: !configured }); } catch (e) {
+        console.warn('[AI4A11y] autoCaptions error:', e);
+      }
+    } else if (Captions.disable) Captions.disable();
   }
 
   if (newSettings.autoSimplify !== undefined) {
@@ -362,8 +366,15 @@ async function initFromStorage() {
     };
 
     // AI sweeps: check key once before enabling any of them (cached per page load).
+    // Special case: autoCaptions enables even without a key (youtubeOnly mode) —
+    // YouTube CC auto-enable works key-free. The Captions adapter transcribes
+    // fetchable media only when the provider is configured.
+    if (aiSettings.autoCaptions) {
+      const configured = await checkAIConfigured();
+      try { await Captions.enable({ youtubeOnly: !configured }); } catch (e) {}
+    }
     if (aiSettings.fixContrast || aiSettings.autoFixLabels || aiSettings.autoDescribe ||
-        aiSettings.autoCaptions || aiSettings.autoSimplify || aiSettings.autoSummarize) {
+        aiSettings.autoSimplify || aiSettings.autoSummarize) {
       const configured = await checkAIConfigured();
       if (!configured) {
         console.info('[AI4A11y] AI sweeps requested but no Gemini API key configured — skipping.');
@@ -371,7 +382,6 @@ async function initFromStorage() {
         if (aiSettings.fixContrast) { try { await FixContrast.enable(); } catch (e) {} }
         if (aiSettings.autoFixLabels) { try { await GenerateLabels.enable(); } catch (e) {} }
         if (aiSettings.autoDescribe) { try { await AutoAltText.enable(); } catch (e) {} }
-        if (aiSettings.autoCaptions) { try { await GenerateCaptions.enable(); } catch (e) {} }
         if (aiSettings.autoSimplify || aiSettings.autoSummarize) { try { await SimplifyText.enable(); } catch (e) {} }
       }
     }
@@ -477,6 +487,26 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     } catch (e) {
       sendResponse({ success: false, reason: e.message });
     }
+  } else if (msg.type === 'pageCommand') {
+    const { action, target, text } = msg;
+    let result;
+    switch (action) {
+      case 'scroll_down':       result = scrollBy('down'); break;
+      case 'scroll_up':         result = scrollBy('up'); break;
+      case 'page_down':         result = scrollBy('page_down'); break;
+      case 'page_up':           result = scrollBy('page_up'); break;
+      case 'top':               result = scrollToTop(); break;
+      case 'bottom':            result = scrollToBottom(); break;
+      case 'back':              result = goBack(); break;
+      case 'forward':           result = goForward(); break;
+      case 'click':             result = clickByText(target || ''); break;
+      case 'focus_next_link':   result = focusNextLink(); break;
+      case 'focus_prev_link':   result = focusPrevLink(); break;
+      case 'focus_next_button': result = focusNextButton(); break;
+      case 'type':              result = typeText(text || ''); break;
+      default:                  result = { ok: false, detail: `unknown action: ${action}` };
+    }
+    sendResponse(result);
   }
   // No `return true` here: every matched branch above calls sendResponse
   // synchronously, and an unconditional `return true` would tell Chrome to
@@ -535,7 +565,7 @@ function applyProfileSettings(settings) {
   }
 
   const aiKeys = { fixContrast: FixContrast, autoWcagFix: WcagFixes, autoFixLabels: GenerateLabels,
-    autoDescribe: AutoAltText, autoCaptions: GenerateCaptions,
+    autoDescribe: AutoAltText, autoCaptions: Captions,
     autoSimplify: SimplifyText, autoSummarize: SimplifyText };
   for (const [key, mod] of Object.entries(aiKeys)) {
     if (settings[key] === true) { try { mod.enable(); } catch (e) {} }

@@ -194,6 +194,29 @@
           }
         },
         {
+          name: "page_action",
+          description: "Perform a quick page action: scroll, click a button or link by its text, type text into the focused field, or move focus. Use this for single-step page interactions. For multi-step tasks (fill a form, navigate across several pages) use start_browser_task instead.",
+          parameters: {
+            type: "object",
+            properties: {
+              action: {
+                type: "string",
+                enum: ["scroll_down", "scroll_up", "page_down", "page_up", "top", "bottom", "back", "forward", "click", "focus_next_link", "focus_prev_link", "focus_next_button", "type"],
+                description: "The action to perform."
+              },
+              target: {
+                type: "string",
+                description: "For action 'click': the visible text, value, or aria-label of the element to click."
+              },
+              text: {
+                type: "string",
+                description: "For action 'type': the text to type into the currently focused field."
+              }
+            },
+            required: ["action"]
+          }
+        },
+        {
           name: "start_browser_task",
           description: "Start the browser agent on a single concise task. Returns once launched (the agent runs asynchronously; you will receive [Browser update] messages). Call once per user-initiated task.",
           parameters: {
@@ -326,6 +349,13 @@
           mode: args && args.mode === "text" ? "text" : "outline",
           chunk: args && Number(args.chunk) || 0
         });
+      case "page_action": {
+        const action = args && typeof args.action === "string" ? args.action : "";
+        if (!action) return { error: "action is required" };
+        const target = args && typeof args.target === "string" ? args.target : void 0;
+        const text = args && typeof args.text === "string" ? args.text : void 0;
+        return await sendRuntime({ type: "voicePageAction", action, ...target !== void 0 ? { target } : {}, ...text !== void 0 ? { text } : {} });
+      }
       case "start_browser_task": {
         const task = args && typeof args.task === "string" ? args.task.trim() : "";
         if (!task) return { error: "no task supplied" };
@@ -438,6 +468,7 @@
       const failures = {
         adjust_settings: "Could not change settings",
         undo_last_change: "Could not undo",
+        page_action: "Could not perform page action",
         start_browser_task: "Could not start the task",
         stop_browser_task: "Could not stop the task",
         remember: "Could not save the memory",
@@ -448,6 +479,10 @@
       return { summary: `${failures[name]}: ${String(result.error).slice(0, 120)}`, ok: false, undoable: false };
     }
     switch (name) {
+      case "page_action": {
+        const result_detail = result && result.detail ? String(result.detail).slice(0, 120) : args && args.action;
+        return { summary: `\u2713 ${result_detail}`, ok: true, undoable: false };
+      }
       case "adjust_settings":
         return { summary: describeChanges(result && result.applied), ok: true, undoable: true };
       case "undo_last_change":
@@ -504,10 +539,11 @@ WHAT YOU CAN DO
 ${settingsPromptLines().join("\n")}
 
 2. Read the page with get_page_content to answer questions about what is on screen.
-3. Run browser tasks with start_browser_task; check on them with get_browser_status; stop them with stop_browser_task.
-4. Memory: get_memory shows what the extension remembers (profile, memories, pending suggestions); remember saves a new fact; forget_memory deletes one; respond_to_proposal resolves a pending suggestion.
-5. undo_last_change reverses the most recent settings or zoom change from this conversation.
-6. suggest_capabilities \u2014 when the user describes a difficulty and you are not sure which settings would help, this consults the extension's recommender. It takes a few seconds, so say you're checking first.
+3. Perform quick page actions with page_action: scroll up/down, click a link or button by name, type text into a field, move focus. For multi-step tasks use start_browser_task.
+4. Run browser tasks with start_browser_task; check on them with get_browser_status; stop them with stop_browser_task.
+5. Memory: get_memory shows what the extension remembers (profile, memories, pending suggestions); remember saves a new fact; forget_memory deletes one; respond_to_proposal resolves a pending suggestion.
+6. undo_last_change reverses the most recent settings or zoom change from this conversation.
+7. suggest_capabilities \u2014 when the user describes a difficulty and you are not sure which settings would help, this consults the extension's recommender. It takes a few seconds, so say you're checking first.
 
 SETTINGS RULES
 - Apply the change immediately with adjust_settings, then confirm in one sentence that includes the new value and mentions undo. Example: "Text is now at 150 percent \u2014 say undo if that's too big."
@@ -529,6 +565,7 @@ PAGE QUESTIONS
 - For "what does this page say", "summarize this", or "find the price", call get_page_content first and answer only from its text. Quote names and numbers exactly. If the answer is not in the text, say you can't see it \u2014 do not guess.
 
 BROWSER TASKS
+- For quick page interactions (scroll, click a button, type text), use page_action \u2014 it is instant and does not start an agent session.
 - Capture the user's intent in one concise sentence for start_browser_task; don't add steps they didn't ask for. Set use_current_tab when the task is about the page they are on.
 - While a task runs you receive [Browser update] messages. Translate them into short conversational updates ("opening GitHub", "clicking the search bar"). If one arrives mid-thought, finish your sentence, then summarize what changed.
 - You can stop a running task with stop_browser_task, but you cannot steer it \u2014 no clicking or typing on the user's behalf. If asked to, say the browser agent is in charge once it starts.
@@ -1848,7 +1885,9 @@ ${lines.join("\n")}`;
     "voiceClearTranscript",
     "voiceTextTurn",
     "voiceUndoLast",
-    "voiceDebugToolCall"
+    "voiceDebugToolCall",
+    // Captions Increment 1: audio decode+chunk for transcription pipeline.
+    "captionDecodeAudio"
   ]);
   async function undoFromUi() {
     const result = await undoLastFromUi();
@@ -1937,6 +1976,78 @@ ${lines.join("\n")}`;
             } catch {
             }
             sendResponse({ ok: true, result });
+            break;
+          }
+          case "captionDecodeAudio": {
+            try {
+              const buffer = msg.buffer;
+              if (!buffer || !(buffer instanceof ArrayBuffer)) {
+                sendResponse({ error: "captionDecodeAudio: no buffer provided" });
+                break;
+              }
+              const CHUNK_DURATION_S = 15;
+              const ctx = new AudioContext();
+              let decoded;
+              try {
+                decoded = await ctx.decodeAudioData(buffer.slice(0));
+              } finally {
+                ctx.close().catch(() => {
+                });
+              }
+              const { sampleRate, duration, numberOfChannels } = decoded;
+              const chunkSamples = Math.ceil(CHUNK_DURATION_S * sampleRate);
+              const totalSamples = decoded.length;
+              const chunks = [];
+              for (let offset = 0; offset < totalSamples; offset += chunkSamples) {
+                let writeStr = function(off2, s) {
+                  for (let i = 0; i < s.length; i++) view.setUint8(off2 + i, s.charCodeAt(i));
+                };
+                const chunkLen = Math.min(chunkSamples, totalSamples - offset);
+                const startSec = offset / sampleRate;
+                const endSec = Math.min(startSec + CHUNK_DURATION_S, duration);
+                const numChannelsOut = 1;
+                const pcm = new Float32Array(chunkLen);
+                for (let ch = 0; ch < numberOfChannels; ch++) {
+                  const channelData = decoded.getChannelData(ch);
+                  for (let i = 0; i < chunkLen; i++) {
+                    pcm[i] += channelData[offset + i] / numberOfChannels;
+                  }
+                }
+                const bitsPerSample = 16;
+                const byteRate = sampleRate * numChannelsOut * bitsPerSample / 8;
+                const blockAlign = numChannelsOut * bitsPerSample / 8;
+                const dataSize = chunkLen * blockAlign;
+                const wavBuffer = new ArrayBuffer(44 + dataSize);
+                const view = new DataView(wavBuffer);
+                writeStr(0, "RIFF");
+                view.setUint32(4, 36 + dataSize, true);
+                writeStr(8, "WAVE");
+                writeStr(12, "fmt ");
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, numChannelsOut, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, byteRate, true);
+                view.setUint16(32, blockAlign, true);
+                view.setUint16(34, bitsPerSample, true);
+                writeStr(36, "data");
+                view.setUint32(40, dataSize, true);
+                let off = 44;
+                for (let i = 0; i < chunkLen; i++) {
+                  const s = Math.max(-1, Math.min(1, pcm[i]));
+                  view.setInt16(off, s < 0 ? s * 32768 : s * 32767, true);
+                  off += 2;
+                }
+                const bytes = new Uint8Array(wavBuffer);
+                let bin = "";
+                for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+                const wavBase64 = btoa(bin);
+                chunks.push({ startSec, endSec, wavBase64 });
+              }
+              sendResponse({ chunks });
+            } catch (e) {
+              sendResponse({ error: e.message || String(e) });
+            }
             break;
           }
         }

@@ -74,7 +74,7 @@ const tools = await import('../extension/offscreen/src/live/tools.js');
 const { TOOL_DECLARATIONS, TOOL_NAMES, dispatchToolCall, describeAction, resetSessionState } = tools;
 
 const declared = TOOL_DECLARATIONS[0].functionDeclarations.map((d) => d.name);
-check('12 tools declared', declared.length === 12, declared);
+check('13 tools declared', declared.length === 13, declared);
 check('TOOL_NAMES matches declarations', JSON.stringify([...declared].sort()) === JSON.stringify([...TOOL_NAMES].sort()));
 const adj = TOOL_DECLARATIONS[0].functionDeclarations.find((d) => d.name === 'adjust_settings');
 check('adjust_settings schema generated from registry', !!adj.parameters.properties.changes.properties.fontScale);
@@ -175,6 +175,22 @@ responders.voiceSuggestCapabilities = (msg) => ({ summary: 'ok', settings: {}, _
 check('suggest requires need', !!(await dispatchToolCall('suggest_capabilities', {})).error);
 r = await dispatchToolCall('suggest_capabilities', { need: 'small text is hard' });
 check('suggest passes the user need through', r.__need === 'small text is hard');
+
+// page_action tool
+const pa = TOOL_DECLARATIONS[0].functionDeclarations.find((d) => d.name === 'page_action');
+check('page_action declared', !!pa);
+check('page_action has action enum', pa && Array.isArray(pa.parameters.properties.action.enum) && pa.parameters.properties.action.enum.includes('scroll_down'));
+check('page_action has target + text params', pa && !!pa.parameters.properties.target && !!pa.parameters.properties.text);
+responders.voicePageAction = (msg) => ({ ok: true, detail: `scrolled down`, __action: msg.action, __target: msg.target });
+let r_pa = await dispatchToolCall('page_action', { action: 'scroll_down' });
+check('page_action dispatch forwards action to voicePageAction', sentMessages.some((m) => m.type === 'voicePageAction' && m.action === 'scroll_down'));
+check('page_action dispatch returns ok result', r_pa && r_pa.ok === true);
+r_pa = await dispatchToolCall('page_action', { action: 'click', target: 'Submit' });
+check('page_action forwards target for click', sentMessages.filter((m) => m.type === 'voicePageAction').pop().target === 'Submit');
+let chip_pa = describeAction('page_action', { action: 'scroll_down' }, { ok: true, detail: 'scrolled down' });
+check('page_action chip contains detail text', chip_pa && chip_pa.ok === true && /scrolled down/.test(chip_pa.summary));
+check('page_action chip is not undoable', chip_pa && chip_pa.undoable === false);
+check('page_action without action -> error', !!(await dispatchToolCall('page_action', {})).error);
 
 // describeAction chips
 let chip = describeAction('adjust_settings', {}, { applied: { fontScale: 150, darkMode: true } });
@@ -451,6 +467,14 @@ check('suggest returns compacted recommendation', r.settings.fontScale === 150 &
 globalThis.callGemini = async () => 'not json at all';
 r = await callRoute({ type: 'voiceSuggestCapabilities', need: 'tiny text' });
 check('unparseable recommender output -> friendly error', /did not return a usable answer/.test(r.error || ''));
+
+// voicePageAction route
+tabMessages.length = 0;
+let r_vpa = await callRoute({ type: 'voicePageAction', action: 'scroll_down' });
+check('voicePageAction route forwards pageCommand to tabs.sendMessage',
+  tabMessages.some((m) => m.type === 'pageCommand' && m.action === 'scroll_down'));
+r_vpa = await callRoute({ type: 'voicePageAction', action: 'click', target: 'Submit' });
+check('voicePageAction route passes target', tabMessages.some((m) => m.type === 'pageCommand' && m.target === 'Submit'));
 
 // ===========================================================================
 // Part 3 — prompt builder

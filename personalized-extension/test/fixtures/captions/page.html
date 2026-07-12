@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Captions Fixture</title>
+  <!--
+    Fixture for captions adapter tests.
+
+    Elements:
+    1. <audio> with same-origin src (tone-speech.wav) — for transcription plumbing tests.
+       A real short spoken clip would give meaningful WER; this beep-tone tests the full
+       decode→chunk→Gemini→VTT pipeline without requiring a specific audio file.
+       Fast-speech note: WER degrades on fast speech; labeled, not hidden.
+
+    2. <video> with blob:-style unreachable src — exercises the "can't reach audio" notice
+       path. blob:fake will fail to load (expected), only the notice behavior is asserted.
+
+    3. Fake YouTube iframe — for cc_load_policy src-rewrite / params logic unit tests.
+       Do NOT hit the network in e2e tests; assert only src-rewrite logic via unit tests.
+       The iframe here is for DOM-presence assertions only (notice it has no actual YT load).
+  -->
+</head>
+<body>
+  <h1>Captions Test Fixture</h1>
+
+  <!-- 1. Same-origin audio: exercises the fetchable-media transcription path.
+          In e2e tests with no GEMINI_API_KEY: expect failed-retryable mark, no crash, no fabricated track.
+          In e2e tests with GEMINI_API_KEY: expect real transcript chunks, no fixed-cadence VTT. -->
+  <audio id="test-audio" src="tone-speech.wav" controls></audio>
+
+  <!-- 2. Blob-style video: exercises the "can't reach audio" notice path.
+          blob:fake won't load — that's intentional. Assert: notice element appears once,
+          no <track> injected, disable removes notice. -->
+  <video id="blob-video" src="blob:fake" width="320" height="240" controls></video>
+
+  <!-- 3. Fake YouTube embed: for src-rewrite logic unit tests (don't load in e2e).
+          In unit tests: assert cc_load_policy=1 is added, never added twice,
+          data-ai4a11y-cc-enabled is set. -->
+  <iframe
+    id="yt-iframe"
+    src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+    width="560"
+    height="315"
+    title="YouTube video player"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</body>
+</html>
