@@ -193,14 +193,22 @@ async function callGemini(prompt, apiKey, optsOrImages) {
   const generationConfig = { temperature: 0.7 };
   if (mimeType) generationConfig.responseMimeType = mimeType;
 
-  const resp = await fetch(getApiUrl(apiKey, model), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig,
-    })
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  let resp;
+  try {
+    resp = await fetch(getApiUrl(apiKey, model), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig,
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!resp.ok) {
     const err = await resp.text();
     throw new Error(`Gemini API error ${resp.status}: ${err}`);
@@ -402,7 +410,7 @@ const OBSERVED_SETTING_KEYS = new Set([
   'hideDistractions', 'showProgress', 'colorBlindMode', 'fontScale', 'lineHeight',
   'letterSpacing', 'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus',
   'readingGuide', 'speechRate', 'autoWcagFix', 'autoDescribe', 'autoSimplify',
-  'autoSummarize', 'autoFixLabels', 'autoCaptions', 'autoVideoDescribe',
+  'autoSummarize', 'autoFixLabels', 'autoCaptions', 'fixContrast',
 ]);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync' || !globalThis.Librarian) return;
@@ -666,6 +674,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === 'getApiKey') {
     getApiKey().then(key => sendResponse({ apiKey: key }));
+    return true;
+  }
+
+  if (msg.type === 'aiStatus') {
+    // Returns {configured: bool} — NEVER returns the key itself.
+    getApiKey().then(key => sendResponse({ configured: !!key }));
     return true;
   }
 

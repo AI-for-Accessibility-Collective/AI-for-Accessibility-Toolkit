@@ -162,7 +162,7 @@ globalThis.AA_TOOLS = {
     "emoji": "🎨",
     "quickStart": true,
     "settings": {
-      "autoWcagFix": true
+      "fixContrast": true
     }
   },
   {
@@ -458,6 +458,10 @@ globalThis.AA_TOOLS = {
     ],
     "description": "Text-to-speech rate"
   },
+  "fixContrast": {
+    "type": "boolean",
+    "description": "Fix low-contrast text"
+  },
   "autoWcagFix": {
     "type": "boolean",
     "description": "Auto-fix accessibility issues"
@@ -481,10 +485,6 @@ globalThis.AA_TOOLS = {
   "autoSummarize": {
     "type": "boolean",
     "description": "Add summaries to long content"
-  },
-  "autoVideoDescribe": {
-    "type": "boolean",
-    "description": "AI video descriptions"
   }
 },
   // One prompt-ready line per setting: "key (type...): description".

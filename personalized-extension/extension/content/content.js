@@ -1,4 +1,6 @@
-import { setAIProvider, createChromeAIProvider } from '../../utils/ai.js';
+import { setAIProvider, createChromeAIProvider, setAnnounceSuppressed, isAIConfigured, announce } from '../../utils/ai.js';
+import { clearMarks } from '../../utils/dom.js';
+import { watchSystemPrefs } from '../../utils/system-prefs.js';
 import { DarkMode } from '../../skills/builtin/dark-mode.js';
 import { FocusMode } from '../../skills/builtin/focus-mode.js';
 import { VisualAssist } from '../../skills/builtin/visual-assist.js';
@@ -31,10 +33,10 @@ const TOOL_MAP = {
 };
 
 const AI_TOOL_MAP = {
+  fixContrast: FixContrast,
   autoWcagFix: WcagFixes,
   autoFixLabels: GenerateLabels,
   autoDescribe: AutoAltText,
-  autoVideoDescribe: AutoAltText,
   autoCaptions: GenerateCaptions,
   autoSimplify: SimplifyText,
   autoSummarize: SimplifyText,
@@ -43,6 +45,17 @@ const AI_TOOL_MAP = {
 let enabledTools = new Set();
 let aiSettings = {};
 let extensionEnabled = true;
+
+// OS-signal auto-activation state (reducedMotion only in Wave 1b).
+// _osAutoMotion is true when MotionReducer is enabled solely by the OS signal
+// (not by an explicit user choice), so we can cleanly reverse it when the
+// OS signal goes away.  Never written to storage.
+let _osAutoMotion = false;
+
+// AI-configured cache: checked once per page load via the background aiStatus
+// probe so we avoid per-element round-trips when no API key is set.
+// null = not yet checked; true/false = cached result.
+let _aiConfigured = null;
 
 const stats = { wcag: 0, images: 0, labels: 0, text: 0, captions: 0 };
 const fixes = [];
@@ -57,6 +70,17 @@ function reportFix(type, element, oldVal, newVal) {
   chrome.runtime.sendMessage({ type: 'fixAdded', stats: { ...stats }, fixes: [...fixes] }).catch(() => {});
 }
 
+// Assign the audit-trail hooks before any builtin module runs its enable().
+// Builtins now use call-time lookups so this assignment is always in time.
+globalThis.ai4a11yLogFix = reportFix;
+globalThis.ai4a11yIncrementStat = (type) => {
+  if (type === 'wcag') stats.wcag++;
+  else if (type === 'image') stats.images++;
+  else if (type === 'label') stats.labels++;
+  else if (type === 'text') stats.text++;
+  else if (type === 'caption') stats.captions++;
+};
+
 function enableTool(toolName, options) {
   const tool = TOOL_MAP[toolName];
   if (!tool) return;
@@ -66,14 +90,16 @@ function enableTool(toolName, options) {
   }
 
   try {
+    let result;
     if (options !== undefined) {
-      if (toolName === 'ColorBlindMode') {
-        tool.enable(options);
-      } else {
-        tool.enable(options);
-      }
+      result = tool.enable(options);
     } else {
-      tool.enable();
+      result = tool.enable();
+    }
+    // If enable() explicitly returns false the tool failed to start — do NOT
+    // phantom-add it to enabledTools (e.g. reader-mode extraction failure).
+    if (result === false) {
+      return { ok: false, reason: 'enable-failed' };
     }
     enabledTools.add(toolName);
     console.log(`[AI4A11y] Enabled ${toolName}`);
@@ -119,9 +145,41 @@ function revertAll() {
   console.log('[AI4A11y] All tools reverted');
 }
 
-async function applyAISettings(newSettings) {
+// Returns the cached AI-configured status (checking once per page load).
+// Resolves to true if a Gemini API key is set, false otherwise.
+async function checkAIConfigured() {
+  if (_aiConfigured !== null) return _aiConfigured;
+  _aiConfigured = await isAIConfigured().catch(() => false);
+  return _aiConfigured;
+}
+
+// AI-gated enable: checks key before enabling an AI-powered adapter.
+// fromSettingsChange=true means the user just toggled it on via the popup —
+// announce a helpful message rather than silently skipping.
+async function enableAITool(key, enableFn, _disableFn, fromSettingsChange = false) {
+  const configured = await checkAIConfigured();
+  if (!configured) {
+    if (fromSettingsChange) {
+      // Announce once so the user knows why nothing happened.
+      announce('This feature needs a Gemini API key — add one in settings.');
+    } else {
+      console.info(`[AI4A11y] Skipping ${key}: no Gemini API key configured.`);
+    }
+    return;
+  }
+  try { await enableFn(); } catch (e) { console.warn(`[AI4A11y] ${key} error:`, e); }
+}
+
+async function applyAISettings(newSettings, fromSettingsChange = false) {
   Object.assign(aiSettings, newSettings);
 
+  if (newSettings.fixContrast !== undefined) {
+    if (newSettings.fixContrast) {
+      await enableAITool('fixContrast', () => FixContrast.enable(), () => FixContrast.disable?.(), fromSettingsChange);
+    } else if (FixContrast.disable) FixContrast.disable();
+  }
+
+  // autoWcagFix is a non-AI structural sweep — no API key required, not gated.
   if (newSettings.autoWcagFix !== undefined) {
     if (newSettings.autoWcagFix) {
       try { await WcagFixes.enable(); } catch (e) { console.warn('[AI4A11y] WcagFixes error:', e); }
@@ -130,31 +188,31 @@ async function applyAISettings(newSettings) {
 
   if (newSettings.autoFixLabels !== undefined) {
     if (newSettings.autoFixLabels) {
-      try { await GenerateLabels.enable(); } catch (e) { console.warn('[AI4A11y] GenerateLabels error:', e); }
+      await enableAITool('autoFixLabels', () => GenerateLabels.enable(), () => GenerateLabels.disable?.(), fromSettingsChange);
     } else if (GenerateLabels.disable) GenerateLabels.disable();
   }
 
   if (newSettings.autoDescribe !== undefined) {
     if (newSettings.autoDescribe) {
-      try { await AutoAltText.enable(); } catch (e) { console.warn('[AI4A11y] AutoAltText error:', e); }
+      await enableAITool('autoDescribe', () => AutoAltText.enable(), () => AutoAltText.disable?.(), fromSettingsChange);
     } else if (AutoAltText.disable) AutoAltText.disable();
   }
 
   if (newSettings.autoCaptions !== undefined) {
     if (newSettings.autoCaptions) {
-      try { await GenerateCaptions.enable(); } catch (e) { console.warn('[AI4A11y] GenerateCaptions error:', e); }
+      await enableAITool('autoCaptions', () => GenerateCaptions.enable(), () => GenerateCaptions.disable?.(), fromSettingsChange);
     } else if (GenerateCaptions.disable) GenerateCaptions.disable();
   }
 
   if (newSettings.autoSimplify !== undefined) {
     if (newSettings.autoSimplify) {
-      try { await SimplifyText.enable(); } catch (e) { console.warn('[AI4A11y] SimplifyText error:', e); }
+      await enableAITool('autoSimplify', () => SimplifyText.enable(), () => SimplifyText.disable?.(), fromSettingsChange);
     } else if (!aiSettings.autoSummarize && SimplifyText.disable) SimplifyText.disable();
   }
 
   if (newSettings.autoSummarize !== undefined) {
     if (newSettings.autoSummarize) {
-      try { await SimplifyText.enable(); } catch (e) { console.warn('[AI4A11y] SimplifyText error:', e); }
+      await enableAITool('autoSummarize', () => SimplifyText.enable(), () => SimplifyText.disable?.(), fromSettingsChange);
     } else if (!aiSettings.autoSimplify && SimplifyText.disable) SimplifyText.disable();
   }
 }
@@ -168,13 +226,14 @@ function getToolStates() {
 }
 
 async function initFromStorage() {
+  setAnnounceSuppressed(true);
   try {
     const settings = await chrome.storage.sync.get([
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
       'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
-      'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
+      'fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
 
@@ -218,24 +277,37 @@ async function initFromStorage() {
     if (hasVA) enableTool('VisualAssist', va);
 
     aiSettings = {
-      autoWcagFix: settings.autoWcagFix !== false,
-      autoFixLabels: settings.autoFixLabels !== false,
-      autoDescribe: settings.autoDescribe !== false,
-      autoVideoDescribe: settings.autoVideoDescribe === true,
+      fixContrast: settings.fixContrast === true,
+      autoWcagFix: settings.autoWcagFix === true,
+      autoFixLabels: settings.autoFixLabels === true,
+      autoDescribe: settings.autoDescribe === true,
       autoCaptions: settings.autoCaptions === true,
       autoSimplify: settings.autoSimplify === true,
       autoSummarize: settings.autoSummarize === true,
     };
 
+    // AI sweeps: check key once before enabling any of them (cached per page load).
+    if (aiSettings.fixContrast || aiSettings.autoFixLabels || aiSettings.autoDescribe ||
+        aiSettings.autoCaptions || aiSettings.autoSimplify || aiSettings.autoSummarize) {
+      const configured = await checkAIConfigured();
+      if (!configured) {
+        console.info('[AI4A11y] AI sweeps requested but no Gemini API key configured — skipping.');
+      } else {
+        if (aiSettings.fixContrast) { try { await FixContrast.enable(); } catch (e) {} }
+        if (aiSettings.autoFixLabels) { try { await GenerateLabels.enable(); } catch (e) {} }
+        if (aiSettings.autoDescribe) { try { await AutoAltText.enable(); } catch (e) {} }
+        if (aiSettings.autoCaptions) { try { await GenerateCaptions.enable(); } catch (e) {} }
+        if (aiSettings.autoSimplify || aiSettings.autoSummarize) { try { await SimplifyText.enable(); } catch (e) {} }
+      }
+    }
+    // autoWcagFix is non-AI (structural), always runs regardless of key.
     if (aiSettings.autoWcagFix) { try { await WcagFixes.enable(); } catch (e) {} }
-    if (aiSettings.autoFixLabels) { try { await GenerateLabels.enable(); } catch (e) {} }
-    if (aiSettings.autoDescribe) { try { await AutoAltText.enable(); } catch (e) {} }
-    if (aiSettings.autoCaptions) { try { await GenerateCaptions.enable(); } catch (e) {} }
-    if (aiSettings.autoSimplify || aiSettings.autoSummarize) { try { await SimplifyText.enable(); } catch (e) {} }
 
     console.log('[AI4A11y] Initialized from stored settings');
   } catch (e) {
     console.warn('[AI4A11y] Could not load stored settings:', e);
+  } finally {
+    setAnnounceSuppressed(false);
   }
 }
 
@@ -247,13 +319,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     disableTool(msg.tool);
     sendResponse({ success: true });
   } else if (msg.type === 'settingsChanged') {
-    applyAISettings(msg.settings || {});
+    applyAISettings(msg.settings || {}, true /* fromSettingsChange */);
     sendResponse({ success: true });
   } else if (msg.type === 'revertAll') {
     revertAll();
     sendResponse({ success: true });
   } else if (msg.type === 'rescan') {
     revertAll();
+    clearMarks(); // clear all namespaced processed-marks so elements are re-visited
     init();
     sendResponse({ success: true });
   } else if (msg.type === 'setEnabled') {
@@ -330,7 +403,7 @@ function applyProfileSettings(settings) {
     enableTool('VisualAssist', va);
   }
 
-  const aiKeys = { autoWcagFix: WcagFixes, autoFixLabels: GenerateLabels,
+  const aiKeys = { fixContrast: FixContrast, autoWcagFix: WcagFixes, autoFixLabels: GenerateLabels,
     autoDescribe: AutoAltText, autoCaptions: GenerateCaptions,
     autoSimplify: SimplifyText, autoSummarize: SimplifyText };
   for (const [key, mod] of Object.entries(aiKeys)) {
@@ -339,6 +412,49 @@ function applyProfileSettings(settings) {
 
   console.log('[AI4A11y] Profile settings applied');
 }
+
+// Cross-tab settings propagation: when another tab (or the popup) writes to
+// chrome.storage.sync, apply the change here too so stale state doesn't persist
+// until reload. Announcements are suppressed for these storage-driven applies
+// (they are not user-initiated in this tab). A shallow diff against current
+// state avoids double-applying a change the popup just sent us directly.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync') return;
+
+  const simpleToolKeys = {
+    darkMode: 'DarkMode', readerMode: 'ReaderMode',
+    keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
+    motionReducer: 'MotionReducer'
+  };
+  const aiSettingKeys = new Set([
+    'fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
+    'autoCaptions', 'autoSimplify', 'autoSummarize'
+  ]);
+
+  setAnnounceSuppressed(true);
+  try {
+    const aiUpdates = {};
+    for (const [key, { newValue }] of Object.entries(changes)) {
+      // Simple on/off tools
+      if (key in simpleToolKeys) {
+        const toolName = simpleToolKeys[key];
+        const currentlyEnabled = enabledTools.has(toolName);
+        if (newValue === true && !currentlyEnabled) enableTool(toolName);
+        else if (newValue === false && currentlyEnabled) disableTool(toolName);
+      }
+      // AI/fixContrast settings
+      if (aiSettingKeys.has(key)) {
+        const currentVal = aiSettings[key];
+        if (newValue !== currentVal) aiUpdates[key] = newValue;
+      }
+    }
+    if (Object.keys(aiUpdates).length > 0) {
+      applyAISettings(aiUpdates);
+    }
+  } finally {
+    setAnnounceSuppressed(false);
+  }
+});
 
 function sendMessageAsync(msg) {
   return new Promise((resolve) => {
@@ -369,6 +485,36 @@ function detectPageContexts() {
 
 async function init() {
   try {
+    // Wire OS-signal auto-respect BEFORE the Librarian overlay so the Librarian
+    // can override an OS-auto-enabled setting.  Only reducedMotion is consumed
+    // in Wave 1b; the other four signals are read but not acted on yet:
+    //   dark:                Wave 2a — suggest dark-mode (0/2 demand)
+    //   moreContrast:        Wave 2a — suggest/enable fix-contrast / visual-assist
+    //   forcedColors:        Wave 2a — same as moreContrast
+    //   reducedTransparency: Wave 2a — no adapter yet
+    watchSystemPrefs(async (prefs) => {
+      if (!extensionEnabled) return;
+      // Check whether the user has an explicit motionReducer setting.
+      const stored = await chrome.storage.sync.get('motionReducer').catch(() => ({}));
+      const userExplicit = 'motionReducer' in stored;
+      if (prefs.reducedMotion && !userExplicit) {
+        // OS says reduce motion, user has no explicit setting: auto-enable.
+        if (!enabledTools.has('MotionReducer')) {
+          setAnnounceSuppressed(true);
+          try { enableTool('MotionReducer'); } finally { setAnnounceSuppressed(false); }
+          _osAutoMotion = true;
+        }
+      } else if (!prefs.reducedMotion && _osAutoMotion) {
+        // OS signal cleared and we auto-enabled it: reverse it.
+        disableTool('MotionReducer');
+        _osAutoMotion = false;
+      } else if (prefs.reducedMotion && userExplicit) {
+        // OS says reduce but user has an explicit choice — their choice wins,
+        // nothing to do here (initFromStorage already applied it).
+        _osAutoMotion = false;
+      }
+    });
+
     const profilesResp = await sendMessageAsync({ type: 'getCustomProfiles' });
     const profiles = profilesResp?.profiles || [];
     const autoApplyProfiles = profiles.filter(p => p.autoApply && p.siteTypes?.length > 0);
@@ -389,7 +535,8 @@ async function init() {
     let appliedProfile = false;
     if (autoApplyProfiles.length > 0 && classifyResp?.matchingProfile?.settings) {
       console.log(`[AI4A11y] Auto-applying profile "${classifyResp.matchingProfile.name}" for ${classifyResp.siteType} site`);
-      applyProfileSettings(classifyResp.matchingProfile.settings);
+      setAnnounceSuppressed(true);
+      try { applyProfileSettings(classifyResp.matchingProfile.settings); } finally { setAnnounceSuppressed(false); }
       appliedProfile = true;
       chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'personal', region: 'adapt', label: 'profile auto-applied' });
       if (classifyResp.matchingProfile.actions?.length > 0) {
@@ -429,7 +576,8 @@ async function init() {
         const baseline = await chrome.storage.sync.get(VA_KEYS);
         overlay = { ...baseline, ...overlay };
       }
-      applyProfileSettings(overlay);
+      setAnnounceSuppressed(true);
+      try { applyProfileSettings(overlay); } finally { setAnnounceSuppressed(false); }
       chrome.runtime.sendMessage({ type: 'aaDemoTrace', diagram: 'personal', region: 'adapt', label: 'learned preferences applied' });
     }
     // Honest cannot-satisfy: if the web SurfaceAdapter flagged needs it can't

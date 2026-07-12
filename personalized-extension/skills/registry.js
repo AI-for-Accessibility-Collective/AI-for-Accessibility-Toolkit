@@ -114,7 +114,7 @@ export const skillRegistry = [
     icon: 'contrast',
     emoji: '\u{1F3A8}',
     quickStart: true,
-    settings: { autoWcagFix: true },
+    settings: { fixContrast: true },
   },
   {
     id: 'simplify-text',
@@ -261,24 +261,24 @@ export const settingsMeta = {
   contrastMode:    { type: 'enum', options: ['none', 'light', 'yellow-black'], description: 'Contrast level' },
   colorBlindMode:  { type: 'enum', options: ['none', 'protanopia', 'deuteranopia', 'tritanopia'], description: 'Color filter' },
   speechRate:      { type: 'number', range: [0.5, 2.0], description: 'Text-to-speech rate' },
+  fixContrast:     { type: 'boolean', description: 'Fix low-contrast text' },
   autoWcagFix:     { type: 'boolean', description: 'Auto-fix accessibility issues' },
   autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
   autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
   autoCaptions:    { type: 'boolean', description: 'Auto captions on video' },
   autoSimplify:    { type: 'boolean', description: 'Simplify complex text' },
   autoSummarize:   { type: 'boolean', description: 'Add summaries to long content' },
-  autoVideoDescribe:{ type: 'boolean', description: 'AI video descriptions' },
 };
 
 // Grouped, prompt-ready rendering of settingsMeta for LLM system prompts
 // (voice mode's capability vocabulary). One line per setting so registry
 // edits flow into every prompt automatically.
 const PROMPT_GROUPS = [
-  ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor']],
+  ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor', 'fixContrast', 'autoWcagFix']],
   ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'dyslexiaFont', 'readingGuide', 'readerMode', 'speechRate']],
   ['Focus & motion', ['focusMode', 'hideDistractions', 'showProgress', 'motionReducer', 'enhanceFocus']],
   ['Motor & input', ['keyboardNav', 'voiceCommands']],
-  ["AI-powered (need the user's API key)", ['autoWcagFix', 'autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify', 'autoSummarize', 'autoVideoDescribe']],
+  ["AI-powered (need the user's API key)", ['autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify', 'autoSummarize']],
 ];
 
 export function settingsPromptLines() {

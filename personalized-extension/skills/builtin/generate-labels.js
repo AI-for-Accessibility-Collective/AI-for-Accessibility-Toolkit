@@ -1,13 +1,13 @@
 import { inferLabel } from '../../utils/ai.js';
-import { markProcessed, getAccessibleName } from '../../utils/dom.js';
+import { markProcessed, wasProcessed, getAccessibleName } from '../../utils/dom.js';
 import { IFRAME_PATTERNS } from '../../utils/constants.js';
 
-const logFix = globalThis.ai4a11yLogFix || (() => {});
-const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+const logFix = (...a) => (globalThis.ai4a11yLogFix || (() => {}))(...a);
+const incrementStat = (...a) => (globalThis.ai4a11yIncrementStat || (() => {}))(...a);
 
 export async function generateLinkLabel(link) {
-  if (link.dataset.ai4a11yProcessed) return null;
-  markProcessed(link, 'pending');
+  if (wasProcessed(link, 'labels')) return null;
+  markProcessed(link, 'pending', 'labels');
 
   const href = link.href || '';
   const existingText = link.textContent?.trim() || '';
@@ -22,25 +22,25 @@ export async function generateLinkLabel(link) {
 
   if (label) {
     link.setAttribute('aria-label', label);
-    markProcessed(link, 'done');
+    markProcessed(link, 'done', 'labels');
     incrementStat('labels');
     logFix('link label', link, existingText || '(empty)', label);
     console.log('[AI4A11y] Generated link label:', label);
     return label;
   }
 
-  markProcessed(link, 'failed');
+  markProcessed(link, 'failed', 'labels');
   return null;
 }
 
 export async function generateButtonLabel(button) {
-  if (button.dataset.ai4a11yProcessed) return null;
-  markProcessed(button, 'pending');
+  if (wasProcessed(button, 'labels')) return null;
+  markProcessed(button, 'pending', 'labels');
 
   const inferred = inferButtonLabel(button);
   if (inferred) {
     button.setAttribute('aria-label', inferred);
-    markProcessed(button, 'done');
+    markProcessed(button, 'done', 'labels');
     incrementStat('labels');
     logFix('button label', button, '(empty)', inferred);
     return inferred;
@@ -57,26 +57,26 @@ export async function generateButtonLabel(button) {
 
   if (label) {
     button.setAttribute('aria-label', label);
-    markProcessed(button, 'done');
+    markProcessed(button, 'done', 'labels');
     incrementStat('labels');
     logFix('button label', button, '(empty)', label);
     return label;
   }
 
-  markProcessed(button, 'failed');
+  markProcessed(button, 'failed', 'labels');
   return null;
 }
 
 export async function generateIframeTitle(iframe) {
-  if (iframe.dataset.ai4a11yProcessed) return null;
-  markProcessed(iframe, 'pending');
+  if (wasProcessed(iframe, 'labels')) return null;
+  markProcessed(iframe, 'pending', 'labels');
 
   const src = iframe.src || '';
 
   for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
     if (src.includes(pattern)) {
       iframe.setAttribute('title', title);
-      markProcessed(iframe, 'done');
+      markProcessed(iframe, 'done', 'labels');
       incrementStat('labels');
       logFix('iframe title', iframe, '(empty)', title);
       return title;
@@ -87,25 +87,25 @@ export async function generateIframeTitle(iframe) {
     const url = new URL(src);
     const title = `Embedded content from ${url.hostname}`;
     iframe.setAttribute('title', title);
-    markProcessed(iframe, 'done');
+    markProcessed(iframe, 'done', 'labels');
     incrementStat('labels');
     logFix('iframe title', iframe, '(empty)', title);
     return title;
   } catch {
     const title = 'Embedded content';
     iframe.setAttribute('title', title);
-    markProcessed(iframe, 'done');
+    markProcessed(iframe, 'done', 'labels');
     return title;
   }
 }
 
 export async function generateFormLabel(input) {
-  if (input.dataset.ai4a11yProcessed) return null;
-  markProcessed(input, 'pending');
+  if (wasProcessed(input, 'labels')) return null;
+  markProcessed(input, 'pending', 'labels');
 
   if (input.placeholder) {
     input.setAttribute('aria-label', input.placeholder);
-    markProcessed(input, 'done');
+    markProcessed(input, 'done', 'labels');
     incrementStat('labels');
     logFix('form label', input, '(empty)', input.placeholder);
     return input.placeholder;
@@ -117,7 +117,7 @@ export async function generateFormLabel(input) {
       .replace(/([a-z])([A-Z])/g, '$1 $2')
       .toLowerCase();
     input.setAttribute('aria-label', label);
-    markProcessed(input, 'done');
+    markProcessed(input, 'done', 'labels');
     incrementStat('labels');
     logFix('form label', input, '(empty)', label);
     return label;
@@ -126,13 +126,13 @@ export async function generateFormLabel(input) {
   const nearbyText = getNearbyText(input);
   if (nearbyText) {
     input.setAttribute('aria-label', nearbyText);
-    markProcessed(input, 'done');
+    markProcessed(input, 'done', 'labels');
     incrementStat('labels');
     logFix('form label', input, '(empty)', nearbyText);
     return nearbyText;
   }
 
-  markProcessed(input, 'skipped');
+  markProcessed(input, 'skipped', 'labels');
   return null;
 }
 

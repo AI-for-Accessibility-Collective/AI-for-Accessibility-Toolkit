@@ -27,6 +27,11 @@ This audit substantiates the thesis already stated in
 evidence below shows that **detect-vs-adapt is the real moat** — the
 remediation/adaptation tier is where almost nothing free or native competes.
 
+**See also** [`docs/observable-settings.md`](observable-settings.md) — which
+system/browser accessibility settings the extension is *allowed to detect*, so
+several of these adapters can **auto-respect** the OS instead of asking the user
+(see [Cross-cutting recommendations](#cross-cutting-recommendations)).
+
 ---
 
 ## Summary
@@ -505,6 +510,17 @@ Patterns that recur across the 🟩 tier:
    (accuracy / pass-rate / coverage matrix), ideally with screen-reader-user
    validation, converts assertions into defensible, citable proof — and is the
    thing the FTC-fined overlays *cannot* honestly produce.
+6. **Auto-respect the OS, don't just offer toggles.** Five system settings are
+   detectable from the extension ([`observable-settings.md`](observable-settings.md)):
+   `prefers-reduced-motion`, `prefers-color-scheme`, `prefers-contrast`,
+   `forced-colors`, `prefers-reduced-transparency` (plus the browser
+   minimum-font-size via `chrome.fontSettings`). `motion-reducer`, `dark-mode`,
+   and `fix-contrast`/`visual-assist` should read their signal on load and react
+   to `change`, rather than waiting for the user to enable something the OS
+   already announced. A shared `watchSystemPrefs()` helper (sketched in that doc)
+   is the natural home. Note the honest boundary: everything else the guidelines
+   ask us to "respect" (screen reader, magnifier, color filters, cursor/text
+   size) is **undetectable by design** — those stay manual.
 
 ## Low-risk engineering wins
 

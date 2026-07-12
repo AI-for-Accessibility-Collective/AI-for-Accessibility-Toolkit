@@ -21,7 +21,7 @@ export const ReaderMode = {
     const main = docClone.querySelector('article, main, [role="main"], .post, .entry-content, .article-body');
     if (!main) {
       announce('Could not extract article content');
-      return;
+      return false;
     }
 
     const article = {

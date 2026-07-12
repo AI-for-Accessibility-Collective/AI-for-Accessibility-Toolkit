@@ -34,7 +34,7 @@
     colorBlindMode: 'none', contrastMode: 'none', fontScale: 100, lineHeight: 1.5,
     letterSpacing: 0, dyslexiaFont: false, largeCursor: false, enhanceFocus: false,
     readingGuide: false, speechRate: 1,
-    autoWcagFix: true, autoDescribe: true, autoFixLabels: true, autoVideoDescribe: false,
+    fixContrast: false, autoWcagFix: false, autoDescribe: false, autoFixLabels: false,
     autoCaptions: false, autoSimplify: false, autoSummarize: false,
   };
 
@@ -50,7 +50,7 @@
   const VA_KEYS = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];
   const FOCUS_KEYS = ['focusMode', 'hideDistractions', 'showProgress'];
-  const AI_KEYS = ['autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
+  const AI_KEYS = ['fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe',
     'autoCaptions', 'autoSimplify', 'autoSummarize'];
 
   const PAGE_ZOOM_RANGE = [25, 500];

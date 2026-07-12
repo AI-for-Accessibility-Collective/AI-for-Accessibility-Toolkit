@@ -7,8 +7,17 @@
     "watch": "node build.js --watch"
   },
   "devDependencies": {
+    "aria-query": "^5.3.2",
     "chokidar": "^3.6.0",
     "esbuild": "^0.28.0",
     "puppeteer": "^24.42.0"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "axe-core": "^4.12.1",
+    "colorjs.io": "^0.7.0",
+    "dom-accessibility-api": "^0.7.1",
+    "dompurify": "^3.4.12",
+    "tabbable": "^6.5.0"
   }
 }

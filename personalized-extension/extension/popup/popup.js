@@ -53,8 +53,8 @@ function renderSiteTypeGrid() {
 document.addEventListener('DOMContentLoaded', async () => {
   renderSiteTypeGrid();
   const settings = await chrome.storage.sync.get([
-    'enabled', 'autoWcagFix', 'autoDescribe', 'autoSimplify', 'autoSummarize',
-    'autoFixLabels', 'autoCaptions', 'autoVideoDescribe',
+    'enabled', 'fixContrast', 'autoWcagFix', 'autoDescribe', 'autoSimplify', 'autoSummarize',
+    'autoFixLabels', 'autoCaptions',
     'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands', 'motionReducer', 'focusMode',
     'hideDistractions', 'showProgress', 'colorBlindMode',
     'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
@@ -141,9 +141,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // AI feature toggles
+  // All three originally-ON settings (autoWcagFix/autoDescribe/autoFixLabels) are
+  // now default-OFF (=== true) to match content.js init and voice-routes defaults.
   const aiDefaults = {
-    autoWcagFix: true, autoDescribe: true, autoSimplify: false,
-    autoSummarize: false, autoFixLabels: true, autoVideoDescribe: false, autoCaptions: false
+    fixContrast: false, autoWcagFix: false, autoDescribe: false, autoSimplify: false,
+    autoSummarize: false, autoFixLabels: false, autoCaptions: false
   };
 
   Object.entries(aiDefaults).forEach(([id, defaultVal]) => {
@@ -301,7 +303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const presets = {
     screenReader: {
       autoWcagFix: true, autoFixLabels: true, autoDescribe: true,
-      autoVideoDescribe: true, keyboardNav: true
+      keyboardNav: true
     },
     biggerText: {
       fontScale: 150, lineHeight: 2.0, letterSpacing: 0.12,
@@ -383,11 +385,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function resetAllUI(preserveProfile = false) {
     const togglesOff = ['darkMode', 'readerMode', 'focusMode', 'keyboardNav', 'voiceCommands', 'motionReducer',
-      'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'autoCaptions', 'autoVideoDescribe',
+      'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'autoCaptions',
+      'fixContrast', 'autoWcagFix', 'autoDescribe', 'autoFixLabels',
       'hideDistractions', 'autoSimplify', 'autoSummarize'];
     togglesOff.forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
 
-    const togglesOn = ['showProgress', 'autoDescribe', 'autoWcagFix', 'autoFixLabels'];
+    const togglesOn = ['showProgress'];
     togglesOn.forEach(id => { const el = document.getElementById(id); if (el) el.checked = true; });
 
     setValue('contrastMode', 'none');
@@ -479,8 +482,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // AI settings (including autoCaptions)
-    ['autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe', 'autoSimplify', 'autoSummarize', 'autoCaptions'].forEach(key => {
+    // AI settings (including autoCaptions and fixContrast)
+    ['fixContrast', 'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoCaptions'].forEach(key => {
       if (has(key)) {
         setChecked(key, !!preset[key]);
         chrome.storage.sync.set({ [key]: !!preset[key] });
@@ -677,7 +680,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       readerMode: 'Reader Mode', keyboardNav: 'Keyboard Nav', voiceCommands: 'Voice Commands',
       contrastMode: 'Contrast', colorBlindMode: 'Color Filter', autoWcagFix: 'WCAG Auto-Fix',
       autoDescribe: 'Image Alt Text', autoFixLabels: 'Generate Labels', autoCaptions: 'Captions',
-      autoSimplify: 'Simplify Text', autoSummarize: 'Summarize Text', autoVideoDescribe: 'Video Descriptions'
+      autoSimplify: 'Simplify Text', autoSummarize: 'Summarize Text', fixContrast: 'Fix Contrast'
     };
 
     if (result.settings) {
@@ -777,8 +780,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
     'hideDistractions', 'showProgress',
     'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode', 'colorBlindMode', 'speechRate',
-    'autoWcagFix', 'autoDescribe', 'autoFixLabels', 'autoCaptions',
-    'autoVideoDescribe', 'autoSimplify', 'autoSummarize'
+    'fixContrast', 'autoWcagFix', 'autoDescribe', 'autoFixLabels', 'autoCaptions',
+    'autoSimplify', 'autoSummarize'
   ];
 
   function captureCurrentSettings() {

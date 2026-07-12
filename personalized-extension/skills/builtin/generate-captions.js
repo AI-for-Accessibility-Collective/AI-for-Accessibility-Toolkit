@@ -1,8 +1,8 @@
 import { transcribeVideo, transcribeAudio } from '../../utils/ai.js';
 import { markProcessed } from '../../utils/dom.js';
 
-const logFix = globalThis.ai4a11yLogFix || (() => {});
-const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+const logFix = (...a) => (globalThis.ai4a11yLogFix || (() => {}))(...a);
+const incrementStat = (...a) => (globalThis.ai4a11yIncrementStat || (() => {}))(...a);
 
 export async function generateVideoCaptions(video) {
   if (video.dataset.ai4a11yCaptioned) return null;

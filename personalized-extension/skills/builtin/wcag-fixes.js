@@ -7,8 +7,8 @@ import {
   ARIA_REQUIRED_ATTRS
 } from '../../utils/constants.js';
 
-const logFix = globalThis.ai4a11yLogFix || (() => {});
-const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+const logFix = (...a) => (globalThis.ai4a11yLogFix || (() => {}))(...a);
+const incrementStat = (...a) => (globalThis.ai4a11yIncrementStat || (() => {}))(...a);
 
 export function fixInvalidLang(element) {
   const currentLang = element.getAttribute('lang');
@@ -37,7 +37,7 @@ export function fixDuplicateId(element) {
   updateIdReferences(originalId, newId);
 
   element.id = newId;
-  markProcessed(element, 'done');
+  markProcessed(element, 'done', 'wcag');
   incrementStat('wcag');
   logFix('duplicate-id', element, originalId, newId);
   console.log('[AI4A11y] Fixed duplicate ID:', originalId);
@@ -78,7 +78,7 @@ export function fixHeadingOrder(element) {
 export function fixPositiveTabindex(element) {
   const oldVal = element.getAttribute('tabindex');
   element.setAttribute('tabindex', '0');
-  markProcessed(element, 'done');
+  markProcessed(element, 'done', 'wcag');
   incrementStat('wcag');
   logFix('tabindex', element, oldVal, '0');
   console.log('[AI4A11y] Fixed positive tabindex');
@@ -92,7 +92,7 @@ export function fixTargetBlank(element) {
   if (!parts.includes('noreferrer')) parts.push('noreferrer');
 
   element.setAttribute('rel', parts.join(' '));
-  markProcessed(element, 'done');
+  markProcessed(element, 'done', 'wcag');
   incrementStat('wcag');
   logFix('target-blank', element, rel || '(empty)', parts.join(' '));
   console.log('[AI4A11y] Added rel="noopener noreferrer"');
