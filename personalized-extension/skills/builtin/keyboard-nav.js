@@ -16,6 +16,7 @@ export const KeyboardNav = {
   _listenerRegistered: false,
   _unregisterSweep: null,
   _modifiedElements: [],   // [{el, prior}] — prior is prior tabindex string or null
+  _injectedIdEls: [],      // [{el, syntheticId}] — elements we gave a synthetic id
   _badgeContainer: null,
   _skipContainer: null,
   _resizeObserver: null,
@@ -98,10 +99,16 @@ export const KeyboardNav = {
       } else {
         el.setAttribute('tabindex', prior);
       }
-      if (el.id === 'ai4a11y-main-content') el.removeAttribute('id');
-      if (el.id === 'ai4a11y-nav') el.removeAttribute('id');
     }
     this._modifiedElements = [];
+
+    // Remove any synthetic ids we injected (only if the element still carries our exact value,
+    // in case the page later assigned a different id itself).
+    for (const { el, syntheticId } of this._injectedIdEls) {
+      if (el.id === syntheticId) el.removeAttribute('id');
+    }
+    this._injectedIdEls = [];
+
     this._lastHeading = null;
 
     console.log('[AI4A11y] Keyboard Navigator disabled');
@@ -182,7 +189,10 @@ export const KeyboardNav = {
 
     const main = document.querySelector('main, [role="main"], #main, #content, article');
     if (main) {
-      if (!main.id) main.id = 'ai4a11y-main-content';
+      if (!main.id) {
+        main.id = 'ai4a11y-main-content';
+        this._injectedIdEls.push({ el: main, syntheticId: 'ai4a11y-main-content' });
+      }
       const skipToMain = document.createElement('a');
       skipToMain.href = '#' + main.id;
       skipToMain.className = 'ai4a11y-skip-link';
@@ -198,7 +208,10 @@ export const KeyboardNav = {
 
     const nav = document.querySelector('nav, [role="navigation"]');
     if (nav) {
-      if (!nav.id) nav.id = 'ai4a11y-nav';
+      if (!nav.id) {
+        nav.id = 'ai4a11y-nav';
+        this._injectedIdEls.push({ el: nav, syntheticId: 'ai4a11y-nav' });
+      }
       const skipToNav = document.createElement('a');
       skipToNav.href = '#' + nav.id;
       skipToNav.className = 'ai4a11y-skip-link';

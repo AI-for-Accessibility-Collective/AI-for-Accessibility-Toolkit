@@ -9,6 +9,10 @@ export const MotionReducer = {
   _pausedPlayState: new Set(),
   _frozenImages: new Map(),
   _pausedIframes: new Set(),
+  // Generation counter: incremented on every disable() call so in-flight
+  // async _freezeSingleImage continuations can detect they've been overtaken
+  // and abort before mutating the DOM or repopulating _frozenImages.
+  _freezeGen: 0,
   currentSettings: {
     stopAnimations: true,
     pauseVideos: true,
@@ -105,6 +109,11 @@ export const MotionReducer = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+    // Bump the generation counter so any in-flight _freezeSingleImage calls
+    // that are currently awaiting a network fetch or ImageDecoder decode will
+    // detect the change and abort before swapping the DOM or repopulating
+    // _frozenImages.
+    this._freezeGen++;
     if (this._unregisterSweep) { this._unregisterSweep(); this._unregisterSweep = null; }
     document.getElementById(this.styleId)?.remove();
 
@@ -186,19 +195,48 @@ export const MotionReducer = {
     if (!img.src || img.dataset.ai4a11yMrFrozen) return;
     img.dataset.ai4a11yMrFrozen = 'pending';
 
+    // Capture the generation at invocation time.  If disable() fires while we
+    // are awaiting, it bumps _freezeGen; we compare after each await and abort
+    // without touching the DOM.
+    const capturedGen = this._freezeGen;
+
     const w = img.naturalWidth || img.width || 100;
     const h = img.naturalHeight || img.height || 100;
     const altText = img.getAttribute('alt') || '';
     const origId = img.id;
     const origClass = img.className;
 
+    // Determine whether the source image is decorative so we can set the
+    // correct ARIA attributes on the replacement canvas.
+    //   • alt="" → explicitly decorative (HTML spec presentational)
+    //   • aria-hidden="true" → author removed from AX tree
+    //   • role="presentation" or role="none" → author marked as presentational
+    const srcAriaHidden = img.getAttribute('aria-hidden');
+    const srcRole = img.getAttribute('role') || '';
+    const decorative = altText === '' ||
+                       srcAriaHidden === 'true' ||
+                       srcRole === 'presentation' ||
+                       srcRole === 'none';
+
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
     if (origId) canvas.id = origId;
     if (origClass) canvas.className = origClass;
-    canvas.setAttribute('role', 'img');
-    canvas.setAttribute('aria-label', altText);
+
+    if (decorative) {
+      // Hide from the AX tree, matching the source image's decorative status.
+      canvas.setAttribute('aria-hidden', 'true');
+      // Do NOT set role or aria-label — a hidden element needs neither.
+    } else {
+      // Named image: expose as img with the same accessible name.
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', altText);
+      // Copy aria-hidden from source if explicitly set (e.g. aria-hidden="true"
+      // on an otherwise-named image is unusual but must be preserved).
+      if (srcAriaHidden !== null) canvas.setAttribute('aria-hidden', srcAriaHidden);
+    }
+
     canvas.setAttribute('width', w);
     canvas.setAttribute('height', h);
 
@@ -223,6 +261,8 @@ export const MotionReducer = {
               resolve(r || { error: 'no response' });
             });
           });
+          // ── abort guard (post-await #1) ────────────────────────────────────
+          if (this._freezeGen !== capturedGen) { delete img.dataset.ai4a11yMrFrozen; return; }
           if (resp && resp.bytes && !resp.error) {
             // Decode type from URL
             const url = img.src;
@@ -249,6 +289,9 @@ export const MotionReducer = {
       }
     }
 
+    // ── abort guard (post-async-block) ────────────────────────────────────────
+    if (this._freezeGen !== capturedGen) { delete img.dataset.ai4a11yMrFrozen; return; }
+
     if (!drawn) {
       // Last resort: crossOrigin re-fetch (may fail on CORS-blocked images)
       try {
@@ -265,6 +308,11 @@ export const MotionReducer = {
         return;
       }
     }
+
+    // ── abort guard (pre-DOM-mutation) ────────────────────────────────────────
+    // Re-check after the last await so a disable() that fired during the
+    // crossOrigin re-fetch does not swap the DOM after teardown.
+    if (this._freezeGen !== capturedGen) { delete img.dataset.ai4a11yMrFrozen; return; }
 
     // Store original and replace
     this._frozenImages.set(canvas, img);

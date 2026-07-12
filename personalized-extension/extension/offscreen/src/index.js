@@ -398,6 +398,12 @@ const OFFSCREEN_MSG_TYPES = new Set([
   'captionDecodeAudio',
 ]);
 
+// One-at-a-time decode gate: AudioContext.decodeAudioData on a large file
+// can spike the shared offscreen page's memory significantly. Concurrent
+// decodes would stack these spikes (finding #12). Serialize at the module
+// level; callers get a retryable error if a decode is already in progress.
+let _captionDecodeBusy = false;
+
 // The panel's Undo button and the undo_last_change tool share one stack;
 // this path also tells the model what happened so it can't quote stale state.
 async function undoFromUi() {
@@ -495,6 +501,21 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           //
           // Why offscreen (not content script): host_permissions fetch + AudioContext
           // decode in one place, no CORS constraints from the page origin.
+          //
+          // Safety invariants (finding #12):
+          //   - One decode at a time (_captionDecodeBusy flag). Concurrent
+          //     decodes would spike the shared voice offscreen page's memory.
+          //   - Duration cap: reject audio whose decoded duration exceeds
+          //     MAX_DECODE_DURATION_S (~20 min). A 50 MB mp3 at 128 kbps is
+          //     ~53 min which would expand to ~300+ MB of raw PCM.
+          //   - Process and serialize chunks one at a time without holding the
+          //     full AudioBuffer and all WAV chunks simultaneously: null out the
+          //     decoded reference after extracting per-chunk data.
+          if (_captionDecodeBusy) {
+            sendResponse({ error: 'captionDecodeAudio: busy — retry after current decode completes', retryable: true });
+            break;
+          }
+          _captionDecodeBusy = true;
           try {
             const buffer = msg.buffer;
             if (!buffer || !(buffer instanceof ArrayBuffer)) {
@@ -502,9 +523,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
               break;
             }
             const CHUNK_DURATION_S = 15;
-            // Use the existing AudioContext from the voice audio pipeline if
-            // available (avoids creating a duplicate context), or create a
-            // temporary one. Either way we just need decodeAudioData.
+            // Max decoded audio duration: ~20 minutes. Beyond this the raw PCM
+            // expansion is a multi-hundred-MB spike in the shared offscreen page.
+            const MAX_DECODE_DURATION_S = 20 * 60; // 1200 seconds
             const ctx = new AudioContext();
             let decoded;
             try {
@@ -512,10 +533,26 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             } finally {
               ctx.close().catch(() => {});
             }
+
+            // Duration cap: bail before we copy PCM into the chunk loop.
+            if (decoded.duration > MAX_DECODE_DURATION_S) {
+              const actualDuration = Math.round(decoded.duration);
+              decoded = null; // release immediately
+              sendResponse({
+                error: `captionDecodeAudio: audio too long (${actualDuration}s > ${MAX_DECODE_DURATION_S}s limit). Try a shorter clip.`,
+                retryable: false,
+              });
+              break;
+            }
+
             const { sampleRate, duration, numberOfChannels } = decoded;
             const chunkSamples = Math.ceil(CHUNK_DURATION_S * sampleRate);
             const totalSamples = decoded.length;
             const chunks = [];
+
+            // Process chunks one at a time. After extracting per-chunk channel
+            // data we immediately release the per-chunk PCM buffer to avoid
+            // holding decoded + all WAV buffers simultaneously.
             for (let offset = 0; offset < totalSamples; offset += chunkSamples) {
               const chunkLen = Math.min(chunkSamples, totalSamples - offset);
               const startSec = offset / sampleRate;
@@ -565,10 +602,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
               for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
               const wavBase64 = btoa(bin);
               chunks.push({ startSec, endSec, wavBase64 });
+              // Release per-chunk PCM buffer before allocating the next one.
+              // (wavBuffer and pcm go out of scope here; GC can collect them
+              //  before the loop allocates the next chunk.)
             }
+            // Release the full AudioBuffer now that chunking is done.
+            decoded = null;
             sendResponse({ chunks });
           } catch (e) {
             sendResponse({ error: e.message || String(e) });
+          } finally {
+            _captionDecodeBusy = false;
           }
           break;
         }

@@ -115,6 +115,9 @@ const contentConfig = {
   outfile: path.resolve(__dirname, 'extension/content/content.bundle.js'),
   format: 'iife',
   target: 'chrome110',
+  // Minified: this bundle is injected into EVERY page (<all_urls>); parse cost
+  // matters. Sourcemap retained for debugging. (Review finding #11.)
+  minify: true,
   sourcemap: true,
   logLevel: 'info',
   // colorjs.io /fn sub-path imports (used by utils/color.js → fix-contrast.js)

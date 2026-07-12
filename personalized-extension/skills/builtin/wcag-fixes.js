@@ -9,6 +9,13 @@ import {
 // Call-time lookup so the audit-trail hook assigned in content.js is always
 // found regardless of module-import order.
 const logFix = (...a) => (globalThis.ai4a11yLogFix || (() => {}))(...a);
+
+// _trackFix: called by every fixer alongside logFix to accumulate revertable
+// inverse descriptors for disable()-time replay.  desc is null for non-revertable
+// fixes (element replacements) and is otherwise the logFix 5th-arg descriptor.
+function _trackFix(desc) {
+  if (desc && desc.selector) _appliedInverses.push(desc);
+}
 const incrementStat = (...a) => (globalThis.ai4a11yIncrementStat || (() => {}))(...a);
 
 // ---------------------------------------------------------------------------
@@ -60,6 +67,28 @@ function normaliseLang(raw) {
 // Stored in the logFix inverse descriptor so revertFix can look the element
 // up later (the element reference itself may be stale after page mutations).
 // ---------------------------------------------------------------------------
+
+// Monotonic counter for anchor attributes stamped on fixed elements.
+// Each fix gets a unique [data-ai4a11y-fix="<n>"] selector so revertFix
+// resolves the EXACT element regardless of nth-of-type index shifts caused
+// by DOM mutations (SPA re-renders, ad insertions, etc.) after fix time.
+let _fixCounter = 0;
+
+/**
+ * Stamp `el` with a unique anchor attribute and return the stable selector.
+ * For document.documentElement we fall back to the positional cssPath ('html')
+ * since stamping the root element is not appropriate.
+ *
+ * The caller is responsible for removing `data-ai4a11y-fix` on revert/disable.
+ */
+function anchorSelector(el) {
+  if (!el || el.nodeType !== 1) return '';
+  if (el === document.documentElement) return 'html';
+  const n = ++_fixCounter;
+  el.setAttribute('data-ai4a11y-fix', String(n));
+  return `[data-ai4a11y-fix="${n}"]`;
+}
+
 function cssPath(el) {
   if (!el || el.nodeType !== 1) return '';
   if (el === document.documentElement) return 'html';
@@ -106,10 +135,12 @@ export function fixInvalidLang(element) {
     return;
   }
 
-  const sel = cssPath(element);
+  // html/documentElement: use stable 'html' selector (no stamp needed).
+  const sel = element === document.documentElement ? 'html' : anchorSelector(element);
   element.setAttribute('lang', fixed);
   incrementStat('wcag');
   logFix('lang', sel, currentLang, fixed, { attr: 'lang', prior: currentLang, selector: sel });
+  _trackFix({ attr: 'lang', prior: currentLang, selector: sel });
   console.log('[AI4A11y] Normalised lang attribute:', currentLang, '->', fixed);
 }
 
@@ -130,11 +161,13 @@ export function fixDuplicateId(element) {
   // Do NOT re-point any references: getElementById resolves to the FIRST
   // occurrence, which means for/aria-labelledby/etc. already point at the
   // correct (first) element. Re-pointing would break that correct wiring.
-  const sel = cssPath(element);
+  // Anchor before changing id so the stamp doesn't rely on the id being stable.
+  const sel = anchorSelector(element);
   element.id = newId;
   markProcessed(element, 'done', 'wcag');
   incrementStat('wcag');
   logFix('duplicate-id', sel, originalId, newId, { attr: 'id', prior: originalId, selector: sel });
+  _trackFix({ attr: 'id', prior: originalId, selector: sel });
   console.log('[AI4A11y] Renamed duplicate ID:', originalId, '->', newId);
 }
 
@@ -146,11 +179,12 @@ export function fixTargetBlank(element) {
   if (!parts.includes('noreferrer')) parts.push('noreferrer');
 
   const newRel = parts.join(' ');
-  const sel = cssPath(element);
+  const sel = anchorSelector(element);
   element.setAttribute('rel', newRel);
   markProcessed(element, 'done', 'wcag');
   incrementStat('wcag');
   logFix('target-blank', sel, rel || '(empty)', newRel, { attr: 'rel', prior: rel || null, selector: sel });
+  _trackFix({ attr: 'rel', prior: rel || null, selector: sel });
   console.log('[AI4A11y] Added rel="noopener noreferrer"');
 }
 
@@ -167,7 +201,8 @@ export function replaceObsoleteElement(element) {
   // For undo we'd need to re-insert — mark as non-revertable (no inverse).
   element.replaceWith(newEl);
   incrementStat('wcag');
-  logFix('obsolete', cssPath(newEl), `<${tag}>`, `<${replacement}>`, null);
+  // anchorSelector stamps the new element so the selector remains stable.
+  logFix('obsolete', anchorSelector(newEl), `<${tag}>`, `<${replacement}>`, null);
   console.log(`[AI4A11y] Replaced <${tag}> with <${replacement}>`);
 }
 
@@ -179,20 +214,22 @@ export function fixViewportMeta(element) {
   // Fix user-scalable=no AND user-scalable=0 (both lock zoom)
   content = content.replace(/user-scalable\s*=\s*(no|0)/gi, 'user-scalable=yes');
   if (content === oldContent) return; // nothing changed
-  const sel = cssPath(element);
+  const sel = anchorSelector(element);
   element.setAttribute('content', content);
   incrementStat('wcag');
   logFix('viewport', sel, oldContent, content, { attr: 'content', prior: oldContent, selector: sel });
+  _trackFix({ attr: 'content', prior: oldContent, selector: sel });
   console.log('[AI4A11y] Fixed viewport meta');
 }
 
 export function fixPositiveTabindex(element) {
   const oldVal = element.getAttribute('tabindex');
-  const sel = cssPath(element);
+  const sel = anchorSelector(element);
   element.setAttribute('tabindex', '0');
   markProcessed(element, 'done', 'wcag');
   incrementStat('wcag');
   logFix('tabindex', sel, oldVal, '0', { attr: 'tabindex', prior: oldVal, selector: sel });
+  _trackFix({ attr: 'tabindex', prior: oldVal, selector: sel });
   console.log('[AI4A11y] Fixed positive tabindex');
 }
 
@@ -200,10 +237,11 @@ export function fixDeprecatedRole(element) {
   const role = element.getAttribute('role');
   if (role && DEPRECATED_ROLES[role]) {
     const newRole = DEPRECATED_ROLES[role];
-    const sel = cssPath(element);
+    const sel = anchorSelector(element);
     element.setAttribute('role', newRole);
     incrementStat('wcag');
     logFix('aria-role', sel, role, newRole, { attr: 'role', prior: role, selector: sel });
+    _trackFix({ attr: 'role', prior: role, selector: sel });
     console.log('[AI4A11y] Replaced deprecated role:', role);
   }
 }
@@ -240,7 +278,7 @@ export function fixHeadingOrder(element) {
     element.replaceWith(newHeading);
     incrementStat('wcag');
     // Element replaced — no simple attr inverse; record as non-revertable.
-    logFix('heading-order', cssPath(newHeading), `h${currentLevel}`, `h${newLevel}`, null);
+    logFix('heading-order', anchorSelector(newHeading), `h${currentLevel}`, `h${newLevel}`, null);
     console.log(`[AI4A11y] Fixed heading: h${currentLevel} -> h${newLevel}`);
   }
 }
@@ -260,10 +298,11 @@ export function fixInvalidAriaAttr(element) {
 export function fixInvalidAriaRole(element) {
   const role = element.getAttribute('role');
   if (role && !VALID_ARIA_ROLES.has(role)) {
-    const sel = cssPath(element);
+    const sel = anchorSelector(element);
     element.removeAttribute('role');
     incrementStat('wcag');
     logFix('aria-role', sel, role, '(removed)', { attr: 'role', prior: role, selector: sel });
+    _trackFix({ attr: 'role', prior: role, selector: sel });
     console.log('[AI4A11y] Removed invalid role:', role);
   }
 }
@@ -283,13 +322,15 @@ export function fixNestedInteractive(element) {
     logFix('nested-interactive', cssPath(span), 'button', 'span', null);
     console.log('[AI4A11y] Replaced nested button with span');
   } else if (element.tagName === 'A') {
-    const sel = cssPath(element);
+    const sel = anchorSelector(element);
     const priorHref = element.getAttribute('href');
     element.removeAttribute('href');
     element.setAttribute('role', 'presentation');
     incrementStat('wcag');
+    // A→presentation is attr-based and cheaply revertable: restore href + remove role.
     logFix('nested-interactive', sel, 'a[href]', 'a[role=presentation]',
       { attr: 'href', prior: priorHref, selector: sel });
+    _trackFix({ attr: 'href', prior: priorHref, selector: sel });
     console.log('[AI4A11y] Made nested link non-interactive');
   }
 }
@@ -306,7 +347,7 @@ export function fixTargetSize(element) {
   const priorMinH = element.style.minHeight || '';
   const priorBoxSizing = element.style.boxSizing || '';
 
-  const sel = cssPath(element);
+  const sel = anchorSelector(element);
   element.style.boxSizing = 'border-box';
   element.style.padding = `${needHeight}px ${needWidth}px`;
   element.style.minWidth = '44px';
@@ -319,7 +360,11 @@ export function fixTargetSize(element) {
   incrementStat('wcag');
   logFix('target-size', sel, `${Math.round(rect.width)}x${Math.round(rect.height)}`, '44x44', {
     style: { padding: priorPadding, minWidth: priorMinW, minHeight: priorMinH, boxSizing: priorBoxSizing },
-    selector: sel
+    selector: sel,
+  });
+  _trackFix({
+    style: { padding: priorPadding, minWidth: priorMinW, minHeight: priorMinH, boxSizing: priorBoxSizing },
+    selector: sel,
   });
   console.log('[AI4A11y] Increased touch target size');
 }
@@ -392,6 +437,22 @@ export const RISKY_AXE_RULES = new Set([
 ]);
 
 // ---------------------------------------------------------------------------
+// Module-level inverse-descriptor list — populated by the logFix shim above.
+// disable() replays these best-effort to restore attribute-based safe-tier fixes.
+//
+// Each entry mirrors the logFix inverse descriptor:
+//   { selector, attr?, prior?, style? }
+//
+// Excluded (non-revertable DOM restructures):
+//   - replaceObsoleteElement  (element swapped; re-insertion would need original node)
+//   - fixHeadingOrder         (element tag change; same reason)
+//   - fixNestedInteractive button→span (element replaced)
+//
+// fixNestedInteractive A→presentation IS included (attr-based, cheaply revertable).
+// ---------------------------------------------------------------------------
+let _appliedInverses = [];
+
+// ---------------------------------------------------------------------------
 // WcagFixes adapter
 // ---------------------------------------------------------------------------
 
@@ -402,12 +463,52 @@ export const WcagFixes = {
   enable(opts = {}) {
     this.enabled = true;
     this._riskyEnabled = !!(opts && opts.wcagRiskyFixes);
+    // Clear any leftover inverses from a previous (incomplete) disable cycle.
+    _appliedInverses = [];
     this.run();
   },
 
+  /**
+   * disable() replays collected safe-tier inverses best-effort (failures
+   * silently skipped), then clears the list.
+   *
+   * Risky-tier DOM restructures (heading re-tag, obsolete element swap,
+   * nested-interactive button→span) are intentionally excluded — they would
+   * require storing the original node, not just an attribute descriptor.
+   * The A→presentation nested-interactive case IS reverted (attr-based).
+   *
+   * After replay every [data-ai4a11y-fix] anchor attribute is removed.
+   */
   disable() {
     this.enabled = false;
     this._riskyEnabled = false;
+
+    // Replay collected attribute-based inverses.
+    for (const desc of _appliedInverses) {
+      try {
+        const el = document.querySelector(desc.selector);
+        if (!el) continue;
+        if (desc.attr !== undefined) {
+          if (desc.prior === null || desc.prior === undefined) {
+            el.removeAttribute(desc.attr);
+          } else {
+            el.setAttribute(desc.attr, desc.prior);
+          }
+        } else if (desc.style) {
+          for (const [prop, val] of Object.entries(desc.style)) {
+            el.style[prop] = val || '';
+          }
+        }
+      } catch (_) {
+        // Best-effort: skip failures silently.
+      }
+    }
+    _appliedInverses = [];
+
+    // Remove all anchor attributes stamped during this enable cycle.
+    document.querySelectorAll('[data-ai4a11y-fix]').forEach(el => {
+      el.removeAttribute('data-ai4a11y-fix');
+    });
   },
 
   run() {

@@ -367,6 +367,20 @@ function showUnreachableNotice(el) {
 }
 
 // ---------------------------------------------------------------------------
+// Generation counter — guards DOM writes from transcriptions that outlive
+// a disable() call.
+// ---------------------------------------------------------------------------
+
+// Bumped by disable(). Any async transcription pipeline captures the counter
+// before every await and bails (without writing to the DOM) if it changes.
+let _generation = 0;
+
+/**
+ * Returns the current generation counter. Export for unit tests.
+ */
+export function _currentGeneration() { return _generation; }
+
+// ---------------------------------------------------------------------------
 // Per-element state
 // ---------------------------------------------------------------------------
 
@@ -381,6 +395,10 @@ const addedNotices = new WeakSet();
 
 async function _processMedia(el, type, aiEnabled) {
   const ns = 'captions';
+
+  // Capture generation before any await. If disable() fires while we are
+  // suspended, _generation is bumped and we bail before touching the DOM.
+  const myGen = _generation;
 
   // Size check BEFORE marking setup.
   const rect = el.getBoundingClientRect();
@@ -449,9 +467,18 @@ async function _processMedia(el, type, aiEnabled) {
     const timer = setTimeout(() => controller.abort(), 5 * 60 * 1000);
     let chunks;
     try {
+      // Generation check: re-verify before and after the cloud round-trip.
+      if (_generation !== myGen) { markProcessed(el, 'failed', ns); return; }
       chunks = await transcribeMediaUrl(src, controller.signal);
     } finally {
       clearTimeout(timer);
+    }
+
+    // Generation check after the multi-minute cloud await.
+    if (_generation !== myGen) {
+      // Teardown already cleaned the DOM. Mark retryable so re-enable re-scans.
+      markProcessed(el, 'failed', ns);
+      return;
     }
 
     if (!chunks || !chunks.length) throw new Error('No transcript returned');
@@ -558,6 +585,11 @@ export const Captions = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+
+    // Bump the generation counter so any in-flight transcription pipeline
+    // that resumes after this point will see the mismatch and write nothing
+    // to the DOM (generation-counter pattern for #6).
+    _generation++;
 
     // Disconnect observer.
     this._observer?.disconnect();

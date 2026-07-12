@@ -4,6 +4,7 @@
 
 import { isValidBcp47, SAFE_FIXERS, RISKY_FIXERS } from '../skills/builtin/wcag-fixes.js';
 import { VALID_ARIA_ROLES, VALID_ARIA_ATTRS } from '../utils/constants.js';
+import { WcagFixes, fixTargetBlank, fixPositiveTabindex } from '../skills/builtin/wcag-fixes.js';
 
 let pass = 0;
 let fail = 0;
@@ -216,6 +217,158 @@ check('VALID_ARIA_ATTRS includes aria-rowspan', VALID_ARIA_ATTRS.has('aria-rowsp
       check('fixPositiveTabindex descriptor captured', false, 'no logFix call found');
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// 6. anchorSelector — stable selector generation (#8)
+// ---------------------------------------------------------------------------
+// Verify that fixers stamp [data-ai4a11y-fix="n"] and that the selector
+// resolves regardless of nth-of-type index shift (simulated by changing the
+// element after stamping).
+
+{
+  const captured = [];
+  globalThis.ai4a11yLogFix = (...args) => captured.push(args);
+  globalThis.ai4a11yIncrementStat = () => {};
+  globalThis.CSS = { escape: (s) => s };
+
+  // A mock element whose parentElement has siblings (so cssPath would use nth-of-type).
+  function makeElWithParent(tag, attrs = {}) {
+    const el = {
+      nodeType: 1,
+      tagName: tag.toUpperCase(),
+      _attrs: { ...attrs },
+      getAttribute(n) { return this._attrs[n] ?? null; },
+      setAttribute(n, v) { this._attrs[n] = v; },
+      removeAttribute(n) { delete this._attrs[n]; },
+      hasAttribute(n) { return n in this._attrs; },
+      get id() { return this._attrs.id || ''; },
+      set id(v) { this._attrs.id = v; },
+      style: {},
+      get parentElement() { return this._parent || null; },
+      get attributes() {
+        return Object.entries(this._attrs).map(([name, value]) => ({ name, value }));
+      },
+    };
+    return el;
+  }
+
+  // 6a. anchorSelector stamps data-ai4a11y-fix and returns [data-ai4a11y-fix="n"].
+  {
+    captured.length = 0;
+    const el = makeElWithParent('a', { rel: '' });
+    el._parent = { children: [el, makeElWithParent('a')] }; // two siblings — nth-of-type would be used
+    try { fixTargetBlank(el); } catch (_) {}
+    const call = captured.find(c => c[0] === 'target-blank');
+    if (call) {
+      const desc = call[4];
+      const selectorIsAnchor = typeof desc?.selector === 'string' && desc.selector.startsWith('[data-ai4a11y-fix="');
+      check('anchorSelector: fixTargetBlank selector uses [data-ai4a11y-fix="n"]', selectorIsAnchor, desc?.selector);
+      // The element must carry the matching attribute value.
+      const fixAttr = el.getAttribute('data-ai4a11y-fix');
+      check('anchorSelector: element stamped with data-ai4a11y-fix', fixAttr !== null, fixAttr);
+      if (fixAttr !== null) {
+        check('anchorSelector: selector matches stamped value',
+          desc.selector === `[data-ai4a11y-fix="${fixAttr}"]`, desc.selector);
+      }
+    } else {
+      check('anchorSelector: fixTargetBlank captured a logFix call', false, 'no call found');
+    }
+  }
+
+  // 6b. fixPositiveTabindex also uses anchor selector.
+  {
+    captured.length = 0;
+    const el = makeElWithParent('button', { tabindex: '5' });
+    try { fixPositiveTabindex(el); } catch (_) {}
+    const call = captured.find(c => c[0] === 'tabindex');
+    if (call) {
+      const desc = call[4];
+      check('anchorSelector: fixPositiveTabindex selector is anchor',
+        typeof desc?.selector === 'string' && desc.selector.startsWith('[data-ai4a11y-fix="'),
+        desc?.selector);
+    } else {
+      check('anchorSelector: fixPositiveTabindex captured logFix', false, 'no call');
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 7. disable() inverse-descriptor replay (#7)
+// ---------------------------------------------------------------------------
+// Verify that WcagFixes.disable() replays collected attribute-based inverses.
+
+{
+  const captured = [];
+  globalThis.ai4a11yLogFix = (...args) => captured.push(args);
+  globalThis.ai4a11yIncrementStat = () => {};
+  globalThis.CSS = { escape: (s) => s };
+
+  // Build a minimal queryable DOM so anchorSelector + querySelector work.
+  const elements = {};
+
+  const makeRealEl = (tag, attrs = {}) => {
+    const el = {
+      nodeType: 1,
+      tagName: tag.toUpperCase(),
+      _attrs: { ...attrs },
+      _id: 'el_' + Math.random().toString(36).slice(2),
+      getAttribute(n) { return this._attrs[n] ?? null; },
+      setAttribute(n, v) { this._attrs[n] = v; if (n === 'data-ai4a11y-fix') elements[v] = this; },
+      removeAttribute(n) { delete this._attrs[n]; },
+      hasAttribute(n) { return n in this._attrs; },
+      get id() { return this._attrs.id || ''; },
+      set id(v) { this._attrs.id = v; },
+      style: {},
+      parentElement: null,
+      get attributes() {
+        return Object.entries(this._attrs).map(([name, value]) => ({ name, value }));
+      },
+    };
+    return el;
+  };
+
+  // Patch document.querySelector to resolve [data-ai4a11y-fix="n"] from our map.
+  // Also handle 'html' for documentElement.
+  const origQS = globalThis.document.querySelector;
+  globalThis.document.querySelector = (sel) => {
+    if (sel === 'html') return globalThis.document.documentElement;
+    const m = sel.match(/\[data-ai4a11y-fix="(\d+)"\]/);
+    if (m) return elements[m[1]] || null;
+    return null;
+  };
+  // Patch querySelectorAll for disable()'s anchor-cleanup pass.
+  const origQSA = globalThis.document.querySelectorAll;
+  globalThis.document.querySelectorAll = (sel) => {
+    if (sel === '[data-ai4a11y-fix]') {
+      return Object.values(elements);
+    }
+    return [];
+  };
+
+  // 7a. disable() restores a rel attribute set by fixTargetBlank.
+  {
+    const el = makeRealEl('a', { rel: 'nofollow' });
+    captured.length = 0;
+    // WcagFixes is already imported at the top — same module instance.
+    WcagFixes.enable();
+    try { fixTargetBlank(el); } catch (_) {}
+    // el should now have rel with noopener+noreferrer; prior is 'nofollow'
+    const relAfterFix = el.getAttribute('rel') || '';
+    check('disable replay: rel contains noopener after fix', relAfterFix.includes('noopener'), relAfterFix);
+
+    WcagFixes.disable();
+    const relAfterDisable = el.getAttribute('rel');
+    check('disable replay: rel restored to prior "nofollow" after disable',
+      relAfterDisable === 'nofollow', relAfterDisable);
+    // Anchor attribute removed on disable.
+    check('disable replay: data-ai4a11y-fix removed after disable',
+      el.getAttribute('data-ai4a11y-fix') === null, el.getAttribute('data-ai4a11y-fix'));
+  }
+
+  // Restore document methods.
+  globalThis.document.querySelector = origQS;
+  globalThis.document.querySelectorAll = origQSA;
 }
 
 // ---------------------------------------------------------------------------

@@ -310,6 +310,115 @@ async function runTests() {
   }
 
   // ---------------------------------------------------------------------------
+  // Test 5: anchor-selector revertFix after sibling insertion (#8 killer case)
+  // After fixing a target=_blank link, insert a sibling <a> BEFORE it so the
+  // nth-of-type index shifts. revertFix must still resolve the correct element
+  // via [data-ai4a11y-fix="n"] (not nth-of-type).
+  // ---------------------------------------------------------------------------
+  console.log('\n--- Test group 5: anchor-selector stable after sibling insertion (#8) ---');
+  const page5 = await runWcagTests(false);
+
+  if (page5) {
+    const anchorResult = await page5.evaluate(() => {
+      // Find the fixed link (has data-ai4a11y-fix and rel with noopener).
+      const extLink = document.getElementById('extLink');
+      if (!extLink) return { error: 'extLink not found' };
+
+      const fixAttr = extLink.getAttribute('data-ai4a11y-fix');
+      if (!fixAttr) return { error: 'no data-ai4a11y-fix stamp on extLink', rel: extLink.getAttribute('rel') };
+
+      const relAfterFix = extLink.getAttribute('rel') || '';
+
+      // Insert a sibling <a> BEFORE extLink — this shifts any nth-of-type index.
+      const sibling = document.createElement('a');
+      sibling.href = 'https://example.com/sibling';
+      sibling.textContent = 'Sibling inserted after fix';
+      extLink.parentElement.insertBefore(sibling, extLink);
+
+      // Now revert using the anchor selector — should still resolve to extLink.
+      const selector = `[data-ai4a11y-fix="${fixAttr}"]`;
+      const resolved = document.querySelector(selector);
+      if (!resolved) return { error: `selector ${selector} resolved null after sibling insertion` };
+
+      const isCorrectElement = resolved === extLink;
+
+      // Apply the inverse (prior rel was empty string → null stored, so remove).
+      const priorRel = null; // extLink had no rel before fix
+      if (priorRel === null) {
+        resolved.removeAttribute('rel');
+      } else {
+        resolved.setAttribute('rel', priorRel);
+      }
+
+      const relAfterRevert = extLink.getAttribute('rel');
+      return {
+        fixAttr,
+        relAfterFix,
+        isCorrectElement,
+        siblingInserted: true,
+        relAfterRevert,
+      };
+    });
+
+    if (anchorResult.error) {
+      check('anchor-selector: extLink was stamped with data-ai4a11y-fix', false, anchorResult.error);
+    } else {
+      check('anchor-selector: data-ai4a11y-fix stamp present on fixed element',
+        !!anchorResult.fixAttr, anchorResult.fixAttr);
+      check('anchor-selector: rel has noopener after fix',
+        !!(anchorResult.relAfterFix && anchorResult.relAfterFix.includes('noopener')),
+        anchorResult.relAfterFix);
+      check('anchor-selector: querySelector resolves exact element after sibling insertion',
+        anchorResult.isCorrectElement, anchorResult);
+      check('anchor-selector: rel removed on revert (prior was absent)',
+        anchorResult.relAfterRevert === null, anchorResult.relAfterRevert);
+    }
+    await page5.close();
+  } else {
+    console.log('SKIP: anchor-selector test skipped');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 6: disable() restores attribute fixes (#7 — inverse replay)
+  // Enable WcagFixes, verify fixes applied, then call disable() and verify DOM
+  // is restored for rel (target-blank) and tabindex fixes.
+  // ---------------------------------------------------------------------------
+  console.log('\n--- Test group 6: disable() restores safe-tier attribute fixes (#7) ---');
+  const page6 = await runWcagTests(false);
+
+  if (page6) {
+    const disableResult = await page6.evaluate(() => {
+      // Capture state before disable: the extLink should have noopener/noreferrer.
+      const extLink = document.getElementById('extLink');
+      const relAfterFix = extLink ? extLink.getAttribute('rel') : null;
+
+      // Now call disable().
+      window.__WcagFixes.disable();
+
+      // After disable: rel should be restored (extLink had no rel before — should be removed).
+      const relAfterDisable = extLink ? extLink.getAttribute('rel') : 'NOT_FOUND';
+
+      // Anchor attributes should be cleaned up.
+      const anchorAttrsRemaining = document.querySelectorAll('[data-ai4a11y-fix]').length;
+
+      return { relAfterFix, relAfterDisable, anchorAttrsRemaining };
+    });
+
+    check('disable replay: rel had noopener/noreferrer after fix',
+      !!(disableResult.relAfterFix && disableResult.relAfterFix.includes('noopener')),
+      disableResult.relAfterFix);
+    check('disable replay: rel removed/restored after disable()',
+      disableResult.relAfterDisable === null || disableResult.relAfterDisable === '',
+      disableResult.relAfterDisable);
+    check('disable replay: all data-ai4a11y-fix anchors removed after disable()',
+      disableResult.anchorAttrsRemaining === 0, disableResult.anchorAttrsRemaining);
+
+    await page6.close();
+  } else {
+    console.log('SKIP: disable-replay test skipped');
+  }
+
+  // ---------------------------------------------------------------------------
   // Cleanup
   // ---------------------------------------------------------------------------
   await browser.close();

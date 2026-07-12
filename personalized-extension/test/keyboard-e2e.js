@@ -474,6 +474,88 @@ async function main() {
       await page.close();
     }
 
+    // -------------------------------------------------------------------------
+    // (h) disable() removes injected ids on main/nav — but only when WE set them
+    //     (#3: enable→disable without clicking a skip link)
+    // -------------------------------------------------------------------------
+    {
+      // page-no-ids.html: main and nav have no id → keyboard-nav injects them.
+      const page = await browser.newPage();
+      page.on('pageerror', e => console.log('[pageerror-h]', e.message));
+      await page.goto(`http://localhost:${PORT}/page-no-ids.html`, { waitUntil: 'domcontentloaded' });
+      await injectKeyboardNav(page, tabbableUmdSrc, knSrc);
+
+      // Verify main/nav have no id before enable.
+      const idsBefore = await page.evaluate(() => ({
+        main: document.querySelector('main')?.id || null,
+        nav: document.querySelector('nav')?.id || null,
+      }));
+      check('(h) main has no id before enable', !idsBefore.main, `got "${idsBefore.main}"`);
+      check('(h) nav has no id before enable', !idsBefore.nav, `got "${idsBefore.nav}"`);
+
+      // enable() — skip links will be created, injecting ids on main and nav.
+      await page.evaluate(() => window.__KN.enable());
+      await sleep(50);
+
+      const idsAfterEnable = await page.evaluate(() => ({
+        main: document.querySelector('main')?.id || null,
+        nav: document.querySelector('nav')?.id || null,
+        skipLinksPresent: !!document.getElementById('ai4a11y-skip-links'),
+      }));
+      check('(h) main gets ai4a11y-main-content id after enable', idsAfterEnable.main === 'ai4a11y-main-content', idsAfterEnable.main);
+      check('(h) nav gets ai4a11y-nav id after enable', idsAfterEnable.nav === 'ai4a11y-nav', idsAfterEnable.nav);
+      check('(h) skip links container injected', idsAfterEnable.skipLinksPresent);
+
+      // disable() WITHOUT clicking any skip link — the injected ids must be removed.
+      await page.evaluate(() => window.__KN.disable());
+      await sleep(50);
+
+      const idsAfterDisable = await page.evaluate(() => ({
+        main: document.querySelector('main')?.getAttribute('id'),
+        nav: document.querySelector('nav')?.getAttribute('id'),
+        skipLinksPresent: !!document.getElementById('ai4a11y-skip-links'),
+      }));
+      check('(h) main id removed after disable (injected id cleaned up)',
+        idsAfterDisable.main === null, `got "${idsAfterDisable.main}"`);
+      check('(h) nav id removed after disable (injected id cleaned up)',
+        idsAfterDisable.nav === null, `got "${idsAfterDisable.nav}"`);
+      check('(h) skip links container removed after disable', !idsAfterDisable.skipLinksPresent);
+
+      await page.close();
+    }
+
+    // -------------------------------------------------------------------------
+    // (i) disable() does NOT clobber a pre-existing id on main (#3 guard)
+    // -------------------------------------------------------------------------
+    {
+      // page-existing-id.html: <main id="existing"> — keyboard-nav must leave it.
+      const page = await browser.newPage();
+      page.on('pageerror', e => console.log('[pageerror-i]', e.message));
+      await page.goto(`http://localhost:${PORT}/page-existing-id.html`, { waitUntil: 'domcontentloaded' });
+      await injectKeyboardNav(page, tabbableUmdSrc, knSrc);
+
+      const idBefore = await page.evaluate(() => document.querySelector('main')?.id);
+      check('(i) main starts with id="existing"', idBefore === 'existing', `got "${idBefore}"`);
+
+      await page.evaluate(() => window.__KN.enable());
+      await sleep(50);
+
+      // main already had an id so keyboard-nav should NOT overwrite it.
+      const idAfterEnable = await page.evaluate(() => document.querySelector('main')?.id);
+      check('(i) main id unchanged after enable (was not injected)',
+        idAfterEnable === 'existing', `got "${idAfterEnable}"`);
+
+      await page.evaluate(() => window.__KN.disable());
+      await sleep(50);
+
+      // After disable the id should still be 'existing' (we never owned it).
+      const idAfterDisable = await page.evaluate(() => document.querySelector('main')?.id);
+      check('(i) pre-existing id="existing" preserved after disable',
+        idAfterDisable === 'existing', `got "${idAfterDisable}"`);
+
+      await page.close();
+    }
+
     // Summary
     const passed = results.filter(r => r.ok).length;
     const total = results.length;

@@ -62,6 +62,11 @@ let _osAutoDark = false;
 // null = not yet checked; true/false = cached result.
 let _aiConfigured = null;
 
+// #14: Module-level handle for the watchSystemPrefs cleanup function.
+// init() can be re-invoked (rescan / setEnabled true), so we must unwatch
+// before re-registering to avoid accumulating duplicate media-query listeners.
+let _prefsUnwatch = null;
+
 const stats = { wcag: 0, images: 0, labels: 0, text: 0, captions: 0 };
 const fixes = [];
 
@@ -153,7 +158,11 @@ window.__ai4a11yAxeDispatch = async function(violations) {
   }
 };
 
-function enableTool(toolName, options) {
+// #18: enableTool is async so it can await async enable() implementations
+// (e.g. VoiceCommands.enable() checks storage before starting recognition).
+// Callers that don't need the result can fire-and-forget; callers that must
+// act on success/failure should await and inspect the returned object.
+async function enableTool(toolName, options) {
   const tool = TOOL_MAP[toolName];
   if (!tool) return;
 
@@ -162,14 +171,12 @@ function enableTool(toolName, options) {
   }
 
   try {
-    let result;
-    if (options !== undefined) {
-      result = tool.enable(options);
-    } else {
-      result = tool.enable();
-    }
+    // Await so async enable() implementations (VoiceCommands) can complete
+    // their mutual-exclusion checks before we decide to add to enabledTools.
+    const result = await (options !== undefined ? tool.enable(options) : tool.enable());
     // If enable() explicitly returns false the tool failed to start — do NOT
-    // phantom-add it to enabledTools (e.g. reader-mode extraction failure).
+    // phantom-add it to enabledTools (e.g. reader-mode extraction failure,
+    // or VoiceCommands bailing when a Live session is active).
     if (result === false) {
       return { ok: false, reason: 'enable-failed' };
     }
@@ -245,9 +252,11 @@ async function enableAITool(key, enableFn, _disableFn, fromSettingsChange = fals
 async function applyAISettings(newSettings, fromSettingsChange = false) {
   Object.assign(aiSettings, newSettings);
 
+  // #16: fixContrast is a deterministic colorjs.io pipeline (requiresAI:false).
+  // It must NOT be gated on the Gemini API key — enable/disable it like autoWcagFix.
   if (newSettings.fixContrast !== undefined) {
     if (newSettings.fixContrast) {
-      await enableAITool('fixContrast', () => FixContrast.enable(), () => FixContrast.disable?.(), fromSettingsChange);
+      try { await FixContrast.enable(); } catch (e) { console.warn('[AI4A11y] FixContrast error:', e); }
     } else if (FixContrast.disable) FixContrast.disable();
   }
 
@@ -374,13 +383,15 @@ async function initFromStorage() {
       const configured = await checkAIConfigured();
       try { await Captions.enable({ youtubeOnly: !configured }); } catch (e) {}
     }
-    if (aiSettings.fixContrast || aiSettings.autoFixLabels || aiSettings.autoDescribe ||
+    // #16: fixContrast is deterministic (requiresAI:false) — always enable it
+    // regardless of key, alongside the other non-AI structural sweeps below.
+    if (aiSettings.fixContrast) { try { await FixContrast.enable(); } catch (e) {} }
+    if (aiSettings.autoFixLabels || aiSettings.autoDescribe ||
         aiSettings.autoSimplify || aiSettings.autoSummarize) {
       const configured = await checkAIConfigured();
       if (!configured) {
         console.info('[AI4A11y] AI sweeps requested but no Gemini API key configured — skipping.');
       } else {
-        if (aiSettings.fixContrast) { try { await FixContrast.enable(); } catch (e) {} }
         if (aiSettings.autoFixLabels) { try { await GenerateLabels.enable(); } catch (e) {} }
         if (aiSettings.autoDescribe) { try { await AutoAltText.enable(); } catch (e) {} }
         if (aiSettings.autoSimplify || aiSettings.autoSummarize) { try { await SimplifyText.enable(); } catch (e) {} }
@@ -517,7 +528,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // sends its response and the channel finally tears down.
 });
 
-function applyProfileSettings(settings) {
+// #17: applyProfileSettings is async so it can await checkAIConfigured()
+// before enabling AI-powered adapters. This closes the hole where a keyless
+// user who has a learned AI preference (e.g. autoDescribe from a prior
+// session) would trigger per-element failed AI round-trips on every page load.
+async function applyProfileSettings(settings) {
   const toolMapping = {
     darkMode: 'DarkMode', readerMode: 'ReaderMode',
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
@@ -565,11 +580,31 @@ function applyProfileSettings(settings) {
     });
   }
 
-  const aiKeys = { fixContrast: FixContrast, autoWcagFix: WcagFixes, autoFixLabels: GenerateLabels,
-    autoDescribe: AutoAltText, autoCaptions: Captions,
+  // Non-AI sweeps: always run regardless of API key.
+  // #16: fixContrast and autoWcagFix are both deterministic (requiresAI:false).
+  if (settings.fixContrast === true) { try { await FixContrast.enable(); } catch (e) {} }
+  if (settings.autoWcagFix === true) { try { await WcagFixes.enable(); } catch (e) {} }
+
+  // AI sweeps: gate on API key to avoid per-element failed round-trips for
+  // keyless users who have a learned AI preference (#17).
+  // autoCaptions is the exception — it enables in youtubeOnly mode key-free.
+  if (settings.autoCaptions === true) {
+    const configured = await checkAIConfigured();
+    try { await Captions.enable({ youtubeOnly: !configured }); } catch (e) {}
+  }
+  const aiOnlyKeys = { autoFixLabels: GenerateLabels,
+    autoDescribe: AutoAltText,
     autoSimplify: SimplifyText, autoSummarize: SimplifyText };
-  for (const [key, mod] of Object.entries(aiKeys)) {
-    if (settings[key] === true) { try { mod.enable(); } catch (e) {} }
+  const anyAIKey = Object.keys(aiOnlyKeys).some(k => settings[k] === true);
+  if (anyAIKey) {
+    const configured = await checkAIConfigured();
+    if (configured) {
+      for (const [key, mod] of Object.entries(aiOnlyKeys)) {
+        if (settings[key] === true) { try { await mod.enable(); } catch (e) {} }
+      }
+    } else {
+      console.info('[AI4A11y] Profile AI sweeps requested but no Gemini API key configured — skipping.');
+    }
   }
 
   console.log('[AI4A11y] Profile settings applied');
@@ -654,7 +689,13 @@ async function init() {
     //   moreContrast:        Wave 2a — suggest/enable fix-contrast / visual-assist
     //   forcedColors:        Wave 2a — same as moreContrast
     //   reducedTransparency: Wave 2a — no adapter yet
-    watchSystemPrefs(async (prefs) => {
+    //
+    // #14: Unwatch any prior registration before re-watching. init() is
+    // re-invoked on 'rescan' and 'setEnabled:true', and watchSystemPrefs
+    // adds 5 media-query listeners per call, so we must remove the old set
+    // before adding a new one.
+    if (_prefsUnwatch) { _prefsUnwatch(); _prefsUnwatch = null; }
+    _prefsUnwatch = watchSystemPrefs(async (prefs) => {
       if (!extensionEnabled) return;
       // Check whether the user has explicit settings for each signal we act on.
       const stored = await chrome.storage.sync.get(['motionReducer', 'darkMode']).catch(() => ({}));
@@ -665,7 +706,7 @@ async function init() {
         // OS says reduce motion, user has no explicit setting: auto-enable.
         if (!enabledTools.has('MotionReducer')) {
           setAnnounceSuppressed(true);
-          try { enableTool('MotionReducer'); } finally { setAnnounceSuppressed(false); }
+          try { await enableTool('MotionReducer'); } finally { setAnnounceSuppressed(false); }
           _osAutoMotion = true;
         }
       } else if (!prefs.reducedMotion && _osAutoMotion) {
@@ -684,8 +725,13 @@ async function init() {
       if (prefs.dark && !darkExplicit) {
         if (!enabledTools.has('DarkMode')) {
           setAnnounceSuppressed(true);
-          try { enableTool('DarkMode'); } finally { setAnnounceSuppressed(false); }
-          _osAutoDark = true;
+          let darkEnableResult;
+          try { darkEnableResult = await enableTool('DarkMode'); } finally { setAnnounceSuppressed(false); }
+          // #19: Only mark auto-dark as active when the enable actually succeeded.
+          // DarkMode.enable() returns false when color-filter arbitration skips it;
+          // setting _osAutoDark=true in that case causes a phantom "Dark mode disabled"
+          // announce on the next OS light-switch (darkExplicit=false, _osAutoDark=true).
+          if (darkEnableResult?.ok !== false) _osAutoDark = true;
         }
       } else if (!prefs.dark && _osAutoDark) {
         // OS switched back to light: undo the auto-enabled dark mode.

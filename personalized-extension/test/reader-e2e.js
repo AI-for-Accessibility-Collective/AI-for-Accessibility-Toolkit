@@ -273,6 +273,62 @@ async function main() {
       check(`Round ${round}: no inert attributes remaining after disable`, inertAllGone);
     }
 
+    // =========================================================================
+    // Beat 4 — Regression #0: extension-owned live regions are NOT inerted
+    // =========================================================================
+    // Repro: inject a fake #ai4a11y-voice-status[aria-live=polite][role=status]
+    // body child (mimicking what voice-commands.js creates), enable ReaderMode,
+    // and assert the live region is NOT inert.
+    console.log('\n--- Beat 4: #ai4a11y-voice-status live region NOT inerted ---');
+    // Re-use the article page — bring it back to front and reset.
+    await articlePage.bringToFront();
+    // Ensure ReaderMode is disabled.
+    await sendToTab(tabId, { type: 'disableTool', tool: 'ReaderMode' });
+    await sleep(200);
+
+    // Inject the fake voice-status live region directly into the page body
+    // (mimics voice-commands.js appending _statusRegion to document.body).
+    await articlePage.evaluate(() => {
+      if (!document.getElementById('ai4a11y-voice-status')) {
+        const sr = document.createElement('div');
+        sr.id = 'ai4a11y-voice-status';
+        sr.setAttribute('role', 'status');
+        sr.setAttribute('aria-live', 'polite');
+        sr.setAttribute('aria-atomic', 'true');
+        sr.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+        sr.textContent = 'Voice commands active';
+        document.body.appendChild(sr);
+      }
+    });
+    await sleep(100);
+
+    // Enable ReaderMode — this triggers the inert loop.
+    await sendToTab(tabId, { type: 'enableTool', tool: 'ReaderMode' });
+    await sleep(300);
+
+    // Assert: #ai4a11y-voice-status is NOT inert.
+    const liveRegionNotInerted = await articlePage.evaluate(() => {
+      const sr = document.getElementById('ai4a11y-voice-status');
+      if (!sr) return { found: false };
+      return {
+        found: true,
+        inert: sr.hasAttribute('inert'),
+      };
+    });
+    check('Beat 4: #ai4a11y-voice-status live region found in DOM', liveRegionNotInerted.found);
+    check(
+      'Beat 4: #ai4a11y-voice-status (aria-live) NOT inerted while ReaderMode is open',
+      liveRegionNotInerted.found && !liveRegionNotInerted.inert,
+      JSON.stringify(liveRegionNotInerted)
+    );
+
+    // Clean up: disable reader mode and remove the injected element.
+    await sendToTab(tabId, { type: 'disableTool', tool: 'ReaderMode' });
+    await sleep(200);
+    await articlePage.evaluate(() => {
+      document.getElementById('ai4a11y-voice-status')?.remove();
+    });
+
   } finally {
     server.close();
     if (!KEEP) await browser.close();

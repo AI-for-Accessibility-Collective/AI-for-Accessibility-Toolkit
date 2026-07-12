@@ -1889,6 +1889,7 @@ ${lines.join("\n")}`;
     // Captions Increment 1: audio decode+chunk for transcription pipeline.
     "captionDecodeAudio"
   ]);
+  var _captionDecodeBusy = false;
   async function undoFromUi() {
     const result = await undoLastFromUi();
     try {
@@ -1979,6 +1980,11 @@ ${lines.join("\n")}`;
             break;
           }
           case "captionDecodeAudio": {
+            if (_captionDecodeBusy) {
+              sendResponse({ error: "captionDecodeAudio: busy \u2014 retry after current decode completes", retryable: true });
+              break;
+            }
+            _captionDecodeBusy = true;
             try {
               const buffer = msg.buffer;
               if (!buffer || !(buffer instanceof ArrayBuffer)) {
@@ -1986,6 +1992,7 @@ ${lines.join("\n")}`;
                 break;
               }
               const CHUNK_DURATION_S = 15;
+              const MAX_DECODE_DURATION_S = 20 * 60;
               const ctx = new AudioContext();
               let decoded;
               try {
@@ -1993,6 +2000,15 @@ ${lines.join("\n")}`;
               } finally {
                 ctx.close().catch(() => {
                 });
+              }
+              if (decoded.duration > MAX_DECODE_DURATION_S) {
+                const actualDuration = Math.round(decoded.duration);
+                decoded = null;
+                sendResponse({
+                  error: `captionDecodeAudio: audio too long (${actualDuration}s > ${MAX_DECODE_DURATION_S}s limit). Try a shorter clip.`,
+                  retryable: false
+                });
+                break;
               }
               const { sampleRate, duration, numberOfChannels } = decoded;
               const chunkSamples = Math.ceil(CHUNK_DURATION_S * sampleRate);
@@ -2044,9 +2060,12 @@ ${lines.join("\n")}`;
                 const wavBase64 = btoa(bin);
                 chunks.push({ startSec, endSec, wavBase64 });
               }
+              decoded = null;
               sendResponse({ chunks });
             } catch (e) {
               sendResponse({ error: e.message || String(e) });
+            } finally {
+              _captionDecodeBusy = false;
             }
             break;
           }

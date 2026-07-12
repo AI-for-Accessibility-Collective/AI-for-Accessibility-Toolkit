@@ -236,6 +236,7 @@ async function svgToDataUrl(svg) {
 
 const GENERATED_ATTR = 'data-ai4a11y-generated';
 const PREV_ALT_ATTR = 'data-ai4a11y-prev-alt';
+const PREV_ROLE_ATTR = 'data-ai4a11y-prev-role';
 const EMPTY_SENTINEL = '\x00'; // sentinel for "attribute was absent before we wrote"
 
 /**
@@ -421,7 +422,16 @@ export async function generateSvgDescription(svg) {
       svg.insertBefore(title, svg.firstChild);
     }
     title.textContent = description;
-    svg.setAttribute('role', 'img');
+    // Record prior role provenance before writing (mirrors prev-alt sentinel pattern).
+    // If the SVG already had role="img", we still write the title but skip re-setting role
+    // so we don't need to restore it — but we still record provenance for symmetry.
+    const priorRole = svg.hasAttribute('role') ? (svg.getAttribute('role') || EMPTY_SENTINEL) : EMPTY_SENTINEL;
+    svg.setAttribute(PREV_ROLE_ATTR, priorRole);
+    if (priorRole === EMPTY_SENTINEL) {
+      // Element had no role — set it now.
+      svg.setAttribute('role', 'img');
+    }
+    // If it already had role="img" (or another role), leave it as-is; title provides the name.
     svg.setAttribute(GENERATED_ATTR, 'alt');
     markProcessed(svg, 'done', 'alt');
     incrementStat('images');
@@ -531,11 +541,20 @@ export const AutoAltText = {
       el.removeAttribute('data-ai4a11y-alt');
     });
 
-    // SVG: remove title we injected and role.
+    // SVG: remove title we injected; restore prior role (or remove if we added it).
     document.querySelectorAll(`svg[${GENERATED_ATTR}="alt"]`).forEach(svg => {
       const title = svg.querySelector('title');
       if (title) title.remove();
-      svg.removeAttribute('role');
+      // Restore prior role using sentinel provenance (mirrors prev-alt pattern).
+      const prevRole = svg.getAttribute(PREV_ROLE_ATTR);
+      if (prevRole === null || prevRole === EMPTY_SENTINEL) {
+        // We added role="img" — remove it.
+        svg.removeAttribute('role');
+      } else {
+        // Author had a role before us — restore it.
+        svg.setAttribute('role', prevRole);
+      }
+      svg.removeAttribute(PREV_ROLE_ATTR);
       svg.removeAttribute(GENERATED_ATTR);
       svg.removeAttribute('data-ai4a11y-alt');
     });

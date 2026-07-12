@@ -132,19 +132,34 @@ export const ReaderMode = {
     const snippet = contentEl.textContent.slice(0, 500);
     host.setAttribute('data-ai4a11y-test-article-text', snippet);
 
-    // SR safety: inert every body child EXCEPT the overlay host AND the
-    // #ai4a11y-announcer live region.  Inerting the announcer would silence
-    // every announce() for exactly this audience, which is load-bearing.
+    // SR safety: inert every body child EXCEPT the overlay host AND any
+    // extension-owned live regions (id starts with "ai4a11y-" AND has
+    // aria-live or role=status/alert).  Inerting those regions would silence
+    // live announcements for exactly the screen-reader audience this overlay
+    // targets (e.g. #ai4a11y-announcer for announce(), #ai4a11y-voice-status
+    // for voice-commands state).  The selector approach covers future regions
+    // automatically without needing to enumerate each id.
     this._inertedElements = [];
-    const announcer = document.getElementById('ai4a11y-announcer');
     for (const child of Array.from(document.body.children)) {
-      if (child === host || child === announcer) continue;
+      if (child === host) continue;
+      // Skip extension-owned live regions: any element whose id starts with
+      // "ai4a11y-" and that carries aria-live or role=status/alert.
+      if (child.id && child.id.startsWith('ai4a11y-')) {
+        const role = child.getAttribute('role') || '';
+        if (child.hasAttribute('aria-live') || role === 'status' || role === 'alert') {
+          continue;
+        }
+      }
       // Only set inert if it isn't already (don't double-mark).
       if (!child.hasAttribute('inert')) {
         child.setAttribute('inert', '');
         this._inertedElements.push(child);
       }
     }
+    // Note: body children appended AFTER the overlay opens (e.g. voice HUD) are
+    // not inerted — a one-shot snapshot cannot cover late arrivals.  Post-open
+    // content is benign (non-interactive status regions) and inerting live
+    // regions would silence them, which is the opposite of the intent here.
 
     document.body.style.overflow = 'hidden';
     document.body.appendChild(host);
@@ -307,8 +322,21 @@ export const ReaderMode = {
     }
 
     // Restore focus to the element that was active before opening.
-    if (this._cachedFocus && typeof this._cachedFocus.focus === 'function') {
-      try { this._cachedFocus.focus(); } catch (_) {}
+    // Guard: the cached element may have been detached by an SPA re-render
+    // while the overlay was open.  A focus() on a disconnected node is a
+    // silent no-op that drops keyboard focus to document start, which is
+    // worse than an explicit fallback.  Fall back to document.body so at
+    // least the user is at a known, reachable landmark.
+    if (this._cachedFocus && typeof this._cachedFocus.focus === 'function' &&
+        this._cachedFocus.isConnected !== false) {
+      try { this._cachedFocus.focus(); } catch (_) {
+        // If focus() throws (e.g. element became inert or hidden), fall back.
+        try { document.body.focus(); } catch (_2) {}
+      }
+    } else {
+      // Cached element is gone or never existed — move focus to body so keyboard
+      // users are not dropped at an invisible document start position.
+      try { document.body.focus(); } catch (_) {}
     }
     this._cachedFocus = null;
     this._shadowRoot = null;

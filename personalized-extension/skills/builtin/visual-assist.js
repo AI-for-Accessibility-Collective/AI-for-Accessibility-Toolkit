@@ -142,6 +142,13 @@ export const VisualAssist = {
     // font-size BEFORE writing any inline styles. This prevents
     // cascade-amplification: scaling a parent element would otherwise change
     // descendant computed sizes before we read them, causing compounding.
+    //
+    // Special case — incremental sweep path (called after ancestors are already
+    // committed to scaled inline styles): a new element nested inside an
+    // already-scaled ancestor inherits the ancestor's *scaled* computed size.
+    // Reading that directly and multiplying again would produce e.g. 2.25× on
+    // a 1.5× pass.  Fix: if the element has a scaled ancestor, derive the true
+    // unscaled baseline by dividing the computed size by the ancestor's scale.
     const scalePlan = []; // [{ el, baselinePx }]
     for (const el of candidates) {
       if (_shouldSkipScale(el)) continue;
@@ -151,10 +158,27 @@ export const VisualAssist = {
         _fontScaleOriginals.set(el, el.style.fontSize);
       }
       try {
-        const baselinePx = parseFloat(getComputedStyle(el).fontSize);
-        if (baselinePx && baselinePx > 0) {
-          scalePlan.push({ el, baselinePx });
+        let baselinePx = parseFloat(getComputedStyle(el).fontSize);
+        if (!baselinePx || baselinePx <= 0) continue;
+
+        // If this element has no own scaled data-attribute but a scaled ancestor
+        // does, the computed size is the ancestor's already-scaled value
+        // (inherited).  Undo the ancestor's scale to recover the true baseline
+        // so we don't compound (e.g. 24px inherited from a 1.5×-scaled parent
+        // → unscaled baseline = 24 / 1.5 = 16px → target = 16 * 1.5 = 24px).
+        if (!el.dataset.ai4a11yFontScale) {
+          try {
+            const scaledAncestor = el.closest && el.closest('[data-ai4a11y-font-scale]');
+            if (scaledAncestor) {
+              const ancestorScale = parseFloat(scaledAncestor.dataset.ai4a11yFontScale);
+              if (ancestorScale && ancestorScale > 0) {
+                baselinePx = baselinePx / ancestorScale;
+              }
+            }
+          } catch (_) {}
         }
+
+        scalePlan.push({ el, baselinePx });
       } catch (_) {}
     }
 
