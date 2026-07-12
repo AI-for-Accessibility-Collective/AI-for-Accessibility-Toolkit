@@ -1,64 +1,31 @@
+// Re-export build-time-generated ARIA tables so all consumers get a single
+// source of truth driven by aria-query (no hand-rolled lists of roles/attrs).
+// Run `npm run build` to regenerate utils/aria-tables.gen.js.
+export { VALID_ARIA_ROLES, VALID_ARIA_ATTRS } from './aria-tables.gen.js';
+
+// ARIA_REQUIRED_ATTRS: maps role → required attributes with safe placeholder
+// defaults. State attributes (aria-checked, aria-expanded, aria-selected) are
+// intentionally EXCLUDED — wcag-fixes must NOT guess widget state (would lie
+// to screen readers). Only structural attributes with safe neutral values.
 export const ARIA_REQUIRED_ATTRS = {
-  checkbox: { 'aria-checked': 'false' },
-  combobox: { 'aria-expanded': 'false' },
-  heading: { 'aria-level': '2' },
-  listbox: {},
-  meter: { 'aria-valuenow': '0' },
-  option: { 'aria-selected': 'false' },
-  progressbar: {},
-  radio: { 'aria-checked': 'false' },
-  scrollbar: { 'aria-controls': '', 'aria-valuenow': '0' },
-  separator: { 'aria-valuenow': '0' },
-  slider: { 'aria-valuenow': '0' },
-  spinbutton: {},
-  switch: { 'aria-checked': 'false' },
-  tab: { 'aria-selected': 'false' },
-  tabpanel: {},
-  tree: {},
-  treeitem: {}
+  heading:     { 'aria-level': '2' },
+  meter:       { 'aria-valuenow': '0' },
+  scrollbar:   { 'aria-controls': '', 'aria-valuenow': '0' },
+  separator:   { 'aria-valuenow': '0' },
+  slider:      { 'aria-valuenow': '0' },
 };
 
 export const DEPRECATED_ROLES = {
   directory: 'list'
 };
 
+// VALID_LANGS is no longer used for lang validation (the BCP-47 structural
+// validator in wcag-fixes.js replaces it). Kept as a named export so any
+// remaining import sites don't break; consumers should migrate to isValidBcp47.
 export const VALID_LANGS = new Set([
   'en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'ru', 'zh', 'ja', 'ko', 'ar', 'hi',
   'bn', 'pa', 'te', 'mr', 'ta', 'ur', 'gu', 'kn', 'ml', 'th', 'vi', 'id', 'ms',
   'tl', 'pl', 'uk', 'ro', 'el', 'cs', 'hu', 'sv', 'da', 'fi', 'no', 'he', 'tr'
-]);
-
-export const VALID_ARIA_ATTRS = new Set([
-  'aria-activedescendant', 'aria-atomic', 'aria-autocomplete', 'aria-braillelabel',
-  'aria-brailleroledescription', 'aria-busy', 'aria-checked', 'aria-colcount',
-  'aria-colindex', 'aria-colindextext', 'aria-colspan', 'aria-controls',
-  'aria-current', 'aria-describedby', 'aria-description', 'aria-details',
-  'aria-disabled', 'aria-dropeffect', 'aria-errormessage', 'aria-expanded',
-  'aria-flowto', 'aria-grabbed', 'aria-haspopup', 'aria-hidden', 'aria-invalid',
-  'aria-keyshortcuts', 'aria-label', 'aria-labelledby', 'aria-level', 'aria-live',
-  'aria-modal', 'aria-multiline', 'aria-multiselectable', 'aria-orientation',
-  'aria-owns', 'aria-placeholder', 'aria-posinset', 'aria-pressed', 'aria-readonly',
-  'aria-relevant', 'aria-required', 'aria-roledescription', 'aria-rowcount',
-  'aria-rowindex', 'aria-rowindextext', 'aria-rowspan', 'aria-selected',
-  'aria-setsize', 'aria-sort', 'aria-valuemax', 'aria-valuemin', 'aria-valuenow',
-  'aria-valuetext'
-]);
-
-export const VALID_ARIA_ROLES = new Set([
-  'alert', 'alertdialog', 'application', 'article', 'banner', 'blockquote',
-  'button', 'caption', 'cell', 'checkbox', 'code', 'columnheader', 'combobox',
-  'command', 'comment', 'complementary', 'composite', 'contentinfo', 'definition',
-  'deletion', 'dialog', 'directory', 'document', 'emphasis', 'feed', 'figure',
-  'form', 'generic', 'grid', 'gridcell', 'group', 'heading', 'img', 'input',
-  'insertion', 'landmark', 'link', 'list', 'listbox', 'listitem', 'log', 'main',
-  'mark', 'marquee', 'math', 'menu', 'menubar', 'menuitem', 'menuitemcheckbox',
-  'menuitemradio', 'meter', 'navigation', 'none', 'note', 'option', 'paragraph',
-  'presentation', 'progressbar', 'radio', 'radiogroup', 'range', 'region',
-  'roletype', 'row', 'rowgroup', 'rowheader', 'scrollbar', 'search', 'searchbox',
-  'section', 'sectionhead', 'select', 'separator', 'slider', 'spinbutton',
-  'status', 'strong', 'structure', 'subscript', 'superscript', 'switch', 'tab',
-  'table', 'tablist', 'tabpanel', 'term', 'textbox', 'time', 'timer', 'toolbar',
-  'tooltip', 'tree', 'treegrid', 'treeitem', 'widget', 'window'
 ]);
 
 export const IFRAME_PATTERNS = {

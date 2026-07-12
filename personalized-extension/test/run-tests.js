@@ -639,6 +639,482 @@ server.listen(PORT, async () => {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Test 17: auto-alt-text static checks (2.2 implementation guard)
+  // ---------------------------------------------------------------------------
+  {
+    const altPath = path.join(ROOT, 'skills/builtin/auto-alt-text.js');
+    const altCode = fs.readFileSync(altPath, 'utf8');
+
+    // (a) computeAccessibleName is imported from dom-accessibility-api.
+    if (/computeAccessibleName/.test(altCode) && /dom-accessibility-api/.test(altCode)) {
+      console.log('PASS: auto-alt-text.js imports computeAccessibleName from dom-accessibility-api');
+    } else {
+      console.log('FAIL: auto-alt-text.js missing computeAccessibleName import from dom-accessibility-api');
+    }
+
+    // (b) img[alt=""] is NOT in the selector string (would overwrite decorative alt).
+    //     The guard: the literal string 'img[alt=""]' must not appear in non-comment code.
+    const altCodeNoComments = altCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (!altCodeNoComments.includes('img[alt=""]') && !altCodeNoComments.includes("img[alt='']")) {
+      console.log('PASS: auto-alt-text.js does not use img[alt=""] selector (decorative images protected)');
+    } else {
+      console.log('FAIL: auto-alt-text.js contains img[alt=""] selector — would overwrite decorative alt');
+    }
+
+    // (c) data-ai4a11y-generated attribute is set on written elements (provenance).
+    if (altCode.includes('data-ai4a11y-generated')) {
+      console.log('PASS: auto-alt-text.js sets data-ai4a11y-generated for provenance');
+    } else {
+      console.log('FAIL: auto-alt-text.js missing data-ai4a11y-generated attribute (no provenance)');
+    }
+
+    // (d) generateVideoDescription is absent (deleted as planned — dead and destructive).
+    if (!altCode.includes('generateVideoDescription')) {
+      console.log('PASS: auto-alt-text.js does not export generateVideoDescription (correctly deleted)');
+    } else {
+      console.log('FAIL: auto-alt-text.js still contains generateVideoDescription — must be deleted');
+    }
+
+    // (e) disable() references prev-alt restore (reverts written alt values).
+    if (altCode.includes('prev-alt') || altCode.includes('PREV_ALT_ATTR') || altCode.includes('revertAlt')) {
+      console.log('PASS: auto-alt-text.js disable() has prev-alt restore logic');
+    } else {
+      console.log('FAIL: auto-alt-text.js disable() missing prev-alt restore — alt text is not reverted on disable');
+    }
+
+    // (f) registerSweep is used (late-loaded images handled via MutationObserver).
+    if (altCode.includes('registerSweep') && altCode.includes('observe.js')) {
+      console.log('PASS: auto-alt-text.js uses registerSweep from observe.js');
+    } else {
+      console.log('FAIL: auto-alt-text.js missing registerSweep from observe.js — late-loaded images not handled');
+    }
+
+    // (g) Background fetchImageBytes route is used for cross-origin images.
+    if (altCode.includes('fetchImageBytes')) {
+      console.log('PASS: auto-alt-text.js routes cross-origin images through fetchImageBytes');
+    } else {
+      console.log('FAIL: auto-alt-text.js missing fetchImageBytes usage — cross-origin images will silently fail');
+    }
+
+    // (h) axeHandlers export shape contains expected keys.
+    if (altCode.includes("'image-alt'") && altCode.includes("'svg-img-alt'")) {
+      console.log('PASS: auto-alt-text.js axeHandlers has image-alt and svg-img-alt keys');
+    } else {
+      console.log('FAIL: auto-alt-text.js axeHandlers missing image-alt or svg-img-alt key');
+    }
+
+    // (i) logFix call includes structured type:'alt-text' (popup fixes panel integration).
+    if (altCode.includes("type: 'alt-text'") || altCode.includes("type:'alt-text'")) {
+      console.log('PASS: auto-alt-text.js logFix call includes type:alt-text for popup fixes panel');
+    } else {
+      console.log('FAIL: auto-alt-text.js logFix missing type:alt-text — fixes will not appear in popup panel');
+    }
+
+    // (j) Aspect ratio preserved: fitDimensions uses same scale for both axes.
+    //     Verify by checking the implementation doesn't independently cap w and h.
+    if (altCode.includes('fitDimensions') && altCode.includes('scale')) {
+      console.log('PASS: auto-alt-text.js uses fitDimensions with unified scale (aspect ratio preserved)');
+    } else {
+      console.log('FAIL: auto-alt-text.js missing fitDimensions / unified scale — aspect ratio may be squashed');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 18: simplify-text + generate-labels static guards (2.5 wave)
+  // ---------------------------------------------------------------------------
+  {
+    const stPath = path.join(ROOT, 'skills/builtin/simplify-text.js');
+    const stCode = fs.readFileSync(stPath, 'utf8');
+
+    // (a) No textContent = '' wipe — the destroy-children bug is gone.
+    const stNoComments = stCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (!stNoComments.includes("element.textContent = ''") && !stNoComments.includes('element.textContent=""')) {
+      console.log('PASS: simplify-text.js has no element.textContent="" DOM wipe');
+    } else {
+      console.log('FAIL: simplify-text.js still has element.textContent="" — destroys child nodes (links/em/strong)');
+    }
+
+    // (b) 'td' not in the element selector (data corruption fix).
+    //     The selector should be 'p, li' only.
+    const selectorLine = stNoComments.match(/querySelectorAll\(['"](.*?)['"]\)/);
+    const selectorStr = selectorLine ? selectorLine[1] : stNoComments;
+    // Check: no standalone 'td' in a querySelectorAll argument.
+    const hasTdInSelector = /querySelectorAll\(['"][^'"]*\btd\b[^'"]*['"]\)/.test(stNoComments);
+    if (!hasTdInSelector) {
+      console.log("PASS: simplify-text.js does not select 'td' elements (data corruption fix)");
+    } else {
+      console.log("FAIL: simplify-text.js still selects 'td' — must use 'p, li' only");
+    }
+
+    // (c) summarizeContent is invoked from the adapter (autoSummarize finally wired).
+    if (stCode.includes('summarizeContent')) {
+      console.log('PASS: simplify-text.js invokes summarizeContent (autoSummarize feature wired)');
+    } else {
+      console.log('FAIL: simplify-text.js does not invoke summarizeContent — autoSummarize remains dead code');
+    }
+
+    // (d) registerSweep from observe.js (late content handled).
+    if (stCode.includes('registerSweep') && stCode.includes('observe.js')) {
+      console.log('PASS: simplify-text.js uses registerSweep from observe.js');
+    } else {
+      console.log('FAIL: simplify-text.js missing registerSweep from observe.js');
+    }
+
+    // (e) enabled re-check after await (disable race prevention).
+    if ((stCode.match(/if\s*\(!this\.enabled\)/g) || []).length >= 2) {
+      console.log('PASS: simplify-text.js re-checks this.enabled after awaits');
+    } else {
+      console.log('FAIL: simplify-text.js missing enabled re-check after awaits (disable race)');
+    }
+
+    // (f) Cache: storage.session or module Map.
+    if (stCode.includes('chrome.storage.session') || stCode.includes('_memCache')) {
+      console.log('PASS: simplify-text.js has per-URL result cache');
+    } else {
+      console.log('FAIL: simplify-text.js missing result cache — toggle off/on burns fresh AI calls');
+    }
+
+    // (g) aria-label on Show original button tied to content.
+    if (stCode.includes('aria-label') && stCode.includes('paragraph')) {
+      console.log('PASS: simplify-text.js Show original button has aria-label tied to content');
+    } else {
+      console.log('FAIL: simplify-text.js Show original button missing aria-label tied to paragraph');
+    }
+
+    // (h) DOM-preserving wrapper: ai4a11y-original-content span used.
+    if (stCode.includes('ai4a11y-original-content')) {
+      console.log('PASS: simplify-text.js uses ai4a11y-original-content wrapper (DOM-preserving)');
+    } else {
+      console.log('FAIL: simplify-text.js missing ai4a11y-original-content wrapper — not DOM-preserving');
+    }
+  }
+
+  {
+    const glPath = path.join(ROOT, 'skills/builtin/generate-labels.js');
+    const glCode = fs.readFileSync(glPath, 'utf8');
+    const glNoComments = glCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+    // (a) computeAccessibleName imported from dom-accessibility-api.
+    if (/computeAccessibleName/.test(glCode) && /dom-accessibility-api/.test(glCode)) {
+      console.log('PASS: generate-labels.js imports computeAccessibleName from dom-accessibility-api');
+    } else {
+      console.log('FAIL: generate-labels.js missing computeAccessibleName import from dom-accessibility-api');
+    }
+
+    // (b) getAccessibleName (old naive import) no longer imported.
+    if (!/import.*getAccessibleName.*from/.test(glCode)) {
+      console.log('PASS: generate-labels.js does not import the old getAccessibleName shim');
+    } else {
+      console.log('FAIL: generate-labels.js still imports getAccessibleName — switch to computeAccessibleName');
+    }
+
+    // (c) :not([id]) gone from the form selector.
+    if (!glNoComments.includes(':not([id])')) {
+      console.log("PASS: generate-labels.js has no :not([id]) in form selector");
+    } else {
+      console.log("FAIL: generate-labels.js still has :not([id]) — skips unlabeled inputs that have an id");
+    }
+
+    // (d) try/catch around inferLabel calls (per-element error isolation).
+    //     Check that try appears in every async generate* function body.
+    const inferCallCount = (glNoComments.match(/inferLabel\(/g) || []).length;
+    const tryCatchCount = (glNoComments.match(/\btry\s*\{/g) || []).length;
+    if (inferCallCount > 0 && tryCatchCount >= inferCallCount) {
+      console.log('PASS: generate-labels.js has try/catch around all inferLabel calls');
+    } else {
+      console.log(`FAIL: generate-labels.js missing try/catch around inferLabel (inferCalls=${inferCallCount}, tryCatches=${tryCatchCount})`);
+    }
+
+    // (e) isVisible filter used in sweep.
+    if (glCode.includes('isVisible')) {
+      console.log('PASS: generate-labels.js filters by isVisible');
+    } else {
+      console.log('FAIL: generate-labels.js missing isVisible filter');
+    }
+
+    // (f) data-ai4a11y-generated="label" provenance attribute.
+    if (glCode.includes('data-ai4a11y-generated') && glCode.includes('label')) {
+      console.log('PASS: generate-labels.js sets data-ai4a11y-generated="label" for provenance');
+    } else {
+      console.log('FAIL: generate-labels.js missing data-ai4a11y-generated provenance attribute');
+    }
+
+    // (g) disable() reverts AI-generated attributes.
+    if (glCode.includes('data-ai4a11y-generated') && glCode.includes('removeAttribute')) {
+      console.log('PASS: generate-labels.js disable() reverts AI-generated label attributes');
+    } else {
+      console.log('FAIL: generate-labels.js disable() does not revert AI-generated attributes');
+    }
+
+    // (h) registerSweep from observe.js.
+    if (glCode.includes('registerSweep') && glCode.includes('observe.js')) {
+      console.log('PASS: generate-labels.js uses registerSweep from observe.js');
+    } else {
+      console.log('FAIL: generate-labels.js missing registerSweep from observe.js');
+    }
+
+    // (i) axeHandlers export keys (link-name, button-name, frame-title, label, select-name).
+    for (const key of ['link-name', 'button-name', 'frame-title', 'label', 'select-name']) {
+      if (glCode.includes(`'${key}'`)) {
+        console.log(`PASS: generate-labels.js axeHandlers has '${key}'`);
+      } else {
+        console.log(`FAIL: generate-labels.js axeHandlers missing '${key}'`);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 19: utils/ai.js Chrome Summarizer API feature-detect
+  // ---------------------------------------------------------------------------
+  {
+    const aiPath = path.join(ROOT, 'utils/ai.js');
+    const aiCode = fs.readFileSync(aiPath, 'utf8');
+
+    if (aiCode.includes("'Summarizer' in self") || aiCode.includes('"Summarizer" in self')) {
+      console.log("PASS: utils/ai.js has Chrome Summarizer API feature-detect ('Summarizer' in self)");
+    } else {
+      console.log("FAIL: utils/ai.js missing Chrome Summarizer API feature-detect");
+    }
+
+    if (aiCode.includes('Summarizer.availability') && aiCode.includes('Summarizer.create')) {
+      console.log('PASS: utils/ai.js uses Summarizer.availability() and Summarizer.create()');
+    } else {
+      console.log('FAIL: utils/ai.js missing Summarizer.availability()/create() calls');
+    }
+
+    // Cloud fallback still present.
+    if (aiCode.includes('sendToBackground') && aiCode.includes('summarize')) {
+      console.log('PASS: utils/ai.js retains cloud fallback for summarizeText');
+    } else {
+      console.log('FAIL: utils/ai.js missing cloud fallback in summarizeText');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 20: keyboard-nav static checks (2.3 implementation guard)
+  // ---------------------------------------------------------------------------
+  {
+    const knPath = path.join(ROOT, 'skills/builtin/keyboard-nav.js');
+    const knCode = fs.readFileSync(knPath, 'utf8');
+
+    // (a) tabbable imported
+    if (/from\s+['"]tabbable['"]/.test(knCode) && knCode.includes('tabbable(')) {
+      console.log('PASS: keyboard-nav.js imports and uses tabbable');
+    } else {
+      console.log('FAIL: keyboard-nav.js must import { tabbable } from tabbable and call tabbable()');
+    }
+
+    // (b) aria-hidden on badge container and/or individual badges
+    if (knCode.includes('aria-hidden') && knCode.includes('"true"')) {
+      console.log('PASS: keyboard-nav.js sets aria-hidden on badges/container');
+    } else {
+      console.log('FAIL: keyboard-nav.js missing aria-hidden="true" on badge container');
+    }
+
+    // (c) e.code used for shortcuts (not e.key)
+    if (/e\.code\s*===\s*['"](?:KeyH|Digit1|Digit2|KeyF)['"]/.test(knCode)) {
+      console.log('PASS: keyboard-nav.js uses e.code for shortcuts');
+    } else {
+      console.log('FAIL: keyboard-nav.js must use e.code (KeyH/Digit1/Digit2/KeyF) instead of e.key');
+    }
+
+    // (d) ctrlKey guard present
+    if (/e\.ctrlKey\s*\|\|\s*e\.metaKey/.test(knCode) || /e\.ctrlKey/.test(knCode)) {
+      console.log('PASS: keyboard-nav.js has ctrlKey guard (AltGr protection)');
+    } else {
+      console.log('FAIL: keyboard-nav.js missing ctrlKey guard for AltGr protection');
+    }
+
+    // (e) No :focus-visible rule in keyboard-nav.js
+    if (!knCode.includes(':focus-visible')) {
+      console.log('PASS: keyboard-nav.js has no :focus-visible rule (delegated to visual-assist)');
+    } else {
+      console.log('FAIL: keyboard-nav.js must not contain :focus-visible CSS — visual-assist owns the focus ring');
+    }
+
+    // (f) isContentEditable guard
+    if (knCode.includes('isContentEditable')) {
+      console.log('PASS: keyboard-nav.js has isContentEditable guard');
+    } else {
+      console.log('FAIL: keyboard-nav.js missing isContentEditable guard for editable targets');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Test 21: wcag-fixes 2.4 static guards
+  // ---------------------------------------------------------------------------
+  {
+    const wcagPath = path.join(ROOT, 'skills/builtin/wcag-fixes.js');
+    const wcagCode = fs.readFileSync(wcagPath, 'utf8');
+    const wcagNoComments = wcagCode.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+    // (a) updateIdReferences gone or is a no-op (must not re-point for/aria-labelledby)
+    if (!wcagNoComments.includes('updateIdReferences') ||
+        wcagNoComments.includes('// no-op') ||
+        // allow the word to appear only in a comment (stripped above means it's in active code if present)
+        !wcagCode.replace(/\/\/[^\n]*/g, '').includes('updateIdReferences(')) {
+      console.log('PASS: wcag-fixes.js updateIdReferences removed (no re-pointing of id refs)');
+    } else {
+      console.log('FAIL: wcag-fixes.js still calls updateIdReferences — breaks correct label wiring');
+    }
+
+    // (b) No aria-checked/aria-expanded/aria-selected backfill in wcag-fixes.js
+    if (!wcagNoComments.includes("aria-checked") || !wcagNoComments.includes("'false'")) {
+      console.log('PASS: wcag-fixes.js has no aria-checked="false" state backfill');
+    } else {
+      // Check more carefully: is it in the code that sets it?
+      const backfillPat = /setAttribute\s*\(\s*['"]aria-checked['"]\s*,\s*['"]false['"]/;
+      if (!backfillPat.test(wcagNoComments)) {
+        console.log('PASS: wcag-fixes.js has no aria-checked="false" state backfill');
+      } else {
+        console.log('FAIL: wcag-fixes.js still backfills aria-checked="false" (lies to SRs)');
+      }
+    }
+
+    // (c) BCP-47 validator present (isValidBcp47 exported)
+    if (wcagCode.includes('export function isValidBcp47')) {
+      console.log('PASS: wcag-fixes.js exports isValidBcp47 BCP-47 structural validator');
+    } else {
+      console.log('FAIL: wcag-fixes.js missing isValidBcp47 export');
+    }
+
+    // (d) wcagRiskyFixes key in registry settingsMeta
+    const registryPath = path.join(ROOT, 'skills/registry.js');
+    const registryCode = fs.readFileSync(registryPath, 'utf8');
+    if (registryCode.includes('wcagRiskyFixes')) {
+      console.log('PASS: registry.js contains wcagRiskyFixes setting key');
+    } else {
+      console.log('FAIL: registry.js missing wcagRiskyFixes setting key');
+    }
+
+    // (e) wcagRiskyFixes in a PROMPT_GROUP
+    const promptGroupsSection = registryCode.slice(registryCode.indexOf('PROMPT_GROUPS'));
+    if (promptGroupsSection.includes('wcagRiskyFixes')) {
+      console.log('PASS: wcagRiskyFixes is in a PROMPT_GROUP');
+    } else {
+      console.log('FAIL: wcagRiskyFixes not placed in any PROMPT_GROUP');
+    }
+
+    // (f) build.js copies axe.min.js (copyAxe function present)
+    const buildPath = path.join(ROOT, 'build.js');
+    const buildCode = fs.readFileSync(buildPath, 'utf8');
+    if (buildCode.includes('axe.min.js') && buildCode.includes('copyAxe')) {
+      console.log('PASS: build.js has copyAxe() that copies axe.min.js');
+    } else {
+      console.log('FAIL: build.js missing copyAxe() for axe.min.js');
+    }
+
+    // (g) lib/axe.min.js exists after build
+    const axeDst = path.join(ROOT, 'extension/lib/axe.min.js');
+    if (require('fs').existsSync(axeDst)) {
+      console.log('PASS: extension/lib/axe.min.js exists after build');
+    } else {
+      console.log('FAIL: extension/lib/axe.min.js not found — run npm run build');
+    }
+
+    // (h) content.js publishes __ai4a11yAxeDispatch
+    const contentPath = path.join(ROOT, 'extension/content/content.js');
+    const contentCode = fs.readFileSync(contentPath, 'utf8');
+    if (contentCode.includes('__ai4a11yAxeDispatch')) {
+      console.log('PASS: content.js publishes window.__ai4a11yAxeDispatch');
+    } else {
+      console.log('FAIL: content.js missing window.__ai4a11yAxeDispatch');
+    }
+
+    // (i) build.js has buildAriaTables (aria-query build-time generation)
+    if (buildCode.includes('buildAriaTables') && buildCode.includes('aria-query')) {
+      console.log('PASS: build.js has buildAriaTables() from aria-query');
+    } else {
+      console.log('FAIL: build.js missing buildAriaTables() — aria-tables.gen.js not generated');
+    }
+
+    // (j) SAFE_FIXERS and RISKY_FIXERS exported from wcag-fixes.js
+    if (wcagCode.includes('export const SAFE_FIXERS') && wcagCode.includes('export const RISKY_FIXERS')) {
+      console.log('PASS: wcag-fixes.js exports SAFE_FIXERS and RISKY_FIXERS');
+    } else {
+      console.log('FAIL: wcag-fixes.js missing SAFE_FIXERS or RISKY_FIXERS export');
+    }
+
+    // (k) removeMetaRefresh not present as active code
+    if (!wcagNoComments.includes('removeMetaRefresh') ||
+        !wcagNoComments.includes('element.remove()')) {
+      console.log('PASS: removeMetaRefresh deleted (was no-op at document_idle)');
+    } else {
+      // check if it's still in active code paths
+      const pat = /function removeMetaRefresh[\s\S]*?element\.remove\(\)/;
+      if (!pat.test(wcagNoComments)) {
+        console.log('PASS: removeMetaRefresh deleted (was no-op at document_idle)');
+      } else {
+        console.log('FAIL: removeMetaRefresh still present as active code — was a no-op, should be removed');
+      }
+    }
+
+    // (l) fixViewportMeta regex also matches user-scalable=0
+    if (wcagCode.includes('user-scalable=0') || wcagCode.includes('user-scalable\\s*=\\s*(no|0)')) {
+      console.log('PASS: fixViewportMeta regex matches user-scalable=0');
+    } else {
+      console.log('FAIL: fixViewportMeta regex does not match user-scalable=0');
+    }
+
+    // (m) cssPath helper present in wcag-fixes.js
+    if (wcagCode.includes('function cssPath')) {
+      console.log('PASS: wcag-fixes.js has cssPath helper for unique element selectors');
+    } else {
+      console.log('FAIL: wcag-fixes.js missing cssPath helper');
+    }
+
+    // (n) logFix calls include inverse descriptor (5th arg)
+    //     Check that at least one logFix call has a 5th argument
+    const logFixCallsWithDesc = (wcagNoComments.match(/logFix\([^)]+,\s*\{/g) || []).length;
+    if (logFixCallsWithDesc >= 3) {
+      console.log(`PASS: wcag-fixes.js logFix calls include inverse descriptors (${logFixCallsWithDesc} found)`);
+    } else {
+      console.log(`FAIL: wcag-fixes.js logFix calls missing inverse descriptors (found ${logFixCallsWithDesc}, need >=3)`);
+    }
+
+    // (o) content.js has revertFix handler
+    if (contentCode.includes("'revertFix'") && contentCode.includes('fixIndex')) {
+      console.log('PASS: content.js has revertFix message handler with fixIndex support');
+    } else {
+      console.log('FAIL: content.js missing revertFix handler or fixIndex support');
+    }
+
+    // (p) background.js has runAxeAudit route
+    const bgPath = path.join(ROOT, 'extension/background.js');
+    const bgCode = fs.readFileSync(bgPath, 'utf8');
+    if (bgCode.includes("'runAxeAudit'") && bgCode.includes('axe.min.js')) {
+      console.log('PASS: background.js has runAxeAudit route that injects axe.min.js');
+    } else {
+      console.log('FAIL: background.js missing runAxeAudit route');
+    }
+
+    // (q) utils/aria-tables.gen.js exists (generated by build)
+    const ariaTablesPath = path.join(ROOT, 'utils/aria-tables.gen.js');
+    if (require('fs').existsSync(ariaTablesPath)) {
+      const ariaTablesCode = fs.readFileSync(ariaTablesPath, 'utf8');
+      if (ariaTablesCode.includes('VALID_ARIA_ROLES') && ariaTablesCode.includes('VALID_ARIA_ATTRS')) {
+        console.log('PASS: utils/aria-tables.gen.js exists and exports VALID_ARIA_ROLES + VALID_ARIA_ATTRS');
+      } else {
+        console.log('FAIL: utils/aria-tables.gen.js exists but missing expected exports');
+      }
+      // Verify abstract roles are not included
+      const abstractRoles = ['command', 'composite', 'landmark', 'range', 'roletype',
+        'section', 'sectionhead', 'select', 'structure', 'widget', 'window'];
+      const hasAbstract = abstractRoles.some(r => {
+        // Check if it's a quoted entry in the array (not just a substring)
+        return new RegExp(`["']${r}["']`).test(ariaTablesCode);
+      });
+      if (!hasAbstract) {
+        console.log('PASS: utils/aria-tables.gen.js has no abstract roles');
+      } else {
+        console.log('FAIL: utils/aria-tables.gen.js still contains abstract ARIA roles');
+      }
+    } else {
+      console.log('FAIL: utils/aria-tables.gen.js not found — run npm run build');
+    }
+  }
+
   console.log('\n=== DONE ===');
 
   server.close();

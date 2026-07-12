@@ -466,6 +466,10 @@ globalThis.AA_TOOLS = {
     "type": "boolean",
     "description": "Auto-fix accessibility issues"
   },
+  "wcagRiskyFixes": {
+    "type": "boolean",
+    "description": "Enable risky WCAG fixes (heading re-tag, ARIA strip, target size) — default off"
+  },
   "autoDescribe": {
     "type": "boolean",
     "description": "AI image descriptions"

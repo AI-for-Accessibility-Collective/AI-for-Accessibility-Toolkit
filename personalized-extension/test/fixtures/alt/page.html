@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Auto Alt-Text Fixture</title>
+<style>
+  body { font-family: sans-serif; padding: 1rem; }
+  figure { margin: 1rem 0; }
+  .hidden { display: none; }
+  .tracking { width: 1px; height: 1px; overflow: hidden; }
+</style>
+</head>
+<body>
+<h1>Auto Alt-Text Adapter Test Fixture</h1>
+
+<!-- 1. Unlabeled img — NEEDS an AI-generated alt.
+     No alt attribute, not hidden, ≥32×32, no accessible name.
+     Expected: generateImageAlt runs and writes alt. -->
+<img
+  id="needs-alt"
+  src="data:image/gif;base64,R0lGODlhQABAAPAAAAAAAP///yH5BAAAAAAALAAAAABAAEAAAAJThI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpfMpvMJjUqn1Kr1is1qt9yu9wsOi8fksvmMTqvX7Lb7DY/L5/S6/Y7P6/f8vv8PGCg4SFhoeBAAOw=="
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+  alt="placeholder"
+>
+<!-- We override alt below to simulate truly missing alt (no alt attr). -->
+<!-- Actually use a proper data URL with no alt attr; reset is done by test. -->
+
+<!-- 2. Decorative alt="" — MUST NOT be touched (author intent).
+     alt="" is explicit.  shouldDescribe must return skip=true. -->
+<img
+  id="decorative"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  alt=""
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+>
+
+<!-- 3. aria-hidden img — MUST NOT be touched.
+     The image is inside an aria-hidden container. -->
+<div aria-hidden="true">
+  <img
+    id="aria-hidden-img"
+    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+    width="64"
+    height="64"
+    style="display:block; width:64px; height:64px;"
+  >
+</div>
+
+<!-- 4. Already-named img via aria-label — MUST NOT be touched.
+     computeAccessibleName returns a non-empty string. -->
+<img
+  id="already-named"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  aria-label="A red dot used as a bullet point"
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+>
+
+<!-- 5. Already-named img via aria-labelledby — MUST NOT be touched.
+     computeAccessibleName resolves this correctly. -->
+<span id="img-label-5" style="display:none">The company logo</span>
+<img
+  id="named-by-labelledby"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  aria-labelledby="img-label-5"
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+>
+
+<!-- 6. Tracking pixel / tiny img — MUST NOT be touched (< 32×32 rendered px).
+     1×1 pixel gif, rendered at 1×1. -->
+<img
+  id="tracking-pixel"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  width="1"
+  height="1"
+  class="tracking"
+  style="width:1px; height:1px;"
+>
+
+<!-- 7. role="presentation" img — MUST NOT be touched. -->
+<img
+  id="role-presentation"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  role="presentation"
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+>
+
+<!-- 8. role="none" img — MUST NOT be touched. -->
+<img
+  id="role-none"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  role="none"
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+>
+
+<!-- 9. Inline SVG without <title> — NEEDS an AI-generated description.
+     generateSvgDescription should run; no accessible name present. -->
+<svg
+  id="svg-needs-description"
+  xmlns="http://www.w3.org/2000/svg"
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+  style="display:block;"
+>
+  <rect width="64" height="64" fill="#4a90e2"/>
+  <circle cx="32" cy="32" r="20" fill="#ffffff"/>
+</svg>
+
+<!-- 10. Inline SVG with <title> — MUST NOT be touched (already named).
+     computeAccessibleName returns the title text. -->
+<svg
+  id="svg-has-title"
+  xmlns="http://www.w3.org/2000/svg"
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+  style="display:block;"
+>
+  <title>Blue square with white circle</title>
+  <rect width="64" height="64" fill="#4a90e2"/>
+  <circle cx="32" cy="32" r="20" fill="#ffffff"/>
+</svg>
+
+<!-- 11. img named via aria-labelledby pointing to a visible label.
+     MUST NOT be touched (computeAccessibleName resolves this). -->
+<p id="caption-text">A chart showing quarterly sales growth</p>
+<img
+  id="named-by-aria-labelledby-visible"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  aria-labelledby="caption-text"
+  width="64"
+  height="64"
+  style="display:block; width:64px; height:64px;"
+>
+
+<!-- Note: a <figure>/<figcaption> pair does NOT name the <img> per ACCNAME
+     (the figcaption only provides an accessible description for the figure
+     element, not the img).  The aria-labelledby form above is what
+     computeAccessibleName actually resolves on an img.  The fixture avoids
+     the figure/figcaption case to prevent a false-positive "already-named"
+     skip that would depend on implementation quirks. -->
+
+</body>
+</html>

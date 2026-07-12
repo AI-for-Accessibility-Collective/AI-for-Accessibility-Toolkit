@@ -1,60 +1,120 @@
+import { tabbable } from 'tabbable';
 import { announce } from '../../utils/ai.js';
+import { registerSweep } from '../../utils/observe.js';
 
 export const KeyboardNav = {
   enabled: false,
   styleId: 'ai4a11y-keyboard-nav-styles',
-  skipLinkElement: null,
   tabSequenceOverlay: false,
-  shortcutHandler: null,
-  modifiedElements: [],
   settings: {
     showSkipLinks: true,
-    enhanceFocusVisible: true,
+    enhanceFocusVisible: false,
     showTabSequence: false
   },
 
+  // Private state
+  _listenerRegistered: false,
+  _unregisterSweep: null,
+  _modifiedElements: [],   // [{el, prior}] — prior is prior tabindex string or null
+  _badgeContainer: null,
+  _skipContainer: null,
+  _resizeObserver: null,
+  _resizeTimer: null,
+  _lastHeading: null,
+  _shortcutHandler: null,
+
+  // -----------------------------------------------------------------------
+  // Tabindex write helper — deduplicates: only records prior value once per el.
+  // -----------------------------------------------------------------------
+  _setTabindex(el, val) {
+    if (!this._modifiedElements.some(r => r.el === el)) {
+      const prior = el.hasAttribute('tabindex') ? el.getAttribute('tabindex') : null;
+      this._modifiedElements.push({ el, prior });
+    }
+    el.setAttribute('tabindex', val);
+  },
+
+  // -----------------------------------------------------------------------
+  // enable
+  // -----------------------------------------------------------------------
   enable(options = {}) {
+    if (this.enabled) return;
+
     this.settings = { ...this.settings, ...options };
     this.enabled = true;
+
     this.injectStyles();
     if (this.settings.showSkipLinks) this.createSkipLinks();
     if (this.settings.showTabSequence) this.showTabSequence();
     this.setupKeyboardShortcuts();
+
+    // Register sweep for SPA URL changes and badge repositioning.
+    this._unregisterSweep = registerSweep('keyboard-nav-badges', ({ reason }) => {
+      if (reason === 'urlchange') {
+        this.disable();
+        return;
+      }
+      // mutation: reposition badges if overlay is visible
+      if (reason === 'mutation' && this.tabSequenceOverlay) {
+        this._repositionBadges();
+      }
+    }, { debounceMs: 300 });
+
     console.log('[AI4A11y] Keyboard Navigator enabled');
-    announce('Keyboard navigation enhanced');
+    // No announce() call here — W1 suppression handles auto paths.
   },
 
+  // -----------------------------------------------------------------------
+  // disable
+  // -----------------------------------------------------------------------
   disable() {
     this.enabled = false;
+
+    // Remove injected styles
     document.getElementById(this.styleId)?.remove();
-    this.skipLinkElement?.remove();
-    this.skipLinkElement = null;
+
+    // Remove skip link container
+    this._skipContainer?.remove();
+    this._skipContainer = null;
+
+    // Remove badge container and clear resize observer
     this.hideTabSequence();
-    if (this.shortcutHandler) {
-      document.removeEventListener('keydown', this.shortcutHandler);
-      this.shortcutHandler = null;
+
+    // Remove keydown listener
+    if (this._shortcutHandler) {
+      document.removeEventListener('keydown', this._shortcutHandler);
+      this._shortcutHandler = null;
     }
-    this.modifiedElements.forEach(el => {
-      el.removeAttribute('tabindex');
+    this._listenerRegistered = false;
+
+    // Unregister sweep
+    this._unregisterSweep?.();
+    this._unregisterSweep = null;
+
+    // Restore all modified elements to their prior tabindex state
+    for (const { el, prior } of this._modifiedElements) {
+      if (prior === null) {
+        el.removeAttribute('tabindex');
+      } else {
+        el.setAttribute('tabindex', prior);
+      }
       if (el.id === 'ai4a11y-main-content') el.removeAttribute('id');
       if (el.id === 'ai4a11y-nav') el.removeAttribute('id');
-    });
-    this.modifiedElements = [];
+    }
+    this._modifiedElements = [];
+    this._lastHeading = null;
+
     console.log('[AI4A11y] Keyboard Navigator disabled');
-    announce('Keyboard navigation restored');
+    // No announce() call here.
   },
 
+  // -----------------------------------------------------------------------
+  // injectStyles — skip-link styles + badge styles only (no focus ring rules).
+  // -----------------------------------------------------------------------
   injectStyles() {
     document.getElementById(this.styleId)?.remove();
 
     const css = `
-      ${this.settings.enhanceFocusVisible ? `
-      *:focus-visible {
-        outline: 3px solid #0066ff !important;
-        outline-offset: 3px !important;
-        box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.25) !important;
-      }
-      ` : ''}
       .ai4a11y-skip-link {
         position: fixed;
         top: -100px;
@@ -95,8 +155,27 @@ export const KeyboardNav = {
     document.head.appendChild(style);
   },
 
+  // -----------------------------------------------------------------------
+  // createSkipLinks — detects existing skip links, injects only if absent.
+  // -----------------------------------------------------------------------
   createSkipLinks() {
-    if (this.skipLinkElement) return;
+    if (this._skipContainer) return;
+
+    // Detect existing skip links: scan first 3 tabbable elements
+    const firstTabbables = tabbable(document.body).slice(0, 3);
+    const hasExistingSkip = firstTabbables.some(
+      el => el.tagName === 'A' && el.getAttribute('href')?.startsWith('#') && /skip/i.test(el.textContent)
+    );
+    if (hasExistingSkip) return;
+
+    // Also check any anchors with #-hrefs — look for skip links near the top of the document
+    const allHashAnchors = Array.from(document.querySelectorAll('a[href^="#"]'));
+    const hasTopSkip = allHashAnchors.some(el => {
+      if (!/skip/i.test(el.textContent)) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < 300;
+    });
+    if (hasTopSkip) return;
 
     const container = document.createElement('div');
     container.id = 'ai4a11y-skip-links';
@@ -110,8 +189,7 @@ export const KeyboardNav = {
       skipToMain.textContent = 'Skip to main content';
       skipToMain.addEventListener('click', (e) => {
         e.preventDefault();
-        main.setAttribute('tabindex', '-1');
-        if (!this.modifiedElements.includes(main)) this.modifiedElements.push(main);
+        this._setTabindex(main, '-1');
         main.focus();
         main.scrollIntoView({ behavior: 'smooth' });
       });
@@ -128,72 +206,170 @@ export const KeyboardNav = {
       skipToNav.style.left = '200px';
       skipToNav.addEventListener('click', (e) => {
         e.preventDefault();
-        nav.setAttribute('tabindex', '-1');
-        if (!this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
+        this._setTabindex(nav, '-1');
         nav.focus();
       });
       container.appendChild(skipToNav);
     }
 
-    this.skipLinkElement = container;
+    this._skipContainer = container;
     document.body.insertBefore(container, document.body.firstChild);
   },
 
+  // -----------------------------------------------------------------------
+  // showTabSequence
+  // -----------------------------------------------------------------------
   showTabSequence() {
     this.hideTabSequence();
 
-    const focusables = Array.from(document.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )).filter(el => {
-      const style = getComputedStyle(el);
-      return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
-    });
+    const focusables = tabbable(document.body);
+
+    const container = document.createElement('div');
+    container.setAttribute('aria-hidden', "true");
+    this._badgeContainer = container;
 
     focusables.forEach((el, idx) => {
       const rect = el.getBoundingClientRect();
       const badge = document.createElement('span');
       badge.className = 'ai4a11y-tab-badge';
+      badge.setAttribute('aria-hidden', 'true');
       badge.textContent = String(idx + 1);
       badge.style.top = (rect.top + window.scrollY - 10) + 'px';
       badge.style.left = (rect.left + window.scrollX - 10) + 'px';
-      document.body.appendChild(badge);
+      container.appendChild(badge);
     });
 
+    document.body.appendChild(container);
     this.tabSequenceOverlay = true;
+
+    // ResizeObserver for badge repositioning (throttled with 100ms debounce)
+    if (typeof ResizeObserver !== 'undefined') {
+      this._resizeObserver = new ResizeObserver(() => {
+        if (!this.tabSequenceOverlay) return;
+        if (this._resizeTimer) clearTimeout(this._resizeTimer);
+        this._resizeTimer = setTimeout(() => {
+          this._resizeTimer = null;
+          if (this.tabSequenceOverlay) this._repositionBadges();
+        }, 100);
+      });
+      this._resizeObserver.observe(document.body);
+    }
   },
 
+  // -----------------------------------------------------------------------
+  // _repositionBadges
+  // -----------------------------------------------------------------------
+  _repositionBadges() {
+    if (!this._badgeContainer) return;
+    const focusables = tabbable(document.body);
+    const badges = Array.from(this._badgeContainer.querySelectorAll('.ai4a11y-tab-badge'));
+    focusables.forEach((el, i) => {
+      if (!badges[i]) return;
+      const rect = el.getBoundingClientRect();
+      badges[i].style.top = (rect.top + window.scrollY - 10) + 'px';
+      badges[i].style.left = (rect.left + window.scrollX - 10) + 'px';
+    });
+  },
+
+  // -----------------------------------------------------------------------
+  // hideTabSequence
+  // -----------------------------------------------------------------------
   hideTabSequence() {
-    document.querySelectorAll('.ai4a11y-tab-badge').forEach(el => el.remove());
+    if (this._badgeContainer) {
+      this._badgeContainer.remove();
+      this._badgeContainer = null;
+    }
     this.tabSequenceOverlay = false;
+
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+    if (this._resizeTimer) {
+      clearTimeout(this._resizeTimer);
+      this._resizeTimer = null;
+    }
   },
 
+  // -----------------------------------------------------------------------
+  // setupKeyboardShortcuts — idempotent
+  // -----------------------------------------------------------------------
   setupKeyboardShortcuts() {
-    this.shortcutHandler = (e) => {
-      if (e.altKey && e.key === '1') {
+    if (this._listenerRegistered) return;
+
+    const handler = (e) => {
+      if (!e.altKey) return;
+      if (e.ctrlKey || e.metaKey) return; // AltGr protection
+
+      // Editable target guard
+      const target = e.target;
+      const tag = target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (target.isContentEditable) return;
+
+      if (e.code === 'Digit1') {
         e.preventDefault();
         const main = document.querySelector('main, [role="main"], #main, #content');
-        if (main) { main.setAttribute('tabindex', '-1'); main.focus(); }
+        if (main) { this._setTabindex(main, '-1'); main.focus(); }
       }
-      if (e.altKey && e.key === '2') {
+
+      if (e.code === 'Digit2') {
         e.preventDefault();
         const nav = document.querySelector('nav, [role="navigation"]');
-        if (nav) { nav.setAttribute('tabindex', '-1'); nav.focus(); }
+        if (nav) { this._setTabindex(nav, '-1'); nav.focus(); }
       }
-      if (e.altKey && e.key === 'h') {
+
+      if (e.code === 'KeyH') {
         e.preventDefault();
-        const h = document.querySelector('h1, h2, h3');
-        if (h) { h.setAttribute('tabindex', '-1'); h.focus(); h.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+        if (!headings.length) return;
+
+        let currentIdx = -1;
+        if (e.shiftKey) {
+          // Shift+Alt+H goes backward
+          if (this._lastHeading) {
+            currentIdx = headings.indexOf(this._lastHeading);
+          }
+          const prevIdx = currentIdx <= 0 ? headings.length - 1 : currentIdx - 1;
+          const h = headings[prevIdx];
+          this._lastHeading = h;
+          this._setTabindex(h, '-1');
+          h.focus();
+          h.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          // Alt+H goes forward
+          if (this._lastHeading) {
+            currentIdx = headings.indexOf(this._lastHeading);
+          }
+          const nextIdx = (currentIdx + 1) % headings.length;
+          const h = headings[nextIdx];
+          this._lastHeading = h;
+          this._setTabindex(h, '-1');
+          h.focus();
+          h.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
-      if (e.altKey && e.key === 'f') {
+
+      if (e.code === 'KeyF') {
         e.preventDefault();
-        if (this.tabSequenceOverlay) this.hideTabSequence();
-        else this.showTabSequence();
+        if (this.tabSequenceOverlay) {
+          this.hideTabSequence();
+          announce('Tab order hidden');
+        } else {
+          this.showTabSequence();
+          announce('Tab order shown');
+        }
       }
     };
 
-    document.addEventListener('keydown', this.shortcutHandler);
+    this._shortcutHandler = handler;
+    document.addEventListener('keydown', handler);
+    this._listenerRegistered = true;
   },
 
+  // -----------------------------------------------------------------------
+  // toggle
+  // -----------------------------------------------------------------------
   toggle() {
     if (this.enabled) this.disable();
     else this.enable();

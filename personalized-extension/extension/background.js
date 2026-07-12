@@ -858,6 +858,76 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  // ---------------------------------------------------------------------------
+  // Axe audit route
+  // ---------------------------------------------------------------------------
+  // Injects axe-core into the active tab (or a specified tabId), runs it for
+  // the rule IDs we handle, then calls window.__ai4a11yAxeDispatch in the
+  // content script with the violations array.
+  //
+  // Trigger paths:
+  //   - popup "Scan & Fix" button sends { type: 'runAxeAudit' }
+  //   - content.js debounced re-scan sends { type: 'runAxeAudit', tabId } when
+  //     autoWcagFix is on AND a first scan was user-triggered (session flag).
+  //
+  // Security: axe.min.js is a packed extension file (not from a remote URL),
+  // injected into the ISOLATED world. No user data is sent anywhere.
+  if (msg.type === 'runAxeAudit') {
+    (async () => {
+      try {
+        let tabId = msg.tabId;
+        if (!tabId) {
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          tabId = tab?.id;
+        }
+        if (!tabId) { sendResponse({ error: 'no tab' }); return; }
+
+        // Rule IDs we handle (intersection of axe 4.12 and our combined handler map).
+        const HANDLED_RULES = [
+          'html-has-lang', 'html-lang-valid', 'valid-lang',
+          'duplicate-id', 'duplicate-id-aria', 'duplicate-id-active',
+          'tabindex', 'aria-valid-attr', 'aria-roles', 'aria-allowed-role',
+          'aria-deprecated-role', 'nested-interactive', 'target-size',
+          'meta-viewport', 'meta-viewport-large', 'blink', 'marquee',
+          'heading-order',
+          // From other modules:
+          'color-contrast', 'color-contrast-enhanced', 'link-in-text-block',
+          'image-alt', 'svg-img-alt',
+          'link-name', 'button-name', 'frame-title', 'label', 'select-name',
+          'video-caption', 'audio-caption',
+        ];
+
+        // Step 1: inject axe-core into the isolated world.
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          files: ['lib/axe.min.js'],
+        });
+
+        // Step 2: run axe and dispatch violations to the content script.
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          func: (ruleIds) => {
+            /* global axe */
+            axe.run(document, {
+              resultTypes: ['violations'],
+              runOnly: { type: 'rule', values: ruleIds },
+            }).then(results => {
+              if (typeof window.__ai4a11yAxeDispatch === 'function') {
+                window.__ai4a11yAxeDispatch(results.violations);
+              }
+            }).catch(e => console.warn('[AI4A11y] axe.run error:', e));
+          },
+          args: [HANDLED_RULES],
+        });
+
+        sendResponse({ ok: true });
+      } catch (e) {
+        sendResponse({ error: e.message || String(e) });
+      }
+    })();
+    return true;
+  }
+
   if (msg.type === 'fetchImageBytes') {
     // Fetch image bytes under host_permissions for cross-origin image freezing
     // in the motion-reducer adapter. Returns base64-encoded bytes.
