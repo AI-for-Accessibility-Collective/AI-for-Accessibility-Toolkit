@@ -858,6 +858,44 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === 'fetchImageBytes') {
+    // Fetch image bytes under host_permissions for cross-origin image freezing
+    // in the motion-reducer adapter. Returns base64-encoded bytes.
+    // Size bound: 8MB to prevent abuse.
+    (async () => {
+      const MAX_BYTES = 8 * 1024 * 1024;
+      try {
+        const url = msg.url;
+        if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+          sendResponse({ error: 'invalid url' });
+          return;
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10_000);
+        let resp;
+        try {
+          resp = await fetch(url, { signal: controller.signal });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        if (!resp.ok) { sendResponse({ error: `fetch failed: ${resp.status}` }); return; }
+        const contentLength = parseInt(resp.headers.get('content-length') || '0', 10);
+        if (contentLength > MAX_BYTES) { sendResponse({ error: 'image too large' }); return; }
+        const arrayBuffer = await resp.arrayBuffer();
+        if (arrayBuffer.byteLength > MAX_BYTES) { sendResponse({ error: 'image too large' }); return; }
+        // Convert to base64
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+        sendResponse({ bytes: base64 });
+      } catch (e) {
+        sendResponse({ error: e.message || String(e) });
+      }
+    })();
+    return true;
+  }
+
   // Demo control: the live-diagram pages flip demo mode on when opened.
   if (msg.type === 'aaSetDemoMode') {
     globalThis.AA_DEMO_MODE = !!msg.on;

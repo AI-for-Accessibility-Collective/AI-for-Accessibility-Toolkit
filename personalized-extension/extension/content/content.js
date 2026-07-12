@@ -390,17 +390,22 @@ function applyProfileSettings(settings) {
   const vaKeys = ['contrastMode', 'fontScale', 'lineHeight', 'letterSpacing',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide'];
   if (vaKeys.some(k => settings[k] !== undefined)) {
-    const va = {
-      contrastMode: settings.contrastMode || 'none',
-      fontScale: (settings.fontScale || 100) / 100,
-      lineHeight: settings.lineHeight || 1.5,
-      letterSpacing: settings.letterSpacing || 0,
-      dyslexiaFont: settings.dyslexiaFont || false,
-      largeCursor: settings.largeCursor || false,
-      enhanceFocus: settings.enhanceFocus || false,
-      readingGuide: settings.readingGuide || false
-    };
-    enableTool('VisualAssist', va);
+    // Merge the stored baseline first so a profile that sets only some keys
+    // (e.g. just fontScale) does not wipe the user's other stored VA settings
+    // (e.g. dyslexiaFont). Mirrors the Librarian overlay path (~line 572-578).
+    chrome.storage.sync.get(vaKeys, (baseline) => {
+      const va = {
+        contrastMode: settings.contrastMode !== undefined ? settings.contrastMode : (baseline.contrastMode || 'none'),
+        fontScale: settings.fontScale !== undefined ? settings.fontScale / 100 : ((baseline.fontScale || 100) / 100),
+        lineHeight: settings.lineHeight !== undefined ? settings.lineHeight : (baseline.lineHeight || 1.5),
+        letterSpacing: settings.letterSpacing !== undefined ? settings.letterSpacing : (baseline.letterSpacing || 0),
+        dyslexiaFont: settings.dyslexiaFont !== undefined ? settings.dyslexiaFont : (baseline.dyslexiaFont || false),
+        largeCursor: settings.largeCursor !== undefined ? settings.largeCursor : (baseline.largeCursor || false),
+        enhanceFocus: settings.enhanceFocus !== undefined ? settings.enhanceFocus : (baseline.enhanceFocus || false),
+        readingGuide: settings.readingGuide !== undefined ? settings.readingGuide : (baseline.readingGuide || false),
+      };
+      enableTool('VisualAssist', va);
+    });
   }
 
   const aiKeys = { fixContrast: FixContrast, autoWcagFix: WcagFixes, autoFixLabels: GenerateLabels,

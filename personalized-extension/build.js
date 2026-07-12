@@ -117,6 +117,14 @@ const contentConfig = {
   target: 'chrome110',
   sourcemap: true,
   logLevel: 'info',
+  // colorjs.io /fn sub-path imports (used by utils/color.js → fix-contrast.js)
+  // are not exported by colorjs.io 0.7.0's package.json "exports" map; mark
+  // them external so the bundle uses the top-level 'colorjs.io/fn' entry that
+  // IS exported. The content script never directly imports these sub-paths.
+  external: [
+    'colorjs.io/fn/spaces/*',
+    'colorjs.io/fn/contrast/*',
+  ],
 };
 
 // Browser-harness primitives. Loaded into the service worker by background.js
