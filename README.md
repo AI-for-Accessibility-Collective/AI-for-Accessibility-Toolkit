@@ -102,7 +102,7 @@ Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CO
 - [x] Set up repo
 - [x] Define architecture spec
 - [x] Define agent cards
-- [ ] Collect agent cards from all teams (in progress)
+- [x] Collect agent cards from all teams
 
 ### Month 3 — Build
 - [ ] Collect team codebases (in progress)
@@ -114,6 +114,7 @@ Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CO
 - [x] Build Ability Profile agent (learns your needs over time)
 - [x] Prepopulate basic accessibility tools (alt text, labels, contrast, dark mode, focus mode, etc.)
 - [x] Build skill layer (skills that combine adapters)
+- [x] Build Skill Builder agent (turns a plain-language request into a skill)
 - [x] Build a reusable core that works beyond the browser
 - [x] Add automated tests
 - [ ] Define design principles (in progress)
@@ -125,12 +126,13 @@ Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CO
 - [x] Co-design with disability community
 
 ### Month 6 — Ship
-- [x] Write documentation
-- [ ] Create example applications
+- [ ] Write documentation (in progress)
+- [ ] Create example applications (in progress)
 - [ ] Test with users (in progress)
 - [ ] Developer validation (hackathon)
 - [ ] Native mobile app (iOS)
 - [ ] XR agent — real-time adaptations in the physical world
+- [ ] Security review before public release
 - [ ] Publish to Chrome Web Store
 - [ ] Publish CLI to PyPI
 - [ ] Release publicly
