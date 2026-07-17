@@ -16,7 +16,7 @@
     "./surfaces/xr": "./surfaces/xr.js"
   },
   "scripts": {
-    "test": "node test/ability-model-test.js && node test/broker-test.js && node test/skill-test.js && node test/skill-edge-test.js",
+    "test": "node test/ability-model-test.js && node test/broker-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js",
     "demo:xr": "node hosts/xr-demo/demo.js",
     "demo:skill": "node hosts/skill-demo/demo.js"
   }

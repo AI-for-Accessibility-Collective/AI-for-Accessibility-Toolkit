@@ -59,8 +59,14 @@ jobs:
           node toolkit/test/broker-test.js
           node toolkit/test/skill-test.js
           node toolkit/test/skill-edge-test.js
+          node toolkit/test/skill-apply-test.js
           node toolkit/hosts/xr-demo/demo.js
           node toolkit/hosts/skill-demo/demo.js
+
+      - name: Tools & profile tests
+        run: |
+          node tools/test/adapters-test.js
+          node tools/test/profiles-test.js
 
       - name: Librarian regression tests
         run: |

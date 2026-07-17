@@ -5,11 +5,13 @@
   "scripts": {
     "build": "node extension/src/build.js",
     "build:prod": "NODE_ENV=production node extension/src/build.js",
-    "watch": "node extension/src/build.js --watch"
+    "watch": "node extension/src/build.js --watch",
+    "test": "node tools/test/adapters-test.js && node tools/test/profiles-test.js"
   },
   "devDependencies": {
     "chokidar": "^3.6.0",
     "esbuild": "^0.28.0",
+    "jsdom": "^29.1.1",
     "playwright": "^1.49.0"
   }
 }
