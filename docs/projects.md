@@ -1,6 +1,10 @@
 # Team Projects
 
+> Canonical list of collective projects. README and architecture.md summarize this file.
+
 Contributions from teams across the AI for Accessibility collective.
+
+> Canonical list of collective projects. README and architecture.md summarize this file.
 
 ---
 

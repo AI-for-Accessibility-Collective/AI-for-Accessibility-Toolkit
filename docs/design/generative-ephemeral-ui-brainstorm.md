@@ -1,3 +1,5 @@
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior.
+
 # Generative Ephemeral UI for Accessibility
 
 Research direction brainstorm — May 2026

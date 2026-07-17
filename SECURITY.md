@@ -39,7 +39,7 @@ We will respond within 48 hours and work with you to understand and address the 
 
 - User preferences are stored locally in `chrome.storage.sync`
 - No user data is transmitted to third parties (except Gemini API for AI features)
-- Custom skills are sandboxed and linted before execution
+- Custom adapters are linted before execution but are **not** sandboxed — they are registered as Chrome user scripts and run with full page access, which is why the extension warns users to only install adapters they trust
 
 ### Dependencies
 

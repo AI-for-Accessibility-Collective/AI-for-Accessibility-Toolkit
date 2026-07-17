@@ -1,4 +1,6 @@
-# Plan: Build the Skill Builder for the AI-for-Accessibility-Toolkit-Draft extension
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior.
+
+# Plan: Build the Skill Builder for the AI-for-Accessibility-Toolkit extension
 
 ## Context
 
@@ -18,7 +20,7 @@ Inherited constraints from the hand-off doc:
 - **Message API**: `gemini`, `saveCustomSkill`, `deleteCustomSkill`, `getActiveSkills`, `setActiveSkills`, `executeCustomSkill`, `getApiKey` — these are the primitives we have.
 - **Audience**: people with accessibility needs across vision, cognitive, hearing, motor, sensory, reading. UI must be high-contrast, screen-reader friendly, and avoid jargon.
 
-This wipes out most of my earlier plan: no manifest of our own, no service worker, no DSL interpreter, no Anthropic SDK, no URL-pattern wizard. What survives is the **creation UX philosophy** (chat + try it + lightweight 3-button feedback) and a few visual idioms from [assets/eval_review.html](/Users/jason/Downloads/skill-creator/assets/eval_review.html).
+This wipes out most of my earlier plan: no manifest of our own, no service worker, no DSL interpreter, no Anthropic SDK, no URL-pattern wizard. What survives is the **creation UX philosophy** (chat + try it + lightweight 3-button feedback) and a few visual idioms from [assets/eval_review.html](skill-creator/assets/eval_review.html).
 
 User-confirmed for this round: **plan only**, no code.
 

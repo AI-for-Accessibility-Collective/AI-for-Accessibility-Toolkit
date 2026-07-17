@@ -13,9 +13,10 @@ labels: architecture
 
 ## Which components does this affect?
 
-- [ ] Analyzers
+- [ ] Auditors
 - [ ] Adapters
-- [ ] Features
 - [ ] Profiles
+- [ ] Skills
+- [ ] Agents (Assistant / Engineer / Librarian)
 - [ ] Background/AI
 - [ ] CLI

@@ -4,8 +4,8 @@ message: If you use this toolkit, please cite it using the metadata from this fi
 type: software
 authors:
   - name: AI for Accessibility Collective
-url: https://github.com/chuanenlin/AI-for-Accessibility-Toolkit
-repository-code: https://github.com/chuanenlin/AI-for-Accessibility-Toolkit
+url: https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit
+repository-code: https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit
 abstract: AI-powered Chrome extension that adapts any webpage to each user's abilities.
 keywords:
   - accessibility

@@ -44,10 +44,12 @@ Copy and fill in when proposing a new capability.
 > Examples: visual → audio, image → text, audio → captions, text → plain language
 
 **Module type:**
-- [ ] Auditor — detects issues
-- [ ] Adapter — fixes issues or provides visual/interaction presets
-- [ ] Profile — tool configuration for a disability group
-- [ ] Other: ___
+- [ ] Transform — converts content across modalities (e.g. Adapter — fixes issues or provides visual/interaction presets)
+- [ ] Analysis — detects issues or extracts information (e.g. Auditor)
+- [ ] Memory — tracks user context across sessions
+- [ ] Validation — human review of adaptations
+- [ ] Knowledge — contributes to the shared corpus
+- [ ] Other: ___ (e.g. Profile — tool configuration for a disability group)
 
 ## Technical
 
@@ -113,8 +115,8 @@ Generates interactive STEM simulations that BLV learners can explore through aud
 **Modality transform:** Visual → audio, text, symbolic
 
 **Module type:**
-- [x] Adapter — fixes inaccessible simulations
-- [x] Feature — sonification presets
+- [x] Transform — converts inaccessible simulations to audio, text, and symbolic modalities
+- [x] Knowledge — contributes sonification mappings and BLV benchmarks to the corpus
 
 ## Technical
 
