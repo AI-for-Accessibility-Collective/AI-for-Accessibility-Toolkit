@@ -1,3 +1,16 @@
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior.
+>
+> **Status update (2026-07-16): Phase 0 is DONE.** `toolkit/` exists (core: librarian/datastore/taxonomy as ES modules behind platform ports; chrome adapter bundles back to `personalized-extension/extension/lib/` at the same paths). Exit gate held: librarian-test 69/69, run-tests 0 fails, demo-beats e2e 26/26, background.js untouched. Corrections found during execution: the chrome.alarms literals were in librarian.js (~L1003), not background.js; `recordExplicitSetting` is internal-only (not a librarian* message); custom adapters are a separate customSkills→user-script path, so Phase 2's "fold skills under procedural memory" is real integration work.
+>
+> **Status update (2026-07-17): Phases 1–4 are DONE (Phase 3 in its local-first form).**
+> - Phase 1: `toolkit/core/ability-model.js` (AbilityModel: relative magnitudes, need-named enums, per-dimension confidence) + `toolkit/surfaces/{web,xr}.js`. `librarian.getAbilityModel()` (message: `librarianGetAbilityModel`).
+> - Phase 2: reflection grounding (`evidence[]` observation ids on records), evidence-discard policy in reflect(), and `librarian.listProcedural()` — the unified read surface over customSkills + saved actions (storage unmoved, no migration), folded into `recall()` as "Learned automations".
+> - Phase 3: `toolkit/core/broker.js` — default-deny capability grants (`mine.grants`, roams; `mine.shareAudit`, local), scope-filtered `exportUnderstanding()` (freeText needs its own scope; raw memories never leave), `importInsight()` → Librarian consent queue via the new `proposeInsight()` (single-writer preserved), full audit trail. Transport per the plan's recommendation: local shared store first; cross-device export and cloud sync remain future work.
+> - Phase 4: `toolkit/hosts/xr-demo/demo.js` — a second consumer on pure in-memory ports running the whole loop (onboard → grant → XR render → insight back → consent → both surfaces update). In CI.
+> - Consent-loop bug found & fixed during Phase 4: accepted `add-memory` proposals merged as *inferred*, so an older explicit toggle permanently beat them; `accepted-proposal` records now rank as explicit (specificity, then recency).
+> - Earlier corrections: chrome.alarms literals were in librarian.js (~L1003), not background.js; `recordExplicitSetting` is internal-only; customSkills execution stays a separate user-script path (only the *read* surface is unified).
+> Remaining future work: cross-device transport (signed export/import blobs), optional cloud sync, native Swift/C# conformers, ArtInsight as a production consumer.
+
 # Refactor plan: extracting the personal‑memory core into the **Toolkit**
 
 **Status:** proposal for review · **Date:** 2026‑06‑26

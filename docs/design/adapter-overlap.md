@@ -1,3 +1,5 @@
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior.
+
 # Built-in Adapter Overlap Audit
 
 > For each of the 18 built-in adapters, what already exists — open-source

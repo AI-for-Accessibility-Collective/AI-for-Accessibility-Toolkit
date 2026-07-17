@@ -1,3 +1,5 @@
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior. Notably: custom adapters now run as chrome.userScripts (USER_SCRIPT world), not new Function in the content script, and activeSkills is not part of the save flow.
+
 # Skill Builder — Hand-off Document
 
 ## What this component does
