@@ -167,7 +167,9 @@ function parseEntryAndRoute() {
   const params = new URLSearchParams(location.search);
   let pending = [];
   try {
-    pending = JSON.parse(decodeURIComponent(params.get('pending') || '[]'));
+    // URLSearchParams.get() already decodes — do NOT decodeURIComponent again
+    // (a second decode throws on any literal % in a skill name/description).
+    pending = JSON.parse(params.get('pending') || '[]');
   } catch { pending = []; }
 
   // Scope from a scoped popup request ("...on news sites"): applied to every
@@ -1159,11 +1161,12 @@ async function persistSkill() {
     return;
   }
 
-  // Custom skills are auto-applied by the existing content script on every
-  // page load (it reads customSkills directly from storage), so we do not
-  // also push the id into activeSkills — that array is used only for built-in
-  // skill toggles in the popup, and adding a custom id there shows it as a
-  // raw "custom-foo" row in the wrong section.
+  // Custom adapters are registered as chrome.userScripts by background.js
+  // (syncCustomUserScripts watches customSkills in storage) and run by
+  // Chrome's user-scripts runtime on every page load. We do not also push
+  // the id into activeSkills — that array is used only for built-in skill
+  // toggles in the popup, and adding a custom id there shows it as a raw
+  // "custom-foo" row in the wrong section.
 
   state.builtCount += 1;
   const where = (() => {
