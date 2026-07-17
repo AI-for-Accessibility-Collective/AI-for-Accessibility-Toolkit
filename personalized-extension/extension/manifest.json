@@ -47,7 +47,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["onboarding/*", "skill-builder/*", "demo/*", "lib/OpenDyslexic-Regular.woff2"],
+      "resources": ["onboarding/*", "adapter-builder/*", "skill-builder/*", "demo/*", "lib/OpenDyslexic-Regular.woff2"],
       "matches": ["<all_urls>"]
     }
   ]

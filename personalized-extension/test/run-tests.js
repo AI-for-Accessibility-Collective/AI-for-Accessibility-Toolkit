@@ -2,6 +2,15 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Track failures across the scattered `console.log('FAIL: ...')` call sites
+// so this suite can gate CI (it exits 0 unconditionally otherwise).
+let _failures = 0;
+const _log = console.log.bind(console);
+console.log = (...args) => {
+  if (typeof args[0] === 'string' && args[0].startsWith('FAIL')) _failures++;
+  _log(...args);
+};
+
 const PORT = 8766;
 const ROOT = path.resolve(__dirname, '..');
 
@@ -107,14 +116,16 @@ server.listen(PORT, async () => {
     }
   }
 
-  // Test 6: Check content.js imports all 16 skills
+  // Test 6: Check content.js imports the skills it drives directly.
+  // (fix-contrast and auto-captions are intentionally NOT imported: contrast
+  // violations route through WcagFixes and captions through GenerateCaptions.)
   const contentPath = path.join(ROOT, 'extension/content/content.js');
   const contentCode = fs.readFileSync(contentPath, 'utf8');
   const importChecks = {
     'DarkMode': 'dark-mode', 'FocusMode': 'focus-mode', 'VisualAssist': 'visual-assist',
     'MotionReducer': 'motion-reducer', 'ReaderMode': 'reader-mode', 'KeyboardNav': 'keyboard-nav',
-    'AutoAltText': 'auto-alt-text', 'FixContrast': 'fix-contrast', 'SimplifyText': 'simplify-text',
-    'VoiceCommands': 'voice-commands', 'AutoCaptions': 'auto-captions', 'ColorFilter': 'color-filter',
+    'AutoAltText': 'auto-alt-text', 'SimplifyText': 'simplify-text',
+    'VoiceCommands': 'voice-commands', 'ColorFilter': 'color-filter',
     'ReadAloud': 'read-aloud', 'GenerateLabels': 'generate-labels',
     'GenerateCaptions': 'generate-captions', 'WcagFixes': 'wcag-fixes'
   };
@@ -208,8 +219,8 @@ server.listen(PORT, async () => {
     console.log('FAIL: Bundle validation error:', e.message);
   }
 
-  console.log('\n=== DONE ===');
+  console.log(`\n=== DONE === (${_failures} failed)`);
 
   server.close();
-  process.exit(0);
+  process.exit(_failures ? 1 : 0);
 });

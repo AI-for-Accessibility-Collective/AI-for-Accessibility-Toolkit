@@ -551,6 +551,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.runtime.sendMessage({ type: 'openSkillBuilder' });
     window.close();
   });
+  document.getElementById('skillsBtn')?.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'openSkillManager' });
+    window.close();
+  });
 
   // Collapsible sections
   document.querySelectorAll('.section-header').forEach(header => {
