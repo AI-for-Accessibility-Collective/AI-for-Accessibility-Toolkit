@@ -30,13 +30,45 @@ jobs:
         run: npm run build
 
       - name: Build personalized extension
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "1"
         run: |
           cd personalized-extension
           npm ci
           npm run build
 
-      - name: Lint check
-        run: npm run lint --if-present
+      - name: Check committed build artifacts are fresh
+        # Every generated-but-committed file: the top-level bundles and the
+        # personalized-extension lib/* built from toolkit/. All are staged in
+        # git, so `git diff --exit-code` has a baseline to compare against.
+        run: |
+          git diff --exit-code -- \
+            extension/content.bundle.js \
+            extension/popup.bundle.js \
+            cli/cli-tools.bundle.js \
+            personalized-extension/extension/lib/taxonomy.js \
+            personalized-extension/extension/lib/datastore.js \
+            personalized-extension/extension/lib/librarian.js \
+            personalized-extension/extension/lib/tools-registry.js \
+            personalized-extension/extension/lib/skills-db.js \
+          || (echo "Committed build artifacts are stale — run the builds and commit the result" && exit 1)
+
+      - name: Toolkit core tests
+        run: |
+          node toolkit/test/ability-model-test.js
+          node toolkit/test/broker-test.js
+          node toolkit/test/skill-test.js
+          node toolkit/test/skill-edge-test.js
+          node toolkit/hosts/xr-demo/demo.js
+          node toolkit/hosts/skill-demo/demo.js
+
+      - name: Librarian regression tests
+        run: |
+          cd personalized-extension
+          node test/librarian-test.js
+          node test/run-tests.js
+          # Puppeteer smoke tests (skills-page, demo-beats) run locally — CI
+          # skips the Chromium download, so they can't launch a browser here.
 
   python:
     runs-on: ubuntu-latest
