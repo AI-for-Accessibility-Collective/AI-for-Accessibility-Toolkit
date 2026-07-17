@@ -356,7 +356,7 @@ canvas[data-ai4a11y-processed="done"] {
 
 /* ============ SCREEN READER ONLY (for live regions) ============ */
 
-#ai4a11y-live {
+#ai4a11y-announcer {
   position: absolute !important;
   width: 1px !important;
   height: 1px !important;

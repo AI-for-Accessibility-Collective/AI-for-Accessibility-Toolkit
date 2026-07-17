@@ -10,6 +10,12 @@
     }
     return provider.describeImage(imageData);
   }
+  async function describeVideo(frames, metadata = {}) {
+    if (!(provider == null ? void 0 : provider.describeVideo)) {
+      throw new Error("AI provider not set or missing describeVideo");
+    }
+    return provider.describeVideo(frames, metadata);
+  }
   async function simplifyText(text, options = {}) {
     if (!(provider == null ? void 0 : provider.simplifyText)) {
       throw new Error("AI provider not set or missing simplifyText");
@@ -57,38 +63,191 @@
     }
     return provider.transcribeAudio(audioUrl);
   }
+  async function improveLinkText(linkText, href, context) {
+    if (!(provider == null ? void 0 : provider.improveLinkText)) {
+      return null;
+    }
+    return provider.improveLinkText(linkText, href, context);
+  }
+  async function inferColumnHeader(sampleData) {
+    if (!(provider == null ? void 0 : provider.inferColumnHeader)) {
+      return null;
+    }
+    return provider.inferColumnHeader(sampleData);
+  }
+
+  // tools/profiles/settings.json
+  var settings_default = {
+    $comment: "Single source of truth for ability profiles. Consumed by tools/profiles/settings.js (bundled into the extension + CLI tools) and read directly by cli/cli.py. Values are evidence-based \u2014 sources: W3C WCAG, W3C COGA, WebAIM Low Vision Survey, AASPIRE autism study, NNGroup UX research.",
+    profiles: {
+      blind: {
+        name: "Blind",
+        description: "Optimized for screen reader users: structure, labels, descriptions",
+        tools: {
+          autoWcagFix: true,
+          autoFixLabels: true,
+          autoDescribe: true,
+          autoVideoDescribe: true,
+          keyboardNav: true
+        }
+      },
+      lowVision: {
+        name: "Low Vision",
+        description: "Larger text (150%), spacing, large cursor, enhanced focus, contrast fixes",
+        tools: {
+          autoWcagFix: true,
+          fontScale: 150,
+          lineHeight: 2,
+          letterSpacing: 0.12,
+          largeCursor: true,
+          enhanceFocus: true,
+          fixContrast: true
+        }
+      },
+      colorBlind: {
+        name: "Color Blindness",
+        description: "Contrast fixes and image descriptions; pick your own filter type in Visual Assist",
+        tools: {
+          fixContrast: true,
+          autoDescribe: true,
+          enhanceFocus: true
+        }
+      },
+      deaf: {
+        name: "Deaf/HoH",
+        description: "Auto captions for media, visual focus for non-audio navigation",
+        tools: {
+          autoCaptions: true,
+          enhanceFocus: true,
+          autoDescribe: false,
+          autoVideoDescribe: false
+        }
+      },
+      motor: {
+        name: "Motor",
+        description: "Keyboard navigation, voice commands, large targets, proper labels",
+        tools: {
+          autoWcagFix: true,
+          autoFixLabels: true,
+          largeCursor: true,
+          enhanceFocus: true,
+          keyboardNav: true,
+          voiceCommands: true
+        }
+      },
+      dyslexia: {
+        name: "Dyslexia",
+        description: "Letter spacing 0.12em (WCAG 1.4.12), double line height, focus mode",
+        tools: {
+          fontScale: 115,
+          lineHeight: 2,
+          letterSpacing: 0.12,
+          focusMode: true
+        }
+      },
+      adhd: {
+        name: "ADHD",
+        description: "Reduced distractions, progress indicators, summaries for long content",
+        tools: {
+          autoSummarize: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true,
+          motionReducer: true
+        }
+      },
+      cognitive: {
+        name: "Cognitive",
+        description: "Simplified text (grade 6-8), summaries, clear progress",
+        tools: {
+          fontScale: 120,
+          lineHeight: 1.8,
+          autoSimplify: true,
+          autoSummarize: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true
+        }
+      },
+      elderly: {
+        name: "Elderly",
+        description: "Larger text, spacing, captions for hearing loss, simplified content",
+        tools: {
+          fontScale: 130,
+          lineHeight: 1.7,
+          letterSpacing: 0.12,
+          largeCursor: true,
+          enhanceFocus: true,
+          autoSimplify: true,
+          autoCaptions: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true
+        }
+      },
+      anxiety: {
+        name: "Anxiety",
+        description: "Calm interface, reduced motion, progress indicators reduce uncertainty",
+        tools: {
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true,
+          motionReducer: true,
+          lineHeight: 1.8
+        }
+      },
+      sensory: {
+        name: "Sensory Processing",
+        description: "Overload prevention: no motion, no progress spinners, fewer distractions",
+        tools: {
+          motionReducer: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: false
+        }
+      },
+      photosensitive: {
+        name: "Photosensitive",
+        description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
+        tools: {
+          darkMode: true,
+          motionReducer: true
+        }
+      }
+    },
+    defaults: {
+      enabled: true,
+      autoDescribe: true,
+      autoVideoDescribe: false,
+      autoSimplify: false,
+      autoWcagFix: true,
+      autoSummarize: false,
+      autoFixLabels: true,
+      autoCaptions: false,
+      fixContrast: true,
+      darkMode: false,
+      dyslexiaFont: false,
+      largeCursor: false,
+      enhanceFocus: false,
+      readingGuide: false,
+      motionReducer: false,
+      readerMode: false,
+      focusMode: false,
+      hideDistractions: false,
+      showProgress: true,
+      keyboardNav: false,
+      voiceCommands: false,
+      fontScale: 100,
+      lineHeight: 1.5,
+      letterSpacing: 0,
+      contrastMode: "none",
+      colorFilter: "none"
+    }
+  };
 
   // tools/profiles/settings.js
-  var defaults = {
-    enabled: true,
-    // AI tools
-    autoDescribe: true,
-    autoVideoDescribe: false,
-    autoSimplify: false,
-    autoWcagFix: true,
-    autoSummarize: false,
-    autoFixLabels: true,
-    autoCaptions: false,
-    fixContrast: true,
-    // Visual tools
-    darkMode: false,
-    dyslexiaFont: false,
-    largeCursor: false,
-    enhanceFocus: false,
-    readingGuide: false,
-    motionReducer: false,
-    // Reading tools
-    readerMode: false,
-    focusMode: false,
-    // Navigation tools
-    keyboardNav: false,
-    voiceCommands: false,
-    // Display settings
-    fontScale: 100,
-    lineHeight: 1.5,
-    letterSpacing: 0,
-    colorFilter: "none"
-  };
+  var profiles = settings_default.profiles;
+  var defaults = settings_default.defaults;
   var settings = { ...defaults };
   async function loadSettings(storageGetter) {
     if (storageGetter) {
@@ -111,13 +270,10 @@
 
   // tools/utils/dom.js
   function isVisible(el) {
-    if (!el)
-      return false;
+    if (!el) return false;
     const style = getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden")
-      return false;
-    if (parseFloat(style.opacity) === 0)
-      return false;
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    if (parseFloat(style.opacity) === 0) return false;
     const rect = el.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
   }
@@ -159,8 +315,7 @@
   }
   function getElementFromNode(node) {
     var _a;
-    if (!((_a = node == null ? void 0 : node.target) == null ? void 0 : _a[0]))
-      return null;
+    if (!((_a = node == null ? void 0 : node.target) == null ? void 0 : _a[0])) return null;
     try {
       return document.querySelector(node.target[0]);
     } catch (e) {
@@ -201,6 +356,43 @@
       return null;
     }
   }
+  function captureVideoFrame(video) {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 360;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+    try {
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch (e) {
+      console.warn("[AI4A11y] Canvas tainted (CORS), cannot capture frame:", e);
+      return null;
+    }
+  }
+  async function captureVideoFrames(video, numFrames = 6) {
+    numFrames = Math.min(Math.max(1, Math.floor(numFrames) || 6), 30);
+    const frames = [];
+    const duration = video.duration || 0;
+    if (!duration || duration < 1) {
+      frames.push(captureVideoFrame(video));
+      return frames;
+    }
+    const interval = duration / (numFrames + 1);
+    const originalTime = video.currentTime;
+    try {
+      for (let i = 1; i <= numFrames; i++) {
+        video.currentTime = interval * i;
+        await new Promise((resolve) => {
+          video.onseeked = resolve;
+          setTimeout(resolve, 500);
+        });
+        frames.push(captureVideoFrame(video));
+      }
+    } finally {
+      video.currentTime = originalTime;
+    }
+    return frames;
+  }
   function getImageSize(img) {
     return {
       width: img.naturalWidth || img.width || 0,
@@ -209,36 +401,50 @@
   }
   function isLikelyDecorative(img) {
     const { width, height } = getImageSize(img);
-    if (width < 20 && height < 20)
-      return true;
-    if (width === 1 && height === 1)
-      return true;
-    if (img.getAttribute("role") === "presentation")
-      return true;
-    if (img.getAttribute("role") === "none")
-      return true;
+    if (width < 20 && height < 20) return true;
+    if (width === 1 && height === 1) return true;
+    if (img.getAttribute("role") === "presentation") return true;
+    if (img.getAttribute("role") === "none") return true;
     return false;
   }
 
   // tools/auditors/missing-alt.js
   function findEmptyAltImages() {
     return Array.from(document.querySelectorAll('img[alt=""]')).filter((img) => {
-      if (wasProcessed(img))
-        return false;
-      if (!isVisible(img))
-        return false;
-      if (isLikelyDecorative(img))
-        return false;
+      if (wasProcessed(img)) return false;
+      if (!isVisible(img)) return false;
+      if (isLikelyDecorative(img)) return false;
       const { width, height } = getImageSize(img);
       return width > 100 && height > 100;
     });
   }
   function findCanvasElements() {
     return Array.from(document.querySelectorAll("canvas")).filter((canvas) => {
-      if (wasProcessed(canvas))
-        return false;
+      if (wasProcessed(canvas)) return false;
       const rect = canvas.getBoundingClientRect();
       return rect.width > 50 && rect.height > 50;
+    });
+  }
+
+  // tools/auditors/missing-labels.js
+  function findAmbiguousLinks() {
+    const ambiguousTexts = [
+      "click here",
+      "here",
+      "read more",
+      "more",
+      "learn more",
+      "continue",
+      "link",
+      "this",
+      "this link"
+    ];
+    return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
+      var _a;
+      if (wasProcessed(link)) return false;
+      if (!isVisible(link)) return false;
+      const text = (_a = link.textContent) == null ? void 0 : _a.trim().toLowerCase();
+      return text && ambiguousTexts.includes(text);
     });
   }
 
@@ -248,8 +454,7 @@
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function generateImageAlt(img) {
-    if (img.dataset.ai4a11yProcessed)
-      return null;
+    if (img.dataset.ai4a11yProcessed) return null;
     markProcessed(img, "pending");
     try {
       const dataUrl = await imageToDataUrl(img);
@@ -276,8 +481,7 @@
     }
   }
   async function generateCanvasDescription(canvas) {
-    if (canvas.dataset.ai4a11yProcessed)
-      return null;
+    if (canvas.dataset.ai4a11yProcessed) return null;
     markProcessed(canvas, "pending");
     try {
       const dataUrl = canvas.toDataURL("image/png");
@@ -299,8 +503,7 @@
     }
   }
   async function generateSvgDescription(svg) {
-    if (svg.dataset.ai4a11yProcessed)
-      return null;
+    if (svg.dataset.ai4a11yProcessed) return null;
     markProcessed(svg, "pending");
     try {
       const serializer = new XMLSerializer();
@@ -325,6 +528,26 @@
     } catch (e) {
       console.warn("[AI4A11y] Failed to describe SVG:", e);
       markProcessed(svg, "failed");
+      return null;
+    }
+  }
+  async function generateVideoDescription(video) {
+    if (video.dataset.ai4a11yDescribed) return null;
+    video.dataset.ai4a11yDescribed = "pending";
+    try {
+      const frames = await captureVideoFrames(video, 6);
+      const description = await describeVideo(frames);
+      if (description) {
+        video.dataset.ai4a11yDescribed = "done";
+        incrementStat("images");
+        logFix("video description", video, "(none)", description);
+        return description;
+      }
+      video.dataset.ai4a11yDescribed = "failed";
+      return null;
+    } catch (e) {
+      console.warn("[AI4A11y] Failed to describe video:", e);
+      video.dataset.ai4a11yDescribed = "failed";
       return null;
     }
   }
@@ -576,18 +799,16 @@
   var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function generateLinkLabel(link) {
-    var _a;
-    if (link.dataset.ai4a11yProcessed)
-      return null;
+    var _a, _b;
+    if (link.dataset.ai4a11yProcessed) return null;
     markProcessed(link, "pending");
     const href = link.href || "";
     const existingText = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
     const context = getContextForElement(link);
     const label = await inferLabel({
-      url: href,
       elementType: "link",
-      existingText,
-      context
+      html: ((_b = link.outerHTML) == null ? void 0 : _b.substring(0, 500)) || "",
+      context: [existingText, href, context].filter(Boolean).join(" | ")
     });
     if (label) {
       link.setAttribute("aria-label", label);
@@ -602,8 +823,7 @@
   }
   async function generateButtonLabel(button) {
     var _a;
-    if (button.dataset.ai4a11yProcessed)
-      return null;
+    if (button.dataset.ai4a11yProcessed) return null;
     markProcessed(button, "pending");
     const inferred = inferButtonLabel(button);
     if (inferred) {
@@ -614,11 +834,10 @@
       return inferred;
     }
     const context = getContextForElement(button);
-    const svgContent = ((_a = button.querySelector("svg")) == null ? void 0 : _a.outerHTML) || "";
     const label = await inferLabel({
       elementType: "button",
-      context,
-      svgContent
+      html: ((_a = button.outerHTML) == null ? void 0 : _a.substring(0, 500)) || "",
+      context
     });
     if (label) {
       button.setAttribute("aria-label", label);
@@ -631,8 +850,7 @@
     return null;
   }
   async function generateIframeTitle(iframe) {
-    if (iframe.dataset.ai4a11yProcessed)
-      return null;
+    if (iframe.dataset.ai4a11yProcessed) return null;
     markProcessed(iframe, "pending");
     const src = iframe.src || "";
     for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
@@ -660,8 +878,7 @@
     }
   }
   async function generateFormLabel(input) {
-    if (input.dataset.ai4a11yProcessed)
-      return null;
+    if (input.dataset.ai4a11yProcessed) return null;
     markProcessed(input, "pending");
     if (input.placeholder) {
       input.setAttribute("aria-label", input.placeholder);
@@ -721,8 +938,7 @@
   function getContextForElement(el) {
     var _a;
     const parent = el.parentElement;
-    if (!parent)
-      return "";
+    if (!parent) return "";
     const clone = parent.cloneNode(true);
     clone.querySelectorAll("script, style").forEach((s) => s.remove());
     return ((_a = clone.textContent) == null ? void 0 : _a.trim().substring(0, 200)) || "";
@@ -742,8 +958,7 @@
       const clone = parent.cloneNode(true);
       clone.querySelectorAll("input, select, textarea, button").forEach((e) => e.remove());
       const text = (_c = clone.textContent) == null ? void 0 : _c.trim();
-      if (text && text.length < 50)
-        return text.replace(/:$/, "");
+      if (text && text.length < 50) return text.replace(/:$/, "");
     }
     return null;
   }
@@ -762,8 +977,7 @@
   });
   async function generateVideoCaptions(video) {
     var _a;
-    if (video.dataset.ai4a11yCaptioned)
-      return null;
+    if (video.dataset.ai4a11yCaptioned) return null;
     video.dataset.ai4a11yCaptioned = "pending";
     const src = video.src || ((_a = video.querySelector("source")) == null ? void 0 : _a.src);
     if (!src) {
@@ -776,7 +990,7 @@
         const text = result.text;
         addCaptionTrack(video, text);
         video.dataset.ai4a11yCaptioned = "done";
-        incrementStat3("wcag");
+        incrementStat3("captions");
         logFix3("captions", video, "(none)", "(generated)");
         console.log("[AI4A11y] Added video captions");
         return text;
@@ -791,8 +1005,7 @@
   }
   async function generateAudioCaptions(audio) {
     var _a;
-    if (audio.dataset.ai4a11yCaptioned)
-      return null;
+    if (audio.dataset.ai4a11yCaptioned) return null;
     audio.dataset.ai4a11yCaptioned = "pending";
     const src = audio.src || ((_a = audio.querySelector("source")) == null ? void 0 : _a.src);
     if (!src) {
@@ -805,7 +1018,7 @@
         const text = result.text;
         addTranscriptBlock(audio, text);
         audio.dataset.ai4a11yCaptioned = "done";
-        incrementStat3("wcag");
+        incrementStat3("captions");
         logFix3("transcript", audio, "(none)", "(generated)");
         console.log("[AI4A11y] Added audio transcript");
         return text;
@@ -877,8 +1090,7 @@ ${chunk}
   });
   async function simplifyText2(element) {
     var _a;
-    if (element.dataset.ai4a11ySimplified)
-      return null;
+    if (element.dataset.ai4a11ySimplified) return null;
     element.dataset.ai4a11ySimplified = "pending";
     if (element.tagName === "TABLE" || element.querySelector("table")) {
       element.dataset.ai4a11ySimplified = "skipped";
@@ -927,7 +1139,7 @@ ${chunk}
         element.appendChild(textContainer);
         element.appendChild(toggleBtn);
         element.dataset.ai4a11ySimplified = "done";
-        incrementStat4("wcag");
+        incrementStat4("text");
         logFix4("simplify", element, "(complex)", "(simplified)");
         console.log("[AI4A11y] Simplified text");
         return simplified;
@@ -942,8 +1154,7 @@ ${chunk}
   }
   async function summarizeContent(element) {
     var _a;
-    if (element.dataset.ai4a11ySummarize)
-      return null;
+    if (element.dataset.ai4a11ySummarize) return null;
     element.dataset.ai4a11ySummarize = "pending";
     if (element.tagName === "TABLE") {
       element.dataset.ai4a11ySummarize = "skipped";
@@ -977,7 +1188,7 @@ ${chunk}
         summaryBox.appendChild(content);
         element.insertBefore(summaryBox, element.firstChild);
         element.dataset.ai4a11ySummarize = "done";
-        incrementStat4("wcag");
+        incrementStat4("text");
         logFix4("summarize", element, "(long)", "(summarized)");
         return summary;
       }
@@ -1019,8 +1230,7 @@ ${chunk}
   }
   function getLuminance(color) {
     const rgb = parseColor(color);
-    if (!rgb)
-      return null;
+    if (!rgb) return null;
     const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
       c = c / 255;
       return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -1034,8 +1244,7 @@ ${chunk}
       if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
         return bg;
       }
-      if (el === document.documentElement)
-        break;
+      if (el === document.documentElement) break;
       el = el.parentElement;
     }
     return "rgb(255, 255, 255)";
@@ -1047,8 +1256,7 @@ ${chunk}
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function fixLowContrast(element, color, background) {
-    if (element.dataset.ai4a11yProcessed)
-      return null;
+    if (element.dataset.ai4a11yProcessed) return null;
     markProcessed(element, "pending");
     if (!background || background === "transparent") {
       background = getEffectiveBackground(element);
@@ -1075,8 +1283,7 @@ ${chunk}
     return fixedColor;
   }
   function fixIndistinguishableLink(link) {
-    if (link.dataset.ai4a11yProcessed)
-      return;
+    if (link.dataset.ai4a11yProcessed) return;
     markProcessed(link, "done");
     link.style.textDecoration = "underline";
     incrementStat5("wcag");
@@ -1096,8 +1303,7 @@ ${chunk}
   });
   function fixInvalidLang(element) {
     const currentLang = element.getAttribute("lang");
-    if (!currentLang)
-      return;
+    if (!currentLang) return;
     const baseLang = currentLang.split("-")[0].toLowerCase();
     const newLang = VALID_LANGS.has(baseLang) ? baseLang : "en";
     element.setAttribute("lang", newLang);
@@ -1123,13 +1329,11 @@ ${chunk}
   }
   function fixHeadingOrder(element) {
     const match = element.tagName.match(/^H([1-6])$/);
-    if (!match)
-      return;
+    if (!match) return;
     const currentLevel = parseInt(match[1]);
     const allHeadings = Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6"));
     const idx = allHeadings.indexOf(element);
-    if (idx === -1 || idx === 0)
-      return;
+    if (idx === -1 || idx === 0) return;
     const prevHeading = allHeadings[idx - 1];
     const prevLevel = parseInt(prevHeading.tagName[1]);
     if (currentLevel > prevLevel + 1) {
@@ -1154,6 +1358,17 @@ ${chunk}
     incrementStat6("wcag");
     logFix6("tabindex", element, oldVal, "0");
     console.log("[AI4A11y] Fixed positive tabindex");
+  }
+  function fixTargetBlank(element) {
+    const rel = element.getAttribute("rel") || "";
+    const parts = rel.split(/\s+/).filter(Boolean);
+    if (!parts.includes("noopener")) parts.push("noopener");
+    if (!parts.includes("noreferrer")) parts.push("noreferrer");
+    element.setAttribute("rel", parts.join(" "));
+    markProcessed(element, "done");
+    incrementStat6("wcag");
+    logFix6("target-blank", element, rel || "(empty)", parts.join(" "));
+    console.log('[AI4A11y] Added rel="noopener noreferrer"');
   }
   function fixInvalidAriaAttr(element) {
     for (const attr of Array.from(element.attributes)) {
@@ -1196,8 +1411,7 @@ ${chunk}
   }
   function fixNestedInteractive(element) {
     const parent = element.closest("a, button");
-    if (!parent || element === parent)
-      return;
+    if (!parent || element === parent) return;
     if (element.tagName === "BUTTON") {
       const span = document.createElement("span");
       while (element.firstChild) {
@@ -1218,8 +1432,7 @@ ${chunk}
   }
   function fixTargetSize(element) {
     const rect = element.getBoundingClientRect();
-    if (rect.width >= 44 && rect.height >= 44)
-      return;
+    if (rect.width >= 44 && rect.height >= 44) return;
     const needWidth = Math.max(0, (44 - rect.width) / 2);
     const needHeight = Math.max(0, (44 - rect.height) / 2);
     const display = getComputedStyle(element).display;
@@ -1265,8 +1478,7 @@ ${chunk}
   }
   function detectLanguage() {
     const meta = document.querySelector('meta[http-equiv="content-language"]');
-    if (meta == null ? void 0 : meta.content)
-      return meta.content.split("-")[0];
+    if (meta == null ? void 0 : meta.content) return meta.content.split("-")[0];
     const patterns = {
       "/es/": "es",
       "/fr/": "fr",
@@ -1276,8 +1488,7 @@ ${chunk}
       "/ko/": "ko"
     };
     for (const [pattern, lang] of Object.entries(patterns)) {
-      if (location.href.includes(pattern))
-        return lang;
+      if (location.href.includes(pattern)) return lang;
     }
     return "en";
   }
@@ -1320,6 +1531,190 @@ ${chunk}
     "meta-refresh": removeMetaRefresh,
     "blink": replaceObsoleteElement,
     "marquee": replaceObsoleteElement
+  };
+
+  // tools/adapters/fix-links.js
+  var logFix7 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat7 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  var MAX_LINKS_PER_PAGE = 10;
+  async function improveAmbiguousLink(link) {
+    var _a, _b, _c;
+    if (link.dataset.ai4a11yProcessed) return null;
+    markProcessed(link, "pending");
+    const text = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
+    const context = ((_c = (_b = link.closest("p, li, td, article, section")) == null ? void 0 : _b.textContent) == null ? void 0 : _c.trim().substring(0, 200)) || "";
+    try {
+      const improved = await improveLinkText(text, link.href, context);
+      if (improved && improved.toLowerCase() !== text.toLowerCase()) {
+        link.setAttribute("aria-label", improved);
+        link.classList.add("ai4a11y-adapted");
+        markProcessed(link, "done");
+        incrementStat7("labels");
+        logFix7("link text", link, text, improved);
+        return improved;
+      }
+    } catch (e) {
+      console.warn("[AI4A11y] improveAmbiguousLink failed:", e);
+    }
+    markProcessed(link, "failed");
+    return null;
+  }
+  async function improveAmbiguousLinks(links) {
+    const batch = Array.from(links).slice(0, MAX_LINKS_PER_PAGE);
+    const results = [];
+    for (const link of batch) {
+      results.push(await improveAmbiguousLink(link));
+    }
+    return results.filter(Boolean);
+  }
+
+  // tools/adapters/fix-tables.js
+  var logFix8 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat8 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  async function fixTableHeaders(table) {
+    if (table.dataset.ai4a11yProcessed) return false;
+    if (table.querySelector("th")) return false;
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if (rows.length < 2) return false;
+    markProcessed(table, "pending");
+    const firstRowCells = Array.from(rows[0].querySelectorAll("td"));
+    if (firstRowCells.length === 0) {
+      markProcessed(table, "skipped");
+      return false;
+    }
+    const looksLikeHeader = firstRowCells.every((cell, i) => {
+      var _a;
+      const text = ((_a = cell.textContent) == null ? void 0 : _a.trim()) || "";
+      if (!text || text.length > 40) return false;
+      const below = rows.slice(1, 4).map((r) => {
+        var _a2, _b;
+        return (_b = (_a2 = r.querySelectorAll("td")[i]) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim();
+      });
+      return !below.includes(text);
+    });
+    if (looksLikeHeader) {
+      firstRowCells.forEach((cell) => {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        th.innerHTML = cell.innerHTML;
+        cell.replaceWith(th);
+      });
+      markProcessed(table, "done");
+      incrementStat8("wcag");
+      logFix8("table headers", table, "(no headers)", "first row \u2192 column headers");
+      return true;
+    }
+    if (rows.length < 4) {
+      markProcessed(table, "skipped");
+      return false;
+    }
+    try {
+      const columnCount = firstRowCells.length;
+      const headers = [];
+      for (let col = 0; col < columnCount; col++) {
+        const samples = rows.slice(0, 5).map((r) => {
+          var _a, _b;
+          return (_b = (_a = r.querySelectorAll("td")[col]) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+        }).filter(Boolean);
+        const header = samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        headers.push(header || `Column ${col + 1}`);
+      }
+      const thead = document.createElement("thead");
+      thead.dataset.ai4a11yGenerated = "true";
+      const headerRow = document.createElement("tr");
+      for (const label of headers) {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+      table.prepend(thead);
+      markProcessed(table, "done");
+      incrementStat8("wcag");
+      logFix8("table headers", table, "(no headers)", headers.join(", "));
+      return true;
+    } catch (e) {
+      console.warn("[AI4A11y] fixTableHeaders failed:", e);
+      markProcessed(table, "failed");
+      return false;
+    }
+  }
+  async function fixAllTables() {
+    const tables = Array.from(document.querySelectorAll("table")).filter((t) => !t.dataset.ai4a11yProcessed && !t.querySelector("th") && t.querySelectorAll("tr").length >= 2).filter((t) => !t.getAttribute("role") || t.getAttribute("role") === "table");
+    const results = [];
+    for (const table of tables) {
+      results.push(await fixTableHeaders(table));
+    }
+    return results.filter(Boolean).length;
+  }
+
+  // tools/adapters/fix-landmarks.js
+  var logFix9 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat9 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  var LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+  function ensureMainLandmark() {
+    if (document.querySelector('main, [role="main"]')) return false;
+    const isCandidate = (el) => {
+      var _a;
+      const tag = el.tagName.toLowerCase();
+      if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
+      if (el.matches('[role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"]')) return false;
+      if ((((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) <= 100) return false;
+      if (el.querySelector(LANDMARK_SELECTOR)) return false;
+      return true;
+    };
+    let level = Array.from(document.body.children);
+    let candidates = level.filter(isCandidate);
+    if (candidates.length === 0) {
+      const shell = level.find((el) => {
+        var _a;
+        return (((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) > 100 && el.querySelector(LANDMARK_SELECTOR);
+      });
+      if (shell) candidates = Array.from(shell.children).filter(isCandidate);
+    }
+    if (candidates.length === 0) return false;
+    const main = candidates.reduce((a, b) => {
+      var _a, _b;
+      return (((_a = a.textContent) == null ? void 0 : _a.length) || 0) >= (((_b = b.textContent) == null ? void 0 : _b.length) || 0) ? a : b;
+    });
+    main.setAttribute("role", "main");
+    markProcessed(main, "done");
+    incrementStat9("wcag");
+    logFix9("landmark", main, "(no main landmark)", 'role="main"');
+    console.log('[AI4A11y] Added role="main" landmark');
+    return true;
+  }
+  function ensureStructuralLandmarks() {
+    let fixed = 0;
+    document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
+      var _a;
+      if (el.closest('nav, [role="navigation"]')) return;
+      const links = el.querySelectorAll("a").length;
+      const textLength = ((_a = el.textContent) == null ? void 0 : _a.trim().length) || 1;
+      if (links >= 3 && links * 15 / textLength > 0.5) {
+        el.setAttribute("role", "navigation");
+        incrementStat9("wcag");
+        logFix9("landmark", el, "(unmarked nav)", 'role="navigation"');
+        fixed++;
+      }
+    });
+    return fixed;
+  }
+  function fixLandmarks() {
+    let count = 0;
+    if (ensureMainLandmark()) count++;
+    count += ensureStructuralLandmarks();
+    return count;
+  }
+  var axeHandlers6 = {
+    "landmark-one-main": () => ensureMainLandmark()
   };
 
   // tools/adapters/visual-assist.js
@@ -1434,17 +1829,14 @@ ${chunk}
       return css;
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     },
     // Reading guide element and handler
     readingGuideEl: null,
     readingGuideHandler: null,
     enableReadingGuide() {
-      if (this.readingGuideEl)
-        return;
+      if (this.readingGuideEl) return;
       this.readingGuideEl = document.createElement("div");
       this.readingGuideEl.className = "ai4a11y-reading-guide";
       document.body.appendChild(this.readingGuideEl);
@@ -1452,8 +1844,7 @@ ${chunk}
       this.lastMouseY = 0;
       this.readingGuideHandler = (e) => {
         this.lastMouseY = e.clientY;
-        if (this.readingGuideRafPending)
-          return;
+        if (this.readingGuideRafPending) return;
         this.readingGuideRafPending = true;
         requestAnimationFrame(() => {
           this.readingGuideRafPending = false;
@@ -1510,8 +1901,7 @@ ${chunk}
       announce("Dark mode enabled");
     },
     enableCSSFallback() {
-      if (document.getElementById(this.styleId))
-        return;
+      if (document.getElementById(this.styleId)) return;
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
@@ -1573,8 +1963,7 @@ ${chunk}
       disableParallax: true
     },
     enable(options = {}) {
-      if (this.enabled)
-        return;
+      if (this.enabled) return;
       this.currentSettings = { ...this.currentSettings, ...options };
       this.enabled = true;
       const s = this.currentSettings;
@@ -1609,10 +1998,8 @@ ${chunk}
       style.id = this.styleId;
       style.textContent = css;
       document.head.appendChild(style);
-      if (s.pauseVideos)
-        this.pauseAllVideos();
-      if (s.stopGifs)
-        this.stopGifs();
+      if (s.pauseVideos) this.pauseAllVideos();
+      if (s.stopGifs) this.stopGifs();
       const pauseAnimations = (deadline) => {
         const elements = document.querySelectorAll("*");
         let i = 0;
@@ -1644,8 +2031,7 @@ ${chunk}
     },
     disable() {
       var _a;
-      if (!this.enabled)
-        return;
+      if (!this.enabled) return;
       this.enabled = false;
       (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
       document.querySelectorAll("[data-ai4a11y-gif-src]").forEach((canvas) => {
@@ -1658,10 +2044,10 @@ ${chunk}
       document.querySelectorAll('[style*="animation-play-state"]').forEach((el) => {
         el.style.animationPlayState = "";
       });
-      document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach((video) => {
+      document.querySelectorAll('video[data-ai4a11y-was-playing="true"]').forEach((video) => {
         video.play().catch(() => {
         });
-        delete video.dataset.ai4a11yWasPaused;
+        delete video.dataset.ai4a11yWasPlaying;
       });
       console.log("[AI4A11y] Motion Reducer disabled");
       announce("Motion restored");
@@ -1670,7 +2056,7 @@ ${chunk}
       document.querySelectorAll("video").forEach((video) => {
         if (!video.paused) {
           video.pause();
-          video.dataset.ai4a11yWasPaused = "false";
+          video.dataset.ai4a11yWasPlaying = "true";
         }
       });
       document.querySelectorAll("iframe").forEach((iframe) => {
@@ -1685,8 +2071,7 @@ ${chunk}
     },
     stopGifs() {
       document.querySelectorAll('img[src$=".gif"], img[src*=".gif?"]').forEach((img) => {
-        if (img.dataset.ai4a11yGifStopped)
-          return;
+        if (img.dataset.ai4a11yGifStopped) return;
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth || img.width || 100;
         canvas.height = img.naturalHeight || img.height || 100;
@@ -1821,8 +2206,7 @@ ${chunk}
       document.body.appendChild(this.progressEl);
       this.progressRafPending = false;
       this.progressHandler = () => {
-        if (this.progressRafPending)
-          return;
+        if (this.progressRafPending) return;
         this.progressRafPending = true;
         requestAnimationFrame(() => {
           this.progressRafPending = false;
@@ -1891,8 +2275,7 @@ ${chunk}
       }
     },
     speakPage(options = {}) {
-      if (options.rate)
-        this.settings.rate = options.rate;
+      if (options.rate) this.settings.rate = options.rate;
       const main = document.querySelector('main, article, [role="main"], .content, #content');
       const target = main || document.body;
       const text = this.extractReadableText(target);
@@ -1908,8 +2291,7 @@ ${chunk}
     },
     async speak(text) {
       this.stop();
-      if (!text)
-        return;
+      if (!text) return;
       this.speaking = true;
       this.paused = false;
       this.words = text.split(/\s+/);
@@ -2112,8 +2494,7 @@ ${chunk}
       console.log("[AI4A11y] Reader Mode enabled");
       announce("Reader mode enabled. Press Escape to exit.");
       this.escapeHandler = (e) => {
-        if (e.key === "Escape")
-          this.disable();
+        if (e.key === "Escape") this.disable();
       };
       document.addEventListener("keydown", this.escapeHandler);
     },
@@ -2215,28 +2596,22 @@ ${chunk}
         const links = Array.from(document.querySelectorAll("a[href]"));
         const current = document.activeElement;
         const idx = links.indexOf(current);
-        if (idx < links.length - 1)
-          links[idx + 1].focus();
-        else if (links.length > 0)
-          links[0].focus();
+        if (idx < links.length - 1) links[idx + 1].focus();
+        else if (links.length > 0) links[0].focus();
       },
       "previous link": () => {
         const links = Array.from(document.querySelectorAll("a[href]"));
         const current = document.activeElement;
         const idx = links.indexOf(current);
-        if (idx > 0)
-          links[idx - 1].focus();
-        else if (links.length > 0)
-          links[links.length - 1].focus();
+        if (idx > 0) links[idx - 1].focus();
+        else if (links.length > 0) links[links.length - 1].focus();
       },
       "next button": () => {
         const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
         const current = document.activeElement;
         const idx = buttons.indexOf(current);
-        if (idx < buttons.length - 1)
-          buttons[idx + 1].focus();
-        else if (buttons.length > 0)
-          buttons[0].focus();
+        if (idx < buttons.length - 1) buttons[idx + 1].focus();
+        else if (buttons.length > 0) buttons[0].focus();
       },
       "read page": () => {
         var _a;
@@ -2274,8 +2649,7 @@ ${chunk}
         }
       };
       this.recognition.onend = () => {
-        if (this.enabled)
-          this.recognition.start();
+        if (this.enabled) this.recognition.start();
       };
       this.createFeedbackElement();
       this.recognition.start();
@@ -2301,8 +2675,7 @@ ${chunk}
     },
     createFeedbackElement() {
       var _a;
-      if (this.feedbackElement)
-        return;
+      if (this.feedbackElement) return;
       this.feedbackElement = document.createElement("div");
       this.feedbackElement.id = "ai4a11y-voice-feedback";
       this.feedbackElement.setAttribute("role", "status");
@@ -2338,8 +2711,7 @@ ${chunk}
       document.body.appendChild(this.feedbackElement);
     },
     showFeedback(text, type) {
-      if (!this.feedbackElement)
-        return;
+      if (!this.feedbackElement) return;
       const textEl = this.feedbackElement.querySelector(".ai4a11y-voice-text");
       if (textEl) {
         textEl.textContent = text;
@@ -2378,8 +2750,7 @@ ${chunk}
       const elements = document.querySelectorAll('a, button, [role="button"], input[type="submit"]');
       for (const el of elements) {
         const elText = (el.textContent || el.value || el.getAttribute("aria-label") || "").toLowerCase();
-        if (elText.includes(text.toLowerCase()))
-          return el;
+        if (elText.includes(text.toLowerCase())) return el;
       }
       return null;
     },
@@ -2387,10 +2758,8 @@ ${chunk}
       this.commands[phrase.toLowerCase()] = action;
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
   window.__ai4a11yVoiceCommands = VoiceCommands;
@@ -2412,10 +2781,8 @@ ${chunk}
       this.settings = { ...this.settings, ...options };
       this.enabled = true;
       this.injectStyles();
-      if (this.settings.showSkipLinks)
-        this.createSkipLinks();
-      if (this.settings.showTabSequence)
-        this.showTabSequence();
+      if (this.settings.showSkipLinks) this.createSkipLinks();
+      if (this.settings.showTabSequence) this.showTabSequence();
       this.setupKeyboardShortcuts();
       console.log("[AI4A11y] Keyboard Navigator enabled");
       announce("Keyboard navigation enhanced");
@@ -2433,10 +2800,8 @@ ${chunk}
       }
       this.modifiedElements.forEach((el) => {
         el.removeAttribute("tabindex");
-        if (el.id === "ai4a11y-main-content")
-          el.removeAttribute("id");
-        if (el.id === "ai4a11y-nav")
-          el.removeAttribute("id");
+        if (el.id === "ai4a11y-main-content") el.removeAttribute("id");
+        if (el.id === "ai4a11y-nav") el.removeAttribute("id");
       });
       this.modifiedElements = [];
       console.log("[AI4A11y] Keyboard Navigator disabled");
@@ -2492,14 +2857,12 @@ ${chunk}
       document.head.appendChild(style);
     },
     createSkipLinks() {
-      if (this.skipLinkElement)
-        return;
+      if (this.skipLinkElement) return;
       const container = document.createElement("div");
       container.id = "ai4a11y-skip-links";
       const main = document.querySelector('main, [role="main"], #main, #content, article');
       if (main) {
-        if (!main.id)
-          main.id = "ai4a11y-main-content";
+        if (!main.id) main.id = "ai4a11y-main-content";
         const skipToMain = document.createElement("a");
         skipToMain.href = "#" + main.id;
         skipToMain.className = "ai4a11y-skip-link";
@@ -2507,8 +2870,7 @@ ${chunk}
         skipToMain.addEventListener("click", (e) => {
           e.preventDefault();
           main.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(main))
-            this.modifiedElements.push(main);
+          if (!this.modifiedElements.includes(main)) this.modifiedElements.push(main);
           main.focus();
           main.scrollIntoView({ behavior: "smooth" });
         });
@@ -2516,8 +2878,7 @@ ${chunk}
       }
       const nav = document.querySelector('nav, [role="navigation"]');
       if (nav) {
-        if (!nav.id)
-          nav.id = "ai4a11y-nav";
+        if (!nav.id) nav.id = "ai4a11y-nav";
         const skipToNav = document.createElement("a");
         skipToNav.href = "#" + nav.id;
         skipToNav.className = "ai4a11y-skip-link";
@@ -2526,8 +2887,7 @@ ${chunk}
         skipToNav.addEventListener("click", (e) => {
           e.preventDefault();
           nav.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(nav))
-            this.modifiedElements.push(nav);
+          if (!this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
           nav.focus();
         });
         container.appendChild(skipToNav);
@@ -2587,19 +2947,15 @@ ${chunk}
         }
         if (e.altKey && e.key === "f") {
           e.preventDefault();
-          if (this.tabSequenceOverlay)
-            this.hideTabSequence();
-          else
-            this.showTabSequence();
+          if (this.tabSequenceOverlay) this.hideTabSequence();
+          else this.showTabSequence();
         }
       };
       document.addEventListener("keydown", this.shortcutHandler);
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
   window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
@@ -2646,8 +3002,7 @@ ${chunk}
       announce("Color blind correction removed");
     },
     injectSvgFilters() {
-      if (document.getElementById(this.filterId))
-        return;
+      if (document.getElementById(this.filterId)) return;
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.id = this.filterId;
       svg.setAttribute("style", "position:absolute;width:0;height:0");
@@ -2705,8 +3060,7 @@ ${chunk}
     videoStates: /* @__PURE__ */ new Map(),
     styleId: "ai4a11y-caption-helper-styles",
     enable() {
-      if (this.enabled)
-        return;
+      if (this.enabled) return;
       this.enabled = true;
       this.injectStyles();
       this.setupVideoObserver();
@@ -2717,8 +3071,7 @@ ${chunk}
     },
     disable() {
       var _a, _b;
-      if (!this.enabled)
-        return;
+      if (!this.enabled) return;
       this.enabled = false;
       (_a = this.observer) == null ? void 0 : _a.disconnect();
       this.observer = null;
@@ -2729,8 +3082,7 @@ ${chunk}
       announce("Auto Transcriber disabled");
     },
     injectStyles() {
-      if (document.getElementById(this.styleId))
-        return;
+      if (document.getElementById(this.styleId)) return;
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
@@ -2775,8 +3127,7 @@ ${chunk}
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              if (node.tagName === "VIDEO")
-                this.setupVideo(node);
+              if (node.tagName === "VIDEO") this.setupVideo(node);
               if (node.tagName === "IFRAME" && ((_a = node.src) == null ? void 0 : _a.includes("youtube"))) {
                 this.enableYouTubeCaptions(node);
               }
@@ -2785,8 +3136,7 @@ ${chunk}
           }
           for (const node of mutation.removedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              if (node.tagName === "VIDEO")
-                this.cleanupVideo(node);
+              if (node.tagName === "VIDEO") this.cleanupVideo(node);
               (_e = (_d = node.querySelectorAll) == null ? void 0 : _d.call(node, "video")) == null ? void 0 : _e.forEach((v) => this.cleanupVideo(v));
             }
           }
@@ -2807,16 +3157,13 @@ ${chunk}
     enableCaptionsOnAllVideos() {
       document.querySelectorAll("video").forEach((v) => this.setupVideo(v));
       document.querySelectorAll('iframe[src*="youtube"]').forEach((f) => this.enableYouTubeCaptions(f));
-      if (location.hostname.includes("youtube.com"))
-        this.enableYouTubePageCaptions();
+      if (location.hostname.includes("youtube.com")) this.enableYouTubePageCaptions();
     },
     setupVideo(video) {
-      if (video.dataset.ai4a11ySetup)
-        return;
+      if (video.dataset.ai4a11ySetup) return;
       video.dataset.ai4a11ySetup = "true";
       const rect = video.getBoundingClientRect();
-      if (rect.width < 100 || rect.height < 75)
-        return;
+      if (rect.width < 100 || rect.height < 75) return;
       let wrapper = video.parentElement;
       if (getComputedStyle(wrapper).position === "static") {
         wrapper.style.position = "relative";
@@ -2835,8 +3182,7 @@ ${chunk}
     },
     async toggleTranscription(video, btn) {
       const state = this.videoStates.get(video);
-      if (!state)
-        return;
+      if (!state) return;
       if (state.isTranscribing) {
         state.isTranscribing = false;
         btn.classList.remove("recording");
@@ -2869,8 +3215,7 @@ ${chunk}
       }
     },
     enableYouTubeCaptions(iframe) {
-      if (iframe.dataset.ai4a11yCaptionsEnabled)
-        return;
+      if (iframe.dataset.ai4a11yCaptionsEnabled) return;
       iframe.dataset.ai4a11yCaptionsEnabled = "true";
       const src = iframe.src;
       if (!src.includes("cc_load_policy=1")) {
@@ -2885,24 +3230,23 @@ ${chunk}
       }
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
   window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
   // tools/adapters/index.js
-  var axeHandlers6 = {
+  var axeHandlers7 = {
     ...axeHandlers,
     ...axeHandlers2,
     ...axeHandlers3,
     ...axeHandlers4,
-    ...axeHandlers5
+    ...axeHandlers5,
+    ...axeHandlers6
   };
   function getAxeHandler(ruleId) {
-    return axeHandlers6[ruleId] || null;
+    return axeHandlers7[ruleId] || null;
   }
 
   // extension/src/stats.js
@@ -2915,7 +3259,7 @@ ${chunk}
     captions: 0
   };
   var fixLog = [];
-  function logFix7(type, element, oldValue, newValue) {
+  function logFix10(type, element, oldValue, newValue) {
     var _a;
     const selector = ((_a = element == null ? void 0 : element.tagName) == null ? void 0 : _a.toLowerCase()) || "element";
     const id = (element == null ? void 0 : element.id) ? `#${element.id}` : "";
@@ -2935,7 +3279,7 @@ ${chunk}
     } catch (e) {
     }
   }
-  function incrementStat7(type) {
+  function incrementStat10(type) {
     if (type in stats) {
       stats[type]++;
     }
@@ -3008,42 +3352,35 @@ ${chunk}
     generateLabels: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
     inferLabel: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
     fixContrast: (fg, bg) => sendMessage({ type: "fixContrast", foreground: fg, background: bg }).then((r) => r == null ? void 0 : r.result),
-    generateCaptions: (data) => sendMessage({ type: "transcribeAudio", audioUrl: data.audioUrl }).then((r) => r == null ? void 0 : r.result),
     getYouTubeTranscript: (videoId) => sendMessage({ type: "getYouTubeTranscript", videoId }).then((r) => r == null ? void 0 : r.result),
     transcribeVideo: (url) => sendMessage({ type: "transcribeVideo", audioUrl: url }).then((r) => r == null ? void 0 : r.result),
     transcribeAudio: (url) => sendMessage({ type: "transcribeAudio", audioUrl: url }).then((r) => r == null ? void 0 : r.result),
     describeElement: (imageData, elementType, context) => sendMessage({ type: "describeElement", imageData, elementType, context }).then((r) => r == null ? void 0 : r.result),
+    improveLinkText: (linkText, href, context) => sendMessage({ type: "improveLinkText", linkText, href, context }).then((r) => r == null ? void 0 : r.result),
+    inferColumnHeader: (sampleData) => sendMessage({ type: "inferColumnHeader", sampleData }).then((r) => r == null ? void 0 : r.result),
     announce: (msg) => announce2(msg)
   });
-  globalThis.ai4a11yLogFix = logFix7;
-  globalThis.ai4a11yIncrementStat = incrementStat7;
+  globalThis.ai4a11yLogFix = logFix10;
+  globalThis.ai4a11yIncrementStat = incrementStat10;
   var isRunning = false;
   var initPromise = null;
   var getHandler = getAxeHandler;
   function applyVisualSettings(settings2) {
     const visualOptions = {};
-    if (settings2.contrastMode !== void 0)
-      visualOptions.contrastMode = settings2.contrastMode || "none";
-    if (settings2.fontScale !== void 0)
-      visualOptions.fontScale = settings2.fontScale;
-    if (settings2.lineHeight !== void 0)
-      visualOptions.lineHeight = settings2.lineHeight;
-    if (settings2.letterSpacing !== void 0)
-      visualOptions.letterSpacing = settings2.letterSpacing;
-    if (settings2.largeCursor)
-      visualOptions.largeCursor = true;
-    if (settings2.enhanceFocus)
-      visualOptions.enhanceFocus = true;
-    if (settings2.dyslexiaFont)
-      visualOptions.dyslexiaFont = true;
-    if (settings2.readingGuide)
-      visualOptions.readingGuide = true;
+    if (settings2.contrastMode !== void 0) visualOptions.contrastMode = settings2.contrastMode || "none";
+    if (settings2.fontScale !== void 0) visualOptions.fontScale = settings2.fontScale;
+    if (settings2.lineHeight !== void 0) visualOptions.lineHeight = settings2.lineHeight;
+    if (settings2.letterSpacing !== void 0) visualOptions.letterSpacing = settings2.letterSpacing;
+    if (settings2.largeCursor) visualOptions.largeCursor = true;
+    if (settings2.enhanceFocus) visualOptions.enhanceFocus = true;
+    if (settings2.dyslexiaFont) visualOptions.dyslexiaFont = true;
+    if (settings2.readingGuide) visualOptions.readingGuide = true;
     const hasNonDefault = visualOptions.contrastMode && visualOptions.contrastMode !== "none" || visualOptions.fontScale && visualOptions.fontScale !== 100 || visualOptions.lineHeight && visualOptions.lineHeight !== 1.5 || visualOptions.letterSpacing && visualOptions.letterSpacing !== 0 || visualOptions.largeCursor || visualOptions.enhanceFocus || visualOptions.dyslexiaFont || visualOptions.readingGuide;
     if (hasNonDefault) {
       VisualAssist.enable(visualOptions);
       console.log("[AI4A11y] Applied visual settings:", visualOptions);
     }
-    const colorMode = settings2.colorBlindMode || settings2.colorFilter;
+    const colorMode = settings2.colorFilter || settings2.colorBlindMode;
     if (colorMode && colorMode !== "none") {
       ColorBlindMode.enable(colorMode);
       console.log("[AI4A11y] Applied color blind mode:", colorMode);
@@ -3063,12 +3400,9 @@ ${chunk}
       });
       console.log("[AI4A11y] Focus mode enabled");
     }
-    if (settings2.readerMode)
-      ReaderMode.enable();
-    if (settings2.keyboardNav)
-      KeyboardNavigator.enable();
-    if (settings2.voiceCommands)
-      VoiceCommands.enable();
+    if (settings2.readerMode) ReaderMode.enable();
+    if (settings2.keyboardNav) KeyboardNavigator.enable();
+    if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
       AutoTranscriber.enable();
       console.log("[AI4A11y] Auto transcriber enabled");
@@ -3107,14 +3441,13 @@ ${chunk}
     try {
       console.log("[AI4A11y] Starting scan...");
       notifyProgress("Analyzing", 10);
-      if (!isEnabled("autoWcagFix")) {
-        console.log("[AI4A11y] Auto WCAG fix disabled");
-        isRunning = false;
-        return;
+      if (isEnabled("autoWcagFix")) {
+        const violations = await runAxeAnalysis();
+        notifyProgress("Fixing", 30);
+        await processViolations(violations);
+      } else {
+        console.log("[AI4A11y] Auto WCAG fix disabled \u2014 skipping axe scan");
       }
-      const violations = await runAxeAnalysis();
-      notifyProgress("Fixing", 30);
-      await processViolations(violations);
       notifyProgress("Images", 50);
       await runAdditionalScans();
       notifyProgress("Text", 80);
@@ -3132,12 +3465,10 @@ ${chunk}
       console.log(`[AI4A11y] Processing: ${violation.id} (${violation.nodes.length} elements)`);
       for (const node of violation.nodes) {
         const el = getElementFromNode(node);
-        if (!el || el.dataset.ai4a11yProcessed)
-          continue;
+        if (!el || el.dataset.ai4a11yProcessed) continue;
         if (isImageViolation(violation.id) && isEnabled("autoDescribe")) {
           const handler = getHandler(violation.id);
-          if (handler)
-            imageTasks.push(() => handler(el));
+          if (handler) imageTasks.push(() => handler(el));
           continue;
         }
         try {
@@ -3161,15 +3492,11 @@ ${chunk}
   }
   async function processViolation(violation, node, el, settings2) {
     const handler = getHandler(violation.id);
-    if (!handler)
-      return;
-    if (violation.id === "color-contrast" && !isEnabled("fixContrast"))
-      return;
-    if (violation.id.includes("label") && !isEnabled("autoFixLabels"))
-      return;
-    if (violation.id.includes("caption") && !isEnabled("autoCaptions"))
-      return;
-    if (violation.id === "color-contrast") {
+    if (!handler) return;
+    if (violation.id.startsWith("color-contrast") && !isEnabled("fixContrast")) return;
+    if (violation.id.includes("label") && !isEnabled("autoFixLabels")) return;
+    if (violation.id.includes("caption") && !isEnabled("autoCaptions")) return;
+    if (violation.id.startsWith("color-contrast")) {
       const style = getComputedStyle(el);
       await handler(el, style.color, style.backgroundColor);
     } else {
@@ -3181,83 +3508,72 @@ ${chunk}
       const emptyAltImages = findEmptyAltImages();
       if (emptyAltImages.length > 0) {
         console.log(`[AI4A11y] Found ${emptyAltImages.length} empty-alt images`);
-        for (const img of emptyAltImages)
-          await generateImageAlt(img);
+        for (const img of emptyAltImages) await generateImageAlt(img);
       }
       const canvases = findCanvasElements();
       if (canvases.length > 0) {
         console.log(`[AI4A11y] Found ${canvases.length} canvas elements`);
-        for (const canvas of canvases)
-          await generateCanvasDescription(canvas);
+        for (const canvas of canvases) await generateCanvasDescription(canvas);
       }
     }
-    fixTargetBlankLinks();
-    fixPositiveTabindexElements();
+    if (isEnabled("autoVideoDescribe")) {
+      const videos = Array.from(document.querySelectorAll("video")).filter((v) => !v.dataset.ai4a11yProcessed && !v.getAttribute("aria-label"));
+      if (videos.length > 0) {
+        console.log(`[AI4A11y] Describing ${videos.length} videos`);
+        for (const video of videos) {
+          await generateVideoDescription(video).catch((e) => console.warn("[AI4A11y] Video description failed:", e));
+        }
+      }
+    }
+    if (isEnabled("autoFixLabels")) {
+      const ambiguousLinks = findAmbiguousLinks();
+      if (ambiguousLinks.length > 0) {
+        console.log(`[AI4A11y] Improving ${ambiguousLinks.length} ambiguous links`);
+        await improveAmbiguousLinks(ambiguousLinks);
+      }
+      await fixAllTables();
+    }
+    if (isEnabled("autoWcagFix")) {
+      fixLandmarks();
+    }
+    document.querySelectorAll('a[target="_blank"]').forEach((link) => {
+      if ((link.getAttribute("rel") || "").includes("noopener")) return;
+      fixTargetBlank(link);
+    });
+    document.querySelectorAll("[tabindex]").forEach((el) => {
+      if (parseInt(el.getAttribute("tabindex")) > 0) fixPositiveTabindex(el);
+    });
   }
   async function runTextProcessing() {
     if (isEnabled("autoSimplify")) {
       const complexText = findComplexText();
       if (complexText.length > 0) {
         console.log(`[AI4A11y] Simplifying ${complexText.length} text blocks`);
-        for (const el of complexText)
-          await simplifyText2(el);
+        for (const el of complexText) await simplifyText2(el);
       }
     }
     if (isEnabled("autoSummarize")) {
       const longBlocks = findLongContent();
       if (longBlocks.length > 0) {
         console.log(`[AI4A11y] Summarizing ${longBlocks.length} long blocks`);
-        for (const el of longBlocks)
-          await summarizeContent(el);
+        for (const el of longBlocks) await summarizeContent(el);
       }
     }
   }
   function findComplexText() {
     return Array.from(document.querySelectorAll("p, li, td, div")).filter((el) => {
-      if (el.dataset.ai4a11yProcessed)
-        return false;
-      if (el.querySelector("p, div, article, section"))
-        return false;
+      if (el.dataset.ai4a11yProcessed) return false;
+      if (el.querySelector("p, div, article, section")) return false;
       return el.textContent.length > 300;
     });
   }
   function findLongContent() {
     return Array.from(document.querySelectorAll("p, article, section, .article-body")).filter((el) => {
       var _a;
-      if (el.dataset.ai4a11ySummarize)
-        return false;
-      if (el.dataset.ai4a11yProcessed)
-        return false;
-      if (el.closest("[data-ai4a11y-summarize]"))
-        return false;
+      if (el.dataset.ai4a11ySummarize) return false;
+      if (el.dataset.ai4a11yProcessed) return false;
+      if (el.closest("[data-ai4a11y-summarize]")) return false;
       return ((_a = el.textContent) == null ? void 0 : _a.trim().length) > 500;
-    });
-  }
-  function fixTargetBlankLinks() {
-    document.querySelectorAll('a[target="_blank"]').forEach((link) => {
-      if (link.dataset.ai4a11yProcessed)
-        return;
-      const rel = link.getAttribute("rel") || "";
-      if (rel.includes("noopener"))
-        return;
-      const parts = rel.split(/\s+/).filter(Boolean);
-      if (!parts.includes("noopener"))
-        parts.push("noopener");
-      if (!parts.includes("noreferrer"))
-        parts.push("noreferrer");
-      link.setAttribute("rel", parts.join(" "));
-      link.dataset.ai4a11yProcessed = "true";
-    });
-  }
-  function fixPositiveTabindexElements() {
-    document.querySelectorAll("[tabindex]").forEach((el) => {
-      if (el.dataset.ai4a11yProcessed)
-        return;
-      const val = parseInt(el.getAttribute("tabindex"));
-      if (val > 0) {
-        el.setAttribute("tabindex", "0");
-        el.dataset.ai4a11yProcessed = "true";
-      }
     });
   }
   function revertAll() {
@@ -3288,10 +3604,8 @@ ${chunk}
       el.classList.remove("ai4a11y-simplified");
     });
     document.querySelectorAll("a.ai4a11y-adapted").forEach((link) => {
-      if (link.dataset.ai4a11yOriginal) {
-        link.textContent = link.dataset.ai4a11yOriginal;
-        link.classList.remove("ai4a11y-adapted");
-      }
+      link.removeAttribute("aria-label");
+      link.classList.remove("ai4a11y-adapted");
     });
     document.querySelectorAll(".ai4a11y-contrast-fixed").forEach((el) => {
       if (el.dataset.ai4a11yOriginalColor) {
@@ -3319,8 +3633,7 @@ ${chunk}
     }
     if (msg.type === "setEnabled") {
       updateSettings({ enabled: msg.enabled });
-      if (!msg.enabled)
-        revertAll();
+      if (!msg.enabled) revertAll();
       sendResponse({ success: true });
       return true;
     }
@@ -3329,8 +3642,7 @@ ${chunk}
         const r = await sendMessage({ type: "getSettings" });
         return r == null ? void 0 : r.result;
       }).then(() => {
-        if (msg.rescan)
-          rescan();
+        if (msg.rescan) rescan();
       });
       sendResponse({ success: true });
       return true;

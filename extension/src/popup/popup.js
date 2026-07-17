@@ -1,7 +1,13 @@
 /**
  * AI for Accessibility - Popup Controller
  * Flat UI with inline controls
+ *
+ * Bundled by extension/src/build.js → popup.bundle.js.
+ * Profile presets come from the shared profiles module (tools/profiles/),
+ * so the popup, content script, and CLI all read the same data.
  */
+
+import { mergeProfileTools } from '../../../tools/profiles/settings.js';
 
 // Safe element setters
 function setChecked(id, value) {
@@ -26,11 +32,14 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
+// Storage keys whose UI control has a different element id
+const KEY_TO_ELEMENT = { colorFilter: 'colorBlindMode' };
+
 // Sync settings changes from other sources (e.g., content script)
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
   for (const [key, { newValue }] of Object.entries(changes)) {
-    const el = document.getElementById(key);
+    const el = document.getElementById(KEY_TO_ELEMENT[key] || key);
     if (el) {
       if (el.type === 'checkbox') el.checked = newValue;
       else if (el.type === 'range' || el.tagName === 'SELECT') el.value = newValue;
@@ -61,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settings = await chrome.storage.sync.get([
     'enabled', 'autoWcagFix', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoFixLabels', 'autoCaptions', 'autoVideoDescribe',
     'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands', 'motionReducer', 'focusMode',
-    'hideDistractions', 'showProgress', 'colorBlindMode',
+    'hideDistractions', 'showProgress', 'colorFilter', 'colorBlindMode',
     'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
     'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'speechRate',
     'geminiKey', 'falKey'
@@ -173,14 +182,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Color blind mode - load from storage
+  // Color filter - load from storage (canonical key: colorFilter;
+  // colorBlindMode read as legacy fallback)
   const colorBlindEl = document.getElementById('colorBlindMode');
-  if (settings.colorBlindMode) {
-    colorBlindEl.value = settings.colorBlindMode;
+  const savedColorFilter = settings.colorFilter || settings.colorBlindMode;
+  if (savedColorFilter) {
+    colorBlindEl.value = savedColorFilter;
   }
 
   colorBlindEl.addEventListener('change', async (e) => {
-    await chrome.storage.sync.set({ colorBlindMode: e.target.value });
+    await chrome.storage.sync.set({ colorFilter: e.target.value });
     if (e.target.value === 'none') {
       sendToContent({ type: 'disableTool', tool: 'ColorBlindMode' });
     } else {
@@ -298,126 +309,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Evidence-based presets for different ability profiles
-  // Sources: W3C WCAG, W3C COGA, WebAIM Low Vision Survey, AASPIRE autism study,
-  // PMC peer-reviewed research, NNGroup UX research
-  const presets = {
-    blind: {
-      // Screen reader users: structure, labels, descriptions matter
-      // ALL visual settings irrelevant (can't see them)
-      autoWcagFix: true,
-      autoFixLabels: true,
-      autoDescribe: true,
-      autoVideoDescribe: true,
-      keyboardNav: true
-    },
-    lowVision: {
-      // WebAIM survey: 150%+ font, 2.0 line height, enhanced contrast
-      // WCAG 1.4.12: letter-spacing 0.12em minimum
-      // Large cursor + focus for tracking
-      autoWcagFix: true,
-      fontScale: 150,
-      lineHeight: 2.0,
-      letterSpacing: 0.12,
-      largeCursor: true,
-      enhanceFocus: true
-    },
-    colorBlind: {
-      // Don't assume filter type - user can select in Visual Assist
-      // Image descriptions help with color-coded charts/infographics
-      autoDescribe: true,
-      enhanceFocus: true
-    },
-    deaf: {
-      // Captions essential, visual focus for non-audio navigation
-      // Don't need image descriptions (can see)
-      autoCaptions: true,
-      enhanceFocus: true,
-      autoDescribe: false,
-      autoVideoDescribe: false
-    },
-    motor: {
-      // Alternative input methods: keyboard, voice
-      // WCAG fixes for proper focus order, labels for voice targeting
-      autoWcagFix: true,
-      autoFixLabels: true,
-      largeCursor: true,
-      enhanceFocus: true,
-      keyboardNav: true,
-      voiceCommands: true
-    },
-    dyslexia: {
-      // Validated: letter spacing 0.12em (WCAG 1.4.12, McLeish study)
-      // Line height 2.0 helps tracking
-      // Focus mode reduces visual noise
-      // Note: OpenDyslexic font has NO peer-reviewed evidence
-      fontScale: 115,
-      lineHeight: 2.0,
-      letterSpacing: 0.12,
-      focusMode: true
-    },
-    adhd: {
-      // Key: reduce distractions (W3C COGA)
-      // Progress indicators help task completion
-      // Summaries help with long content (TL;DR)
-      autoSummarize: true,
-      focusMode: true,
-      hideDistractions: true,
-      showProgress: true,
-      motionReducer: true
-    },
-    cognitive: {
-      // W3C COGA: grade 6-8 reading level, clear progress
-      // Simplify + summarize for comprehension
-      fontScale: 120,
-      lineHeight: 1.8,
-      autoSimplify: true,
-      autoSummarize: true,
-      focusMode: true,
-      hideDistractions: true,
-      showProgress: true
-    },
-    elderly: {
-      // Combines: vision decline, hearing loss, cognitive changes
-      // W3C WAI + NNG: 130% font, spacing, simplified text
-      // Captions for age-related hearing loss
-      fontScale: 130,
-      lineHeight: 1.7,
-      letterSpacing: 0.12,
-      largeCursor: true,
-      enhanceFocus: true,
-      autoSimplify: true,
-      autoCaptions: true,
-      focusMode: true,
-      hideDistractions: true,
-      showProgress: true
-    },
-    anxiety: {
-      // Progress indicators reduce uncertainty (NNGroup)
-      // Calm visual environment
-      focusMode: true,
-      hideDistractions: true,
-      showProgress: true,
-      motionReducer: true,
-      lineHeight: 1.8
-    },
-    sensory: {
-      // Autism/sensory processing: overload prevention
-      // Motion removal critical (ACM 2022)
-      // NO progress spinners - they cause stress
-      motionReducer: true,
-      focusMode: true,
-      hideDistractions: true,
-      showProgress: false
-    },
-    photosensitive: {
-      // Light/motion sensitivity, migraine/seizure prevention
-      // WCAG 2.3.3: no flashing, reduce motion
-      darkMode: true,
-      motionReducer: true
-    }
-  };
-
   // Multi-profile selection with checkboxes
   const profileCheckboxes = document.querySelectorAll('.profile-checkbox input');
   const profileCountEl = document.getElementById('profileCount');
@@ -455,28 +346,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       .map(cb => cb.value);
   }
 
-  // Merge multiple presets (booleans: OR, numbers: max)
-  // Must match logic in tools/profiles/settings.js applyProfiles()
-  function mergePresets(profileIds) {
-    const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
-    const merged = {};
-
-    for (const id of profileIds) {
-      const preset = presets[id];
-      if (!preset) continue;
-
-      for (const [key, value] of Object.entries(preset)) {
-        if (numericKeys.includes(key) && typeof value === 'number') {
-          merged[key] = Math.max(merged[key] || 0, value);
-        } else if ((key === 'colorFilter' || key === 'colorBlindMode') && value !== 'none') {
-          merged[key] = value;
-        } else {
-          merged[key] = merged[key] || value;
-        }
-      }
-    }
-    return merged;
-  }
+  // Merging lives in the shared profiles module so the popup, content
+  // script, and CLI can never disagree about what a profile enables.
+  const mergePresets = mergeProfileTools;
 
   profileCheckboxes.forEach(cb => {
     cb.addEventListener('change', async () => {
@@ -546,7 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     togglesOff.forEach(id => storageReset[id] = false);
     togglesOn.forEach(id => storageReset[id] = true);
     storageReset.contrastMode = 'none';
-    storageReset.colorBlindMode = 'none';
+    storageReset.colorFilter = 'none';
     storageReset.speechRate = 1;
     storageReset.fontScale = 100;
     storageReset.lineHeight = 1.5;
@@ -613,11 +485,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       sendFocusModeUpdate();
     }
 
-    // Color blind mode
-    if (preset.colorBlindMode) {
-      setValue('colorBlindMode', preset.colorBlindMode);
-      chrome.storage.sync.set({ colorBlindMode: preset.colorBlindMode });
-      sendToContent({ type: 'enableTool', tool: 'ColorBlindMode', options: preset.colorBlindMode });
+    // Color filter
+    if (preset.colorFilter && preset.colorFilter !== 'none') {
+      setValue('colorBlindMode', preset.colorFilter);
+      chrome.storage.sync.set({ colorFilter: preset.colorFilter });
+      sendToContent({ type: 'enableTool', tool: 'ColorBlindMode', options: preset.colorFilter });
     }
 
     // AI settings

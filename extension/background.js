@@ -1125,7 +1125,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       'enabled', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoWcagFix', 'autoFixLabels',
       'autoVideoDescribe', 'autoCaptions', 'fixContrast',
       'darkMode', 'readerMode', 'focusMode', 'keyboardNav', 'voiceCommands', 'motionReducer',
-      'hideDistractions', 'showProgress', 'colorBlindMode',
+      'hideDistractions', 'showProgress', 'colorFilter', 'colorBlindMode',
       'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
       'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
       'selectedProfiles', 'geminiKey', 'falKey'
@@ -1165,7 +1165,7 @@ chrome.runtime.onInstalled.addListener(() => {
         motionReducer: false,
         hideDistractions: false,
         showProgress: true,
-        colorBlindMode: 'none',
+        colorFilter: 'none',
         contrastMode: 'none',
         // Visual assist
         fontScale: 100,
@@ -1177,7 +1177,7 @@ chrome.runtime.onInstalled.addListener(() => {
         readingGuide: false,
         speechRate: 1,
         // Profile
-        selectedProfile: 'none'
+        selectedProfiles: []
       });
     }
   });
