@@ -47,7 +47,8 @@ export function emptyAbilityModel() {
       font: 'standard',   // 'standard' | 'dyslexia-friendly'
     },
     vision: {
-      contrast: 'standard',      // 'standard' | 'high'
+      contrast: 'standard',      // 'standard' | 'high' (device-independent)
+      contrastStyle: null,       // the specific high-contrast variant, when known ('light' | 'yellow-black') — preserved so the web polarity round-trips
       lightPreference: 'standard', // 'standard' | 'dark'
       colorVision: 'typical',    // 'typical' | 'protanopia' | 'deuteranopia' | 'tritanopia'
       descriptions: false,       // needs described visuals (images, video)
@@ -146,6 +147,9 @@ export function deriveAbilityModel(profile = {}, settings = {}, opts = {}) {
   }
   if (settings.contrastMode && settings.contrastMode !== 'none') {
     m.vision.contrast = 'high';
+    // Keep the specific variant so a chosen polarity (e.g. yellow-on-black for
+    // photosensitivity) isn't silently flipped to white-on-black on round-trip.
+    m.vision.contrastStyle = settings.contrastMode;
     conf('vision.contrast', 0.9, 'settings');
   }
   const colorFilter = settings.colorFilter || settings.colorBlindMode;

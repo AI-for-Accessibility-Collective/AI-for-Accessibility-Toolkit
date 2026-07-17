@@ -26,7 +26,9 @@
       },
       vision: {
         contrast: "standard",
-        // 'standard' | 'high'
+        // 'standard' | 'high' (device-independent)
+        contrastStyle: null,
+        // the specific high-contrast variant, when known ('light' | 'yellow-black') — preserved so the web polarity round-trips
         lightPreference: "standard",
         // 'standard' | 'dark'
         colorVision: "typical",
@@ -139,6 +141,7 @@
     }
     if (settings.contrastMode && settings.contrastMode !== "none") {
       m.vision.contrast = "high";
+      m.vision.contrastStyle = settings.contrastMode;
       conf("vision.contrast", 0.9, "settings");
     }
     const colorFilter = settings.colorFilter || settings.colorBlindMode;
@@ -195,7 +198,7 @@
   function parseSkill(markdown) {
     let src = String(markdown || "").replace(/\r\n?/g, "\n");
     const lines = src.split("\n");
-    const fmStart = lines.findIndex((l) => l.trim() === "---");
+    const fmStart = lines.findIndex((l, i) => l.trim() === "---" && /^\s*[a-zA-Z][\w-]*\s*:/.test(lines[i + 1] || ""));
     if (fmStart > 0) src = lines.slice(fmStart).join("\n");
     const fm = src.match(FRONTMATTER_RE);
     const front = fm ? parseFrontmatter(fm[1]) : {};
@@ -754,8 +757,13 @@ Rules:
             return true;
           }
         }
-        const removed = await DS().patch("mine.suppressions", (s) => s.filter((x) => x.id !== id));
-        return Array.isArray(removed);
+        let found = false;
+        await DS().patch("mine.suppressions", (s) => {
+          const next = (s || []).filter((x) => x.id !== id);
+          found = next.length !== (s || []).length;
+          return next;
+        });
+        return found;
       },
       async listProposals(status = "pending") {
         const props = await DS().get("mine.proposals");
@@ -1022,6 +1030,9 @@ Return ONLY valid JSON with:
         if (!prop || prop.status !== "pending") return { ok: false, reason: "not-pending" };
         const now = clock.now();
         if (response === "accept") {
+          if (prop.change?.op === "profile-set" && !/^fields\.[A-Za-z]/.test(String(prop.change.path || ""))) {
+            return { ok: false, reason: "profile-path-not-allowed" };
+          }
           prop.status = "accepted";
           if (prop.change?.op === "profile-set") {
             await this.setProfileField(prop.change.path, prop.change.value);

@@ -995,7 +995,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // --- Librarian (personal memory/profile agent) ---
   // Fast lane: deterministic queries + mechanical writes. The slow lane
   // (extract/reflect) runs on alarms; the *Now variants exist for debugging.
-  if (msg.type && msg.type.startsWith('librarian')) {
+  if (msg.type && (msg.type.startsWith('librarian') || msg.type.startsWith('broker'))) {
     const L = globalThis.Librarian;
     if (!L) { sendResponse({ error: 'librarian not loaded' }); return false; }
     (async () => {

@@ -74,10 +74,13 @@ function extractRecipe(body) {
 export function parseSkill(markdown) {
   // Normalize line endings and tolerate preamble the LLM may add before the
   // frontmatter (e.g. "Here's your skill:\n\n---\n..."): drop everything up to
-  // the first line that is exactly `---`.
+  // the frontmatter opener. Anchor on a `---` that is *immediately followed by
+  // a `key: value` line*, not just any bare `---` — otherwise a stray markdown
+  // horizontal rule in the preamble gets mistaken for the opener and swallows
+  // the real frontmatter into the body.
   let src = String(markdown || '').replace(/\r\n?/g, '\n');
   const lines = src.split('\n');
-  const fmStart = lines.findIndex(l => l.trim() === '---');
+  const fmStart = lines.findIndex((l, i) => l.trim() === '---' && /^\s*[a-zA-Z][\w-]*\s*:/.test(lines[i + 1] || ''));
   if (fmStart > 0) src = lines.slice(fmStart).join('\n');
   const fm = src.match(FRONTMATTER_RE);
   const front = fm ? parseFrontmatter(fm[1]) : {};

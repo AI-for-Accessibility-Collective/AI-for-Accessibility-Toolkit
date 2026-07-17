@@ -514,10 +514,16 @@ export function createLibrarian({
           return true;
         }
       }
-      // Suppressions are deletable too (un-suppress).
-      const removed = await DS().patch('mine.suppressions', (s) =>
-        s.filter(x => x.id !== id));
-      return Array.isArray(removed);
+      // Suppressions are deletable too (un-suppress). Report whether a record
+      // actually went away — filter() always returns an array, so length is
+      // the only honest signal.
+      let found = false;
+      await DS().patch('mine.suppressions', (s) => {
+        const next = (s || []).filter(x => x.id !== id);
+        found = next.length !== (s || []).length;
+        return next;
+      });
+      return found;
     },
 
     async listProposals(status = 'pending') {
@@ -814,6 +820,16 @@ Return ONLY valid JSON with:
       const now = clock.now();
 
       if (response === 'accept') {
+        // A profile-set proposal may only write ability fields (`fields.*`) —
+        // the contract the extraction prompt promises. Refuse control-plane
+        // paths (metaPreferences, memoryPaused, schemaVersion, …): an inferred
+        // proposal the user only ever sees as friendly prose must never
+        // silently rewrite consent or rate-limit settings. (The broker bans
+        // profile-set outright for external apps; this closes the same hole on
+        // the internal extraction path.)
+        if (prop.change?.op === 'profile-set' && !/^fields\.[A-Za-z]/.test(String(prop.change.path || ''))) {
+          return { ok: false, reason: 'profile-path-not-allowed' };
+        }
         prop.status = 'accepted';
         if (prop.change?.op === 'profile-set') {
           await this.setProfileField(prop.change.path, prop.change.value);

@@ -23,7 +23,9 @@ export function renderWebSettings(model) {
   }
   if (model.text.font === 'dyslexia-friendly') s.dyslexiaFont = true;
 
-  if (model.vision.contrast === 'high') s.contrastMode = 'light';
+  // Render the exact variant the user chose when we know it; fall back to
+  // 'light' only for models that arrived from another surface without one.
+  if (model.vision.contrast === 'high') s.contrastMode = model.vision.contrastStyle || 'light';
   if (model.vision.lightPreference === 'dark') s.darkMode = true;
   if (model.vision.colorVision !== 'typical') s.colorFilter = model.vision.colorVision;
   if (model.vision.descriptions) {

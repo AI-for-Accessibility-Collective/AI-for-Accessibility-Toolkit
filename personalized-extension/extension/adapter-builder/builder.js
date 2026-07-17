@@ -913,8 +913,13 @@ function lintGenerated(code, useAI) {
     { re: /document\.write\s*\(/, msg: 'uses document.write' },
     { re: /location\.(href|assign|replace)\s*=/, msg: 'navigates the page' },
     { re: /window\.open\s*\(/, msg: 'opens a new window' },
-    { re: /(?:^|[^.\w])fetch\s*\(/, msg: 'fetches a URL directly' },
+    // \b (not [^.\w]) so member-access forms like window.fetch(/self.fetch( are
+    // caught too — the old negative-lookback let any `.fetch(` slip through.
+    { re: /\bfetch\s*\(/, msg: 'fetches a URL directly' },
     { re: /XMLHttpRequest/, msg: 'uses XMLHttpRequest' },
+    { re: /\bnew\s+WebSocket\b/, msg: 'opens a WebSocket' },
+    { re: /\.sendBeacon\s*\(/, msg: 'sends a network beacon' },
+    { re: /\bnew\s+Function\s*\(/, msg: 'uses the Function constructor (eval-equivalent)' },
   ];
   for (const { re, msg } of bad) if (re.test(code)) issues.push(msg);
   // The user opted out of AI, so the skill must not call Gemini at runtime.

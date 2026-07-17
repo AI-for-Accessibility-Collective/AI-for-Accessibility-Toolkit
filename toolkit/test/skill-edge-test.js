@@ -51,6 +51,8 @@ check('parses recipe', g.recipe.adapters.length === 2 && g.recipe.adapters[0].id
 // ---- PARSING: edge cases (what LLMs actually emit) --------------------------
 check('tolerates preamble before frontmatter',
   parseSkill('Sure! Here is your skill:\n\n' + GOOD).name === 'reading-aid');
+check('preamble with a stray --- divider does not swallow the real frontmatter',
+  parseSkill('Sure, let me think.\n\n---\n\nHere is my reasoning.\n\n' + GOOD).name === 'reading-aid');
 check('tolerates CRLF line endings',
   parseSkill(GOOD.replace(/\n/g, '\r\n')).name === 'reading-aid');
 check('tolerates whole doc wrapped in ```markdown fence (via parseBuiltSkill)',

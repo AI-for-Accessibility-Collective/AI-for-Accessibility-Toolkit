@@ -156,9 +156,16 @@ async function applySkill(skill, btn) {
     setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1800);
     return;
   }
-  const { plan } = await sendBg({ type: 'librarianResolveSkill', skill });
+  const resp = await sendBg({ type: 'librarianResolveSkill', skill });
+  if (!resp || resp.error || !resp.plan) {
+    // Don't claim success when the skill couldn't be resolved — the whole
+    // point of Apply is that the user can trust it happened.
+    btn.textContent = 'Could not apply';
+    setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1800);
+    return;
+  }
   try {
-    await chrome.tabs.sendMessage(tab.id, { type: 'applySkill', plan });
+    await chrome.tabs.sendMessage(tab.id, { type: 'applySkill', plan: resp.plan });
     btn.textContent = 'Applied ✓';
   } catch {
     btn.textContent = 'Reload the page, then retry';

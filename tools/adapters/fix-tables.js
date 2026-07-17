@@ -29,9 +29,17 @@ export async function fixTableHeaders(table) {
     return false;
   }
 
-  // Heuristic: first row is a header if every cell is short text and no cell
-  // repeats in the column below it.
-  const looksLikeHeader = firstRowCells.every((cell, i) => {
+  // Numbers, currency, percentages, and dates are data, not header labels.
+  const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*%?$/.test(t) ||
+    /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t);
+
+  // Heuristic: the first row is a header if every cell is short text that
+  // doesn't repeat in the column below it — AND the row isn't mostly data
+  // values. Without the data check, a genuinely headerless table with short,
+  // distinct first-row values (day names, ids, numbers) gets its real data
+  // promoted to headers, inventing false semantics.
+  const dataLikeCount = firstRowCells.filter(c => isDataLike(c.textContent?.trim() || '')).length;
+  const looksLikeHeader = dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
     const text = cell.textContent?.trim() || '';
     if (!text || text.length > 40) return false;
     const below = rows.slice(1, 4).map(r => r.querySelectorAll('td')[i]?.textContent?.trim());

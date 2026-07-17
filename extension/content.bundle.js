@@ -277,6 +277,9 @@
     const rect = el.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
   }
+  function looksLikeNavClass(el) {
+    return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
+  }
   function markProcessed(el, status = "done") {
     el.dataset.ai4a11yProcessed = status;
   }
@@ -1586,7 +1589,12 @@ ${chunk}
       markProcessed(table, "skipped");
       return false;
     }
-    const looksLikeHeader = firstRowCells.every((cell, i) => {
+    const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*%?$/.test(t) || /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t);
+    const dataLikeCount = firstRowCells.filter((c) => {
+      var _a;
+      return isDataLike(((_a = c.textContent) == null ? void 0 : _a.trim()) || "");
+    }).length;
+    const looksLikeHeader = dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
       var _a;
       const text = ((_a = cell.textContent) == null ? void 0 : _a.trim()) || "";
       if (!text || text.length > 40) return false;
@@ -1665,7 +1673,7 @@ ${chunk}
       var _a;
       const tag = el.tagName.toLowerCase();
       if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
-      if (el.matches('[role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"]')) return false;
+      if (el.getAttribute("role")) return false;
       if ((((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) <= 100) return false;
       if (el.querySelector(LANDMARK_SELECTOR)) return false;
       return true;
@@ -1695,6 +1703,7 @@ ${chunk}
     let fixed = 0;
     document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
       var _a;
+      if (!looksLikeNavClass(el)) return;
       if (el.closest('nav, [role="navigation"]')) return;
       const links = el.querySelectorAll("a").length;
       const textLength = ((_a = el.textContent) == null ? void 0 : _a.trim().length) || 1;
