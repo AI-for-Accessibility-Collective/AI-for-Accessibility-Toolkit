@@ -42,7 +42,10 @@ export function rgbToHex(r, g, b) {
 
 export function getEffectiveBackground(element) {
   let el = element;
-  while (el && el !== document.body) {
+  // Walk through body and documentElement too — pages often set the page
+  // background there (e.g. dark themes), and stopping early wrongly
+  // reports white.
+  while (el) {
     const bg = getComputedStyle(el).backgroundColor;
     if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return bg;
     el = el.parentElement;

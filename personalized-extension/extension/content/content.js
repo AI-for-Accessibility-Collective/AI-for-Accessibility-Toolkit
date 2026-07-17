@@ -7,9 +7,7 @@ import { ReaderMode } from '../../skills/builtin/reader-mode.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
-import { FixContrast } from '../../skills/builtin/fix-contrast.js';
 import { SimplifyText } from '../../skills/builtin/simplify-text.js';
-import { AutoCaptions } from '../../skills/builtin/auto-captions.js';
 import { VoiceCommands } from '../../skills/builtin/voice-commands.js';
 import { ReadAloud } from '../../skills/builtin/read-aloud.js';
 import { GenerateLabels } from '../../skills/builtin/generate-labels.js';
@@ -67,11 +65,7 @@ function enableTool(toolName, options) {
 
   try {
     if (options !== undefined) {
-      if (toolName === 'ColorBlindMode') {
-        tool.enable(options);
-      } else {
-        tool.enable(options);
-      }
+      tool.enable(options);
     } else {
       tool.enable();
     }
@@ -276,6 +270,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   } else if (msg.type === 'applyProfile') {
     if (msg.settings) {
       applyProfileSettings(msg.settings);
+    }
+    sendResponse({ success: true });
+  } else if (msg.type === 'applySkill') {
+    // Apply a skill's resolved settings to this page. The caller (Skills
+    // manager) already got explicit user consent via its "Apply" button, so
+    // this is a deliberate user action, not silent adaptation. The resolved
+    // plan is just settings, so it flows through the same adapter path.
+    if (msg.plan?.settings) {
+      applyProfileSettings(msg.plan.settings);
     }
     sendResponse({ success: true });
   }
