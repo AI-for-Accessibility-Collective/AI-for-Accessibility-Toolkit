@@ -237,6 +237,53 @@ async function run() {
     check('auditor: reports no banner/contentinfo/navigation on div-soup', !audit.hasBanner && !audit.hasContentinfo && !audit.hasNavigation);
     check('auditor: flags the unmarked nav cluster', audit.unmarkedNavCandidates === 1 && findUnmarkedNavigation().length === 1);
   }
+
+  // ── REGRESSIONS (from code review) ───────────────────────────────────────────
+
+  // A headerless table whose first row is short but is DATA (day names +
+  // numbers) must not have its real data promoted to headers.
+  {
+    const doc = mount(`
+      <table>
+        <tr><td>Mon</td><td>100</td><td>110</td></tr>
+        <tr><td>Tue</td><td>105</td><td>108</td></tr>
+        <tr><td>Wed</td><td>102</td><td>115</td></tr>
+        <tr><td>Thu</td><td>98</td><td>120</td></tr>
+      </table>`);
+    fakeAI({ inferColumnHeader: () => 'Metric' });
+    const table = doc.querySelector('table');
+    await fixTableHeaders(table);
+    const ths = Array.from(table.querySelectorAll('th')).map(t => t.textContent);
+    check('tables: does not promote data rows (day names + numbers) to headers',
+      !ths.some(t => ['Mon', 'Tue', 'Wed', 'Thu', '100', '105'].includes(t)));
+    check('tables: the real first-row data survives as data cells', !!Array.from(table.querySelectorAll('td')).find(td => td.textContent === 'Mon'));
+  }
+
+  // ensureMainLandmark must never overwrite an existing (non-landmark) role.
+  {
+    const doc = mount(`<div class="content" role="region" aria-label="Featured"><p>${'Region content that is the biggest block on the page. '.repeat(4)}</p></div>`);
+    fakeAI();
+    const added = ensureMainLandmark();
+    check('landmarks: never overwrites an existing role (region preserved)', added === false && doc.querySelector('.content').getAttribute('role') === 'region');
+  }
+
+  // "unavailable" contains the substring "nav" but is not navigation.
+  {
+    const doc = mount(`
+      <div class="product-unavailable-notice"><a href="/a">contact us</a> <a href="/b">similar items</a> <a href="/c">browse catalog</a></div>
+      <div class="content"><p>${'Body copy. '.repeat(30)}</p></div>`);
+    fakeAI();
+    ensureStructuralLandmarks();
+    check('landmarks: "unavailable" is not mislabeled as navigation', !doc.querySelector('.product-unavailable-notice').getAttribute('role'));
+    check('auditor: "unavailable" is not counted as an unmarked nav', auditLandmarks().unmarkedNavCandidates === 0);
+  }
+
+  // A per-article <header> is not a page banner.
+  {
+    mount(`<article><header>Article title</header><p>${'text '.repeat(30)}</p></article>`);
+    fakeAI();
+    check('auditor: a nested per-article header is not a page banner', auditLandmarks().hasBanner === false);
+  }
 }
 
 run().then(() => {

@@ -131,6 +131,19 @@ function check(name, cond) {
   const p3 = await L.getProfile();
   check('accept applies profile change', acc.ok && p3.fields?.hearing?.captions === true);
 
+  // A profile-set proposal must never reach control-plane fields (consent,
+  // rate limits) — only ability fields under fields.* — even on accept. The
+  // user sees only the friendly aspectLabel, so a path outside fields.* is a
+  // silent-rewrite vector and must be refused.
+  const beforeCap = (await L.getProfile()).metaPreferences.maxProposalsPerWeek;
+  await L._draftProposals(
+    [{ aspect: 'profile.metaPreferences.maxProposalsPerWeek', aspectLabel: 'proposal cadence', change: { op: 'profile-set', path: 'metaPreferences.maxProposalsPerWeek', value: 999999 }, rationale: 'r', evidence: [] }],
+    { suppressions: await DS.get('mine.suppressions'), profile: await L.getProfile(), now: Date.now() });
+  const cpProp = (await L.listProposals()).find(p => p.aspect === 'profile.metaPreferences.maxProposalsPerWeek');
+  const cpResp = await L.respondToProposal(cpProp.id, 'accept');
+  const afterCap = (await L.getProfile()).metaPreferences.maxProposalsPerWeek;
+  check('profile-set proposal cannot write control-plane fields', cpResp.ok === false && afterCap === beforeCap);
+
   // 8. Reflection: promotion (3 origins, same category+setting) + hygiene
   for (const o of ['cnn.com', 'bbc.com', 'reuters.com']) {
     await DS.setMemoryShard(`origin:${o}`, [mk(`origin:${o}`, { motionReducer: true })]);
@@ -155,6 +168,8 @@ function check(name, cond) {
   const del = await L.deleteMemory('m-origin:nytimes.com-fontScale');
   const nyt = await DS.getMemoryShard('origin:nytimes.com');
   check('deleteMemory removes record', del === true && !nyt.some(r => r.id === 'm-origin:nytimes.com-fontScale'));
+  const delMiss = await L.deleteMemory('m-does-not-exist-anywhere');
+  check('deleteMemory reports false when nothing matched', delMiss === false);
 
   // 10. interpretNeeds prompt: registry-grounded + profile-conditioned
   const inp = await L.interpretNeedsPrompt('Make text easier to read for me on news sites');

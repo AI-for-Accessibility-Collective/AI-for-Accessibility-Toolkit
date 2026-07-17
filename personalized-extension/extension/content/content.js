@@ -372,6 +372,14 @@ function detectPageContexts() {
 
 async function init() {
   try {
+    // Master switch. When the user has turned the extension off, apply nothing —
+    // not the stored baseline, not an auto-apply profile, not learned Librarian
+    // preferences. initFromStorage() checks this too, but profile auto-apply and
+    // the Librarian overlay below run outside it, so the check must live here to
+    // honor the off state on a fresh navigation.
+    const master = await chrome.storage.sync.get('enabled');
+    if (master.enabled === false) return;
+
     const profilesResp = await sendMessageAsync({ type: 'getCustomProfiles' });
     const profiles = profilesResp?.profiles || [];
     const autoApplyProfiles = profiles.filter(p => p.autoApply && p.siteTypes?.length > 0);

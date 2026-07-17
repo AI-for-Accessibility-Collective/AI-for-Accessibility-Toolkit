@@ -286,10 +286,14 @@ Return ONLY the hex color (e.g. #1a2b3c), nothing else."""
             result = ask_claude_text(prompt, timeout=30)
             try:
                 import re
-                match = re.search(r'#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b', result)
-                if match:
-                    return match.group()
-                return None
+                text = (result or '').strip()
+                # Prefer an exact hex response; otherwise take the LAST hex in the
+                # text — a chatty model puts the *suggested* color last, after
+                # restating the bad one ("#1a2b3c has poor contrast, try #4d5e6f").
+                if re.fullmatch(r'#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}', text):
+                    return text
+                matches = re.findall(r'#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b', text)
+                return matches[-1] if matches else None
             except:
                 return None
 
@@ -1496,10 +1500,13 @@ def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
             env=_claude_cli_env(),
         )
         if result.returncode != 0:
-            return json.dumps({'error': f'cli failed: {result.stderr[:200]}'})
+            # Include an empty 'answer' so callers doing data.get('answer', result)
+            # degrade to "" (→ safe fallback) instead of leaking the raw error
+            # JSON into an aria-label / table header.
+            return json.dumps({'error': f'cli failed: {result.stderr[:200]}', 'answer': ''})
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        return json.dumps({'error': 'timeout'})
+        return json.dumps({'error': 'timeout', 'answer': ''})
 
 
 def plan_task(page, task, run_dir, context=""):

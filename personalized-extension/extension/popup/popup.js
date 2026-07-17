@@ -687,7 +687,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const label = settingLabels[key] || key;
         const displayVal = typeof value === 'boolean' ? (value ? 'ON' : 'OFF') : String(value);
         const reason = result.reasons?.[key] || '';
-        item.innerHTML = `<span class="setting-name">${escapeHtml(label)}: ${displayVal}</span><span class="setting-reason">${escapeHtml(reason)}</span>`;
+        item.innerHTML = `<span class="setting-name">${escapeHtml(label)}: ${escapeHtml(displayVal)}</span><span class="setting-reason">${escapeHtml(reason)}</span>`;
         listEl.appendChild(item);
       }
     }
@@ -902,7 +902,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const nameSpan = document.createElement('div');
       nameSpan.style.cssText = 'flex:1;min-width:0';
       nameSpan.innerHTML = `<div class="profile-item-name">${escapeHtml(p.name)}</div>` +
-        (p.siteTypes?.length ? `<div class="profile-item-sites">${p.siteTypes.join(', ')}</div>` : '');
+        (p.siteTypes?.length ? `<div class="profile-item-sites">${escapeHtml(p.siteTypes.join(', '))}</div>` : '');
 
       const applyBtn = document.createElement('button');
       applyBtn.className = 'profile-item-btn apply';

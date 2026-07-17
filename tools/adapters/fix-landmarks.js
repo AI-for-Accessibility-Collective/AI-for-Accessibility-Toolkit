@@ -1,5 +1,5 @@
 // Add missing ARIA landmarks so screen reader users can navigate by region
-import { markProcessed } from '../utils/dom.js';
+import { markProcessed, looksLikeNavClass } from '../utils/dom.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -23,7 +23,9 @@ export function ensureMainLandmark() {
   const isCandidate = (el) => {
     const tag = el.tagName.toLowerCase();
     if (['header', 'footer', 'nav', 'aside', 'script', 'style', 'noscript'].includes(tag)) return false;
-    if (el.matches('[role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"]')) return false;
+    // Never overwrite an existing role — setting role="main" would destroy a
+    // region/tabpanel/search/form/etc. semantic already on the element.
+    if (el.getAttribute('role')) return false;
     if ((el.textContent?.trim().length || 0) <= 100) return false;
     // Reject wrappers that contain their own landmark regions.
     if (el.querySelector(LANDMARK_SELECTOR)) return false;
@@ -64,6 +66,7 @@ export function ensureStructuralLandmarks() {
 
   // Top-of-body div that is mostly links → navigation
   document.querySelectorAll('div[class*="nav" i]:not([role])').forEach(el => {
+    if (!looksLikeNavClass(el)) return; // reject substring false-positives ("unavailable" etc.)
     if (el.closest('nav, [role="navigation"]')) return;
     const links = el.querySelectorAll('a').length;
     const textLength = el.textContent?.trim().length || 1;

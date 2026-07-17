@@ -39,6 +39,15 @@ export function getAccessibleName(el) {
   return el.textContent?.trim() || '';
 }
 
+// Does an element's class list actually name it as navigation? Guards against
+// the naive `[class*="nav" i]` substring match, which also hits words like
+// "unavailable" (u-nav-ailable). Matches nav / navbar / navigation as a token
+// unit — including suffix forms like "topnav" and "main-nav" — but not "nav"
+// buried mid-word.
+export function looksLikeNavClass(el) {
+  return Array.from(el.classList || []).some(c => /nav(bar|igation)?([-_]|$)/i.test(c));
+}
+
 // Mark element as processed by AI4A11y
 export function markProcessed(el, status = 'done') {
   el.dataset.ai4a11yProcessed = status;

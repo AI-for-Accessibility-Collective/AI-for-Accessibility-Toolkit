@@ -118,6 +118,19 @@ const librarian = createLibrarian({
   check('librarian.getAbilityModel carries supportAreas', m.supportAreas.includes('vision'));
   check('model renders back to the same web settings', renderWebSettings(m).fontScale === 150);
 
+  // Contrast polarity must survive the model round-trip — a chosen high-contrast
+  // variant (e.g. yellow-on-black for photosensitivity) must not silently flip
+  // to white-on-black when the model is re-rendered for the web.
+  for (const cm of ['light', 'yellow-black']) {
+    const cmModel = deriveAbilityModel({}, { contrastMode: cm });
+    check(`contrastMode "${cm}" derives high contrast`, cmModel.vision.contrast === 'high');
+    check(`contrastMode "${cm}" round-trips to web without flipping`, renderWebSettings(cmModel).contrastMode === cm);
+  }
+  // A model arriving from another surface (no web variant) still renders sanely.
+  const xrModel = deriveAbilityModel({}, { contrastMode: 'yellow-black' });
+  delete xrModel.vision.contrastStyle;
+  check('high-contrast model without a variant falls back to light on web', renderWebSettings(xrModel).contrastMode === 'light');
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
