@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic A11y — Skill Builder</title>
+  <link rel="stylesheet" href="skills.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="app-header" role="banner">
+    <div class="brand">
+      <svg class="brand-icon" width="28" height="28" viewBox="0 0 128 128" aria-hidden="true">
+        <circle cx="64" cy="64" r="64" fill="#1a73e8"/>
+        <text x="64" y="64" text-anchor="middle" dominant-baseline="central"
+              font-family="sans-serif" font-weight="bold" font-size="52" fill="white">A</text>
+      </svg>
+      <h1 class="brand-title">Skill Builder</h1>
+    </div>
+  </header>
+
+  <main id="main" class="skills-main">
+    <p class="phase-help">
+      A <strong>skill</strong> is a saved recipe that combines existing adapters to adapt pages for a
+      need — e.g. "reading aid" turns on larger text, a reading guide, and focus mode together.
+      The Engineer builds one from a plain-language description; you review it before it's saved.
+    </p>
+
+    <!-- Build a new skill -->
+    <section class="skills-build" aria-labelledby="build-heading">
+      <h2 id="build-heading">Build a skill</h2>
+      <label class="build-label" for="needInput">Describe what you need</label>
+      <textarea id="needInput" class="need-input" rows="2"
+        placeholder="e.g. Make news articles calmer and easier to read"></textarea>
+      <div class="phase-actions">
+        <button id="buildBtn" class="btn btn-primary">Build it</button>
+        <span id="buildStatus" class="build-status" role="status" aria-live="polite"></span>
+      </div>
+
+      <!-- Preview of the built skill, before saving -->
+      <div id="preview" class="skill-preview" hidden aria-live="polite">
+        <h3 id="previewName" class="preview-name"></h3>
+        <p id="previewDesc" class="preview-desc"></p>
+        <p class="preview-label">This skill applies:</p>
+        <ul id="previewAdapters" class="preview-adapters"></ul>
+        <div class="phase-actions">
+          <button id="saveBtn" class="btn btn-success">Save skill</button>
+          <button id="discardBtn" class="btn btn-text">Discard</button>
+        </div>
+        <p id="previewErrors" class="phase-error" hidden></p>
+      </div>
+    </section>
+
+    <!-- Existing skills -->
+    <section class="skills-list-section" aria-labelledby="list-heading">
+      <div class="list-header">
+        <h2 id="list-heading">Your skills</h2>
+        <button id="suggestBtn" class="btn btn-secondary" title="Find a skill that fits the current tab">
+          Suggest for current page
+        </button>
+      </div>
+      <p id="listStatus" class="build-status" role="status" aria-live="polite"></p>
+      <ul id="skillList" class="skill-list"></ul>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Skills compose adapters. Need a brand-new capability no adapter provides? Build one in the <a href="../adapter-builder/builder.html">Adapter Builder</a>.</p>
+  </footer>
+
+  <script src="skills.js"></script>
+</body>
+</html>
