@@ -1,0 +1,23 @@
+{
+  "name": "@ai4a11y/toolkit",
+  "version": "0.1.0",
+  "description": "Platform-agnostic core of the AI for Accessibility Toolkit: Librarian (personal memory/profile agent), Datastore, AbilityModel, and SurfaceAdapters behind platform ports",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./core/librarian": "./core/librarian.js",
+    "./core/datastore": "./core/datastore.js",
+    "./core/taxonomy": "./core/taxonomy.js",
+    "./core/ability-model": "./core/ability-model.js",
+    "./core/broker": "./core/broker.js",
+    "./core/skill": "./core/skill.js",
+    "./core/skill-builder": "./core/skill-builder.js",
+    "./surfaces/web": "./surfaces/web.js",
+    "./surfaces/xr": "./surfaces/xr.js"
+  },
+  "scripts": {
+    "test": "node test/ability-model-test.js && node test/broker-test.js && node test/skill-test.js && node test/skill-edge-test.js",
+    "demo:xr": "node hosts/xr-demo/demo.js",
+    "demo:skill": "node hosts/skill-demo/demo.js"
+  }
+}
