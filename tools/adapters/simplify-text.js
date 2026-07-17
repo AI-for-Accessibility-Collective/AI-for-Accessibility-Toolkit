@@ -1,5 +1,4 @@
 import { simplifyText as aiSimplifyText, summarizeText as aiSummarizeText } from '../utils/ai.js';
-import { markProcessed } from '../utils/dom.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -68,7 +67,7 @@ export async function simplifyText(element) {
       element.appendChild(toggleBtn);
 
       element.dataset.ai4a11ySimplified = 'done';
-      incrementStat('wcag');
+      incrementStat('text');
       logFix('simplify', element, '(complex)', '(simplified)');
       console.log('[AI4A11y] Simplified text');
       return simplified;
@@ -130,7 +129,7 @@ export async function summarizeContent(element) {
 
       element.insertBefore(summaryBox, element.firstChild);
       element.dataset.ai4a11ySummarize = 'done';
-      incrementStat('wcag');
+      incrementStat('text');
       logFix('summarize', element, '(long)', '(summarized)');
       return summary;
     }

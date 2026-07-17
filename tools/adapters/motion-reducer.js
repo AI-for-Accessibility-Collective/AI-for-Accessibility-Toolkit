@@ -103,10 +103,10 @@ export const MotionReducer = {
       el.style.animationPlayState = '';
     });
 
-    // Resume videos that were paused by motion reducer
-    document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach(video => {
+    // Resume videos that were playing before motion reducer paused them
+    document.querySelectorAll('video[data-ai4a11y-was-playing="true"]').forEach(video => {
       video.play().catch(() => {});
-      delete video.dataset.ai4a11yWasPaused;
+      delete video.dataset.ai4a11yWasPlaying;
     });
 
     console.log('[AI4A11y] Motion Reducer disabled');
@@ -117,7 +117,7 @@ export const MotionReducer = {
     document.querySelectorAll('video').forEach(video => {
       if (!video.paused) {
         video.pause();
-        video.dataset.ai4a11yWasPaused = 'false';
+        video.dataset.ai4a11yWasPlaying = 'true';
       }
     });
     document.querySelectorAll('iframe').forEach(iframe => {

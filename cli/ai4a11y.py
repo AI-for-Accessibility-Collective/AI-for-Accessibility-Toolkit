@@ -273,25 +273,25 @@ Return ONLY the label text."""
             except:
                 return result.strip()
 
-        # Fix contrast - takes fg/bg colors, returns adjusted colors
+        # Fix contrast - takes fg/bg colors, returns the adjusted foreground
+        # color as a hex string (the adapter assigns it to element.style.color)
         def ai_fix_contrast(fg, bg):
             prompt = f"""The foreground color {fg} on background {bg} has insufficient contrast.
-Suggest adjusted colors that:
-1. Meet WCAG AA contrast ratio (4.5:1 for normal text)
-2. Stay visually similar to the original
-3. Maintain readability
+Suggest an adjusted foreground color that:
+1. Meets WCAG AA contrast ratio (4.5:1 for normal text) against {bg}
+2. Stays visually similar to the original
+3. Maintains readability
 
-Return JSON: {{"foreground": "#hex", "background": "#hex"}}"""
+Return ONLY the hex color (e.g. #1a2b3c), nothing else."""
             result = ask_claude_text(prompt, timeout=30)
             try:
-                # Try to parse JSON from response
                 import re
-                match = re.search(r'\{[^}]+\}', result)
+                match = re.search(r'#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b', result)
                 if match:
-                    return json.loads(match.group())
-                return {"foreground": fg, "background": bg}
+                    return match.group()
+                return None
             except:
-                return {"foreground": fg, "background": bg}
+                return None
 
         # Describe element - takes screenshot + element info
         def ai_describe_element(image_data, element_type, context):
@@ -314,6 +314,38 @@ Provide a brief, useful description (1-2 sentences) that helps a screen reader u
             except:
                 return result.strip()
 
+        # Improve ambiguous link text ("click here" → descriptive label)
+        def ai_improve_link_text(link_text, href, context):
+            prompt = f"""Improve this ambiguous link text for screen reader users.
+
+Current link text: "{link_text}"
+Link URL: {href}
+Surrounding context: "{context}"
+
+Generate a short, descriptive link text (2-5 words) that explains where the link goes.
+Return ONLY the improved link text."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Infer a table column header from sample cell values
+        def ai_infer_column_header(sample_data):
+            samples = sample_data if isinstance(sample_data, list) else [str(sample_data)]
+            sample_str = "\n".join(f"- {s}" for s in samples)
+            prompt = f"""What is the best column header for this table data? Sample values:
+{sample_str}
+
+Return ONLY a short header name (1-3 words)."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
         # Expose functions to page
         page.expose_function("ai4a11y_describeImage", ai_describe_image)
         page.expose_function("ai4a11y_simplifyText", ai_simplify_text)
@@ -321,6 +353,8 @@ Provide a brief, useful description (1-2 sentences) that helps a screen reader u
         page.expose_function("ai4a11y_generateLabels", ai_generate_labels)
         page.expose_function("ai4a11y_fixContrast", ai_fix_contrast)
         page.expose_function("ai4a11y_describeElement", ai_describe_element)
+        page.expose_function("ai4a11y_improveLinkText", ai_improve_link_text)
+        page.expose_function("ai4a11y_inferColumnHeader", ai_infer_column_header)
 
         _ai_callbacks_exposed.add(page_id)
         return True
@@ -1348,8 +1382,8 @@ _IRIS_SYSTEM_PROMPT = (
 # Model selection is centralized so a future model bump is a one-line change.
 # Grounding is a constrained classification ('pick N from list'); vision reasons
 # over a screenshot. Per CLAUDE.md: Sonnet floor, Opus when possible.
-_IRIS_GROUND_MODEL = "claude-sonnet-4-6"   # text-only grounding from a11y candidates
-_IRIS_VISION_MODEL = "claude-opus-4-7"     # screenshot reasoning (describe / ask / visual tap)
+_IRIS_GROUND_MODEL = "claude-sonnet-5"     # text-only grounding from a11y candidates
+_IRIS_VISION_MODEL = "claude-opus-4-8"     # screenshot reasoning (describe / ask / visual tap)
 # ai4a11y wants fast, grounded vision descriptions — not deep multi-step reasoning.
 # --effort low tells Opus 4.7 to skip extended thinking; keeps latency predictable.
 _IRIS_VISION_EFFORT = "low"

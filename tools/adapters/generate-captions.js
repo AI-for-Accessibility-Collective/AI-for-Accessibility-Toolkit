@@ -1,5 +1,4 @@
 import { transcribeVideo, transcribeAudio } from '../utils/ai.js';
-import { markProcessed } from '../utils/dom.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -22,7 +21,7 @@ export async function generateVideoCaptions(video) {
       const text = result.text;
       addCaptionTrack(video, text);
       video.dataset.ai4a11yCaptioned = 'done';
-      incrementStat('wcag');
+      incrementStat('captions');
       logFix('captions', video, '(none)', '(generated)');
       console.log('[AI4A11y] Added video captions');
       return text;
@@ -55,7 +54,7 @@ export async function generateAudioCaptions(audio) {
       const text = result.text;
       addTranscriptBlock(audio, text);
       audio.dataset.ai4a11yCaptioned = 'done';
-      incrementStat('wcag');
+      incrementStat('captions');
       logFix('transcript', audio, '(none)', '(generated)');
       console.log('[AI4A11y] Added audio transcript');
       return text;

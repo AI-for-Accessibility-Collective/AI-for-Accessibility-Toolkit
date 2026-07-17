@@ -1,0 +1,106 @@
+// Fix data tables without header rows so screen readers can announce columns
+import { inferColumnHeader } from '../utils/ai.js';
+import { markProcessed } from '../utils/dom.js';
+
+const logFix = globalThis.ai4a11yLogFix || (() => {});
+const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+
+/**
+ * Fix a table that has no <th> cells.
+ *
+ * Strategy:
+ * 1. If the first row *looks* like a header row (short, distinct text),
+ *    convert its cells to <th scope="col"> — deterministic, no AI.
+ * 2. Otherwise, sample each column and ask the AI for a header name,
+ *    then insert a generated <thead> (marked as AI-generated).
+ */
+export async function fixTableHeaders(table) {
+  if (table.dataset.ai4a11yProcessed) return false;
+  if (table.querySelector('th')) return false;
+
+  const rows = Array.from(table.querySelectorAll('tr'));
+  if (rows.length < 2) return false;
+
+  markProcessed(table, 'pending');
+
+  const firstRowCells = Array.from(rows[0].querySelectorAll('td'));
+  if (firstRowCells.length === 0) {
+    markProcessed(table, 'skipped');
+    return false;
+  }
+
+  // Heuristic: first row is a header if every cell is short text and no cell
+  // repeats in the column below it.
+  const looksLikeHeader = firstRowCells.every((cell, i) => {
+    const text = cell.textContent?.trim() || '';
+    if (!text || text.length > 40) return false;
+    const below = rows.slice(1, 4).map(r => r.querySelectorAll('td')[i]?.textContent?.trim());
+    return !below.includes(text);
+  });
+
+  if (looksLikeHeader) {
+    firstRowCells.forEach(cell => {
+      const th = document.createElement('th');
+      th.setAttribute('scope', 'col');
+      th.innerHTML = cell.innerHTML;
+      cell.replaceWith(th);
+    });
+    markProcessed(table, 'done');
+    incrementStat('wcag');
+    logFix('table headers', table, '(no headers)', 'first row → column headers');
+    return true;
+  }
+
+  // AI path: only for tables with enough data to infer from
+  if (rows.length < 4) {
+    markProcessed(table, 'skipped');
+    return false;
+  }
+
+  try {
+    const columnCount = firstRowCells.length;
+    const headers = [];
+    for (let col = 0; col < columnCount; col++) {
+      const samples = rows.slice(0, 5)
+        .map(r => r.querySelectorAll('td')[col]?.textContent?.trim())
+        .filter(Boolean);
+      const header = samples.length >= 2 ? await inferColumnHeader(samples) : null;
+      headers.push(header || `Column ${col + 1}`);
+    }
+
+    const thead = document.createElement('thead');
+    thead.dataset.ai4a11yGenerated = 'true';
+    const headerRow = document.createElement('tr');
+    for (const label of headers) {
+      const th = document.createElement('th');
+      th.setAttribute('scope', 'col');
+      th.textContent = label;
+      headerRow.appendChild(th);
+    }
+    thead.appendChild(headerRow);
+    table.prepend(thead);
+
+    markProcessed(table, 'done');
+    incrementStat('wcag');
+    logFix('table headers', table, '(no headers)', headers.join(', '));
+    return true;
+  } catch (e) {
+    console.warn('[AI4A11y] fixTableHeaders failed:', e);
+    markProcessed(table, 'failed');
+    return false;
+  }
+}
+
+/** Find and fix all headerless data tables on the page. */
+export async function fixAllTables() {
+  const tables = Array.from(document.querySelectorAll('table'))
+    .filter(t => !t.dataset.ai4a11yProcessed && !t.querySelector('th') && t.querySelectorAll('tr').length >= 2)
+    .filter(t => !t.getAttribute('role') || t.getAttribute('role') === 'table'); // skip layout tables marked role=presentation
+  const results = [];
+  for (const table of tables) {
+    results.push(await fixTableHeaders(table));
+  }
+  return results.filter(Boolean).length;
+}
+
+export const axeHandlers = {};

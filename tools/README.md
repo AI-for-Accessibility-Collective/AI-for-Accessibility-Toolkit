@@ -11,6 +11,7 @@ tools/
 │   ├── missing-alt.js
 │   ├── missing-captions.js
 │   ├── missing-labels.js
+│   ├── missing-landmarks.js
 │   ├── poor-contrast.js
 │   └── wcag-issues.js    # axe-core wrapper
 ├── adapters/       # Fix issues or apply visual presets
@@ -18,12 +19,17 @@ tools/
 │   ├── generate-alt.js
 │   ├── generate-labels.js
 │   ├── fix-contrast.js
+│   ├── fix-landmarks.js
+│   ├── fix-links.js
+│   ├── fix-tables.js
 │   ├── visual-assist.js
 │   ├── dark-mode.js
 │   ├── reader-mode.js
 │   └── ...
 ├── profiles/       # User presets (blind, lowVision, etc.)
 │   └── settings.json
+├── insights/       # Model-facing knowledge modules distilled from applications
+│   └── artinsight/ # e.g. ArtInsight — accessible artwork descriptions
 ├── utils/          # Shared utilities
 │   ├── ai.js       # AI provider abstraction
 │   ├── dom.js      # DOM manipulation helpers

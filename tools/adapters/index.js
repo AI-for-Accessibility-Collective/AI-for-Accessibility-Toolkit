@@ -5,6 +5,9 @@ export * from './generate-captions.js';
 export * from './simplify-text.js';
 export * from './fix-contrast.js';
 export * from './wcag-fixes.js';
+export * from './fix-links.js';
+export * from './fix-tables.js';
+export * from './fix-landmarks.js';
 
 // Visual preference adapters
 export { VisualAssist } from './visual-assist.js';
@@ -24,6 +27,7 @@ import { axeHandlers as labelHandlers } from './generate-labels.js';
 import { axeHandlers as captionHandlers } from './generate-captions.js';
 import { axeHandlers as contrastHandlers } from './fix-contrast.js';
 import { axeHandlers as wcagHandlers } from './wcag-fixes.js';
+import { axeHandlers as landmarkHandlers } from './fix-landmarks.js';
 
 export const axeHandlers = {
   ...altHandlers,
@@ -31,6 +35,7 @@ export const axeHandlers = {
   ...captionHandlers,
   ...contrastHandlers,
   ...wcagHandlers,
+  ...landmarkHandlers,
 };
 
 // Run adapter by axe rule ID
