@@ -69,8 +69,8 @@ Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
 ### Step 1 — Clone the repo
 
 ```bash
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
-cd AI-for-Accessibility-Toolkit-Draft/webapp/voicecontrol
+git clone https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git
+cd AI-for-Accessibility-Toolkit/webapp/voicecontrol
 ```
 
 ### Step 2 — Backend
@@ -82,7 +82,7 @@ cd backend
 cp .env.example .env
 # Open .env and set:
 #   GEMINI_API_KEY=your-gemini-api-key
-#   DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025   # optional override
+#   DEMO_AGENT_MODEL=gemini-live-2.5-flash-native-audio   # optional override
 
 # Run the backend with uv (installs dependencies automatically)
 uv run python main.py
@@ -123,7 +123,7 @@ Copy `backend/.env.example` to `backend/.env` and fill in your values:
 GEMINI_API_KEY=your-gemini-api-key-here
 
 # Optional — override the default model
-# DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
+# DEMO_AGENT_MODEL=gemini-live-2.5-flash-native-audio
 ```
 
 > ⚠️ **Never commit `.env`** — it is listed in `.gitignore`.

@@ -33,18 +33,32 @@ from skill_loader import detect_domain_skills, detect_interaction_skills
 logger = logging.getLogger("browsermind_text.agent")
 
 # ── Model configuration ────────────────────────────────────────────────────────
+# Default: plain Gemini API key (matches voicecontrol). Set USE_VERTEX_AI=true
+# plus VERTEX_PROJECT to use Vertex AI instead.
 
-_USE_VERTEX = os.getenv("USE_VERTEX_AI", "true").lower() == "true"
+_USE_VERTEX = os.getenv("USE_VERTEX_AI", "false").lower() == "true"
 
 if _USE_VERTEX:
+    _project = os.getenv("VERTEX_PROJECT", "")
+    if not _project or _project == "your-gcp-project-id":
+        raise RuntimeError(
+            "USE_VERTEX_AI=true but VERTEX_PROJECT is not set to a real GCP project. "
+            "Either set VERTEX_PROJECT, or unset USE_VERTEX_AI and set GEMINI_API_KEY."
+        )
     client = genai.Client(
         vertexai=True,
-        project=os.getenv("VERTEX_PROJECT", "your-gcp-project-id"),
+        project=_project,
         location=os.getenv("VERTEX_LOCATION", "global"),
     )
     MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
 else:
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    _api_key = os.getenv("GEMINI_API_KEY", "")
+    if not _api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY is not set. Copy .env.example to .env and add your key "
+            "(https://aistudio.google.com/apikey), or set USE_VERTEX_AI=true with VERTEX_PROJECT."
+        )
+    client = genai.Client(api_key=_api_key)
     MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
 
 logger.info(f"Agent using model: {MODEL} | Vertex: {_USE_VERTEX}")
