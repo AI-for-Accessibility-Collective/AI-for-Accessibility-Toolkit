@@ -1,190 +1,22 @@
 /**
- * Settings & Profiles Configuration
+ * Settings & Profiles — logic layer.
+ *
+ * Profile DATA lives in settings.json (single source of truth, also read
+ * directly by cli/cli.py). This module adds merge/apply logic on top.
  *
  * EXTENDING PROFILES:
- * 1. Add a new profile to `profiles` object
+ * 1. Add a new profile to settings.json
  * 2. Map the tools/settings for that profile
- * 3. The profile will appear in the popup dropdown
+ * 3. It appears in the popup and `ai4a11y list profiles` automatically
  */
 
-// Default settings for all tools
-const defaults = {
-  enabled: true,
-  // AI tools
-  autoDescribe: true,
-  autoVideoDescribe: false,
-  autoSimplify: false,
-  autoWcagFix: true,
-  autoSummarize: false,
-  autoFixLabels: true,
-  autoCaptions: false,
-  fixContrast: true,
-  // Visual tools
-  darkMode: false,
-  dyslexiaFont: false,
-  largeCursor: false,
-  enhanceFocus: false,
-  readingGuide: false,
-  motionReducer: false,
-  // Reading tools
-  readerMode: false,
-  focusMode: false,
-  // Navigation tools
-  keyboardNav: false,
-  voiceCommands: false,
-  // Display settings
-  fontScale: 100,
-  lineHeight: 1.5,
-  letterSpacing: 0,
-  colorFilter: 'none'
-};
+import profileData from './settings.json' with { type: 'json' };
+
+export const profiles = profileData.profiles;
+export const defaults = profileData.defaults;
 
 // Current settings (mutable)
 let settings = { ...defaults };
-
-/**
- * Accessibility Profiles
- *
- * Each profile maps to a set of tools that help users with specific needs.
- * Add new profiles here - they'll be available in the popup.
- */
-export const profiles = {
-  // Vision impairments
-  lowVision: {
-    name: 'Low Vision',
-    description: 'Larger text, enhanced focus indicators',
-    tools: {
-      fontScale: 150,
-      lineHeight: 2.0,
-      largeCursor: true,
-      enhanceFocus: true,
-      fixContrast: true
-    }
-  },
-
-  blind: {
-    name: 'Blind',
-    description: 'Optimized for screen reader users',
-    tools: {
-      autoDescribe: true,
-      autoVideoDescribe: true,
-      autoFixLabels: true,
-      autoWcagFix: true,
-      keyboardNav: true
-    }
-  },
-
-  colorBlind: {
-    name: 'Color Blindness',
-    description: 'Color filters and enhanced contrast',
-    tools: {
-      fixContrast: true,
-      colorFilter: 'deuteranopia'
-    }
-  },
-
-  // Reading/cognitive
-  dyslexia: {
-    name: 'Dyslexia',
-    description: 'Dyslexia-friendly font and spacing',
-    tools: {
-      dyslexiaFont: true,
-      fontScale: 115,
-      lineHeight: 2.0,
-      letterSpacing: 0.12,
-      focusMode: true
-    }
-  },
-
-  adhd: {
-    name: 'ADHD',
-    description: 'Reduced distractions, focus mode',
-    tools: {
-      focusMode: true,
-      motionReducer: true,
-      readerMode: true
-    }
-  },
-
-  cognitive: {
-    name: 'Cognitive',
-    description: 'Simplified text, summaries',
-    tools: {
-      autoSimplify: true,
-      autoSummarize: true,
-      fontScale: 120,
-      lineHeight: 1.8,
-      focusMode: true
-    }
-  },
-
-  // Motor
-  motor: {
-    name: 'Motor',
-    description: 'Keyboard navigation, large targets',
-    tools: {
-      largeCursor: true,
-      enhanceFocus: true,
-      keyboardNav: true
-    }
-  },
-
-  // Sensory
-  photosensitive: {
-    name: 'Photosensitive',
-    description: 'Dark mode, reduced motion',
-    tools: {
-      darkMode: true,
-      motionReducer: true
-    }
-  },
-
-  deaf: {
-    name: 'Deaf/HoH',
-    description: 'Auto captions for media',
-    tools: {
-      autoCaptions: true,
-      autoVideoDescribe: true,
-      enhanceFocus: true
-    }
-  },
-
-  // Mental health
-  anxiety: {
-    name: 'Anxiety',
-    description: 'Calm interface, reduced motion',
-    tools: {
-      focusMode: true,
-      motionReducer: true,
-      readerMode: true,
-      lineHeight: 1.8
-    }
-  },
-
-  // Older adults
-  elderly: {
-    name: 'Elderly',
-    description: 'Larger text, simplified content',
-    tools: {
-      fontScale: 150,
-      lineHeight: 1.8,
-      enhanceFocus: true,
-      autoSimplify: true,
-      autoSummarize: true
-    }
-  },
-
-  // Sensory processing
-  sensory: {
-    name: 'Sensory Processing',
-    description: 'Reduced stimulation, calm interface',
-    tools: {
-      motionReducer: true,
-      darkMode: true,
-      focusMode: true
-    }
-  }
-};
 
 // Load settings from storage (extension overrides this)
 export async function loadSettings(storageGetter) {
@@ -207,6 +39,34 @@ export function updateSettings(newSettings) {
   settings = { ...settings, ...newSettings };
 }
 
+/**
+ * Merge the tool settings of multiple profiles into one settings object.
+ * Booleans: OR (any profile enabling a feature wins, except explicit false
+ * only yields when no other profile set true). Numbers: MAX. Color filter:
+ * last non-none wins. Shared by the popup presets and applyProfiles so the
+ * extension UI and the profiles module can never disagree.
+ */
+export function mergeProfileTools(profileIds) {
+  const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
+  const merged = {};
+
+  for (const profileId of profileIds) {
+    const profile = profiles[profileId];
+    if (!profile?.tools) continue;
+
+    for (const [key, value] of Object.entries(profile.tools)) {
+      if (numericKeys.includes(key) && typeof value === 'number') {
+        merged[key] = Math.max(merged[key] || 0, value);
+      } else if ((key === 'colorFilter' || key === 'contrastMode') && value !== 'none') {
+        merged[key] = value;
+      } else {
+        merged[key] = merged[key] || value;
+      }
+    }
+  }
+  return merged;
+}
+
 // Apply a single profile
 export function applyProfile(profileId) {
   const profile = profiles[profileId];
@@ -226,32 +86,7 @@ export function applyProfiles(profileIds) {
     return false;
   }
 
-  // Start with defaults
-  let merged = { ...defaults };
-
-  // Merge each profile's tools (later profiles override earlier ones for conflicts)
-  // For numeric values like fontScale, take the maximum
-  const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
-
-  for (const profileId of profileIds) {
-    const profile = profiles[profileId];
-    if (!profile?.tools) continue;
-
-    for (const [key, value] of Object.entries(profile.tools)) {
-      if (numericKeys.includes(key) && typeof value === 'number') {
-        // Take the larger value for numeric settings
-        merged[key] = Math.max(merged[key] || 0, value);
-      } else if (key === 'colorFilter' && value !== 'none') {
-        // Last non-none color filter wins
-        merged[key] = value;
-      } else {
-        // Booleans: true wins (enable feature if any profile wants it)
-        merged[key] = merged[key] || value;
-      }
-    }
-  }
-
-  settings = merged;
+  settings = { ...defaults, ...mergeProfileTools(profileIds) };
   const names = profileIds.map(id => profiles[id]?.name).filter(Boolean);
   console.log(`[AI4A11y] Applied profiles: ${names.join(', ')}`);
   return true;
@@ -301,8 +136,9 @@ export function getEnabledAdapters(profileId) {
   if (tools.darkMode) enabled.push('dark-mode');
   if (tools.dyslexiaFont) enabled.push('visual-assist');
   if (tools.largeCursor) enabled.push('visual-assist');
-  if (tools.enhanceFocus) enabled.push('focus-mode');
+  if (tools.enhanceFocus) enabled.push('visual-assist');
   if (tools.readingGuide) enabled.push('visual-assist');
+  if (tools.fontScale && tools.fontScale !== 100) enabled.push('visual-assist');
   if (tools.motionReducer) enabled.push('motion-reducer');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
@@ -314,4 +150,4 @@ export function getEnabledAdapters(profileId) {
 }
 
 // Export settings object for direct access
-export { settings, defaults };
+export { settings };
