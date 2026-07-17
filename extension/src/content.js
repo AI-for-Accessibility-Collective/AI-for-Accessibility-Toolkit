@@ -14,12 +14,19 @@ import { profiles, loadSettings, getSettings, isEnabled, updateSettings, getProf
 import { clearAllMarks, sleep } from '../../tools/utils/dom.js';
 import { runAxeAnalysis, getElementFromNode } from '../../tools/auditors/wcag-issues.js';
 import { findEmptyAltImages, findCanvasElements } from '../../tools/auditors/missing-alt.js';
+import { findAmbiguousLinks } from '../../tools/auditors/missing-labels.js';
 import {
   getAxeHandler,
   generateImageAlt,
   generateCanvasDescription,
+  generateVideoDescription,
   simplifyText,
   summarizeContent,
+  fixTargetBlank,
+  fixPositiveTabindex,
+  improveAmbiguousLinks,
+  fixAllTables,
+  fixLandmarks,
   VisualAssist,
   DarkMode,
   MotionReducer,
@@ -45,11 +52,12 @@ setAIProvider({
   generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
   inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
   fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(r => r?.result),
-  generateCaptions: (data) => sendMessage({ type: 'transcribeAudio', audioUrl: data.audioUrl }).then(r => r?.result),
   getYouTubeTranscript: (videoId) => sendMessage({ type: 'getYouTubeTranscript', videoId }).then(r => r?.result),
   transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(r => r?.result),
   transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(r => r?.result),
   describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(r => r?.result),
+  improveLinkText: (linkText, href, context) => sendMessage({ type: 'improveLinkText', linkText, href, context }).then(r => r?.result),
+  inferColumnHeader: (sampleData) => sendMessage({ type: 'inferColumnHeader', sampleData }).then(r => r?.result),
   announce: (msg) => announce(msg),
 });
 
@@ -92,8 +100,8 @@ function applyVisualSettings(settings) {
     console.log('[AI4A11y] Applied visual settings:', visualOptions);
   }
 
-  // Color blind filter
-  const colorMode = settings.colorBlindMode || settings.colorFilter;
+  // Color filter (canonical key: colorFilter; colorBlindMode is legacy)
+  const colorMode = settings.colorFilter || settings.colorBlindMode;
   if (colorMode && colorMode !== 'none') {
     ColorBlindMode.enable(colorMode);
     console.log('[AI4A11y] Applied color blind mode:', colorMode);
@@ -169,15 +177,13 @@ async function doInit() {
     console.log('[AI4A11y] Starting scan...');
     notifyProgress('Analyzing', 10);
 
-    if (!isEnabled('autoWcagFix')) {
-      console.log('[AI4A11y] Auto WCAG fix disabled');
-      isRunning = false;
-      return;
+    if (isEnabled('autoWcagFix')) {
+      const violations = await runAxeAnalysis();
+      notifyProgress('Fixing', 30);
+      await processViolations(violations);
+    } else {
+      console.log('[AI4A11y] Auto WCAG fix disabled — skipping axe scan');
     }
-
-    const violations = await runAxeAnalysis();
-    notifyProgress('Fixing', 30);
-    await processViolations(violations);
     notifyProgress('Images', 50);
     await runAdditionalScans();
     notifyProgress('Text', 80);
@@ -234,11 +240,11 @@ async function processViolation(violation, node, el, settings) {
   const handler = getHandler(violation.id);
   if (!handler) return;
 
-  if (violation.id === 'color-contrast' && !isEnabled('fixContrast')) return;
+  if (violation.id.startsWith('color-contrast') && !isEnabled('fixContrast')) return;
   if (violation.id.includes('label') && !isEnabled('autoFixLabels')) return;
   if (violation.id.includes('caption') && !isEnabled('autoCaptions')) return;
 
-  if (violation.id === 'color-contrast') {
+  if (violation.id.startsWith('color-contrast')) {
     const style = getComputedStyle(el);
     await handler(el, style.color, style.backgroundColor);
   } else {
@@ -261,8 +267,43 @@ async function runAdditionalScans() {
     }
   }
 
-  fixTargetBlankLinks();
-  fixPositiveTabindexElements();
+  if (isEnabled('autoVideoDescribe')) {
+    const videos = Array.from(document.querySelectorAll('video'))
+      .filter(v => !v.dataset.ai4a11yProcessed && !v.getAttribute('aria-label'));
+    if (videos.length > 0) {
+      console.log(`[AI4A11y] Describing ${videos.length} videos`);
+      for (const video of videos) {
+        await generateVideoDescription(video).catch(e => console.warn('[AI4A11y] Video description failed:', e));
+      }
+    }
+  }
+
+  if (isEnabled('autoFixLabels')) {
+    const ambiguousLinks = findAmbiguousLinks();
+    if (ambiguousLinks.length > 0) {
+      console.log(`[AI4A11y] Improving ${ambiguousLinks.length} ambiguous links`);
+      await improveAmbiguousLinks(ambiguousLinks);
+    }
+    await fixAllTables();
+  }
+
+  if (isEnabled('autoWcagFix')) {
+    fixLandmarks();
+  }
+
+  // These two run regardless of the shared ai4a11yProcessed flag: an earlier
+  // fixer (e.g. ambiguous-link labeling) may have marked the same element,
+  // and these fix *different* attributes. Each has its own idempotency guard
+  // (rel already has noopener / tabindex already normalized), so they're safe
+  // to re-check every scan without the shared mutex.
+  document.querySelectorAll('a[target="_blank"]').forEach(link => {
+    if ((link.getAttribute('rel') || '').includes('noopener')) return;
+    fixTargetBlank(link);
+  });
+
+  document.querySelectorAll('[tabindex]').forEach(el => {
+    if (parseInt(el.getAttribute('tabindex')) > 0) fixPositiveTabindex(el);
+  });
 }
 
 async function runTextProcessing() {
@@ -302,30 +343,6 @@ function findLongContent() {
     });
 }
 
-function fixTargetBlankLinks() {
-  document.querySelectorAll('a[target="_blank"]').forEach(link => {
-    if (link.dataset.ai4a11yProcessed) return;
-    const rel = link.getAttribute('rel') || '';
-    if (rel.includes('noopener')) return;
-    const parts = rel.split(/\s+/).filter(Boolean);
-    if (!parts.includes('noopener')) parts.push('noopener');
-    if (!parts.includes('noreferrer')) parts.push('noreferrer');
-    link.setAttribute('rel', parts.join(' '));
-    link.dataset.ai4a11yProcessed = 'true';
-  });
-}
-
-function fixPositiveTabindexElements() {
-  document.querySelectorAll('[tabindex]').forEach(el => {
-    if (el.dataset.ai4a11yProcessed) return;
-    const val = parseInt(el.getAttribute('tabindex'));
-    if (val > 0) {
-      el.setAttribute('tabindex', '0');
-      el.dataset.ai4a11yProcessed = 'true';
-    }
-  });
-}
-
 function revertAll() {
   VisualAssist.disable();
   MotionReducer.disable();
@@ -355,10 +372,8 @@ function revertAll() {
   });
 
   document.querySelectorAll('a.ai4a11y-adapted').forEach(link => {
-    if (link.dataset.ai4a11yOriginal) {
-      link.textContent = link.dataset.ai4a11yOriginal;
-      link.classList.remove('ai4a11y-adapted');
-    }
+    link.removeAttribute('aria-label');
+    link.classList.remove('ai4a11y-adapted');
   });
 
   document.querySelectorAll('.ai4a11y-contrast-fixed').forEach(el => {
