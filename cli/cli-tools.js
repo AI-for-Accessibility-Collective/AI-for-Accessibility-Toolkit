@@ -27,6 +27,9 @@ import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 import {
   generateImageAlt,
   generateCanvasDescription,
+  improveAmbiguousLinks,
+  fixAllTables,
+  fixLandmarks,
   getAxeHandler,
   axeHandlers
 } from '../tools/adapters/index.js';
@@ -55,8 +58,9 @@ import {
 import { runAxeAnalysis, getElementFromNode } from '../tools/auditors/wcag-issues.js';
 import { findEmptyAltImages, findCanvasElements, findImagesWithoutAlt } from '../tools/auditors/missing-alt.js';
 import { findVideosWithoutCaptions, findAudioWithoutTranscripts } from '../tools/auditors/missing-captions.js';
-import { findEmptyLinks, findEmptyButtons, findUnlabeledInputs } from '../tools/auditors/missing-labels.js';
+import { findEmptyLinks, findEmptyButtons, findUnlabeledInputs, findAmbiguousLinks } from '../tools/auditors/missing-labels.js';
 import { findLowContrastText } from '../tools/auditors/poor-contrast.js';
+import { auditLandmarks } from '../tools/auditors/missing-landmarks.js';
 
 // Import profiles
 import {
@@ -112,6 +116,18 @@ function setupAIProvider() {
     describeElement: async (imageData, elementType, context) => {
       if (typeof window.ai4a11y_describeElement === 'function') {
         return await window.ai4a11y_describeElement(imageData, elementType, context);
+      }
+      return null;
+    },
+    improveLinkText: async (linkText, href, context) => {
+      if (typeof window.ai4a11y_improveLinkText === 'function') {
+        return await window.ai4a11y_improveLinkText(linkText, href, context);
+      }
+      return null;
+    },
+    inferColumnHeader: async (sampleData) => {
+      if (typeof window.ai4a11y_inferColumnHeader === 'function') {
+        return await window.ai4a11y_inferColumnHeader(sampleData);
       }
       return null;
     },
@@ -364,14 +380,13 @@ const auditors = {
 // AI-powered fix functions
 const aiFixes = {
   async describeImages() {
-    const { images } = await auditors.findMissingAlt();
+    const { noAlt, emptyAlt } = auditors.findMissingAlt();
     const results = [];
-    for (const img of images) {
+    for (const img of [...noAlt, ...emptyAlt]) {
       const el = document.querySelector(img.selector);
       if (el) {
         const alt = await generateImageAlt(el);
         if (alt) {
-          el.alt = alt;
           results.push({ selector: img.selector, alt });
         }
       }
@@ -380,17 +395,24 @@ const aiFixes = {
   },
 
   async simplifyText(selector) {
+    // Adapter operates on elements (rewrites in place, keeps original)
     const el = selector ? document.querySelector(selector) : document.body;
     if (!el) return null;
-    const simplified = await simplifyText(el.textContent);
-    return simplified;
+    return await simplifyText(el);
   },
 
   async summarize(selector) {
     const el = selector ? document.querySelector(selector) : document.body;
     if (!el) return null;
-    const summary = await summarizeContent(el.textContent);
-    return summary;
+    return await summarizeContent(el);
+  },
+
+  async improveLinks() {
+    return await improveAmbiguousLinks(findAmbiguousLinks());
+  },
+
+  async fixTables() {
+    return await fixAllTables();
   },
 
   async fixAxeViolation(ruleId, selector) {
@@ -617,6 +639,8 @@ if (typeof window !== 'undefined') {
     findMissingLabels: auditors.findMissingLabels,
     findMissingCaptions: auditors.findMissingCaptions,
     findPoorContrast: auditors.findPoorContrast,
+    findAmbiguousLinks,
+    auditLandmarks,
     runFullAudit: auditors.runFullAudit,
 
     // AI fixes
@@ -624,6 +648,9 @@ if (typeof window !== 'undefined') {
     describeImages: aiFixes.describeImages,
     simplifyText: aiFixes.simplifyText,
     summarize: aiFixes.summarize,
+    improveLinks: aiFixes.improveLinks,
+    fixTables: aiFixes.fixTables,
+    fixLandmarks,
     fixAxeViolation: aiFixes.fixAxeViolation,
 
     // Full scan (like extension)

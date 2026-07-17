@@ -17,10 +17,9 @@ export async function generateLinkLabel(link) {
   const context = getContextForElement(link);
 
   const label = await inferLabel({
-    url: href,
     elementType: 'link',
-    existingText,
-    context
+    html: link.outerHTML?.substring(0, 500) || '',
+    context: [existingText, href, context].filter(Boolean).join(' | ')
   });
 
   if (label) {
@@ -53,12 +52,11 @@ export async function generateButtonLabel(button) {
 
   // Fall back to AI
   const context = getContextForElement(button);
-  const svgContent = button.querySelector('svg')?.outerHTML || '';
 
   const label = await inferLabel({
     elementType: 'button',
-    context,
-    svgContent
+    html: button.outerHTML?.substring(0, 500) || '',
+    context
   });
 
   if (label) {
