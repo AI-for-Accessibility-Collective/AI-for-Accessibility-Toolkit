@@ -37,6 +37,7 @@ const BUILT = {
             resp = { skills: [
               { name: 'reading-aid', description: 'Reading help.', source: 'builtin', recipe: { adapters: [{ id: 'visual-assist', settings: { fontScale: 130 } }] } },
               { name: 'turn-on-captions', description: 'Runs a saved task.', source: 'mine', recipe: { adapters: [], actions: [{ name: 'Turn on captions', prompt: 'Turn on captions for this video' }] } },
+              { name: 'mixed-skill', description: 'Adapters and a task.', source: 'mine', recipe: { adapters: [{ id: 'visual-assist', settings: { fontScale: 130 } }], actions: [{ name: 'Do the thing', prompt: 'Do the thing' }] } },
               ...mineSkills.map(s => ({ ...s, source: 'mine' })),
             ] };
           } else if (msg.type === 'librarianBuildSkill') {
@@ -44,11 +45,11 @@ const BUILT = {
           } else if (msg.type === 'librarianSaveSkill') {
             mineSkills.push(msg.skill); resp = { saved: true, errors: [] };
           } else if (msg.type === 'librarianResolveSkill') {
-            resp = msg.skill?.recipe?.actions?.length
-              ? { plan: { settings: {}, adapterIds: [], actions: msg.skill.recipe.actions } }
-              : { plan: { settings: { fontScale: 130, focusMode: true }, adapterIds: ['visual-assist', 'focus-mode'] } };
+            const rec = msg.skill?.recipe || {};
+            const adapterIds = (rec.adapters || []).map(a => a.id);
+            resp = { plan: { settings: adapterIds.length ? { fontScale: 130, focusMode: true } : {}, adapterIds, actions: rec.actions || [] } };
           } else if (msg.type === 'runSkillActions') {
-            resp = { started: true, count: (msg.actions || []).length };
+            resp = window.__agentBusy ? { skipped: true, reason: 'agent_busy' } : { started: true, count: (msg.actions || []).length };
           } else if (msg.type === 'librarianRetrieveSkill') {
             resp = { skill: { name: 'reading-aid' } };
           } else if (msg.type === 'librarianFindSkill') {
@@ -147,6 +148,24 @@ const BUILT = {
   await page.waitForFunction(() => window.__sent.some(m => m.type === 'librarianBuildSkill' && /reading/.test(m.need)), { timeout: 5000 });
   check('build anyway proceeds to the Engineer', await page.evaluate(() =>
     document.getElementById('reuseOffer').hidden));
+
+  // Mixed skill (adapters + a task) where the agent is busy: the adapter part
+  // applies but the action doesn't — the button must NOT falsely claim
+  // "Applied ✓"; it must surface the part that failed.
+  await page.evaluate(() => { window.__agentBusy = true; window.__sent.length = 0; });
+  await page.evaluate(() => {
+    const card = [...document.querySelectorAll('.skill-card')].find(c => /mixed-skill/.test(c.textContent));
+    card.querySelector('.btn-primary').click();
+  });
+  await page.waitForFunction(() => window.__sent.some(m => m.type === 'runSkillActions'), { timeout: 5000 });
+  await page.waitForFunction(() => {
+    const b = [...document.querySelectorAll('.skill-card')].find(c => /mixed-skill/.test(c.textContent))?.querySelector('.btn-primary');
+    return b && b.textContent !== 'Applying…';
+  }, { timeout: 5000 });
+  const mixedBtnText = await page.evaluate(() =>
+    [...document.querySelectorAll('.skill-card')].find(c => /mixed-skill/.test(c.textContent)).querySelector('.btn-primary').textContent);
+  check('mixed skill with a busy agent does not claim full success', mixedBtnText !== 'Applied ✓');
+  check('mixed skill surfaces the part that failed', /busy/.test(mixedBtnText));
 
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed`);
