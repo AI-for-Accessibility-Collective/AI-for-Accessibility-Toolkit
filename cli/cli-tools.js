@@ -29,6 +29,7 @@ import { BionicReading } from '../tools/adapters/bionic-reading.js';
 import { UnpinSticky } from '../tools/adapters/unpin-sticky.js';
 import { TranslatePage } from '../tools/adapters/translate-page.js';
 import { MuteSounds } from '../tools/adapters/mute-sounds.js';
+import { DefineWords } from '../tools/adapters/define-words.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -175,6 +176,7 @@ const tools = {
   unpinSticky: UnpinSticky,
   translatePage: TranslatePage,
   muteSounds: MuteSounds,
+  defineWords: DefineWords,
 };
 
 // Normalize tool name (handles case variations)
@@ -211,6 +213,8 @@ function normalizeTool(name) {
     'translate': 'translatePage',
     'mutesounds': 'muteSounds',
     'mute': 'muteSounds',
+    'definewords': 'defineWords',
+    'define': 'defineWords',
   };
   return map[lower] || name;
 }
@@ -306,6 +310,7 @@ function applyProfileByName(profileId) {
   if (profileTools.unpinSticky) UnpinSticky.enable();
   if (profileTools.translatePage) TranslatePage.enable({ targetLang: profileTools.translateTo });
   if (profileTools.muteSounds) MuteSounds.enable();
+  if (profileTools.defineWords) DefineWords.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -354,6 +359,7 @@ function getToolDescription(name) {
     unpinSticky: 'Un-fix sticky headers/bars so they stop eating the viewport when zoomed',
     translatePage: 'Translate the page text into another language (AI)',
     muteSounds: 'Mute all audio and video and block autoplay sound',
+    defineWords: 'Show plain-language definitions of hard words on hover (AI)',
   };
   return descriptions[name] || '';
 }

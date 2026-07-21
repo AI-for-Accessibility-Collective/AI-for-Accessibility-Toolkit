@@ -81,6 +81,12 @@
     }
     return provider.translateText(text, targetLang);
   }
+  async function defineWord(word, context) {
+    if (!(provider == null ? void 0 : provider.defineWord)) {
+      return null;
+    }
+    return provider.defineWord(word, context);
+  }
 
   // tools/profiles/settings.json
   var settings_default = {
@@ -185,7 +191,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          highlightLinks: true
+          highlightLinks: true,
+          defineWords: true
         }
       },
       olderAdult: {
@@ -275,7 +282,8 @@
       unpinSticky: false,
       translatePage: false,
       translateTo: "English",
-      muteSounds: false
+      muteSounds: false,
+      defineWords: false
     }
   };
 
@@ -4108,6 +4116,261 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yMuteSounds = MuteSounds;
 
+  // tools/adapters/define-words.js
+  var SKIP_TAGS2 = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "A", "BUTTON"]);
+  var MAX_WORDS = 500;
+  var STYLE_ID = "ai4a11y-define-styles";
+  var TOOLTIP_ID = "ai4a11y-define-tooltip";
+  var CONTEXT_SEL = "p, li, blockquote, figcaption, dd, dt, td, th, h1, h2, h3, h4, h5, h6";
+  var CONTEXT_CHARS = 200;
+  var DefineWords = {
+    markerClass: "ai4a11y-define",
+    // the per-word interactive spans
+    wrapperClass: "ai4a11y-define-wrap",
+    // the text-node replacement wrappers
+    enabled: false,
+    wrapped: null,
+    // Set of { span (wrapper), originalNode } (for exact restore)
+    definitions: null,
+    // Map lowercased word -> definition (null cached too, so a dead provider isn't re-asked)
+    showHandler: null,
+    hideHandler: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.wrapped = /* @__PURE__ */ new Set();
+      this.definitions = /* @__PURE__ */ new Map();
+      const minLength = typeof options.minLength === "number" && options.minLength > 0 ? options.minLength : 8;
+      let root = null;
+      try {
+        root = document.querySelector('main, article, [role="main"]') || document.body;
+      } catch {
+      }
+      if (!root) {
+        console.log("[AI4A11y] Define Words: no content root found");
+        announce("Define words: no readable text found");
+        return;
+      }
+      const textNodes = [];
+      try {
+        this.collect(root, textNodes);
+      } catch {
+      }
+      let count = 0;
+      for (const textNode of textNodes) {
+        if (count >= MAX_WORDS) break;
+        try {
+          const parent = textNode.parentNode;
+          if (!parent) continue;
+          const built = this.buildWrapper(textNode.nodeValue, minLength, MAX_WORDS - count);
+          if (!built) continue;
+          parent.replaceChild(built.wrap, textNode);
+          this.wrapped.add({ span: built.wrap, originalNode: textNode });
+          count += built.wrappedCount;
+        } catch {
+        }
+      }
+      if (count >= MAX_WORDS) console.log(`[AI4A11y] Define Words: capped at ${MAX_WORDS} words`);
+      this.injectStyles();
+      this.showHandler = (e) => this.handleShow(e);
+      this.hideHandler = (e) => this.handleHide(e);
+      document.addEventListener("mouseover", this.showHandler);
+      document.addEventListener("focusin", this.showHandler);
+      document.addEventListener("mouseout", this.hideHandler);
+      document.addEventListener("focusout", this.hideHandler);
+      console.log(`[AI4A11y] Define Words enabled (${count} words)`);
+      announce(count ? "Word definitions on: hover or focus an underlined word" : "Define words: no long words found");
+    },
+    // Depth-first text-node collection under root, skipping SKIP_TAGS subtrees
+    // and wrappers we already built.
+    collect(el, out) {
+      for (const node of el.childNodes) {
+        if (node.nodeType === 3) {
+          if (/\S/.test(node.nodeValue)) out.push(node);
+        } else if (node.nodeType === 1 && !SKIP_TAGS2.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass))) {
+          this.collect(node, out);
+        }
+      }
+    },
+    // Rebuild one text node as a wrapper <span>: qualifying words (alphabetic,
+    // long enough, within budget) become interactive spans; everything else —
+    // short words, punctuation, whitespace — is re-emitted verbatim as text.
+    // Returns null when nothing qualified, so the caller leaves the node alone.
+    buildWrapper(text, minLength, budget) {
+      const wrap = document.createElement("span");
+      wrap.className = this.wrapperClass;
+      let last = 0, wrappedCount = 0;
+      const re = /[A-Za-z]+/g;
+      let m;
+      while (m = re.exec(text)) {
+        if (m[0].length < minLength || wrappedCount >= budget) continue;
+        if (m.index > last) wrap.appendChild(document.createTextNode(text.slice(last, m.index)));
+        wrap.appendChild(this.buildWordSpan(m[0]));
+        last = m.index + m[0].length;
+        wrappedCount++;
+      }
+      if (!wrappedCount) return null;
+      if (last < text.length) wrap.appendChild(document.createTextNode(text.slice(last)));
+      return { wrap, wrappedCount };
+    },
+    buildWordSpan(word) {
+      const span = document.createElement("span");
+      span.className = this.markerClass;
+      span.setAttribute("tabindex", "0");
+      span.setAttribute("role", "button");
+      span.setAttribute("aria-label", `Define ${word}`);
+      span.textContent = word;
+      return span;
+    },
+    injectStyles() {
+      try {
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+        .${this.markerClass} {
+          text-decoration: underline dotted;
+          text-underline-offset: 2px;
+          cursor: help;
+        }
+        .${this.markerClass}:focus {
+          outline: 2px solid #4A90D9;
+          outline-offset: 1px;
+        }
+        #${TOOLTIP_ID} {
+          position: absolute;
+          z-index: 2147483647;
+          max-width: 320px;
+          padding: 8px 10px;
+          background: #1c1c1e;
+          color: #ffffff;
+          font: 14px/1.4 system-ui, sans-serif;
+          border-radius: 6px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+          pointer-events: none;
+        }`;
+        (document.head || document.documentElement).appendChild(style);
+      } catch {
+      }
+    },
+    handleShow(event) {
+      try {
+        const target = event.target;
+        const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+        if (span) this.showDefinition(span).catch(() => {
+        });
+      } catch {
+      }
+    },
+    handleHide(event) {
+      try {
+        const target = event.target;
+        if (target && target.closest && target.closest(`.${this.markerClass}`)) this.hideTooltip();
+      } catch {
+      }
+    },
+    async showDefinition(span) {
+      if (!this.enabled || !this.definitions) return;
+      const word = (span.textContent || "").trim();
+      if (!word) return;
+      const key = word.toLowerCase();
+      let def;
+      if (this.definitions.has(key)) {
+        def = this.definitions.get(key);
+      } else {
+        let def2;
+        try {
+          def2 = await defineWord(word, this.sentenceContext(span));
+        } catch {
+          def2 = null;
+        }
+        if (!this.enabled || !this.definitions) return;
+        this.definitions.set(key, def2 || null);
+        def = def2;
+      }
+      if (!def) return;
+      this.showTooltip(span, def);
+    },
+    // The surrounding sentence(s) for the AI prompt: the enclosing text block's
+    // content, whitespace-collapsed and truncated to a bounded prompt size.
+    sentenceContext(span) {
+      try {
+        const block = span.closest(CONTEXT_SEL) || span.parentNode;
+        return ((block == null ? void 0 : block.textContent) || "").replace(/\s+/g, " ").trim().slice(0, CONTEXT_CHARS);
+      } catch {
+        return "";
+      }
+    },
+    showTooltip(span, text) {
+      try {
+        let tip = document.getElementById(TOOLTIP_ID);
+        if (!tip) {
+          tip = document.createElement("div");
+          tip.id = TOOLTIP_ID;
+          tip.setAttribute("role", "tooltip");
+          document.body.appendChild(tip);
+        }
+        tip.textContent = text;
+        const rect = span.getBoundingClientRect();
+        tip.style.left = `${Math.max(0, rect.left + (window.scrollX || 0))}px`;
+        tip.style.top = `${rect.bottom + (window.scrollY || 0) + 6}px`;
+        tip.style.display = "block";
+      } catch {
+      }
+    },
+    hideTooltip() {
+      try {
+        const tip = document.getElementById(TOOLTIP_ID);
+        if (tip) tip.style.display = "none";
+      } catch {
+      }
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.showHandler) {
+        document.removeEventListener("mouseover", this.showHandler);
+        document.removeEventListener("focusin", this.showHandler);
+        this.showHandler = null;
+      }
+      if (this.hideHandler) {
+        document.removeEventListener("mouseout", this.hideHandler);
+        document.removeEventListener("focusout", this.hideHandler);
+        this.hideHandler = null;
+      }
+      try {
+        (_a = document.getElementById(TOOLTIP_ID)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(STYLE_ID)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      if (this.wrapped) {
+        for (const { span, originalNode } of this.wrapped) {
+          try {
+            (_c = span.parentNode) == null ? void 0 : _c.replaceChild(originalNode, span);
+          } catch {
+          }
+        }
+        this.wrapped.clear();
+        this.wrapped = null;
+      }
+      if (this.definitions) {
+        this.definitions.clear();
+        this.definitions = null;
+      }
+      console.log("[AI4A11y] Define Words disabled");
+      announce("Word definitions off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yDefineWords = DefineWords;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -4283,6 +4546,7 @@ ${scope(":focus")} {
     if (settings2.unpinSticky) UnpinSticky.enable();
     if (settings2.translatePage) TranslatePage.enable({ targetLang: settings2.translateTo });
     if (settings2.muteSounds) MuteSounds.enable();
+    if (settings2.defineWords) DefineWords.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -4477,6 +4741,7 @@ ${scope(":focus")} {
     UnpinSticky.disable();
     TranslatePage.disable();
     MuteSounds.disable();
+    DefineWords.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -4597,7 +4862,8 @@ ${scope(":focus")} {
           BionicReading: BionicReading.enabled || false,
           UnpinSticky: UnpinSticky.enabled || false,
           TranslatePage: TranslatePage.enabled || false,
-          MuteSounds: MuteSounds.enabled || false
+          MuteSounds: MuteSounds.enabled || false,
+          DefineWords: DefineWords.enabled || false
         }
       });
       return true;

@@ -18,7 +18,7 @@ function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('F
 const RECOGNIZED = new Set([
   'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
   'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'contrastMode', 'darkMode',
-  'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'focusMode', 'fontScale', 'hideDistractions',
+  'defineWords', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'focusMode', 'fontScale', 'hideDistractions',
   'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'motionReducer', 'muteSounds',
   'pageOutline', 'readerMode', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'speechRate', 'voiceCommands',
   'fixContrast',

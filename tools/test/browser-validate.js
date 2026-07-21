@@ -21,7 +21,7 @@ const PAGE = `<!DOCTYPE html><html><head><style>
   <div id="cookie" class="cookie-banner" style="position:fixed; bottom:0; left:0;">We use cookies <button>OK</button></div>
   <header id="hdr" style="position:fixed; top:0; left:0;">Sticky header</header>
   <main>
-    <h1>Main Title</h1>
+    <h1>Documentation Overview</h1>
     <h2>Section A</h2>
     <h2>Section B</h2>
     <p>Body text with a <a id="lnk" href="https://docs.example.org/guide">documentation link</a> in it.</p>
@@ -134,6 +134,19 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('mute: the video is really muted', await page.evaluate(() => document.querySelector('#vid').muted === true));
     await disable('muteSounds');
     check('mute: the video is unmuted again after disable', await page.evaluate(() => document.querySelector('#vid').muted === false));
+  }
+
+  // ── Define Words — REAL: long words become interactive spans (AI-free part) ─
+  {
+    await enable('defineWords');
+    const wrapped = await page.evaluate(() => document.querySelectorAll('.ai4a11y-define').length);
+    check('define: long words are really wrapped as interactive spans', wrapped > 0);
+    check('define: a wrapped word carries define affordances (role/tabindex)', await page.evaluate(() => {
+      const s = document.querySelector('.ai4a11y-define');
+      return !!s && s.getAttribute('role') === 'button' && s.getAttribute('tabindex') === '0';
+    }));
+    await disable('defineWords');
+    check('define: word wrapping removed after disable', (await page.evaluate(() => document.querySelectorAll('.ai4a11y-define').length)) === 0);
   }
 
   await browser.close();
