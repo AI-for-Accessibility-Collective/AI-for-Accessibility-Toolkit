@@ -11,7 +11,8 @@
           autoFixLabels: true,
           autoDescribe: true,
           autoVideoDescribe: true,
-          keyboardNav: true
+          keyboardNav: true,
+          pageOutline: true
         }
       },
       lowVision: {
@@ -58,7 +59,8 @@
           keyboardNav: true,
           voiceCommands: true,
           dismissOverlays: true,
-          bigTargets: true
+          bigTargets: true,
+          pageOutline: true
         }
       },
       dyslexia: {
@@ -178,7 +180,8 @@
       letterSpacing: 0,
       contrastMode: "none",
       colorFilter: "none",
-      highlightLinks: false
+      highlightLinks: false,
+      pageOutline: false
     }
   };
 

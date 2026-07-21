@@ -20,7 +20,7 @@ const RECOGNIZED = new Set([
   'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'colorBlindMode', 'contrastMode', 'darkMode',
   'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'focusMode', 'fontScale', 'hideDistractions',
   'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'motionReducer',
-  'readerMode', 'readingGuide', 'showProgress', 'speechRate', 'voiceCommands',
+  'pageOutline', 'readerMode', 'readingGuide', 'showProgress', 'speechRate', 'voiceCommands',
   'fixContrast',
 ]);
 const NUMERIC_RANGE = { fontScale: [50, 300], lineHeight: [1, 3], letterSpacing: [0, 1], speechRate: [0.3, 4] };
