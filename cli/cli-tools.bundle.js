@@ -5799,7 +5799,7 @@ ${chunk}
         }
       },
       photosensitive: {
-        name: "Photosensitive",
+        name: "Light Sensitive",
         description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
         tools: {
           darkMode: true,
