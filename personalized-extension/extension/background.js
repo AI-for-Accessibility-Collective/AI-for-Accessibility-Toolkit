@@ -188,12 +188,14 @@ async function callGemini(prompt, apiKey, optsOrImages) {
   const parts = [{ text: prompt }];
   if (images && images.length > 0) {
     for (const dataUrl of images) {
-      const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
-      if (match) {
-        parts.push({
-          inlineData: { mimeType: match[1], data: match[2] }
-        });
+      const match = typeof dataUrl === 'string' && dataUrl.match(/^data:(.+?);base64,(.+)$/);
+      if (!match) {
+        // Refuse a non-data-URL image instead of silently dropping it: a
+        // dropped image leaves Gemini describing nothing and inventing an
+        // answer — the worst outcome for a screen-reader user relying on it.
+        throw new Error('Image must be a base64 data URL, not a page URL');
       }
+      parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
     }
   }
 
