@@ -54,6 +54,7 @@ import {
   FlashGuard,
   DescribeOnDemand,
   ReflowColumn,
+  FocusLocator,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -162,6 +163,7 @@ function applyVisualSettings(settings) {
   if (settings.flashGuard) FlashGuard.enable();
   if (settings.describeOnDemand) DescribeOnDemand.enable();
   if (settings.reflowColumn) ReflowColumn.enable();
+  if (settings.focusLocator) FocusLocator.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -407,6 +409,7 @@ function revertAll() {
   FlashGuard.disable();
   DescribeOnDemand.disable();
   ReflowColumn.disable();
+  FocusLocator.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -540,7 +543,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         Magnifier: Magnifier.enabled || false,
         FlashGuard: FlashGuard.enabled || false,
         DescribeOnDemand: DescribeOnDemand.enabled || false,
-        ReflowColumn: ReflowColumn.enabled || false
+        ReflowColumn: ReflowColumn.enabled || false,
+        FocusLocator: FocusLocator.enabled || false
       }
     });
     return true;

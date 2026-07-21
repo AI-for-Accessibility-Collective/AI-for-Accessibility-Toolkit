@@ -438,6 +438,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "focus-locator",
+    "name": "Focus Locator",
+    "description": "Draws a strong, always-visible ring around whatever has keyboard focus and reinforces every focus outline, so low-vision and motor users never lose track of where they are.",
+    "supportAreas": [
+      "vision",
+      "motor"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "center_focus_weak",
+    "emoji": "🎯",
+    "quickStart": false,
+    "settings": {
+      "focusLocator": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -817,6 +836,10 @@ globalThis.AA_TOOLS = {
   "reflowColumn": {
     "type": "boolean",
     "description": "Force page content into one readable column"
+  },
+  "focusLocator": {
+    "type": "boolean",
+    "description": "Show a strong always-visible keyboard focus indicator"
   },
   "keyboardNav": {
     "type": "boolean",

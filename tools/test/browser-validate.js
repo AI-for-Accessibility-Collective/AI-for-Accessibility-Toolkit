@@ -290,6 +290,23 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('reflow: body width cap removed after disable', (await css('body', 'maxWidth')) === 'none');
   }
 
+  // ── Focus Locator — REAL: a focus ring appears on the focused element ───────
+  {
+    await enable('focusLocator');
+    check('focus-locator: injects a strong focus-outline style + a ring element', await page.evaluate(() =>
+      !!document.getElementById('ai4a11y-focus-locator-styles') && !!document.getElementById('ai4a11y-focus-ring')));
+    const ringShown = await page.evaluate(async () => {
+      document.querySelector('#btn').focus();
+      document.querySelector('#btn').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 30));
+      const ring = document.getElementById('ai4a11y-focus-ring');
+      return !!ring && getComputedStyle(ring).display !== 'none';
+    });
+    check('focus-locator: the ring shows when an element is focused', ringShown);
+    await disable('focusLocator');
+    check('focus-locator: style + ring removed after disable', !(await exists('#ai4a11y-focus-ring')) && !(await exists('#ai4a11y-focus-locator-styles')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

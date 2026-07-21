@@ -157,6 +157,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.flashGuard) enabled.push('flash-guard');
   if (tools.describeOnDemand) enabled.push('describe-on-demand');
   if (tools.reflowColumn) enabled.push('reflow-column');
+  if (tools.focusLocator) enabled.push('focus-locator');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');
