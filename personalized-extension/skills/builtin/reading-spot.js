@@ -18,6 +18,8 @@ export const ReadingSpot = {
   buttonId: 'ai4a11y-spot-restore',
   enabled: false,
   key: null,
+  savedY: null,          // the spot from a previous visit, if any
+  restorePending: false, // a jump-back button is showing and not yet used
   scrollHandler: null,   // stored ref so disable() can removeEventListener
   saveTimer: null,       // debounce timeout, cleared on disable
 
@@ -43,12 +45,17 @@ export const ReadingSpot = {
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
-    this.key = options.key || KEY_PREFIX + window.location.pathname;
+    // Include the query string: sites that route by query (e.g. /watch?v=aaa
+    // vs /watch?v=bbb) are different pages and must not share one spot.
+    this.key = options.key || KEY_PREFIX + window.location.pathname + window.location.search;
 
     // A spot saved on a previous visit → offer to jump back. 0 (the top) is
     // where a fresh load already sits, so only a real offset earns a button.
     const savedY = this.readSpot();
+    this.savedY = savedY;
+    this.restorePending = false;
     if (savedY !== null && savedY > 0 && !document.getElementById(this.buttonId)) {
+      this.restorePending = true; // a far spot the reader hasn't returned to yet
       const btn = document.createElement('button');
       btn.id = this.buttonId;
       btn.type = 'button';
@@ -59,6 +66,7 @@ export const ReadingSpot = {
         'border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;';
       btn.addEventListener('click', () => {
         window.scrollTo(0, savedY);
+        this.restorePending = false;
         btn.remove();
       });
       (document.body || document.documentElement).appendChild(btn);
@@ -72,7 +80,14 @@ export const ReadingSpot = {
       if (this.saveTimer) clearTimeout(this.saveTimer);
       this.saveTimer = setTimeout(() => {
         this.saveTimer = null;
-        if (this.enabled) this.saveSpot(window.scrollY);
+        if (!this.enabled) return;
+        const y = window.scrollY;
+        // While a jump-back button is still pending, a small accidental scroll
+        // must not overwrite the far spot the reader hasn't returned to yet —
+        // only record a position beyond it (they have genuinely read further).
+        if (this.restorePending && this.savedY != null && y <= this.savedY) return;
+        this.restorePending = false;
+        this.saveSpot(y);
       }, SAVE_DELAY_MS);
     };
     window.addEventListener('scroll', this.scrollHandler, { passive: true });
@@ -91,6 +106,8 @@ export const ReadingSpot = {
       this.scrollHandler = null;
     }
     if (this.saveTimer) { clearTimeout(this.saveTimer); this.saveTimer = null; }
+    this.restorePending = false;
+    this.savedY = null;
     document.getElementById(this.buttonId)?.remove();
     // The saved spot itself stays in storage for the next visit.
     console.log('[AI4A11y] Save Reading Spot disabled');
