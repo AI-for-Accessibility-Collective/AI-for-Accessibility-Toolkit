@@ -3239,28 +3239,31 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
       const token = ++this._reqSeq;
       this.show("Describing\u2026");
-      let desc = null;
+      let desc = null, errMsg = null;
       try {
         if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
           const dataUrl = await imageToDataUrl(el);
           desc = dataUrl ? await describeImage(dataUrl) : null;
         } else if (el.tagName === "CANVAS" && typeof el.toDataURL === "function") {
+          let dataUrl = null;
           try {
-            desc = await describeImage(el.toDataURL());
+            dataUrl = el.toDataURL();
           } catch {
-            desc = null;
+            dataUrl = null;
           }
+          desc = dataUrl ? await describeImage(dataUrl) : null;
         } else {
           const label = el.getAttribute && (el.getAttribute("aria-label") || el.getAttribute("title")) || "";
           const text = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
           if (text.length > 60) desc = await summarizeText(text);
           else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
         }
-      } catch {
+      } catch (e) {
         desc = null;
+        errMsg = e && e.message ? e.message : null;
       }
       if (token !== this._reqSeq) return;
-      this.show(desc || "Couldn\u2019t get a description. If this keeps happening, check that your AI key is set in the extension settings.");
+      this.show(desc || errMsg || "No description is available for that element.");
     },
     show(text) {
       if (!this.panel) {

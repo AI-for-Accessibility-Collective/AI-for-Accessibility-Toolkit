@@ -5151,28 +5151,31 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
       const token = ++this._reqSeq;
       this.show("Describing\u2026");
-      let desc = null;
+      let desc = null, errMsg = null;
       try {
         if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
           const dataUrl = await imageToDataUrl(el);
           desc = dataUrl ? await describeImage(dataUrl) : null;
         } else if (el.tagName === "CANVAS" && typeof el.toDataURL === "function") {
+          let dataUrl = null;
           try {
-            desc = await describeImage(el.toDataURL());
+            dataUrl = el.toDataURL();
           } catch {
-            desc = null;
+            dataUrl = null;
           }
+          desc = dataUrl ? await describeImage(dataUrl) : null;
         } else {
           const label = el.getAttribute && (el.getAttribute("aria-label") || el.getAttribute("title")) || "";
           const text = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
           if (text.length > 60) desc = await summarizeText(text);
           else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
         }
-      } catch {
+      } catch (e) {
         desc = null;
+        errMsg = e && e.message ? e.message : null;
       }
       if (token !== this._reqSeq) return;
-      this.show(desc || "Couldn\u2019t get a description. If this keeps happening, check that your AI key is set in the extension settings.");
+      this.show(desc || errMsg || "No description is available for that element.");
     },
     show(text) {
       if (!this.panel) {
@@ -5926,22 +5929,26 @@ ${scope} table {
   }
 
   // extension/src/content.js
+  var unwrap = (r) => {
+    if (r && r.success === false) throw new Error(r.error || "AI request failed");
+    return r == null ? void 0 : r.result;
+  };
   setAIProvider({
-    describeImage: (imageData) => sendMessage({ type: "describeImage", imageData }).then((r) => r == null ? void 0 : r.result),
-    describeVideo: (frames, metadata) => sendMessage({ type: "describeVideoFrames", frames, metadata }).then((r) => r == null ? void 0 : r.result),
-    simplifyText: (text) => sendMessage({ type: "simplifyText", text }).then((r) => r == null ? void 0 : r.result),
-    summarizeText: (text) => sendMessage({ type: "summarizeText", text }).then((r) => r == null ? void 0 : r.result),
-    translateText: (text, targetLang) => sendMessage({ type: "translateText", text, targetLang }).then((r) => r == null ? void 0 : r.result),
-    defineWord: (word, context) => sendMessage({ type: "defineWord", word, context }).then((r) => r == null ? void 0 : r.result),
-    generateLabels: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
-    inferLabel: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
-    fixContrast: (fg, bg) => sendMessage({ type: "fixContrast", foreground: fg, background: bg }).then((r) => r == null ? void 0 : r.result),
-    getYouTubeTranscript: (videoId) => sendMessage({ type: "getYouTubeTranscript", videoId }).then((r) => r == null ? void 0 : r.result),
-    transcribeVideo: (url) => sendMessage({ type: "transcribeVideo", audioUrl: url }).then((r) => r == null ? void 0 : r.result),
-    transcribeAudio: (url) => sendMessage({ type: "transcribeAudio", audioUrl: url }).then((r) => r == null ? void 0 : r.result),
-    describeElement: (imageData, elementType, context) => sendMessage({ type: "describeElement", imageData, elementType, context }).then((r) => r == null ? void 0 : r.result),
-    improveLinkText: (linkText, href, context) => sendMessage({ type: "improveLinkText", linkText, href, context }).then((r) => r == null ? void 0 : r.result),
-    inferColumnHeader: (sampleData) => sendMessage({ type: "inferColumnHeader", sampleData }).then((r) => r == null ? void 0 : r.result),
+    describeImage: (imageData) => sendMessage({ type: "describeImage", imageData }).then(unwrap),
+    describeVideo: (frames, metadata) => sendMessage({ type: "describeVideoFrames", frames, metadata }).then(unwrap),
+    simplifyText: (text) => sendMessage({ type: "simplifyText", text }).then(unwrap),
+    summarizeText: (text) => sendMessage({ type: "summarizeText", text }).then(unwrap),
+    translateText: (text, targetLang) => sendMessage({ type: "translateText", text, targetLang }).then(unwrap),
+    defineWord: (word, context) => sendMessage({ type: "defineWord", word, context }).then(unwrap),
+    generateLabels: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then(unwrap),
+    inferLabel: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then(unwrap),
+    fixContrast: (fg, bg) => sendMessage({ type: "fixContrast", foreground: fg, background: bg }).then(unwrap),
+    getYouTubeTranscript: (videoId) => sendMessage({ type: "getYouTubeTranscript", videoId }).then(unwrap),
+    transcribeVideo: (url) => sendMessage({ type: "transcribeVideo", audioUrl: url }).then(unwrap),
+    transcribeAudio: (url) => sendMessage({ type: "transcribeAudio", audioUrl: url }).then(unwrap),
+    describeElement: (imageData, elementType, context) => sendMessage({ type: "describeElement", imageData, elementType, context }).then(unwrap),
+    improveLinkText: (linkText, href, context) => sendMessage({ type: "improveLinkText", linkText, href, context }).then(unwrap),
+    inferColumnHeader: (sampleData) => sendMessage({ type: "inferColumnHeader", sampleData }).then(unwrap),
     announce: (msg) => announce2(msg)
   });
   globalThis.ai4a11yLogFix = logFix10;

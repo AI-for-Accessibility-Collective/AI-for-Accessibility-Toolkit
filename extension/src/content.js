@@ -65,23 +65,32 @@ import {
 import { resetStats, getStats, getFixLog, logFix, incrementStat } from './stats.js';
 import { sendMessage, notifyProgress, announce } from './utils/messaging.js';
 
-// Set up Chrome AI provider (bridges to background.js Gemini API)
+// Set up Chrome AI provider (bridges to background.js Gemini API).
+// unwrap returns the result, or THROWS the real error (a missing API key, a
+// blocked response) so an explicit user action like describe-on-demand can tell
+// the user WHY it failed instead of a blank "no description". Bulk adapters
+// already try/catch each call and degrade, so this doesn't change their
+// behaviour — it only lets the deliberate, one-off requests speak up.
+const unwrap = (r) => {
+  if (r && r.success === false) throw new Error(r.error || 'AI request failed');
+  return r?.result;
+};
 setAIProvider({
-  describeImage: (imageData) => sendMessage({ type: 'describeImage', imageData }).then(r => r?.result),
-  describeVideo: (frames, metadata) => sendMessage({ type: 'describeVideoFrames', frames, metadata }).then(r => r?.result),
-  simplifyText: (text) => sendMessage({ type: 'simplifyText', text }).then(r => r?.result),
-  summarizeText: (text) => sendMessage({ type: 'summarizeText', text }).then(r => r?.result),
-  translateText: (text, targetLang) => sendMessage({ type: 'translateText', text, targetLang }).then(r => r?.result),
-  defineWord: (word, context) => sendMessage({ type: 'defineWord', word, context }).then(r => r?.result),
-  generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
-  inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
-  fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(r => r?.result),
-  getYouTubeTranscript: (videoId) => sendMessage({ type: 'getYouTubeTranscript', videoId }).then(r => r?.result),
-  transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(r => r?.result),
-  transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(r => r?.result),
-  describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(r => r?.result),
-  improveLinkText: (linkText, href, context) => sendMessage({ type: 'improveLinkText', linkText, href, context }).then(r => r?.result),
-  inferColumnHeader: (sampleData) => sendMessage({ type: 'inferColumnHeader', sampleData }).then(r => r?.result),
+  describeImage: (imageData) => sendMessage({ type: 'describeImage', imageData }).then(unwrap),
+  describeVideo: (frames, metadata) => sendMessage({ type: 'describeVideoFrames', frames, metadata }).then(unwrap),
+  simplifyText: (text) => sendMessage({ type: 'simplifyText', text }).then(unwrap),
+  summarizeText: (text) => sendMessage({ type: 'summarizeText', text }).then(unwrap),
+  translateText: (text, targetLang) => sendMessage({ type: 'translateText', text, targetLang }).then(unwrap),
+  defineWord: (word, context) => sendMessage({ type: 'defineWord', word, context }).then(unwrap),
+  generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(unwrap),
+  inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(unwrap),
+  fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(unwrap),
+  getYouTubeTranscript: (videoId) => sendMessage({ type: 'getYouTubeTranscript', videoId }).then(unwrap),
+  transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(unwrap),
+  transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(unwrap),
+  describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(unwrap),
+  improveLinkText: (linkText, href, context) => sendMessage({ type: 'improveLinkText', linkText, href, context }).then(unwrap),
+  inferColumnHeader: (sampleData) => sendMessage({ type: 'inferColumnHeader', sampleData }).then(unwrap),
   announce: (msg) => announce(msg),
 });
 
