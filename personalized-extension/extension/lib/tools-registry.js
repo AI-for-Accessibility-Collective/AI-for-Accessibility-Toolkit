@@ -420,6 +420,24 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "reflow-column",
+    "name": "Reflow to Column",
+    "description": "Forces page content into a single readable column so zooming in does not cause horizontal scrolling or overlapping content (WCAG 1.4.10 Reflow).",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "view_agenda",
+    "emoji": "📰",
+    "quickStart": false,
+    "settings": {
+      "reflowColumn": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -795,6 +813,10 @@ globalThis.AA_TOOLS = {
   "describeOnDemand": {
     "type": "boolean",
     "description": "Get an AI description of any element on request"
+  },
+  "reflowColumn": {
+    "type": "boolean",
+    "description": "Force page content into one readable column"
   },
   "keyboardNav": {
     "type": "boolean",

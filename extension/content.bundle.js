@@ -119,7 +119,8 @@
           fixContrast: true,
           highlightLinks: true,
           unpinSticky: true,
-          magnifier: true
+          magnifier: true,
+          reflowColumn: true
         }
       },
       colorBlind: {
@@ -300,7 +301,8 @@
       announceUpdates: false,
       magnifier: false,
       flashGuard: false,
-      describeOnDemand: false
+      describeOnDemand: false,
+      reflowColumn: false
     }
   };
 
@@ -5200,6 +5202,79 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yDescribeOnDemand = DescribeOnDemand;
 
+  // tools/adapters/reflow-column.js
+  var ReflowColumn = {
+    styleId: "ai4a11y-reflow-column-styles",
+    rootClass: "ai4a11y-reflow",
+    enabled: false,
+    style: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const width = options.width || 720;
+      const scope = `html.${this.rootClass}`;
+      this.style = injectStyle(this.styleId, `
+${scope} body {
+  max-width: ${width}px !important;
+  margin: 0 auto !important;
+}
+/* Floats and CSS multi-column are what put content side by side. */
+${scope} * {
+  float: none !important;
+  column-count: 1 !important;
+}
+/* Linearize the common layout containers so rows stack into one column. */
+${scope} [style*="display: flex"],
+${scope} [style*="display:flex"],
+${scope} [style*="display: grid"],
+${scope} [style*="display:grid"],
+${scope} main,
+${scope} section,
+${scope} article {
+  display: block !important;
+  max-width: 100% !important;
+}
+/* Media and tables must shrink to the column, never widen it. */
+${scope} img,
+${scope} video,
+${scope} table {
+  max-width: 100% !important;
+  height: auto !important;
+}`);
+      try {
+        document.documentElement.classList.add(this.rootClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Reflow enabled");
+      announce("Page reflowed into a single column");
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        document.documentElement.classList.remove(this.rootClass);
+      } catch {
+      }
+      try {
+        (_a = this.style) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      this.style = null;
+      console.log("[AI4A11y] Reflow disabled");
+      announce("Page layout restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReflowColumn = ReflowColumn;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5383,6 +5458,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     if (settings2.magnifier) Magnifier.enable();
     if (settings2.flashGuard) FlashGuard.enable();
     if (settings2.describeOnDemand) DescribeOnDemand.enable();
+    if (settings2.reflowColumn) ReflowColumn.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5585,6 +5661,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     Magnifier.disable();
     FlashGuard.disable();
     DescribeOnDemand.disable();
+    ReflowColumn.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5713,7 +5790,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
           LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
           Magnifier: Magnifier.enabled || false,
           FlashGuard: FlashGuard.enabled || false,
-          DescribeOnDemand: DescribeOnDemand.enabled || false
+          DescribeOnDemand: DescribeOnDemand.enabled || false,
+          ReflowColumn: ReflowColumn.enabled || false
         }
       });
       return true;

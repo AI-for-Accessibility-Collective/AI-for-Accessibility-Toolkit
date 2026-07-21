@@ -30,7 +30,8 @@
           fixContrast: true,
           highlightLinks: true,
           unpinSticky: true,
-          magnifier: true
+          magnifier: true,
+          reflowColumn: true
         }
       },
       colorBlind: {
@@ -211,7 +212,8 @@
       announceUpdates: false,
       magnifier: false,
       flashGuard: false,
-      describeOnDemand: false
+      describeOnDemand: false,
+      reflowColumn: false
     }
   };
 
