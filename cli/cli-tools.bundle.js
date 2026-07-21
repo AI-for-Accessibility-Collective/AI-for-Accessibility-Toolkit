@@ -6141,6 +6141,7 @@ ${chunk}
     if (profileTools.confirmActions) ConfirmActions.enable();
     if (profileTools.rememberSpot) ReadingSpot.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
+    if (profileTools.voiceCommands) VoiceCommands.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
     }
