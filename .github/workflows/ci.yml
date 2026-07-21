@@ -60,6 +60,7 @@ jobs:
           node toolkit/test/skill-test.js
           node toolkit/test/skill-edge-test.js
           node toolkit/test/skill-apply-test.js
+          node toolkit/test/scenario-test.js
           node toolkit/hosts/xr-demo/demo.js
           node toolkit/hosts/skill-demo/demo.js
 
