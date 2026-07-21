@@ -238,7 +238,8 @@
           hideDistractions: true,
           showProgress: false,
           dismissOverlays: true,
-          muteSounds: true
+          muteSounds: true,
+          reduceBrightness: true
         }
       },
       photosensitive: {
@@ -246,7 +247,8 @@
         description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
         tools: {
           darkMode: true,
-          motionReducer: true
+          motionReducer: true,
+          reduceBrightness: true
         }
       }
     },
@@ -287,7 +289,8 @@
       translateTo: "English",
       muteSounds: false,
       defineWords: false,
-      stopAutoAdvance: false
+      stopAutoAdvance: false,
+      reduceBrightness: false
     }
   };
 
@@ -4540,6 +4543,65 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yStopAutoAdvance = StopAutoAdvance;
 
+  // tools/adapters/reduce-brightness.js
+  var ReduceBrightness = {
+    styleId: "ai4a11y-reduce-brightness-styles",
+    htmlClass: "ai4a11y-dimmed",
+    overlayId: "ai4a11y-dim-overlay",
+    enabled: false,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const bright = options.brightness ?? 0.8;
+      const sat = options.saturation ?? 0.85;
+      const dimLevel = options.dim ?? 0.15;
+      try {
+        document.documentElement.classList.add(this.htmlClass);
+      } catch {
+      }
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      const overlay = document.createElement("div");
+      overlay.id = this.overlayId;
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
+      overlay.style.pointerEvents = "none";
+      overlay.style.zIndex = "2147483646";
+      (document.body || document.documentElement).appendChild(overlay);
+      console.log("[AI4A11y] Reduce Brightness enabled");
+      announce("Screen dimmed");
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        (_a = document.documentElement) == null ? void 0 : _a.classList.remove(this.htmlClass);
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      try {
+        (_c = document.getElementById(this.overlayId)) == null ? void 0 : _c.remove();
+      } catch {
+      }
+      console.log("[AI4A11y] Reduce Brightness disabled");
+      announce("Screen brightness restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReduceBrightness = ReduceBrightness;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -4717,6 +4779,7 @@ ${scope(":focus")} {
     if (settings2.muteSounds) MuteSounds.enable();
     if (settings2.defineWords) DefineWords.enable();
     if (settings2.stopAutoAdvance) StopAutoAdvance.enable();
+    if (settings2.reduceBrightness) ReduceBrightness.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -4913,6 +4976,7 @@ ${scope(":focus")} {
     MuteSounds.disable();
     DefineWords.disable();
     StopAutoAdvance.disable();
+    ReduceBrightness.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5035,7 +5099,8 @@ ${scope(":focus")} {
           TranslatePage: TranslatePage.enabled || false,
           MuteSounds: MuteSounds.enabled || false,
           DefineWords: DefineWords.enabled || false,
-          StopAutoAdvance: StopAutoAdvance.enabled || false
+          StopAutoAdvance: StopAutoAdvance.enabled || false,
+          ReduceBrightness: ReduceBrightness.enabled || false
         }
       });
       return true;

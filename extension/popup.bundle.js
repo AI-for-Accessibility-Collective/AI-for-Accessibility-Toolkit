@@ -149,7 +149,8 @@
           hideDistractions: true,
           showProgress: false,
           dismissOverlays: true,
-          muteSounds: true
+          muteSounds: true,
+          reduceBrightness: true
         }
       },
       photosensitive: {
@@ -157,7 +158,8 @@
         description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
         tools: {
           darkMode: true,
-          motionReducer: true
+          motionReducer: true,
+          reduceBrightness: true
         }
       }
     },
@@ -198,7 +200,8 @@
       translateTo: "English",
       muteSounds: false,
       defineWords: false,
-      stopAutoAdvance: false
+      stopAutoAdvance: false,
+      reduceBrightness: false
     }
   };
 

@@ -188,6 +188,17 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('autoadvance: carousel animation resumes after disable', (await css('#car', 'animationPlayState')) === 'running');
   }
 
+  // ── Reduce Brightness — REAL: a computed filter is applied to <html> ────────
+  {
+    check('brightness: no page filter before', (await css('html', 'filter')) === 'none');
+    await enable('reduceBrightness');
+    const filt = await css('html', 'filter');
+    check(`brightness: a real brightness/saturate filter is applied (${filt})`, filt !== 'none' && /brightness|matrix/.test(filt));
+    check('brightness: a dimming overlay is added', await exists('#ai4a11y-dim-overlay'));
+    await disable('reduceBrightness');
+    check('brightness: filter and overlay removed after disable', (await css('html', 'filter')) === 'none' && !(await exists('#ai4a11y-dim-overlay')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

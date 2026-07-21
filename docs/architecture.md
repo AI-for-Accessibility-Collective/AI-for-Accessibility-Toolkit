@@ -185,8 +185,8 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance |
 | `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance |
 | `anxiety` | Calm UI, reduced motion, dismiss popups, mute sounds |
-| `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds |
-| `photosensitive` | Dark mode, reduced motion |
+| `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds, reduce brightness |
+| `photosensitive` | Dark mode, reduced motion, reduce brightness |
 
 Profiles are defined in `tools/profiles/settings.js`. Users can also toggle individual tools, and every explicit change feeds the Librarian's continual-update loop.
 

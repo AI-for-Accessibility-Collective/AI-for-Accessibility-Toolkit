@@ -310,6 +310,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "reduce-brightness",
+    "name": "Reduce Brightness",
+    "description": "Dims and desaturates the whole page for a calmer, low-stimulation view — for light sensitivity, migraine, and sensory-overload needs (distinct from dark mode).",
+    "supportAreas": [
+      "sensory",
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "brightness_low",
+    "emoji": "🔆",
+    "quickStart": false,
+    "settings": {
+      "reduceBrightness": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -661,6 +680,10 @@ globalThis.AA_TOOLS = {
   "stopAutoAdvance": {
     "type": "boolean",
     "description": "Pause auto-carousels, auto-refresh, and autoplay media"
+  },
+  "reduceBrightness": {
+    "type": "boolean",
+    "description": "Dim and desaturate the page for a low-stimulation view"
   },
   "keyboardNav": {
     "type": "boolean",

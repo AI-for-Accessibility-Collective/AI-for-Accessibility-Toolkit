@@ -31,6 +31,7 @@ import { TranslatePage } from '../tools/adapters/translate-page.js';
 import { MuteSounds } from '../tools/adapters/mute-sounds.js';
 import { DefineWords } from '../tools/adapters/define-words.js';
 import { StopAutoAdvance } from '../tools/adapters/stop-auto-advance.js';
+import { ReduceBrightness } from '../tools/adapters/reduce-brightness.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -179,6 +180,7 @@ const tools = {
   muteSounds: MuteSounds,
   defineWords: DefineWords,
   stopAutoAdvance: StopAutoAdvance,
+  reduceBrightness: ReduceBrightness,
 };
 
 // Normalize tool name (handles case variations)
@@ -219,6 +221,8 @@ function normalizeTool(name) {
     'define': 'defineWords',
     'stopautoadvance': 'stopAutoAdvance',
     'stopauto': 'stopAutoAdvance',
+    'reducebrightness': 'reduceBrightness',
+    'dim': 'reduceBrightness',
   };
   return map[lower] || name;
 }
@@ -316,6 +320,7 @@ function applyProfileByName(profileId) {
   if (profileTools.muteSounds) MuteSounds.enable();
   if (profileTools.defineWords) DefineWords.enable();
   if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
+  if (profileTools.reduceBrightness) ReduceBrightness.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -366,6 +371,7 @@ function getToolDescription(name) {
     muteSounds: 'Mute all audio and video and block autoplay sound',
     defineWords: 'Show plain-language definitions of hard words on hover (AI)',
     stopAutoAdvance: 'Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)',
+    reduceBrightness: 'Dim and desaturate the page for a low-stimulation view',
   };
   return descriptions[name] || '';
 }

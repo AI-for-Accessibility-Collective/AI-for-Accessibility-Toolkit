@@ -2611,6 +2611,65 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yStopAutoAdvance = StopAutoAdvance;
 
+  // tools/adapters/reduce-brightness.js
+  var ReduceBrightness = {
+    styleId: "ai4a11y-reduce-brightness-styles",
+    htmlClass: "ai4a11y-dimmed",
+    overlayId: "ai4a11y-dim-overlay",
+    enabled: false,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const bright = options.brightness ?? 0.8;
+      const sat = options.saturation ?? 0.85;
+      const dimLevel = options.dim ?? 0.15;
+      try {
+        document.documentElement.classList.add(this.htmlClass);
+      } catch {
+      }
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      const overlay = document.createElement("div");
+      overlay.id = this.overlayId;
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
+      overlay.style.pointerEvents = "none";
+      overlay.style.zIndex = "2147483646";
+      (document.body || document.documentElement).appendChild(overlay);
+      console.log("[AI4A11y] Reduce Brightness enabled");
+      announce("Screen dimmed");
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        (_a = document.documentElement) == null ? void 0 : _a.classList.remove(this.htmlClass);
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      try {
+        (_c = document.getElementById(this.overlayId)) == null ? void 0 : _c.remove();
+      } catch {
+      }
+      console.log("[AI4A11y] Reduce Brightness disabled");
+      announce("Screen brightness restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReduceBrightness = ReduceBrightness;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -4528,7 +4587,8 @@ ${chunk}
           hideDistractions: true,
           showProgress: false,
           dismissOverlays: true,
-          muteSounds: true
+          muteSounds: true,
+          reduceBrightness: true
         }
       },
       photosensitive: {
@@ -4536,7 +4596,8 @@ ${chunk}
         description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
         tools: {
           darkMode: true,
-          motionReducer: true
+          motionReducer: true,
+          reduceBrightness: true
         }
       }
     },
@@ -4577,7 +4638,8 @@ ${chunk}
       translateTo: "English",
       muteSounds: false,
       defineWords: false,
-      stopAutoAdvance: false
+      stopAutoAdvance: false,
+      reduceBrightness: false
     }
   };
 
@@ -4689,7 +4751,8 @@ ${chunk}
     translatePage: TranslatePage,
     muteSounds: MuteSounds,
     defineWords: DefineWords,
-    stopAutoAdvance: StopAutoAdvance
+    stopAutoAdvance: StopAutoAdvance,
+    reduceBrightness: ReduceBrightness
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -4727,7 +4790,9 @@ ${chunk}
       "definewords": "defineWords",
       "define": "defineWords",
       "stopautoadvance": "stopAutoAdvance",
-      "stopauto": "stopAutoAdvance"
+      "stopauto": "stopAutoAdvance",
+      "reducebrightness": "reduceBrightness",
+      "dim": "reduceBrightness"
     };
     return map[lower] || name;
   }
@@ -4811,6 +4876,7 @@ ${chunk}
     if (profileTools.muteSounds) MuteSounds.enable();
     if (profileTools.defineWords) DefineWords.enable();
     if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
+    if (profileTools.reduceBrightness) ReduceBrightness.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -4854,7 +4920,8 @@ ${chunk}
       translatePage: "Translate the page text into another language (AI)",
       muteSounds: "Mute all audio and video and block autoplay sound",
       defineWords: "Show plain-language definitions of hard words on hover (AI)",
-      stopAutoAdvance: "Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)"
+      stopAutoAdvance: "Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)",
+      reduceBrightness: "Dim and desaturate the page for a low-stimulation view"
     };
     return descriptions[name] || "";
   }
