@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AI for Accessibility",
+  "name": "Agentic A11y",
   "version": "1.0.0",
   "description": "AI-powered accessibility fixes: auto-generate alt text, describe canvas/charts, simplify text, fix contrast, and more.",
   "permissions": [
