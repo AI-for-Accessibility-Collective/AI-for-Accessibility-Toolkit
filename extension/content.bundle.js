@@ -120,7 +120,8 @@
           highlightLinks: true,
           unpinSticky: true,
           magnifier: true,
-          reflowColumn: true
+          reflowColumn: true,
+          focusLocator: true
         }
       },
       colorBlind: {
@@ -157,7 +158,8 @@
           bigTargets: true,
           pageOutline: true,
           unpinSticky: true,
-          stopAutoAdvance: true
+          stopAutoAdvance: true,
+          focusLocator: true
         }
       },
       dyslexia: {
@@ -302,7 +304,8 @@
       magnifier: false,
       flashGuard: false,
       describeOnDemand: false,
-      reflowColumn: false
+      reflowColumn: false,
+      focusLocator: false
     }
   };
 
@@ -5275,6 +5278,92 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yReflowColumn = ReflowColumn;
 
+  // tools/adapters/focus-locator.js
+  var FocusLocator = {
+    styleId: "ai4a11y-focus-locator-styles",
+    ringId: "ai4a11y-focus-ring",
+    enabled: false,
+    styleHandle: null,
+    ring: null,
+    focusInHandler: null,
+    focusOutHandler: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const color = options && options.color || "#ffbf00";
+      this.styleHandle = injectStyle(this.styleId, `
+      *:focus, *:focus-visible {
+        outline: 4px solid ${color} !important;
+        outline-offset: 3px !important;
+        box-shadow: 0 0 0 7px color-mix(in srgb, ${color} 40%, transparent) !important;
+      }
+    `);
+      const ring = document.createElement("div");
+      ring.id = this.ringId;
+      ring.setAttribute("aria-hidden", "true");
+      ring.style.cssText = [
+        "position: fixed",
+        "display: none",
+        "pointer-events: none",
+        `border: 3px solid ${color}`,
+        "border-radius: 4px",
+        "background: none",
+        "z-index: 2147483646",
+        "box-sizing: border-box"
+      ].join("; ");
+      (document.body || document.documentElement).appendChild(ring);
+      this.ring = ring;
+      this.focusInHandler = (event) => {
+        if (!this.enabled || !this.ring) return;
+        const el = event.target;
+        if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
+        try {
+          const rect = el.getBoundingClientRect();
+          this.ring.style.top = `${rect.top}px`;
+          this.ring.style.left = `${rect.left}px`;
+          this.ring.style.width = `${rect.width}px`;
+          this.ring.style.height = `${rect.height}px`;
+          this.ring.style.display = "block";
+        } catch {
+        }
+      };
+      this.focusOutHandler = () => {
+        if (this.ring) this.ring.style.display = "none";
+      };
+      document.addEventListener("focusin", this.focusInHandler, true);
+      document.addEventListener("focusout", this.focusOutHandler, true);
+      console.log("[AI4A11y] Focus Locator enabled");
+      announce("Focus highlighting on");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.focusInHandler) {
+        document.removeEventListener("focusin", this.focusInHandler, true);
+        this.focusInHandler = null;
+      }
+      if (this.focusOutHandler) {
+        document.removeEventListener("focusout", this.focusOutHandler, true);
+        this.focusOutHandler = null;
+      }
+      if (this.styleHandle) {
+        this.styleHandle.remove();
+        this.styleHandle = null;
+      }
+      if (this.ring) {
+        this.ring.remove();
+        this.ring = null;
+      }
+      console.log("[AI4A11y] Focus Locator disabled");
+      announce("Focus highlighting off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFocusLocator = FocusLocator;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5459,6 +5548,7 @@ ${scope} table {
     if (settings2.flashGuard) FlashGuard.enable();
     if (settings2.describeOnDemand) DescribeOnDemand.enable();
     if (settings2.reflowColumn) ReflowColumn.enable();
+    if (settings2.focusLocator) FocusLocator.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5662,6 +5752,7 @@ ${scope} table {
     FlashGuard.disable();
     DescribeOnDemand.disable();
     ReflowColumn.disable();
+    FocusLocator.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5791,7 +5882,8 @@ ${scope} table {
           Magnifier: Magnifier.enabled || false,
           FlashGuard: FlashGuard.enabled || false,
           DescribeOnDemand: DescribeOnDemand.enabled || false,
-          ReflowColumn: ReflowColumn.enabled || false
+          ReflowColumn: ReflowColumn.enabled || false,
+          FocusLocator: FocusLocator.enabled || false
         }
       });
       return true;
