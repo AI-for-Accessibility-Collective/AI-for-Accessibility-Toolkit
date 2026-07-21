@@ -24,7 +24,8 @@
           letterSpacing: 0.12,
           largeCursor: true,
           enhanceFocus: true,
-          fixContrast: true
+          fixContrast: true,
+          highlightLinks: true
         }
       },
       colorBlind: {
@@ -67,7 +68,8 @@
           fontScale: 115,
           lineHeight: 2,
           letterSpacing: 0.12,
-          focusMode: true
+          focusMode: true,
+          highlightLinks: true
         }
       },
       adhd: {
@@ -93,7 +95,8 @@
           dismissOverlays: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: true
+          showProgress: true,
+          highlightLinks: true
         }
       },
       elderly: {
@@ -110,7 +113,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          bigTargets: true
+          bigTargets: true,
+          highlightLinks: true
         }
       },
       anxiety: {
@@ -173,7 +177,8 @@
       lineHeight: 1.5,
       letterSpacing: 0,
       contrastMode: "none",
-      colorFilter: "none"
+      colorFilter: "none",
+      highlightLinks: false
     }
   };
 

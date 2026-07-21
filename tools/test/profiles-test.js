@@ -19,7 +19,7 @@ const RECOGNIZED = new Set([
   'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
   'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'colorBlindMode', 'contrastMode', 'darkMode',
   'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'focusMode', 'fontScale', 'hideDistractions',
-  'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'motionReducer',
+  'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'motionReducer',
   'readerMode', 'readingGuide', 'showProgress', 'speechRate', 'voiceCommands',
   'fixContrast',
 ]);

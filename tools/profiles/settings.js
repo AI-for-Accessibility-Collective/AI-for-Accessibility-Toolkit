@@ -142,6 +142,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.motionReducer) enabled.push('motion-reducer');
   if (tools.dismissOverlays) enabled.push('dismiss-overlays');
   if (tools.bigTargets) enabled.push('big-targets');
+  if (tools.highlightLinks) enabled.push('link-highlighter');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');

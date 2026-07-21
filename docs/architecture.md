@@ -176,14 +176,14 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | Profile | What it enables |
 |---------|-----------------|
 | `blind` | Auto alt text, labels, WCAG fixes, keyboard nav |
-| `lowVision` | Large text (150%), enhanced focus, high contrast |
+| `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links |
 | `colorBlind` | Color filters, enhanced contrast |
 | `deaf` | Auto captions, visual emphasis |
 | `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets |
-| `dyslexia` | Wider spacing, larger text, focus mode |
+| `dyslexia` | Wider spacing, larger text, focus mode, highlight links |
 | `adhd` | Focus mode, reduced motion, reader mode, dismiss popups |
-| `cognitive` | Simplified text, summaries, dismiss popups |
-| `elderly` | Large text, enhanced focus, simplified text, bigger click targets |
+| `cognitive` | Simplified text, summaries, dismiss popups, highlight links |
+| `elderly` | Large text, enhanced focus, simplified text, bigger click targets, highlight links |
 | `anxiety` | Calm UI, reduced motion, dismiss popups |
 | `sensory` | Reduced motion, focus mode, dismiss popups |
 | `photosensitive` | Dark mode, reduced motion |

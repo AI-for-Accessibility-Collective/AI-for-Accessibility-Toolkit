@@ -23,6 +23,7 @@ import { KeyboardNavigator } from '../tools/adapters/keyboard-nav.js';
 import { ColorBlindMode } from '../tools/adapters/color-blind.js';
 import { DismissOverlays } from '../tools/adapters/dismiss-overlays.js';
 import { BigTargets } from '../tools/adapters/big-targets.js';
+import { LinkHighlighter } from '../tools/adapters/link-highlighter.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -151,6 +152,7 @@ const tools = {
   autoTranscriber: AutoTranscriber,
   dismissOverlays: DismissOverlays,
   bigTargets: BigTargets,
+  highlightLinks: LinkHighlighter,
 };
 
 // Normalize tool name (handles case variations)
@@ -175,6 +177,8 @@ function normalizeTool(name) {
     'dismisspopups': 'dismissOverlays',
     'bigtargets': 'bigTargets',
     'biggertargets': 'bigTargets',
+    'highlightlinks': 'highlightLinks',
+    'linkhighlighter': 'highlightLinks',
   };
   return map[lower] || name;
 }
@@ -264,6 +268,7 @@ function applyProfileByName(profileId) {
   if (profileTools.readerMode) ReaderMode.enable();
   if (profileTools.dismissOverlays) DismissOverlays.enable();
   if (profileTools.bigTargets) BigTargets.enable();
+  if (profileTools.highlightLinks) LinkHighlighter.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -306,6 +311,7 @@ function getToolDescription(name) {
     autoTranscriber: 'Auto-generate captions for media',
     dismissOverlays: 'Hide cookie banners, newsletter popups, and blocking modals',
     bigTargets: 'Enlarge and space out small clickable controls (WCAG 2.5.8)',
+    highlightLinks: 'Underline and strengthen links and reveal where each one leads',
   };
   return descriptions[name] || '';
 }

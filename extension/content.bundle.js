@@ -101,7 +101,8 @@
           letterSpacing: 0.12,
           largeCursor: true,
           enhanceFocus: true,
-          fixContrast: true
+          fixContrast: true,
+          highlightLinks: true
         }
       },
       colorBlind: {
@@ -144,7 +145,8 @@
           fontScale: 115,
           lineHeight: 2,
           letterSpacing: 0.12,
-          focusMode: true
+          focusMode: true,
+          highlightLinks: true
         }
       },
       adhd: {
@@ -170,7 +172,8 @@
           dismissOverlays: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: true
+          showProgress: true,
+          highlightLinks: true
         }
       },
       elderly: {
@@ -187,7 +190,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          bigTargets: true
+          bigTargets: true,
+          highlightLinks: true
         }
       },
       anxiety: {
@@ -250,7 +254,8 @@
       lineHeight: 1.5,
       letterSpacing: 0,
       contrastMode: "none",
-      colorFilter: "none"
+      colorFilter: "none",
+      highlightLinks: false
     }
   };
 
@@ -3420,6 +3425,126 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
 
+  // tools/adapters/link-highlighter.js
+  var LinkHighlighter = {
+    styleId: "ai4a11y-link-highlighter-styles",
+    bodyClass: "ai4a11y-highlight-links",
+    dataAttr: "data-ai4a11y-linkhl",
+    enabled: false,
+    titled: null,
+    // Set of links WE titled (for exact restore)
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.titled = /* @__PURE__ */ new Set();
+      const color = options && options.color || "#0b57d0";
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+      .${this.bodyClass} a[href] {
+        text-decoration: underline !important;
+        text-decoration-thickness: 2px !important;
+        text-underline-offset: 2px !important;
+        font-weight: 600 !important;
+        color: ${color} !important;
+      }
+      .${this.bodyClass} a[href]:focus,
+      .${this.bodyClass} a[href]:focus-visible {
+        outline: 3px solid ${color} !important;
+        outline-offset: 2px !important;
+      }
+    `;
+      (document.head || document.documentElement).appendChild(style);
+      if (document.body) document.body.classList.add(this.bodyClass);
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Link Highlighter enabled (${count} destinations revealed)`);
+      announce(count ? `Links highlighted, ${count} destination${count === 1 ? "" : "s"} revealed` : "Links highlighted");
+    },
+    // Reveal destination hosts for every untitled link under root; returns how
+    // many links were titled.
+    sweep(root) {
+      let n = 0;
+      let links;
+      try {
+        links = root.querySelectorAll("a[href]");
+      } catch {
+        return 0;
+      }
+      for (const a of links) if (this.reveal(a)) n++;
+      return n;
+    },
+    // An added node may itself be a link, or contain links.
+    consider(node) {
+      if (!node || node.nodeType !== 1) return;
+      try {
+        if (node.matches && node.matches("a[href]")) this.reveal(node);
+      } catch {
+      }
+      if (node.querySelectorAll) this.sweep(node);
+    },
+    // Set one link's title to its destination host. Returns true if we titled
+    // it. NEVER overwrites a title the page already set — that text is the
+    // page's own description and must survive disable() untouched.
+    reveal(a) {
+      if (!a || a.nodeType !== 1 || this.titled.has(a)) return false;
+      if (a.hasAttribute("title")) return false;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#")) return false;
+      let host = "";
+      try {
+        host = new URL(href, window.location.href).host;
+      } catch {
+        return false;
+      }
+      if (!host) return false;
+      a.setAttribute("title", host);
+      a.setAttribute(this.dataAttr, "");
+      this.titled.add(a);
+      return true;
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (document.body) document.body.classList.remove(this.bodyClass);
+      if (this.titled) {
+        for (const a of this.titled) {
+          try {
+            a.removeAttribute("title");
+            a.removeAttribute(this.dataAttr);
+          } catch {
+          }
+        }
+        this.titled.clear();
+        this.titled = null;
+      }
+      console.log("[AI4A11y] Link Highlighter disabled");
+      announce("Link highlighting off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yLinkHighlighter = LinkHighlighter;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -3587,6 +3712,7 @@ ${scope(":focus")} {
     if (settings2.readerMode) ReaderMode.enable();
     if (settings2.dismissOverlays) DismissOverlays.enable();
     if (settings2.bigTargets) BigTargets.enable();
+    if (settings2.highlightLinks) LinkHighlighter.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -3775,6 +3901,7 @@ ${scope(":focus")} {
     AutoTranscriber.disable();
     DismissOverlays.disable();
     BigTargets.disable();
+    LinkHighlighter.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -3889,7 +4016,8 @@ ${scope(":focus")} {
           KeyboardNavigator: KeyboardNavigator.enabled || false,
           AutoTranscriber: AutoTranscriber.enabled || false,
           DismissOverlays: DismissOverlays.enabled || false,
-          BigTargets: BigTargets.enabled || false
+          BigTargets: BigTargets.enabled || false,
+          LinkHighlighter: LinkHighlighter.enabled || false
         }
       });
       return true;
