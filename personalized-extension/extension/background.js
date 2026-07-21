@@ -1056,7 +1056,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           case 'librarianFindSkill':
             sendResponse({ skill: await L.findSkillForNeed(msg.need) }); break;
           case 'librarianBuildSkill':
-            sendResponse(await L.buildSkill(msg.need)); break;
+            sendResponse(await L.buildSkill(msg.need, { previous: msg.previous || null, feedback: msg.feedback || '' })); break;
           case 'librarianResolveSkill':
             sendResponse({ plan: L.resolveSkill(msg.skill) }); break;
           case 'librarianSaveSkill':

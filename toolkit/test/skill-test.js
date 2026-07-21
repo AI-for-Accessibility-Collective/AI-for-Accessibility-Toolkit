@@ -97,6 +97,15 @@ const prompt = buildSkillPrompt('make news sites calmer and easier to read', { p
 check('prompt grounds the model in real adapter ids', prompt.includes('visual-assist') && prompt.includes('focus-mode'));
 check('prompt lists setting vocabulary', prompt.includes('fontScale'));
 check('prompt asks for SKILL.md shape', prompt.includes('SKILL.md') && prompt.includes('"adapters"'));
+check('prompt has no revision block without feedback', !prompt.includes('The person tried it'));
+
+// The evaluation loop: a rejected attempt + feedback goes back to the Engineer.
+const revisePrompt = buildSkillPrompt('make news sites calmer and easier to read', {
+  profile: { supportAreas: ['vision'] }, tools, taxonomy: TAXONOMY,
+  previous: reading, feedback: 'the text is still too small',
+});
+check('revision prompt carries the previous skill', revisePrompt.includes('name: reading-aid'));
+check('revision prompt carries the feedback', revisePrompt.includes('the text is still too small'));
 
 // Simulate an LLM returning a well-formed skill (wrapped in a markdown fence).
 const fakeLLMOut = '```markdown\n' + serializeSkill({

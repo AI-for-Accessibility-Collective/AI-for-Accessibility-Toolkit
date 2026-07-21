@@ -122,6 +122,30 @@ async function onSave() {
   }
 }
 
+// The evaluation loop's "fail" arrow: the person tried (or read) the built
+// skill and it isn't right — send it back to the Engineer with their feedback
+// and show the revised version in the same preview.
+async function onImprove() {
+  const feedback = $('feedbackInput').value.trim();
+  if (!builtSkill) return;
+  if (!feedback) { $('buildStatus').textContent = 'Say what to change first.'; return; }
+  $('improveBtn').disabled = true;
+  $('buildStatus').textContent = 'The Engineer is revising the skill…';
+
+  const need = $('needInput').value.trim();
+  const resp = await sendBg({ type: 'librarianBuildSkill', need, previous: builtSkill, feedback });
+  $('improveBtn').disabled = false;
+
+  if (resp.error || !resp.skill) {
+    $('buildStatus').textContent = `Couldn't revise: ${resp.error || resp.errors?.join('; ') || 'no skill produced'}`;
+    return;
+  }
+  builtSkill = resp.skill;
+  $('feedbackInput').value = '';
+  $('buildStatus').textContent = resp.valid ? 'Revised. Review it below.' : 'Revised, but review the warnings.';
+  renderPreview(resp.skill, resp.valid, resp.errors || []);
+}
+
 // ---- List + apply + delete -------------------------------------------------
 let matchName = null;
 
@@ -221,6 +245,7 @@ function init() {
   // The adaptive evaluation step: experience the built skill on the real page
   // BEFORE deciding to save it. Same consent-by-click path as Apply.
   $('tryBtn').addEventListener('click', () => { if (builtSkill) applySkill(builtSkill, $('tryBtn')); });
+  $('improveBtn').addEventListener('click', onImprove);
   $('discardBtn').addEventListener('click', () => { $('preview').hidden = true; builtSkill = null; });
   $('suggestBtn').addEventListener('click', onSuggest);
   // Reuse offer: "Use it" highlights the existing skill in the list below
