@@ -516,6 +516,26 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "reading-spot",
+    "name": "Save Reading Spot",
+    "description": "Remembers how far down a page you had read and offers a one-click \"jump back to where you were\" when you return, a memory aid for cognitive and older-adult users.",
+    "supportAreas": [
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference"
+    ],
+    "requiresAI": false,
+    "icon": "bookmark",
+    "emoji": "🔖",
+    "quickStart": false,
+    "settings": {
+      "rememberSpot": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -911,6 +931,10 @@ globalThis.AA_TOOLS = {
   "confirmActions": {
     "type": "boolean",
     "description": "Ask for confirmation before risky or final actions"
+  },
+  "rememberSpot": {
+    "type": "boolean",
+    "description": "Remember and restore your reading position on a page"
   },
   "keyboardNav": {
     "type": "boolean",
