@@ -2446,6 +2446,171 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yDefineWords = DefineWords;
 
+  // tools/adapters/stop-auto-advance.js
+  var CAROUSEL_SELECTOR = '[class*="carousel"], [class*="slider"], [class*="rotat"], [class*="ticker"], [class*="marquee"], [aria-roledescription="carousel"]';
+  var StopAutoAdvance = {
+    styleId: "ai4a11y-stop-autoadvance-styles",
+    enabled: false,
+    removedMetas: null,
+    // Array of { node, parent, nextSibling } for exact restore
+    pausedMedia: null,
+    // Set of media elements we paused (resume exactly these)
+    stoppedMarquees: null,
+    // Set of <marquee> elements we stopped
+    observer: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.removedMetas = [];
+      this.pausedMedia = /* @__PURE__ */ new Set();
+      this.stoppedMarquees = /* @__PURE__ */ new Set();
+      let metas = [];
+      try {
+        metas = Array.from(document.querySelectorAll("meta[http-equiv]"));
+      } catch {
+      }
+      for (const meta of metas) {
+        try {
+          if ((meta.getAttribute("http-equiv") || "").trim().toLowerCase() !== "refresh") continue;
+          this.removedMetas.push({ node: meta, parent: meta.parentNode, nextSibling: meta.nextSibling });
+          meta.remove();
+        } catch {
+        }
+      }
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      const descendants = CAROUSEL_SELECTOR.split(", ").map((s) => `${s} *`).join(", ");
+      style.textContent = `${CAROUSEL_SELECTOR}, ${descendants} { animation-play-state: paused !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      const stilled = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.considerLate(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      const total = this.removedMetas.length + stilled;
+      console.log(`[AI4A11y] Stop Auto-Advance enabled (${total} stopped)`);
+      announce(total ? `Stopped ${total} auto-advancing item${total === 1 ? "" : "s"}; carousels paused` : "Paused carousels; watching for auto-playing media");
+    },
+    // Still every playing media element and running marquee under root.
+    // Returns how many were stopped.
+    sweep(root) {
+      let n = 0;
+      let media = [];
+      try {
+        media = root.querySelectorAll("video, audio");
+      } catch {
+        return 0;
+      }
+      for (const el of media) if (this.considerMedia(el)) n++;
+      let marquees = [];
+      try {
+        marquees = root.querySelectorAll("marquee");
+      } catch {
+        return n;
+      }
+      for (const el of marquees) if (this.considerMarquee(el)) n++;
+      return n;
+    },
+    // Pause one media element if it is currently playing. Returns true if we
+    // paused it (and will therefore resume it on disable).
+    considerMedia(el) {
+      try {
+        if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
+        if (typeof el.pause === "function") el.pause();
+        this.pausedMedia.add(el);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    considerMarquee(el) {
+      try {
+        if (!el || this.stoppedMarquees.has(el)) return false;
+        if (typeof el.stop === "function") el.stop();
+        this.stoppedMarquees.add(el);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    // A node added after enable: still it if it is itself media/marquee,
+    // otherwise sweep whatever it contains.
+    considerLate(el) {
+      const tag = (el.tagName || "").toLowerCase();
+      if (tag === "video" || tag === "audio") {
+        this.considerMedia(el);
+        return;
+      }
+      if (tag === "marquee") {
+        this.considerMarquee(el);
+        return;
+      }
+      if (el.querySelectorAll) this.sweep(el);
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      if (this.removedMetas) {
+        for (const { node, parent, nextSibling } of this.removedMetas) {
+          if (!parent) continue;
+          try {
+            parent.insertBefore(node, nextSibling);
+          } catch {
+            try {
+              parent.appendChild(node);
+            } catch {
+            }
+          }
+        }
+        this.removedMetas = null;
+      }
+      if (this.pausedMedia) {
+        for (const el of this.pausedMedia) {
+          try {
+            if (typeof el.play === "function") (_c = (_b = el.play()) == null ? void 0 : _b.catch) == null ? void 0 : _c.call(_b, () => {
+            });
+          } catch {
+          }
+        }
+        this.pausedMedia.clear();
+        this.pausedMedia = null;
+      }
+      if (this.stoppedMarquees) {
+        for (const el of this.stoppedMarquees) {
+          try {
+            if (typeof el.start === "function") el.start();
+          } catch {
+          }
+        }
+        this.stoppedMarquees.clear();
+        this.stoppedMarquees = null;
+      }
+      console.log("[AI4A11y] Stop Auto-Advance disabled");
+      announce("Auto-advancing content resumed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yStopAutoAdvance = StopAutoAdvance;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -4276,7 +4441,8 @@ ${chunk}
           dismissOverlays: true,
           bigTargets: true,
           pageOutline: true,
-          unpinSticky: true
+          unpinSticky: true,
+          stopAutoAdvance: true
         }
       },
       dyslexia: {
@@ -4317,7 +4483,8 @@ ${chunk}
           hideDistractions: true,
           showProgress: true,
           highlightLinks: true,
-          defineWords: true
+          defineWords: true,
+          stopAutoAdvance: true
         }
       },
       olderAdult: {
@@ -4335,7 +4502,8 @@ ${chunk}
           hideDistractions: true,
           showProgress: true,
           bigTargets: true,
-          highlightLinks: true
+          highlightLinks: true,
+          stopAutoAdvance: true
         }
       },
       anxiety: {
@@ -4408,7 +4576,8 @@ ${chunk}
       translatePage: false,
       translateTo: "English",
       muteSounds: false,
-      defineWords: false
+      defineWords: false,
+      stopAutoAdvance: false
     }
   };
 
@@ -4519,7 +4688,8 @@ ${chunk}
     unpinSticky: UnpinSticky,
     translatePage: TranslatePage,
     muteSounds: MuteSounds,
-    defineWords: DefineWords
+    defineWords: DefineWords,
+    stopAutoAdvance: StopAutoAdvance
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -4555,7 +4725,9 @@ ${chunk}
       "mutesounds": "muteSounds",
       "mute": "muteSounds",
       "definewords": "defineWords",
-      "define": "defineWords"
+      "define": "defineWords",
+      "stopautoadvance": "stopAutoAdvance",
+      "stopauto": "stopAutoAdvance"
     };
     return map[lower] || name;
   }
@@ -4638,6 +4810,7 @@ ${chunk}
     if (profileTools.translatePage) TranslatePage.enable({ targetLang: profileTools.translateTo });
     if (profileTools.muteSounds) MuteSounds.enable();
     if (profileTools.defineWords) DefineWords.enable();
+    if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -4680,7 +4853,8 @@ ${chunk}
       unpinSticky: "Un-fix sticky headers/bars so they stop eating the viewport when zoomed",
       translatePage: "Translate the page text into another language (AI)",
       muteSounds: "Mute all audio and video and block autoplay sound",
-      defineWords: "Show plain-language definitions of hard words on hover (AI)"
+      defineWords: "Show plain-language definitions of hard words on hover (AI)",
+      stopAutoAdvance: "Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)"
     };
     return descriptions[name] || "";
   }

@@ -29,6 +29,7 @@ export { UnpinSticky } from './unpin-sticky.js';
 export { TranslatePage } from './translate-page.js';
 export { MuteSounds } from './mute-sounds.js';
 export { DefineWords } from './define-words.js';
+export { StopAutoAdvance } from './stop-auto-advance.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

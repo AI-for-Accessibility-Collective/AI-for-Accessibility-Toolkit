@@ -62,7 +62,8 @@
           dismissOverlays: true,
           bigTargets: true,
           pageOutline: true,
-          unpinSticky: true
+          unpinSticky: true,
+          stopAutoAdvance: true
         }
       },
       dyslexia: {
@@ -103,7 +104,8 @@
           hideDistractions: true,
           showProgress: true,
           highlightLinks: true,
-          defineWords: true
+          defineWords: true,
+          stopAutoAdvance: true
         }
       },
       olderAdult: {
@@ -121,7 +123,8 @@
           hideDistractions: true,
           showProgress: true,
           bigTargets: true,
-          highlightLinks: true
+          highlightLinks: true,
+          stopAutoAdvance: true
         }
       },
       anxiety: {
@@ -194,7 +197,8 @@
       translatePage: false,
       translateTo: "English",
       muteSounds: false,
-      defineWords: false
+      defineWords: false,
+      stopAutoAdvance: false
     }
   };
 
