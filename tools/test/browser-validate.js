@@ -136,8 +136,24 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('mute: the video is unmuted again after disable', await page.evaluate(() => document.querySelector('#vid').muted === false));
   }
 
-  // ── Define Words — REAL: long words become interactive spans (AI-free part) ─
+  // ── Translate Page (AI) — REAL end-to-end with a STUBBED model injected as the
+  // same window.ai4a11y_* callback the CLI uses. Validates the full path (real
+  // DOM text replaced, inline link preserved, exact restore); only the real
+  // Gemini OUTPUT quality needs a live key, which this can't assert. ──────────
   {
+    await page.evaluate(() => { window.ai4a11y_translateText = (text, lang) => `[${lang}] ${text}`; });
+    const before = await page.evaluate(() => document.querySelector('main p').textContent);
+    await enable('translatePage', { targetLang: 'Spanish' });
+    await page.waitForFunction(() => document.querySelector('main p').textContent.startsWith('[Spanish]'), { timeout: 5000 });
+    check('translate: real page text is replaced by the (stubbed) translation', true);
+    await disable('translatePage');
+    check('translate: original text restored AND the inline link survives', (await page.evaluate(() => document.querySelector('main p').textContent)) === before && (await exists('#lnk')));
+  }
+
+  // ── Define Words (AI) — REAL: wrapping (AI-free) PLUS the hover→definition
+  // path driven by a stubbed model injected as window.ai4a11y_defineWord. ─────
+  {
+    await page.evaluate(() => { window.ai4a11y_defineWord = () => 'a simple meaning'; });
     await enable('defineWords');
     const wrapped = await page.evaluate(() => document.querySelectorAll('.ai4a11y-define').length);
     check('define: long words are really wrapped as interactive spans', wrapped > 0);
@@ -145,8 +161,18 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
       const s = document.querySelector('.ai4a11y-define');
       return !!s && s.getAttribute('role') === 'button' && s.getAttribute('tabindex') === '0';
     }));
+    const tipShown = await page.evaluate(async () => {
+      const s = document.querySelector('.ai4a11y-define');
+      s.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 80));
+      const tip = document.getElementById('ai4a11y-define-tooltip');
+      return !!tip && tip.textContent.includes('a simple meaning');
+    });
+    check('define: hovering a word really shows the AI definition (real browser, stubbed model)', tipShown);
     await disable('defineWords');
-    check('define: word wrapping removed after disable', (await page.evaluate(() => document.querySelectorAll('.ai4a11y-define').length)) === 0);
+    check('define: word wrapping + tooltip removed after disable',
+      (await page.evaluate(() => document.querySelectorAll('.ai4a11y-define').length)) === 0 &&
+      !(await exists('#ai4a11y-define-tooltip')));
   }
 
   await browser.close();
