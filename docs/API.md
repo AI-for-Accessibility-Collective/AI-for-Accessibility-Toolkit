@@ -241,17 +241,18 @@ Plain-language instructions (what it does, when to use it).
 ```
 ```
 
-The frontmatter + body are **model-facing** (an agent reads them); the fenced JSON **recipe** is **machine-runnable** — it resolves deterministically to the same settings the adapter layer applies, so running a skill needs no LLM. Built-in skills ship in `toolkit/skills/builtin/`.
+The frontmatter + body are **model-facing** (an agent reads them); the fenced JSON **recipe** is **machine-runnable** — it resolves deterministically to the same settings the adapter layer applies, so running a skill needs no LLM. A recipe can compose **adapters** (page-fixing settings, above) and **actions** (plain-language tasks the browser agent runs: `"actions": [{ "name": "...", "prompt": "..." }]`) — the latter is how a reusable task saved from the Assistant becomes a skill. Built-in skills ship in `toolkit/skills/builtin/`.
 
 ### Skill functions (`toolkit/core/skill.js`)
 
 ```javascript
-import { parseSkill, validateSkill, resolveSkill, matchSkill } from './toolkit/core/skill.js';
+import { parseSkill, validateSkill, resolveSkill, matchSkill, matchSkillToNeed } from './toolkit/core/skill.js';
 
 const skill = parseSkill(markdown);              // → { name, description, supportAreas, siteRelevance, recipe, body }
 validateSkill(skill, { tools });                 // → { valid, errors[] } (checks adapter ids + setting keys vs the registry)
-resolveSkill(skill);                             // → { settings: {...}, adapterIds: [...] } — the apply-plan
-matchSkill(skill, { supportAreas, category });   // → score, for retrieval
+resolveSkill(skill);                             // → { settings: {...}, adapterIds: [...], actions: [...] } — the apply-plan
+matchSkill(skill, { supportAreas, category });   // → score, for page-based retrieval
+matchSkillToNeed(skill, need);                   // → score, for "does this need already have a skill?"
 ```
 
 ### The Engineer (`toolkit/core/skill-builder.js`)
@@ -261,6 +262,9 @@ import { buildSkill } from './toolkit/core/skill-builder.js';
 
 // Prompts the injected LLM to author a skill grounded in the real adapter catalog.
 const { skill, valid, errors } = await buildSkill(need, { llm, tools, taxonomy, profile });
+
+// Evaluation loop: the person rejected an attempt — pass it back with their feedback.
+await buildSkill(need, { llm, tools, taxonomy, profile, previous: skill, feedback: 'text still too small' });
 ```
 
 ### Librarian skill API (`toolkit/core/librarian.js`)
@@ -268,13 +272,14 @@ const { skill, valid, errors } = await buildSkill(need, { llm, tools, taxonomy, 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `listSkills()` | `Skill[]` | Built-in + the user's own (`source: 'builtin'\|'mine'`) |
+| `findSkillForNeed(need)` | `Skill\|null` | Existing skill covering a plain-language need (the reuse check before building) |
 | `retrieveSkill(url, contexts?)` | `Skill\|null` | Best fit for the page + this person |
-| `resolveSkill(skill)` | `{ settings, adapterIds }` | Compile to the adapter apply-plan |
-| `buildSkill(need)` | `{ skill, valid, errors }` | Run the Engineer (does not save) |
-| `saveSkill(skill)` | `{ saved, errors }` | Persist a user-validated skill |
+| `resolveSkill(skill)` | `{ settings, adapterIds, actions }` | Compile to the apply-plan |
+| `buildSkill(need, opts?)` | `{ skill, valid, errors }` | Run the Engineer (does not save); `opts.previous` + `opts.feedback` revise a rejected attempt |
+| `saveSkill(skill)` | `{ saved, errors }` | Persist a user-validated skill (records its supportAreas + siteRelevance in memory) |
 | `deleteSkill(name)` | `boolean` | Remove one of the user's skills |
 
-In the extension these are reachable as `librarian{ListSkills,RetrieveSkill,ResolveSkill,BuildSkill,SaveSkill,DeleteSkill}` messages. Run `node toolkit/hosts/skill-demo/demo.js` to see the whole flow.
+In the extension these are reachable as `librarian{ListSkills,FindSkill,RetrieveSkill,ResolveSkill,BuildSkill,SaveSkill,DeleteSkill}` messages; a resolved plan's `actions` run through the background's `runSkillActions` message (the browser agent). Run `node toolkit/hosts/skill-demo/demo.js` to see the whole flow.
 
 ## CLI Commands
 
