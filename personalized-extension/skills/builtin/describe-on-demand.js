@@ -10,6 +10,7 @@
 // no new AI plumbing. Reversible: all listeners, the panel, the live region,
 // and the injected style are removed on disable.
 import { describeImage, summarizeText, announce } from '../../utils/ai.js';
+import { imageToDataUrl } from '../../utils/image.js';
 import { injectStyle } from './_primitives.js';
 
 export const DescribeOnDemand = {
@@ -18,6 +19,7 @@ export const DescribeOnDemand = {
   panel: null,
   live: null,
   lastHover: null,
+  _reqSeq: 0,
   _keyHandler: null,
   _clickHandler: null,
   _moveHandler: null,
@@ -46,7 +48,10 @@ export const DescribeOnDemand = {
 
     // Alt+D describes the focused (or last-hovered) element — the keyboard path.
     this._keyHandler = (e) => {
-      if (e.altKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); this.describe(this.target()); }
+      // e.code (physical key), not e.key: on macOS Option+D composes '∂', so
+      // e.key === 'd' never matches while Alt is held — the keyboard path (the
+      // screen-reader path this adapter exists for) would silently do nothing.
+      if (e.altKey && e.code === 'KeyD') { e.preventDefault(); this.describe(this.target()); }
       if (e.key === 'Escape') this.hide();
     };
     document.addEventListener('keydown', this._keyHandler, true);
@@ -76,11 +81,18 @@ export const DescribeOnDemand = {
       this.show('Focus or point at an element first, then press Alt+D.');
       return;
     }
+    const token = ++this._reqSeq; // a slow answer for an earlier request must
+                                  // not overwrite the answer for a newer one.
     this.show('Describing…');
     let desc = null;
     try {
       if (el.tagName === 'IMG' && (el.currentSrc || el.src)) {
-        desc = await describeImage(el.currentSrc || el.src);
+        // Providers require a data URL, not a page URL — convert first (fetch/
+        // canvas), exactly like generate-alt. Passing the raw src makes the
+        // extension fail, and can make a lax provider describe nothing and
+        // invent an answer, presenting a fabricated description as fact.
+        const dataUrl = await imageToDataUrl(el);
+        desc = dataUrl ? await describeImage(dataUrl) : null;
       } else if (el.tagName === 'CANVAS' && typeof el.toDataURL === 'function') {
         try { desc = await describeImage(el.toDataURL()); } catch { desc = null; }
       } else {
@@ -90,7 +102,8 @@ export const DescribeOnDemand = {
         else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
       }
     } catch { desc = null; }
-    this.show(desc || 'No description is available for that element.');
+    if (token !== this._reqSeq) return; // a newer request superseded this one
+    this.show(desc || 'Couldn’t get a description. If this keeps happening, check that your AI key is set in the extension settings.');
   },
 
   show(text) {

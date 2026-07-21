@@ -271,12 +271,28 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
       p.textContent = 'This is a deliberately long paragraph of text that comfortably exceeds the sixty-character threshold so the describe adapter routes it to the summarizer.';
       document.querySelector('main').appendChild(p);
       p.focus();
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', altKey: true }));
+      // code:'KeyD' (physical key) — Alt+D composes '∂' on macOS, so key:'d'
+      // would never match under the fix.
+      document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD', key: 'd', altKey: true }));
       await new Promise((r) => setTimeout(r, 80));
       const panel = document.getElementById('ai4a11y-describe-panel');
       return !!panel && panel.style.display === 'block' && panel.textContent.includes('short plain summary');
     });
     check('describe: Alt+D describes the focused element via the (stubbed) model', shown);
+    // IMG path: the fix routes images through imageToDataUrl, so the provider
+    // must receive a data URL — never a page URL a lax model would ignore.
+    const imgArg = await page.evaluate(async () => {
+      window.__descArg = null;
+      window.ai4a11y_describeImage = (u) => { window.__descArg = u; return 'an image description'; };
+      const img = document.createElement('img'); img.id = 'desc-img';
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+      await new Promise((r) => setTimeout(r, 20));
+      document.querySelector('main').appendChild(img);
+      img.dispatchEvent(new MouseEvent('click', { bubbles: true, altKey: true }));
+      await new Promise((r) => setTimeout(r, 80));
+      return window.__descArg;
+    });
+    check('describe: Alt+click an image sends a data URL to the model (not the page URL)', typeof imgArg === 'string' && imgArg.startsWith('data:'));
     await disable('describeOnDemand');
     check('describe: panel + live region removed after disable', !(await exists('#ai4a11y-describe-panel')) && !(await exists('#ai4a11y-describe-live')));
   }

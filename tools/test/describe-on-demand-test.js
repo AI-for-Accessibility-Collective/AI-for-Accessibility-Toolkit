@@ -29,6 +29,11 @@ async function run() {
   // Image path: Alt+click an <img> → vision describe → panel + live region.
   {
     const doc = mount('<img id="pic" src="https://cdn.example.com/cat.jpg" alt=""><p id="para">' + 'Some fairly long article text that should be summarized on demand. '.repeat(3) + '</p>');
+    // imageToDataUrl fetches the image and reads it as a data URL — stub fetch
+    // + FileReader so the URL→data-URL conversion the fix relies on runs
+    // deterministically under jsdom (jsdom's native FileReader is unreliable).
+    global.fetch = async () => ({ blob: async () => ({}) });
+    global.FileReader = class { readAsDataURL() { this.result = 'data:image/png;base64,iVBORw0KGgo='; setTimeout(() => this.onload && this.onload(), 0); } };
     const calls = stubAI();
     DescribeOnDemand.enable();
     check('describe: enable creates a hidden live region', !!doc.getElementById('ai4a11y-describe-live'));
@@ -36,7 +41,7 @@ async function run() {
     const img = doc.getElementById('pic');
     img.dispatchEvent(new doc.defaultView.MouseEvent('click', { bubbles: true, altKey: true }));
     await tick(); await tick();
-    check('describe: Alt+click an image calls vision with its src', calls.img.length === 1 && calls.img[0].includes('cat.jpg'));
+    check('describe: Alt+click an image sends a DATA URL to vision (not the page URL)', calls.img.length === 1 && /^data:image\//.test(calls.img[0]));
     const panel = doc.getElementById('ai4a11y-describe-panel');
     check('describe: a description panel appears', !!panel && panel.style.display === 'block');
     check('describe: the description shows in the panel', panel.querySelector('.ai4a11y-describe-body').textContent === 'a described image');
@@ -44,7 +49,7 @@ async function run() {
 
     // Text path: Alt+D on the focused paragraph → summarize.
     const para = doc.getElementById('para'); para.setAttribute('tabindex', '-1'); para.focus();
-    doc.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', { key: 'd', altKey: true }));
+    doc.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', { code: 'KeyD', key: 'd', altKey: true }));
     await tick(); await tick();
     check('describe: Alt+D on a text element summarizes its content', calls.summarize.length === 1);
     check('describe: the summary shows in the panel', panel.querySelector('.ai4a11y-describe-body').textContent === 'a short summary');
