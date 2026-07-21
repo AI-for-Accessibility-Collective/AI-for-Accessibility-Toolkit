@@ -53,6 +53,7 @@ export function observeAdded(target, onElement, opts = {}) {
 // opts.skipClass  — a class marking already-processed wrappers to skip.
 // opts.cap        — max text nodes to process (default 5000); returns capped.
 const DEFAULT_SKIP = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'SELECT', 'OPTION']);
+const HTML_NS = 'http://www.w3.org/1999/xhtml';
 
 export function transformTextNodes(root, transform, opts = {}) {
   const doc = root && root.ownerDocument ? root.ownerDocument : (typeof document !== 'undefined' ? document : null);
@@ -72,6 +73,14 @@ export function transformTextNodes(root, transform, opts = {}) {
       } else if (child.nodeType === 1) {
         const tag = child.tagName;
         if (skipTags.has(tag)) continue;
+        // Foreign-namespace subtrees (SVG, MathML): an HTML wrapper span does
+        // not render inside them, so replacing their text would blank it out.
+        if (child.namespaceURI && child.namespaceURI !== HTML_NS) continue;
+        // Editable regions: never rewrite text the user is typing — disabling
+        // would discard their edits, and our wrapper markup could be submitted.
+        if (child.isContentEditable === true) continue;
+        const ce = child.getAttribute && child.getAttribute('contenteditable');
+        if (ce === '' || ce === 'true') continue;
         if (skipClass && child.classList && child.classList.contains(skipClass)) continue;
         walk(child);
       }

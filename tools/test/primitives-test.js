@@ -65,6 +65,19 @@ async function run() {
     handle.restore();
   }
 
+  // ── transformTextNodes skips editable + foreign-namespace subtrees ───────────
+  {
+    const doc = mount('<main><div id="ed" contenteditable="true">draft text</div><svg><text id="svgt">Axis</text></svg><p id="np">plain words</p></main>');
+    const handle = transformTextNodes(doc.querySelector('main'), (t) => {
+      const s = doc.createElement('span'); s.className = 'tt'; s.textContent = t.toUpperCase(); return s;
+    });
+    check('transform: skips contenteditable regions (user edits untouched)', doc.querySelector('#ed').textContent === 'draft text' && doc.querySelector('#ed').querySelector('.tt') === null);
+    check('transform: skips SVG text (no HTML span injected into svg)', doc.querySelector('#svgt').textContent === 'Axis' && doc.querySelector('svg').querySelector('span') === null);
+    check('transform: still transforms ordinary text beside skipped regions', doc.querySelector('#np').textContent.includes('PLAIN'));
+    handle.restore();
+    check('transform: restore is clean when skips are present', doc.querySelector('#np').textContent === 'plain words');
+  }
+
   // ── mainRoot ────────────────────────────────────────────────────────────────
   {
     const doc = mount('<nav>n</nav><main id="m"><p>c</p></main>');
