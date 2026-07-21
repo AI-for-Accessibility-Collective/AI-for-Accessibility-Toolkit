@@ -3,6 +3,7 @@ import { announce } from '../../utils/ai.js';
 export const MotionReducer = {
   styleId: 'ai4a11y-motion-reducer-styles',
   enabled: false,
+  gifOriginals: null,
   currentSettings: {
     stopAnimations: true,
     pauseVideos: true,
@@ -14,6 +15,7 @@ export const MotionReducer = {
     if (this.enabled) return;
     this.currentSettings = { ...this.currentSettings, ...options };
     this.enabled = true;
+    this.gifOriginals = new Map(); // canvas → the exact <img> it replaced
 
     const s = this.currentSettings;
     let css = '';
@@ -89,13 +91,21 @@ export const MotionReducer = {
     this.enabled = false;
     document.getElementById(this.styleId)?.remove();
 
+    // Restore the EXACT original <img> node (preserving id, dimensions,
+    // data-*, srcset, styles, listeners) instead of a lossy copy.
     document.querySelectorAll('[data-ai4a11y-gif-src]').forEach(canvas => {
-      const img = document.createElement('img');
-      img.src = canvas.dataset.ai4a11yGifSrc;
-      img.alt = canvas.getAttribute('alt') || '';
-      img.className = canvas.className;
-      canvas.replaceWith(img);
+      const original = this.gifOriginals?.get(canvas);
+      if (original) {
+        canvas.replaceWith(original);
+      } else {
+        const img = document.createElement('img');
+        img.src = canvas.dataset.ai4a11yGifSrc;
+        img.setAttribute('alt', canvas.getAttribute('aria-label') || '');
+        img.className = canvas.className;
+        canvas.replaceWith(img);
+      }
     });
+    this.gifOriginals?.clear();
 
     document.querySelectorAll('[style*="animation-play-state"]').forEach(el => {
       el.style.animationPlayState = '';
@@ -134,14 +144,17 @@ export const MotionReducer = {
       canvas.width = img.naturalWidth || img.width || 100;
       canvas.height = img.naturalHeight || img.height || 100;
       canvas.className = img.className;
-      canvas.setAttribute('alt', img.alt || '');
+      // <canvas> has no `alt`; the accessible name must come from aria-label.
+      canvas.setAttribute('aria-label', img.alt || '');
       canvas.setAttribute('role', 'img');
       canvas.dataset.ai4a11yGifSrc = img.src;
       const ctx = canvas.getContext('2d');
       const tempImg = new Image();
-      tempImg.crossOrigin = 'anonymous';
+      // No crossOrigin: we only draw-and-display; anonymous CORS makes cross-
+      // origin GIFs without CORS headers fail to load (leaving them animating).
       tempImg.onload = () => {
         ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+        this.gifOriginals?.set(canvas, img);
         img.replaceWith(canvas);
         canvas.dataset.ai4a11yGifStopped = 'true';
       };
@@ -159,4 +172,4 @@ export const MotionReducer = {
   }
 };
 
-window.__ai4a11yMotionReducer = MotionReducer;
+if (typeof window !== 'undefined') window.__ai4a11yMotionReducer = MotionReducer;
