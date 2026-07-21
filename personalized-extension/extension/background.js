@@ -31,7 +31,7 @@ Datastore.runMigrations().catch((e) =>
 // synchronously without a storage round-trip.
 chrome.storage.local.get('aaDemoMode', (d) => { globalThis.AA_DEMO_MODE = !!(d && d.aaDemoMode); });
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.5-flash';
 const USER_SCRIPT_ID_PREFIX = 'aa-custom-';
 
 function getApiUrl(apiKey, model) {

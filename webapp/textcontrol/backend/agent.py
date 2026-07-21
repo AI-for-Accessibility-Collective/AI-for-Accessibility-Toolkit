@@ -50,7 +50,7 @@ if _USE_VERTEX:
         project=_project,
         location=os.getenv("VERTEX_LOCATION", "global"),
     )
-    MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
+    MODEL = os.getenv("AGENT_MODEL", "gemini-3.5-flash")
 else:
     _api_key = os.getenv("GEMINI_API_KEY", "")
     if not _api_key:
@@ -59,7 +59,7 @@ else:
             "(https://aistudio.google.com/apikey), or set USE_VERTEX_AI=true with VERTEX_PROJECT."
         )
     client = genai.Client(api_key=_api_key)
-    MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
+    MODEL = os.getenv("AGENT_MODEL", "gemini-3.5-flash")
 
 logger.info(f"Agent using model: {MODEL} | Vertex: {_USE_VERTEX}")
 
