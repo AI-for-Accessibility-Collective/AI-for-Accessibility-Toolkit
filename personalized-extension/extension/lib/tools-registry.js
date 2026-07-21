@@ -151,6 +151,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "link-highlighter",
+    "name": "Highlight Links",
+    "description": "Underlines and strengthens links with a distinct color and a strong focus ring, and reveals each link's destination host so you can tell where a link leads before clicking it.",
+    "supportAreas": [
+      "vision",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "link",
+    "emoji": "🔗",
+    "quickStart": false,
+    "settings": {
+      "highlightLinks": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -470,6 +489,10 @@ globalThis.AA_TOOLS = {
   "bigTargets": {
     "type": "boolean",
     "description": "Enlarge and space out small clickable controls"
+  },
+  "highlightLinks": {
+    "type": "boolean",
+    "description": "Underline links and show where each one leads"
   },
   "keyboardNav": {
     "type": "boolean",

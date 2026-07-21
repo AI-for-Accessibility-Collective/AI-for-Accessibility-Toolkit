@@ -6,6 +6,7 @@ import { MotionReducer } from '../../skills/builtin/motion-reducer.js';
 import { ReaderMode } from '../../skills/builtin/reader-mode.js';
 import { DismissOverlays } from '../../skills/builtin/dismiss-overlays.js';
 import { BigTargets } from '../../skills/builtin/big-targets.js';
+import { LinkHighlighter } from '../../skills/builtin/link-highlighter.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -26,6 +27,7 @@ const TOOL_MAP = {
   ReaderMode,
   DismissOverlays,
   BigTargets,
+  LinkHighlighter,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -171,7 +173,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks',
       'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -186,6 +188,7 @@ async function initFromStorage() {
     if (settings.readerMode) enableTool('ReaderMode');
     if (settings.dismissOverlays) enableTool('DismissOverlays');
     if (settings.bigTargets) enableTool('BigTargets');
+    if (settings.highlightLinks) enableTool('LinkHighlighter');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -301,7 +304,7 @@ function applyProfileSettings(settings) {
     darkMode: 'DarkMode', readerMode: 'ReaderMode',
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
     motionReducer: 'MotionReducer', dismissOverlays: 'DismissOverlays',
-    bigTargets: 'BigTargets'
+    bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {

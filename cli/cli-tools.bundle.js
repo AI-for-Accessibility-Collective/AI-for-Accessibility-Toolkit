@@ -1572,6 +1572,126 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
 
+  // tools/adapters/link-highlighter.js
+  var LinkHighlighter = {
+    styleId: "ai4a11y-link-highlighter-styles",
+    bodyClass: "ai4a11y-highlight-links",
+    dataAttr: "data-ai4a11y-linkhl",
+    enabled: false,
+    titled: null,
+    // Set of links WE titled (for exact restore)
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.titled = /* @__PURE__ */ new Set();
+      const color = options && options.color || "#0b57d0";
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+      .${this.bodyClass} a[href] {
+        text-decoration: underline !important;
+        text-decoration-thickness: 2px !important;
+        text-underline-offset: 2px !important;
+        font-weight: 600 !important;
+        color: ${color} !important;
+      }
+      .${this.bodyClass} a[href]:focus,
+      .${this.bodyClass} a[href]:focus-visible {
+        outline: 3px solid ${color} !important;
+        outline-offset: 2px !important;
+      }
+    `;
+      (document.head || document.documentElement).appendChild(style);
+      if (document.body) document.body.classList.add(this.bodyClass);
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Link Highlighter enabled (${count} destinations revealed)`);
+      announce(count ? `Links highlighted, ${count} destination${count === 1 ? "" : "s"} revealed` : "Links highlighted");
+    },
+    // Reveal destination hosts for every untitled link under root; returns how
+    // many links were titled.
+    sweep(root) {
+      let n = 0;
+      let links;
+      try {
+        links = root.querySelectorAll("a[href]");
+      } catch {
+        return 0;
+      }
+      for (const a of links) if (this.reveal(a)) n++;
+      return n;
+    },
+    // An added node may itself be a link, or contain links.
+    consider(node) {
+      if (!node || node.nodeType !== 1) return;
+      try {
+        if (node.matches && node.matches("a[href]")) this.reveal(node);
+      } catch {
+      }
+      if (node.querySelectorAll) this.sweep(node);
+    },
+    // Set one link's title to its destination host. Returns true if we titled
+    // it. NEVER overwrites a title the page already set — that text is the
+    // page's own description and must survive disable() untouched.
+    reveal(a) {
+      if (!a || a.nodeType !== 1 || this.titled.has(a)) return false;
+      if (a.hasAttribute("title")) return false;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#")) return false;
+      let host = "";
+      try {
+        host = new URL(href, window.location.href).host;
+      } catch {
+        return false;
+      }
+      if (!host) return false;
+      a.setAttribute("title", host);
+      a.setAttribute(this.dataAttr, "");
+      this.titled.add(a);
+      return true;
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (document.body) document.body.classList.remove(this.bodyClass);
+      if (this.titled) {
+        for (const a of this.titled) {
+          try {
+            a.removeAttribute("title");
+            a.removeAttribute(this.dataAttr);
+          } catch {
+          }
+        }
+        this.titled.clear();
+        this.titled = null;
+      }
+      console.log("[AI4A11y] Link Highlighter disabled");
+      announce("Link highlighting off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yLinkHighlighter = LinkHighlighter;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -3309,7 +3429,8 @@ ${chunk}
           letterSpacing: 0.12,
           largeCursor: true,
           enhanceFocus: true,
-          fixContrast: true
+          fixContrast: true,
+          highlightLinks: true
         }
       },
       colorBlind: {
@@ -3352,7 +3473,8 @@ ${chunk}
           fontScale: 115,
           lineHeight: 2,
           letterSpacing: 0.12,
-          focusMode: true
+          focusMode: true,
+          highlightLinks: true
         }
       },
       adhd: {
@@ -3378,7 +3500,8 @@ ${chunk}
           dismissOverlays: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: true
+          showProgress: true,
+          highlightLinks: true
         }
       },
       elderly: {
@@ -3395,7 +3518,8 @@ ${chunk}
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          bigTargets: true
+          bigTargets: true,
+          highlightLinks: true
         }
       },
       anxiety: {
@@ -3458,7 +3582,8 @@ ${chunk}
       lineHeight: 1.5,
       letterSpacing: 0,
       contrastMode: "none",
-      colorFilter: "none"
+      colorFilter: "none",
+      highlightLinks: false
     }
   };
 
@@ -3550,7 +3675,8 @@ ${chunk}
     colorBlindMode: ColorBlindMode,
     autoTranscriber: AutoTranscriber,
     dismissOverlays: DismissOverlays,
-    bigTargets: BigTargets
+    bigTargets: BigTargets,
+    highlightLinks: LinkHighlighter
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -3572,7 +3698,9 @@ ${chunk}
       "dismissoverlays": "dismissOverlays",
       "dismisspopups": "dismissOverlays",
       "bigtargets": "bigTargets",
-      "biggertargets": "bigTargets"
+      "biggertargets": "bigTargets",
+      "highlightlinks": "highlightLinks",
+      "linkhighlighter": "highlightLinks"
     };
     return map[lower] || name;
   }
@@ -3648,6 +3776,7 @@ ${chunk}
     if (profileTools.readerMode) ReaderMode.enable();
     if (profileTools.dismissOverlays) DismissOverlays.enable();
     if (profileTools.bigTargets) BigTargets.enable();
+    if (profileTools.highlightLinks) LinkHighlighter.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -3683,7 +3812,8 @@ ${chunk}
       colorBlindMode: "Color vision deficiency filters",
       autoTranscriber: "Auto-generate captions for media",
       dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals",
-      bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)"
+      bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)",
+      highlightLinks: "Underline and strengthen links and reveal where each one leads"
     };
     return descriptions[name] || "";
   }
