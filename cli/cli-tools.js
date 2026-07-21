@@ -21,6 +21,7 @@ import { ReaderMode } from '../tools/adapters/reader-mode.js';
 import { VoiceCommands } from '../tools/adapters/voice-commands.js';
 import { KeyboardNavigator } from '../tools/adapters/keyboard-nav.js';
 import { ColorBlindMode } from '../tools/adapters/color-blind.js';
+import { DismissOverlays } from '../tools/adapters/dismiss-overlays.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -147,6 +148,7 @@ const tools = {
   keyboardNav: KeyboardNavigator,
   colorBlindMode: ColorBlindMode,
   autoTranscriber: AutoTranscriber,
+  dismissOverlays: DismissOverlays,
 };
 
 // Normalize tool name (handles case variations)
@@ -167,6 +169,8 @@ function normalizeTool(name) {
     'colorfilter': 'colorBlindMode',
     'autotranscriber': 'autoTranscriber',
     'autocaptions': 'autoTranscriber',
+    'dismissoverlays': 'dismissOverlays',
+    'dismisspopups': 'dismissOverlays',
   };
   return map[lower] || name;
 }
@@ -254,6 +258,7 @@ function applyProfileByName(profileId) {
   if (profileTools.motionReducer) MotionReducer.enable();
   if (profileTools.focusMode) FocusMode.enable();
   if (profileTools.readerMode) ReaderMode.enable();
+  if (profileTools.dismissOverlays) DismissOverlays.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -294,6 +299,7 @@ function getToolDescription(name) {
     keyboardNav: 'Enhanced keyboard navigation',
     colorBlindMode: 'Color vision deficiency filters',
     autoTranscriber: 'Auto-generate captions for media',
+    dismissOverlays: 'Hide cookie banners, newsletter popups, and blocking modals',
   };
   return descriptions[name] || '';
 }
