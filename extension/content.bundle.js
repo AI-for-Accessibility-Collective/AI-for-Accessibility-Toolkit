@@ -558,6 +558,7 @@
       const frames = await captureVideoFrames(video, 6);
       const description = await describeVideo(frames);
       if (description) {
+        video.setAttribute("aria-label", description);
         video.dataset.ai4a11yDescribed = "done";
         incrementStat("images");
         logFix("video description", video, "(none)", description);
