@@ -3472,7 +3472,7 @@ ${scope} table {
       const color = options && options.color || "#ffffff";
       this.style = injectStyle(this.styleId, `
       #${this.tipId} {
-        position: absolute;
+        position: fixed;
         z-index: 2147483647;
         max-width: 320px;
         padding: 8px 12px;
@@ -3522,8 +3522,8 @@ ${scope} table {
         rect = el.getBoundingClientRect();
       } catch {
       }
-      const x = (rect ? rect.left : 0) + (window.scrollX || 0);
-      const y = (rect ? rect.bottom : 0) + (window.scrollY || 0) + 6;
+      const x = rect ? rect.left : 0;
+      const y = (rect ? rect.bottom : 0) + 6;
       this.tip.style.left = `${Math.max(0, x)}px`;
       this.tip.style.top = `${Math.max(0, y)}px`;
       this.tip.hidden = false;
