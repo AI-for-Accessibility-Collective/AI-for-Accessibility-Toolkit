@@ -15,13 +15,15 @@
 
 ---
 
-[axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) find accessibility problems and hand you a report. This one fixes them instead, live in the browser and tuned to whoever's reading.
+[axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) find accessibility problems and hand you a report. This one fixes them instead, live in the browser and tuned to the person reading the page.
 
 It's a Chrome extension, a developer CLI, and a small platform-agnostic core other apps can build on.
 
 ## Quick Start
 
-**Chrome extension.** It isn't on the Chrome Web Store yet, so for now you build it from source once.
+### Chrome extension — no code
+
+It isn't on the Chrome Web Store yet, so build it once from source:
 
 ```bash
 git clone https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git
@@ -29,43 +31,52 @@ cd AI-for-Accessibility-Toolkit
 npm install && npm run build
 ```
 
-Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the `extension/` folder. Add a free [Gemini key](https://aistudio.google.com/apikey) in the popup. From here it's all no-code: choose your profile(s) and browse — pages adapt as you go. Try the [test site](https://ai4a11y-test-site.vercel.app/) first.
+Then load it and try it:
 
-**CLI** — for developers and coding agents:
+1. Open `chrome://extensions` and turn on **Developer mode** (top-right).
+2. Click **Load unpacked** and choose the `extension/` folder.
+3. Open the [test site](https://ai4a11y-test-site.vercel.app/), click the toolbar icon, pick a profile, and watch the page change.
+
+Most adapters — bigger text, dark mode, wider spacing, a single-column reading view, dismissing popups, keeping focus visible — work right away with **no key**. The AI features (writing alt text, captions, plain-language summaries, translation) need a free [Gemini key](https://aistudio.google.com/apikey); paste it into the popup once.
+
+### Command line — for developers and agents
 
 ```bash
 pip install -e . && playwright install chromium
-export ANTHROPIC_API_KEY=sk-...
 
-ai4a11y session start
+ai4a11y session start                    # open a browser
 ai4a11y session go https://example.com
-ai4a11y session audit
+ai4a11y session audit                    # list what's inaccessible
 ```
 
-Add `--json` to any command for output that drops into scripts, CI, and agents.
+`audit` runs [axe-core](https://github.com/dequelabs/axe-core) and needs no key. The AI commands (`describe`, `simplify`) use Claude — run `export ANTHROPIC_API_KEY=sk-...` first. Add `--json` to any command for output you can pipe into scripts, CI, or an agent.
 
 ## Examples
 
-**In the extension** (no code). Once it's loaded:
+### In the extension
 
-- Turn on **Dyslexia** and open a long article. Text enlarges, spacing opens up, and side clutter dims.
-- Land on a page of unlabeled images or an uncaptioned video. It writes the alt text and generates captions for you.
-- Open the **Skill Builder**, type *"make Reddit calmer to read,"* and it assembles a reusable skill (less motion, fewer distractions) that you approve before it saves.
+Open the [test site](https://ai4a11y-test-site.vercel.app/) and try these — the first three need no key:
 
-**From the CLI** (developers and coding agents):
+- **Dyslexia** → text grows, line and letter spacing open up, and side clutter dims on a long article.
+- **Low Vision** → 150% text, a bold focus ring that follows your keyboard, and a magnifier that tracks the cursor.
+- **Motor** → bigger click targets, sticky bars unpinned, and a "click again to confirm" guard on Delete / Submit buttons.
+- **Blind** *(needs a Gemini key)* → missing alt text and video captions get written for you; press **Alt+D** on any element to hear what it is.
+- **Skill Builder** → type *"make Reddit calmer to read"* and it assembles a reusable recipe (less motion, fewer popups) you approve before it saves.
+
+### From the command line
 
 ```bash
-# Audit a page (JSON, for CI or an agent)
+# 1. What's inaccessible on a page? (JSON pipes straight into CI or an agent)
+ai4a11y session start
+ai4a11y session go https://news.ycombinator.com
 ai4a11y session audit --json
 
-# Adapt the page for a specific person
+# 2. Adapt the page for someone, then read it back in plain language
 ai4a11y session profile dyslexia
 ai4a11y session enable visualAssist fontScale=150
-
-# Describe what's on screen (for an agent that can't see it)
 ai4a11y session describe
 
-# Scaffold your own fix
+# 3. Scaffold a new fix, pre-wired to the profiles it serves
 ai4a11y create fix-carousels --type adapter --profiles blind,motor
 ```
 
@@ -77,7 +88,9 @@ Underneath, **auditors** scan for problems like missing alt text or low contrast
 
 The personalized extension goes further: it remembers what you need, and its Skill Builder turns a plain-language request into a new skill. That engine lives in `toolkit/`, a standalone core meant to run beyond the browser.
 
-![Toolkit layers](docs/diagrams/toolkit-layers.png)
+<p align="center">
+  <img src="docs/diagrams/toolkit-layers.png" alt="Toolkit layers: every interface runs on the same core" width="440">
+</p>
 
 The [architecture doc](docs/architecture.md) walks through the rest — the Librarian, Engineer, and Assistant agents, and how the core stays portable.
 

@@ -4,7 +4,9 @@
 
 ## The Big Picture
 
-![Architecture overview — interactions between agents](diagrams/architecture-overview.png)
+<p align="center">
+  <img src="diagrams/architecture-overview.png" alt="Architecture overview — interactions between agents" width="760">
+</p>
 
 Three cooperating agents sit between the person and the toolkit's datastore:
 
@@ -22,7 +24,9 @@ Around them:
 
 ## Toolkit Layers
 
-![Toolkit layers — what is the toolkit](diagrams/toolkit-layers.png)
+<p align="center">
+  <img src="diagrams/toolkit-layers.png" alt="Toolkit layers — what is the toolkit" width="440">
+</p>
 
 The **end user** never sees "the toolkit" — they use an app in the **Interfacing Layer** (the Assistant, a browser extension, a mobile app, an XR app). Every interface is powered by the same **Toolkit** underneath:
 
@@ -60,7 +64,9 @@ Memory is sharded by a **scope chain** — `general → context:* → category:*
 
 ## Skill Creation Flows
 
-![Skill creation flows](diagrams/skill-creation-flow.png)
+<p align="center">
+  <img src="diagrams/skill-creation-flow.png" alt="Skill creation flows" width="500">
+</p>
 
 Two paths produce new skills:
 
@@ -79,7 +85,9 @@ Either way, **the user validates before anything is saved** — suggestions, nev
 
 ## Personal Ability Profile Flows
 
-![Personal ability profile and memory flows](diagrams/ability-profile-flow.png)
+<p align="center">
+  <img src="diagrams/ability-profile-flow.png" alt="Personal ability profile and memory flows" width="720">
+</p>
 
 - **Cold start** — the user selects from base ability profiles (see [Profiles](#profiles)) and/or gives a free-text self-description. The Librarian turns this into the initial Personal Ability Profile.
 - **Drives adaptation** — the profile is what the toolkit consults to adapt each page; the user experiences the result directly in the adapted webpage (the adaptive evaluation interface).
@@ -88,7 +96,9 @@ Either way, **the user validates before anything is saved** — suggestions, nev
 
 ## XR Agent (future direction)
 
-![XR agent ideas](diagrams/xr-agent-ideas.png)
+<p align="center">
+  <img src="diagrams/xr-agent-ideas.png" alt="XR agent ideas" width="760">
+</p>
 
 The same toolkit powers an **XR Agent**:
 
