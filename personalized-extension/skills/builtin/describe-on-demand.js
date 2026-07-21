@@ -84,7 +84,7 @@ export const DescribeOnDemand = {
     const token = ++this._reqSeq; // a slow answer for an earlier request must
                                   // not overwrite the answer for a newer one.
     this.show('Describing…');
-    let desc = null;
+    let desc = null, errMsg = null;
     try {
       if (el.tagName === 'IMG' && (el.currentSrc || el.src)) {
         // Providers require a data URL, not a page URL — convert first (fetch/
@@ -94,16 +94,20 @@ export const DescribeOnDemand = {
         const dataUrl = await imageToDataUrl(el);
         desc = dataUrl ? await describeImage(dataUrl) : null;
       } else if (el.tagName === 'CANVAS' && typeof el.toDataURL === 'function') {
-        try { desc = await describeImage(el.toDataURL()); } catch { desc = null; }
+        let dataUrl = null;
+        try { dataUrl = el.toDataURL(); } catch { dataUrl = null; } // tainted canvas
+        desc = dataUrl ? await describeImage(dataUrl) : null; // AI errors propagate
       } else {
         const label = (el.getAttribute && (el.getAttribute('aria-label') || el.getAttribute('title'))) || '';
         const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
         if (text.length > 60) desc = await summarizeText(text);
         else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
       }
-    } catch { desc = null; }
+    } catch (e) { desc = null; errMsg = (e && e.message) ? e.message : null; }
     if (token !== this._reqSeq) return; // a newer request superseded this one
-    this.show(desc || 'Couldn’t get a description. If this keeps happening, check that your AI key is set in the extension settings.');
+    // Prefer the real reason (e.g. "Gemini API key not set. Open extension
+    // settings.") so the user knows what to fix, not just that it didn't work.
+    this.show(desc || errMsg || 'No description is available for that element.');
   },
 
   show(text) {

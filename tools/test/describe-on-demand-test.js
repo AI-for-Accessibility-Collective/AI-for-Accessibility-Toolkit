@@ -79,6 +79,24 @@ async function run() {
     DescribeOnDemand.disable();
     check('describe: double disable is safe', DescribeOnDemand.enabled === false);
   }
+
+  // A provider failure (e.g. a missing API key) is SHOWN to the user, not
+  // swallowed into a blank "no description".
+  {
+    const doc = mount('<p id="para" tabindex="-1">' + 'A long paragraph that goes to the summarizer path. '.repeat(3) + '</p>');
+    setAIProvider({
+      summarizeText: async () => { throw new Error('Gemini API key not set. Open extension settings.'); },
+      describeImage: async () => null,
+      announce() {},
+    });
+    DescribeOnDemand.enable();
+    doc.getElementById('para').focus();
+    doc.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', { code: 'KeyD', key: 'd', altKey: true }));
+    await tick(); await tick();
+    const panel = doc.getElementById('ai4a11y-describe-panel');
+    check('describe: a provider error message is surfaced to the user', !!panel && panel.textContent.includes('Gemini API key not set'));
+    DescribeOnDemand.disable();
+  }
 }
 
 run().then(() => {
