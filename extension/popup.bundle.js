@@ -731,18 +731,8 @@
         chrome.storage.sync.set(visualStorage);
         applyVisualAssist();
       }
-      const toolStorage = {};
-      if (preset.darkMode !== void 0) toolStorage.darkMode = preset.darkMode;
-      if (preset.motionReducer !== void 0) toolStorage.motionReducer = preset.motionReducer;
-      if (preset.readerMode !== void 0) toolStorage.readerMode = preset.readerMode;
-      if (preset.keyboardNav !== void 0) toolStorage.keyboardNav = preset.keyboardNav;
-      if (preset.voiceCommands !== void 0) toolStorage.voiceCommands = preset.voiceCommands;
-      if (preset.focusMode !== void 0) toolStorage.focusMode = preset.focusMode;
-      if (preset.hideDistractions !== void 0) toolStorage.hideDistractions = preset.hideDistractions;
-      if (preset.showProgress !== void 0) toolStorage.showProgress = preset.showProgress;
-      if (Object.keys(toolStorage).length > 0) {
-        chrome.storage.sync.set(toolStorage);
-      }
+      chrome.storage.sync.set(preset);
+      sendToContent({ type: "settingsChanged", settings: preset, apply: true, rescan: true });
     }
     document.getElementById("resetAll").addEventListener("click", resetAll);
     async function resetAll() {

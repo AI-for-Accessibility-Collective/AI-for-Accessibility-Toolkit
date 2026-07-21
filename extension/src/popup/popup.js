@@ -546,19 +546,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       applyVisualAssist();
     }
 
-    // Save tool toggle states for persistence
-    const toolStorage = {};
-    if (preset.darkMode !== undefined) toolStorage.darkMode = preset.darkMode;
-    if (preset.motionReducer !== undefined) toolStorage.motionReducer = preset.motionReducer;
-    if (preset.readerMode !== undefined) toolStorage.readerMode = preset.readerMode;
-    if (preset.keyboardNav !== undefined) toolStorage.keyboardNav = preset.keyboardNav;
-    if (preset.voiceCommands !== undefined) toolStorage.voiceCommands = preset.voiceCommands;
-    if (preset.focusMode !== undefined) toolStorage.focusMode = preset.focusMode;
-    if (preset.hideDistractions !== undefined) toolStorage.hideDistractions = preset.hideDistractions;
-    if (preset.showProgress !== undefined) toolStorage.showProgress = preset.showProgress;
-    if (Object.keys(toolStorage).length > 0) {
-      chrome.storage.sync.set(toolStorage);
-    }
+    // Persist EVERY tool this profile enables — not just the ones with a popup
+    // control listed above — and ask the current page to apply them live. The
+    // content script's applyVisualSettings reads every adapter from storage, so
+    // without persisting the whole merged preset the newer adapters (reflow,
+    // focus locator, confirm actions, reading spot, describe on demand, …) were
+    // written nowhere and silently never ran on this extension.
+    chrome.storage.sync.set(preset);
+    sendToContent({ type: 'settingsChanged', settings: preset, apply: true, rescan: true });
   }
 
   // Reset all
