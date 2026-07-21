@@ -17,7 +17,7 @@
 
 - **Adapter** (user-facing, in `personalized-extension/`) — a capability the
   end user enables/builds that adapts a page for accessibility (formerly
-  "skill" in the UI). Built in the **Adapter Creator** (formerly "Skill
+  "skill" in the UI). Built in the **Skill Builder** (formerly "Skill
   Builder"). Note: this is the user/AI-facing layer and is a *different,
   broader concept* from the `tools/adapters/` axe-rule fixers above — related
   family (both adapt the page), different layer. Don't conflate them.

@@ -429,7 +429,7 @@ function showSummary() {
   showSummary._newSkills = newSkills;
 
   const finishBtn = document.getElementById('summaryFinishBtn');
-  finishBtn.textContent = newSkills.length > 0 ? 'Open Adapter Creator' : 'Finish Setup';
+  finishBtn.textContent = newSkills.length > 0 ? 'Open Skill Builder' : 'Finish Setup';
 
   showPage('page-summary');
 }
