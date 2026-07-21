@@ -20,6 +20,7 @@ export { VoiceCommands } from './voice-commands.js';
 export { KeyboardNavigator } from './keyboard-nav.js';
 export { ColorBlindMode } from './color-blind.js';
 export { AutoTranscriber } from './auto-transcriber.js';
+export { DismissOverlays } from './dismiss-overlays.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

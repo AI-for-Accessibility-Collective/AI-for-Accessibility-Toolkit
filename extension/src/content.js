@@ -37,6 +37,7 @@ import {
   KeyboardNavigator,
   ColorBlindMode,
   AutoTranscriber,
+  DismissOverlays,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -126,6 +127,7 @@ function applyVisualSettings(settings) {
   }
 
   if (settings.readerMode) ReaderMode.enable();
+  if (settings.dismissOverlays) DismissOverlays.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -354,6 +356,7 @@ function revertAll() {
   VoiceCommands.disable();
   KeyboardNavigator.disable();
   AutoTranscriber.disable();
+  DismissOverlays.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -470,7 +473,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         ReaderMode: ReaderMode.enabled || false,
         VoiceCommands: VoiceCommands.enabled || false,
         KeyboardNavigator: KeyboardNavigator.enabled || false,
-        AutoTranscriber: AutoTranscriber.enabled || false
+        AutoTranscriber: AutoTranscriber.enabled || false,
+        DismissOverlays: DismissOverlays.enabled || false
       }
     });
     return true;

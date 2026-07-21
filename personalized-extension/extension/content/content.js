@@ -4,6 +4,7 @@ import { FocusMode } from '../../skills/builtin/focus-mode.js';
 import { VisualAssist } from '../../skills/builtin/visual-assist.js';
 import { MotionReducer } from '../../skills/builtin/motion-reducer.js';
 import { ReaderMode } from '../../skills/builtin/reader-mode.js';
+import { DismissOverlays } from '../../skills/builtin/dismiss-overlays.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -22,6 +23,7 @@ const TOOL_MAP = {
   VisualAssist,
   MotionReducer,
   ReaderMode,
+  DismissOverlays,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -167,7 +169,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays',
       'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -180,6 +182,7 @@ async function initFromStorage() {
     if (settings.darkMode) enableTool('DarkMode');
     if (settings.motionReducer) enableTool('MotionReducer');
     if (settings.readerMode) enableTool('ReaderMode');
+    if (settings.dismissOverlays) enableTool('DismissOverlays');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -294,7 +297,7 @@ function applyProfileSettings(settings) {
   const toolMapping = {
     darkMode: 'DarkMode', readerMode: 'ReaderMode',
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
-    motionReducer: 'MotionReducer'
+    motionReducer: 'MotionReducer', dismissOverlays: 'DismissOverlays'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {

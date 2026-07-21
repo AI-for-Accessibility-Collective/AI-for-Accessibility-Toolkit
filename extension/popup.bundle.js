@@ -55,7 +55,8 @@
           largeCursor: true,
           enhanceFocus: true,
           keyboardNav: true,
-          voiceCommands: true
+          voiceCommands: true,
+          dismissOverlays: true
         }
       },
       dyslexia: {
@@ -76,7 +77,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          motionReducer: true
+          motionReducer: true,
+          dismissOverlays: true
         }
       },
       cognitive: {
@@ -87,6 +89,7 @@
           lineHeight: 1.8,
           autoSimplify: true,
           autoSummarize: true,
+          dismissOverlays: true,
           focusMode: true,
           hideDistractions: true,
           showProgress: true
@@ -116,7 +119,8 @@
           hideDistractions: true,
           showProgress: true,
           motionReducer: true,
-          lineHeight: 1.8
+          lineHeight: 1.8,
+          dismissOverlays: true
         }
       },
       sensory: {
@@ -126,7 +130,8 @@
           motionReducer: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: false
+          showProgress: false,
+          dismissOverlays: true
         }
       },
       photosensitive: {
@@ -154,6 +159,7 @@
       enhanceFocus: false,
       readingGuide: false,
       motionReducer: false,
+      dismissOverlays: false,
       readerMode: false,
       focusMode: false,
       hideDistractions: false,

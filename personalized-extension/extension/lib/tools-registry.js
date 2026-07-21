@@ -111,6 +111,27 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "dismiss-overlays",
+    "name": "Dismiss Popups",
+    "description": "Hides cookie/consent banners, newsletter modals, sticky promo bars, and blocking interstitials, restores locked scrolling, and keeps watching for popups injected after load.",
+    "supportAreas": [
+      "cognitive",
+      "sensory",
+      "motor",
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "block",
+    "emoji": "🚫",
+    "quickStart": true,
+    "settings": {
+      "dismissOverlays": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -422,6 +443,10 @@ globalThis.AA_TOOLS = {
   "readerMode": {
     "type": "boolean",
     "description": "Clean reading view"
+  },
+  "dismissOverlays": {
+    "type": "boolean",
+    "description": "Hide cookie banners, newsletter popups, and blocking modals"
   },
   "keyboardNav": {
     "type": "boolean",

@@ -132,7 +132,8 @@
           largeCursor: true,
           enhanceFocus: true,
           keyboardNav: true,
-          voiceCommands: true
+          voiceCommands: true,
+          dismissOverlays: true
         }
       },
       dyslexia: {
@@ -153,7 +154,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          motionReducer: true
+          motionReducer: true,
+          dismissOverlays: true
         }
       },
       cognitive: {
@@ -164,6 +166,7 @@
           lineHeight: 1.8,
           autoSimplify: true,
           autoSummarize: true,
+          dismissOverlays: true,
           focusMode: true,
           hideDistractions: true,
           showProgress: true
@@ -193,7 +196,8 @@
           hideDistractions: true,
           showProgress: true,
           motionReducer: true,
-          lineHeight: 1.8
+          lineHeight: 1.8,
+          dismissOverlays: true
         }
       },
       sensory: {
@@ -203,7 +207,8 @@
           motionReducer: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: false
+          showProgress: false,
+          dismissOverlays: true
         }
       },
       photosensitive: {
@@ -231,6 +236,7 @@
       enhanceFocus: false,
       readingGuide: false,
       motionReducer: false,
+      dismissOverlays: false,
       readerMode: false,
       focusMode: false,
       hideDistractions: false,
@@ -3245,6 +3251,116 @@ ${chunk}
   };
   window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
+  // tools/adapters/dismiss-overlays.js
+  var OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
+  function classNameOf(el) {
+    const c = el.className;
+    if (typeof c === "string") return c;
+    if (c && typeof c.baseVal === "string") return c.baseVal;
+    return "";
+  }
+  var DismissOverlays = {
+    styleId: "ai4a11y-dismiss-overlays-styles",
+    hiddenClass: "ai4a11y-overlay-dismissed",
+    enabled: false,
+    hidden: null,
+    // Set of elements we hid (for exact restore)
+    observer: null,
+    prevBodyOverflow: null,
+    prevHtmlOverflow: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.hidden = /* @__PURE__ */ new Set();
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `.${this.hiddenClass} { display: none !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      this.prevBodyOverflow = document.body ? document.body.style.overflow : null;
+      this.prevHtmlOverflow = document.documentElement ? document.documentElement.style.overflow : null;
+      if (document.body && document.body.style.overflow === "hidden") document.body.style.overflow = "";
+      if (document.documentElement && document.documentElement.style.overflow === "hidden") document.documentElement.style.overflow = "";
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Dismiss Overlays enabled (${count} hidden)`);
+      announce(count ? `Hid ${count} popup${count === 1 ? "" : "s"}` : "Watching for popups to hide");
+    },
+    // Scan a root for overlays and hide them; returns how many were hidden.
+    sweep(root) {
+      let n = 0;
+      let candidates;
+      try {
+        candidates = root.querySelectorAll('div, section, aside, dialog, [role="dialog"], [aria-modal="true"]');
+      } catch {
+        return 0;
+      }
+      for (const el of candidates) if (this.consider(el)) n++;
+      return n;
+    },
+    // Hide one element if it looks like a blocking overlay. Returns true if hidden.
+    consider(el) {
+      if (!el || el.nodeType !== 1 || this.hidden.has(el)) return false;
+      if (el.classList && el.classList.contains(this.hiddenClass)) return false;
+      if (!this.isOverlay(el)) {
+        if (el.querySelector) {
+          const inner = this.sweep(el);
+          if (inner) return true;
+        }
+        return false;
+      }
+      el.classList.add(this.hiddenClass);
+      this.hidden.add(el);
+      return true;
+    },
+    isOverlay(el) {
+      if (el.getAttribute && el.getAttribute("aria-modal") === "true") return true;
+      const nameHit = OVERLAY_NAME_RE.test(el.id || "") || OVERLAY_NAME_RE.test(classNameOf(el)) || OVERLAY_NAME_RE.test(el.getAttribute && el.getAttribute("aria-label") || "");
+      if (!nameHit) return false;
+      let pos = "";
+      try {
+        pos = (getComputedStyle(el).position || "").toLowerCase();
+      } catch {
+      }
+      const blocking = pos === "fixed" || pos === "sticky" || el.getAttribute && el.getAttribute("role") === "dialog";
+      return blocking;
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (this.hidden) {
+        for (const el of this.hidden) (_b = el.classList) == null ? void 0 : _b.remove(this.hiddenClass);
+        this.hidden.clear();
+        this.hidden = null;
+      }
+      if (document.body && this.prevBodyOverflow !== null) document.body.style.overflow = this.prevBodyOverflow;
+      if (document.documentElement && this.prevHtmlOverflow !== null) document.documentElement.style.overflow = this.prevHtmlOverflow;
+      this.prevBodyOverflow = this.prevHtmlOverflow = null;
+      console.log("[AI4A11y] Dismiss Overlays disabled");
+      announce("Popups restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yDismissOverlays = DismissOverlays;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -3410,6 +3526,7 @@ ${chunk}
       console.log("[AI4A11y] Focus mode enabled");
     }
     if (settings2.readerMode) ReaderMode.enable();
+    if (settings2.dismissOverlays) DismissOverlays.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -3596,6 +3713,7 @@ ${chunk}
     VoiceCommands.disable();
     KeyboardNavigator.disable();
     AutoTranscriber.disable();
+    DismissOverlays.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -3708,7 +3826,8 @@ ${chunk}
           ReaderMode: ReaderMode.enabled || false,
           VoiceCommands: VoiceCommands.enabled || false,
           KeyboardNavigator: KeyboardNavigator.enabled || false,
-          AutoTranscriber: AutoTranscriber.enabled || false
+          AutoTranscriber: AutoTranscriber.enabled || false,
+          DismissOverlays: DismissOverlays.enabled || false
         }
       });
       return true;
