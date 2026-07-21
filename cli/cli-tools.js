@@ -36,6 +36,7 @@ import { SoundVisualizer } from '../tools/adapters/sound-visualizer.js';
 import { LiveRegionAnnouncer } from '../tools/adapters/live-region-announcer.js';
 import { Magnifier } from '../tools/adapters/magnifier.js';
 import { FlashGuard } from '../tools/adapters/flash-guard.js';
+import { DescribeOnDemand } from '../tools/adapters/describe-on-demand.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -189,6 +190,7 @@ const tools = {
   announceUpdates: LiveRegionAnnouncer,
   magnifier: Magnifier,
   flashGuard: FlashGuard,
+  describeOnDemand: DescribeOnDemand,
 };
 
 // Normalize tool name (handles case variations)
@@ -239,6 +241,8 @@ function normalizeTool(name) {
     'lens': 'magnifier',
     'flashguard': 'flashGuard',
     'flash': 'flashGuard',
+    'describeondemand': 'describeOnDemand',
+    'describe': 'describeOnDemand',
   };
   return map[lower] || name;
 }
@@ -341,6 +345,7 @@ function applyProfileByName(profileId) {
   if (profileTools.announceUpdates) LiveRegionAnnouncer.enable();
   if (profileTools.magnifier) Magnifier.enable();
   if (profileTools.flashGuard) FlashGuard.enable();
+  if (profileTools.describeOnDemand) DescribeOnDemand.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -396,6 +401,7 @@ function getToolDescription(name) {
     announceUpdates: 'Announce dynamic content changes to screen readers (live region)',
     magnifier: 'A lens that magnifies the text under the cursor',
     flashGuard: 'Block autoplay and dim video/animation for seizure safety (WCAG 2.3.1)',
+    describeOnDemand: 'Alt+click or Alt+D to get an AI description of any element',
   };
   return descriptions[name] || '';
 }

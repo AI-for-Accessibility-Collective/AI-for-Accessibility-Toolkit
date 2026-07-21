@@ -260,6 +260,27 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('flash-guard: filter removed after disable', (await css('#vid', 'filter')) === 'none');
   }
 
+  // ── Describe on Demand (AI) — REAL: Alt+D describes the focused element ──────
+  {
+    await page.evaluate(() => { window.ai4a11y_summarizeText = () => 'a short plain summary'; });
+    await enable('describeOnDemand');
+    check('describe: enable creates the screen-reader live region', await exists('#ai4a11y-describe-live'));
+    const shown = await page.evaluate(async () => {
+      const p = document.createElement('p');
+      p.id = 'desc-long'; p.setAttribute('tabindex', '-1');
+      p.textContent = 'This is a deliberately long paragraph of text that comfortably exceeds the sixty-character threshold so the describe adapter routes it to the summarizer.';
+      document.querySelector('main').appendChild(p);
+      p.focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', altKey: true }));
+      await new Promise((r) => setTimeout(r, 80));
+      const panel = document.getElementById('ai4a11y-describe-panel');
+      return !!panel && panel.style.display === 'block' && panel.textContent.includes('short plain summary');
+    });
+    check('describe: Alt+D describes the focused element via the (stubbed) model', shown);
+    await disable('describeOnDemand');
+    check('describe: panel + live region removed after disable', !(await exists('#ai4a11y-describe-panel')) && !(await exists('#ai4a11y-describe-live')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

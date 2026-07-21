@@ -402,6 +402,24 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "describe-on-demand",
+    "name": "Describe on Demand",
+    "description": "Point at any element and get an AI description on request — press Alt+D to describe the focused element, or Alt-click one. Reads out images, charts, and complex widgets that lack good alt text.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": true,
+    "icon": "search_insights",
+    "emoji": "🔎",
+    "quickStart": false,
+    "settings": {
+      "describeOnDemand": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -773,6 +791,10 @@ globalThis.AA_TOOLS = {
   "flashGuard": {
     "type": "boolean",
     "description": "Block autoplay and dim video/animation for seizure safety"
+  },
+  "describeOnDemand": {
+    "type": "boolean",
+    "description": "Get an AI description of any element on request"
   },
   "keyboardNav": {
     "type": "boolean",

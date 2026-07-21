@@ -155,6 +155,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.announceUpdates) enabled.push('live-region-announcer');
   if (tools.magnifier) enabled.push('magnifier');
   if (tools.flashGuard) enabled.push('flash-guard');
+  if (tools.describeOnDemand) enabled.push('describe-on-demand');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');
