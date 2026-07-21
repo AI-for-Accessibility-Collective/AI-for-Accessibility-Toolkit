@@ -47,7 +47,7 @@ On startup the backend auto-discovers Chrome's CDP WebSocket on port 9222 (look 
 | `VERTEX_PROJECT` | GCP project ID | required if Vertex |
 | `VERTEX_LOCATION` | Vertex AI region | `global` |
 | `GEMINI_API_KEY` | Gemini API key | required if not Vertex |
-| `AGENT_MODEL` | Model to use | `gemini-2.5-flash` |
+| `AGENT_MODEL` | Model to use | `gemini-3.5-flash` |
 | `BROWSER_HARNESS_DIR` | Path to browser-harness checkout | `../../browser-harness` |
 | `BU_CDP_PORT` | Chrome remote debugging port (used for auto-discovery) | `9222` |
 | `BU_CDP_WS` | Explicit Chrome CDP WebSocket URL — set this to skip auto-discovery | unset |
