@@ -158,11 +158,15 @@ export function createBroker({ datastore, librarian, clock = { now: () => Date.n
     async exportUnderstanding(grantId) {
       const g = await requireGrant(grantId);
       // The privacy layer's access-control gate: the profile's sharing level
-      // must cover this grant's audience, checked on EVERY export.
+      // must cover this grant's audience, checked on EVERY export. Fail
+      // CLOSED on unrecognized values: an unknown sharing level counts as
+      // 'personal' (the most private ceiling) and an unknown audience never
+      // passes — a corrupted field must narrow access, not widen it.
       const profile = await librarian.getProfile();
       const sharing = profile?.metaPreferences?.sharing || 'personal';
       const audience = g.audience || 'personal';
-      if ((AUDIENCE_ORDER[audience] ?? Infinity) > AUDIENCE_ORDER[sharing]) {
+      const ceiling = AUDIENCE_ORDER[sharing] ?? 0;
+      if ((AUDIENCE_ORDER[audience] ?? Infinity) > ceiling) {
         await audit({ kind: 'export-blocked', grantId: g.id, appId: g.appId, audience, sharing });
         throw new Error(`Broker: profile sharing is "${sharing}" — a "${audience}" grant may not read it`);
       }
@@ -203,6 +207,21 @@ export function createBroker({ datastore, librarian, clock = { now: () => Date.n
       }
       if (hasUnsafeKeys(insight.change)) {
         throw new Error('Broker: insight change contains unsafe keys');
+      }
+      // An action insight becomes, on accept, a task the browser agent RUNS —
+      // validate its shape at the trust boundary with the same rigor
+      // hasUnsafeKeys gives to key names: real, bounded strings only.
+      if (insight.change.op === 'add-profile-action') {
+        const a = insight.change.action;
+        const types = insight.change.siteTypes;
+        if (!a || typeof a.name !== 'string' || !a.name.trim() || a.name.length > 120
+            || typeof a.prompt !== 'string' || !a.prompt.trim() || a.prompt.length > 1000) {
+          throw new Error('Broker: add-profile-action needs action.name and action.prompt as bounded strings');
+        }
+        if (!Array.isArray(types) || types.length === 0 || types.length > 5
+            || types.some(t => typeof t !== 'string' || !t.trim() || t.length > 40)) {
+          throw new Error('Broker: add-profile-action needs siteTypes as a short list of category ids');
+        }
       }
       const accepted = await librarian.proposeInsight({
         aspect: insight.aspect,

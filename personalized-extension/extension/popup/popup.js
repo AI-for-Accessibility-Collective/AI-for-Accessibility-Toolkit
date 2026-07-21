@@ -1077,6 +1077,16 @@ function setupMemoryPanel() {
       const why = document.createElement('div');
       why.className = 'proposal-rationale';
       why.textContent = p.rationale || '';
+      // Consent must show the payload, not just the pitch: for an action
+      // proposal, the aspectLabel and rationale can both be app-supplied
+      // (broker insights) — the exact task the agent would run is the one
+      // thing the person must see before saying yes.
+      let payload = null;
+      if (p.change?.op === 'add-profile-action' && p.change.action?.prompt) {
+        payload = document.createElement('div');
+        payload.className = 'proposal-rationale proposal-payload';
+        payload.textContent = `Exact task it will run: "${p.change.action.prompt}"`;
+      }
       const actions = document.createElement('div');
       actions.className = 'proposal-actions';
       const mk = (label, response, cls) => {
@@ -1091,6 +1101,7 @@ function setupMemoryPanel() {
       actions.appendChild(mk("Don't suggest this", 'suppress', 'btn-secondary'));
       card.appendChild(title);
       card.appendChild(why);
+      if (payload) card.appendChild(payload);
       card.appendChild(actions);
       return card;
     };

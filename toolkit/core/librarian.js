@@ -893,14 +893,41 @@ Return ONLY valid JSON with:
           const slug = String(prop.change.action.name || 'saved-task').toLowerCase()
             .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'saved-task';
           const cats = siteTypes.length ? siteTypes : ['all'];
-          await this.saveSkill({
-            name: slug,
-            description: `Runs "${prop.change.action.prompt}" for you. Use it on ${cats.join(', ')} sites.`,
-            supportAreas: [],
-            siteRelevance: cats,
-            recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt: prop.change.action.prompt }] },
-            body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
-          });
+          // Best-effort: the accept itself must still persist (line below the
+          // branch) even if the skill-doc write fails — otherwise the proposal
+          // stays pending on disk with the profile action already saved, and
+          // a second accept would duplicate it.
+          try {
+            const prompt = prop.change.action.prompt;
+            const skills = await this.listSkills();
+            const sameCats = (s) =>
+              JSON.stringify([...(s.siteRelevance || [])].sort()) === JSON.stringify([...cats].sort());
+            // Idempotent: an action skill for this exact task already exists.
+            const already = skills.some(s => sameCats(s)
+              && (s.recipe?.adapters || []).length === 0
+              && (s.recipe?.actions || []).length === 1
+              && s.recipe.actions[0].prompt === prompt);
+            if (!already) {
+              // A proposal-sourced save must only ADD — never overwrite a
+              // skill (the person's own or a built-in) that shares the name.
+              // Proposal fields can be app-supplied through the broker, so a
+              // name collision here could otherwise swap a trusted skill's
+              // recipe for an attacker-chosen task.
+              const names = new Set(skills.map(s => s.name));
+              let name = slug;
+              for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
+              await this.saveSkill({
+                name,
+                description: `Runs "${prompt}" for you. Use it on ${cats.join(', ')} sites.`,
+                supportAreas: [],
+                siteRelevance: cats,
+                recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt }] },
+                body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
+              });
+            }
+          } catch (e) {
+            console.warn('[Librarian] could not save accepted task as a skill:', e.message);
+          }
           demo.trace('skill', 'skillsdb', 'saved as skill.md');
           demo.trace('skill', 'autoenable', 'skill stored');
           demo.trace('skill', 'profiledb_skill', 'trigger registered');

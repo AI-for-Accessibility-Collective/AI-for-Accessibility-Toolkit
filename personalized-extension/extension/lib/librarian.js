@@ -1183,16 +1183,29 @@ Return ONLY valid JSON with:
             });
             const slug = String(prop.change.action.name || "saved-task").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "saved-task";
             const cats = siteTypes.length ? siteTypes : ["all"];
-            await this.saveSkill({
-              name: slug,
-              description: `Runs "${prop.change.action.prompt}" for you. Use it on ${cats.join(", ")} sites.`,
-              supportAreas: [],
-              siteRelevance: cats,
-              recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt: prop.change.action.prompt }] },
-              body: `# ${prop.change.action.name}
+            try {
+              const prompt = prop.change.action.prompt;
+              const skills = await this.listSkills();
+              const sameCats = (s) => JSON.stringify([...s.siteRelevance || []].sort()) === JSON.stringify([...cats].sort());
+              const already = skills.some((s) => sameCats(s) && (s.recipe?.adapters || []).length === 0 && (s.recipe?.actions || []).length === 1 && s.recipe.actions[0].prompt === prompt);
+              if (!already) {
+                const names = new Set(skills.map((s) => s.name));
+                let name = slug;
+                for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
+                await this.saveSkill({
+                  name,
+                  description: `Runs "${prompt}" for you. Use it on ${cats.join(", ")} sites.`,
+                  supportAreas: [],
+                  siteRelevance: cats,
+                  recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt }] },
+                  body: `# ${prop.change.action.name}
 
 Saved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`
-            });
+                });
+              }
+            } catch (e) {
+              console.warn("[Librarian] could not save accepted task as a skill:", e.message);
+            }
             demo2.trace("skill", "skillsdb", "saved as skill.md");
             demo2.trace("skill", "autoenable", "skill stored");
             demo2.trace("skill", "profiledb_skill", "trigger registered");
@@ -1652,7 +1665,8 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
         const profile = await librarian2.getProfile();
         const sharing = profile?.metaPreferences?.sharing || "personal";
         const audience = g.audience || "personal";
-        if ((AUDIENCE_ORDER[audience] ?? Infinity) > AUDIENCE_ORDER[sharing]) {
+        const ceiling = AUDIENCE_ORDER[sharing] ?? 0;
+        if ((AUDIENCE_ORDER[audience] ?? Infinity) > ceiling) {
           await audit({ kind: "export-blocked", grantId: g.id, appId: g.appId, audience, sharing });
           throw new Error(`Broker: profile sharing is "${sharing}" \u2014 a "${audience}" grant may not read it`);
         }
@@ -1690,6 +1704,16 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
         }
         if (hasUnsafeKeys(insight.change)) {
           throw new Error("Broker: insight change contains unsafe keys");
+        }
+        if (insight.change.op === "add-profile-action") {
+          const a = insight.change.action;
+          const types = insight.change.siteTypes;
+          if (!a || typeof a.name !== "string" || !a.name.trim() || a.name.length > 120 || typeof a.prompt !== "string" || !a.prompt.trim() || a.prompt.length > 1e3) {
+            throw new Error("Broker: add-profile-action needs action.name and action.prompt as bounded strings");
+          }
+          if (!Array.isArray(types) || types.length === 0 || types.length > 5 || types.some((t) => typeof t !== "string" || !t.trim() || t.length > 40)) {
+            throw new Error("Broker: add-profile-action needs siteTypes as a short list of category ids");
+          }
         }
         const accepted = await librarian2.proposeInsight({
           aspect: insight.aspect,

@@ -2,12 +2,14 @@
 //
 // Wires the real Engineer + Librarian skill API (background `librarian*Skill`
 // messages) to a UI where the user can:
-//   - describe a need → the Engineer composes existing adapters into a skill;
-//   - review it (what adapters, what settings) and SAVE it (consent gate);
+//   - describe a need → an existing skill that covers it is offered first;
+//   - if none fits, the Engineer composes existing adapters into a skill;
+//   - TRY the built skill on the live page, and send it back with feedback
+//     for revision, before deciding to SAVE it (consent gate);
 //   - see built-in + their own skills;
 //   - APPLY a skill to the current page (the "Apply" click is the consent) —
-//     which resolves the skill to settings and hands them to the content
-//     script's adapter path.
+//     adapter recipes go to the content script, action recipes (saved
+//     reusable tasks) run through the background's browser agent.
 //
 // No auto-application anywhere: every page change is a deliberate click.
 
@@ -59,15 +61,24 @@ function renderReuseOffer(skill) {
 async function onBuild() {
   const need = $('needInput').value.trim();
   if (!need) { $('buildStatus').textContent = 'Type what you need first.'; return; }
+  // Disable BEFORE the first await — a double-click must not race two
+  // reuse checks or two Engineer builds.
+  $('buildBtn').disabled = true;
 
   if (need !== checkedNeed) {
     checkedNeed = need;
     const { skill: match } = await sendBg({ type: 'librarianFindSkill', need });
-    if (match) { offeredSkill = match; renderReuseOffer(match); return; }
+    // The person kept typing while we checked — this answer is stale.
+    if ($('needInput').value.trim() !== need) { $('buildBtn').disabled = false; return; }
+    if (match) {
+      $('buildBtn').disabled = false;
+      offeredSkill = match;
+      renderReuseOffer(match);
+      return;
+    }
   }
   hideReuseOffer();
 
-  $('buildBtn').disabled = true;
   $('buildStatus').textContent = 'The Engineer is composing adapters…';
   $('preview').hidden = true;
 

@@ -157,6 +157,35 @@ const broker = createBroker({ datastore: () => datastore, librarian });
   const gSelf = await broker.createGrant({ appId: 'my-xr', read: ['ability.text'] });
   check('personal grants still export at the personal level', (await broker.exportUnderstanding(gSelf.id)).text !== undefined);
 
+  // Action insights become agent-run tasks on accept — the broker must
+  // reject malformed ones at the trust boundary, and queue well-formed ones.
+  await throws('action insight without a prompt rejected', () =>
+    broker.importInsight(gEvil.id, {
+      aspect: 'auto.video', change: { op: 'add-profile-action', siteTypes: ['video'], action: { name: 'x' } },
+    }));
+  await throws('action insight with non-array siteTypes rejected', () =>
+    broker.importInsight(gEvil.id, {
+      aspect: 'auto.video', change: { op: 'add-profile-action', siteTypes: 'video', action: { name: 'x', prompt: 'do y' } },
+    }));
+  await throws('action insight with oversized prompt rejected', () =>
+    broker.importInsight(gEvil.id, {
+      aspect: 'auto.video', change: { op: 'add-profile-action', siteTypes: ['video'], action: { name: 'x', prompt: 'y'.repeat(1001) } },
+    }));
+  const okIns = await broker.importInsight(gEvil.id, {
+    aspect: 'reusable-action.category:video', aspectLabel: 'auto captions on video sites',
+    change: { op: 'add-profile-action', siteTypes: ['video'], action: { name: 'Enable captions', prompt: 'Turn on captions' } },
+    rationale: 'measured you enabling captions',
+  });
+  check('well-formed action insight queues as a proposal', okIns.queued === true);
+
+  // Fail closed: an unrecognized sharing value (corruption, bad write) must
+  // NARROW access to the personal ceiling, never widen it.
+  await librarian.setProfileField('metaPreferences.sharing', 'garbage-value');
+  await throws('corrupt sharing level blocks friends grants', () =>
+    broker.exportUnderstanding(gFriend.id));
+  check('corrupt sharing level still allows personal grants', (await broker.exportUnderstanding(gSelf.id)).text !== undefined);
+  await librarian.setProfileField('metaPreferences.sharing', 'personal');
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
