@@ -160,7 +160,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8080
 
 **Solutions:**
 1. Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
-2. Check Node version: `node --version` (requires Node 18+)
+2. Check Node version: `node --version` (requires Node 20.19+)
 3. Review esbuild errors in terminal output
 
 ### Missing dependencies
