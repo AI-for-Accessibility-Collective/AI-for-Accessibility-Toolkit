@@ -12,7 +12,10 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        # jsdom (via html-encoding-sniffer -> @exodus/bytes) ships ESM that must
+        # be require()d, which Node 18 cannot do (ERR_REQUIRE_ESM). That support
+        # only exists from Node 20.19. Test the current LTS lines, not EOL 18.
+        node-version: [20.x, 22.x]
 
     steps:
       - uses: actions/checkout@v4

@@ -2,6 +2,9 @@
   "name": "ai-for-accessibility-toolkit",
   "version": "1.0.0",
   "description": "AI-powered Chrome extension that adapts any webpage to each user's abilities",
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "build": "node extension/src/build.js",
     "build:prod": "NODE_ENV=production node extension/src/build.js",
