@@ -193,8 +193,11 @@ One sentence max. No fluff. Just the facts.` }
   );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Gemini API error');
+    // Guard the parse: a proxy 502 returns an HTML body, and an unguarded
+    // response.json() would surface "Unexpected token '<'" instead of the
+    // real HTTP status.
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Gemini API error (${response.status})`);
   }
 
   const data = await response.json();
