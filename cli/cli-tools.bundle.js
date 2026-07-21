@@ -3629,7 +3629,7 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
 
   // tools/adapters/confirm-actions.js
-  var DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|post|publish|unsubscribe|deactivate|close account)\b/i;
+  var DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account)\b/i;
   var ConfirmActions = {
     promptId: "ai4a11y-confirm-prompt",
     armedAttr: "data-ai4a11y-armed",
@@ -3647,7 +3647,7 @@ ${scope} table {
       if (this.enabled) return;
       this.enabled = true;
       this.armed = /* @__PURE__ */ new Set();
-      if (typeof options.windowMs === "number") this.windowMs = options.windowMs;
+      this.windowMs = typeof options.windowMs === "number" ? options.windowMs : 4e3;
       this.clickHandler = (e) => this.onClick(e);
       document.addEventListener("click", this.clickHandler, true);
       console.log("[AI4A11y] Confirm Actions enabled");
@@ -3655,6 +3655,7 @@ ${scope} table {
     },
     onClick(e) {
       if (!this.enabled) return;
+      if (e.isTrusted === false) return;
       const t = e.target;
       if (!t || t.nodeType !== 1) return;
       if (this.prompt && (t === this.prompt || this.prompt.contains(t))) return;
@@ -3673,16 +3674,24 @@ ${scope} table {
       this.promptTimer = setTimeout(() => this.clearArmed(), this.windowMs);
     },
     looksDestructive(el) {
-      return DESTRUCTIVE_RE.test(el.textContent || "") || DESTRUCTIVE_RE.test(el.value || "") || DESTRUCTIVE_RE.test(el.getAttribute && el.getAttribute("aria-label") || "");
+      const name = (el.getAttribute && el.getAttribute("aria-label") || el.value || el.textContent || "").replace(/\s+/g, " ").trim();
+      if (!name || name.length > 40) return false;
+      return DESTRUCTIVE_RE.test(name);
     },
     showPrompt(el) {
       const prompt = document.createElement("span");
       prompt.id = this.promptId;
       prompt.setAttribute("role", "status");
       prompt.textContent = "Click again to confirm";
-      prompt.style.cssText = "display:inline-block;margin:0 6px;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;";
-      if (el.insertAdjacentElement) el.insertAdjacentElement("afterend", prompt);
-      else (document.body || document.documentElement).appendChild(prompt);
+      prompt.style.cssText = "position:fixed;z-index:2147483647;margin:0;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;pointer-events:none;";
+      (document.body || document.documentElement).appendChild(prompt);
+      let rect = null;
+      try {
+        rect = el.getBoundingClientRect();
+      } catch {
+      }
+      prompt.style.left = `${rect ? Math.max(4, rect.left) : 4}px`;
+      prompt.style.top = `${rect ? Math.max(4, rect.top - 24) : 4}px`;
       this.prompt = prompt;
     },
     // Drop any pending confirmation: timer, prompt, and armed flags.

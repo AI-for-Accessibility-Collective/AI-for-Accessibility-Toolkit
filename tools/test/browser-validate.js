@@ -337,16 +337,21 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
       document.querySelector('main').appendChild(b);
     });
     await enable('confirmActions');
-    const first = await page.evaluate(() => {
+    // page.click issues a genuine trusted click (via CDP input), which is what
+    // the isTrusted guard requires — script-dispatched events are untrusted.
+    await page.click('#del');
+    const first = await page.evaluate(() => window.__delFired);
+    check('confirm: first real click on a destructive button is intercepted', first === 0);
+    await page.click('#del');
+    const second = await page.evaluate(() => window.__delFired);
+    check('confirm: a second real click confirms and proceeds', second === 1);
+    // A programmatic (untrusted) click is NOT intercepted — it passes through.
+    const prog = await page.evaluate(() => {
+      window.__delFired = 0;
       document.getElementById('del').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       return window.__delFired;
     });
-    check('confirm: first click on a destructive button is intercepted', first === 0);
-    const second = await page.evaluate(() => {
-      document.getElementById('del').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      return window.__delFired;
-    });
-    check('confirm: a second click confirms and proceeds', second === 1);
+    check('confirm: a programmatic (untrusted) click is not intercepted', prog === 1);
     await disable('confirmActions');
   }
 

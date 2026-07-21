@@ -13,7 +13,7 @@ import { announce } from '../utils/ai.js';
 
 // Action words that mark a control as destructive or final. Matched against
 // the control's textContent / value / aria-label.
-const DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|post|publish|unsubscribe|deactivate|close account)\b/i;
+const DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account)\b/i;
 
 export const ConfirmActions = {
   promptId: 'ai4a11y-confirm-prompt',
@@ -29,7 +29,7 @@ export const ConfirmActions = {
     if (this.enabled) return;
     this.enabled = true;
     this.armed = new Set();
-    if (typeof options.windowMs === 'number') this.windowMs = options.windowMs;
+    this.windowMs = typeof options.windowMs === 'number' ? options.windowMs : 4000;
 
     // Capture phase: run before the page's own handlers so a first click on a
     // risky control can be stopped before anything executes.
@@ -42,6 +42,10 @@ export const ConfirmActions = {
 
   onClick(e) {
     if (!this.enabled) return;
+    // Only guard real user clicks. A page's own programmatic .click() (e.g. a
+    // custom control forwarding to a hidden submit button) is not a tremor or a
+    // misread label — intercepting it would silently break the site's own flow.
+    if (e.isTrusted === false) return;
     const t = e.target;
     if (!t || t.nodeType !== 1) return;
     // Never intercept our own prompt (its text contains "confirm").
@@ -66,9 +70,13 @@ export const ConfirmActions = {
   },
 
   looksDestructive(el) {
-    return DESTRUCTIVE_RE.test(el.textContent || '') ||
-      DESTRUCTIVE_RE.test(el.value || '') ||
-      DESTRUCTIVE_RE.test((el.getAttribute && el.getAttribute('aria-label')) || '');
+    // Match the control's accessible NAME, not its full subtree text: a whole
+    // card wrapped in one <a> would otherwise match a keyword buried anywhere
+    // inside it. Long text is prose or a card, not an action control, so cap it.
+    const name = ((el.getAttribute && el.getAttribute('aria-label')) || el.value || el.textContent || '')
+      .replace(/\s+/g, ' ').trim();
+    if (!name || name.length > 40) return false;
+    return DESTRUCTIVE_RE.test(name);
   },
 
   showPrompt(el) {
@@ -76,9 +84,15 @@ export const ConfirmActions = {
     prompt.id = this.promptId;
     prompt.setAttribute('role', 'status'); // screen readers hear the ask too
     prompt.textContent = 'Click again to confirm';
-    prompt.style.cssText = 'display:inline-block;margin:0 6px;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;';
-    if (el.insertAdjacentElement) el.insertAdjacentElement('afterend', prompt);
-    else (document.body || document.documentElement).appendChild(prompt);
+    // Fixed overlay near the control, NOT inserted after it: an in-flow prompt
+    // reflows the row and can shift the armed button out from under the pointer
+    // before the confirming second click lands.
+    prompt.style.cssText = 'position:fixed;z-index:2147483647;margin:0;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;pointer-events:none;';
+    (document.body || document.documentElement).appendChild(prompt);
+    let rect = null;
+    try { rect = el.getBoundingClientRect(); } catch { /* detached */ }
+    prompt.style.left = `${rect ? Math.max(4, rect.left) : 4}px`;
+    prompt.style.top = `${rect ? Math.max(4, rect.top - 24) : 4}px`;
     this.prompt = prompt;
   },
 
