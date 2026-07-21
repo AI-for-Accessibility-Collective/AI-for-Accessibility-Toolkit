@@ -965,8 +965,8 @@ Rules:
         });
         await this.logObservation({
           type: "saved-action",
-          text: `Saved skill "${skill.name}"`,
-          data: { skill: skill.name }
+          text: `Saved skill "${skill.name}" \u2014 helps with ${(skill.supportAreas || []).join(", ") || "unspecified areas"}; applies on ${(skill.siteRelevance || []).join(", ") || "all"} sites`,
+          data: { skill: skill.name, supportAreas: skill.supportAreas || [], triggers: skill.siteRelevance || [] }
         }).catch(() => {
         });
         return { saved: true, errors: [] };

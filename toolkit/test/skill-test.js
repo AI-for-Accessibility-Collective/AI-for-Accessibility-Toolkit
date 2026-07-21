@@ -162,6 +162,13 @@ const librarian = createLibrarian({
   const afterSave = await librarian.listSkills();
   check('saved skill appears as mine', afterSave.some(s => s.name === 'my-shop-helper' && s.source === 'mine'));
 
+  // The flow's final step: saving records ability context + triggers so the
+  // profile/memory db learns from the validated skill.
+  const log = await datastore.get('mine.episodicLog');
+  const saveEntry = [...(log.entries || [])].reverse().find(e => e.type === 'saved-action');
+  check('saving a skill records ability context and triggers',
+    !!saveEntry && saveEntry.data.supportAreas?.includes('vision') && saveEntry.data.triggers?.includes('shopping'));
+
   // saveSkill rejects an invalid skill.
   const badSave = await librarian.saveSkill({ name: 'broken', description: 'x', recipe: { adapters: [{ id: 'nope' }] }, supportAreas: [], siteRelevance: [] });
   check('saveSkill rejects invalid skill', badSave.saved === false && badSave.errors.length > 0);
