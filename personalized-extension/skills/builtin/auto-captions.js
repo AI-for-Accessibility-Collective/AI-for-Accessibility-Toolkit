@@ -5,6 +5,8 @@ export const AutoCaptions = {
   observer: null,
   videoStates: new Map(),
   styleId: 'ai4a11y-caption-helper-styles',
+  _enableTimer: null,
+  _pagehideHandler: null,
 
   enable() {
     if (this.enabled) return;
@@ -12,7 +14,12 @@ export const AutoCaptions = {
     this.injectStyles();
     this.setupVideoObserver();
     this.enableCaptionsOnAllVideos();
-    setTimeout(() => this.enableCaptionsOnAllVideos(), 1000);
+    // Keep the deferred sweep's handle and gate on enabled so it can't attach
+    // CC UI after a quick disable().
+    this._enableTimer = setTimeout(() => {
+      this._enableTimer = null;
+      if (this.enabled) this.enableCaptionsOnAllVideos();
+    }, 1000);
     console.log('[AI4A11y] Auto Transcriber enabled');
     announce('Auto Transcriber enabled');
   },
@@ -20,10 +27,14 @@ export const AutoCaptions = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+    if (this._enableTimer) { clearTimeout(this._enableTimer); this._enableTimer = null; }
+    if (this._pagehideHandler) { window.removeEventListener('pagehide', this._pagehideHandler); this._pagehideHandler = null; }
     this.observer?.disconnect();
     this.observer = null;
     document.querySelectorAll('.ai4a11y-audio-btn, .ai4a11y-caption-box').forEach(el => el.remove());
     document.getElementById(this.styleId)?.remove();
+    // Clear the per-video setup flag, else re-enable() skips every existing video.
+    document.querySelectorAll('video[data-ai4a11y-setup]').forEach(v => { delete v.dataset.ai4a11ySetup; });
     this.videoStates.clear();
     console.log('[AI4A11y] Auto Transcriber disabled');
     announce('Auto Transcriber disabled');
@@ -92,7 +103,10 @@ export const AutoCaptions = {
     });
     this.observer.observe(document.body, { childList: true, subtree: true });
 
-    window.addEventListener('pagehide', () => this.disable(), { once: true });
+    // Keep the handler reference so disable() can remove it (an anonymous one
+    // leaks one listener per enable/disable cycle in a long-lived SPA).
+    this._pagehideHandler = () => this.disable();
+    window.addEventListener('pagehide', this._pagehideHandler, { once: true });
   },
 
   cleanupVideo(video) {

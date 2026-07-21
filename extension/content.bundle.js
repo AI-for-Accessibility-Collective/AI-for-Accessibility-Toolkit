@@ -3099,13 +3099,18 @@ ${chunk}
     observer: null,
     videoStates: /* @__PURE__ */ new Map(),
     styleId: "ai4a11y-caption-helper-styles",
+    _enableTimer: null,
+    _pagehideHandler: null,
     enable() {
       if (this.enabled) return;
       this.enabled = true;
       this.injectStyles();
       this.setupVideoObserver();
       this.enableCaptionsOnAllVideos();
-      setTimeout(() => this.enableCaptionsOnAllVideos(), 1e3);
+      this._enableTimer = setTimeout(() => {
+        this._enableTimer = null;
+        if (this.enabled) this.enableCaptionsOnAllVideos();
+      }, 1e3);
       console.log("[AI4A11y] Auto Transcriber enabled");
       announce("Auto Transcriber enabled");
     },
@@ -3113,10 +3118,21 @@ ${chunk}
       var _a, _b;
       if (!this.enabled) return;
       this.enabled = false;
+      if (this._enableTimer) {
+        clearTimeout(this._enableTimer);
+        this._enableTimer = null;
+      }
+      if (this._pagehideHandler) {
+        window.removeEventListener("pagehide", this._pagehideHandler);
+        this._pagehideHandler = null;
+      }
       (_a = this.observer) == null ? void 0 : _a.disconnect();
       this.observer = null;
       document.querySelectorAll(".ai4a11y-audio-btn, .ai4a11y-caption-box").forEach((el) => el.remove());
       (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      document.querySelectorAll("video[data-ai4a11y-setup]").forEach((v) => {
+        delete v.dataset.ai4a11ySetup;
+      });
       this.videoStates.clear();
       console.log("[AI4A11y] Auto Transcriber disabled");
       announce("Auto Transcriber disabled");
@@ -3183,7 +3199,8 @@ ${chunk}
         }
       });
       this.observer.observe(document.body, { childList: true, subtree: true });
-      window.addEventListener("pagehide", () => this.disable(), { once: true });
+      this._pagehideHandler = () => this.disable();
+      window.addEventListener("pagehide", this._pagehideHandler, { once: true });
     },
     cleanupVideo(video) {
       var _a, _b;
