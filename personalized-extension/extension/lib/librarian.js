@@ -187,12 +187,15 @@
   }
   function extractRecipe(body) {
     const m = body.match(/```json\s*([\s\S]*?)```/);
-    if (!m) return { adapters: [] };
+    if (!m) return { adapters: [], actions: [] };
     try {
       const parsed = JSON.parse(m[1]);
-      return { adapters: Array.isArray(parsed.adapters) ? parsed.adapters : [] };
+      return {
+        adapters: Array.isArray(parsed.adapters) ? parsed.adapters : [],
+        actions: Array.isArray(parsed.actions) ? parsed.actions : []
+      };
     } catch {
-      return { adapters: [] };
+      return { adapters: [], actions: [] };
     }
   }
   function parseSkill(markdown) {
@@ -243,7 +246,11 @@ ${body.trim()}
     if (!skill.name) errors.push("missing name");
     if (!skill.description) errors.push("missing description");
     const steps = skill.recipe?.adapters || [];
-    if (steps.length === 0) errors.push("recipe has no adapters");
+    const actions = skill.recipe?.actions || [];
+    if (steps.length === 0 && actions.length === 0) errors.push("recipe has no adapters or actions");
+    for (const act of actions) {
+      if (!act || typeof act.prompt !== "string" || !act.prompt.trim()) errors.push("recipe action missing prompt");
+    }
     const meta = tools?.settingsMeta || {};
     for (const step of steps) {
       if (!step || typeof step.id !== "string") {
@@ -278,7 +285,8 @@ ${body.trim()}
       adapterIds.push(step.id);
       Object.assign(settings, step.settings || {});
     }
-    return { settings, adapterIds };
+    const actions = (skill.recipe?.actions || []).filter((a) => a && typeof a.prompt === "string" && a.prompt.trim()).map((a) => ({ name: a.name || a.prompt, prompt: a.prompt }));
+    return { settings, adapterIds, actions };
   }
   function matchSkill(skill, { supportAreas = [], category = null } = {}) {
     let score = 0;
@@ -1169,6 +1177,18 @@ Return ONLY valid JSON with:
                 savedAt: now
               });
               return profiles;
+            });
+            const slug = String(prop.change.action.name || "saved-task").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "saved-task";
+            const cats = siteTypes.length ? siteTypes : ["all"];
+            await this.saveSkill({
+              name: slug,
+              description: `Runs "${prop.change.action.prompt}" for you. Use it on ${cats.join(", ")} sites.`,
+              supportAreas: [],
+              siteRelevance: cats,
+              recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt: prop.change.action.prompt }] },
+              body: `# ${prop.change.action.name}
+
+Saved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`
             });
             demo2.trace("skill", "skillsdb", "saved as skill.md");
             demo2.trace("skill", "autoenable", "skill stored");
