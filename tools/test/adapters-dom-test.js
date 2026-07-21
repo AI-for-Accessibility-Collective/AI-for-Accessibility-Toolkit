@@ -8,6 +8,7 @@
 import { JSDOM } from 'jsdom';
 import { DismissOverlays } from '../adapters/dismiss-overlays.js';
 import { KeyboardNavigator } from '../adapters/keyboard-nav.js';
+import { getEffectiveBackground, getContrastRatio } from '../utils/color.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
@@ -120,6 +121,25 @@ async function run() {
     KeyboardNavigator.disable();
     check('keyboard-nav: idempotent enable (clean after double-enable + one disable)',
       doc.querySelector('#ai4a11y-skip-links') === null && !doc.querySelector('main').id);
+  }
+
+  // ── EFFECTIVE BACKGROUND (regression: alpha compositing) ────────────────────
+  {
+    const doc = mount(`<div id="dark" style="background-color: rgb(0, 0, 0)"><p id="t" style="background-color: rgba(255, 255, 255, 0.5)">text</p></div>`);
+    const bg = getEffectiveBackground(doc.querySelector('#t'));
+    // 50% white over black composites to ~mid-gray (128), NOT pure white.
+    const m = bg.match(/rgb\((\d+), (\d+), (\d+)\)/);
+    const gray = m ? Number(m[1]) : -1;
+    check('contrast: a translucent white bg over black composites to mid-gray', gray >= 120 && gray <= 136);
+    check('contrast: the composited bg is not mistaken for opaque white', gray < 255);
+    // White text on that real mid-gray fails AA — the old code (seeing "white")
+    // would have wrongly judged it fine.
+    check('contrast: white text on the real background is correctly sub-AA',
+      getContrastRatio('rgb(255, 255, 255)', bg) < 4.5);
+
+    // An opaque background short-circuits to itself.
+    const opaque = getEffectiveBackground(mount(`<p id="o" style="background-color: rgb(20, 40, 60)">x</p>`).querySelector('#o'));
+    check('contrast: an opaque background is returned as-is', opaque === 'rgb(20, 40, 60)');
   }
 }
 

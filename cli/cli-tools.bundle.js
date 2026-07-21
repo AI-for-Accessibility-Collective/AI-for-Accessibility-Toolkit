@@ -2865,17 +2865,35 @@ ${chunk}
     const darker = Math.min(l1, l2);
     return (lighter + 0.05) / (darker + 0.05);
   }
+  function parseRgba(color) {
+    if (!color) return null;
+    const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
+    const rgb = parseColor(color);
+    return rgb ? { ...rgb, a: 1 } : null;
+  }
   function getEffectiveBackground(element) {
+    const layers = [];
     let el = element;
     while (el) {
-      const bg = getComputedStyle(el).backgroundColor;
-      if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
-        return bg;
+      const parsed = parseRgba(getComputedStyle(el).backgroundColor);
+      if (parsed && parsed.a > 0) {
+        layers.push(parsed);
+        if (parsed.a >= 1) break;
       }
       if (el === document.documentElement) break;
       el = el.parentElement;
     }
-    return "rgb(255, 255, 255)";
+    let base = { r: 255, g: 255, b: 255 };
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const top = layers[i];
+      base = {
+        r: Math.round(top.r * top.a + base.r * (1 - top.a)),
+        g: Math.round(top.g * top.a + base.g * (1 - top.a)),
+        b: Math.round(top.b * top.a + base.b * (1 - top.a))
+      };
+    }
+    return `rgb(${base.r}, ${base.g}, ${base.b})`;
   }
 
   // tools/adapters/fix-contrast.js
