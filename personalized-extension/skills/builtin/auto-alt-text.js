@@ -137,6 +137,9 @@ export async function generateVideoDescription(video) {
     const description = await describeVideo(frames);
 
     if (description) {
+      // Expose the description to assistive tech (sibling image/canvas paths
+      // apply theirs; this one used to compute it and drop it).
+      video.setAttribute('aria-label', description);
       video.dataset.ai4a11yDescribed = 'done';
       incrementStat('images');
       logFix('video description', video, '(none)', description);
