@@ -233,6 +233,22 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('live-region: the live region is removed after disable', !(await exists('#ai4a11y-live-region')));
   }
 
+  // ── Magnifier — REAL: lens appears and shows text under the cursor ──────────
+  {
+    await enable('magnifier');
+    check('magnifier: a lens element is created', await exists('#ai4a11y-magnifier'));
+    const box = await page.evaluate(() => { const r = document.querySelector('main p').getBoundingClientRect(); return { x: r.x + 8, y: r.y + r.height / 2 }; });
+    await page.mouse.move(box.x, box.y);
+    const shows = await page.evaluate(async () => {
+      await new Promise((r) => setTimeout(r, 80));
+      const l = document.getElementById('ai4a11y-magnifier');
+      return !!l && getComputedStyle(l).display !== 'none' && l.textContent.trim().length > 0;
+    });
+    check('magnifier: moving the cursor shows magnified text of the element under it', shows);
+    await disable('magnifier');
+    check('magnifier: lens removed after disable', !(await exists('#ai4a11y-magnifier')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);
