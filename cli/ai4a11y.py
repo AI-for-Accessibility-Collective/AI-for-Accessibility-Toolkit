@@ -4637,7 +4637,7 @@ def session_profile(profile_name, json_output=False):
     """Apply an accessibility profile to the current page.
 
     Profiles: lowVision, blind, colorBlind, dyslexia, adhd, cognitive,
-              motor, photosensitive, deaf, anxiety, elderly, sensory
+              motor, photosensitive, deaf, anxiety, olderAdult, sensory
 
     Each profile enables a specific set of tools optimized for that need.
     The profile is saved and auto-applied to all future page navigations.
@@ -5830,7 +5830,7 @@ if __name__ == "__main__":
             if not sub_args:
                 print("usage: session profile <name>")
                 print("  profiles: lowVision, blind, colorBlind, dyslexia, adhd, cognitive,")
-                print("            motor, photosensitive, deaf, anxiety, elderly, sensory")
+                print("            motor, photosensitive, deaf, anxiety, olderAdult, sensory")
                 sys.exit(1)
             session_profile(sub_args[0], json_output=json_output)
         elif sub == "profiles":
