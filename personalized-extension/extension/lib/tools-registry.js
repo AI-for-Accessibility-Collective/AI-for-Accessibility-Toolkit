@@ -213,6 +213,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "unpin-sticky",
+    "name": "Unpin Sticky Bars",
+    "description": "Un-fixes sticky and fixed headers, footers, and floating bars so they stop covering the page when you zoom in (WCAG 1.4.10 reflow) or force extra scrolling.",
+    "supportAreas": [
+      "vision",
+      "motor"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "push_pin",
+    "emoji": "📌",
+    "quickStart": false,
+    "settings": {
+      "unpinSticky": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -544,6 +563,10 @@ globalThis.AA_TOOLS = {
   "bionicReading": {
     "type": "boolean",
     "description": "Bold the start of each word to guide the eye"
+  },
+  "unpinSticky": {
+    "type": "boolean",
+    "description": "Un-fix sticky headers and bars so they stop covering the page"
   },
   "keyboardNav": {
     "type": "boolean",

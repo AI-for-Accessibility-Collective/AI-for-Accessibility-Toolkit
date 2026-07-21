@@ -42,6 +42,7 @@ import {
   LinkHighlighter,
   PageOutline,
   BionicReading,
+  UnpinSticky,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -136,6 +137,7 @@ function applyVisualSettings(settings) {
   if (settings.highlightLinks) LinkHighlighter.enable();
   if (settings.pageOutline) PageOutline.enable();
   if (settings.bionicReading) BionicReading.enable();
+  if (settings.unpinSticky) UnpinSticky.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -369,6 +371,7 @@ function revertAll() {
   LinkHighlighter.disable();
   PageOutline.disable();
   BionicReading.disable();
+  UnpinSticky.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -490,7 +493,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         BigTargets: BigTargets.enabled || false,
         LinkHighlighter: LinkHighlighter.enabled || false,
         PageOutline: PageOutline.enabled || false,
-        BionicReading: BionicReading.enabled || false
+        BionicReading: BionicReading.enabled || false,
+        UnpinSticky: UnpinSticky.enabled || false
       }
     });
     return true;

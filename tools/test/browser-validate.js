@@ -117,6 +117,15 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
       (await page.evaluate(() => document.querySelector('main p').textContent)) === textBefore);
   }
 
+  // ── Unpin Sticky Bars — REAL: the fixed header becomes position:static ──────
+  {
+    check('unpin: the header is really position:fixed before', (await css('#hdr', 'position')) === 'fixed');
+    await enable('unpinSticky');
+    check('unpin: the fixed header becomes position:static', (await css('#hdr', 'position')) === 'static');
+    await disable('unpinSticky');
+    check('unpin: the header is fixed again after disable', (await css('#hdr', 'position')) === 'fixed');
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

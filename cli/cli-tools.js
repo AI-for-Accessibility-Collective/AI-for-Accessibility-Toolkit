@@ -26,6 +26,7 @@ import { BigTargets } from '../tools/adapters/big-targets.js';
 import { LinkHighlighter } from '../tools/adapters/link-highlighter.js';
 import { PageOutline } from '../tools/adapters/page-outline.js';
 import { BionicReading } from '../tools/adapters/bionic-reading.js';
+import { UnpinSticky } from '../tools/adapters/unpin-sticky.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -157,6 +158,7 @@ const tools = {
   highlightLinks: LinkHighlighter,
   pageOutline: PageOutline,
   bionicReading: BionicReading,
+  unpinSticky: UnpinSticky,
 };
 
 // Normalize tool name (handles case variations)
@@ -187,6 +189,8 @@ function normalizeTool(name) {
     'outline': 'pageOutline',
     'bionicreading': 'bionicReading',
     'bionic': 'bionicReading',
+    'unpinsticky': 'unpinSticky',
+    'unpin': 'unpinSticky',
   };
   return map[lower] || name;
 }
@@ -279,6 +283,7 @@ function applyProfileByName(profileId) {
   if (profileTools.highlightLinks) LinkHighlighter.enable();
   if (profileTools.pageOutline) PageOutline.enable();
   if (profileTools.bionicReading) BionicReading.enable();
+  if (profileTools.unpinSticky) UnpinSticky.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -324,6 +329,7 @@ function getToolDescription(name) {
     highlightLinks: 'Underline and strengthen links and reveal where each one leads',
     pageOutline: 'On-page heading navigator to jump between sections',
     bionicReading: 'Bold the start of each word to guide the eye (dyslexia/ADHD aid)',
+    unpinSticky: 'Un-fix sticky headers/bars so they stop eating the viewport when zoomed',
   };
   return descriptions[name] || '';
 }

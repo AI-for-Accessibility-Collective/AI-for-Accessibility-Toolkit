@@ -1921,6 +1921,93 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yBionicReading = BionicReading;
 
+  // tools/adapters/unpin-sticky.js
+  var UnpinSticky = {
+    styleId: "ai4a11y-unpin-sticky-styles",
+    unpinnedClass: "ai4a11y-unpinned",
+    enabled: false,
+    unpinned: null,
+    // Set of elements we unpinned (for exact restore)
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.unpinned = /* @__PURE__ */ new Set();
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `.${this.unpinnedClass} { position: static !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) {
+                this.consider(node);
+                if (node.querySelectorAll) this.sweep(node);
+              }
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Unpin Sticky Bars enabled (${count} unpinned)`);
+      announce(count ? `Unpinned ${count} sticky bar${count === 1 ? "" : "s"}` : "Watching for sticky bars to unpin");
+    },
+    // Scan a root for pinned elements and unpin them; returns how many.
+    sweep(root) {
+      let n = 0;
+      let candidates;
+      try {
+        candidates = root.querySelectorAll("*");
+      } catch {
+        return 0;
+      }
+      for (const el of candidates) if (this.consider(el)) n++;
+      return n;
+    },
+    // Unpin one element if its computed position is fixed or sticky. Returns
+    // true if unpinned. Never touches our own injected nodes.
+    consider(el) {
+      if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
+      if (el.id === this.styleId) return false;
+      if (el.classList && el.classList.contains(this.unpinnedClass)) return false;
+      let pos = "";
+      try {
+        pos = (getComputedStyle(el).position || "").toLowerCase();
+      } catch {
+        return false;
+      }
+      if (pos !== "fixed" && pos !== "sticky") return false;
+      el.classList.add(this.unpinnedClass);
+      this.unpinned.add(el);
+      return true;
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (this.unpinned) {
+        for (const el of this.unpinned) (_b = el.classList) == null ? void 0 : _b.remove(this.unpinnedClass);
+        this.unpinned.clear();
+        this.unpinned = null;
+      }
+      console.log("[AI4A11y] Unpin Sticky Bars disabled");
+      announce("Sticky bars restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -3715,7 +3802,8 @@ ${chunk}
           largeCursor: true,
           enhanceFocus: true,
           fixContrast: true,
-          highlightLinks: true
+          highlightLinks: true,
+          unpinSticky: true
         }
       },
       colorBlind: {
@@ -3749,7 +3837,8 @@ ${chunk}
           voiceCommands: true,
           dismissOverlays: true,
           bigTargets: true,
-          pageOutline: true
+          pageOutline: true,
+          unpinSticky: true
         }
       },
       dyslexia: {
@@ -3873,7 +3962,8 @@ ${chunk}
       colorFilter: "none",
       highlightLinks: false,
       pageOutline: false,
-      bionicReading: false
+      bionicReading: false,
+      unpinSticky: false
     }
   };
 
@@ -3968,7 +4058,8 @@ ${chunk}
     bigTargets: BigTargets,
     highlightLinks: LinkHighlighter,
     pageOutline: PageOutline,
-    bionicReading: BionicReading
+    bionicReading: BionicReading,
+    unpinSticky: UnpinSticky
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -3996,7 +4087,9 @@ ${chunk}
       "pageoutline": "pageOutline",
       "outline": "pageOutline",
       "bionicreading": "bionicReading",
-      "bionic": "bionicReading"
+      "bionic": "bionicReading",
+      "unpinsticky": "unpinSticky",
+      "unpin": "unpinSticky"
     };
     return map[lower] || name;
   }
@@ -4075,6 +4168,7 @@ ${chunk}
     if (profileTools.highlightLinks) LinkHighlighter.enable();
     if (profileTools.pageOutline) PageOutline.enable();
     if (profileTools.bionicReading) BionicReading.enable();
+    if (profileTools.unpinSticky) UnpinSticky.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -4113,7 +4207,8 @@ ${chunk}
       bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)",
       highlightLinks: "Underline and strengthen links and reveal where each one leads",
       pageOutline: "On-page heading navigator to jump between sections",
-      bionicReading: "Bold the start of each word to guide the eye (dyslexia/ADHD aid)"
+      bionicReading: "Bold the start of each word to guide the eye (dyslexia/ADHD aid)",
+      unpinSticky: "Un-fix sticky headers/bars so they stop eating the viewport when zoomed"
     };
     return descriptions[name] || "";
   }
