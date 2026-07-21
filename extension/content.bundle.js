@@ -173,7 +173,8 @@
           letterSpacing: 0.12,
           focusMode: true,
           highlightLinks: true,
-          bionicReading: true
+          bionicReading: true,
+          readingRuler: true
         }
       },
       adhd: {
@@ -186,7 +187,8 @@
           showProgress: true,
           motionReducer: true,
           dismissOverlays: true,
-          bionicReading: true
+          bionicReading: true,
+          readingRuler: true
         }
       },
       cognitive: {
@@ -308,7 +310,8 @@
       describeOnDemand: false,
       reflowColumn: false,
       focusLocator: false,
-      persistentHover: false
+      persistentHover: false,
+      readingRuler: false
     }
   };
 
@@ -5478,6 +5481,101 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yPersistentHover = PersistentHover;
 
+  // tools/adapters/reading-ruler.js
+  var ReadingRuler = {
+    bandId: "ai4a11y-reading-ruler",
+    enabled: false,
+    band: null,
+    shadeTop: null,
+    shadeBottom: null,
+    height: 40,
+    moveHandler: null,
+    // stored ref so disable() removes exactly this listener
+    frame: null,
+    // pending rAF/timer id, cancelled on disable
+    lastY: 0,
+    raf: null,
+    cancelRaf: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.height = options.height || 40;
+      const band = document.createElement("div");
+      band.id = this.bandId;
+      band.setAttribute("aria-hidden", "true");
+      band.style.cssText = `position: fixed; left: 0; right: 0; height: ${this.height}px; background: rgba(255, 255, 0, 0.18); border-top: 1px solid rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(0, 0, 0, 0.15); pointer-events: none; z-index: 2147483645;`;
+      (document.body || document.documentElement).appendChild(band);
+      this.band = band;
+      if (options.dim !== false) {
+        const shade = () => {
+          const el = document.createElement("div");
+          el.setAttribute("aria-hidden", "true");
+          el.style.cssText = "position: fixed; left: 0; right: 0; background: rgba(0, 0, 0, 0.12); pointer-events: none; z-index: 2147483644;";
+          (document.body || document.documentElement).appendChild(el);
+          return el;
+        };
+        this.shadeTop = shade();
+        this.shadeBottom = shade();
+      }
+      const hasRaf = typeof requestAnimationFrame === "function";
+      this.raf = hasRaf ? (fn) => requestAnimationFrame(fn) : (fn) => setTimeout(fn, 16);
+      this.cancelRaf = hasRaf ? (id) => cancelAnimationFrame(id) : (id) => clearTimeout(id);
+      this.moveHandler = (event) => {
+        this.lastY = event.clientY;
+        if (this.frame !== null) return;
+        this.frame = this.raf(() => {
+          this.frame = null;
+          if (this.enabled) this.position(this.lastY);
+        });
+      };
+      document.addEventListener("mousemove", this.moveHandler);
+      this.position(typeof window !== "undefined" && window.innerHeight ? window.innerHeight / 2 : 0);
+      console.log("[AI4A11y] Reading Ruler enabled");
+      announce("Reading ruler on. It follows your cursor.");
+    },
+    // Center the band (and reflow the shades) around viewport y-coordinate `y`.
+    position(y) {
+      if (!this.band) return;
+      const top = Math.round(y - this.height / 2);
+      this.band.style.top = `${top}px`;
+      if (this.shadeTop) {
+        this.shadeTop.style.top = "0px";
+        this.shadeTop.style.height = `${Math.max(0, top)}px`;
+      }
+      if (this.shadeBottom) {
+        this.shadeBottom.style.top = `${top + this.height}px`;
+        this.shadeBottom.style.bottom = "0px";
+      }
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.moveHandler) {
+        document.removeEventListener("mousemove", this.moveHandler);
+        this.moveHandler = null;
+      }
+      if (this.frame !== null) {
+        this.cancelRaf(this.frame);
+        this.frame = null;
+      }
+      this.raf = this.cancelRaf = null;
+      (_a = this.band) == null ? void 0 : _a.remove();
+      this.band = null;
+      (_b = this.shadeTop) == null ? void 0 : _b.remove();
+      this.shadeTop = null;
+      (_c = this.shadeBottom) == null ? void 0 : _c.remove();
+      this.shadeBottom = null;
+      console.log("[AI4A11y] Reading Ruler disabled");
+      announce("Reading ruler off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5664,6 +5762,7 @@ ${scope} table {
     if (settings2.reflowColumn) ReflowColumn.enable();
     if (settings2.focusLocator) FocusLocator.enable();
     if (settings2.persistentHover) PersistentHover.enable();
+    if (settings2.readingRuler) ReadingRuler.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5869,6 +5968,7 @@ ${scope} table {
     ReflowColumn.disable();
     FocusLocator.disable();
     PersistentHover.disable();
+    ReadingRuler.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -6000,7 +6100,8 @@ ${scope} table {
           DescribeOnDemand: DescribeOnDemand.enabled || false,
           ReflowColumn: ReflowColumn.enabled || false,
           FocusLocator: FocusLocator.enabled || false,
-          PersistentHover: PersistentHover.enabled || false
+          PersistentHover: PersistentHover.enabled || false,
+          ReadingRuler: ReadingRuler.enabled || false
         }
       });
       return true;

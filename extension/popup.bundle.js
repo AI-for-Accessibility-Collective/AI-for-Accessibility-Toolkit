@@ -84,7 +84,8 @@
           letterSpacing: 0.12,
           focusMode: true,
           highlightLinks: true,
-          bionicReading: true
+          bionicReading: true,
+          readingRuler: true
         }
       },
       adhd: {
@@ -97,7 +98,8 @@
           showProgress: true,
           motionReducer: true,
           dismissOverlays: true,
-          bionicReading: true
+          bionicReading: true,
+          readingRuler: true
         }
       },
       cognitive: {
@@ -219,7 +221,8 @@
       describeOnDemand: false,
       reflowColumn: false,
       focusLocator: false,
-      persistentHover: false
+      persistentHover: false,
+      readingRuler: false
     }
   };
 

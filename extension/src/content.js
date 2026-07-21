@@ -56,6 +56,7 @@ import {
   ReflowColumn,
   FocusLocator,
   PersistentHover,
+  ReadingRuler,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -166,6 +167,7 @@ function applyVisualSettings(settings) {
   if (settings.reflowColumn) ReflowColumn.enable();
   if (settings.focusLocator) FocusLocator.enable();
   if (settings.persistentHover) PersistentHover.enable();
+  if (settings.readingRuler) ReadingRuler.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -413,6 +415,7 @@ function revertAll() {
   ReflowColumn.disable();
   FocusLocator.disable();
   PersistentHover.disable();
+  ReadingRuler.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -548,7 +551,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         DescribeOnDemand: DescribeOnDemand.enabled || false,
         ReflowColumn: ReflowColumn.enabled || false,
         FocusLocator: FocusLocator.enabled || false,
-        PersistentHover: PersistentHover.enabled || false
+        PersistentHover: PersistentHover.enabled || false,
+        ReadingRuler: ReadingRuler.enabled || false
       }
     });
     return true;
