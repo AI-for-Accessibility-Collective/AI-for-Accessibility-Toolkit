@@ -141,6 +141,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.fontScale && tools.fontScale !== 100) enabled.push('visual-assist');
   if (tools.motionReducer) enabled.push('motion-reducer');
   if (tools.dismissOverlays) enabled.push('dismiss-overlays');
+  if (tools.bigTargets) enabled.push('big-targets');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');

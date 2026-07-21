@@ -22,6 +22,7 @@ import { VoiceCommands } from '../tools/adapters/voice-commands.js';
 import { KeyboardNavigator } from '../tools/adapters/keyboard-nav.js';
 import { ColorBlindMode } from '../tools/adapters/color-blind.js';
 import { DismissOverlays } from '../tools/adapters/dismiss-overlays.js';
+import { BigTargets } from '../tools/adapters/big-targets.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -149,6 +150,7 @@ const tools = {
   colorBlindMode: ColorBlindMode,
   autoTranscriber: AutoTranscriber,
   dismissOverlays: DismissOverlays,
+  bigTargets: BigTargets,
 };
 
 // Normalize tool name (handles case variations)
@@ -171,6 +173,8 @@ function normalizeTool(name) {
     'autocaptions': 'autoTranscriber',
     'dismissoverlays': 'dismissOverlays',
     'dismisspopups': 'dismissOverlays',
+    'bigtargets': 'bigTargets',
+    'biggertargets': 'bigTargets',
   };
   return map[lower] || name;
 }
@@ -259,6 +263,7 @@ function applyProfileByName(profileId) {
   if (profileTools.focusMode) FocusMode.enable();
   if (profileTools.readerMode) ReaderMode.enable();
   if (profileTools.dismissOverlays) DismissOverlays.enable();
+  if (profileTools.bigTargets) BigTargets.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -300,6 +305,7 @@ function getToolDescription(name) {
     colorBlindMode: 'Color vision deficiency filters',
     autoTranscriber: 'Auto-generate captions for media',
     dismissOverlays: 'Hide cookie banners, newsletter popups, and blocking modals',
+    bigTargets: 'Enlarge and space out small clickable controls (WCAG 2.5.8)',
   };
   return descriptions[name] || '';
 }

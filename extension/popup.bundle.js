@@ -56,7 +56,8 @@
           enhanceFocus: true,
           keyboardNav: true,
           voiceCommands: true,
-          dismissOverlays: true
+          dismissOverlays: true,
+          bigTargets: true
         }
       },
       dyslexia: {
@@ -108,7 +109,8 @@
           autoCaptions: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: true
+          showProgress: true,
+          bigTargets: true
         }
       },
       anxiety: {
@@ -160,6 +162,7 @@
       readingGuide: false,
       motionReducer: false,
       dismissOverlays: false,
+      bigTargets: false,
       readerMode: false,
       focusMode: false,
       hideDistractions: false,
