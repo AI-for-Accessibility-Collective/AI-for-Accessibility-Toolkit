@@ -3258,6 +3258,79 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yDescribeOnDemand = DescribeOnDemand;
 
+  // tools/adapters/reflow-column.js
+  var ReflowColumn = {
+    styleId: "ai4a11y-reflow-column-styles",
+    rootClass: "ai4a11y-reflow",
+    enabled: false,
+    style: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const width = options.width || 720;
+      const scope = `html.${this.rootClass}`;
+      this.style = injectStyle(this.styleId, `
+${scope} body {
+  max-width: ${width}px !important;
+  margin: 0 auto !important;
+}
+/* Floats and CSS multi-column are what put content side by side. */
+${scope} * {
+  float: none !important;
+  column-count: 1 !important;
+}
+/* Linearize the common layout containers so rows stack into one column. */
+${scope} [style*="display: flex"],
+${scope} [style*="display:flex"],
+${scope} [style*="display: grid"],
+${scope} [style*="display:grid"],
+${scope} main,
+${scope} section,
+${scope} article {
+  display: block !important;
+  max-width: 100% !important;
+}
+/* Media and tables must shrink to the column, never widen it. */
+${scope} img,
+${scope} video,
+${scope} table {
+  max-width: 100% !important;
+  height: auto !important;
+}`);
+      try {
+        document.documentElement.classList.add(this.rootClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Reflow enabled");
+      announce("Page reflowed into a single column");
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        document.documentElement.classList.remove(this.rootClass);
+      } catch {
+      }
+      try {
+        (_a = this.style) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      this.style = null;
+      console.log("[AI4A11y] Reflow disabled");
+      announce("Page layout restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReflowColumn = ReflowColumn;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -5056,7 +5129,8 @@ ${chunk}
           fixContrast: true,
           highlightLinks: true,
           unpinSticky: true,
-          magnifier: true
+          magnifier: true,
+          reflowColumn: true
         }
       },
       colorBlind: {
@@ -5237,7 +5311,8 @@ ${chunk}
       announceUpdates: false,
       magnifier: false,
       flashGuard: false,
-      describeOnDemand: false
+      describeOnDemand: false,
+      reflowColumn: false
     }
   };
 
@@ -5355,7 +5430,8 @@ ${chunk}
     announceUpdates: LiveRegionAnnouncer,
     magnifier: Magnifier,
     flashGuard: FlashGuard,
-    describeOnDemand: DescribeOnDemand
+    describeOnDemand: DescribeOnDemand,
+    reflowColumn: ReflowColumn
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -5405,7 +5481,9 @@ ${chunk}
       "flashguard": "flashGuard",
       "flash": "flashGuard",
       "describeondemand": "describeOnDemand",
-      "describe": "describeOnDemand"
+      "describe": "describeOnDemand",
+      "reflowcolumn": "reflowColumn",
+      "reflow": "reflowColumn"
     };
     return map[lower] || name;
   }
@@ -5495,6 +5573,7 @@ ${chunk}
     if (profileTools.magnifier) Magnifier.enable();
     if (profileTools.flashGuard) FlashGuard.enable();
     if (profileTools.describeOnDemand) DescribeOnDemand.enable();
+    if (profileTools.reflowColumn) ReflowColumn.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -5544,7 +5623,8 @@ ${chunk}
       announceUpdates: "Announce dynamic content changes to screen readers (live region)",
       magnifier: "A lens that magnifies the text under the cursor",
       flashGuard: "Block autoplay and dim video/animation for seizure safety (WCAG 2.3.1)",
-      describeOnDemand: "Alt+click or Alt+D to get an AI description of any element"
+      describeOnDemand: "Alt+click or Alt+D to get an AI description of any element",
+      reflowColumn: "Force page content into one readable column (WCAG 1.4.10)"
     };
     return descriptions[name] || "";
   }

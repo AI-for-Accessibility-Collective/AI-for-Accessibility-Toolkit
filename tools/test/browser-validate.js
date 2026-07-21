@@ -281,6 +281,15 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('describe: panel + live region removed after disable', !(await exists('#ai4a11y-describe-panel')) && !(await exists('#ai4a11y-describe-live')));
   }
 
+  // ── Reflow to Column — REAL: body is constrained to a single narrow column ──
+  {
+    await enable('reflowColumn');
+    const mw = await css('body', 'maxWidth');
+    check(`reflow: body is capped to a readable column width (${mw})`, mw !== 'none' && parseInt(mw, 10) > 0 && parseInt(mw, 10) <= 900);
+    await disable('reflowColumn');
+    check('reflow: body width cap removed after disable', (await css('body', 'maxWidth')) === 'none');
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

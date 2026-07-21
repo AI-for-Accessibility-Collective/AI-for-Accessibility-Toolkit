@@ -176,7 +176,7 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | Profile | What it enables |
 |---------|-----------------|
 | `blind` | Auto alt text, labels, WCAG fixes, keyboard nav, page outline, announce updates, describe on demand |
-| `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier |
+| `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier, reflow to column |
 | `colorBlind` | Color filters, enhanced contrast |
 | `deaf` | Auto captions, visual emphasis, sound visualizer |
 | `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance |

@@ -53,6 +53,7 @@ import {
   Magnifier,
   FlashGuard,
   DescribeOnDemand,
+  ReflowColumn,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -160,6 +161,7 @@ function applyVisualSettings(settings) {
   if (settings.magnifier) Magnifier.enable();
   if (settings.flashGuard) FlashGuard.enable();
   if (settings.describeOnDemand) DescribeOnDemand.enable();
+  if (settings.reflowColumn) ReflowColumn.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -404,6 +406,7 @@ function revertAll() {
   Magnifier.disable();
   FlashGuard.disable();
   DescribeOnDemand.disable();
+  ReflowColumn.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -536,7 +539,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
         Magnifier: Magnifier.enabled || false,
         FlashGuard: FlashGuard.enabled || false,
-        DescribeOnDemand: DescribeOnDemand.enabled || false
+        DescribeOnDemand: DescribeOnDemand.enabled || false,
+        ReflowColumn: ReflowColumn.enabled || false
       }
     });
     return true;
