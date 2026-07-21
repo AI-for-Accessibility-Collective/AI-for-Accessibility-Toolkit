@@ -149,6 +149,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.translatePage) enabled.push('translate-page');
   if (tools.muteSounds) enabled.push('mute-sounds');
   if (tools.defineWords) enabled.push('define-words');
+  if (tools.stopAutoAdvance) enabled.push('stop-auto-advance');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');

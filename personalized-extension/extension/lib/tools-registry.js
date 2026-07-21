@@ -291,6 +291,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "stop-auto-advance",
+    "name": "Stop Auto-Advance",
+    "description": "Pauses content that moves on its own — auto-rotating carousels, marquees, auto-refreshing pages, and autoplaying media — so it does not advance before you are ready (WCAG 2.2.1 and 2.2.2).",
+    "supportAreas": [
+      "motor",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "pause_circle",
+    "emoji": "⏸️",
+    "quickStart": false,
+    "settings": {
+      "stopAutoAdvance": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -638,6 +657,10 @@ globalThis.AA_TOOLS = {
   "defineWords": {
     "type": "boolean",
     "description": "Show plain-language definitions of hard words on hover"
+  },
+  "stopAutoAdvance": {
+    "type": "boolean",
+    "description": "Pause auto-carousels, auto-refresh, and autoplay media"
   },
   "keyboardNav": {
     "type": "boolean",

@@ -27,6 +27,7 @@ const PAGE = `<!DOCTYPE html><html><head><style>
     <p>Body text with a <a id="lnk" href="https://docs.example.org/guide">documentation link</a> in it.</p>
     <button id="btn" style="width:18px; height:16px; padding:0;">x</button>
     <div id="anim">spinning</div>
+    <div class="carousel" id="car" style="animation: aa-spin 3s linear infinite;">carousel</div>
     <video id="vid" muted="false"></video>
   </main>
 </body></html>`;
@@ -173,6 +174,18 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('define: word wrapping + tooltip removed after disable',
       (await page.evaluate(() => document.querySelectorAll('.ai4a11y-define').length)) === 0 &&
       !(await exists('#ai4a11y-define-tooltip')));
+  }
+
+  // ── Stop Auto-Advance — REAL: a carousel's animation pauses and resumes ─────
+  {
+    // Reset any inline pause an earlier adapter's async pass may have left on
+    // this shared element, so we start from a known "running" state.
+    await page.evaluate(() => { document.querySelector('#car').style.animationPlayState = 'running'; });
+    check('autoadvance: carousel is really animating before', (await css('#car', 'animationPlayState')) === 'running');
+    await enable('stopAutoAdvance');
+    check('autoadvance: carousel animation is paused', (await css('#car', 'animationPlayState')) === 'paused');
+    await disable('stopAutoAdvance');
+    check('autoadvance: carousel animation resumes after disable', (await css('#car', 'animationPlayState')) === 'running');
   }
 
   await browser.close();
