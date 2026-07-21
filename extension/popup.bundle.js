@@ -102,7 +102,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: true,
-          highlightLinks: true
+          highlightLinks: true,
+          defineWords: true
         }
       },
       olderAdult: {
@@ -192,7 +193,8 @@
       unpinSticky: false,
       translatePage: false,
       translateTo: "English",
-      muteSounds: false
+      muteSounds: false,
+      defineWords: false
     }
   };
 

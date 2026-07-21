@@ -270,6 +270,27 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "define-words",
+    "name": "Define Words",
+    "description": "Makes long or hard words in the text interactive — hover or focus a word to get a short plain-language definition, without changing the original text. An AI cognitive-access aid.",
+    "supportAreas": [
+      "cognitive",
+      "reading"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference"
+    ],
+    "requiresAI": true,
+    "icon": "dictionary",
+    "emoji": "📖",
+    "quickStart": false,
+    "settings": {
+      "defineWords": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -613,6 +634,10 @@ globalThis.AA_TOOLS = {
   "muteSounds": {
     "type": "boolean",
     "description": "Mute all audio and video and block autoplay sound"
+  },
+  "defineWords": {
+    "type": "boolean",
+    "description": "Show plain-language definitions of hard words on hover"
   },
   "keyboardNav": {
     "type": "boolean",
