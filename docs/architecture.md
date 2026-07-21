@@ -180,8 +180,8 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | `colorBlind` | Color filters, enhanced contrast |
 | `deaf` | Auto captions, visual emphasis |
 | `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline |
-| `dyslexia` | Wider spacing, larger text, focus mode, highlight links |
-| `adhd` | Focus mode, reduced motion, reader mode, dismiss popups |
+| `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading |
+| `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading |
 | `cognitive` | Simplified text, summaries, dismiss popups, highlight links |
 | `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links |
 | `anxiety` | Calm UI, reduced motion, dismiss popups |

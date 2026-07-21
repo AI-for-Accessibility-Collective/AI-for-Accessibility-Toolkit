@@ -41,6 +41,7 @@ import {
   BigTargets,
   LinkHighlighter,
   PageOutline,
+  BionicReading,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -134,6 +135,7 @@ function applyVisualSettings(settings) {
   if (settings.bigTargets) BigTargets.enable();
   if (settings.highlightLinks) LinkHighlighter.enable();
   if (settings.pageOutline) PageOutline.enable();
+  if (settings.bionicReading) BionicReading.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -366,6 +368,7 @@ function revertAll() {
   BigTargets.disable();
   LinkHighlighter.disable();
   PageOutline.disable();
+  BionicReading.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -486,7 +489,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         DismissOverlays: DismissOverlays.enabled || false,
         BigTargets: BigTargets.enabled || false,
         LinkHighlighter: LinkHighlighter.enabled || false,
-        PageOutline: PageOutline.enabled || false
+        PageOutline: PageOutline.enabled || false,
+        BionicReading: BionicReading.enabled || false
       }
     });
     return true;

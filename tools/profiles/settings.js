@@ -144,6 +144,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.bigTargets) enabled.push('big-targets');
   if (tools.highlightLinks) enabled.push('link-highlighter');
   if (tools.pageOutline) enabled.push('page-outline');
+  if (tools.bionicReading) enabled.push('bionic-reading');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');
