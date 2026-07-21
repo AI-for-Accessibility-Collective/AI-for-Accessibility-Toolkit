@@ -826,11 +826,18 @@
     const href = link.href || "";
     const existingText = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
     const context = getContextForElement(link);
-    const label = await inferLabel({
-      elementType: "link",
-      html: ((_b = link.outerHTML) == null ? void 0 : _b.substring(0, 500)) || "",
-      context: [existingText, href, context].filter(Boolean).join(" | ")
-    });
+    let label;
+    try {
+      label = await inferLabel({
+        elementType: "link",
+        html: ((_b = link.outerHTML) == null ? void 0 : _b.substring(0, 500)) || "",
+        context: [existingText, href, context].filter(Boolean).join(" | ")
+      });
+    } catch (e) {
+      console.warn("[AI4A11y] Link label inference failed:", e.message);
+      markProcessed(link, "failed");
+      return null;
+    }
     if (label) {
       link.setAttribute("aria-label", label);
       markProcessed(link, "done");
@@ -855,11 +862,18 @@
       return inferred;
     }
     const context = getContextForElement(button);
-    const label = await inferLabel({
-      elementType: "button",
-      html: ((_a = button.outerHTML) == null ? void 0 : _a.substring(0, 500)) || "",
-      context
-    });
+    let label;
+    try {
+      label = await inferLabel({
+        elementType: "button",
+        html: ((_a = button.outerHTML) == null ? void 0 : _a.substring(0, 500)) || "",
+        context
+      });
+    } catch (e) {
+      console.warn("[AI4A11y] Button label inference failed:", e.message);
+      markProcessed(button, "failed");
+      return null;
+    }
     if (label) {
       button.setAttribute("aria-label", label);
       markProcessed(button, "done");
