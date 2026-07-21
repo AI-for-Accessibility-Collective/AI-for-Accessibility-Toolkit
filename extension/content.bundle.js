@@ -2675,11 +2675,13 @@ ${chunk}
       }
     },
     enable(options = {}) {
+      if (this.enabled) return;
       if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
         announce("Voice recognition not supported in this browser");
         return;
       }
       this.settings = { ...this.settings, ...options };
+      this._fatal = false;
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = this.settings.continuous;
@@ -2699,9 +2701,18 @@ ${chunk}
         if (event.error !== "no-speech") {
           this.showFeedback(`Error: ${event.error}`, "error");
         }
+        if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
+          this._fatal = true;
+          announce("Voice commands unavailable \u2014 microphone blocked or missing");
+        }
       };
       this.recognition.onend = () => {
-        if (this.enabled) this.recognition.start();
+        if (this.enabled && !this._fatal) {
+          try {
+            this.recognition.start();
+          } catch {
+          }
+        }
       };
       this.createFeedbackElement();
       this.recognition.start();
@@ -2814,7 +2825,7 @@ ${chunk}
       else this.enable();
     }
   };
-  window.__ai4a11yVoiceCommands = VoiceCommands;
+  if (typeof window !== "undefined") window.__ai4a11yVoiceCommands = VoiceCommands;
 
   // tools/adapters/keyboard-nav.js
   var KeyboardNavigator = {
