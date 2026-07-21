@@ -5095,6 +5095,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     panel: null,
     live: null,
     lastHover: null,
+    _reqSeq: 0,
     _keyHandler: null,
     _clickHandler: null,
     _moveHandler: null,
@@ -5117,7 +5118,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       this.live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
       (document.body || document.documentElement).appendChild(this.live);
       this._keyHandler = (e) => {
-        if (e.altKey && (e.key === "d" || e.key === "D")) {
+        if (e.altKey && e.code === "KeyD") {
           e.preventDefault();
           this.describe(this.target());
         }
@@ -5148,11 +5149,13 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         this.show("Focus or point at an element first, then press Alt+D.");
         return;
       }
+      const token = ++this._reqSeq;
       this.show("Describing\u2026");
       let desc = null;
       try {
         if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
-          desc = await describeImage(el.currentSrc || el.src);
+          const dataUrl = await imageToDataUrl(el);
+          desc = dataUrl ? await describeImage(dataUrl) : null;
         } else if (el.tagName === "CANVAS" && typeof el.toDataURL === "function") {
           try {
             desc = await describeImage(el.toDataURL());
@@ -5168,7 +5171,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       } catch {
         desc = null;
       }
-      this.show(desc || "No description is available for that element.");
+      if (token !== this._reqSeq) return;
+      this.show(desc || "Couldn\u2019t get a description. If this keeps happening, check that your AI key is set in the extension settings.");
     },
     show(text) {
       if (!this.panel) {
