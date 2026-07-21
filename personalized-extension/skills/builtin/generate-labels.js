@@ -13,12 +13,21 @@ export async function generateLinkLabel(link) {
   const existingText = link.textContent?.trim() || '';
   const context = getContextForElement(link);
 
-  const label = await inferLabel({
-    url: href,
-    elementType: 'link',
-    existingText,
-    context
-  });
+  // inferLabel throws with no AI provider; unguarded, the marker stays
+  // 'pending' (truthy) and the link is skipped forever. Mark 'failed' instead.
+  let label;
+  try {
+    label = await inferLabel({
+      url: href,
+      elementType: 'link',
+      existingText,
+      context
+    });
+  } catch (e) {
+    console.warn('[AI4A11y] Link label inference failed:', e.message);
+    markProcessed(link, 'failed');
+    return null;
+  }
 
   if (label) {
     link.setAttribute('aria-label', label);
@@ -49,11 +58,18 @@ export async function generateButtonLabel(button) {
   const context = getContextForElement(button);
   const svgContent = button.querySelector('svg')?.outerHTML || '';
 
-  const label = await inferLabel({
-    elementType: 'button',
-    context,
-    svgContent
-  });
+  let label;
+  try {
+    label = await inferLabel({
+      elementType: 'button',
+      context,
+      svgContent
+    });
+  } catch (e) {
+    console.warn('[AI4A11y] Button label inference failed:', e.message);
+    markProcessed(button, 'failed');
+    return null;
+  }
 
   if (label) {
     button.setAttribute('aria-label', label);
