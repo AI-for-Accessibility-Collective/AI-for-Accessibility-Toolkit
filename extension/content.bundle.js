@@ -6266,6 +6266,7 @@ ${scope} table {
         const r = await sendMessage({ type: "getSettings" });
         return r == null ? void 0 : r.result;
       }).then(() => {
+        if (msg.apply) applyVisualSettings(getSettings());
         if (msg.rescan) rescan();
       });
       sendResponse({ success: true });

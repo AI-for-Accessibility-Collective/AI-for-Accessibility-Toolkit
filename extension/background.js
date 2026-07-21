@@ -1171,15 +1171,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       });
     }),
-    'getSettings': () => chrome.storage.sync.get([
-      'enabled', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoWcagFix', 'autoFixLabels',
-      'autoVideoDescribe', 'autoCaptions', 'fixContrast',
-      'darkMode', 'readerMode', 'focusMode', 'keyboardNav', 'voiceCommands', 'motionReducer',
-      'hideDistractions', 'showProgress', 'colorFilter', 'colorBlindMode',
-      'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
-      'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
-      'selectedProfiles', 'geminiKey', 'falKey'
-    ])
+    // Return the ENTIRE sync store. The content script's applyVisualSettings
+    // reads every adapter's setting key, so a hand-kept whitelist here silently
+    // strands any tool not listed — which was every newer adapter (reflow,
+    // focus locator, confirm actions, reading spot, describe on demand, …) plus
+    // a dozen older ones. get(null) fetches all keys and never goes stale.
+    'getSettings': () => chrome.storage.sync.get(null)
   };
 
   const handler = handlers[message.type];

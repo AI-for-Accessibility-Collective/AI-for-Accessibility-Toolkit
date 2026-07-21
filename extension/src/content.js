@@ -482,7 +482,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     loadSettings(async () => {
       const r = await sendMessage({ type: 'getSettings' });
       return r?.result;
-    }).then(() => { if (msg.rescan) rescan(); });
+    }).then(() => {
+      // apply:true (sent when a profile is applied) turns the newly-enabled
+      // adapters on live; manual single-toggle changes omit it and drive tools
+      // through their own enable/disable messages instead.
+      if (msg.apply) applyVisualSettings(getSettings());
+      if (msg.rescan) rescan();
+    });
     sendResponse({ success: true });
     return true;
   }
