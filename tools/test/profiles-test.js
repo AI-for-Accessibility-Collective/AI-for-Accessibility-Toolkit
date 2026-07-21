@@ -17,7 +17,7 @@ function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('F
 // outside this set is a dead setting nothing applies.
 const RECOGNIZED = new Set([
   'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
-  'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'colorBlindMode', 'contrastMode', 'darkMode',
+  'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'contrastMode', 'darkMode',
   'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'focusMode', 'fontScale', 'hideDistractions',
   'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'motionReducer',
   'pageOutline', 'readerMode', 'readingGuide', 'showProgress', 'speechRate', 'voiceCommands',

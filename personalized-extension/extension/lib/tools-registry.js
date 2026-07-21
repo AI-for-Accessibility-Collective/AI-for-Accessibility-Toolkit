@@ -192,6 +192,27 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "bionic-reading",
+    "name": "Bionic Reading",
+    "description": "Bolds the first part of each word to give the eye fixation points, a reading aid many dyslexic and ADHD readers find helps them move through text with less effort.",
+    "supportAreas": [
+      "reading",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference"
+    ],
+    "requiresAI": false,
+    "icon": "format_bold",
+    "emoji": "📖",
+    "quickStart": false,
+    "settings": {
+      "bionicReading": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -519,6 +540,10 @@ globalThis.AA_TOOLS = {
   "pageOutline": {
     "type": "boolean",
     "description": "On-page heading navigator for jumping between sections"
+  },
+  "bionicReading": {
+    "type": "boolean",
+    "description": "Bold the start of each word to guide the eye"
   },
   "keyboardNav": {
     "type": "boolean",

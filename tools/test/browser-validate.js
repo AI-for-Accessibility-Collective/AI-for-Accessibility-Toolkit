@@ -105,6 +105,18 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('keyboard-nav: skip-links are removed after disable', !(await exists('#ai4a11y-skip-links')));
   }
 
+  // ── Bionic Reading — REAL: word-starts wrapped in <b> in the body text ──────
+  {
+    const textBefore = await page.evaluate(() => document.querySelector('main p').textContent);
+    await enable('bionicReading');
+    const bolds = await page.evaluate(() => document.querySelectorAll('main .ai4a11y-bionic b').length);
+    check('bionic: word-starts are really bolded in the body text', bolds > 0);
+    await disable('bionicReading');
+    check('bionic: all bolding removed after disable', (await page.evaluate(() => document.querySelectorAll('.ai4a11y-bionic').length)) === 0);
+    check('bionic: the visible text is unchanged after the round-trip',
+      (await page.evaluate(() => document.querySelector('main p').textContent)) === textBefore);
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

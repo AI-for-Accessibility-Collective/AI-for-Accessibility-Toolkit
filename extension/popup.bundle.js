@@ -71,7 +71,8 @@
           lineHeight: 2,
           letterSpacing: 0.12,
           focusMode: true,
-          highlightLinks: true
+          highlightLinks: true,
+          bionicReading: true
         }
       },
       adhd: {
@@ -83,7 +84,8 @@
           hideDistractions: true,
           showProgress: true,
           motionReducer: true,
-          dismissOverlays: true
+          dismissOverlays: true,
+          bionicReading: true
         }
       },
       cognitive: {
@@ -181,7 +183,8 @@
       contrastMode: "none",
       colorFilter: "none",
       highlightLinks: false,
-      pageOutline: false
+      pageOutline: false,
+      bionicReading: false
     }
   };
 

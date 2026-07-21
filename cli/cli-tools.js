@@ -25,6 +25,7 @@ import { DismissOverlays } from '../tools/adapters/dismiss-overlays.js';
 import { BigTargets } from '../tools/adapters/big-targets.js';
 import { LinkHighlighter } from '../tools/adapters/link-highlighter.js';
 import { PageOutline } from '../tools/adapters/page-outline.js';
+import { BionicReading } from '../tools/adapters/bionic-reading.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -155,6 +156,7 @@ const tools = {
   bigTargets: BigTargets,
   highlightLinks: LinkHighlighter,
   pageOutline: PageOutline,
+  bionicReading: BionicReading,
 };
 
 // Normalize tool name (handles case variations)
@@ -183,6 +185,8 @@ function normalizeTool(name) {
     'linkhighlighter': 'highlightLinks',
     'pageoutline': 'pageOutline',
     'outline': 'pageOutline',
+    'bionicreading': 'bionicReading',
+    'bionic': 'bionicReading',
   };
   return map[lower] || name;
 }
@@ -274,6 +278,7 @@ function applyProfileByName(profileId) {
   if (profileTools.bigTargets) BigTargets.enable();
   if (profileTools.highlightLinks) LinkHighlighter.enable();
   if (profileTools.pageOutline) PageOutline.enable();
+  if (profileTools.bionicReading) BionicReading.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -318,6 +323,7 @@ function getToolDescription(name) {
     bigTargets: 'Enlarge and space out small clickable controls (WCAG 2.5.8)',
     highlightLinks: 'Underline and strengthen links and reveal where each one leads',
     pageOutline: 'On-page heading navigator to jump between sections',
+    bionicReading: 'Bold the start of each word to guide the eye (dyslexia/ADHD aid)',
   };
   return descriptions[name] || '';
 }

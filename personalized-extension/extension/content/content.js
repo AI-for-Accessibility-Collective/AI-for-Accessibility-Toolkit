@@ -8,6 +8,7 @@ import { DismissOverlays } from '../../skills/builtin/dismiss-overlays.js';
 import { BigTargets } from '../../skills/builtin/big-targets.js';
 import { LinkHighlighter } from '../../skills/builtin/link-highlighter.js';
 import { PageOutline } from '../../skills/builtin/page-outline.js';
+import { BionicReading } from '../../skills/builtin/bionic-reading.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -30,6 +31,7 @@ const TOOL_MAP = {
   BigTargets,
   LinkHighlighter,
   PageOutline,
+  BionicReading,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -175,7 +177,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading',
       'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -192,6 +194,7 @@ async function initFromStorage() {
     if (settings.bigTargets) enableTool('BigTargets');
     if (settings.highlightLinks) enableTool('LinkHighlighter');
     if (settings.pageOutline) enableTool('PageOutline');
+    if (settings.bionicReading) enableTool('BionicReading');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -307,7 +310,8 @@ function applyProfileSettings(settings) {
     darkMode: 'DarkMode', readerMode: 'ReaderMode',
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
     motionReducer: 'MotionReducer', dismissOverlays: 'DismissOverlays',
-    bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline'
+    bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline',
+    bionicReading: 'BionicReading'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {

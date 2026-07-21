@@ -1818,6 +1818,109 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
 
+  // tools/adapters/bionic-reading.js
+  var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT"]);
+  var MAX_TEXT_NODES = 2e3;
+  var BionicReading = {
+    markerClass: "ai4a11y-bionic",
+    enabled: false,
+    processed: null,
+    // Set of { span, originalNode } (for exact restore)
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.processed = /* @__PURE__ */ new Set();
+      const ratio = typeof options.boldRatio === "number" && options.boldRatio > 0 && options.boldRatio <= 1 ? options.boldRatio : 0.4;
+      let root = null;
+      try {
+        root = document.querySelector('main, article, [role="main"], .content, #content') || document.body;
+      } catch {
+      }
+      if (!root) {
+        console.log("[AI4A11y] Bionic Reading: no content root found");
+        announce("Bionic reading: no readable text found");
+        return;
+      }
+      const textNodes = [];
+      let capped = false;
+      try {
+        capped = !this.collect(root, textNodes);
+      } catch {
+      }
+      if (capped) console.log(`[AI4A11y] Bionic Reading: capped at ${MAX_TEXT_NODES} text nodes`);
+      let count = 0;
+      for (const textNode of textNodes) {
+        try {
+          const parent = textNode.parentNode;
+          if (!parent) continue;
+          const span = this.buildSpan(textNode.nodeValue, ratio);
+          parent.replaceChild(span, textNode);
+          this.processed.add({ span, originalNode: textNode });
+          count++;
+        } catch {
+        }
+      }
+      console.log(`[AI4A11y] Bionic Reading enabled (${count} text blocks)`);
+      announce(count ? "Bionic reading on" : "Bionic reading: no readable text found");
+    },
+    // Depth-first text-node collection under root, skipping SKIP_TAGS subtrees
+    // and spans we already built. Returns false once the cap refuses a node.
+    collect(el, out) {
+      for (const node of el.childNodes) {
+        if (node.nodeType === 3) {
+          if (!/\S/.test(node.nodeValue)) continue;
+          if (out.length >= MAX_TEXT_NODES) return false;
+          out.push(node);
+        } else if (node.nodeType === 1 && !SKIP_TAGS.has(node.tagName) && !(node.classList && node.classList.contains(this.markerClass))) {
+          if (!this.collect(node, out)) return false;
+        }
+      }
+      return true;
+    },
+    // Rebuild one text node's content as a marker <span>, bolding each word's
+    // prefix. Whitespace runs are preserved verbatim as their own text nodes.
+    buildSpan(text, ratio) {
+      const span = document.createElement("span");
+      span.className = this.markerClass;
+      for (const part of text.split(/(\s+)/)) {
+        if (!part) continue;
+        if (/\s/.test(part)) span.appendChild(document.createTextNode(part));
+        else this.boldWord(span, part, ratio);
+      }
+      return span;
+    },
+    // One word: <b>prefix</b> + plain text node for the rest.
+    boldWord(span, word, ratio) {
+      const prefixLen = Math.min(word.length, Math.ceil(word.length * ratio));
+      const b = document.createElement("b");
+      b.textContent = word.slice(0, prefixLen);
+      span.appendChild(b);
+      if (prefixLen < word.length) span.appendChild(document.createTextNode(word.slice(prefixLen)));
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.processed) {
+        for (const { span, originalNode } of this.processed) {
+          try {
+            (_a = span.parentNode) == null ? void 0 : _a.replaceChild(originalNode, span);
+          } catch {
+          }
+        }
+        this.processed.clear();
+        this.processed = null;
+      }
+      console.log("[AI4A11y] Bionic Reading disabled");
+      announce("Bionic reading off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yBionicReading = BionicReading;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -3657,7 +3760,8 @@ ${chunk}
           lineHeight: 2,
           letterSpacing: 0.12,
           focusMode: true,
-          highlightLinks: true
+          highlightLinks: true,
+          bionicReading: true
         }
       },
       adhd: {
@@ -3669,7 +3773,8 @@ ${chunk}
           hideDistractions: true,
           showProgress: true,
           motionReducer: true,
-          dismissOverlays: true
+          dismissOverlays: true,
+          bionicReading: true
         }
       },
       cognitive: {
@@ -3767,7 +3872,8 @@ ${chunk}
       contrastMode: "none",
       colorFilter: "none",
       highlightLinks: false,
-      pageOutline: false
+      pageOutline: false,
+      bionicReading: false
     }
   };
 
@@ -3861,7 +3967,8 @@ ${chunk}
     dismissOverlays: DismissOverlays,
     bigTargets: BigTargets,
     highlightLinks: LinkHighlighter,
-    pageOutline: PageOutline
+    pageOutline: PageOutline,
+    bionicReading: BionicReading
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -3887,7 +3994,9 @@ ${chunk}
       "highlightlinks": "highlightLinks",
       "linkhighlighter": "highlightLinks",
       "pageoutline": "pageOutline",
-      "outline": "pageOutline"
+      "outline": "pageOutline",
+      "bionicreading": "bionicReading",
+      "bionic": "bionicReading"
     };
     return map[lower] || name;
   }
@@ -3965,6 +4074,7 @@ ${chunk}
     if (profileTools.bigTargets) BigTargets.enable();
     if (profileTools.highlightLinks) LinkHighlighter.enable();
     if (profileTools.pageOutline) PageOutline.enable();
+    if (profileTools.bionicReading) BionicReading.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -4002,7 +4112,8 @@ ${chunk}
       dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals",
       bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)",
       highlightLinks: "Underline and strengthen links and reveal where each one leads",
-      pageOutline: "On-page heading navigator to jump between sections"
+      pageOutline: "On-page heading navigator to jump between sections",
+      bionicReading: "Bold the start of each word to guide the eye (dyslexia/ADHD aid)"
     };
     return descriptions[name] || "";
   }
