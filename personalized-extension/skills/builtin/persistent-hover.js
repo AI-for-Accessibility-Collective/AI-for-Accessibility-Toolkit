@@ -33,7 +33,7 @@ export const PersistentHover = {
     const color = (options && options.color) || '#ffffff';
     this.style = injectStyle(this.styleId, `
       #${this.tipId} {
-        position: absolute;
+        position: fixed;
         z-index: 2147483647;
         max-width: 320px;
         padding: 8px 12px;
@@ -90,8 +90,11 @@ export const PersistentHover = {
     this.tip.textContent = text;
     let rect = null;
     try { rect = el.getBoundingClientRect(); } catch { /* detached */ }
-    const x = (rect ? rect.left : 0) + (window.scrollX || 0);
-    const y = (rect ? rect.bottom : 0) + (window.scrollY || 0) + 6;
+    // position: fixed → viewport coordinates apply directly. No scroll offsets,
+    // and no dependence on the initial containing block, which a positioned or
+    // transformed ancestor would otherwise shift the tooltip against.
+    const x = rect ? rect.left : 0;
+    const y = (rect ? rect.bottom : 0) + 6;
     this.tip.style.left = `${Math.max(0, x)}px`;
     this.tip.style.top = `${Math.max(0, y)}px`;
     this.tip.hidden = false;
