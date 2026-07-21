@@ -3528,6 +3528,101 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yPersistentHover = PersistentHover;
 
+  // tools/adapters/reading-ruler.js
+  var ReadingRuler = {
+    bandId: "ai4a11y-reading-ruler",
+    enabled: false,
+    band: null,
+    shadeTop: null,
+    shadeBottom: null,
+    height: 40,
+    moveHandler: null,
+    // stored ref so disable() removes exactly this listener
+    frame: null,
+    // pending rAF/timer id, cancelled on disable
+    lastY: 0,
+    raf: null,
+    cancelRaf: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.height = options.height || 40;
+      const band = document.createElement("div");
+      band.id = this.bandId;
+      band.setAttribute("aria-hidden", "true");
+      band.style.cssText = `position: fixed; left: 0; right: 0; height: ${this.height}px; background: rgba(255, 255, 0, 0.18); border-top: 1px solid rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(0, 0, 0, 0.15); pointer-events: none; z-index: 2147483645;`;
+      (document.body || document.documentElement).appendChild(band);
+      this.band = band;
+      if (options.dim !== false) {
+        const shade = () => {
+          const el = document.createElement("div");
+          el.setAttribute("aria-hidden", "true");
+          el.style.cssText = "position: fixed; left: 0; right: 0; background: rgba(0, 0, 0, 0.12); pointer-events: none; z-index: 2147483644;";
+          (document.body || document.documentElement).appendChild(el);
+          return el;
+        };
+        this.shadeTop = shade();
+        this.shadeBottom = shade();
+      }
+      const hasRaf = typeof requestAnimationFrame === "function";
+      this.raf = hasRaf ? (fn) => requestAnimationFrame(fn) : (fn) => setTimeout(fn, 16);
+      this.cancelRaf = hasRaf ? (id) => cancelAnimationFrame(id) : (id) => clearTimeout(id);
+      this.moveHandler = (event) => {
+        this.lastY = event.clientY;
+        if (this.frame !== null) return;
+        this.frame = this.raf(() => {
+          this.frame = null;
+          if (this.enabled) this.position(this.lastY);
+        });
+      };
+      document.addEventListener("mousemove", this.moveHandler);
+      this.position(typeof window !== "undefined" && window.innerHeight ? window.innerHeight / 2 : 0);
+      console.log("[AI4A11y] Reading Ruler enabled");
+      announce("Reading ruler on. It follows your cursor.");
+    },
+    // Center the band (and reflow the shades) around viewport y-coordinate `y`.
+    position(y) {
+      if (!this.band) return;
+      const top = Math.round(y - this.height / 2);
+      this.band.style.top = `${top}px`;
+      if (this.shadeTop) {
+        this.shadeTop.style.top = "0px";
+        this.shadeTop.style.height = `${Math.max(0, top)}px`;
+      }
+      if (this.shadeBottom) {
+        this.shadeBottom.style.top = `${top + this.height}px`;
+        this.shadeBottom.style.bottom = "0px";
+      }
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.moveHandler) {
+        document.removeEventListener("mousemove", this.moveHandler);
+        this.moveHandler = null;
+      }
+      if (this.frame !== null) {
+        this.cancelRaf(this.frame);
+        this.frame = null;
+      }
+      this.raf = this.cancelRaf = null;
+      (_a = this.band) == null ? void 0 : _a.remove();
+      this.band = null;
+      (_b = this.shadeTop) == null ? void 0 : _b.remove();
+      this.shadeTop = null;
+      (_c = this.shadeBottom) == null ? void 0 : _c.remove();
+      this.shadeBottom = null;
+      console.log("[AI4A11y] Reading Ruler disabled");
+      announce("Reading ruler off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -5380,7 +5475,8 @@ ${chunk}
           letterSpacing: 0.12,
           focusMode: true,
           highlightLinks: true,
-          bionicReading: true
+          bionicReading: true,
+          readingRuler: true
         }
       },
       adhd: {
@@ -5393,7 +5489,8 @@ ${chunk}
           showProgress: true,
           motionReducer: true,
           dismissOverlays: true,
-          bionicReading: true
+          bionicReading: true,
+          readingRuler: true
         }
       },
       cognitive: {
@@ -5515,7 +5612,8 @@ ${chunk}
       describeOnDemand: false,
       reflowColumn: false,
       focusLocator: false,
-      persistentHover: false
+      persistentHover: false,
+      readingRuler: false
     }
   };
 
@@ -5636,7 +5734,8 @@ ${chunk}
     describeOnDemand: DescribeOnDemand,
     reflowColumn: ReflowColumn,
     focusLocator: FocusLocator,
-    persistentHover: PersistentHover
+    persistentHover: PersistentHover,
+    readingRuler: ReadingRuler
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -5692,7 +5791,9 @@ ${chunk}
       "focuslocator": "focusLocator",
       "focusring": "focusLocator",
       "persistenthover": "persistentHover",
-      "hover": "persistentHover"
+      "hover": "persistentHover",
+      "readingruler": "readingRuler",
+      "ruler": "readingRuler"
     };
     return map[lower] || name;
   }
@@ -5785,6 +5886,7 @@ ${chunk}
     if (profileTools.reflowColumn) ReflowColumn.enable();
     if (profileTools.focusLocator) FocusLocator.enable();
     if (profileTools.persistentHover) PersistentHover.enable();
+    if (profileTools.readingRuler) ReadingRuler.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -5837,7 +5939,8 @@ ${chunk}
       describeOnDemand: "Alt+click or Alt+D to get an AI description of any element",
       reflowColumn: "Force page content into one readable column (WCAG 1.4.10)",
       focusLocator: "Show a strong always-visible indicator of keyboard focus",
-      persistentHover: "Keep hover tooltips visible and dismissible (WCAG 1.4.13)"
+      persistentHover: "Keep hover tooltips visible and dismissible (WCAG 1.4.13)",
+      readingRuler: "A highlight band that follows your reading line"
     };
     return descriptions[name] || "";
   }

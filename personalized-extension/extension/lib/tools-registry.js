@@ -476,6 +476,27 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "reading-ruler",
+    "name": "Reading Ruler",
+    "description": "A soft highlight band that follows your cursor down the page to keep your eyes on the current line, dimming the rest — a focus aid for dyslexic and ADHD readers.",
+    "supportAreas": [
+      "reading",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference"
+    ],
+    "requiresAI": false,
+    "icon": "horizontal_rule",
+    "emoji": "📏",
+    "quickStart": false,
+    "settings": {
+      "readingRuler": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -863,6 +884,10 @@ globalThis.AA_TOOLS = {
   "persistentHover": {
     "type": "boolean",
     "description": "Keep hover tooltips visible and dismissible"
+  },
+  "readingRuler": {
+    "type": "boolean",
+    "description": "A highlight band that follows your reading line"
   },
   "keyboardNav": {
     "type": "boolean",
