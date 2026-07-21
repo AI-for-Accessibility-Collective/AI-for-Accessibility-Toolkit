@@ -102,6 +102,36 @@ const BUILT = {
     const m = window.__sent.find(x => x.type === 'librarianBuildSkill' && x.feedback);
     return m.previous?.name === 'news-calm' && /too small/.test(m.feedback);
   }));
+  await page.waitForFunction(() => document.getElementById('buildStatus').textContent.startsWith('Revised'), { timeout: 5000 });
+  check('feedback field clears after a successful revision', await page.$eval('#feedbackInput', el => el.value === ''));
+
+  // Enter in the feedback field submits (keyboard operability), mirroring the
+  // popup's aiInput/taskInput convention.
+  await page.evaluate(() => { window.__sent.length = 0; });
+  await page.focus('#feedbackInput');
+  await page.type('#feedbackInput', 'make it calmer');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => window.__sent.some(m => m.type === 'librarianBuildSkill' && m.feedback), { timeout: 5000 });
+  check('Enter in the feedback field submits a revision', await page.evaluate(() =>
+    window.__sent.some(m => m.type === 'librarianBuildSkill' && /calmer/.test(m.feedback || ''))));
+
+  // Empty-feedback guard: clicking Improve with nothing typed does nothing.
+  await page.evaluate(() => { window.__sent.length = 0; document.getElementById('feedbackInput').value = ''; });
+  await page.click('#improveBtn');
+  await page.waitForFunction(() => document.getElementById('buildStatus').textContent === 'Say what to change first.', { timeout: 5000 });
+  check('empty feedback is a no-op (no build sent)', await page.evaluate(() =>
+    !window.__sent.some(m => m.type === 'librarianBuildSkill')));
+
+  // Stale-feedback guard: typing feedback, then building a fresh skill, must
+  // clear the old feedback so it can't be submitted against the new skill.
+  await page.type('#feedbackInput', 'stale text for the old skill');
+  await page.evaluate(() => { window.__sent.length = 0; document.getElementById('needInput').value = ''; });
+  await page.type('#needInput', 'a totally different need');
+  await page.click('#buildBtn');
+  // onBuild clears feedback before it sends the build, so once the build
+  // message is out the field is already empty (no race on the visible preview).
+  await page.waitForFunction(() => window.__sent.some(m => m.type === 'librarianBuildSkill' && /different need/.test(m.need || '')), { timeout: 5000 });
+  check('a fresh build clears stale feedback', await page.$eval('#feedbackInput', el => el.value === ''));
 
   // Save → preview hides, list grows, save message sent.
   await page.click('#saveBtn');
