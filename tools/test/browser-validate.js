@@ -199,6 +199,21 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('brightness: filter and overlay removed after disable', (await css('html', 'filter')) === 'none' && !(await exists('#ai4a11y-dim-overlay')));
   }
 
+  // ── Sound Visualizer — REAL: playing sound flashes a visible indicator ──────
+  {
+    await page.evaluate(() => { const v = document.querySelector('#vid'); v.muted = false; v.volume = 1; });
+    await enable('soundVisualizer');
+    const shown = await page.evaluate(async () => {
+      document.querySelector('#vid').dispatchEvent(new Event('play', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 40));
+      const ind = document.getElementById('ai4a11y-sound-indicator');
+      return !!ind && getComputedStyle(ind).display !== 'none';
+    });
+    check('sound-viz: playing sound really flashes a visual indicator', shown);
+    await disable('soundVisualizer');
+    check('sound-viz: indicator removed after disable', !(await exists('#ai4a11y-sound-indicator')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

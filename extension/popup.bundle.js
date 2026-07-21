@@ -46,7 +46,8 @@
           autoCaptions: true,
           enhanceFocus: true,
           autoDescribe: false,
-          autoVideoDescribe: false
+          autoVideoDescribe: false,
+          soundVisualizer: true
         }
       },
       motor: {
@@ -201,7 +202,8 @@
       muteSounds: false,
       defineWords: false,
       stopAutoAdvance: false,
-      reduceBrightness: false
+      reduceBrightness: false,
+      soundVisualizer: false
     }
   };
 

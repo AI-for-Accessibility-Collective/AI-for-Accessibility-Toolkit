@@ -151,6 +151,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.defineWords) enabled.push('define-words');
   if (tools.stopAutoAdvance) enabled.push('stop-auto-advance');
   if (tools.reduceBrightness) enabled.push('reduce-brightness');
+  if (tools.soundVisualizer) enabled.push('sound-visualizer');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');
