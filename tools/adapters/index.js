@@ -41,6 +41,7 @@ export { FocusLocator } from './focus-locator.js';
 export { PersistentHover } from './persistent-hover.js';
 export { ReadingRuler } from './reading-ruler.js';
 export { ConfirmActions } from './confirm-actions.js';
+export { ReadingSpot } from './reading-spot.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

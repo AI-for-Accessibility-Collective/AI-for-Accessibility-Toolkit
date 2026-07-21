@@ -161,6 +161,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.persistentHover) enabled.push('persistent-hover');
   if (tools.readingRuler) enabled.push('reading-ruler');
   if (tools.confirmActions) enabled.push('confirm-actions');
+  if (tools.rememberSpot) enabled.push('reading-spot');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');

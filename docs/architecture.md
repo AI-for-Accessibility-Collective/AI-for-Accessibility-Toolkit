@@ -182,8 +182,8 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions |
 | `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading, reading ruler |
 | `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading, reading ruler |
-| `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions |
-| `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance |
+| `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions, save reading spot |
+| `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance, save reading spot |
 | `anxiety` | Calm UI, reduced motion, dismiss popups, mute sounds |
 | `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds, reduce brightness |
 | `photosensitive` | Dark mode, reduced motion, reduce brightness, flash guard |

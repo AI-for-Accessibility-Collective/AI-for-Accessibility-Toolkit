@@ -207,7 +207,8 @@
           highlightLinks: true,
           defineWords: true,
           stopAutoAdvance: true,
-          confirmActions: true
+          confirmActions: true,
+          rememberSpot: true
         }
       },
       olderAdult: {
@@ -226,7 +227,8 @@
           showProgress: true,
           bigTargets: true,
           highlightLinks: true,
-          stopAutoAdvance: true
+          stopAutoAdvance: true,
+          rememberSpot: true
         }
       },
       anxiety: {
@@ -314,7 +316,8 @@
       focusLocator: false,
       persistentHover: false,
       readingRuler: false,
-      confirmActions: false
+      confirmActions: false,
+      rememberSpot: false
     }
   };
 
@@ -5671,6 +5674,89 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yConfirmActions = ConfirmActions;
 
+  // tools/adapters/reading-spot.js
+  var KEY_PREFIX = "ai4a11y-spot:";
+  var SAVE_DELAY_MS = 500;
+  var ReadingSpot = {
+    buttonId: "ai4a11y-spot-restore",
+    enabled: false,
+    key: null,
+    scrollHandler: null,
+    // stored ref so disable() can removeEventListener
+    saveTimer: null,
+    // debounce timeout, cleared on disable
+    // localStorage can throw on ANY access in private mode or a sandboxed
+    // frame, so every touch goes through these two guarded helpers. Access is
+    // via `window.localStorage` (never the bare global) so tests can stub it.
+    readSpot() {
+      try {
+        if (typeof window.localStorage === "undefined") return null;
+        const raw = window.localStorage.getItem(this.key);
+        const y = raw === null ? NaN : Number(raw);
+        return Number.isFinite(y) ? y : null;
+      } catch {
+        return null;
+      }
+    },
+    saveSpot(y) {
+      try {
+        if (typeof window.localStorage === "undefined") return;
+        window.localStorage.setItem(this.key, String(y));
+      } catch {
+      }
+    },
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.key = options.key || KEY_PREFIX + window.location.pathname;
+      const savedY = this.readSpot();
+      if (savedY !== null && savedY > 0 && !document.getElementById(this.buttonId)) {
+        const btn = document.createElement("button");
+        btn.id = this.buttonId;
+        btn.type = "button";
+        btn.textContent = "Jump back to where you were";
+        btn.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; font-size: 16px; border-radius: 8px;border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;";
+        btn.addEventListener("click", () => {
+          window.scrollTo(0, savedY);
+          btn.remove();
+        });
+        (document.body || document.documentElement).appendChild(btn);
+      }
+      this.scrollHandler = () => {
+        if (!this.enabled) return;
+        if (this.saveTimer) clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+          this.saveTimer = null;
+          if (this.enabled) this.saveSpot(window.scrollY);
+        }, SAVE_DELAY_MS);
+      };
+      window.addEventListener("scroll", this.scrollHandler, { passive: true });
+      console.log("[AI4A11y] Save Reading Spot enabled");
+      announce(savedY !== null && savedY > 0 ? "Found your last reading spot \u2014 a jump-back button was added" : "Saving your reading spot as you scroll");
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.scrollHandler) {
+        window.removeEventListener("scroll", this.scrollHandler);
+        this.scrollHandler = null;
+      }
+      if (this.saveTimer) {
+        clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+      }
+      (_a = document.getElementById(this.buttonId)) == null ? void 0 : _a.remove();
+      console.log("[AI4A11y] Save Reading Spot disabled");
+      announce("Reading spot saving turned off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReadingSpot = ReadingSpot;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5859,6 +5945,7 @@ ${scope} table {
     if (settings2.persistentHover) PersistentHover.enable();
     if (settings2.readingRuler) ReadingRuler.enable();
     if (settings2.confirmActions) ConfirmActions.enable();
+    if (settings2.rememberSpot) ReadingSpot.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -6066,6 +6153,7 @@ ${scope} table {
     PersistentHover.disable();
     ReadingRuler.disable();
     ConfirmActions.disable();
+    ReadingSpot.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -6199,7 +6287,8 @@ ${scope} table {
           FocusLocator: FocusLocator.enabled || false,
           PersistentHover: PersistentHover.enabled || false,
           ReadingRuler: ReadingRuler.enabled || false,
-          ConfirmActions: ConfirmActions.enabled || false
+          ConfirmActions: ConfirmActions.enabled || false,
+          ReadingSpot: ReadingSpot.enabled || false
         }
       });
       return true;

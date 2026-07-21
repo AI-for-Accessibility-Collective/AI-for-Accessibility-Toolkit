@@ -118,7 +118,8 @@
           highlightLinks: true,
           defineWords: true,
           stopAutoAdvance: true,
-          confirmActions: true
+          confirmActions: true,
+          rememberSpot: true
         }
       },
       olderAdult: {
@@ -137,7 +138,8 @@
           showProgress: true,
           bigTargets: true,
           highlightLinks: true,
-          stopAutoAdvance: true
+          stopAutoAdvance: true,
+          rememberSpot: true
         }
       },
       anxiety: {
@@ -225,7 +227,8 @@
       focusLocator: false,
       persistentHover: false,
       readingRuler: false,
-      confirmActions: false
+      confirmActions: false,
+      rememberSpot: false
     }
   };
 
