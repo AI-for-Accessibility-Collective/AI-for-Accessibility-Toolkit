@@ -251,7 +251,8 @@
         tools: {
           darkMode: true,
           motionReducer: true,
-          reduceBrightness: true
+          reduceBrightness: true,
+          flashGuard: true
         }
       }
     },
@@ -296,7 +297,8 @@
       reduceBrightness: false,
       soundVisualizer: false,
       announceUpdates: false,
-      magnifier: false
+      magnifier: false,
+      flashGuard: false
     }
   };
 
@@ -4929,6 +4931,97 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yMagnifier = Magnifier;
 
+  // tools/adapters/flash-guard.js
+  var FlashGuard = {
+    styleId: "ai4a11y-flash-guard-styles",
+    enabled: false,
+    tracked: null,
+    // Set of { video, hadAutoplay, wasPlaying } for exact restore
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.tracked = /* @__PURE__ */ new Set();
+      document.querySelectorAll("video").forEach((video) => this.guardVideo(video));
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+      video, canvas, img[src*=".gif"], img[src$=".gif"], [class*="gif"] {
+        filter: brightness(0.8) contrast(0.85) !important;
+      }
+    `;
+      (document.head || document.documentElement).appendChild(style);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType !== 1) continue;
+              if (node.tagName === "VIDEO") this.guardVideo(node);
+              if (node.querySelectorAll) {
+                node.querySelectorAll("video").forEach((v) => this.guardVideo(v));
+              }
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log("[AI4A11y] Flash Guard enabled");
+      announce("Flash protection on: videos paused and media dimmed");
+    },
+    // Pause one video and strip its autoplay, recording prior state for restore.
+    guardVideo(video) {
+      if (!video || !this.tracked) return;
+      for (const t of this.tracked) if (t.video === video) return;
+      try {
+        this.tracked.add({
+          video,
+          hadAutoplay: video.hasAttribute("autoplay"),
+          wasPlaying: !video.paused
+        });
+        video.pause();
+        video.removeAttribute("autoplay");
+        video.autoplay = false;
+      } catch (e) {
+      }
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (this.tracked) {
+        for (const { video, hadAutoplay, wasPlaying } of this.tracked) {
+          try {
+            if (hadAutoplay) {
+              video.setAttribute("autoplay", "");
+              video.autoplay = true;
+            }
+            if (wasPlaying) {
+              const p = video.play();
+              if (p && p.catch) p.catch(() => {
+              });
+            }
+          } catch (e) {
+          }
+        }
+        this.tracked.clear();
+        this.tracked = null;
+      }
+      console.log("[AI4A11y] Flash Guard disabled");
+      announce("Flash protection off: media restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFlashGuard = FlashGuard;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5110,6 +5203,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     if (settings2.soundVisualizer) SoundVisualizer.enable();
     if (settings2.announceUpdates) LiveRegionAnnouncer.enable();
     if (settings2.magnifier) Magnifier.enable();
+    if (settings2.flashGuard) FlashGuard.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5310,6 +5404,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     SoundVisualizer.disable();
     LiveRegionAnnouncer.disable();
     Magnifier.disable();
+    FlashGuard.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5436,7 +5531,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
           ReduceBrightness: ReduceBrightness.enabled || false,
           SoundVisualizer: SoundVisualizer.enabled || false,
           LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
-          Magnifier: Magnifier.enabled || false
+          Magnifier: Magnifier.enabled || false,
+          FlashGuard: FlashGuard.enabled || false
         }
       });
       return true;

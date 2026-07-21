@@ -34,6 +34,7 @@ export { ReduceBrightness } from './reduce-brightness.js';
 export { SoundVisualizer } from './sound-visualizer.js';
 export { LiveRegionAnnouncer } from './live-region-announcer.js';
 export { Magnifier } from './magnifier.js';
+export { FlashGuard } from './flash-guard.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

@@ -249,6 +249,17 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('magnifier: lens removed after disable', !(await exists('#ai4a11y-magnifier')));
   }
 
+  // ── Flash Guard — REAL: video gets a dimming filter + autoplay removed ──────
+  {
+    await page.evaluate(() => { document.querySelector('#vid').setAttribute('autoplay', ''); });
+    await enable('flashGuard');
+    const filt = await css('#vid', 'filter');
+    check(`flash-guard: video gets a reduced-brightness filter (${filt})`, filt !== 'none' && /brightness|matrix/.test(filt));
+    check('flash-guard: autoplay is removed from the video', await page.evaluate(() => !document.querySelector('#vid').hasAttribute('autoplay')));
+    await disable('flashGuard');
+    check('flash-guard: filter removed after disable', (await css('#vid', 'filter')) === 'none');
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

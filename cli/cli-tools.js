@@ -35,6 +35,7 @@ import { ReduceBrightness } from '../tools/adapters/reduce-brightness.js';
 import { SoundVisualizer } from '../tools/adapters/sound-visualizer.js';
 import { LiveRegionAnnouncer } from '../tools/adapters/live-region-announcer.js';
 import { Magnifier } from '../tools/adapters/magnifier.js';
+import { FlashGuard } from '../tools/adapters/flash-guard.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -187,6 +188,7 @@ const tools = {
   soundVisualizer: SoundVisualizer,
   announceUpdates: LiveRegionAnnouncer,
   magnifier: Magnifier,
+  flashGuard: FlashGuard,
 };
 
 // Normalize tool name (handles case variations)
@@ -235,6 +237,8 @@ function normalizeTool(name) {
     'liveregion': 'announceUpdates',
     'magnifier': 'magnifier',
     'lens': 'magnifier',
+    'flashguard': 'flashGuard',
+    'flash': 'flashGuard',
   };
   return map[lower] || name;
 }
@@ -336,6 +340,7 @@ function applyProfileByName(profileId) {
   if (profileTools.soundVisualizer) SoundVisualizer.enable();
   if (profileTools.announceUpdates) LiveRegionAnnouncer.enable();
   if (profileTools.magnifier) Magnifier.enable();
+  if (profileTools.flashGuard) FlashGuard.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -390,6 +395,7 @@ function getToolDescription(name) {
     soundVisualizer: 'Flash a visual indicator when the page plays sound (Deaf/HoH)',
     announceUpdates: 'Announce dynamic content changes to screen readers (live region)',
     magnifier: 'A lens that magnifies the text under the cursor',
+    flashGuard: 'Block autoplay and dim video/animation for seizure safety (WCAG 2.3.1)',
   };
   return descriptions[name] || '';
 }
