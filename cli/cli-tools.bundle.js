@@ -1830,67 +1830,98 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
 
+  // tools/adapters/_primitives.js
+  var DEFAULT_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION"]);
+  function transformTextNodes(root, transform, opts = {}) {
+    const doc = root && root.ownerDocument ? root.ownerDocument : typeof document !== "undefined" ? document : null;
+    const records = [];
+    if (!root || !doc) return { records, capped: false, restore() {
+    } };
+    const skipTags = opts.skipTags || DEFAULT_SKIP;
+    const skipClass = opts.skipClass || null;
+    const cap = opts.cap ?? 5e3;
+    const texts = [];
+    const walk = (node) => {
+      for (let child = node.firstChild; child; child = child.nextSibling) {
+        if (child.nodeType === 3) {
+          if (child.nodeValue && child.nodeValue.trim()) texts.push(child);
+        } else if (child.nodeType === 1) {
+          const tag = child.tagName;
+          if (skipTags.has(tag)) continue;
+          if (skipClass && child.classList && child.classList.contains(skipClass)) continue;
+          walk(child);
+        }
+      }
+    };
+    try {
+      walk(root);
+    } catch {
+    }
+    let capped = false;
+    for (const textNode of texts) {
+      if (records.length >= cap) {
+        capped = true;
+        break;
+      }
+      let replacement;
+      try {
+        replacement = transform(textNode.nodeValue, textNode);
+      } catch {
+        replacement = null;
+      }
+      if (!replacement) continue;
+      try {
+        textNode.parentNode.replaceChild(replacement, textNode);
+        records.push({ replacement, original: textNode });
+      } catch {
+      }
+    }
+    return {
+      records,
+      capped,
+      restore() {
+        for (const { replacement, original } of records) {
+          try {
+            if (replacement.parentNode) replacement.parentNode.replaceChild(original, replacement);
+          } catch {
+          }
+        }
+        records.length = 0;
+      }
+    };
+  }
+  function mainRoot(doc = typeof document !== "undefined" ? document : null) {
+    if (!doc) return null;
+    return doc.querySelector('main, article, [role="main"], .content, #content') || doc.body || null;
+  }
+
   // tools/adapters/bionic-reading.js
-  var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT"]);
   var MAX_TEXT_NODES = 2e3;
   var BionicReading = {
     markerClass: "ai4a11y-bionic",
     enabled: false,
-    processed: null,
-    // Set of { span, originalNode } (for exact restore)
+    handle: null,
+    // transformTextNodes handle (owns the exact-restore)
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      this.processed = /* @__PURE__ */ new Set();
       const ratio = typeof options.boldRatio === "number" && options.boldRatio > 0 && options.boldRatio <= 1 ? options.boldRatio : 0.4;
-      let root = null;
-      try {
-        root = document.querySelector('main, article, [role="main"], .content, #content') || document.body;
-      } catch {
-      }
+      const root = mainRoot();
       if (!root) {
-        console.log("[AI4A11y] Bionic Reading: no content root found");
         announce("Bionic reading: no readable text found");
         return;
       }
-      const textNodes = [];
-      let capped = false;
-      try {
-        capped = !this.collect(root, textNodes);
-      } catch {
-      }
-      if (capped) console.log(`[AI4A11y] Bionic Reading: capped at ${MAX_TEXT_NODES} text nodes`);
-      let count = 0;
-      for (const textNode of textNodes) {
-        try {
-          const parent = textNode.parentNode;
-          if (!parent) continue;
-          const span = this.buildSpan(textNode.nodeValue, ratio);
-          parent.replaceChild(span, textNode);
-          this.processed.add({ span, originalNode: textNode });
-          count++;
-        } catch {
-        }
-      }
+      this.handle = transformTextNodes(root, (text) => this.buildSpan(text, ratio), {
+        skipClass: this.markerClass,
+        cap: MAX_TEXT_NODES
+      });
+      const count = this.handle.records.length;
+      if (this.handle.capped) console.log(`[AI4A11y] Bionic Reading: capped at ${MAX_TEXT_NODES} text nodes`);
       console.log(`[AI4A11y] Bionic Reading enabled (${count} text blocks)`);
       announce(count ? "Bionic reading on" : "Bionic reading: no readable text found");
     },
-    // Depth-first text-node collection under root, skipping SKIP_TAGS subtrees
-    // and spans we already built. Returns false once the cap refuses a node.
-    collect(el, out) {
-      for (const node of el.childNodes) {
-        if (node.nodeType === 3) {
-          if (!/\S/.test(node.nodeValue)) continue;
-          if (out.length >= MAX_TEXT_NODES) return false;
-          out.push(node);
-        } else if (node.nodeType === 1 && !SKIP_TAGS.has(node.tagName) && !(node.classList && node.classList.contains(this.markerClass))) {
-          if (!this.collect(node, out)) return false;
-        }
-      }
-      return true;
-    },
     // Rebuild one text node's content as a marker <span>, bolding each word's
-    // prefix. Whitespace runs are preserved verbatim as their own text nodes.
+    // prefix. Whitespace runs are preserved verbatim.
     buildSpan(text, ratio) {
       const span = document.createElement("span");
       span.className = this.markerClass;
@@ -1910,18 +1941,11 @@ ${scope(":focus")} {
       if (prefixLen < word.length) span.appendChild(document.createTextNode(word.slice(prefixLen)));
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
-      if (this.processed) {
-        for (const { span, originalNode } of this.processed) {
-          try {
-            (_a = span.parentNode) == null ? void 0 : _a.replaceChild(originalNode, span);
-          } catch {
-          }
-        }
-        this.processed.clear();
-        this.processed = null;
+      if (this.handle) {
+        this.handle.restore();
+        this.handle = null;
       }
       console.log("[AI4A11y] Bionic Reading disabled");
       announce("Bionic reading off");
@@ -2192,7 +2216,7 @@ ${scope(":focus")} {
   if (typeof window !== "undefined") window.__ai4a11yMuteSounds = MuteSounds;
 
   // tools/adapters/define-words.js
-  var SKIP_TAGS2 = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "A", "BUTTON"]);
+  var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "A", "BUTTON"]);
   var MAX_WORDS = 500;
   var STYLE_ID = "ai4a11y-define-styles";
   var TOOLTIP_ID = "ai4a11y-define-tooltip";
@@ -2262,7 +2286,7 @@ ${scope(":focus")} {
       for (const node of el.childNodes) {
         if (node.nodeType === 3) {
           if (/\S/.test(node.nodeValue)) out.push(node);
-        } else if (node.nodeType === 1 && !SKIP_TAGS2.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass))) {
+        } else if (node.nodeType === 1 && !SKIP_TAGS.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass))) {
           this.collect(node, out);
         }
       }
