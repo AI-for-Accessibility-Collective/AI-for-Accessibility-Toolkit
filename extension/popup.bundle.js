@@ -26,7 +26,8 @@
           largeCursor: true,
           enhanceFocus: true,
           fixContrast: true,
-          highlightLinks: true
+          highlightLinks: true,
+          unpinSticky: true
         }
       },
       colorBlind: {
@@ -60,7 +61,8 @@
           voiceCommands: true,
           dismissOverlays: true,
           bigTargets: true,
-          pageOutline: true
+          pageOutline: true,
+          unpinSticky: true
         }
       },
       dyslexia: {
@@ -184,7 +186,8 @@
       colorFilter: "none",
       highlightLinks: false,
       pageOutline: false,
-      bionicReading: false
+      bionicReading: false,
+      unpinSticky: false
     }
   };
 
