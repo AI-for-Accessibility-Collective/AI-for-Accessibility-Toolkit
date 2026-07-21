@@ -32,7 +32,8 @@
           unpinSticky: true,
           magnifier: true,
           reflowColumn: true,
-          focusLocator: true
+          focusLocator: true,
+          persistentHover: true
         }
       },
       colorBlind: {
@@ -70,7 +71,8 @@
           pageOutline: true,
           unpinSticky: true,
           stopAutoAdvance: true,
-          focusLocator: true
+          focusLocator: true,
+          persistentHover: true
         }
       },
       dyslexia: {
@@ -216,7 +218,8 @@
       flashGuard: false,
       describeOnDemand: false,
       reflowColumn: false,
-      focusLocator: false
+      focusLocator: false,
+      persistentHover: false
     }
   };
 

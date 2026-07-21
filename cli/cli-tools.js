@@ -39,6 +39,7 @@ import { FlashGuard } from '../tools/adapters/flash-guard.js';
 import { DescribeOnDemand } from '../tools/adapters/describe-on-demand.js';
 import { ReflowColumn } from '../tools/adapters/reflow-column.js';
 import { FocusLocator } from '../tools/adapters/focus-locator.js';
+import { PersistentHover } from '../tools/adapters/persistent-hover.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -195,6 +196,7 @@ const tools = {
   describeOnDemand: DescribeOnDemand,
   reflowColumn: ReflowColumn,
   focusLocator: FocusLocator,
+  persistentHover: PersistentHover,
 };
 
 // Normalize tool name (handles case variations)
@@ -251,6 +253,8 @@ function normalizeTool(name) {
     'reflow': 'reflowColumn',
     'focuslocator': 'focusLocator',
     'focusring': 'focusLocator',
+    'persistenthover': 'persistentHover',
+    'hover': 'persistentHover',
   };
   return map[lower] || name;
 }
@@ -356,6 +360,7 @@ function applyProfileByName(profileId) {
   if (profileTools.describeOnDemand) DescribeOnDemand.enable();
   if (profileTools.reflowColumn) ReflowColumn.enable();
   if (profileTools.focusLocator) FocusLocator.enable();
+  if (profileTools.persistentHover) PersistentHover.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -414,6 +419,7 @@ function getToolDescription(name) {
     describeOnDemand: 'Alt+click or Alt+D to get an AI description of any element',
     reflowColumn: 'Force page content into one readable column (WCAG 1.4.10)',
     focusLocator: 'Show a strong always-visible indicator of keyboard focus',
+    persistentHover: 'Keep hover tooltips visible and dismissible (WCAG 1.4.13)',
   };
   return descriptions[name] || '';
 }

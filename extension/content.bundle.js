@@ -121,7 +121,8 @@
           unpinSticky: true,
           magnifier: true,
           reflowColumn: true,
-          focusLocator: true
+          focusLocator: true,
+          persistentHover: true
         }
       },
       colorBlind: {
@@ -159,7 +160,8 @@
           pageOutline: true,
           unpinSticky: true,
           stopAutoAdvance: true,
-          focusLocator: true
+          focusLocator: true,
+          persistentHover: true
         }
       },
       dyslexia: {
@@ -305,7 +307,8 @@
       flashGuard: false,
       describeOnDemand: false,
       reflowColumn: false,
-      focusLocator: false
+      focusLocator: false,
+      persistentHover: false
     }
   };
 
@@ -5364,6 +5367,117 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yFocusLocator = FocusLocator;
 
+  // tools/adapters/persistent-hover.js
+  var PersistentHover = {
+    styleId: "ai4a11y-persistent-hover-styles",
+    tipId: "ai4a11y-hover-tip",
+    enabled: false,
+    style: null,
+    // injectStyle handle
+    tip: null,
+    // the single reusable tooltip element
+    current: null,
+    // the titled element the tooltip is showing for
+    onMouseOver: null,
+    // stored listener refs (for exact removal)
+    onKeyDown: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const background = options && options.background || "#1c1c1e";
+      const color = options && options.color || "#ffffff";
+      this.style = injectStyle(this.styleId, `
+      #${this.tipId} {
+        position: absolute;
+        z-index: 2147483647;
+        max-width: 320px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: ${background};
+        color: ${color};
+        font: 500 15px/1.45 system-ui, -apple-system, sans-serif;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        pointer-events: auto !important;
+      }
+    `);
+      const tip = document.createElement("div");
+      tip.id = this.tipId;
+      tip.setAttribute("role", "tooltip");
+      tip.hidden = true;
+      tip.style.pointerEvents = "auto";
+      (document.body || document.documentElement).appendChild(tip);
+      this.tip = tip;
+      this.onMouseOver = (e) => {
+        if (!this.enabled) return;
+        const target = e.target;
+        if (!target || target.nodeType !== 1) return;
+        if (this.tip && (target === this.tip || this.tip.contains(target))) return;
+        const el = target.closest ? target.closest("[title]") : null;
+        if (!el) return;
+        const text = (el.getAttribute("title") || "").trim();
+        if (!text || el === this.current) return;
+        this.show(el, text);
+      };
+      document.addEventListener("mouseover", this.onMouseOver, true);
+      this.onKeyDown = (e) => {
+        if (!this.enabled) return;
+        if (e.key === "Escape") this.hide();
+      };
+      document.addEventListener("keydown", this.onKeyDown, true);
+      console.log("[AI4A11y] Persistent Hover enabled");
+      announce("Hover tooltips now stay on screen. Press Escape to dismiss one");
+    },
+    // Fill the tooltip with the element's title text (textContent, never
+    // innerHTML) and place it just below the element.
+    show(el, text) {
+      if (!this.tip) return;
+      this.current = el;
+      this.tip.textContent = text;
+      let rect = null;
+      try {
+        rect = el.getBoundingClientRect();
+      } catch {
+      }
+      const x = (rect ? rect.left : 0) + (window.scrollX || 0);
+      const y = (rect ? rect.bottom : 0) + (window.scrollY || 0) + 6;
+      this.tip.style.left = `${Math.max(0, x)}px`;
+      this.tip.style.top = `${Math.max(0, y)}px`;
+      this.tip.hidden = false;
+    },
+    hide() {
+      if (this.tip) this.tip.hidden = true;
+      this.current = null;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.onMouseOver) {
+        document.removeEventListener("mouseover", this.onMouseOver, true);
+        this.onMouseOver = null;
+      }
+      if (this.onKeyDown) {
+        document.removeEventListener("keydown", this.onKeyDown, true);
+        this.onKeyDown = null;
+      }
+      if (this.style) {
+        this.style.remove();
+        this.style = null;
+      }
+      if (this.tip) {
+        this.tip.remove();
+        this.tip = null;
+      }
+      this.current = null;
+      console.log("[AI4A11y] Persistent Hover disabled");
+      announce("Persistent hover off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPersistentHover = PersistentHover;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5549,6 +5663,7 @@ ${scope} table {
     if (settings2.describeOnDemand) DescribeOnDemand.enable();
     if (settings2.reflowColumn) ReflowColumn.enable();
     if (settings2.focusLocator) FocusLocator.enable();
+    if (settings2.persistentHover) PersistentHover.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5753,6 +5868,7 @@ ${scope} table {
     DescribeOnDemand.disable();
     ReflowColumn.disable();
     FocusLocator.disable();
+    PersistentHover.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5883,7 +5999,8 @@ ${scope} table {
           FlashGuard: FlashGuard.enabled || false,
           DescribeOnDemand: DescribeOnDemand.enabled || false,
           ReflowColumn: ReflowColumn.enabled || false,
-          FocusLocator: FocusLocator.enabled || false
+          FocusLocator: FocusLocator.enabled || false,
+          PersistentHover: PersistentHover.enabled || false
         }
       });
       return true;

@@ -38,6 +38,7 @@ export { FlashGuard } from './flash-guard.js';
 export { DescribeOnDemand } from './describe-on-demand.js';
 export { ReflowColumn } from './reflow-column.js';
 export { FocusLocator } from './focus-locator.js';
+export { PersistentHover } from './persistent-hover.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';
