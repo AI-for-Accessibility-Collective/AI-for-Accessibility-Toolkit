@@ -3623,6 +3623,98 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
 
+  // tools/adapters/confirm-actions.js
+  var DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|post|publish|unsubscribe|deactivate|close account)\b/i;
+  var ConfirmActions = {
+    promptId: "ai4a11y-confirm-prompt",
+    armedAttr: "data-ai4a11y-armed",
+    enabled: false,
+    clickHandler: null,
+    // stored ref so disable() removes this exact listener
+    prompt: null,
+    // the injected "Click again to confirm" element
+    promptTimer: null,
+    armed: null,
+    // Set of elements currently carrying the data flag
+    windowMs: 4e3,
+    // how long a first click stays armed
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.armed = /* @__PURE__ */ new Set();
+      if (typeof options.windowMs === "number") this.windowMs = options.windowMs;
+      this.clickHandler = (e) => this.onClick(e);
+      document.addEventListener("click", this.clickHandler, true);
+      console.log("[AI4A11y] Confirm Actions enabled");
+      announce("Confirm actions on: risky buttons need a second click");
+    },
+    onClick(e) {
+      if (!this.enabled) return;
+      const t = e.target;
+      if (!t || t.nodeType !== 1) return;
+      if (this.prompt && (t === this.prompt || this.prompt.contains(t))) return;
+      const el = t.closest ? t.closest('button, [type="submit"], a') : null;
+      if (!el || !this.looksDestructive(el)) return;
+      if (el.hasAttribute(this.armedAttr)) {
+        this.clearArmed();
+        return;
+      }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      this.clearArmed();
+      el.setAttribute(this.armedAttr, "true");
+      this.armed.add(el);
+      this.showPrompt(el);
+      this.promptTimer = setTimeout(() => this.clearArmed(), this.windowMs);
+    },
+    looksDestructive(el) {
+      return DESTRUCTIVE_RE.test(el.textContent || "") || DESTRUCTIVE_RE.test(el.value || "") || DESTRUCTIVE_RE.test(el.getAttribute && el.getAttribute("aria-label") || "");
+    },
+    showPrompt(el) {
+      const prompt = document.createElement("span");
+      prompt.id = this.promptId;
+      prompt.setAttribute("role", "status");
+      prompt.textContent = "Click again to confirm";
+      prompt.style.cssText = "display:inline-block;margin:0 6px;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;";
+      if (el.insertAdjacentElement) el.insertAdjacentElement("afterend", prompt);
+      else (document.body || document.documentElement).appendChild(prompt);
+      this.prompt = prompt;
+    },
+    // Drop any pending confirmation: timer, prompt, and armed flags.
+    clearArmed() {
+      var _a;
+      if (this.promptTimer) {
+        clearTimeout(this.promptTimer);
+        this.promptTimer = null;
+      }
+      if (this.prompt) {
+        this.prompt.remove();
+        this.prompt = null;
+      }
+      if (this.armed) {
+        for (const el of this.armed) (_a = el.removeAttribute) == null ? void 0 : _a.call(el, this.armedAttr);
+        this.armed.clear();
+      }
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.clickHandler) {
+        document.removeEventListener("click", this.clickHandler, true);
+        this.clickHandler = null;
+      }
+      this.clearArmed();
+      this.armed = null;
+      console.log("[AI4A11y] Confirm Actions disabled");
+      announce("Confirm actions off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yConfirmActions = ConfirmActions;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -5463,7 +5555,8 @@ ${chunk}
           unpinSticky: true,
           stopAutoAdvance: true,
           focusLocator: true,
-          persistentHover: true
+          persistentHover: true,
+          confirmActions: true
         }
       },
       dyslexia: {
@@ -5507,7 +5600,8 @@ ${chunk}
           showProgress: true,
           highlightLinks: true,
           defineWords: true,
-          stopAutoAdvance: true
+          stopAutoAdvance: true,
+          confirmActions: true
         }
       },
       olderAdult: {
@@ -5613,7 +5707,8 @@ ${chunk}
       reflowColumn: false,
       focusLocator: false,
       persistentHover: false,
-      readingRuler: false
+      readingRuler: false,
+      confirmActions: false
     }
   };
 
@@ -5735,7 +5830,8 @@ ${chunk}
     reflowColumn: ReflowColumn,
     focusLocator: FocusLocator,
     persistentHover: PersistentHover,
-    readingRuler: ReadingRuler
+    readingRuler: ReadingRuler,
+    confirmActions: ConfirmActions
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -5793,7 +5889,9 @@ ${chunk}
       "persistenthover": "persistentHover",
       "hover": "persistentHover",
       "readingruler": "readingRuler",
-      "ruler": "readingRuler"
+      "ruler": "readingRuler",
+      "confirmactions": "confirmActions",
+      "confirm": "confirmActions"
     };
     return map[lower] || name;
   }
@@ -5887,6 +5985,7 @@ ${chunk}
     if (profileTools.focusLocator) FocusLocator.enable();
     if (profileTools.persistentHover) PersistentHover.enable();
     if (profileTools.readingRuler) ReadingRuler.enable();
+    if (profileTools.confirmActions) ConfirmActions.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -5940,7 +6039,8 @@ ${chunk}
       reflowColumn: "Force page content into one readable column (WCAG 1.4.10)",
       focusLocator: "Show a strong always-visible indicator of keyboard focus",
       persistentHover: "Keep hover tooltips visible and dismissible (WCAG 1.4.13)",
-      readingRuler: "A highlight band that follows your reading line"
+      readingRuler: "A highlight band that follows your reading line",
+      confirmActions: "Ask for confirmation before risky or final actions"
     };
     return descriptions[name] || "";
   }

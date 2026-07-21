@@ -497,6 +497,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "confirm-actions",
+    "name": "Confirm Actions",
+    "description": "Asks for a second click before risky or final actions (delete, submit, pay, send), preventing accidental activation for motor and cognitive users. From the co-design study: \"please confirm and do not execute\".",
+    "supportAreas": [
+      "motor",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "verified_user",
+    "emoji": "✔️",
+    "quickStart": false,
+    "settings": {
+      "confirmActions": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -888,6 +907,10 @@ globalThis.AA_TOOLS = {
   "readingRuler": {
     "type": "boolean",
     "description": "A highlight band that follows your reading line"
+  },
+  "confirmActions": {
+    "type": "boolean",
+    "description": "Ask for confirmation before risky or final actions"
   },
   "keyboardNav": {
     "type": "boolean",

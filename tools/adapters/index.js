@@ -40,6 +40,7 @@ export { ReflowColumn } from './reflow-column.js';
 export { FocusLocator } from './focus-locator.js';
 export { PersistentHover } from './persistent-hover.js';
 export { ReadingRuler } from './reading-ruler.js';
+export { ConfirmActions } from './confirm-actions.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

@@ -72,7 +72,8 @@
           unpinSticky: true,
           stopAutoAdvance: true,
           focusLocator: true,
-          persistentHover: true
+          persistentHover: true,
+          confirmActions: true
         }
       },
       dyslexia: {
@@ -116,7 +117,8 @@
           showProgress: true,
           highlightLinks: true,
           defineWords: true,
-          stopAutoAdvance: true
+          stopAutoAdvance: true,
+          confirmActions: true
         }
       },
       olderAdult: {
@@ -222,7 +224,8 @@
       reflowColumn: false,
       focusLocator: false,
       persistentHover: false,
-      readingRuler: false
+      readingRuler: false,
+      confirmActions: false
     }
   };
 

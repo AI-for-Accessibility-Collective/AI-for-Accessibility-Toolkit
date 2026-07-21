@@ -179,10 +179,10 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier, reflow to column, focus locator |
 | `colorBlind` | Color filters, enhanced contrast |
 | `deaf` | Auto captions, visual emphasis, sound visualizer |
-| `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator |
+| `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions |
 | `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading, reading ruler |
 | `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading, reading ruler |
-| `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance |
+| `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions |
 | `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance |
 | `anxiety` | Calm UI, reduced motion, dismiss popups, mute sounds |
 | `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds, reduce brightness |
