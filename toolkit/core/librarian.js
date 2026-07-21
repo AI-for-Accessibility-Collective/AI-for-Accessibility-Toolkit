@@ -204,6 +204,8 @@ export function createLibrarian({
       consentBoundary: 'profile-only',  // 'profile-only' | 'all-tiers'
       language: 'standard',             // 'standard' | 'plain'
       maxProposalsPerWeek: 30,
+      sharing: 'personal',              // 'personal' | 'friends' | 'anyone' — the
+                                        // broker's export ceiling (privacy layer)
     },
     memoryPaused: false,
   };

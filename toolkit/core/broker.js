@@ -45,6 +45,16 @@ const DIMENSION_BY_SCOPE = {
   'ability.freeText': 'freeText',
 };
 
+// Who holds a grant, relative to the person: an app acting for the person
+// themself, someone in their circle (family, friends, carers), or anyone
+// beyond it. The profile's sharing level — 'personal', 'friends', or
+// 'anyone' (the diagrams' access-control choices) — is the CEILING: a grant
+// whose audience sits above the current level exports nothing until the
+// person raises it. Enforced at export time, so lowering the level
+// immediately cuts off out-of-level grants without needing to revoke them.
+export const AUDIENCES = ['personal', 'friends', 'anyone'];
+const AUDIENCE_ORDER = { personal: 0, friends: 1, anyone: 2 };
+
 // Proposal `change` ops an external app is allowed to suggest. `profile-set`
 // is deliberately EXCLUDED: it lets a proposal write an arbitrary profile
 // path, and even accepted, a malicious path (`__proto__.x`) is a pollution
@@ -104,18 +114,21 @@ export function createBroker({ datastore, librarian, clock = { now: () => Date.n
     /**
      * Create a grant for an app. The USER creates grants (through consent
      * UI); apps request them. Default deny: empty read/write until granted.
-     * @param {{ appId: string, appName?: string, read?: string[], write?: boolean }} req
+     * @param {{ appId: string, appName?: string, read?: string[], write?: boolean,
+     *           audience?: 'personal'|'friends'|'anyone' }} req
      */
-    async createGrant({ appId, appName = '', read = [], write = false }) {
+    async createGrant({ appId, appName = '', read = [], write = false, audience = 'personal' }) {
       if (!appId) throw new Error('Broker: appId required');
       const bad = read.filter(s => !READ_SCOPES.includes(s));
       if (bad.length) throw new Error(`Broker: unknown read scopes: ${bad.join(', ')}`);
+      if (!AUDIENCES.includes(audience)) throw new Error(`Broker: unknown audience "${audience}"`);
       const grant = {
         id: newId('grant'),
         appId,
         appName,
         read: [...new Set(read)],
         write: !!write,           // may contribute insights (as proposals)
+        audience,                 // who this grant's holder is to the person
         createdAt: clock.now(),
         revokedAt: null,
       };
@@ -144,6 +157,15 @@ export function createBroker({ datastore, librarian, clock = { now: () => Date.n
      */
     async exportUnderstanding(grantId) {
       const g = await requireGrant(grantId);
+      // The privacy layer's access-control gate: the profile's sharing level
+      // must cover this grant's audience, checked on EVERY export.
+      const profile = await librarian.getProfile();
+      const sharing = profile?.metaPreferences?.sharing || 'personal';
+      const audience = g.audience || 'personal';
+      if ((AUDIENCE_ORDER[audience] ?? Infinity) > AUDIENCE_ORDER[sharing]) {
+        await audit({ kind: 'export-blocked', grantId: g.id, appId: g.appId, audience, sharing });
+        throw new Error(`Broker: profile sharing is "${sharing}" — a "${audience}" grant may not read it`);
+      }
       const model = await librarian.getAbilityModel();
       const out = {
         schemaVersion: model.schemaVersion,

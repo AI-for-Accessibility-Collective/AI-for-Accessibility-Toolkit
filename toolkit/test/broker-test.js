@@ -136,6 +136,27 @@ const broker = createBroker({ datastore: () => datastore, librarian });
   // Read scopes constant sanity
   check('READ_SCOPES covers all model dimensions', READ_SCOPES.length === 8);
 
+  // Sharing level (privacy layer): the profile's sharing choice is the export
+  // ceiling for a grant's audience — personal < friends < anyone.
+  await throws('unknown audience rejected', () =>
+    broker.createGrant({ appId: 'x', read: ['ability.text'], audience: 'everyone' }));
+  const gFriend = await broker.createGrant({ appId: 'sister-app', read: ['ability.text'], audience: 'friends' });
+  await throws('friends grant blocked while sharing is personal', () =>
+    broker.exportUnderstanding(gFriend.id));
+  const blocked = (await broker.getAuditLog()).some(a => a.kind === 'export-blocked' && a.appId === 'sister-app');
+  check('blocked export is audited', blocked);
+  await librarian.setProfileField('metaPreferences.sharing', 'friends');
+  const friendExport = await broker.exportUnderstanding(gFriend.id);
+  check('friends grant exports once sharing allows it', friendExport.text !== undefined);
+  const gPublic = await broker.createGrant({ appId: 'community', read: ['ability.text'], audience: 'anyone' });
+  await throws('anyone grant still blocked at friends level', () =>
+    broker.exportUnderstanding(gPublic.id));
+  await librarian.setProfileField('metaPreferences.sharing', 'personal');
+  await throws('lowering sharing cuts off friends grants again', () =>
+    broker.exportUnderstanding(gFriend.id));
+  const gSelf = await broker.createGrant({ appId: 'my-xr', read: ['ability.text'] });
+  check('personal grants still export at the personal level', (await broker.exportUnderstanding(gSelf.id)).text !== undefined);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
