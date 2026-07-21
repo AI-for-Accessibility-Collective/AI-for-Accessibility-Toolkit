@@ -589,7 +589,10 @@ Rules:
         // 'profile-only' | 'all-tiers'
         language: "standard",
         // 'standard' | 'plain'
-        maxProposalsPerWeek: 30
+        maxProposalsPerWeek: 30,
+        sharing: "personal"
+        // 'personal' | 'friends' | 'anyone' — the
+        // broker's export ceiling (privacy layer)
       },
       memoryPaused: false
     };
@@ -1558,6 +1561,8 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
     "ability.cognition": "cognition",
     "ability.freeText": "freeText"
   };
+  var AUDIENCES = ["personal", "friends", "anyone"];
+  var AUDIENCE_ORDER = { personal: 0, friends: 1, anyone: 2 };
   var ALLOWED_INSIGHT_OPS = /* @__PURE__ */ new Set(["add-memory", "add-profile-action"]);
   var UNSAFE_KEYS = /* @__PURE__ */ new Set(["__proto__", "prototype", "constructor"]);
   function hasUnsafeKeys(value, depth = 0) {
@@ -1595,12 +1600,14 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
       /**
        * Create a grant for an app. The USER creates grants (through consent
        * UI); apps request them. Default deny: empty read/write until granted.
-       * @param {{ appId: string, appName?: string, read?: string[], write?: boolean }} req
+       * @param {{ appId: string, appName?: string, read?: string[], write?: boolean,
+       *           audience?: 'personal'|'friends'|'anyone' }} req
        */
-      async createGrant({ appId, appName = "", read = [], write = false }) {
+      async createGrant({ appId, appName = "", read = [], write = false, audience = "personal" }) {
         if (!appId) throw new Error("Broker: appId required");
         const bad = read.filter((s) => !READ_SCOPES.includes(s));
         if (bad.length) throw new Error(`Broker: unknown read scopes: ${bad.join(", ")}`);
+        if (!AUDIENCES.includes(audience)) throw new Error(`Broker: unknown audience "${audience}"`);
         const grant = {
           id: newId("grant"),
           appId,
@@ -1608,6 +1615,8 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
           read: [...new Set(read)],
           write: !!write,
           // may contribute insights (as proposals)
+          audience,
+          // who this grant's holder is to the person
           createdAt: clock.now(),
           revokedAt: null
         };
@@ -1640,6 +1649,13 @@ User support areas: ${profile.supportAreas.join(", ")}. Output only the playbook
        */
       async exportUnderstanding(grantId) {
         const g = await requireGrant(grantId);
+        const profile = await librarian2.getProfile();
+        const sharing = profile?.metaPreferences?.sharing || "personal";
+        const audience = g.audience || "personal";
+        if ((AUDIENCE_ORDER[audience] ?? Infinity) > AUDIENCE_ORDER[sharing]) {
+          await audit({ kind: "export-blocked", grantId: g.id, appId: g.appId, audience, sharing });
+          throw new Error(`Broker: profile sharing is "${sharing}" \u2014 a "${audience}" grant may not read it`);
+        }
         const model = await librarian2.getAbilityModel();
         const out = {
           schemaVersion: model.schemaVersion,

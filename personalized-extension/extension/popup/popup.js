@@ -1020,6 +1020,17 @@ function setupMemoryPanel() {
     await sendMessageP({ type: 'librarianSetPause', paused: !pauseToggle.checked });
   });
 
+  // The privacy layer's access-control choice: who may read the profile
+  // through the broker (only me / friends and family / anyone I allow).
+  const sharingSelect = document.getElementById('sharingSelect');
+  sharingSelect?.addEventListener('change', async () => {
+    await sendMessageP({
+      type: 'librarianSetProfileField',
+      path: 'metaPreferences.sharing',
+      value: sharingSelect.value,
+    });
+  });
+
   function scopeLabel(scope) {
     if (scope === 'general') return 'Everywhere';
     if (scope.startsWith('category:')) return 'On ' + scope.slice(9) + ' sites';
@@ -1043,6 +1054,9 @@ function setupMemoryPanel() {
 
     if (pauseToggle && profResp?.profile) {
       pauseToggle.checked = !profResp.profile.memoryPaused;
+    }
+    if (sharingSelect && profResp?.profile) {
+      sharingSelect.value = profResp.profile.metaPreferences?.sharing || 'personal';
     }
 
     // --- Proposals: the consent gate ---
