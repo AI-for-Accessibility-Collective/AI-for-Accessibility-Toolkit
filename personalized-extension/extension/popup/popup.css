@@ -289,7 +289,7 @@ select:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
 
 /* Footer */
 footer {
-  display: flex; justify-content: flex-start; align-items: center; gap: 6px;
+  display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 6px;
   padding: 8px 10px; background: white; border-top: 1px solid var(--grey-200);
   position: sticky; bottom: 0; z-index: 100;
 }
