@@ -35,7 +35,8 @@ globalThis.AA_SKILLS = [
             "showProgress": false
           }
         }
-      ]
+      ],
+      "actions": []
     },
     "body": "# Calm Browsing\n\nTurns a busy, animated page into a still, low-stimulation one.\n\n## What it does\n1. **motion-reducer** — stops animations, autoplaying video, GIFs, and parallax, which are common triggers for vestibular discomfort and migraine.\n2. **dark-mode** — lowers overall brightness to reduce glare.\n3. **focus-mode** — hides ads and popups to cut visual clutter (no progress spinner, which can itself cause stress).\n\n## When to use\nAny page that feels overwhelming — heavy social feeds, news sites, ad-dense pages. Safe everywhere; nothing here removes content, only movement and clutter.\n\n## Notes\n- Deliberately leaves progress indicators OFF — for sensory-sensitive users, spinners add stress rather than reassurance.\n\n## Recipe\n```json\n{\n  \"adapters\": [\n    { \"id\": \"motion-reducer\", \"settings\": { \"motionReducer\": true } },\n    { \"id\": \"dark-mode\", \"settings\": { \"darkMode\": true } },\n    { \"id\": \"focus-mode\", \"settings\": { \"focusMode\": true, \"hideDistractions\": true, \"showProgress\": false } }\n  ]\n}\n```"
   },
@@ -63,7 +64,8 @@ globalThis.AA_SKILLS = [
             "motionReducer": true
           }
         }
-      ]
+      ],
+      "actions": []
     },
     "body": "# Quiet Video\n\nAdds a visual track to video and calms the surrounding page.\n\n## What it does\n1. **auto-captions** — generates captions for videos that lack them, so speech is readable.\n2. **motion-reducer** — stops autoplay and background animation on the page around the player, so nothing competes with the captions.\n\n## When to use\nVideo and streaming pages. Also useful for anyone watching with sound off (public spaces, shared rooms), not only deaf/HoH users.\n\n## Notes\n- Caption generation calls the AI provider on the video's audio; it may take a few seconds on first play.\n\n## Recipe\n```json\n{\n  \"adapters\": [\n    { \"id\": \"auto-captions\", \"settings\": { \"autoCaptions\": true } },\n    { \"id\": \"motion-reducer\", \"settings\": { \"motionReducer\": true } }\n  ]\n}\n```"
   },
@@ -99,7 +101,8 @@ globalThis.AA_SKILLS = [
             "showProgress": true
           }
         }
-      ]
+      ],
+      "actions": []
     },
     "body": "# Reading Aid\n\nMakes dense, long-form text comfortable to read: larger type, generous spacing, a reading guide, and fewer distractions around the main content.\n\n## What it does\n1. **visual-assist** — scales text to 130%, widens line height, strengthens focus indicators, and shows a horizontal reading guide that tracks the current line.\n2. **focus-mode** — dims ads and side content and keeps a scroll-progress cue, so the reader stays with the article.\n\n## When to use\nLong-form reading — articles, documentation, blog posts. Skip on dashboards, web apps, or pages where layout carries meaning, since larger text can reflow controls.\n\n## Notes\n- Stacks safely with `dark-mode` for readers who also prefer a dark page.\n- If the reader also needs simpler language, add the `simplify-text` adapter.\n\n## Recipe\n```json\n{\n  \"adapters\": [\n    { \"id\": \"visual-assist\", \"settings\": { \"fontScale\": 130, \"lineHeight\": 1.8, \"enhanceFocus\": true, \"readingGuide\": true } },\n    { \"id\": \"focus-mode\", \"settings\": { \"focusMode\": true, \"hideDistractions\": true, \"showProgress\": true } }\n  ]\n}\n```"
   },
@@ -139,7 +142,8 @@ globalThis.AA_SKILLS = [
             "keyboardNav": true
           }
         }
-      ]
+      ],
+      "actions": []
     },
     "body": "# Screen Reader Boost\n\nMakes a page announce correctly for screen-reader users by generating the descriptions, labels, and structure that are missing.\n\n## What it does\n1. **auto-alt-text** — generates alt text for images that have none, so they're announced instead of skipped.\n2. **generate-labels** — names unlabeled buttons, links, and form fields.\n3. **wcag-fixes** — repairs common structural violations (landmarks, headings, tabindex, language).\n4. **keyboard-nav** — adds skip links and a clear tab order for non-pointer navigation.\n\n## When to use\nAny site, for anyone navigating by screen reader or keyboard. Visual settings are intentionally omitted — they don't help a screen-reader user.\n\n## Notes\n- The description and label steps call the AI provider; the WCAG and keyboard steps are deterministic and run offline.\n\n## Recipe\n```json\n{\n  \"adapters\": [\n    { \"id\": \"auto-alt-text\", \"settings\": { \"autoDescribe\": true } },\n    { \"id\": \"generate-labels\", \"settings\": { \"autoFixLabels\": true } },\n    { \"id\": \"wcag-fixes\", \"settings\": { \"autoWcagFix\": true } },\n    { \"id\": \"keyboard-nav\", \"settings\": { \"keyboardNav\": true } }\n  ]\n}\n```"
   }

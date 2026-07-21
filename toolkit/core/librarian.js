@@ -884,6 +884,21 @@ Return ONLY valid JSON with:
             });
             return profiles;
           });
+          // The implicit flow's last box: the accepted reusable task also
+          // becomes a real SKILL.md in the Skills db (an action-step recipe),
+          // so the person can see it, apply it, and share it like any other
+          // skill. The profile action above stays — auto-replay reads it.
+          const slug = String(prop.change.action.name || 'saved-task').toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'saved-task';
+          const cats = siteTypes.length ? siteTypes : ['all'];
+          await this.saveSkill({
+            name: slug,
+            description: `Runs "${prop.change.action.prompt}" for you. Use it on ${cats.join(', ')} sites.`,
+            supportAreas: [],
+            siteRelevance: cats,
+            recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt: prop.change.action.prompt }] },
+            body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
+          });
           demo.trace('skill', 'skillsdb', 'saved as skill.md');
           demo.trace('skill', 'autoenable', 'skill stored');
           demo.trace('skill', 'profiledb_skill', 'trigger registered');

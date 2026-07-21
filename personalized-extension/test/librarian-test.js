@@ -206,6 +206,11 @@ function check(name, cond) {
   const created = profs.find(p => p.siteTypes?.includes('video') && p.autoApply);
   check('accept creates auto-apply profile', accR.ok && !!created);
   check('profile carries the action prompt', created && created.actions.some(a => a.prompt === 'Turn on captions for this video'));
+  // The implicit flow's last box: the accepted task is also a real skill in
+  // the Skills db, visible and applicable like any other.
+  const skillDocs = await DS.get('mine.skillDocs');
+  const taskSkill = (skillDocs || []).find(s => (s.recipe?.actions || []).some(a => a.prompt === 'Turn on captions for this video'));
+  check('accept also saves the task as a skill', !!taskSkill && (taskSkill.siteRelevance || []).includes('video'));
   // re-run of the same task after accept → no new proposal (already saved)
   await L.logObservation({
     type: 'agent-task', url: 'https://www.youtube.com/watch?v=xyz',

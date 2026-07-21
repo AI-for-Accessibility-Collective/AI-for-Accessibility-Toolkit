@@ -1106,6 +1106,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  // Apply-path for skills whose recipe carries agent actions (reusable tasks
+  // saved as skills): the Skill Builder page resolved the skill and asks the
+  // browser agent to run the task on the tab the person chose. The Apply
+  // click on the page is the consent.
+  if (msg.type === 'runSkillActions') {
+    (async () => {
+      const actions = msg.actions || [];
+      if (!actions.length || !globalThis.BrowserAgent) {
+        sendResponse({ skipped: true });
+        return;
+      }
+      if (globalThis.BrowserAgent.isRunning()) {
+        sendResponse({ skipped: true, reason: 'agent_busy' });
+        return;
+      }
+      sendResponse({ started: true, count: actions.length });
+      for (const action of actions) {
+        if (globalThis.BrowserAgent.isRunning()) break;
+        try {
+          console.log(`[AgenticA11y] Running skill action: ${action.name || action.prompt}`);
+          await globalThis.BrowserAgent.run(action.prompt, { tabId: msg.tabId ?? null });
+        } catch (e) {
+          console.warn(`[AgenticA11y] Skill action failed: ${e.message}`);
+        }
+      }
+    })();
+    return true;
+  }
+
   if (msg.type === 'runProfileActions') {
     (async () => {
       const actions = msg.actions || [];

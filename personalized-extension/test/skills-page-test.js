@@ -36,6 +36,7 @@ const BUILT = {
           if (msg.type === 'librarianListSkills') {
             resp = { skills: [
               { name: 'reading-aid', description: 'Reading help.', source: 'builtin', recipe: { adapters: [{ id: 'visual-assist', settings: { fontScale: 130 } }] } },
+              { name: 'turn-on-captions', description: 'Runs a saved task.', source: 'mine', recipe: { adapters: [], actions: [{ name: 'Turn on captions', prompt: 'Turn on captions for this video' }] } },
               ...mineSkills.map(s => ({ ...s, source: 'mine' })),
             ] };
           } else if (msg.type === 'librarianBuildSkill') {
@@ -43,7 +44,11 @@ const BUILT = {
           } else if (msg.type === 'librarianSaveSkill') {
             mineSkills.push(msg.skill); resp = { saved: true, errors: [] };
           } else if (msg.type === 'librarianResolveSkill') {
-            resp = { plan: { settings: { fontScale: 130, focusMode: true }, adapterIds: ['visual-assist', 'focus-mode'] } };
+            resp = msg.skill?.recipe?.actions?.length
+              ? { plan: { settings: {}, adapterIds: [], actions: msg.skill.recipe.actions } }
+              : { plan: { settings: { fontScale: 130, focusMode: true }, adapterIds: ['visual-assist', 'focus-mode'] } };
+          } else if (msg.type === 'runSkillActions') {
+            resp = { started: true, count: (msg.actions || []).length };
           } else if (msg.type === 'librarianRetrieveSkill') {
             resp = { skill: { name: 'reading-aid' } };
           } else if (msg.type === 'librarianFindSkill') {
@@ -114,6 +119,20 @@ const BUILT = {
   const applyMsg = await page.evaluate(() => window.__sent.find(m => m.__toTab === 7 && m.type === 'applySkill'));
   check('apply resolves skill first', await page.evaluate(() => window.__sent.some(m => m.type === 'librarianResolveSkill')));
   check('apply sends resolved settings to the tab', applyMsg?.plan?.settings?.fontScale === 130);
+
+  // Action skill (a reusable task saved as a skill): the card names the task
+  // and Apply hands it to the browser agent for the chosen tab.
+  check('action skill card shows the task it runs', await page.evaluate(() =>
+    [...document.querySelectorAll('.skill-card')].some(c => /Runs: Turn on captions/.test(c.textContent))));
+  await page.evaluate(() => {
+    const card = [...document.querySelectorAll('.skill-card')].find(c => /turn-on-captions/.test(c.textContent));
+    card.querySelector('.btn-primary').click();
+  });
+  await page.waitForFunction(() => window.__sent.some(m => m.type === 'runSkillActions'), { timeout: 5000 });
+  check('applying an action skill asks the agent to run it', await page.evaluate(() => {
+    const m = window.__sent.find(x => x.type === 'runSkillActions');
+    return m.tabId === 7 && m.actions[0].prompt === 'Turn on captions for this video';
+  }));
 
   // Reuse-before-build: a need an existing skill covers gets an offer first,
   // and "Build a new one anyway" then proceeds to the Engineer.

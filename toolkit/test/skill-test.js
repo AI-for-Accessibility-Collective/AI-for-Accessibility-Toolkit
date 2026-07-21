@@ -87,6 +87,15 @@ const badRes = validateSkill(bad, { tools });
 check('rejects unknown adapter', !badRes.valid && badRes.errors.some(e => e.includes('not-a-real-adapter')));
 check('rejects unknown setting', badRes.errors.some(e => e.includes('nope')));
 
+// ---- action skills (reusable tasks saved as skills) ------------------------
+const actionSkill = parseSkill('---\nname: turn-on-captions\ndescription: Turns captions on for videos.\nsiteRelevance: [video]\n---\n# Turn on captions\n\n## Recipe\n```json\n{"adapters":[],"actions":[{"name":"Turn on captions","prompt":"Turn on captions for this video"}]}\n```');
+check('action-only skill validates', validateSkill(actionSkill, { tools }).valid);
+const actionPlan = resolveSkill(actionSkill);
+check('action skill resolves its task', actionPlan.actions.length === 1 && actionPlan.actions[0].prompt === 'Turn on captions for this video');
+check('action skill round-trips through serialize', resolveSkill(parseSkill(serializeSkill(actionSkill))).actions.length === 1);
+const nothing = parseSkill('---\nname: empty\ndescription: x\n---\n## Recipe\n```json\n{"adapters":[]}\n```');
+check('recipe with nothing to do is invalid', !validateSkill(nothing, { tools }).valid);
+
 // ---- round-trip serialize -> parse -----------------------------------------
 const rt = parseSkill(serializeSkill(reading));
 check('serialize->parse preserves name', rt.name === 'reading-aid');

@@ -22,13 +22,21 @@
  * @property {string} id           - adapter id (must exist in the tools registry)
  * @property {Object} [settings]   - settings to apply for that adapter
  *
+ * @typedef {Object} SkillRecipeAction
+ * @property {string} prompt       - plain-language task the browser agent runs
+ * @property {string} [name]       - short label for the task
+ *
  * @typedef {Object} Skill
  * @property {string} name
  * @property {string} description  - when to use it (what the model matches on)
  * @property {string[]} supportAreas
  * @property {string[]} siteRelevance
- * @property {{ adapters: SkillRecipeStep[] }} recipe
+ * @property {{ adapters: SkillRecipeStep[], actions?: SkillRecipeAction[] }} recipe
  * @property {string} body         - full markdown (instructions), sans frontmatter
+ *
+ * A recipe can compose two kinds of steps: adapters (page-fixing code applied
+ * directly) and actions (tasks the browser agent performs — how a reusable
+ * task saved from the Assistant becomes a skill). Most skills use only one.
  */
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/;
@@ -55,12 +63,15 @@ function parseFrontmatter(text) {
 // Extract the first ```json fenced block (the machine-runnable recipe).
 function extractRecipe(body) {
   const m = body.match(/```json\s*([\s\S]*?)```/);
-  if (!m) return { adapters: [] };
+  if (!m) return { adapters: [], actions: [] };
   try {
     const parsed = JSON.parse(m[1]);
-    return { adapters: Array.isArray(parsed.adapters) ? parsed.adapters : [] };
+    return {
+      adapters: Array.isArray(parsed.adapters) ? parsed.adapters : [],
+      actions: Array.isArray(parsed.actions) ? parsed.actions : [],
+    };
   } catch {
-    return { adapters: [] };
+    return { adapters: [], actions: [] };
   }
 }
 
@@ -133,7 +144,11 @@ export function validateSkill(skill, { tools } = {}) {
   if (!skill.name) errors.push('missing name');
   if (!skill.description) errors.push('missing description');
   const steps = skill.recipe?.adapters || [];
-  if (steps.length === 0) errors.push('recipe has no adapters');
+  const actions = skill.recipe?.actions || [];
+  if (steps.length === 0 && actions.length === 0) errors.push('recipe has no adapters or actions');
+  for (const act of actions) {
+    if (!act || typeof act.prompt !== 'string' || !act.prompt.trim()) errors.push('recipe action missing prompt');
+  }
   const meta = tools?.settingsMeta || {};
   for (const step of steps) {
     if (!step || typeof step.id !== 'string') { errors.push('recipe step missing adapter id'); continue; }
@@ -160,10 +175,11 @@ export function validateSkill(skill, { tools } = {}) {
 /**
  * Compile a skill's recipe to the deterministic apply-plan: the merged
  * settings object (same shape the extension's applyVisualSettings consumes)
- * plus the ordered adapter ids. This is the bridge skill → adapters, no LLM.
- * Later steps win on key conflicts (author-ordered).
+ * plus the ordered adapter ids, plus any agent actions to run. This is the
+ * bridge skill → adapters, no LLM. Later steps win on key conflicts
+ * (author-ordered).
  * @param {Skill} skill
- * @returns {{ settings: Object, adapterIds: string[] }}
+ * @returns {{ settings: Object, adapterIds: string[], actions: SkillRecipeAction[] }}
  */
 export function resolveSkill(skill) {
   const settings = {};
@@ -173,7 +189,10 @@ export function resolveSkill(skill) {
     adapterIds.push(step.id);
     Object.assign(settings, step.settings || {});
   }
-  return { settings, adapterIds };
+  const actions = (skill.recipe?.actions || [])
+    .filter(a => a && typeof a.prompt === 'string' && a.prompt.trim())
+    .map(a => ({ name: a.name || a.prompt, prompt: a.prompt }));
+  return { settings, adapterIds, actions };
 }
 
 /**

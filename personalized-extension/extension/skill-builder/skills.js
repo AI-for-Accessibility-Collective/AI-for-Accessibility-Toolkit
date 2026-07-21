@@ -164,13 +164,18 @@ function renderCard(skill) {
   const li = document.createElement('li');
   li.className = 'skill-card' + (skill.name === matchName ? ' is-match' : '');
   const adapters = describeAdapters(skill).map((a) => a.id).join(', ');
+  const tasks = (skill.recipe?.actions || []).map((a) => a.name || a.prompt).join('; ');
+  const does = [
+    adapters ? `Applies: ${escapeHtml(adapters)}` : '',
+    tasks ? `Runs: ${escapeHtml(tasks)}` : '',
+  ].filter(Boolean).join(' · ');
   li.innerHTML = `
     <div class="skill-head">
       <span class="skill-name">${escapeHtml(skill.name)}</span>
       <span class="skill-src">${skill.source === 'mine' ? 'yours' : 'built-in'}</span>
     </div>
     <p class="skill-desc">${escapeHtml(skill.description || '')}</p>
-    <p class="skill-adapters">Applies: ${escapeHtml(adapters)}</p>
+    <p class="skill-adapters">${does}</p>
     <div class="skill-actions"></div>`;
   const actions = li.querySelector('.skill-actions');
 
@@ -214,12 +219,25 @@ async function applySkill(skill, btn) {
     setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1800);
     return;
   }
-  try {
-    await chrome.tabs.sendMessage(tab.id, { type: 'applySkill', plan: resp.plan });
-    btn.textContent = 'Applied ✓';
-  } catch {
-    btn.textContent = 'Reload the page, then retry';
+  // A plan can carry adapter settings (content script applies them), agent
+  // actions (the background's browser agent runs them), or both.
+  const plan = resp.plan;
+  let applied = false;
+  let failText = 'Could not apply';
+  if (plan.adapterIds?.length) {
+    try {
+      await chrome.tabs.sendMessage(tab.id, { type: 'applySkill', plan });
+      applied = true;
+    } catch {
+      failText = 'Reload the page, then retry';
+    }
   }
+  if (plan.actions?.length) {
+    const r = await sendBg({ type: 'runSkillActions', actions: plan.actions, tabId: tab.id });
+    if (r?.started) applied = true;
+    else if (r?.reason === 'agent_busy') failText = 'The assistant is busy — try again soon';
+  }
+  btn.textContent = applied ? 'Applied ✓' : failText;
   setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1800);
 }
 
