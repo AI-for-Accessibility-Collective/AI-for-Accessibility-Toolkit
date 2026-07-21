@@ -33,6 +33,7 @@ import { DefineWords } from '../tools/adapters/define-words.js';
 import { StopAutoAdvance } from '../tools/adapters/stop-auto-advance.js';
 import { ReduceBrightness } from '../tools/adapters/reduce-brightness.js';
 import { SoundVisualizer } from '../tools/adapters/sound-visualizer.js';
+import { LiveRegionAnnouncer } from '../tools/adapters/live-region-announcer.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -183,6 +184,7 @@ const tools = {
   stopAutoAdvance: StopAutoAdvance,
   reduceBrightness: ReduceBrightness,
   soundVisualizer: SoundVisualizer,
+  announceUpdates: LiveRegionAnnouncer,
 };
 
 // Normalize tool name (handles case variations)
@@ -227,6 +229,8 @@ function normalizeTool(name) {
     'dim': 'reduceBrightness',
     'soundvisualizer': 'soundVisualizer',
     'soundviz': 'soundVisualizer',
+    'announceupdates': 'announceUpdates',
+    'liveregion': 'announceUpdates',
   };
   return map[lower] || name;
 }
@@ -326,6 +330,7 @@ function applyProfileByName(profileId) {
   if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
   if (profileTools.reduceBrightness) ReduceBrightness.enable();
   if (profileTools.soundVisualizer) SoundVisualizer.enable();
+  if (profileTools.announceUpdates) LiveRegionAnnouncer.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -378,6 +383,7 @@ function getToolDescription(name) {
     stopAutoAdvance: 'Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)',
     reduceBrightness: 'Dim and desaturate the page for a low-stimulation view',
     soundVisualizer: 'Flash a visual indicator when the page plays sound (Deaf/HoH)',
+    announceUpdates: 'Announce dynamic content changes to screen readers (live region)',
   };
   return descriptions[name] || '';
 }

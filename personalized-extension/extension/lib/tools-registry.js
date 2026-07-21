@@ -347,6 +347,24 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "live-region-announcer",
+    "name": "Announce Updates",
+    "description": "Mirrors dynamic page changes (new results, toasts, status messages) into a polite ARIA live region so screen readers announce updates that would otherwise be silent.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "campaign",
+    "emoji": "📢",
+    "quickStart": false,
+    "settings": {
+      "announceUpdates": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -706,6 +724,10 @@ globalThis.AA_TOOLS = {
   "soundVisualizer": {
     "type": "boolean",
     "description": "Flash a visual indicator when the page plays sound"
+  },
+  "announceUpdates": {
+    "type": "boolean",
+    "description": "Announce dynamic content changes to screen readers"
   },
   "keyboardNav": {
     "type": "boolean",
