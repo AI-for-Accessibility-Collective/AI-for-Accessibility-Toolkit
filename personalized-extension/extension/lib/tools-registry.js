@@ -876,6 +876,10 @@ globalThis.AA_TOOLS = {
     "type": "boolean",
     "description": "Translate the page text into another language"
   },
+  "translateTo": {
+    "type": "string",
+    "description": "Target language for translation (e.g. \"Spanish\")"
+  },
   "muteSounds": {
     "type": "boolean",
     "description": "Mute all audio and video and block autoplay sound"
