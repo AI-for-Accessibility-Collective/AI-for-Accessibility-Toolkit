@@ -81,6 +81,9 @@ async function onBuild() {
 
   $('buildStatus').textContent = 'The Engineer is composing adapters…';
   $('preview').hidden = true;
+  // A fresh build starts a fresh evaluation — don't carry feedback typed
+  // against the previous skill into a revision of this new one.
+  $('feedbackInput').value = '';
 
   const resp = await sendBg({ type: 'librarianBuildSkill', need });
   $('buildBtn').disabled = false;
@@ -281,7 +284,14 @@ function init() {
   // BEFORE deciding to save it. Same consent-by-click path as Apply.
   $('tryBtn').addEventListener('click', () => { if (builtSkill) applySkill(builtSkill, $('tryBtn')); });
   $('improveBtn').addEventListener('click', onImprove);
-  $('discardBtn').addEventListener('click', () => { $('preview').hidden = true; builtSkill = null; });
+  // Enter submits feedback, matching the popup's aiInput/taskInput convention
+  // (keyboard operability matters most in an accessibility tool).
+  $('feedbackInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') onImprove(); });
+  $('discardBtn').addEventListener('click', () => {
+    $('preview').hidden = true;
+    builtSkill = null;
+    $('feedbackInput').value = '';
+  });
   $('suggestBtn').addEventListener('click', onSuggest);
   // Reuse offer: "Use it" highlights the existing skill in the list below
   // (Apply from there is the consent click); "Build a new one anyway" falls
