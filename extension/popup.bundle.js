@@ -162,7 +162,8 @@
         tools: {
           darkMode: true,
           motionReducer: true,
-          reduceBrightness: true
+          reduceBrightness: true,
+          flashGuard: true
         }
       }
     },
@@ -207,7 +208,8 @@
       reduceBrightness: false,
       soundVisualizer: false,
       announceUpdates: false,
-      magnifier: false
+      magnifier: false,
+      flashGuard: false
     }
   };
 

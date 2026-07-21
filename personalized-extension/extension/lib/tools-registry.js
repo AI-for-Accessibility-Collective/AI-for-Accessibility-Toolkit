@@ -383,6 +383,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "flash-guard",
+    "name": "Flash Guard",
+    "description": "Seizure safety for photosensitive users: blocks autoplay on video and dims video, canvas, and animated GIFs so unexpected flashing is prevented or reduced (WCAG 2.3.1).",
+    "supportAreas": [
+      "sensory",
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "flash_off",
+    "emoji": "⚡",
+    "quickStart": false,
+    "settings": {
+      "flashGuard": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -750,6 +769,10 @@ globalThis.AA_TOOLS = {
   "magnifier": {
     "type": "boolean",
     "description": "A cursor-following lens that magnifies text"
+  },
+  "flashGuard": {
+    "type": "boolean",
+    "description": "Block autoplay and dim video/animation for seizure safety"
   },
   "keyboardNav": {
     "type": "boolean",
