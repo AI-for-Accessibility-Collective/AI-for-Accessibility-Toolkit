@@ -527,6 +527,7 @@ export const settingsMeta = {
   bionicReading:   { type: 'boolean', description: 'Bold the start of each word to guide the eye' },
   unpinSticky:     { type: 'boolean', description: 'Un-fix sticky headers and bars so they stop covering the page' },
   translatePage:   { type: 'boolean', description: 'Translate the page text into another language' },
+  translateTo:     { type: 'string', description: 'Target language for translation (e.g. "Spanish")' },
   muteSounds:      { type: 'boolean', description: 'Mute all audio and video and block autoplay sound' },
   defineWords:     { type: 'boolean', description: 'Show plain-language definitions of hard words on hover' },
   stopAutoAdvance: { type: 'boolean', description: 'Pause auto-carousels, auto-refresh, and autoplay media' },
