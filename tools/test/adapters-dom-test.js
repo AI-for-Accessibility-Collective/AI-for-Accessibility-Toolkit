@@ -7,6 +7,7 @@
 // Run: node tools/test/adapters-dom-test.js
 import { JSDOM } from 'jsdom';
 import { DismissOverlays } from '../adapters/dismiss-overlays.js';
+import { KeyboardNavigator } from '../adapters/keyboard-nav.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
@@ -15,6 +16,7 @@ const tick = () => new Promise(r => setTimeout(r, 0));
 function mount(bodyHTML) {
   const dom = new JSDOM(`<!DOCTYPE html><html><body>${bodyHTML}</body></html>`, { url: 'https://example.com/article' });
   const { window } = dom;
+  window.HTMLElement.prototype.scrollIntoView = window.HTMLElement.prototype.scrollIntoView || function () {};
   global.window = window;
   global.document = window.document;
   global.getComputedStyle = (el) => window.getComputedStyle(el);
@@ -93,6 +95,31 @@ async function run() {
       doc.body.appendChild(later);
       return !later.classList.contains('ai4a11y-overlay-dismissed');
     })());
+  }
+
+  // ── KEYBOARD NAV (regressions: id + tabindex leak on disable, idempotency) ──
+  {
+    const doc = mount(`<main><p>content</p></main><nav><a href="/">home</a></nav><h1>Title</h1>`);
+    KeyboardNavigator.enable();
+    check('keyboard-nav: stamps an id on <main> for its skip link', doc.querySelector('main').id === 'ai4a11y-main-content');
+
+    // Simulate the Alt+H shortcut, which stamps tabindex on a heading.
+    const h1 = doc.querySelector('h1');
+    KeyboardNavigator.shortcutHandler(new doc.defaultView.KeyboardEvent('keydown', { altKey: true, key: 'h' }));
+    check('keyboard-nav: Alt+H stamps tabindex on the heading', h1.getAttribute('tabindex') === '-1');
+
+    KeyboardNavigator.disable();
+    check('keyboard-nav: disable removes the id it stamped on <main>', !doc.querySelector('main').id);
+    check('keyboard-nav: disable removes the tabindex a shortcut left behind', h1.getAttribute('tabindex') === null);
+    check('keyboard-nav: disable removes the skip-link container', doc.querySelector('#ai4a11y-skip-links') === null);
+
+    // Idempotency: enabling twice then disabling once must leave no residue —
+    // proving the second enable was a no-op (no leaked listener/state).
+    KeyboardNavigator.enable();
+    KeyboardNavigator.enable();
+    KeyboardNavigator.disable();
+    check('keyboard-nav: idempotent enable (clean after double-enable + one disable)',
+      doc.querySelector('#ai4a11y-skip-links') === null && !doc.querySelector('main').id);
   }
 }
 

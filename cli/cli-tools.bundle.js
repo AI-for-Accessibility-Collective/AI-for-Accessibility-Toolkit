@@ -1131,6 +1131,7 @@
       showTabSequence: false
     },
     enable(options = {}) {
+      if (this.enabled) return;
       this.settings = { ...this.settings, ...options };
       this.enabled = true;
       this.injectStyles();
@@ -1216,6 +1217,7 @@
       const main = document.querySelector('main, [role="main"], #main, #content, article');
       if (main) {
         if (!main.id) main.id = "ai4a11y-main-content";
+        if (main.id === "ai4a11y-main-content" && !this.modifiedElements.includes(main)) this.modifiedElements.push(main);
         const skipToMain = document.createElement("a");
         skipToMain.href = "#" + main.id;
         skipToMain.className = "ai4a11y-skip-link";
@@ -1232,6 +1234,7 @@
       const nav = document.querySelector('nav, [role="navigation"]');
       if (nav) {
         if (!nav.id) nav.id = "ai4a11y-nav";
+        if (nav.id === "ai4a11y-nav" && !this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
         const skipToNav = document.createElement("a");
         skipToNav.href = "#" + nav.id;
         skipToNav.className = "ai4a11y-skip-link";
@@ -1273,30 +1276,25 @@
     },
     setupKeyboardShortcuts() {
       this.shortcutHandler = (e) => {
+        const focusTracked = (el) => {
+          if (!el) return;
+          el.setAttribute("tabindex", "-1");
+          if (!this.modifiedElements.includes(el)) this.modifiedElements.push(el);
+          el.focus();
+          return el;
+        };
         if (e.altKey && e.key === "1") {
           e.preventDefault();
-          const main = document.querySelector('main, [role="main"], #main, #content');
-          if (main) {
-            main.setAttribute("tabindex", "-1");
-            main.focus();
-          }
+          focusTracked(document.querySelector('main, [role="main"], #main, #content'));
         }
         if (e.altKey && e.key === "2") {
           e.preventDefault();
-          const nav = document.querySelector('nav, [role="navigation"]');
-          if (nav) {
-            nav.setAttribute("tabindex", "-1");
-            nav.focus();
-          }
+          focusTracked(document.querySelector('nav, [role="navigation"]'));
         }
         if (e.altKey && e.key === "h") {
           e.preventDefault();
-          const h = document.querySelector("h1, h2, h3");
-          if (h) {
-            h.setAttribute("tabindex", "-1");
-            h.focus();
-            h.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
+          const h = focusTracked(document.querySelector("h1, h2, h3"));
+          if (h) h.scrollIntoView({ behavior: "smooth", block: "center" });
         }
         if (e.altKey && e.key === "f") {
           e.preventDefault();
@@ -1311,7 +1309,7 @@
       else this.enable();
     }
   };
-  window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
+  if (typeof window !== "undefined") window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
 
   // tools/adapters/color-blind.js
   var ColorBlindMode = {
