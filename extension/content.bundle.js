@@ -5724,6 +5724,10 @@ ${scope} table {
     buttonId: "ai4a11y-spot-restore",
     enabled: false,
     key: null,
+    savedY: null,
+    // the spot from a previous visit, if any
+    restorePending: false,
+    // a jump-back button is showing and not yet used
     scrollHandler: null,
     // stored ref so disable() can removeEventListener
     saveTimer: null,
@@ -5751,9 +5755,12 @@ ${scope} table {
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      this.key = options.key || KEY_PREFIX + window.location.pathname;
+      this.key = options.key || KEY_PREFIX + window.location.pathname + window.location.search;
       const savedY = this.readSpot();
+      this.savedY = savedY;
+      this.restorePending = false;
       if (savedY !== null && savedY > 0 && !document.getElementById(this.buttonId)) {
+        this.restorePending = true;
         const btn = document.createElement("button");
         btn.id = this.buttonId;
         btn.type = "button";
@@ -5761,6 +5768,7 @@ ${scope} table {
         btn.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; font-size: 16px; border-radius: 8px;border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;";
         btn.addEventListener("click", () => {
           window.scrollTo(0, savedY);
+          this.restorePending = false;
           btn.remove();
         });
         (document.body || document.documentElement).appendChild(btn);
@@ -5770,7 +5778,11 @@ ${scope} table {
         if (this.saveTimer) clearTimeout(this.saveTimer);
         this.saveTimer = setTimeout(() => {
           this.saveTimer = null;
-          if (this.enabled) this.saveSpot(window.scrollY);
+          if (!this.enabled) return;
+          const y = window.scrollY;
+          if (this.restorePending && this.savedY != null && y <= this.savedY) return;
+          this.restorePending = false;
+          this.saveSpot(y);
         }, SAVE_DELAY_MS);
       };
       window.addEventListener("scroll", this.scrollHandler, { passive: true });
@@ -5789,6 +5801,8 @@ ${scope} table {
         clearTimeout(this.saveTimer);
         this.saveTimer = null;
       }
+      this.restorePending = false;
+      this.savedY = null;
       (_a = document.getElementById(this.buttonId)) == null ? void 0 : _a.remove();
       console.log("[AI4A11y] Save Reading Spot disabled");
       announce("Reading spot saving turned off");

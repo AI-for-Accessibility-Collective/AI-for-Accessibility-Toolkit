@@ -12,8 +12,8 @@ let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
-function mount(bodyHTML) {
-  const dom = new JSDOM(`<!DOCTYPE html><html><body>${bodyHTML}</body></html>`, { url: 'https://example.com/article' });
+function mount(bodyHTML, url = 'https://example.com/article') {
+  const dom = new JSDOM(`<!DOCTYPE html><html><body>${bodyHTML}</body></html>`, { url });
   const { window } = dom;
   window.scrollTo = window.scrollTo || (() => {});
   global.window = window;
@@ -97,6 +97,36 @@ async function run() {
     win.dispatchEvent(new win.Event('scroll'));
     await wait(600);
     check('spot: a throwing localStorage does not crash the debounced save', true);
+    ReadingSpot.disable();
+  }
+
+  // ── PENDING SPOT: a small accidental scroll must not clobber the far spot ────
+  {
+    const win = mount(`<main style="height: 6000px"><p>long article</p></main>`);
+    const KEY = 'ai4a11y-spot:pending';
+    win.localStorage.setItem(KEY, '5000');
+    ReadingSpot.enable({ key: KEY });   // button pending, reader has NOT clicked it
+    Object.defineProperty(win, 'scrollY', { value: 120, configurable: true });
+    win.dispatchEvent(new win.Event('scroll'));
+    await wait(600);
+    check('spot: a small accidental scroll does not overwrite the pending far spot', win.localStorage.getItem(KEY) === '5000');
+    // Reading genuinely further (beyond the saved spot) does update it.
+    Object.defineProperty(win, 'scrollY', { value: 5200, configurable: true });
+    win.dispatchEvent(new win.Event('scroll'));
+    await wait(600);
+    check('spot: scrolling beyond the saved spot updates it', win.localStorage.getItem(KEY) === '5200');
+    ReadingSpot.disable();
+  }
+
+  // ── KEY ISOLATION: pages that route by query string get distinct spots ──────
+  {
+    const win = mount(`<main style="height: 3000px"><p>video</p></main>`, 'https://example.com/watch?v=abc');
+    ReadingSpot.enable();  // default key → pathname + search
+    Object.defineProperty(win, 'scrollY', { value: 800, configurable: true });
+    win.dispatchEvent(new win.Event('scroll'));
+    await wait(600);
+    check('spot: the default key includes the query string', win.localStorage.getItem('ai4a11y-spot:/watch?v=abc') === '800');
+    check('spot: query-routed pages do not collide on pathname alone', win.localStorage.getItem('ai4a11y-spot:/watch') === null);
     ReadingSpot.disable();
   }
 }
