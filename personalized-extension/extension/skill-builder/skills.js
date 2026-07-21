@@ -231,24 +231,30 @@ async function applySkill(skill, btn) {
     return;
   }
   // A plan can carry adapter settings (content script applies them), agent
-  // actions (the background's browser agent runs them), or both.
+  // actions (the background's browser agent runs them), or both. Track each
+  // part separately: with a mixed skill, one part succeeding must not mask
+  // the other failing — "Applied ✓" only when everything that was attempted
+  // ran, so the person can trust the whole skill happened.
   const plan = resp.plan;
-  let applied = false;
+  const hasAdapters = !!plan.adapterIds?.length;
+  const hasActions = !!plan.actions?.length;
+  let adapterOk = !hasAdapters;
+  let actionOk = !hasActions;
   let failText = 'Could not apply';
-  if (plan.adapterIds?.length) {
+  if (hasAdapters) {
     try {
       await chrome.tabs.sendMessage(tab.id, { type: 'applySkill', plan });
-      applied = true;
+      adapterOk = true;
     } catch {
       failText = 'Reload the page, then retry';
     }
   }
-  if (plan.actions?.length) {
+  if (hasActions) {
     const r = await sendBg({ type: 'runSkillActions', actions: plan.actions, tabId: tab.id });
-    if (r?.started) applied = true;
+    if (r?.started) actionOk = true;
     else if (r?.reason === 'agent_busy') failText = 'The assistant is busy — try again soon';
   }
-  btn.textContent = applied ? 'Applied ✓' : failText;
+  btn.textContent = (adapterOk && actionOk && (hasAdapters || hasActions)) ? 'Applied ✓' : failText;
   setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1800);
 }
 
