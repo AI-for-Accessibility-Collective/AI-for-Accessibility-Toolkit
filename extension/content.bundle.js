@@ -3809,6 +3809,7 @@ ${scope(":focus")} {
     } };
   }
   var DEFAULT_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION"]);
+  var HTML_NS = "http://www.w3.org/1999/xhtml";
   function transformTextNodes(root, transform, opts = {}) {
     const doc = root && root.ownerDocument ? root.ownerDocument : typeof document !== "undefined" ? document : null;
     const records = [];
@@ -3825,6 +3826,10 @@ ${scope(":focus")} {
         } else if (child.nodeType === 1) {
           const tag = child.tagName;
           if (skipTags.has(tag)) continue;
+          if (child.namespaceURI && child.namespaceURI !== HTML_NS) continue;
+          if (child.isContentEditable === true) continue;
+          const ce = child.getAttribute && child.getAttribute("contenteditable");
+          if (ce === "" || ce === "true") continue;
           if (skipClass && child.classList && child.classList.contains(skipClass)) continue;
           walk(child);
         }
