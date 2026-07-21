@@ -66,16 +66,43 @@ export function rgbToHex(r, g, b) {
   return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 }
 
-// Get effective background color (walks up DOM tree)
+// Parse a color to { r, g, b, a } (alpha 0–1), including rgba()/hex. Returns
+// null for unparseable or fully-transparent colors.
+function parseRgba(color) {
+  if (!color) return null;
+  const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? parseFloat(m[4]) : 1 };
+  const rgb = parseColor(color);
+  return rgb ? { ...rgb, a: 1 } : null;
+}
+
+// Get effective background color (walks up the DOM tree). Semi-transparent
+// backgrounds are ALPHA-COMPOSITED onto what's behind them, so contrast math
+// sees the actual rendered color — e.g. text over rgba(255,255,255,0.5) on a
+// dark page resolves to a mid-gray, not pure white (which used to make the
+// fixer pick black text that still failed WCAG against the real background).
 export function getEffectiveBackground(element) {
+  const layers = []; // element-first (topmost) → ancestor (bottom)
   let el = element;
   while (el) {
-    const bg = getComputedStyle(el).backgroundColor;
-    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
-      return bg;
+    const parsed = parseRgba(getComputedStyle(el).backgroundColor);
+    if (parsed && parsed.a > 0) {
+      layers.push(parsed);
+      if (parsed.a >= 1) break; // opaque — nothing below shows through
     }
     if (el === document.documentElement) break;
     el = el.parentElement;
   }
-  return 'rgb(255, 255, 255)';
+  // Composite from the deepest layer up to the element over an opaque white
+  // base (the page default), using the "source-over" operator.
+  let base = { r: 255, g: 255, b: 255 };
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const top = layers[i];
+    base = {
+      r: Math.round(top.r * top.a + base.r * (1 - top.a)),
+      g: Math.round(top.g * top.a + base.g * (1 - top.a)),
+      b: Math.round(top.b * top.a + base.b * (1 - top.a)),
+    };
+  }
+  return `rgb(${base.r}, ${base.g}, ${base.b})`;
 }

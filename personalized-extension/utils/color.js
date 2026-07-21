@@ -40,15 +40,38 @@ export function rgbToHex(r, g, b) {
   return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 }
 
+// Parse a color to { r, g, b, a } (alpha 0–1). Null if unparseable/transparent.
+function parseRgba(color) {
+  if (!color) return null;
+  const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? parseFloat(m[4]) : 1 };
+  const rgb = parseColor(color);
+  return rgb ? { ...rgb, a: 1 } : null;
+}
+
 export function getEffectiveBackground(element) {
+  // Walk up (through body and documentElement too — pages often set the page
+  // background there), ALPHA-COMPOSITING semi-transparent layers so contrast
+  // math sees the actual rendered color, not a translucent overlay treated as
+  // opaque.
+  const layers = [];
   let el = element;
-  // Walk through body and documentElement too — pages often set the page
-  // background there (e.g. dark themes), and stopping early wrongly
-  // reports white.
   while (el) {
-    const bg = getComputedStyle(el).backgroundColor;
-    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return bg;
+    const parsed = parseRgba(getComputedStyle(el).backgroundColor);
+    if (parsed && parsed.a > 0) {
+      layers.push(parsed);
+      if (parsed.a >= 1) break;
+    }
     el = el.parentElement;
   }
-  return 'rgb(255, 255, 255)';
+  let base = { r: 255, g: 255, b: 255 };
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const top = layers[i];
+    base = {
+      r: Math.round(top.r * top.a + base.r * (1 - top.a)),
+      g: Math.round(top.g * top.a + base.g * (1 - top.a)),
+      b: Math.round(top.b * top.a + base.b * (1 - top.a)),
+    };
+  }
+  return `rgb(${base.r}, ${base.g}, ${base.b})`;
 }
