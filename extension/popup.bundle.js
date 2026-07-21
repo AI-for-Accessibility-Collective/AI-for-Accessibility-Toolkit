@@ -13,7 +13,8 @@
           autoVideoDescribe: true,
           keyboardNav: true,
           pageOutline: true,
-          announceUpdates: true
+          announceUpdates: true,
+          describeOnDemand: true
         }
       },
       lowVision: {
@@ -209,7 +210,8 @@
       soundVisualizer: false,
       announceUpdates: false,
       magnifier: false,
-      flashGuard: false
+      flashGuard: false,
+      describeOnDemand: false
     }
   };
 

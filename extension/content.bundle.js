@@ -102,7 +102,8 @@
           autoVideoDescribe: true,
           keyboardNav: true,
           pageOutline: true,
-          announceUpdates: true
+          announceUpdates: true,
+          describeOnDemand: true
         }
       },
       lowVision: {
@@ -298,7 +299,8 @@
       soundVisualizer: false,
       announceUpdates: false,
       magnifier: false,
-      flashGuard: false
+      flashGuard: false,
+      describeOnDemand: false
     }
   };
 
@@ -3771,6 +3773,24 @@ ${scope(":focus")} {
   if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
 
   // tools/adapters/_primitives.js
+  function injectStyle(id, css, doc = typeof document !== "undefined" ? document : null) {
+    if (!doc) return { remove() {
+    } };
+    let el = doc.getElementById(id);
+    if (!el) {
+      el = doc.createElement("style");
+      el.id = id;
+      (doc.head || doc.documentElement).appendChild(el);
+    }
+    el.textContent = css;
+    return { el, remove() {
+      var _a;
+      try {
+        (_a = doc.getElementById(id)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+    } };
+  }
   var DEFAULT_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION"]);
   function transformTextNodes(root, transform, opts = {}) {
     const doc = root && root.ownerDocument ? root.ownerDocument : typeof document !== "undefined" ? document : null;
@@ -5046,6 +5066,140 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yFlashGuard = FlashGuard;
 
+  // tools/adapters/describe-on-demand.js
+  var DescribeOnDemand = {
+    styleId: "ai4a11y-describe-styles",
+    enabled: false,
+    panel: null,
+    live: null,
+    lastHover: null,
+    _keyHandler: null,
+    _clickHandler: null,
+    _moveHandler: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      injectStyle(this.styleId, `
+      #ai4a11y-describe-panel {
+        position: fixed; bottom: 16px; right: 16px; max-width: 360px; z-index: 2147483647;
+        background: #10141a; color: #f2f5f9; border: 2px solid #1a73e8; border-radius: 10px;
+        padding: 12px 14px; font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+      }
+      #ai4a11y-describe-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
+      #ai4a11y-describe-panel .ai4a11y-describe-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+    `);
+      this.live = document.createElement("div");
+      this.live.id = "ai4a11y-describe-live";
+      this.live.setAttribute("aria-live", "polite");
+      this.live.setAttribute("aria-atomic", "true");
+      this.live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      (document.body || document.documentElement).appendChild(this.live);
+      this._keyHandler = (e) => {
+        if (e.altKey && (e.key === "d" || e.key === "D")) {
+          e.preventDefault();
+          this.describe(this.target());
+        }
+        if (e.key === "Escape") this.hide();
+      };
+      document.addEventListener("keydown", this._keyHandler, true);
+      this._clickHandler = (e) => {
+        if (e.altKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.describe(e.target);
+        }
+      };
+      document.addEventListener("click", this._clickHandler, true);
+      this._moveHandler = (e) => {
+        this.lastHover = e.target;
+      };
+      document.addEventListener("mouseover", this._moveHandler, true);
+      announce("Describe on demand ready. Press Alt plus D to describe the focused element, or Alt-click one.");
+    },
+    target() {
+      const a = document.activeElement;
+      if (a && a !== document.body && a !== document.documentElement) return a;
+      return this.lastHover;
+    },
+    async describe(el) {
+      if (!el || el === document.body || el === document.documentElement) {
+        this.show("Focus or point at an element first, then press Alt+D.");
+        return;
+      }
+      this.show("Describing\u2026");
+      let desc = null;
+      try {
+        if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
+          desc = await describeImage(el.currentSrc || el.src);
+        } else if (el.tagName === "CANVAS" && typeof el.toDataURL === "function") {
+          try {
+            desc = await describeImage(el.toDataURL());
+          } catch {
+            desc = null;
+          }
+        } else {
+          const label = el.getAttribute && (el.getAttribute("aria-label") || el.getAttribute("title")) || "";
+          const text = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+          if (text.length > 60) desc = await summarizeText(text);
+          else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
+        }
+      } catch {
+        desc = null;
+      }
+      this.show(desc || "No description is available for that element.");
+    },
+    show(text) {
+      if (!this.panel) {
+        this.panel = document.createElement("div");
+        this.panel.id = "ai4a11y-describe-panel";
+        this.panel.setAttribute("role", "dialog");
+        this.panel.setAttribute("aria-label", "Element description");
+        const h = document.createElement("h2");
+        h.textContent = "Description";
+        const close = document.createElement("button");
+        close.className = "ai4a11y-describe-close";
+        close.setAttribute("aria-label", "Close description");
+        close.textContent = "\u2715";
+        close.addEventListener("click", () => this.hide());
+        const body = document.createElement("p");
+        body.className = "ai4a11y-describe-body";
+        body.style.margin = "0";
+        this.panel.append(close, h, body);
+        (document.body || document.documentElement).appendChild(this.panel);
+      }
+      this.panel.querySelector(".ai4a11y-describe-body").textContent = text;
+      this.panel.style.display = "block";
+      if (this.live) this.live.textContent = text;
+    },
+    hide() {
+      if (this.panel) this.panel.style.display = "none";
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this._keyHandler) document.removeEventListener("keydown", this._keyHandler, true);
+      if (this._clickHandler) document.removeEventListener("click", this._clickHandler, true);
+      if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
+      this._keyHandler = this._clickHandler = this._moveHandler = null;
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      (_b = this.panel) == null ? void 0 : _b.remove();
+      this.panel = null;
+      (_c = this.live) == null ? void 0 : _c.remove();
+      this.live = null;
+      this.lastHover = null;
+      announce("Describe on demand off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yDescribeOnDemand = DescribeOnDemand;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -5228,6 +5382,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     if (settings2.announceUpdates) LiveRegionAnnouncer.enable();
     if (settings2.magnifier) Magnifier.enable();
     if (settings2.flashGuard) FlashGuard.enable();
+    if (settings2.describeOnDemand) DescribeOnDemand.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5429,6 +5584,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     LiveRegionAnnouncer.disable();
     Magnifier.disable();
     FlashGuard.disable();
+    DescribeOnDemand.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5556,7 +5712,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
           SoundVisualizer: SoundVisualizer.enabled || false,
           LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
           Magnifier: Magnifier.enabled || false,
-          FlashGuard: FlashGuard.enabled || false
+          FlashGuard: FlashGuard.enabled || false,
+          DescribeOnDemand: DescribeOnDemand.enabled || false
         }
       });
       return true;
