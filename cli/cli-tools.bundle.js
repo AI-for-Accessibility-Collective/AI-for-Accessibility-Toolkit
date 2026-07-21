@@ -2670,6 +2670,83 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yReduceBrightness = ReduceBrightness;
 
+  // tools/adapters/sound-visualizer.js
+  var INDICATOR_ID = "ai4a11y-sound-indicator";
+  var FLASH_MS = 1200;
+  function isAudible(el) {
+    if (!el || !el.tagName) return false;
+    const tag = el.tagName.toUpperCase();
+    if (tag !== "VIDEO" && tag !== "AUDIO") return false;
+    return el.muted !== true && el.volume > 0;
+  }
+  var SoundVisualizer = {
+    enabled: false,
+    indicator: null,
+    playHandler: null,
+    volumeHandler: null,
+    hideTimer: null,
+    flashMs: FLASH_MS,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.flashMs = Number(options.duration) > 0 ? Number(options.duration) : FLASH_MS;
+      const indicator = document.createElement("div");
+      indicator.id = INDICATOR_ID;
+      indicator.setAttribute("role", "status");
+      indicator.setAttribute("aria-live", "polite");
+      indicator.style.cssText = "position: fixed; top: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; border-radius: 8px;background: rgba(0, 0, 0, 0.85); color: #fff;font: 600 15px/1.2 system-ui, sans-serif;pointer-events: none; display: none;";
+      (document.body || document.documentElement).appendChild(indicator);
+      this.indicator = indicator;
+      this.playHandler = (e) => {
+        if (!this.enabled) return;
+        if (isAudible(e.target)) this.flash();
+      };
+      this.volumeHandler = (e) => {
+        if (!this.enabled) return;
+        if (isAudible(e.target) && e.target.paused === false) this.flash();
+      };
+      document.addEventListener("play", this.playHandler, true);
+      document.addEventListener("volumechange", this.volumeHandler, true);
+      console.log("[AI4A11y] Sound Visualizer enabled");
+      announce("Sound indicator on \u2014 a visual cue will flash when the page plays sound");
+    },
+    // Show the indicator, restarting the auto-hide window on every new cue.
+    flash() {
+      if (!this.indicator) return;
+      this.indicator.textContent = "\u{1F50A} Sound playing";
+      this.indicator.style.display = "block";
+      if (this.hideTimer) clearTimeout(this.hideTimer);
+      this.hideTimer = setTimeout(() => {
+        this.hideTimer = null;
+        if (this.indicator) this.indicator.style.display = "none";
+      }, this.flashMs);
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        if (this.playHandler) document.removeEventListener("play", this.playHandler, true);
+        if (this.volumeHandler) document.removeEventListener("volumechange", this.volumeHandler, true);
+      } catch {
+      }
+      this.playHandler = this.volumeHandler = null;
+      if (this.hideTimer) {
+        clearTimeout(this.hideTimer);
+        this.hideTimer = null;
+      }
+      (_a = this.indicator) == null ? void 0 : _a.remove();
+      this.indicator = null;
+      console.log("[AI4A11y] Sound Visualizer disabled");
+      announce("Sound indicator off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySoundVisualizer = SoundVisualizer;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -4484,7 +4561,8 @@ ${chunk}
           autoCaptions: true,
           enhanceFocus: true,
           autoDescribe: false,
-          autoVideoDescribe: false
+          autoVideoDescribe: false,
+          soundVisualizer: true
         }
       },
       motor: {
@@ -4639,7 +4717,8 @@ ${chunk}
       muteSounds: false,
       defineWords: false,
       stopAutoAdvance: false,
-      reduceBrightness: false
+      reduceBrightness: false,
+      soundVisualizer: false
     }
   };
 
@@ -4752,7 +4831,8 @@ ${chunk}
     muteSounds: MuteSounds,
     defineWords: DefineWords,
     stopAutoAdvance: StopAutoAdvance,
-    reduceBrightness: ReduceBrightness
+    reduceBrightness: ReduceBrightness,
+    soundVisualizer: SoundVisualizer
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -4792,7 +4872,9 @@ ${chunk}
       "stopautoadvance": "stopAutoAdvance",
       "stopauto": "stopAutoAdvance",
       "reducebrightness": "reduceBrightness",
-      "dim": "reduceBrightness"
+      "dim": "reduceBrightness",
+      "soundvisualizer": "soundVisualizer",
+      "soundviz": "soundVisualizer"
     };
     return map[lower] || name;
   }
@@ -4877,6 +4959,7 @@ ${chunk}
     if (profileTools.defineWords) DefineWords.enable();
     if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
     if (profileTools.reduceBrightness) ReduceBrightness.enable();
+    if (profileTools.soundVisualizer) SoundVisualizer.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -4921,7 +5004,8 @@ ${chunk}
       muteSounds: "Mute all audio and video and block autoplay sound",
       defineWords: "Show plain-language definitions of hard words on hover (AI)",
       stopAutoAdvance: "Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)",
-      reduceBrightness: "Dim and desaturate the page for a low-stimulation view"
+      reduceBrightness: "Dim and desaturate the page for a low-stimulation view",
+      soundVisualizer: "Flash a visual indicator when the page plays sound (Deaf/HoH)"
     };
     return descriptions[name] || "";
   }

@@ -31,6 +31,7 @@ export { MuteSounds } from './mute-sounds.js';
 export { DefineWords } from './define-words.js';
 export { StopAutoAdvance } from './stop-auto-advance.js';
 export { ReduceBrightness } from './reduce-brightness.js';
+export { SoundVisualizer } from './sound-visualizer.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

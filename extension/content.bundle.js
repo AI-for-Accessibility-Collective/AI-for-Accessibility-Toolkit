@@ -135,7 +135,8 @@
           autoCaptions: true,
           enhanceFocus: true,
           autoDescribe: false,
-          autoVideoDescribe: false
+          autoVideoDescribe: false,
+          soundVisualizer: true
         }
       },
       motor: {
@@ -290,7 +291,8 @@
       muteSounds: false,
       defineWords: false,
       stopAutoAdvance: false,
-      reduceBrightness: false
+      reduceBrightness: false,
+      soundVisualizer: false
     }
   };
 
@@ -4602,6 +4604,83 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yReduceBrightness = ReduceBrightness;
 
+  // tools/adapters/sound-visualizer.js
+  var INDICATOR_ID = "ai4a11y-sound-indicator";
+  var FLASH_MS = 1200;
+  function isAudible(el) {
+    if (!el || !el.tagName) return false;
+    const tag = el.tagName.toUpperCase();
+    if (tag !== "VIDEO" && tag !== "AUDIO") return false;
+    return el.muted !== true && el.volume > 0;
+  }
+  var SoundVisualizer = {
+    enabled: false,
+    indicator: null,
+    playHandler: null,
+    volumeHandler: null,
+    hideTimer: null,
+    flashMs: FLASH_MS,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.flashMs = Number(options.duration) > 0 ? Number(options.duration) : FLASH_MS;
+      const indicator = document.createElement("div");
+      indicator.id = INDICATOR_ID;
+      indicator.setAttribute("role", "status");
+      indicator.setAttribute("aria-live", "polite");
+      indicator.style.cssText = "position: fixed; top: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; border-radius: 8px;background: rgba(0, 0, 0, 0.85); color: #fff;font: 600 15px/1.2 system-ui, sans-serif;pointer-events: none; display: none;";
+      (document.body || document.documentElement).appendChild(indicator);
+      this.indicator = indicator;
+      this.playHandler = (e) => {
+        if (!this.enabled) return;
+        if (isAudible(e.target)) this.flash();
+      };
+      this.volumeHandler = (e) => {
+        if (!this.enabled) return;
+        if (isAudible(e.target) && e.target.paused === false) this.flash();
+      };
+      document.addEventListener("play", this.playHandler, true);
+      document.addEventListener("volumechange", this.volumeHandler, true);
+      console.log("[AI4A11y] Sound Visualizer enabled");
+      announce("Sound indicator on \u2014 a visual cue will flash when the page plays sound");
+    },
+    // Show the indicator, restarting the auto-hide window on every new cue.
+    flash() {
+      if (!this.indicator) return;
+      this.indicator.textContent = "\u{1F50A} Sound playing";
+      this.indicator.style.display = "block";
+      if (this.hideTimer) clearTimeout(this.hideTimer);
+      this.hideTimer = setTimeout(() => {
+        this.hideTimer = null;
+        if (this.indicator) this.indicator.style.display = "none";
+      }, this.flashMs);
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        if (this.playHandler) document.removeEventListener("play", this.playHandler, true);
+        if (this.volumeHandler) document.removeEventListener("volumechange", this.volumeHandler, true);
+      } catch {
+      }
+      this.playHandler = this.volumeHandler = null;
+      if (this.hideTimer) {
+        clearTimeout(this.hideTimer);
+        this.hideTimer = null;
+      }
+      (_a = this.indicator) == null ? void 0 : _a.remove();
+      this.indicator = null;
+      console.log("[AI4A11y] Sound Visualizer disabled");
+      announce("Sound indicator off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySoundVisualizer = SoundVisualizer;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -4780,6 +4859,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     if (settings2.defineWords) DefineWords.enable();
     if (settings2.stopAutoAdvance) StopAutoAdvance.enable();
     if (settings2.reduceBrightness) ReduceBrightness.enable();
+    if (settings2.soundVisualizer) SoundVisualizer.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -4977,6 +5057,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     DefineWords.disable();
     StopAutoAdvance.disable();
     ReduceBrightness.disable();
+    SoundVisualizer.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5100,7 +5181,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
           MuteSounds: MuteSounds.enabled || false,
           DefineWords: DefineWords.enabled || false,
           StopAutoAdvance: StopAutoAdvance.enabled || false,
-          ReduceBrightness: ReduceBrightness.enabled || false
+          ReduceBrightness: ReduceBrightness.enabled || false,
+          SoundVisualizer: SoundVisualizer.enabled || false
         }
       });
       return true;

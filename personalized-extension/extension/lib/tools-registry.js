@@ -329,6 +329,24 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "sound-visualizer",
+    "name": "Sound Visualizer",
+    "description": "Flashes an on-screen indicator whenever the page plays sound, so Deaf and hard-of-hearing users notice non-speech audio cues like beeps, alerts, and notifications.",
+    "supportAreas": [
+      "hearing"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "graphic_eq",
+    "emoji": "💡",
+    "quickStart": false,
+    "settings": {
+      "soundVisualizer": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -684,6 +702,10 @@ globalThis.AA_TOOLS = {
   "reduceBrightness": {
     "type": "boolean",
     "description": "Dim and desaturate the page for a low-stimulation view"
+  },
+  "soundVisualizer": {
+    "type": "boolean",
+    "description": "Flash a visual indicator when the page plays sound"
   },
   "keyboardNav": {
     "type": "boolean",
