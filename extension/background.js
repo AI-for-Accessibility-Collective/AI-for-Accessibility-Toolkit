@@ -3,6 +3,9 @@
  * Handles AI API calls for image description, text simplification, etc.
  */
 
+// One place to bump the Gemini model, instead of editing the URL in every call.
+const GEMINI_MODEL = 'gemini-3.5-flash';
+
 // Get API keys from storage
 async function getApiKeys() {
   try {
@@ -169,7 +172,7 @@ async function describeImageGemini(imageDataUrl, options, geminiKey) {
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -220,7 +223,7 @@ async function describeElement(imageDataUrl, elementType = 'canvas', context = '
   // For role-img without image data, use context-based description
   if (elementType === 'role-img' && context && !imageDataUrl) {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -276,7 +279,7 @@ Aim for 4-6 detailed sentences.`
 
   const isVideoFrame = elementType === 'video frame';
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -345,7 +348,7 @@ Write a comprehensive description (6-10 sentences) that helps someone understand
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -458,7 +461,7 @@ async function describeVideoFromUrl(videoUrl, prompt, apiKey) {
     // Step 4: Generate content with the file
     console.log('[AI4A11y BG] Generating description...');
     const genResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -521,7 +524,7 @@ async function simplifyText(text) {
 
   console.log('[AI4A11y BG] Calling Gemini API...');
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -587,7 +590,7 @@ async function translateText(text, targetLang) {
   const keys = await getApiKeys();
   if (!keys.gemini) throw new Error('Gemini API key not set');
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -613,7 +616,7 @@ async function defineWord(word, context) {
   const keys = await getApiKeys();
   if (!keys.gemini) throw new Error('Gemini API key not set');
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -639,7 +642,7 @@ async function summarizeText(text) {
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -784,7 +787,7 @@ async function transcribeWithGemini(mediaUrl, apiKey) {
 
     // Ask Gemini to transcribe AND describe audio
     const genResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -869,7 +872,7 @@ async function describeSound(audioDataUrl) {
   const base64Data = base64Match[2];
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -896,7 +899,7 @@ async function improveLinkText(linkText, href, surroundingText) {
   if (!keys.gemini) return linkText;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -929,7 +932,7 @@ async function inferElementName(elementType, html, context) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -961,7 +964,7 @@ async function generateHeading(content) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -992,7 +995,7 @@ async function inferColumnHeader(sampleData) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1113,7 +1116,7 @@ async function generateSummaryText(content) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
