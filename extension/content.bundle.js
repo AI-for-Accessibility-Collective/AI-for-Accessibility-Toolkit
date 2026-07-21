@@ -1997,6 +1997,7 @@ ${chunk}
   var MotionReducer = {
     styleId: "ai4a11y-motion-reducer-styles",
     enabled: false,
+    gifOriginals: null,
     currentSettings: {
       stopAnimations: true,
       pauseVideos: true,
@@ -2007,6 +2008,7 @@ ${chunk}
       if (this.enabled) return;
       this.currentSettings = { ...this.currentSettings, ...options };
       this.enabled = true;
+      this.gifOriginals = /* @__PURE__ */ new Map();
       const s = this.currentSettings;
       let css = "";
       if (s.stopAnimations) {
@@ -2071,17 +2073,24 @@ ${chunk}
       announce("Motion reduced");
     },
     disable() {
-      var _a;
+      var _a, _b;
       if (!this.enabled) return;
       this.enabled = false;
       (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
       document.querySelectorAll("[data-ai4a11y-gif-src]").forEach((canvas) => {
-        const img = document.createElement("img");
-        img.src = canvas.dataset.ai4a11yGifSrc;
-        img.alt = canvas.getAttribute("alt") || "";
-        img.className = canvas.className;
-        canvas.replaceWith(img);
+        var _a2;
+        const original = (_a2 = this.gifOriginals) == null ? void 0 : _a2.get(canvas);
+        if (original) {
+          canvas.replaceWith(original);
+        } else {
+          const img = document.createElement("img");
+          img.src = canvas.dataset.ai4a11yGifSrc;
+          img.setAttribute("alt", canvas.getAttribute("aria-label") || "");
+          img.className = canvas.className;
+          canvas.replaceWith(img);
+        }
       });
+      (_b = this.gifOriginals) == null ? void 0 : _b.clear();
       document.querySelectorAll('[style*="animation-play-state"]').forEach((el) => {
         el.style.animationPlayState = "";
       });
@@ -2117,14 +2126,15 @@ ${chunk}
         canvas.width = img.naturalWidth || img.width || 100;
         canvas.height = img.naturalHeight || img.height || 100;
         canvas.className = img.className;
-        canvas.setAttribute("alt", img.alt || "");
+        canvas.setAttribute("aria-label", img.alt || "");
         canvas.setAttribute("role", "img");
         canvas.dataset.ai4a11yGifSrc = img.src;
         const ctx = canvas.getContext("2d");
         const tempImg = new Image();
-        tempImg.crossOrigin = "anonymous";
         tempImg.onload = () => {
+          var _a;
           ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+          (_a = this.gifOriginals) == null ? void 0 : _a.set(canvas, img);
           img.replaceWith(canvas);
           canvas.dataset.ai4a11yGifStopped = "true";
         };
@@ -2143,7 +2153,7 @@ ${chunk}
       }
     }
   };
-  window.__ai4a11yMotionReducer = MotionReducer;
+  if (typeof window !== "undefined") window.__ai4a11yMotionReducer = MotionReducer;
 
   // tools/adapters/focus-mode.js
   var FocusMode = {
