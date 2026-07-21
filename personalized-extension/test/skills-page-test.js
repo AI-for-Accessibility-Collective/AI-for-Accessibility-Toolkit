@@ -79,6 +79,14 @@ const BUILT = {
   check('preview lists composed adapters', (await page.$eval('#previewAdapters', el => el.textContent)).includes('visual-assist'));
   check('build sent librarianBuildSkill with the need', await page.evaluate(() => window.__sent.some(m => m.type === 'librarianBuildSkill' && /news/.test(m.need))));
 
+  // Try before save: the unsaved built skill can be applied to the page.
+  await page.click('#tryBtn');
+  await page.waitForFunction(() => window.__sent.some(m => m.__toTab === 7 && m.type === 'applySkill'), { timeout: 5000 });
+  check('try applies the built skill before saving', await page.evaluate(() => {
+    const m = window.__sent.find(x => x.__toTab === 7 && x.type === 'applySkill');
+    return m?.plan?.settings?.fontScale === 130;
+  }));
+
   // Save → preview hides, list grows, save message sent.
   await page.click('#saveBtn');
   await page.waitForFunction(() => document.getElementById('preview').hidden, { timeout: 5000 });

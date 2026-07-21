@@ -101,6 +101,7 @@ function renderPreview(skill, valid, errors) {
   if (!valid && errors.length) { errEl.textContent = 'Warnings: ' + errors.join('; '); errEl.hidden = false; }
   else errEl.hidden = true;
   $('saveBtn').disabled = !valid;
+  $('tryBtn').disabled = !valid;
   $('preview').hidden = false;
 }
 
@@ -217,6 +218,9 @@ function escapeHtml(s) {
 function init() {
   $('buildBtn').addEventListener('click', onBuild);
   $('saveBtn').addEventListener('click', onSave);
+  // The adaptive evaluation step: experience the built skill on the real page
+  // BEFORE deciding to save it. Same consent-by-click path as Apply.
+  $('tryBtn').addEventListener('click', () => { if (builtSkill) applySkill(builtSkill, $('tryBtn')); });
   $('discardBtn').addEventListener('click', () => { $('preview').hidden = true; builtSkill = null; });
   $('suggestBtn').addEventListener('click', onSuggest);
   // Reuse offer: "Use it" highlights the existing skill in the list below
