@@ -118,8 +118,8 @@ Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CO
 - [x] Build a reusable core that works beyond the browser
 - [x] Add automated tests
 - [ ] Define design principles (in progress)
-- [ ] Build adaptive validation interface (people review and correct adaptations) (in progress)
-- [ ] Add privacy and sharing controls (keep private, or share with friends/family/org)
+- [x] Build adaptive validation interface (people review and correct adaptations)
+- [x] Add privacy and sharing controls (keep private, or share with friends/family/org)
 - [ ] Build evaluation benchmark (test sites arena) (in progress)
 - [ ] Integrate team projects
 - [ ] Unify the two extensions on shared tools
