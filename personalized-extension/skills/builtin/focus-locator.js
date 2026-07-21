@@ -16,8 +16,11 @@ export const FocusLocator = {
   enabled: false,
   styleHandle: null,
   ring: null,
+  tracked: null,        // the element the ring is currently following
   focusInHandler: null,
   focusOutHandler: null,
+  scrollHandler: null,
+  resizeHandler: null,
 
   enable(options = {}) {
     if (this.enabled) return;
@@ -56,28 +59,45 @@ export const FocusLocator = {
     this.ring = ring;
 
     this.focusInHandler = (event) => {
-      if (!this.enabled || !this.ring) return;
+      if (!this.enabled) return;
       const el = event.target;
       if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
-      try {
-        // The ring is position:fixed, so the viewport-relative rect applies
-        // directly — no scroll offsets needed.
-        const rect = el.getBoundingClientRect();
-        this.ring.style.top = `${rect.top}px`;
-        this.ring.style.left = `${rect.left}px`;
-        this.ring.style.width = `${rect.width}px`;
-        this.ring.style.height = `${rect.height}px`;
-        this.ring.style.display = 'block';
-      } catch { /* detached element or hostile getBoundingClientRect */ }
+      this.tracked = el;
+      this.position();
     };
     this.focusOutHandler = () => {
+      this.tracked = null;
       if (this.ring) this.ring.style.display = 'none';
     };
     document.addEventListener('focusin', this.focusInHandler, true);
     document.addEventListener('focusout', this.focusOutHandler, true);
 
+    // The ring is position:fixed, so it does not move with the page. Without
+    // this, scrolling or resizing without changing focus would leave the ring
+    // at stale viewport coordinates, confidently highlighting the wrong region.
+    // Re-rect the tracked element on both. passive so it never blocks scrolling.
+    this.scrollHandler = () => this.position();
+    this.resizeHandler = () => this.position();
+    window.addEventListener('scroll', this.scrollHandler, { capture: true, passive: true });
+    window.addEventListener('resize', this.resizeHandler, { passive: true });
+
     console.log('[AI4A11y] Focus Locator enabled');
     announce('Focus highlighting on');
+  },
+
+  // Draw the ring over the tracked element's current viewport rect. Hides
+  // (rather than drawing a stray ring) once the element leaves the DOM.
+  position() {
+    if (!this.enabled || !this.ring || !this.tracked) return;
+    if (this.tracked.isConnected === false) { this.ring.style.display = 'none'; return; }
+    try {
+      const rect = this.tracked.getBoundingClientRect();
+      this.ring.style.top = `${rect.top}px`;
+      this.ring.style.left = `${rect.left}px`;
+      this.ring.style.width = `${rect.width}px`;
+      this.ring.style.height = `${rect.height}px`;
+      this.ring.style.display = 'block';
+    } catch { /* detached element or hostile getBoundingClientRect */ }
   },
 
   disable() {
@@ -91,6 +111,9 @@ export const FocusLocator = {
       document.removeEventListener('focusout', this.focusOutHandler, true);
       this.focusOutHandler = null;
     }
+    if (this.scrollHandler) { window.removeEventListener('scroll', this.scrollHandler, { capture: true }); this.scrollHandler = null; }
+    if (this.resizeHandler) { window.removeEventListener('resize', this.resizeHandler); this.resizeHandler = null; }
+    this.tracked = null;
     if (this.styleHandle) { this.styleHandle.remove(); this.styleHandle = null; }
     if (this.ring) { this.ring.remove(); this.ring = null; }
     console.log('[AI4A11y] Focus Locator disabled');

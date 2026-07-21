@@ -303,6 +303,25 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
       return !!ring && getComputedStyle(ring).display !== 'none';
     });
     check('focus-locator: the ring shows when an element is focused', ringShown);
+    // A position:fixed ring must follow the focused element on scroll, not sit
+    // at stale coordinates highlighting the wrong region.
+    const follows = await page.evaluate(async () => {
+      const btn = document.querySelector('#btn');
+      const spacer = document.createElement('div'); spacer.id = '__spacer'; spacer.style.height = '2000px';
+      document.body.appendChild(spacer);
+      btn.focus();
+      btn.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 20));
+      const ring = document.getElementById('ai4a11y-focus-ring');
+      const before = parseFloat(ring.style.top) || 0;
+      window.scrollTo(0, 400);
+      window.dispatchEvent(new Event('scroll'));
+      await new Promise((r) => setTimeout(r, 20));
+      const after = parseFloat(ring.style.top) || 0;
+      window.scrollTo(0, 0); spacer.remove();
+      return Math.abs(after - before);
+    });
+    check('focus-locator: the ring follows the focused element on scroll (not stale)', follows > 50);
     await disable('focusLocator');
     check('focus-locator: style + ring removed after disable', !(await exists('#ai4a11y-focus-ring')) && !(await exists('#ai4a11y-focus-locator-styles')));
   }
