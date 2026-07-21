@@ -577,6 +577,54 @@ Return ONLY the simplified text:`
   return resultText || text;
 }
 
+// Translate text into a target language
+async function translateText(text, targetLang) {
+  text = (text || '').trim();
+  if (!text) return '';
+  const keys = await getApiKeys();
+  if (!keys.gemini) throw new Error('Gemini API key not set');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `Translate the following text into ${targetLang || 'English'}. Preserve the meaning and tone. Do not add notes or explanations. Return ONLY the translated text.\n\n${text}` }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+      })
+    }
+  );
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(`Gemini API error: ${response.status} - ${errData.error?.message || 'Unknown'}`);
+  }
+  const data = await response.json();
+  if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') return text;
+  return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim() || text;
+}
+
+// Plain-language definition of a word/phrase in its sentence context
+async function defineWord(word, context) {
+  word = (word || '').trim();
+  if (!word) return '';
+  const keys = await getApiKeys();
+  if (!keys.gemini) throw new Error('Gemini API key not set');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${keys.gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `Define the word or phrase "${word}" in one short, plain-language sentence a general reader can understand, as it is used in this context: "${context || ''}". Return ONLY the definition.` }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 256 }
+      })
+    }
+  );
+  if (!response.ok) return '';
+  const data = await response.json();
+  return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+}
+
 // Summarize long text
 async function summarizeText(text) {
   text = text.trim().replace(/\s+/g, ' ');
@@ -1096,6 +1144,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     'describeVideoFrames': () => describeVideoFrames(message.frames, message.metadata),
     'simplifyText': () => simplifyText(message.text),
     'summarizeText': () => summarizeText(message.text),
+    'translateText': () => translateText(message.text, message.targetLang),
+    'defineWord': () => defineWord(message.word, message.context),
     'transcribeAudio': () => transcribeAudio(message.audioUrl || message.audioData),
     'transcribeVideo': () => transcribeAudio(message.audioUrl || message.audioData),
     'describeSound': () => describeSound(message.audioUrl || message.audioData),

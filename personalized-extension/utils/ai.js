@@ -75,6 +75,16 @@ export async function describeElement(element, context) {
   return _provider.describeElement(element, context);
 }
 
+export async function translateText(text, targetLang) {
+  if (!_provider?.translateText) return null;
+  return _provider.translateText(text, targetLang);
+}
+
+export async function defineWord(word, context) {
+  if (!_provider?.defineWord) return null;
+  return _provider.defineWord(word, context);
+}
+
 export function announce(message) {
   if (_provider?.announce) {
     _provider.announce(message);
@@ -123,6 +133,14 @@ export function createChromeAIProvider() {
 
     async summarizeText(text) {
       return sendToBackground(`Summarize the following text in 2-3 concise sentences. Return ONLY the summary.\n\n${text}`);
+    },
+
+    async translateText(text, targetLang) {
+      return sendToBackground(`Translate the following text into ${targetLang || 'English'}. Preserve the meaning and tone. Return ONLY the translated text.\n\n${text}`);
+    },
+
+    async defineWord(word, context) {
+      return sendToBackground(`Define the word or phrase "${word}" in one short, plain-language sentence, as used in: "${context || ''}". Return ONLY the definition.`);
     },
 
     async generateLabels(context) {

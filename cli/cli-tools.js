@@ -27,6 +27,7 @@ import { LinkHighlighter } from '../tools/adapters/link-highlighter.js';
 import { PageOutline } from '../tools/adapters/page-outline.js';
 import { BionicReading } from '../tools/adapters/bionic-reading.js';
 import { UnpinSticky } from '../tools/adapters/unpin-sticky.js';
+import { TranslatePage } from '../tools/adapters/translate-page.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -101,6 +102,18 @@ function setupAIProvider() {
       }
       return null;
     },
+    translateText: async (text, targetLang) => {
+      if (typeof window.ai4a11y_translateText === 'function') {
+        return await window.ai4a11y_translateText(text, targetLang);
+      }
+      return null;
+    },
+    defineWord: async (word, context) => {
+      if (typeof window.ai4a11y_defineWord === 'function') {
+        return await window.ai4a11y_defineWord(word, context);
+      }
+      return null;
+    },
     generateLabels: async (ctx) => {
       if (typeof window.ai4a11y_generateLabels === 'function') {
         return await window.ai4a11y_generateLabels(ctx);
@@ -159,6 +172,7 @@ const tools = {
   pageOutline: PageOutline,
   bionicReading: BionicReading,
   unpinSticky: UnpinSticky,
+  translatePage: TranslatePage,
 };
 
 // Normalize tool name (handles case variations)
@@ -191,6 +205,8 @@ function normalizeTool(name) {
     'bionic': 'bionicReading',
     'unpinsticky': 'unpinSticky',
     'unpin': 'unpinSticky',
+    'translatepage': 'translatePage',
+    'translate': 'translatePage',
   };
   return map[lower] || name;
 }
@@ -284,6 +300,7 @@ function applyProfileByName(profileId) {
   if (profileTools.pageOutline) PageOutline.enable();
   if (profileTools.bionicReading) BionicReading.enable();
   if (profileTools.unpinSticky) UnpinSticky.enable();
+  if (profileTools.translatePage) TranslatePage.enable({ targetLang: profileTools.translateTo });
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -330,6 +347,7 @@ function getToolDescription(name) {
     pageOutline: 'On-page heading navigator to jump between sections',
     bionicReading: 'Bold the start of each word to guide the eye (dyslexia/ADHD aid)',
     unpinSticky: 'Un-fix sticky headers/bars so they stop eating the viewport when zoomed',
+    translatePage: 'Translate the page text into another language (AI)',
   };
   return descriptions[name] || '';
 }

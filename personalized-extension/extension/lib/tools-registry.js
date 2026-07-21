@@ -232,6 +232,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "translate-page",
+    "name": "Translate Page",
+    "description": "Translates the page's text into another language with AI (e.g. for readers whose first language is not the page's), keeping the original so it can be restored.",
+    "supportAreas": [
+      "cognitive",
+      "reading"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": true,
+    "icon": "translate",
+    "emoji": "🌐",
+    "quickStart": false,
+    "settings": {
+      "translatePage": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -567,6 +586,10 @@ globalThis.AA_TOOLS = {
   "unpinSticky": {
     "type": "boolean",
     "description": "Un-fix sticky headers and bars so they stop covering the page"
+  },
+  "translatePage": {
+    "type": "boolean",
+    "description": "Translate the page text into another language"
   },
   "keyboardNav": {
     "type": "boolean",
