@@ -57,6 +57,7 @@ import {
   FocusLocator,
   PersistentHover,
   ReadingRuler,
+  ConfirmActions,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -168,6 +169,7 @@ function applyVisualSettings(settings) {
   if (settings.focusLocator) FocusLocator.enable();
   if (settings.persistentHover) PersistentHover.enable();
   if (settings.readingRuler) ReadingRuler.enable();
+  if (settings.confirmActions) ConfirmActions.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -416,6 +418,7 @@ function revertAll() {
   FocusLocator.disable();
   PersistentHover.disable();
   ReadingRuler.disable();
+  ConfirmActions.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -552,7 +555,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         ReflowColumn: ReflowColumn.enabled || false,
         FocusLocator: FocusLocator.enabled || false,
         PersistentHover: PersistentHover.enabled || false,
-        ReadingRuler: ReadingRuler.enabled || false
+        ReadingRuler: ReadingRuler.enabled || false,
+        ConfirmActions: ConfirmActions.enabled || false
       }
     });
     return true;

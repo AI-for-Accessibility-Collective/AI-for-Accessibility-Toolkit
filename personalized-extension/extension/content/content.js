@@ -24,6 +24,7 @@ import { ReflowColumn } from '../../skills/builtin/reflow-column.js';
 import { FocusLocator } from '../../skills/builtin/focus-locator.js';
 import { PersistentHover } from '../../skills/builtin/persistent-hover.js';
 import { ReadingRuler } from '../../skills/builtin/reading-ruler.js';
+import { ConfirmActions } from '../../skills/builtin/confirm-actions.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -62,6 +63,7 @@ const TOOL_MAP = {
   FocusLocator,
   PersistentHover,
   ReadingRuler,
+  ConfirmActions,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -207,7 +209,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions',
       'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -240,6 +242,7 @@ async function initFromStorage() {
     if (settings.focusLocator) enableTool('FocusLocator');
     if (settings.persistentHover) enableTool('PersistentHover');
     if (settings.readingRuler) enableTool('ReadingRuler');
+    if (settings.confirmActions) enableTool('ConfirmActions');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -358,7 +361,7 @@ function applyProfileSettings(settings) {
     bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline',
     bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage',
     muteSounds: 'MuteSounds', defineWords: 'DefineWords', stopAutoAdvance: 'StopAutoAdvance',
-    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler'
+    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {

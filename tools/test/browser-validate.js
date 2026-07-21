@@ -329,6 +329,27 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('hover: tooltip removed after disable', !(await exists('#ai4a11y-hover-tip')));
   }
 
+  // ── Confirm Actions — REAL: a destructive click needs a second confirmation ─
+  {
+    await page.evaluate(() => {
+      const b = document.createElement('button'); b.id = 'del'; b.textContent = 'Delete account';
+      window.__delFired = 0; b.addEventListener('click', () => { window.__delFired++; });
+      document.querySelector('main').appendChild(b);
+    });
+    await enable('confirmActions');
+    const first = await page.evaluate(() => {
+      document.getElementById('del').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      return window.__delFired;
+    });
+    check('confirm: first click on a destructive button is intercepted', first === 0);
+    const second = await page.evaluate(() => {
+      document.getElementById('del').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      return window.__delFired;
+    });
+    check('confirm: a second click confirms and proceeds', second === 1);
+    await disable('confirmActions');
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

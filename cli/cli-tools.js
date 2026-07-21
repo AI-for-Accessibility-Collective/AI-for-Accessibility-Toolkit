@@ -41,6 +41,7 @@ import { ReflowColumn } from '../tools/adapters/reflow-column.js';
 import { FocusLocator } from '../tools/adapters/focus-locator.js';
 import { PersistentHover } from '../tools/adapters/persistent-hover.js';
 import { ReadingRuler } from '../tools/adapters/reading-ruler.js';
+import { ConfirmActions } from '../tools/adapters/confirm-actions.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -199,6 +200,7 @@ const tools = {
   focusLocator: FocusLocator,
   persistentHover: PersistentHover,
   readingRuler: ReadingRuler,
+  confirmActions: ConfirmActions,
 };
 
 // Normalize tool name (handles case variations)
@@ -259,6 +261,8 @@ function normalizeTool(name) {
     'hover': 'persistentHover',
     'readingruler': 'readingRuler',
     'ruler': 'readingRuler',
+    'confirmactions': 'confirmActions',
+    'confirm': 'confirmActions',
   };
   return map[lower] || name;
 }
@@ -366,6 +370,7 @@ function applyProfileByName(profileId) {
   if (profileTools.focusLocator) FocusLocator.enable();
   if (profileTools.persistentHover) PersistentHover.enable();
   if (profileTools.readingRuler) ReadingRuler.enable();
+  if (profileTools.confirmActions) ConfirmActions.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
@@ -426,6 +431,7 @@ function getToolDescription(name) {
     focusLocator: 'Show a strong always-visible indicator of keyboard focus',
     persistentHover: 'Keep hover tooltips visible and dismissible (WCAG 1.4.13)',
     readingRuler: 'A highlight band that follows your reading line',
+    confirmActions: 'Ask for confirmation before risky or final actions',
   };
   return descriptions[name] || '';
 }
