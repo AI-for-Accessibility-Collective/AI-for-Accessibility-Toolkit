@@ -12,7 +12,8 @@
           autoDescribe: true,
           autoVideoDescribe: true,
           keyboardNav: true,
-          pageOutline: true
+          pageOutline: true,
+          announceUpdates: true
         }
       },
       lowVision: {
@@ -203,7 +204,8 @@
       defineWords: false,
       stopAutoAdvance: false,
       reduceBrightness: false,
-      soundVisualizer: false
+      soundVisualizer: false,
+      announceUpdates: false
     }
   };
 
