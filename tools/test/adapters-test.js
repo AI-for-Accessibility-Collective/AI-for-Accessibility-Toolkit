@@ -225,6 +225,25 @@ async function run() {
     check('tables: AI failure marks the table failed', table.dataset.ai4a11yProcessed === 'failed');
   }
 
+  // Promoting a header row must MOVE cell content (keep listeners), not
+  // innerHTML-copy it (which would silently drop them).
+  {
+    const doc = mount(`
+      <table>
+        <tr><td><button id="srt">Name ▲</button></td><td>Score</td></tr>
+        <tr><td>Alice</td><td>30</td></tr>
+        <tr><td>Bob</td><td>25</td></tr>
+      </table>`);
+    fakeAI();
+    let clicked = 0;
+    doc.querySelector('#srt').addEventListener('click', () => clicked++);
+    await fixTableHeaders(doc.querySelector('table'));
+    const btn = doc.querySelector('th #srt');
+    check('tables: header-cell content survives promotion into <th>', !!btn);
+    btn?.click();
+    check('tables: a listener on promoted header content still fires', clicked === 1);
+  }
+
   // ── AUDITOR ──────────────────────────────────────────────────────────────────
 
   {

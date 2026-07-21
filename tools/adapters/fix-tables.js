@@ -5,6 +5,12 @@ import { markProcessed } from '../utils/dom.js';
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 
+// Per-page AI cost bounds (mirrors fix-links.js's MAX_LINKS_PER_PAGE): a
+// dashboard full of wide headerless tables must not fire dozens of AI calls
+// in one scan. Deterministic header-row promotion is free and uncapped.
+const MAX_AI_TABLES_PER_PAGE = 10;
+const MAX_AI_COLUMNS = 12;
+
 /**
  * Fix a table that has no <th> cells.
  *
@@ -50,7 +56,10 @@ export async function fixTableHeaders(table) {
     firstRowCells.forEach(cell => {
       const th = document.createElement('th');
       th.setAttribute('scope', 'col');
-      th.innerHTML = cell.innerHTML;
+      // Move the live child nodes so any event listeners the page bound to
+      // header-cell content (sort icons, tooltips) survive the promotion —
+      // an innerHTML round-trip would silently drop them.
+      while (cell.firstChild) th.appendChild(cell.firstChild);
       cell.replaceWith(th);
     });
     markProcessed(table, 'done');
@@ -72,7 +81,7 @@ export async function fixTableHeaders(table) {
       const samples = rows.slice(0, 5)
         .map(r => r.querySelectorAll('td')[col]?.textContent?.trim())
         .filter(Boolean);
-      const header = samples.length >= 2 ? await inferColumnHeader(samples) : null;
+      const header = (col < MAX_AI_COLUMNS && samples.length >= 2) ? await inferColumnHeader(samples) : null;
       headers.push(header || `Column ${col + 1}`);
     }
 
@@ -101,9 +110,15 @@ export async function fixTableHeaders(table) {
 
 /** Find and fix all headerless data tables on the page. */
 export async function fixAllTables() {
-  const tables = Array.from(document.querySelectorAll('table'))
+  const candidates = Array.from(document.querySelectorAll('table'))
     .filter(t => !t.dataset.ai4a11yProcessed && !t.querySelector('th') && t.querySelectorAll('tr').length >= 2)
     .filter(t => !t.getAttribute('role') || t.getAttribute('role') === 'table'); // skip layout tables marked role=presentation
+  // Bound AI cost per scan; announce the truncation rather than silently
+  // dropping the rest (they get another chance on the next scan pass).
+  const tables = candidates.slice(0, MAX_AI_TABLES_PER_PAGE);
+  if (candidates.length > tables.length) {
+    console.log(`[AI4A11y] fix-tables: fixing ${tables.length} of ${candidates.length} headerless tables this pass (cost cap)`);
+  }
   const results = [];
   for (const table of tables) {
     results.push(await fixTableHeaders(table));
