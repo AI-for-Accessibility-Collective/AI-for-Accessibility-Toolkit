@@ -374,6 +374,48 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     await disable('confirmActions');
   }
 
+  // ── Reading Ruler — REAL: a band follows the pointer, gone after disable ────
+  {
+    await enable('readingRuler');
+    check('reading-ruler: a highlight band is injected', await exists('#ai4a11y-reading-ruler'));
+    const moved = await page.evaluate(async () => {
+      const band = document.getElementById('ai4a11y-reading-ruler');
+      const y1 = band.getBoundingClientRect().top;
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 100, clientY: 550, bubbles: true }));
+      await new Promise((r) => setTimeout(r, 50));
+      const y2 = document.getElementById('ai4a11y-reading-ruler').getBoundingClientRect().top;
+      return Math.abs(y2 - y1);
+    });
+    check('reading-ruler: the band follows the pointer on mousemove', moved > 10);
+    await disable('readingRuler');
+    check('reading-ruler: the band is removed after disable', !(await exists('#ai4a11y-reading-ruler')));
+  }
+
+  // ── Save Reading Spot — REAL: a saved spot offers a working jump-back ────────
+  {
+    await page.evaluate(() => {
+      const s = document.createElement('div'); s.id = '__tall'; s.style.height = '3000px'; document.body.appendChild(s);
+    });
+    const KEY = 'ai4a11y-spot:browser-validate';
+    const seeded = await page.evaluate((k) => { try { localStorage.setItem(k, '600'); return true; } catch { return false; } }, KEY);
+    if (seeded) {
+      await enable('rememberSpot', { key: KEY });
+      check('reading-spot: a saved spot creates a jump-back button', await exists('#ai4a11y-spot-restore'));
+      const jumped = await page.evaluate(async () => {
+        document.getElementById('ai4a11y-spot-restore').click();
+        await new Promise((r) => setTimeout(r, 20));
+        return { y: window.scrollY, gone: !document.getElementById('ai4a11y-spot-restore') };
+      });
+      check('reading-spot: clicking jumps to the saved position and removes the button', jumped.y === 600 && jumped.gone);
+      await disable('rememberSpot');
+      check('reading-spot: no button remains after disable', !(await exists('#ai4a11y-spot-restore')));
+      await page.evaluate((k) => { try { localStorage.removeItem(k); } catch {} }, KEY);
+    } else {
+      check('reading-spot: SKIPPED (localStorage unavailable on the harness origin)', true);
+    }
+    await page.evaluate(() => { document.getElementById('__tall')?.remove(); window.scrollTo(0, 0); });
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);
