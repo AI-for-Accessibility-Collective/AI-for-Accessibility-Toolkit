@@ -256,6 +256,30 @@ Return ONLY the summary."""
             except:
                 return result.strip()
 
+        def ai_translate_text(text, target_lang="English"):
+            prompt = f"""Translate the following text into {target_lang or 'English'}.
+Preserve the meaning and tone. Do not add notes or explanations.
+
+Text:
+{text[:3000]}
+
+Return ONLY the translated text."""
+            result = ask_claude_text(prompt, timeout=60)
+            try:
+                return json.loads(result).get('answer', result)
+            except Exception:
+                return result.strip()
+
+        def ai_define_word(word, context=""):
+            prompt = f"""Define the word or phrase "{word}" in one short, plain-language sentence a general reader can understand, as used in this context: "{(context or '')[:400]}".
+
+Return ONLY the definition."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                return json.loads(result).get('answer', result)
+            except Exception:
+                return result.strip()
+
         # Generate label - takes context about element, returns accessible label
         def ai_generate_labels(context):
             ctx_str = json.dumps(context) if isinstance(context, dict) else str(context)
@@ -359,6 +383,8 @@ Return ONLY a short header name (1-3 words)."""
         page.expose_function("ai4a11y_describeElement", ai_describe_element)
         page.expose_function("ai4a11y_improveLinkText", ai_improve_link_text)
         page.expose_function("ai4a11y_inferColumnHeader", ai_infer_column_header)
+        page.expose_function("ai4a11y_translateText", ai_translate_text)
+        page.expose_function("ai4a11y_defineWord", ai_define_word)
 
         _ai_callbacks_exposed.add(page_id)
         return True
