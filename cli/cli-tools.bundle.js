@@ -3606,8 +3606,8 @@ ${chunk}
           highlightLinks: true
         }
       },
-      elderly: {
-        name: "Elderly",
+      olderAdult: {
+        name: "Older Adult",
         description: "Larger text, spacing, captions for hearing loss, simplified content",
         tools: {
           fontScale: 130,

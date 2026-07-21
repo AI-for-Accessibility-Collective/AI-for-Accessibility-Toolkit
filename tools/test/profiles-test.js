@@ -24,7 +24,7 @@ const RECOGNIZED = new Set([
   'fixContrast',
 ]);
 const NUMERIC_RANGE = { fontScale: [50, 300], lineHeight: [1, 3], letterSpacing: [0, 1], speechRate: [0.3, 4] };
-const EXPECTED_PROFILES = ['blind', 'lowVision', 'colorBlind', 'deaf', 'motor', 'dyslexia', 'adhd', 'cognitive', 'elderly', 'anxiety', 'sensory', 'photosensitive'];
+const EXPECTED_PROFILES = ['blind', 'lowVision', 'colorBlind', 'deaf', 'motor', 'dyslexia', 'adhd', 'cognitive', 'olderAdult', 'anxiety', 'sensory', 'photosensitive'];
 
 // ── SHAPE / INTEGRITY ─────────────────────────────────────────────────────────
 check('all 12 expected profiles are present', EXPECTED_PROFILES.every(id => profiles[id]) && Object.keys(profiles).length === 12);

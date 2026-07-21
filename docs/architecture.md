@@ -183,7 +183,7 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | `dyslexia` | Wider spacing, larger text, focus mode, highlight links |
 | `adhd` | Focus mode, reduced motion, reader mode, dismiss popups |
 | `cognitive` | Simplified text, summaries, dismiss popups, highlight links |
-| `elderly` | Large text, enhanced focus, simplified text, bigger click targets, highlight links |
+| `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links |
 | `anxiety` | Calm UI, reduced motion, dismiss popups |
 | `sensory` | Reduced motion, focus mode, dismiss popups |
 | `photosensitive` | Dark mode, reduced motion |

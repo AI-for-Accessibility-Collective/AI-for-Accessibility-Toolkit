@@ -83,7 +83,7 @@ The [architecture doc](docs/architecture.md) walks through the rest — the Libr
 
 ## Profiles
 
-Twelve built-in profiles — Blind, Low Vision, Color Blind, Deaf/HoH, Motor, Dyslexia, ADHD, Cognitive, Elderly, Anxiety, Sensory, Photosensitive. Each maps to evidence-based settings (W3C WCAG/COGA, WebAIM, NNGroup) in [`tools/profiles/settings.json`](tools/profiles/settings.json). Combine them and they merge — any profile that enables a fix wins, and the largest text size wins.
+Twelve built-in profiles — Blind, Low Vision, Color Blind, Deaf/HoH, Motor, Dyslexia, ADHD, Cognitive, Older Adult, Anxiety, Sensory, Photosensitive. Each maps to evidence-based settings (W3C WCAG/COGA, WebAIM, NNGroup) in [`tools/profiles/settings.json`](tools/profiles/settings.json). Combine them and they merge — any profile that enables a fix wins, and the largest text size wins.
 
 ## Contributing
 
