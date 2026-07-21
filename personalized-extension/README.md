@@ -26,7 +26,7 @@ The design separates a **shared, read-only Global database** from a **per-user, 
 |---|---|---|
 | **Librarian** (personal memory/profile agent) | Sole writer of the Mine store; recalls preferences, classifies sites, scopes adapters, gates proposals behind consent | [`extension/lib/librarian.js`](extension/lib/librarian.js) |
 | **Assistant** (browser automation agent) | Performs one-off browser tasks via CDP; its outcomes can become saved, auto-replayed adapters | [`extension/browser-harness/`](extension/browser-harness/) |
-| **Engineer** (Adapter Creator) | Generates a new custom adapter from a description when the Global db has no match | [`extension/skill-builder/`](extension/skill-builder/) |
+| **Engineer** (Skill Builder) | Generates a new custom adapter from a description when the Global db has no match | [`extension/skill-builder/`](extension/skill-builder/) |
 
 ## Shared adapter corpus (the Global db)
 
@@ -116,7 +116,7 @@ personalized-extension/
 │   │   ├── tools-registry.js    # Generated from skills/registry.js (the Global db at runtime)
 │   │   └── demo-trace.js        # Demo-only instrumentation
 │   ├── browser-harness/         # Assistant: CDP-driven browser automation agent
-│   ├── skill-builder/           # Engineer: the Adapter Creator
+│   ├── skill-builder/           # Engineer: the Skill Builder
 │   ├── onboarding/              # Cold-start onboarding flow
 │   ├── popup/                   # Popup (toggles, suggestions, memory panel)
 │   ├── content/                 # Content script (bundled by esbuild)
