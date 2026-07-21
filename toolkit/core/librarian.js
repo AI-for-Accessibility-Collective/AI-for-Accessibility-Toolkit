@@ -608,14 +608,18 @@ export function createLibrarian({
     // The Engineer: build a new skill from a plain-language need, grounded in
     // the real adapter catalog. Does NOT save — returns the skill for the
     // user to validate first (the adaptive evaluation interface). Consent
-    // before persistence is the toolkit's rule.
-    async buildSkill(need) {
+    // before persistence is the toolkit's rule. When validation fails, pass
+    // the rejected attempt back as { previous, feedback } and the Engineer
+    // revises it — the evaluation loop's "fail → back to the builder" arrow.
+    async buildSkill(need, opts = {}) {
       const profile = await getOrInitProfile();
       return await buildSkill(need, {
         llm: _gemini,
         tools: DS().global.tools(),
         taxonomy: TAX(),
         profile,
+        previous: opts.previous || null,
+        feedback: opts.feedback || '',
       });
     },
 

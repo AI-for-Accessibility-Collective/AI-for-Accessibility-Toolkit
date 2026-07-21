@@ -87,6 +87,16 @@ const BUILT = {
     return m?.plan?.settings?.fontScale === 130;
   }));
 
+  // Feedback loop: "Improve it" sends the rejected attempt + feedback back.
+  await page.type('#feedbackInput', 'text still too small');
+  await page.click('#improveBtn');
+  await page.waitForFunction(() => window.__sent.some(m =>
+    m.type === 'librarianBuildSkill' && m.feedback && m.previous), { timeout: 5000 });
+  check('improve sends previous skill and feedback to the Engineer', await page.evaluate(() => {
+    const m = window.__sent.find(x => x.type === 'librarianBuildSkill' && x.feedback);
+    return m.previous?.name === 'news-calm' && /too small/.test(m.feedback);
+  }));
+
   // Save → preview hides, list grows, save message sent.
   await page.click('#saveBtn');
   await page.waitForFunction(() => document.getElementById('preview').hidden, { timeout: 5000 });

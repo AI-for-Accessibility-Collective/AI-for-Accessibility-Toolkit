@@ -58,6 +58,13 @@
           <button id="saveBtn" class="btn btn-success">Save skill</button>
           <button id="discardBtn" class="btn btn-text">Discard</button>
         </div>
+        <!-- Validation failed? Send it back to the Engineer with feedback. -->
+        <label class="build-label" for="feedbackInput">Not right yet? Tell the Engineer what to change</label>
+        <div class="phase-actions">
+          <input id="feedbackInput" class="need-input" type="text"
+            placeholder="e.g. The text is still too small">
+          <button id="improveBtn" class="btn btn-secondary">Improve it</button>
+        </div>
         <p id="previewErrors" class="phase-error" hidden></p>
       </div>
     </section>

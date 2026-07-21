@@ -6,21 +6,27 @@
 // gemini caller); this module builds the prompt and parses the result. It does
 // NOT generate executable code — it authors instructions that name adapters.
 
-import { parseSkill, validateSkill } from './skill.js';
+import { parseSkill, serializeSkill, validateSkill } from './skill.js';
 
 /**
  * Build the prompt that instructs the LLM to author a SKILL.md composing the
  * available adapters for a stated need. Grounds the model in the real adapter
  * catalog + settings vocabulary so it can only reference things that exist.
  *
+ * When the person tried a previous attempt and it wasn't right, pass it back
+ * with their feedback (`previous` + `feedback`) — the diagrams' evaluation
+ * loop where a failed validation returns to the skill builder agent.
+ *
  * @param {string} need                 - the user's plain-language request
  * @param {Object} opts
  * @param {Object} [opts.profile]        - ability profile (supportAreas, freeText)
  * @param {Object} opts.tools            - AA_TOOLS registry (forPrompt + settingsVocabularyLines)
  * @param {Object} [opts.taxonomy]       - AA_TAXONOMY (categoryIds) for siteRelevance
+ * @param {Object} [opts.previous]       - the prior built Skill the person rejected
+ * @param {string} [opts.feedback]       - what the person said was wrong with it
  * @returns {string}
  */
-export function buildSkillPrompt(need, { profile = {}, tools, taxonomy } = {}) {
+export function buildSkillPrompt(need, { profile = {}, tools, taxonomy, previous = null, feedback = '' } = {}) {
   const adapters = tools.forPrompt().map(t =>
     `- ${t.id} — ${t.name}: ${t.description} (helps: ${t.supportAreas.join(', ')})`).join('\n');
   const settingsVocab = tools.settingsVocabularyLines().join('\n');
@@ -29,10 +35,13 @@ export function buildSkillPrompt(need, { profile = {}, tools, taxonomy } = {}) {
     ? `\nAbout this person:\n- Support areas: ${(profile.supportAreas || []).join(', ') || 'unspecified'}`
       + (profile.freeText ? `\n- In their words: "${profile.freeText}"` : '')
     : '';
+  const revisionBlock = (previous && feedback)
+    ? `\n\nYou already built this skill for that need:\n\n${serializeSkill(previous)}\n\nThe person tried it and said: "${feedback}"\nRevise the skill to address their feedback. Keep the same name unless the feedback changes what the skill is about, and keep the parts that already worked.`
+    : '';
 
   return `You are the Engineer — an accessibility skill builder. Author a SKILL.md that adapts web pages for the need below by composing EXISTING adapters. You do NOT write code; you write a playbook that names which adapters to apply and with what settings.
 
-The need: "${need}"${profileBlock}
+The need: "${need}"${profileBlock}${revisionBlock}
 
 Available adapters (use only these ids):
 ${adapters}
@@ -106,11 +115,13 @@ export function parseBuiltSkill(llmOutput, { tools } = {}) {
  * @param {Object} deps.tools
  * @param {Object} [deps.taxonomy]
  * @param {Object} [deps.profile]
+ * @param {Object} [deps.previous]  - prior attempt to revise
+ * @param {string} [deps.feedback]  - the person's feedback on it
  * @returns {Promise<{ skill: import('./skill.js').Skill|null, valid: boolean, errors: string[] }>}
  */
-export async function buildSkill(need, { llm, tools, taxonomy, profile } = {}) {
+export async function buildSkill(need, { llm, tools, taxonomy, profile, previous = null, feedback = '' } = {}) {
   if (!llm) return { skill: null, valid: false, errors: ['no LLM available'] };
-  const prompt = buildSkillPrompt(need, { profile, tools, taxonomy });
+  const prompt = buildSkillPrompt(need, { profile, tools, taxonomy, previous, feedback });
   let out;
   try {
     out = await llm(prompt);

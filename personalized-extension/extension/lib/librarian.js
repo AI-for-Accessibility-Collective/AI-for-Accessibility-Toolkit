@@ -213,6 +213,31 @@
       body
     };
   }
+  function serializeSkill(skill) {
+    const list = (a) => `[${(a || []).join(", ")}]`;
+    const front = [
+      "---",
+      `name: ${skill.name}`,
+      `description: ${skill.description}`,
+      `supportAreas: ${list(skill.supportAreas)}`,
+      `siteRelevance: ${list(skill.siteRelevance)}`,
+      "---"
+    ].join("\n");
+    let body = skill.body || "";
+    if (!/```json/.test(body)) {
+      body = `${body}
+
+## Recipe
+\`\`\`json
+${JSON.stringify(skill.recipe || { adapters: [] }, null, 2)}
+\`\`\`
+`;
+    }
+    return `${front}
+
+${body.trim()}
+`;
+  }
   function validateSkill(skill, { tools } = {}) {
     const errors = [];
     if (!skill.name) errors.push("missing name");
@@ -329,7 +354,7 @@
   }
 
   // ../toolkit/core/skill-builder.js
-  function buildSkillPrompt(need, { profile = {}, tools, taxonomy } = {}) {
+  function buildSkillPrompt(need, { profile = {}, tools, taxonomy, previous = null, feedback = "" } = {}) {
     const adapters = tools.forPrompt().map((t) => `- ${t.id} \u2014 ${t.name}: ${t.description} (helps: ${t.supportAreas.join(", ")})`).join("\n");
     const settingsVocab = tools.settingsVocabularyLines().join("\n");
     const categories = taxonomy ? taxonomy.categoryIds().join(", ") : "news, social, video, shopping, education, productivity, reference, other";
@@ -337,9 +362,17 @@
 About this person:
 - Support areas: ${(profile.supportAreas || []).join(", ") || "unspecified"}` + (profile.freeText ? `
 - In their words: "${profile.freeText}"` : "") : "";
+    const revisionBlock = previous && feedback ? `
+
+You already built this skill for that need:
+
+${serializeSkill(previous)}
+
+The person tried it and said: "${feedback}"
+Revise the skill to address their feedback. Keep the same name unless the feedback changes what the skill is about, and keep the parts that already worked.` : "";
     return `You are the Engineer \u2014 an accessibility skill builder. Author a SKILL.md that adapts web pages for the need below by composing EXISTING adapters. You do NOT write code; you write a playbook that names which adapters to apply and with what settings.
 
-The need: "${need}"${profileBlock}
+The need: "${need}"${profileBlock}${revisionBlock}
 
 Available adapters (use only these ids):
 ${adapters}
@@ -390,9 +423,9 @@ Rules:
     const { valid, errors } = validateSkill(skill, { tools });
     return { skill, valid, errors };
   }
-  async function buildSkill(need, { llm, tools, taxonomy, profile } = {}) {
+  async function buildSkill(need, { llm, tools, taxonomy, profile, previous = null, feedback = "" } = {}) {
     if (!llm) return { skill: null, valid: false, errors: ["no LLM available"] };
-    const prompt = buildSkillPrompt(need, { profile, tools, taxonomy });
+    const prompt = buildSkillPrompt(need, { profile, tools, taxonomy, previous, feedback });
     let out;
     try {
       out = await llm(prompt);
@@ -904,14 +937,18 @@ Rules:
       // The Engineer: build a new skill from a plain-language need, grounded in
       // the real adapter catalog. Does NOT save — returns the skill for the
       // user to validate first (the adaptive evaluation interface). Consent
-      // before persistence is the toolkit's rule.
-      async buildSkill(need) {
+      // before persistence is the toolkit's rule. When validation fails, pass
+      // the rejected attempt back as { previous, feedback } and the Engineer
+      // revises it — the evaluation loop's "fail → back to the builder" arrow.
+      async buildSkill(need, opts = {}) {
         const profile = await getOrInitProfile();
         return await buildSkill(need, {
           llm: _gemini,
           tools: DS().global.tools(),
           taxonomy: TAX(),
-          profile
+          profile,
+          previous: opts.previous || null,
+          feedback: opts.feedback || ""
         });
       },
       // Persist a user-validated skill to their Skills db (mine.skillDocs).
