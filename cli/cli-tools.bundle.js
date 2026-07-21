@@ -3417,6 +3417,117 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yFocusLocator = FocusLocator;
 
+  // tools/adapters/persistent-hover.js
+  var PersistentHover = {
+    styleId: "ai4a11y-persistent-hover-styles",
+    tipId: "ai4a11y-hover-tip",
+    enabled: false,
+    style: null,
+    // injectStyle handle
+    tip: null,
+    // the single reusable tooltip element
+    current: null,
+    // the titled element the tooltip is showing for
+    onMouseOver: null,
+    // stored listener refs (for exact removal)
+    onKeyDown: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const background = options && options.background || "#1c1c1e";
+      const color = options && options.color || "#ffffff";
+      this.style = injectStyle(this.styleId, `
+      #${this.tipId} {
+        position: absolute;
+        z-index: 2147483647;
+        max-width: 320px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: ${background};
+        color: ${color};
+        font: 500 15px/1.45 system-ui, -apple-system, sans-serif;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        pointer-events: auto !important;
+      }
+    `);
+      const tip = document.createElement("div");
+      tip.id = this.tipId;
+      tip.setAttribute("role", "tooltip");
+      tip.hidden = true;
+      tip.style.pointerEvents = "auto";
+      (document.body || document.documentElement).appendChild(tip);
+      this.tip = tip;
+      this.onMouseOver = (e) => {
+        if (!this.enabled) return;
+        const target = e.target;
+        if (!target || target.nodeType !== 1) return;
+        if (this.tip && (target === this.tip || this.tip.contains(target))) return;
+        const el = target.closest ? target.closest("[title]") : null;
+        if (!el) return;
+        const text = (el.getAttribute("title") || "").trim();
+        if (!text || el === this.current) return;
+        this.show(el, text);
+      };
+      document.addEventListener("mouseover", this.onMouseOver, true);
+      this.onKeyDown = (e) => {
+        if (!this.enabled) return;
+        if (e.key === "Escape") this.hide();
+      };
+      document.addEventListener("keydown", this.onKeyDown, true);
+      console.log("[AI4A11y] Persistent Hover enabled");
+      announce("Hover tooltips now stay on screen. Press Escape to dismiss one");
+    },
+    // Fill the tooltip with the element's title text (textContent, never
+    // innerHTML) and place it just below the element.
+    show(el, text) {
+      if (!this.tip) return;
+      this.current = el;
+      this.tip.textContent = text;
+      let rect = null;
+      try {
+        rect = el.getBoundingClientRect();
+      } catch {
+      }
+      const x = (rect ? rect.left : 0) + (window.scrollX || 0);
+      const y = (rect ? rect.bottom : 0) + (window.scrollY || 0) + 6;
+      this.tip.style.left = `${Math.max(0, x)}px`;
+      this.tip.style.top = `${Math.max(0, y)}px`;
+      this.tip.hidden = false;
+    },
+    hide() {
+      if (this.tip) this.tip.hidden = true;
+      this.current = null;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.onMouseOver) {
+        document.removeEventListener("mouseover", this.onMouseOver, true);
+        this.onMouseOver = null;
+      }
+      if (this.onKeyDown) {
+        document.removeEventListener("keydown", this.onKeyDown, true);
+        this.onKeyDown = null;
+      }
+      if (this.style) {
+        this.style.remove();
+        this.style = null;
+      }
+      if (this.tip) {
+        this.tip.remove();
+        this.tip = null;
+      }
+      this.current = null;
+      console.log("[AI4A11y] Persistent Hover disabled");
+      announce("Persistent hover off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPersistentHover = PersistentHover;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -5217,7 +5328,8 @@ ${chunk}
           unpinSticky: true,
           magnifier: true,
           reflowColumn: true,
-          focusLocator: true
+          focusLocator: true,
+          persistentHover: true
         }
       },
       colorBlind: {
@@ -5255,7 +5367,8 @@ ${chunk}
           pageOutline: true,
           unpinSticky: true,
           stopAutoAdvance: true,
-          focusLocator: true
+          focusLocator: true,
+          persistentHover: true
         }
       },
       dyslexia: {
@@ -5401,7 +5514,8 @@ ${chunk}
       flashGuard: false,
       describeOnDemand: false,
       reflowColumn: false,
-      focusLocator: false
+      focusLocator: false,
+      persistentHover: false
     }
   };
 
@@ -5521,7 +5635,8 @@ ${chunk}
     flashGuard: FlashGuard,
     describeOnDemand: DescribeOnDemand,
     reflowColumn: ReflowColumn,
-    focusLocator: FocusLocator
+    focusLocator: FocusLocator,
+    persistentHover: PersistentHover
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -5575,7 +5690,9 @@ ${chunk}
       "reflowcolumn": "reflowColumn",
       "reflow": "reflowColumn",
       "focuslocator": "focusLocator",
-      "focusring": "focusLocator"
+      "focusring": "focusLocator",
+      "persistenthover": "persistentHover",
+      "hover": "persistentHover"
     };
     return map[lower] || name;
   }
@@ -5667,6 +5784,7 @@ ${chunk}
     if (profileTools.describeOnDemand) DescribeOnDemand.enable();
     if (profileTools.reflowColumn) ReflowColumn.enable();
     if (profileTools.focusLocator) FocusLocator.enable();
+    if (profileTools.persistentHover) PersistentHover.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -5718,7 +5836,8 @@ ${chunk}
       flashGuard: "Block autoplay and dim video/animation for seizure safety (WCAG 2.3.1)",
       describeOnDemand: "Alt+click or Alt+D to get an AI description of any element",
       reflowColumn: "Force page content into one readable column (WCAG 1.4.10)",
-      focusLocator: "Show a strong always-visible indicator of keyboard focus"
+      focusLocator: "Show a strong always-visible indicator of keyboard focus",
+      persistentHover: "Keep hover tooltips visible and dismissible (WCAG 1.4.13)"
     };
     return descriptions[name] || "";
   }

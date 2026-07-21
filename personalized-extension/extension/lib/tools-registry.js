@@ -457,6 +457,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "persistent-hover",
+    "name": "Persistent Hover",
+    "description": "Keeps hover-revealed tooltips visible and lets you move onto them or dismiss them with Escape, instead of vanishing the instant the pointer moves (WCAG 1.4.13).",
+    "supportAreas": [
+      "vision",
+      "motor"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "tooltip",
+    "emoji": "💬",
+    "quickStart": false,
+    "settings": {
+      "persistentHover": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -840,6 +859,10 @@ globalThis.AA_TOOLS = {
   "focusLocator": {
     "type": "boolean",
     "description": "Show a strong always-visible keyboard focus indicator"
+  },
+  "persistentHover": {
+    "type": "boolean",
+    "description": "Keep hover tooltips visible and dismissible"
   },
   "keyboardNav": {
     "type": "boolean",

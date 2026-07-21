@@ -307,6 +307,28 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('focus-locator: style + ring removed after disable', !(await exists('#ai4a11y-focus-ring')) && !(await exists('#ai4a11y-focus-locator-styles')));
   }
 
+  // ── Persistent Hover — REAL: a title tooltip appears and survives, then Escape
+  {
+    await enable('persistentHover');
+    const tipShown = await page.evaluate(async () => {
+      const lnk = document.querySelector('#lnk'); lnk.setAttribute('title', 'Opens the documentation');
+      lnk.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 40));
+      const tip = document.getElementById('ai4a11y-hover-tip');
+      return !!tip && getComputedStyle(tip).display !== 'none' && tip.textContent.includes('documentation');
+    });
+    check('hover: a title tooltip appears and stays visible on hover', tipShown);
+    const dismissed = await page.evaluate(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await new Promise((r) => setTimeout(r, 20));
+      const tip = document.getElementById('ai4a11y-hover-tip');
+      return !tip || getComputedStyle(tip).display === 'none';
+    });
+    check('hover: Escape dismisses the persistent tooltip', dismissed);
+    await disable('persistentHover');
+    check('hover: tooltip removed after disable', !(await exists('#ai4a11y-hover-tip')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

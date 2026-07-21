@@ -55,6 +55,7 @@ import {
   DescribeOnDemand,
   ReflowColumn,
   FocusLocator,
+  PersistentHover,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -164,6 +165,7 @@ function applyVisualSettings(settings) {
   if (settings.describeOnDemand) DescribeOnDemand.enable();
   if (settings.reflowColumn) ReflowColumn.enable();
   if (settings.focusLocator) FocusLocator.enable();
+  if (settings.persistentHover) PersistentHover.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -410,6 +412,7 @@ function revertAll() {
   DescribeOnDemand.disable();
   ReflowColumn.disable();
   FocusLocator.disable();
+  PersistentHover.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -544,7 +547,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         FlashGuard: FlashGuard.enabled || false,
         DescribeOnDemand: DescribeOnDemand.enabled || false,
         ReflowColumn: ReflowColumn.enabled || false,
-        FocusLocator: FocusLocator.enabled || false
+        FocusLocator: FocusLocator.enabled || false,
+        PersistentHover: PersistentHover.enabled || false
       }
     });
     return true;
