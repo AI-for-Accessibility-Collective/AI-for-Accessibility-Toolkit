@@ -50,6 +50,7 @@ import {
   ReduceBrightness,
   SoundVisualizer,
   LiveRegionAnnouncer,
+  Magnifier,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -154,6 +155,7 @@ function applyVisualSettings(settings) {
   if (settings.reduceBrightness) ReduceBrightness.enable();
   if (settings.soundVisualizer) SoundVisualizer.enable();
   if (settings.announceUpdates) LiveRegionAnnouncer.enable();
+  if (settings.magnifier) Magnifier.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -395,6 +397,7 @@ function revertAll() {
   ReduceBrightness.disable();
   SoundVisualizer.disable();
   LiveRegionAnnouncer.disable();
+  Magnifier.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -524,7 +527,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         StopAutoAdvance: StopAutoAdvance.enabled || false,
         ReduceBrightness: ReduceBrightness.enabled || false,
         SoundVisualizer: SoundVisualizer.enabled || false,
-        LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false
+        LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
+        Magnifier: Magnifier.enabled || false
       }
     });
     return true;

@@ -117,7 +117,8 @@
           enhanceFocus: true,
           fixContrast: true,
           highlightLinks: true,
-          unpinSticky: true
+          unpinSticky: true,
+          magnifier: true
         }
       },
       colorBlind: {
@@ -294,7 +295,8 @@
       stopAutoAdvance: false,
       reduceBrightness: false,
       soundVisualizer: false,
-      announceUpdates: false
+      announceUpdates: false,
+      magnifier: false
     }
   };
 
@@ -4794,6 +4796,139 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   };
   if (typeof window !== "undefined") window.__ai4a11yLiveRegionAnnouncer = LiveRegionAnnouncer;
 
+  // tools/adapters/magnifier.js
+  var Magnifier = {
+    lensId: "ai4a11y-magnifier",
+    enabled: false,
+    lens: null,
+    moveHandler: null,
+    // ref kept so disable() can remove the exact listener
+    leaveHandler: null,
+    rafId: null,
+    lastEvent: null,
+    lastUpdate: 0,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const fontSize = Number(options.fontSize) || 32;
+      const lens = document.createElement("div");
+      lens.id = this.lensId;
+      lens.setAttribute("aria-hidden", "true");
+      lens.style.cssText = `
+      display: none;
+      position: fixed;
+      max-width: min(60vw, 640px);
+      padding: 12px 18px;
+      font-size: ${fontSize}px;
+      line-height: 1.35;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #ffffff;
+      background: #111111;
+      border: 2px solid #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+      overflow-wrap: break-word;
+      pointer-events: none;
+      z-index: 2147483646;
+    `;
+      (document.body || document.documentElement).appendChild(lens);
+      this.lens = lens;
+      this.moveHandler = (e) => this.onMove(e);
+      this.leaveHandler = () => this.hide();
+      document.addEventListener("mousemove", this.moveHandler, { passive: true });
+      document.addEventListener("mouseleave", this.leaveHandler);
+      console.log("[AI4A11y] Magnifier enabled");
+      announce("Magnifier on. Move the pointer over text to enlarge it");
+    },
+    // Coalesce the mousemove firehose into one lens update per frame (or a
+    // ~30ms gate where requestAnimationFrame doesn't exist).
+    onMove(e) {
+      if (!this.enabled) return;
+      this.lastEvent = e;
+      if (typeof requestAnimationFrame === "function") {
+        if (this.rafId !== null) return;
+        this.rafId = requestAnimationFrame(() => {
+          this.rafId = null;
+          this.update();
+        });
+      } else {
+        const now = Date.now();
+        if (now - this.lastUpdate < 30) return;
+        this.lastUpdate = now;
+        this.update();
+      }
+    },
+    update() {
+      const lens = this.lens;
+      const e = this.lastEvent;
+      if (!this.enabled || !lens || !e) return;
+      try {
+        if (typeof document.elementFromPoint !== "function") return;
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        if (!el || el === lens || lens.contains(el)) return;
+        const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+        if (!text) {
+          this.hide();
+          return;
+        }
+        lens.textContent = text.length > 180 ? `${text.slice(0, 180)}\u2026` : text;
+        lens.style.display = "block";
+        this.position(e.clientX, e.clientY);
+      } catch {
+      }
+    },
+    // Offset the lens from the cursor, flipping to the other side rather than
+    // running off the viewport edge.
+    position(x, y) {
+      const lens = this.lens;
+      if (!lens) return;
+      const vw = window.innerWidth || 1024;
+      const vh = window.innerHeight || 768;
+      let w = 0, h = 0;
+      try {
+        const r = lens.getBoundingClientRect();
+        w = r.width || 0;
+        h = r.height || 0;
+      } catch {
+      }
+      let left = x + 24;
+      let top = y + 24;
+      if (left + w > vw) left = Math.max(8, x - w - 24);
+      if (top + h > vh) top = Math.max(8, y - h - 24);
+      lens.style.left = `${left}px`;
+      lens.style.top = `${top}px`;
+    },
+    hide() {
+      if (this.lens) this.lens.style.display = "none";
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.moveHandler) {
+        document.removeEventListener("mousemove", this.moveHandler);
+        this.moveHandler = null;
+      }
+      if (this.leaveHandler) {
+        document.removeEventListener("mouseleave", this.leaveHandler);
+        this.leaveHandler = null;
+      }
+      if (this.rafId !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+      this.lastEvent = null;
+      this.lastUpdate = 0;
+      (_a = document.getElementById(this.lensId)) == null ? void 0 : _a.remove();
+      this.lens = null;
+      console.log("[AI4A11y] Magnifier disabled");
+      announce("Magnifier off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yMagnifier = Magnifier;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -4974,6 +5109,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     if (settings2.reduceBrightness) ReduceBrightness.enable();
     if (settings2.soundVisualizer) SoundVisualizer.enable();
     if (settings2.announceUpdates) LiveRegionAnnouncer.enable();
+    if (settings2.magnifier) Magnifier.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -5173,6 +5309,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     ReduceBrightness.disable();
     SoundVisualizer.disable();
     LiveRegionAnnouncer.disable();
+    Magnifier.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -5298,7 +5435,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
           StopAutoAdvance: StopAutoAdvance.enabled || false,
           ReduceBrightness: ReduceBrightness.enabled || false,
           SoundVisualizer: SoundVisualizer.enabled || false,
-          LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false
+          LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
+          Magnifier: Magnifier.enabled || false
         }
       });
       return true;

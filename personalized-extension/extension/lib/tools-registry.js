@@ -365,6 +365,24 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "magnifier",
+    "name": "Magnifier",
+    "description": "A lens that follows the cursor and shows the text under the pointer enlarged, so low-vision readers can magnify any part of the page without zooming the whole layout.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "zoom_in",
+    "emoji": "🔍",
+    "quickStart": false,
+    "settings": {
+      "magnifier": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -728,6 +746,10 @@ globalThis.AA_TOOLS = {
   "announceUpdates": {
     "type": "boolean",
     "description": "Announce dynamic content changes to screen readers"
+  },
+  "magnifier": {
+    "type": "boolean",
+    "description": "A cursor-following lens that magnifies text"
   },
   "keyboardNav": {
     "type": "boolean",

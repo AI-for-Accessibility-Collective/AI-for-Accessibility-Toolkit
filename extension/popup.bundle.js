@@ -28,7 +28,8 @@
           enhanceFocus: true,
           fixContrast: true,
           highlightLinks: true,
-          unpinSticky: true
+          unpinSticky: true,
+          magnifier: true
         }
       },
       colorBlind: {
@@ -205,7 +206,8 @@
       stopAutoAdvance: false,
       reduceBrightness: false,
       soundVisualizer: false,
-      announceUpdates: false
+      announceUpdates: false,
+      magnifier: false
     }
   };
 
