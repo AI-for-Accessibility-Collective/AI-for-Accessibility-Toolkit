@@ -1692,6 +1692,106 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yLinkHighlighter = LinkHighlighter;
 
+  // tools/adapters/page-outline.js
+  var PageOutline = {
+    containerId: "ai4a11y-page-outline",
+    enabled: false,
+    addedIds: null,
+    // Set of headings we gave a generated id (for exact restore)
+    addedTabindex: null,
+    // Set of headings we gave tabindex="-1" (for exact restore)
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.addedIds = /* @__PURE__ */ new Set();
+      this.addedTabindex = /* @__PURE__ */ new Set();
+      const selector = options.selector || "h1, h2, h3";
+      let headings = [];
+      try {
+        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
+      } catch {
+      }
+      const nav = document.createElement("nav");
+      nav.id = this.containerId;
+      nav.setAttribute("role", "navigation");
+      nav.setAttribute("aria-label", "Page outline");
+      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
+      if (headings.length === 0) {
+        const note = document.createElement("p");
+        note.textContent = "No headings on this page";
+        nav.appendChild(note);
+      } else {
+        const list = document.createElement("ul");
+        list.style.cssText = "list-style: none; margin: 0; padding: 0;";
+        let n = 0;
+        for (const heading of headings) {
+          if (!heading.id) {
+            let id;
+            do {
+              id = `ai4a11y-outline-h-${n++}`;
+            } while (document.getElementById(id));
+            heading.id = id;
+            this.addedIds.add(heading);
+          }
+          const item = document.createElement("li");
+          const level = Number(heading.tagName[1]) || 1;
+          item.style.paddingLeft = `${(level - 1) * 16}px`;
+          const link = document.createElement("a");
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent.trim();
+          link.addEventListener("click", () => this.jumpTo(heading));
+          item.appendChild(link);
+          list.appendChild(item);
+        }
+        nav.appendChild(list);
+      }
+      try {
+        (document.body || document.documentElement).appendChild(nav);
+      } catch {
+      }
+      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
+      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
+    },
+    // Move both the viewport and keyboard/screen-reader focus to the heading.
+    // Headings aren't focusable by default, so add tabindex="-1" — tracked so
+    // disable() removes it again.
+    jumpTo(heading) {
+      var _a;
+      try {
+        if (!heading.hasAttribute("tabindex")) {
+          heading.setAttribute("tabindex", "-1");
+          (_a = this.addedTabindex) == null ? void 0 : _a.add(heading);
+        }
+        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
+        heading.focus();
+      } catch {
+      }
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      (_a = document.getElementById(this.containerId)) == null ? void 0 : _a.remove();
+      if (this.addedIds) {
+        for (const h of this.addedIds) h.removeAttribute("id");
+        this.addedIds.clear();
+        this.addedIds = null;
+      }
+      if (this.addedTabindex) {
+        for (const h of this.addedTabindex) h.removeAttribute("tabindex");
+        this.addedTabindex.clear();
+        this.addedTabindex = null;
+      }
+      console.log("[AI4A11y] Page Outline disabled");
+      announce("Page outline removed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -3416,7 +3516,8 @@ ${chunk}
           autoFixLabels: true,
           autoDescribe: true,
           autoVideoDescribe: true,
-          keyboardNav: true
+          keyboardNav: true,
+          pageOutline: true
         }
       },
       lowVision: {
@@ -3463,7 +3564,8 @@ ${chunk}
           keyboardNav: true,
           voiceCommands: true,
           dismissOverlays: true,
-          bigTargets: true
+          bigTargets: true,
+          pageOutline: true
         }
       },
       dyslexia: {
@@ -3583,7 +3685,8 @@ ${chunk}
       letterSpacing: 0,
       contrastMode: "none",
       colorFilter: "none",
-      highlightLinks: false
+      highlightLinks: false,
+      pageOutline: false
     }
   };
 
@@ -3676,7 +3779,8 @@ ${chunk}
     autoTranscriber: AutoTranscriber,
     dismissOverlays: DismissOverlays,
     bigTargets: BigTargets,
-    highlightLinks: LinkHighlighter
+    highlightLinks: LinkHighlighter,
+    pageOutline: PageOutline
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -3700,7 +3804,9 @@ ${chunk}
       "bigtargets": "bigTargets",
       "biggertargets": "bigTargets",
       "highlightlinks": "highlightLinks",
-      "linkhighlighter": "highlightLinks"
+      "linkhighlighter": "highlightLinks",
+      "pageoutline": "pageOutline",
+      "outline": "pageOutline"
     };
     return map[lower] || name;
   }
@@ -3777,6 +3883,7 @@ ${chunk}
     if (profileTools.dismissOverlays) DismissOverlays.enable();
     if (profileTools.bigTargets) BigTargets.enable();
     if (profileTools.highlightLinks) LinkHighlighter.enable();
+    if (profileTools.pageOutline) PageOutline.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -3813,7 +3920,8 @@ ${chunk}
       autoTranscriber: "Auto-generate captions for media",
       dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals",
       bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)",
-      highlightLinks: "Underline and strengthen links and reveal where each one leads"
+      highlightLinks: "Underline and strengthen links and reveal where each one leads",
+      pageOutline: "On-page heading navigator to jump between sections"
     };
     return descriptions[name] || "";
   }

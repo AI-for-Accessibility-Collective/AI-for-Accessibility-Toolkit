@@ -170,6 +170,28 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "page-outline",
+    "name": "Page Outline",
+    "description": "Builds an on-page navigator listing the page's headings as links, so you can jump straight to any section instead of scrolling or crawling through it line by line.",
+    "supportAreas": [
+      "vision",
+      "motor",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference"
+    ],
+    "requiresAI": false,
+    "icon": "toc",
+    "emoji": "🗺️",
+    "quickStart": false,
+    "settings": {
+      "pageOutline": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -493,6 +515,10 @@ globalThis.AA_TOOLS = {
   "highlightLinks": {
     "type": "boolean",
     "description": "Underline links and show where each one leads"
+  },
+  "pageOutline": {
+    "type": "boolean",
+    "description": "On-page heading navigator for jumping between sections"
   },
   "keyboardNav": {
     "type": "boolean",

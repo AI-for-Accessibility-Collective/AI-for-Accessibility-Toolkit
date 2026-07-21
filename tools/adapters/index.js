@@ -23,6 +23,7 @@ export { AutoTranscriber } from './auto-transcriber.js';
 export { DismissOverlays } from './dismiss-overlays.js';
 export { BigTargets } from './big-targets.js';
 export { LinkHighlighter } from './link-highlighter.js';
+export { PageOutline } from './page-outline.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';
