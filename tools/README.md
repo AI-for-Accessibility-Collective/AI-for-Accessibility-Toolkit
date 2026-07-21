@@ -16,6 +16,7 @@ tools/
 │   └── wcag-issues.js    # axe-core wrapper
 ├── adapters/       # Fix issues or apply visual presets
 │   ├── index.js
+│   ├── _primitives.js   # Shared building blocks (text-node transform, style injection, DOM observers)
 │   ├── generate-alt.js
 │   ├── generate-labels.js
 │   ├── fix-contrast.js

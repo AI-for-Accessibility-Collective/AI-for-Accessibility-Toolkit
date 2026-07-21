@@ -17,6 +17,8 @@ setAIProvider({
   describeElement: async (dataUrl, elementType, context) => { /* returns string */ },
   simplifyText: async (text) => { /* returns string */ },
   summarizeText: async (text) => { /* returns string */ },
+  translateText: async (text, targetLang) => { /* returns string */ },
+  defineWord: async (word, context) => { /* returns string */ },
   generateLabels: async (context) => { /* returns string */ },
   inferLabel: async (context) => { /* returns string */ },
   fixContrast: async (fg, bg) => { /* returns string hex color */ },
@@ -29,7 +31,7 @@ setAIProvider({
 });
 ```
 
-Methods you don't provide degrade gracefully: required ones (`describeImage`, `simplifyText`, …) throw a clear error; optional ones (`fixContrast`, `improveLinkText`, `inferColumnHeader`, `transcribe*`, `describeElement`) return `null` so adapters skip that enhancement.
+Methods you don't provide degrade gracefully: required ones (`describeImage`, `simplifyText`, …) throw a clear error; optional ones (`fixContrast`, `improveLinkText`, `inferColumnHeader`, `translateText`, `defineWord`, `transcribe*`, `describeElement`) return `null` so adapters skip that enhancement.
 
 ### Provider Methods
 
@@ -40,6 +42,8 @@ Methods you don't provide degrade gracefully: required ones (`describeImage`, `s
 | `describeElement` | `dataUrl`, `elementType` ('canvas'\|'svg'\|'chart'…), `context` | `string` | Type-specific rich description |
 | `simplifyText` | `text: string` | `string` | Rewrite text at lower reading level |
 | `summarizeText` | `text: string` | `string` | Summarize long content (2-3 sentences) |
+| `translateText` | `text: string`, `targetLang: string` | `string` | Translate text into the target language |
+| `defineWord` | `word: string`, `context: string` | `string` | Plain-language definition of a word in context |
 | `generateLabels` | `{ elementType, html, context }` | `string` | Generate accessible name for element |
 | `inferLabel` | `{ elementType, html, context }` | `string` | Infer label for unlabeled form field |
 | `fixContrast` | `fg: string`, `bg: string` | `string` | Return fixed color meeting WCAG AA |
@@ -333,6 +337,8 @@ chrome.runtime.sendMessage({ type: 'describeImage', imageData: dataUrl }, respon
 'describeVideoFrames'// { frames, metadata } → { result: string }
 'simplifyText'       // { text } → { result: string }
 'summarizeText'      // { text } → { result: string }
+'translateText'      // { text, targetLang } → { result: string }
+'defineWord'         // { word, context } → { result: string }
 'transcribeAudio'    // { audioUrl } → { result: { type, text } }
 'transcribeVideo'    // { audioUrl } → { result: { type, text } }
 'inferLabel'         // { elementType, html, context } → { result: string }
