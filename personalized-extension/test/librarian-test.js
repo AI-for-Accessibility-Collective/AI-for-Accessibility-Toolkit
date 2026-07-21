@@ -242,6 +242,28 @@ function check(name, cond) {
     text: 'bank task', data: { task: 'Enlarge the statement text', summary: 'done', success: true },
   });
   check('no proposals from no-memory zones', (await L.listProposals()).length === 0);
+  // A proposal-sourced skill save must never overwrite an existing skill
+  // that shares the name (proposal fields can be app-supplied via the
+  // broker): the trusted skill stays intact and the task lands under a
+  // disambiguated name instead.
+  await L.saveSkill({
+    name: 'hide-the-trending-panel', description: 'My trusted skill.',
+    supportAreas: [], siteRelevance: ['social'],
+    recipe: { adapters: [], actions: [{ name: 'Hide the trending panel', prompt: 'My trusted safe task' }] },
+    body: '# Mine',
+  });
+  await L.logObservation({
+    type: 'agent-task', url: 'https://www.reddit.com/r/all',
+    text: 'done', data: { task: 'Hide the trending panel', summary: 'done', success: true },
+  });
+  const colProps = await L.listProposals();
+  check('colliding task still proposes', colProps.length === 1);
+  await L.respondToProposal(colProps[0].id, 'accept');
+  const docsAfter = await DS.get('mine.skillDocs');
+  const original = docsAfter.find(s => s.name === 'hide-the-trending-panel');
+  const added = docsAfter.find(s => s.name === 'hide-the-trending-panel-2');
+  check('existing skill not overwritten by accepted task', original?.recipe.actions[0].prompt === 'My trusted safe task');
+  check('accepted task saved under a new name instead', added?.recipe.actions[0].prompt === 'Hide the trending panel');
 
   // 12. Explicit setting changes stick: a manual toggle must beat auto-apply
   // profiles and learned records on subsequent pages (the "my change
