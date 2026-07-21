@@ -15,7 +15,7 @@ export const ReadAloud = {
   },
 
   getVoices() {
-    return speechSynthesis.getVoices();
+    return (typeof speechSynthesis !== 'undefined') ? speechSynthesis.getVoices() : [];
   },
 
   setVoice(voiceName) {
@@ -56,6 +56,10 @@ export const ReadAloud = {
   async speak(text) {
     this.stop();
     if (!text) return;
+    if (typeof EasySpeech === 'undefined' && typeof speechSynthesis === 'undefined') {
+      announce('Text-to-speech is not available in this browser');
+      return;
+    }
 
     this.speaking = true;
     this.paused = false;
@@ -92,13 +96,13 @@ export const ReadAloud = {
       this.speaking = false;
     };
 
-    speechSynthesis.speak(this.utterance);
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.speak(this.utterance);
     console.log('[AI4A11y] Read Aloud started');
     announce('Reading started');
   },
 
   pause() {
-    if (this.speaking && !this.paused) {
+    if (this.speaking && !this.paused && typeof speechSynthesis !== 'undefined') {
       speechSynthesis.pause();
       this.paused = true;
       announce('Reading paused');
@@ -106,7 +110,7 @@ export const ReadAloud = {
   },
 
   resume() {
-    if (this.paused) {
+    if (this.paused && typeof speechSynthesis !== 'undefined') {
       speechSynthesis.resume();
       this.paused = false;
       announce('Reading resumed');
@@ -114,7 +118,7 @@ export const ReadAloud = {
   },
 
   stop() {
-    speechSynthesis.cancel();
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     this.speaking = false;
     this.paused = false;
   },
@@ -153,4 +157,4 @@ export const ReadAloud = {
   }
 };
 
-window.__ai4a11yReadAloud = ReadAloud;
+if (typeof window !== 'undefined') window.__ai4a11yReadAloud = ReadAloud;

@@ -2307,7 +2307,7 @@ ${chunk}
       highlightColor: "#ffeb3b"
     },
     getVoices() {
-      return speechSynthesis.getVoices();
+      return typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
     },
     setVoice(voiceName) {
       const voices = this.getVoices();
@@ -2343,6 +2343,10 @@ ${chunk}
     async speak(text) {
       this.stop();
       if (!text) return;
+      if (typeof EasySpeech === "undefined" && typeof speechSynthesis === "undefined") {
+        announce("Text-to-speech is not available in this browser");
+        return;
+      }
       this.speaking = true;
       this.paused = false;
       this.words = text.split(/\s+/);
@@ -2409,19 +2413,19 @@ ${chunk}
         console.error("[AI4A11y] Speech error:", event.error);
         this.speaking = false;
       };
-      speechSynthesis.speak(this.utterance);
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.speak(this.utterance);
       console.log("[AI4A11y] Read Aloud started");
       announce("Reading started");
     },
     pause() {
-      if (this.speaking && !this.paused) {
+      if (this.speaking && !this.paused && typeof speechSynthesis !== "undefined") {
         speechSynthesis.pause();
         this.paused = true;
         announce("Reading paused");
       }
     },
     resume() {
-      if (this.paused) {
+      if (this.paused && typeof speechSynthesis !== "undefined") {
         speechSynthesis.resume();
         this.paused = false;
         announce("Reading resumed");
@@ -2434,7 +2438,7 @@ ${chunk}
         } catch (e) {
         }
       }
-      speechSynthesis.cancel();
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
       this.speaking = false;
       this.paused = false;
     },
@@ -2461,7 +2465,7 @@ ${chunk}
       }
     }
   };
-  window.__ai4a11yReadAloud = ReadAloud;
+  if (typeof window !== "undefined") window.__ai4a11yReadAloud = ReadAloud;
 
   // tools/adapters/reader-mode.js
   var ReaderMode = {
