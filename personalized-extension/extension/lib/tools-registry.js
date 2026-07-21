@@ -132,6 +132,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "big-targets",
+    "name": "Bigger Click Targets",
+    "description": "Enlarges and spaces out small links, buttons, and inputs to a comfortable 44px click/touch size (WCAG 2.5.8) so they are easy to hit with a shaky hand, a single finger, or eye-gaze input.",
+    "supportAreas": [
+      "motor",
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "ads_click",
+    "emoji": "👆",
+    "quickStart": true,
+    "settings": {
+      "bigTargets": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -447,6 +466,10 @@ globalThis.AA_TOOLS = {
   "dismissOverlays": {
     "type": "boolean",
     "description": "Hide cookie banners, newsletter popups, and blocking modals"
+  },
+  "bigTargets": {
+    "type": "boolean",
+    "description": "Enlarge and space out small clickable controls"
   },
   "keyboardNav": {
     "type": "boolean",

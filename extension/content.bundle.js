@@ -133,7 +133,8 @@
           enhanceFocus: true,
           keyboardNav: true,
           voiceCommands: true,
-          dismissOverlays: true
+          dismissOverlays: true,
+          bigTargets: true
         }
       },
       dyslexia: {
@@ -185,7 +186,8 @@
           autoCaptions: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: true
+          showProgress: true,
+          bigTargets: true
         }
       },
       anxiety: {
@@ -237,6 +239,7 @@
       readingGuide: false,
       motionReducer: false,
       dismissOverlays: false,
+      bigTargets: false,
       readerMode: false,
       focusMode: false,
       hideDistractions: false,
@@ -3359,6 +3362,64 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yDismissOverlays = DismissOverlays;
 
+  // tools/adapters/big-targets.js
+  var TARGET_SELECTORS = ["a", "button", "input", '[role="button"]', "[onclick]"];
+  var BigTargets = {
+    styleId: "ai4a11y-big-targets-styles",
+    bodyClass: "ai4a11y-big-targets",
+    enabled: false,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const minSize = options.minSize || 44;
+      const gap = options.gap || 6;
+      const scope = (suffix = "") => TARGET_SELECTORS.map((s) => `body.${this.bodyClass} ${s}${suffix}`).join(",\n");
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+${scope()} {
+  min-width: ${minSize}px !important;
+  min-height: ${minSize}px !important;
+  padding: 8px 12px !important;
+  margin: ${gap}px !important;
+  box-sizing: border-box !important;
+}
+/* min-width/height are ignored on inline boxes, and bare links are inline. */
+body.${this.bodyClass} a { display: inline-block !important; }
+${scope(":focus")} {
+  outline: 3px solid #1a73e8 !important;
+  outline-offset: 2px !important;
+}`;
+      (document.head || document.documentElement).appendChild(style);
+      try {
+        if (document.body) document.body.classList.add(this.bodyClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Bigger Click Targets enabled");
+      announce("Click targets enlarged");
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        if (document.body) document.body.classList.remove(this.bodyClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Bigger Click Targets disabled");
+      announce("Click targets restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -3525,6 +3586,7 @@ ${chunk}
     }
     if (settings2.readerMode) ReaderMode.enable();
     if (settings2.dismissOverlays) DismissOverlays.enable();
+    if (settings2.bigTargets) BigTargets.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -3712,6 +3774,7 @@ ${chunk}
     KeyboardNavigator.disable();
     AutoTranscriber.disable();
     DismissOverlays.disable();
+    BigTargets.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -3825,7 +3888,8 @@ ${chunk}
           VoiceCommands: VoiceCommands.enabled || false,
           KeyboardNavigator: KeyboardNavigator.enabled || false,
           AutoTranscriber: AutoTranscriber.enabled || false,
-          DismissOverlays: DismissOverlays.enabled || false
+          DismissOverlays: DismissOverlays.enabled || false,
+          BigTargets: BigTargets.enabled || false
         }
       });
       return true;

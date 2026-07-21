@@ -1514,6 +1514,64 @@
   };
   if (typeof window !== "undefined") window.__ai4a11yDismissOverlays = DismissOverlays;
 
+  // tools/adapters/big-targets.js
+  var TARGET_SELECTORS = ["a", "button", "input", '[role="button"]', "[onclick]"];
+  var BigTargets = {
+    styleId: "ai4a11y-big-targets-styles",
+    bodyClass: "ai4a11y-big-targets",
+    enabled: false,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const minSize = options.minSize || 44;
+      const gap = options.gap || 6;
+      const scope = (suffix = "") => TARGET_SELECTORS.map((s) => `body.${this.bodyClass} ${s}${suffix}`).join(",\n");
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+${scope()} {
+  min-width: ${minSize}px !important;
+  min-height: ${minSize}px !important;
+  padding: 8px 12px !important;
+  margin: ${gap}px !important;
+  box-sizing: border-box !important;
+}
+/* min-width/height are ignored on inline boxes, and bare links are inline. */
+body.${this.bodyClass} a { display: inline-block !important; }
+${scope(":focus")} {
+  outline: 3px solid #1a73e8 !important;
+  outline-offset: 2px !important;
+}`;
+      (document.head || document.documentElement).appendChild(style);
+      try {
+        if (document.body) document.body.classList.add(this.bodyClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Bigger Click Targets enabled");
+      announce("Click targets enlarged");
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        if (document.body) document.body.classList.remove(this.bodyClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Bigger Click Targets disabled");
+      announce("Click targets restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -3283,7 +3341,8 @@ ${chunk}
           enhanceFocus: true,
           keyboardNav: true,
           voiceCommands: true,
-          dismissOverlays: true
+          dismissOverlays: true,
+          bigTargets: true
         }
       },
       dyslexia: {
@@ -3335,7 +3394,8 @@ ${chunk}
           autoCaptions: true,
           focusMode: true,
           hideDistractions: true,
-          showProgress: true
+          showProgress: true,
+          bigTargets: true
         }
       },
       anxiety: {
@@ -3387,6 +3447,7 @@ ${chunk}
       readingGuide: false,
       motionReducer: false,
       dismissOverlays: false,
+      bigTargets: false,
       readerMode: false,
       focusMode: false,
       hideDistractions: false,
@@ -3488,7 +3549,8 @@ ${chunk}
     keyboardNav: KeyboardNavigator,
     colorBlindMode: ColorBlindMode,
     autoTranscriber: AutoTranscriber,
-    dismissOverlays: DismissOverlays
+    dismissOverlays: DismissOverlays,
+    bigTargets: BigTargets
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -3508,7 +3570,9 @@ ${chunk}
       "autotranscriber": "autoTranscriber",
       "autocaptions": "autoTranscriber",
       "dismissoverlays": "dismissOverlays",
-      "dismisspopups": "dismissOverlays"
+      "dismisspopups": "dismissOverlays",
+      "bigtargets": "bigTargets",
+      "biggertargets": "bigTargets"
     };
     return map[lower] || name;
   }
@@ -3583,6 +3647,7 @@ ${chunk}
     if (profileTools.focusMode) FocusMode.enable();
     if (profileTools.readerMode) ReaderMode.enable();
     if (profileTools.dismissOverlays) DismissOverlays.enable();
+    if (profileTools.bigTargets) BigTargets.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -3617,7 +3682,8 @@ ${chunk}
       keyboardNav: "Enhanced keyboard navigation",
       colorBlindMode: "Color vision deficiency filters",
       autoTranscriber: "Auto-generate captions for media",
-      dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals"
+      dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals",
+      bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)"
     };
     return descriptions[name] || "";
   }
