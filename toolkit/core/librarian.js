@@ -634,10 +634,16 @@ export function createLibrarian({
         if (idx >= 0) skills[idx] = entry; else skills.push(entry);
         return skills;
       });
-      // A saved skill is a strong signal about what helps this person.
+      // A saved skill is a strong signal about what helps this person. Record
+      // the ability context (supportAreas) and the triggers (siteRelevance)
+      // alongside it — the flow's final step, where the profile/memory db
+      // learns e.g. "low vision + anxiety" and "news sites + videos" from the
+      // skill the person just validated. Extraction folds it into the profile.
       await this.logObservation({
-        type: 'saved-action', text: `Saved skill "${skill.name}"`,
-        data: { skill: skill.name },
+        type: 'saved-action',
+        text: `Saved skill "${skill.name}" — helps with ${(skill.supportAreas || []).join(', ') || 'unspecified areas'};`
+          + ` applies on ${(skill.siteRelevance || []).join(', ') || 'all'} sites`,
+        data: { skill: skill.name, supportAreas: skill.supportAreas || [], triggers: skill.siteRelevance || [] },
       }).catch(() => {});
       return { saved: true, errors: [] };
     },
