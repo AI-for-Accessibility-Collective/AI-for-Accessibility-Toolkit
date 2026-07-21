@@ -75,6 +75,12 @@
     }
     return provider.inferColumnHeader(sampleData);
   }
+  async function translateText(text, targetLang) {
+    if (!(provider == null ? void 0 : provider.translateText)) {
+      return null;
+    }
+    return provider.translateText(text, targetLang);
+  }
 
   // tools/profiles/settings.json
   var settings_default = {
@@ -264,7 +270,9 @@
       highlightLinks: false,
       pageOutline: false,
       bionicReading: false,
-      unpinSticky: false
+      unpinSticky: false,
+      translatePage: false,
+      translateTo: "English"
     }
   };
 
@@ -3926,6 +3934,81 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
 
+  // tools/adapters/translate-page.js
+  var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
+  var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
+  var MAX_BLOCKS = 80;
+  var BATCH = 4;
+  var TranslatePage = {
+    enabled: false,
+    translated: null,
+    // Set of { el, originalNodes: Node[] }
+    targetLang: "English",
+    async enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.translated = /* @__PURE__ */ new Set();
+      this.targetLang = options.targetLang || options.lang || "English";
+      const root = document.querySelector('main, article, [role="main"]') || document.body;
+      if (!root) {
+        announce("Nothing to translate");
+        return;
+      }
+      let blocks;
+      try {
+        blocks = [...root.querySelectorAll(BLOCK_SEL)].filter((el) => el.textContent.trim().length > 1 && !el.closest(SKIP_ANCESTOR) && !el.querySelector(BLOCK_SEL));
+      } catch {
+        blocks = [];
+      }
+      const targets = blocks.slice(0, MAX_BLOCKS);
+      if (blocks.length > targets.length) {
+        console.log(`[AI4A11y] Translate: translating ${targets.length} of ${blocks.length} blocks (cost cap)`);
+      }
+      announce(`Translating to ${this.targetLang}\u2026`);
+      let done = 0;
+      for (let i = 0; i < targets.length && this.enabled; i += BATCH) {
+        await Promise.all(targets.slice(i, i + BATCH).map(async (el) => {
+          const original = el.textContent;
+          let out;
+          try {
+            out = await translateText(original, this.targetLang);
+          } catch {
+            return;
+          }
+          if (!out || !this.enabled || !el.isConnected) return;
+          const originalNodes = [...el.childNodes];
+          el.textContent = out;
+          this.translated.add({ el, originalNodes });
+          done++;
+        }));
+      }
+      console.log(`[AI4A11y] Translate Page: ${done} blocks \u2192 ${this.targetLang}`);
+      announce(done ? `Translated ${done} passages to ${this.targetLang}` : "Translation unavailable");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.translated) {
+        for (const { el, originalNodes } of this.translated) {
+          try {
+            if (!el.isConnected) continue;
+            el.textContent = "";
+            for (const node of originalNodes) el.appendChild(node);
+          } catch {
+          }
+        }
+        this.translated.clear();
+        this.translated = null;
+      }
+      announce("Original text restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yTranslatePage = TranslatePage;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -4039,6 +4122,8 @@ ${scope(":focus")} {
     describeVideo: (frames, metadata) => sendMessage({ type: "describeVideoFrames", frames, metadata }).then((r) => r == null ? void 0 : r.result),
     simplifyText: (text) => sendMessage({ type: "simplifyText", text }).then((r) => r == null ? void 0 : r.result),
     summarizeText: (text) => sendMessage({ type: "summarizeText", text }).then((r) => r == null ? void 0 : r.result),
+    translateText: (text, targetLang) => sendMessage({ type: "translateText", text, targetLang }).then((r) => r == null ? void 0 : r.result),
+    defineWord: (word, context) => sendMessage({ type: "defineWord", word, context }).then((r) => r == null ? void 0 : r.result),
     generateLabels: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
     inferLabel: (ctx) => sendMessage({ type: "inferLabel", ...ctx }).then((r) => r == null ? void 0 : r.result),
     fixContrast: (fg, bg) => sendMessage({ type: "fixContrast", foreground: fg, background: bg }).then((r) => r == null ? void 0 : r.result),
@@ -4097,6 +4182,7 @@ ${scope(":focus")} {
     if (settings2.pageOutline) PageOutline.enable();
     if (settings2.bionicReading) BionicReading.enable();
     if (settings2.unpinSticky) UnpinSticky.enable();
+    if (settings2.translatePage) TranslatePage.enable({ targetLang: settings2.translateTo });
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -4289,6 +4375,7 @@ ${scope(":focus")} {
     PageOutline.disable();
     BionicReading.disable();
     UnpinSticky.disable();
+    TranslatePage.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -4407,7 +4494,8 @@ ${scope(":focus")} {
           LinkHighlighter: LinkHighlighter.enabled || false,
           PageOutline: PageOutline.enabled || false,
           BionicReading: BionicReading.enabled || false,
-          UnpinSticky: UnpinSticky.enabled || false
+          UnpinSticky: UnpinSticky.enabled || false,
+          TranslatePage: TranslatePage.enabled || false
         }
       });
       return true;

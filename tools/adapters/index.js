@@ -26,6 +26,7 @@ export { LinkHighlighter } from './link-highlighter.js';
 export { PageOutline } from './page-outline.js';
 export { BionicReading } from './bionic-reading.js';
 export { UnpinSticky } from './unpin-sticky.js';
+export { TranslatePage } from './translate-page.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

@@ -187,7 +187,9 @@
       highlightLinks: false,
       pageOutline: false,
       bionicReading: false,
-      unpinSticky: false
+      unpinSticky: false,
+      translatePage: false,
+      translateTo: "English"
     }
   };
 

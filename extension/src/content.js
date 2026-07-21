@@ -43,6 +43,7 @@ import {
   PageOutline,
   BionicReading,
   UnpinSticky,
+  TranslatePage,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -55,6 +56,8 @@ setAIProvider({
   describeVideo: (frames, metadata) => sendMessage({ type: 'describeVideoFrames', frames, metadata }).then(r => r?.result),
   simplifyText: (text) => sendMessage({ type: 'simplifyText', text }).then(r => r?.result),
   summarizeText: (text) => sendMessage({ type: 'summarizeText', text }).then(r => r?.result),
+  translateText: (text, targetLang) => sendMessage({ type: 'translateText', text, targetLang }).then(r => r?.result),
+  defineWord: (word, context) => sendMessage({ type: 'defineWord', word, context }).then(r => r?.result),
   generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
   inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
   fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(r => r?.result),
@@ -138,6 +141,7 @@ function applyVisualSettings(settings) {
   if (settings.pageOutline) PageOutline.enable();
   if (settings.bionicReading) BionicReading.enable();
   if (settings.unpinSticky) UnpinSticky.enable();
+  if (settings.translatePage) TranslatePage.enable({ targetLang: settings.translateTo });
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -372,6 +376,7 @@ function revertAll() {
   PageOutline.disable();
   BionicReading.disable();
   UnpinSticky.disable();
+  TranslatePage.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -494,7 +499,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         LinkHighlighter: LinkHighlighter.enabled || false,
         PageOutline: PageOutline.enabled || false,
         BionicReading: BionicReading.enabled || false,
-        UnpinSticky: UnpinSticky.enabled || false
+        UnpinSticky: UnpinSticky.enabled || false,
+        TranslatePage: TranslatePage.enabled || false
       }
     });
     return true;

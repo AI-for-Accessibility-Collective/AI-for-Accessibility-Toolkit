@@ -69,6 +69,12 @@
     }
     return provider.inferColumnHeader(sampleData);
   }
+  async function translateText(text, targetLang) {
+    if (!(provider == null ? void 0 : provider.translateText)) {
+      return null;
+    }
+    return provider.translateText(text, targetLang);
+  }
 
   // tools/adapters/visual-assist.js
   var VisualAssist = {
@@ -2007,6 +2013,81 @@ ${scope(":focus")} {
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
+
+  // tools/adapters/translate-page.js
+  var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
+  var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
+  var MAX_BLOCKS = 80;
+  var BATCH = 4;
+  var TranslatePage = {
+    enabled: false,
+    translated: null,
+    // Set of { el, originalNodes: Node[] }
+    targetLang: "English",
+    async enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.translated = /* @__PURE__ */ new Set();
+      this.targetLang = options.targetLang || options.lang || "English";
+      const root = document.querySelector('main, article, [role="main"]') || document.body;
+      if (!root) {
+        announce("Nothing to translate");
+        return;
+      }
+      let blocks;
+      try {
+        blocks = [...root.querySelectorAll(BLOCK_SEL)].filter((el) => el.textContent.trim().length > 1 && !el.closest(SKIP_ANCESTOR) && !el.querySelector(BLOCK_SEL));
+      } catch {
+        blocks = [];
+      }
+      const targets = blocks.slice(0, MAX_BLOCKS);
+      if (blocks.length > targets.length) {
+        console.log(`[AI4A11y] Translate: translating ${targets.length} of ${blocks.length} blocks (cost cap)`);
+      }
+      announce(`Translating to ${this.targetLang}\u2026`);
+      let done = 0;
+      for (let i = 0; i < targets.length && this.enabled; i += BATCH) {
+        await Promise.all(targets.slice(i, i + BATCH).map(async (el) => {
+          const original = el.textContent;
+          let out;
+          try {
+            out = await translateText(original, this.targetLang);
+          } catch {
+            return;
+          }
+          if (!out || !this.enabled || !el.isConnected) return;
+          const originalNodes = [...el.childNodes];
+          el.textContent = out;
+          this.translated.add({ el, originalNodes });
+          done++;
+        }));
+      }
+      console.log(`[AI4A11y] Translate Page: ${done} blocks \u2192 ${this.targetLang}`);
+      announce(done ? `Translated ${done} passages to ${this.targetLang}` : "Translation unavailable");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.translated) {
+        for (const { el, originalNodes } of this.translated) {
+          try {
+            if (!el.isConnected) continue;
+            el.textContent = "";
+            for (const node of originalNodes) el.appendChild(node);
+          } catch {
+          }
+        }
+        this.translated.clear();
+        this.translated = null;
+      }
+      announce("Original text restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yTranslatePage = TranslatePage;
 
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
@@ -3963,7 +4044,9 @@ ${chunk}
       highlightLinks: false,
       pageOutline: false,
       bionicReading: false,
-      unpinSticky: false
+      unpinSticky: false,
+      translatePage: false,
+      translateTo: "English"
     }
   };
 
@@ -4001,6 +4084,18 @@ ${chunk}
       summarizeText: async (text) => {
         if (typeof window.ai4a11y_summarizeText === "function") {
           return await window.ai4a11y_summarizeText(text);
+        }
+        return null;
+      },
+      translateText: async (text, targetLang) => {
+        if (typeof window.ai4a11y_translateText === "function") {
+          return await window.ai4a11y_translateText(text, targetLang);
+        }
+        return null;
+      },
+      defineWord: async (word, context) => {
+        if (typeof window.ai4a11y_defineWord === "function") {
+          return await window.ai4a11y_defineWord(word, context);
         }
         return null;
       },
@@ -4059,7 +4154,8 @@ ${chunk}
     highlightLinks: LinkHighlighter,
     pageOutline: PageOutline,
     bionicReading: BionicReading,
-    unpinSticky: UnpinSticky
+    unpinSticky: UnpinSticky,
+    translatePage: TranslatePage
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -4089,7 +4185,9 @@ ${chunk}
       "bionicreading": "bionicReading",
       "bionic": "bionicReading",
       "unpinsticky": "unpinSticky",
-      "unpin": "unpinSticky"
+      "unpin": "unpinSticky",
+      "translatepage": "translatePage",
+      "translate": "translatePage"
     };
     return map[lower] || name;
   }
@@ -4169,6 +4267,7 @@ ${chunk}
     if (profileTools.pageOutline) PageOutline.enable();
     if (profileTools.bionicReading) BionicReading.enable();
     if (profileTools.unpinSticky) UnpinSticky.enable();
+    if (profileTools.translatePage) TranslatePage.enable({ targetLang: profileTools.translateTo });
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
@@ -4208,7 +4307,8 @@ ${chunk}
       highlightLinks: "Underline and strengthen links and reveal where each one leads",
       pageOutline: "On-page heading navigator to jump between sections",
       bionicReading: "Bold the start of each word to guide the eye (dyslexia/ADHD aid)",
-      unpinSticky: "Un-fix sticky headers/bars so they stop eating the viewport when zoomed"
+      unpinSticky: "Un-fix sticky headers/bars so they stop eating the viewport when zoomed",
+      translatePage: "Translate the page text into another language (AI)"
     };
     return descriptions[name] || "";
   }

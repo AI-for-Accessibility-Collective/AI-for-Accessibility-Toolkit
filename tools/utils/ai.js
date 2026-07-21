@@ -110,3 +110,19 @@ export async function inferColumnHeader(sampleData) {
   }
   return provider.inferColumnHeader(sampleData);
 }
+
+// Translate a block of text into the named target language (e.g. "Spanish").
+export async function translateText(text, targetLang) {
+  if (!provider?.translateText) {
+    return null;
+  }
+  return provider.translateText(text, targetLang);
+}
+
+// A short plain-language definition of a word/phrase, given its sentence context.
+export async function defineWord(word, context) {
+  if (!provider?.defineWord) {
+    return null;
+  }
+  return provider.defineWord(word, context);
+}
