@@ -19,7 +19,7 @@ const RECOGNIZED = new Set([
   'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
   'announceUpdates', 'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'confirmActions', 'contrastMode', 'darkMode',
   'defineWords', 'describeOnDemand', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
-  'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
+  'colorFilter', 'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
   'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
   'fixContrast',
 ]);

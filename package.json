@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AI-powered Chrome extension that adapts any webpage to each user's abilities",
   "engines": {
-    "node": ">=20.19"
+    "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
   "scripts": {
     "build": "node extension/src/build.js",
