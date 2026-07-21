@@ -15,6 +15,9 @@ export const ReaderMode = {
   },
 
   enable(options = {}) {
+    // Idempotent: a second enable() would orphan the first overlay + Escape
+    // listener, leaving a stuck full-screen div and a leaked handler.
+    if (this.enabled) return;
     this.settings = { ...this.settings, ...options };
 
     const docClone = document.cloneNode(true);
@@ -173,4 +176,4 @@ export const ReaderMode = {
   }
 };
 
-window.__ai4a11yReaderMode = ReaderMode;
+if (typeof window !== 'undefined') window.__ai4a11yReaderMode = ReaderMode;

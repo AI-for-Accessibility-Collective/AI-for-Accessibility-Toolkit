@@ -780,6 +780,7 @@
       textColor: "#333"
     },
     enable(options = {}) {
+      if (this.enabled) return;
       if (typeof Readability === "undefined") {
         console.warn("[AI4A11y] Readability library not loaded");
         announce("Reader mode not available");
@@ -917,7 +918,7 @@
       }
     }
   };
-  window.__ai4a11yReaderMode = ReaderMode;
+  if (typeof window !== "undefined") window.__ai4a11yReaderMode = ReaderMode;
 
   // tools/adapters/voice-commands.js
   var VoiceCommands = {

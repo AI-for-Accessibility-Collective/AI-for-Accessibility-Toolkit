@@ -16,6 +16,10 @@ export const ReaderMode = {
   },
 
   enable(options = {}) {
+    // Idempotent: a second enable() without an intervening disable() would
+    // orphan the first overlay + Escape listener (disable() only knows the
+    // latest references), leaving a stuck full-screen div and a leaked handler.
+    if (this.enabled) return;
     if (typeof Readability === 'undefined') {
       console.warn('[AI4A11y] Readability library not loaded');
       announce('Reader mode not available');
@@ -181,4 +185,4 @@ export const ReaderMode = {
   }
 };
 
-window.__ai4a11yReaderMode = ReaderMode;
+if (typeof window !== 'undefined') window.__ai4a11yReaderMode = ReaderMode;
