@@ -38,6 +38,15 @@
         <span id="buildStatus" class="build-status" role="status" aria-live="polite"></span>
       </div>
 
+      <!-- Offer an existing skill that already covers the need, before building -->
+      <div id="reuseOffer" class="skill-preview" hidden aria-live="polite">
+        <p id="reuseText"></p>
+        <div class="phase-actions">
+          <button id="reuseUseBtn" class="btn btn-success">Use it</button>
+          <button id="reuseBuildBtn" class="btn btn-text">Build a new one anyway</button>
+        </div>
+      </div>
+
       <!-- Preview of the built skill, before saving -->
       <div id="preview" class="skill-preview" hidden aria-live="polite">
         <h3 id="previewName" class="preview-name"></h3>

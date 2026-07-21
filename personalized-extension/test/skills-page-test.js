@@ -46,6 +46,10 @@ const BUILT = {
             resp = { plan: { settings: { fontScale: 130, focusMode: true }, adapterIds: ['visual-assist', 'focus-mode'] } };
           } else if (msg.type === 'librarianRetrieveSkill') {
             resp = { skill: { name: 'reading-aid' } };
+          } else if (msg.type === 'librarianFindSkill') {
+            resp = /\breading\b/.test(msg.need)
+              ? { skill: { name: 'reading-aid', description: 'Reading help.', source: 'builtin' } }
+              : {};
           } else if (msg.type === 'librarianDeleteSkill') {
             mineSkills = mineSkills.filter(s => s.name !== msg.name); resp = { deleted: true };
           }
@@ -92,6 +96,20 @@ const BUILT = {
   const applyMsg = await page.evaluate(() => window.__sent.find(m => m.__toTab === 7 && m.type === 'applySkill'));
   check('apply resolves skill first', await page.evaluate(() => window.__sent.some(m => m.type === 'librarianResolveSkill')));
   check('apply sends resolved settings to the tab', applyMsg?.plan?.settings?.fontScale === 130);
+
+  // Reuse-before-build: a need an existing skill covers gets an offer first,
+  // and "Build a new one anyway" then proceeds to the Engineer.
+  await page.evaluate(() => { document.getElementById('needInput').value = ''; window.__sent.length = 0; });
+  await page.type('#needInput', 'help with reading');
+  await page.click('#buildBtn');
+  await page.waitForFunction(() => !document.getElementById('reuseOffer').hidden, { timeout: 5000 });
+  check('covered need offers the existing skill instead of building', await page.evaluate(() =>
+    document.getElementById('reuseText').textContent.includes('reading-aid')
+    && !window.__sent.some(m => m.type === 'librarianBuildSkill')));
+  await page.click('#reuseBuildBtn');
+  await page.waitForFunction(() => window.__sent.some(m => m.type === 'librarianBuildSkill' && /reading/.test(m.need)), { timeout: 5000 });
+  check('build anyway proceeds to the Engineer', await page.evaluate(() =>
+    document.getElementById('reuseOffer').hidden));
 
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed`);

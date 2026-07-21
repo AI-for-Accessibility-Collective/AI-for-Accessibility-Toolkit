@@ -36,7 +36,7 @@
  * @param {import('./ports.js').Demo} [deps.demo]
  */
 import { deriveAbilityModel } from './ability-model.js';
-import { resolveSkill, matchSkill, validateSkill } from './skill.js';
+import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill } from './skill.js';
 import { buildSkill } from './skill-builder.js';
 
 export function createLibrarian({
@@ -582,6 +582,19 @@ export function createLibrarian({
       const scored = (await this.listSkills())
         .map(s => ({ skill: s, score: matchSkill(s, ctx) }))
         .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score);
+      return scored.length ? scored[0].skill : null;
+    },
+
+    // The skill-creation flow's first diamond: "does the skill exist in the
+    // db?" — checked BEFORE the Engineer builds anything. Built-in and the
+    // person's own skills both count. Deterministic keyword match (no LLM),
+    // so the reuse offer works without an API key. Returns the best fit or
+    // null when nothing plausibly covers the need.
+    async findSkillForNeed(need) {
+      const scored = (await this.listSkills())
+        .map(s => ({ skill: s, score: matchSkillToNeed(s, need) }))
+        .filter(x => x.score >= 4)
         .sort((a, b) => b.score - a.score);
       return scored.length ? scored[0].skill : null;
     },

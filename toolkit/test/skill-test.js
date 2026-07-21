@@ -4,7 +4,7 @@
 import { readFileSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { parseSkill, serializeSkill, validateSkill, resolveSkill, matchSkill } from '../core/skill.js';
+import { parseSkill, serializeSkill, validateSkill, resolveSkill, matchSkill, matchSkillToNeed } from '../core/skill.js';
 import { buildSkillPrompt, parseBuiltSkill } from '../core/skill-builder.js';
 import { createDatastore } from '../core/datastore.js';
 import { createLibrarian } from '../core/librarian.js';
@@ -72,6 +72,15 @@ check('reading-aid matches vision reader on news', matchSkill(reading, { support
 check('reading-aid does not match a motor user on video', matchSkill(reading, { supportAreas: ['motor'], category: 'video' }) === 0);
 check('calm-browsing (siteRelevance all) matches anywhere', matchSkill(calm, { supportAreas: ['sensory'], category: 'shopping' }) > 0);
 
+// ---- matching a plain-language need (reuse-before-build check) -------------
+const readNeed = 'Make text easier to read for me on news sites';
+check('reading-aid covers a plain reading need', matchSkillToNeed(reading, readNeed) >= 4);
+check('reading need scores reading-aid above calm-browsing',
+  matchSkillToNeed(reading, readNeed) > matchSkillToNeed(calm, readNeed));
+check('unrelated need does not match reading-aid', matchSkillToNeed(reading, 'louder alert sounds') < 4);
+check('empty need matches nothing', matchSkillToNeed(reading, '') === 0);
+check('generic words alone match nothing', matchSkillToNeed(reading, 'please make this site more like that') === 0);
+
 // ---- validation catches bad skills -----------------------------------------
 const bad = parseSkill('---\nname: bad\ndescription: x\n---\n## Recipe\n```json\n{"adapters":[{"id":"not-a-real-adapter","settings":{"nope":1}}]}\n```');
 const badRes = validateSkill(bad, { tools });
@@ -126,6 +135,13 @@ const librarian = createLibrarian({
 
   const applyPlan = librarian.resolveSkill(retrieved);
   check('retrieved skill resolves to a settings plan', typeof applyPlan.settings === 'object' && applyPlan.adapterIds.length > 0);
+
+  // Reuse-before-build: an existing skill is found for a covered need; a
+  // need nothing covers returns null (so the Engineer gets asked).
+  const found = await librarian.findSkillForNeed('make long text easier to read on news sites');
+  check('findSkillForNeed returns a covering skill', found && found.name === 'reading-aid');
+  const notFound = await librarian.findSkillForNeed('translate pages into sign language video');
+  check('findSkillForNeed returns null when nothing covers the need', notFound === null);
 
   // Save a user skill → appears in listSkills as mine, retrievable.
   const saveRes = await librarian.saveSkill({

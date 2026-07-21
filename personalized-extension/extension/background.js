@@ -1053,6 +1053,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse({ skills: await L.listSkills() }); break;
           case 'librarianRetrieveSkill':
             sendResponse({ skill: await L.retrieveSkill(msg.url, msg.contexts || []) }); break;
+          case 'librarianFindSkill':
+            sendResponse({ skill: await L.findSkillForNeed(msg.need) }); break;
           case 'librarianBuildSkill':
             sendResponse(await L.buildSkill(msg.need)); break;
           case 'librarianResolveSkill':

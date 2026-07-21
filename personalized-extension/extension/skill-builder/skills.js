@@ -39,9 +39,34 @@ function describeAdapters(skill) {
 // ---- Build a new skill (the Engineer) --------------------------------------
 let builtSkill = null;
 
+// The skill-creation flow's first question: does a skill for this need already
+// exist? We check the skill db (built-in + yours) and offer the match BEFORE
+// asking the Engineer to build. `checkedNeed` remembers what we last checked
+// so "Build a new one anyway" (or a second Build click) goes straight through.
+let checkedNeed = null;
+let offeredSkill = null;
+
+function hideReuseOffer() { $('reuseOffer').hidden = true; }
+
+function renderReuseOffer(skill) {
+  $('reuseText').innerHTML =
+    `A skill for this may already exist: <strong>${escapeHtml(skill.name)}</strong>` +
+    ` (${skill.source === 'mine' ? 'yours' : 'built-in'}) — ${escapeHtml(skill.description || '')}`;
+  $('reuseOffer').hidden = false;
+  $('buildStatus').textContent = 'Found an existing skill that may cover this.';
+}
+
 async function onBuild() {
   const need = $('needInput').value.trim();
   if (!need) { $('buildStatus').textContent = 'Type what you need first.'; return; }
+
+  if (need !== checkedNeed) {
+    checkedNeed = need;
+    const { skill: match } = await sendBg({ type: 'librarianFindSkill', need });
+    if (match) { offeredSkill = match; renderReuseOffer(match); return; }
+  }
+  hideReuseOffer();
+
   $('buildBtn').disabled = true;
   $('buildStatus').textContent = 'The Engineer is composing adapters…';
   $('preview').hidden = true;
@@ -194,6 +219,19 @@ function init() {
   $('saveBtn').addEventListener('click', onSave);
   $('discardBtn').addEventListener('click', () => { $('preview').hidden = true; builtSkill = null; });
   $('suggestBtn').addEventListener('click', onSuggest);
+  // Reuse offer: "Use it" highlights the existing skill in the list below
+  // (Apply from there is the consent click); "Build a new one anyway" falls
+  // through to the Engineer because the need was already checked.
+  $('reuseUseBtn').addEventListener('click', async () => {
+    hideReuseOffer();
+    if (!offeredSkill) return;
+    matchName = offeredSkill.name;
+    await loadSkills();
+    $('listStatus').textContent = `"${offeredSkill.name}" is highlighted below — Apply it from there.`;
+    document.querySelector('.skills-list-section')?.scrollIntoView({ behavior: 'smooth' });
+  });
+  $('reuseBuildBtn').addEventListener('click', () => { hideReuseOffer(); onBuild(); });
+  $('needInput').addEventListener('input', () => { checkedNeed = null; hideReuseOffer(); });
   loadSkills();
 }
 

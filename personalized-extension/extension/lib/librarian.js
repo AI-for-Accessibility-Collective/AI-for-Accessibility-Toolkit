@@ -264,6 +264,69 @@
     if (rel.includes("all")) score += 1;
     return score;
   }
+  var GENERIC_WORDS = /* @__PURE__ */ new Set([
+    "the",
+    "and",
+    "for",
+    "with",
+    "when",
+    "that",
+    "this",
+    "them",
+    "they",
+    "have",
+    "from",
+    "make",
+    "making",
+    "want",
+    "need",
+    "please",
+    "help",
+    "like",
+    "can",
+    "could",
+    "would",
+    "site",
+    "page",
+    "website",
+    "web",
+    "get",
+    "turn",
+    "use",
+    "using",
+    "more",
+    "some",
+    "all",
+    "every",
+    "thing"
+  ]);
+  function needTokens(text) {
+    return String(text || "").toLowerCase().split(/[^a-z0-9]+/).map((w) => w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w).filter((w) => w.length > 2 && !GENERIC_WORDS.has(w));
+  }
+  function tokenLike(a, b) {
+    if (a === b) return true;
+    const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+    return short.length >= 4 && long.startsWith(short);
+  }
+  function matchSkillToNeed(skill, need) {
+    const needToks = [...new Set(needTokens(need))];
+    if (!needToks.length) return 0;
+    const fields = [
+      { toks: needTokens(skill.name), weight: 3 },
+      { toks: needTokens((skill.supportAreas || []).join(" ")), weight: 2 },
+      { toks: needTokens((skill.siteRelevance || []).join(" ")), weight: 2 },
+      { toks: needTokens(skill.description), weight: 2 }
+    ];
+    let score = 0;
+    for (const t of needToks) {
+      let best = 0;
+      for (const f of fields) {
+        if (f.weight > best && f.toks.some((ft) => tokenLike(t, ft))) best = f.weight;
+      }
+      score += best;
+    }
+    return score;
+  }
 
   // ../toolkit/core/skill-builder.js
   function buildSkillPrompt(need, { profile = {}, tools, taxonomy } = {}) {
@@ -822,6 +885,15 @@ Rules:
         const category = origin ? await this.getSiteCategory(origin) : null;
         const ctx = { supportAreas: profile.supportAreas || [], category };
         const scored = (await this.listSkills()).map((s) => ({ skill: s, score: matchSkill(s, ctx) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+        return scored.length ? scored[0].skill : null;
+      },
+      // The skill-creation flow's first diamond: "does the skill exist in the
+      // db?" — checked BEFORE the Engineer builds anything. Built-in and the
+      // person's own skills both count. Deterministic keyword match (no LLM),
+      // so the reuse offer works without an API key. Returns the best fit or
+      // null when nothing plausibly covers the need.
+      async findSkillForNeed(need) {
+        const scored = (await this.listSkills()).map((s) => ({ skill: s, score: matchSkillToNeed(s, need) })).filter((x) => x.score >= 4).sort((a, b) => b.score - a.score);
         return scored.length ? scored[0].skill : null;
       },
       // Compile a skill to the deterministic apply-plan (settings + adapter ids)

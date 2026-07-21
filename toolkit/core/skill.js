@@ -193,3 +193,55 @@ export function matchSkill(skill, { supportAreas = [], category = null } = {}) {
   if (rel.includes('all')) score += 1;
   return score;
 }
+
+// Words too generic to signal WHICH skill a need is about. Post-singular form
+// ('site' also covers 'sites'); words of 1-2 letters are dropped by length.
+const GENERIC_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'when', 'that', 'this', 'them', 'they', 'have',
+  'from', 'make', 'making', 'want', 'need', 'please', 'help', 'like', 'can',
+  'could', 'would', 'site', 'page', 'website', 'web', 'get', 'turn', 'use',
+  'using', 'more', 'some', 'all', 'every', 'thing',
+]);
+
+function needTokens(text) {
+  return String(text || '').toLowerCase().split(/[^a-z0-9]+/)
+    .map(w => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) ? w.slice(0, -1) : w)
+    .filter(w => w.length > 2 && !GENERIC_WORDS.has(w));
+}
+
+// Same word, or one is a prefix of the other ("read" ~ "reading") — enough
+// stemming for needs phrased in plain language, without a stemmer dependency.
+function tokenLike(a, b) {
+  if (a === b) return true;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return short.length >= 4 && long.startsWith(short);
+}
+
+/**
+ * Score how well a skill covers a plain-language NEED (the diagrams' "does
+ * the skill exist in the db?" check, before the Engineer builds a new one).
+ * Deterministic keyword overlap — each need word counts once, at the weight
+ * of the best field it appears in. 0 = no meaningful overlap.
+ * @param {Skill} skill
+ * @param {string} need
+ * @returns {number}
+ */
+export function matchSkillToNeed(skill, need) {
+  const needToks = [...new Set(needTokens(need))];
+  if (!needToks.length) return 0;
+  const fields = [
+    { toks: needTokens(skill.name), weight: 3 },
+    { toks: needTokens((skill.supportAreas || []).join(' ')), weight: 2 },
+    { toks: needTokens((skill.siteRelevance || []).join(' ')), weight: 2 },
+    { toks: needTokens(skill.description), weight: 2 },
+  ];
+  let score = 0;
+  for (const t of needToks) {
+    let best = 0;
+    for (const f of fields) {
+      if (f.weight > best && f.toks.some(ft => tokenLike(t, ft))) best = f.weight;
+    }
+    score += best;
+  }
+  return score;
+}
