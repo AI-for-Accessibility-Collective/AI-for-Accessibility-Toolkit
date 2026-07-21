@@ -1610,6 +1610,8 @@ ${chunk}
   });
   var incrementStat8 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var MAX_AI_TABLES_PER_PAGE = 10;
+  var MAX_AI_COLUMNS = 12;
   async function fixTableHeaders(table) {
     if (table.dataset.ai4a11yProcessed) return false;
     if (table.querySelector("th")) return false;
@@ -1640,7 +1642,7 @@ ${chunk}
       firstRowCells.forEach((cell) => {
         const th = document.createElement("th");
         th.setAttribute("scope", "col");
-        th.innerHTML = cell.innerHTML;
+        while (cell.firstChild) th.appendChild(cell.firstChild);
         cell.replaceWith(th);
       });
       markProcessed(table, "done");
@@ -1660,7 +1662,7 @@ ${chunk}
           var _a, _b;
           return (_b = (_a = r.querySelectorAll("td")[col]) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
         }).filter(Boolean);
-        const header = samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        const header = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
         headers.push(header || `Column ${col + 1}`);
       }
       const thead = document.createElement("thead");
@@ -1685,7 +1687,11 @@ ${chunk}
     }
   }
   async function fixAllTables() {
-    const tables = Array.from(document.querySelectorAll("table")).filter((t) => !t.dataset.ai4a11yProcessed && !t.querySelector("th") && t.querySelectorAll("tr").length >= 2).filter((t) => !t.getAttribute("role") || t.getAttribute("role") === "table");
+    const candidates = Array.from(document.querySelectorAll("table")).filter((t) => !t.dataset.ai4a11yProcessed && !t.querySelector("th") && t.querySelectorAll("tr").length >= 2).filter((t) => !t.getAttribute("role") || t.getAttribute("role") === "table");
+    const tables = candidates.slice(0, MAX_AI_TABLES_PER_PAGE);
+    if (candidates.length > tables.length) {
+      console.log(`[AI4A11y] fix-tables: fixing ${tables.length} of ${candidates.length} headerless tables this pass (cost cap)`);
+    }
     const results = [];
     for (const table of tables) {
       results.push(await fixTableHeaders(table));
