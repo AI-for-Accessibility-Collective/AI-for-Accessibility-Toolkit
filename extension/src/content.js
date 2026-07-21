@@ -44,6 +44,7 @@ import {
   BionicReading,
   UnpinSticky,
   TranslatePage,
+  MuteSounds,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -142,6 +143,7 @@ function applyVisualSettings(settings) {
   if (settings.bionicReading) BionicReading.enable();
   if (settings.unpinSticky) UnpinSticky.enable();
   if (settings.translatePage) TranslatePage.enable({ targetLang: settings.translateTo });
+  if (settings.muteSounds) MuteSounds.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -377,6 +379,7 @@ function revertAll() {
   BionicReading.disable();
   UnpinSticky.disable();
   TranslatePage.disable();
+  MuteSounds.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -500,7 +503,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         PageOutline: PageOutline.enabled || false,
         BionicReading: BionicReading.enabled || false,
         UnpinSticky: UnpinSticky.enabled || false,
-        TranslatePage: TranslatePage.enabled || false
+        TranslatePage: TranslatePage.enabled || false,
+        MuteSounds: MuteSounds.enabled || false
       }
     });
     return true;

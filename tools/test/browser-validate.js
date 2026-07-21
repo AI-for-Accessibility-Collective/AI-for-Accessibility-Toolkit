@@ -27,6 +27,7 @@ const PAGE = `<!DOCTYPE html><html><head><style>
     <p>Body text with a <a id="lnk" href="https://docs.example.org/guide">documentation link</a> in it.</p>
     <button id="btn" style="width:18px; height:16px; padding:0;">x</button>
     <div id="anim">spinning</div>
+    <video id="vid" muted="false"></video>
   </main>
 </body></html>`;
 
@@ -124,6 +125,15 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('unpin: the fixed header becomes position:static', (await css('#hdr', 'position')) === 'static');
     await disable('unpinSticky');
     check('unpin: the header is fixed again after disable', (await css('#hdr', 'position')) === 'fixed');
+  }
+
+  // ── Mute Sounds — REAL: the video's .muted property flips and reverts ───────
+  {
+    await page.evaluate(() => { document.querySelector('#vid').muted = false; });
+    await enable('muteSounds');
+    check('mute: the video is really muted', await page.evaluate(() => document.querySelector('#vid').muted === true));
+    await disable('muteSounds');
+    check('mute: the video is unmuted again after disable', await page.evaluate(() => document.querySelector('#vid').muted === false));
   }
 
   await browser.close();

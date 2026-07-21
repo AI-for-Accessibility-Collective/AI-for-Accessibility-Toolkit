@@ -215,7 +215,8 @@
           showProgress: true,
           motionReducer: true,
           lineHeight: 1.8,
-          dismissOverlays: true
+          dismissOverlays: true,
+          muteSounds: true
         }
       },
       sensory: {
@@ -226,7 +227,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: false,
-          dismissOverlays: true
+          dismissOverlays: true,
+          muteSounds: true
         }
       },
       photosensitive: {
@@ -272,7 +274,8 @@
       bionicReading: false,
       unpinSticky: false,
       translatePage: false,
-      translateTo: "English"
+      translateTo: "English",
+      muteSounds: false
     }
   };
 
@@ -4009,6 +4012,102 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yTranslatePage = TranslatePage;
 
+  // tools/adapters/mute-sounds.js
+  var MuteSounds = {
+    enabled: false,
+    muted: null,
+    // Set of elements we muted (for exact restore)
+    observer: null,
+    playHandler: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.muted = /* @__PURE__ */ new Set();
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      this.playHandler = (e) => {
+        if (!this.enabled) return;
+        const el = e.target;
+        if (el && (el.tagName === "VIDEO" || el.tagName === "AUDIO")) this.muteEl(el);
+      };
+      document.addEventListener("play", this.playHandler, true);
+      console.log(`[AI4A11y] Mute Sounds enabled (${count} muted)`);
+      announce(count ? `Muted ${count} sound source${count === 1 ? "" : "s"}` : "Watching for sounds to mute");
+    },
+    // Scan a root for media and mute it; returns how many were muted.
+    sweep(root) {
+      let n = 0;
+      let media;
+      try {
+        media = root.querySelectorAll("video, audio");
+      } catch {
+        return 0;
+      }
+      for (const el of media) if (this.muteEl(el)) n++;
+      return n;
+    },
+    // An added node may itself be media, or contain media (embedded players).
+    consider(node) {
+      if (node.tagName === "VIDEO" || node.tagName === "AUDIO") this.muteEl(node);
+      if (node.querySelectorAll) this.sweep(node);
+    },
+    // Mute one element if it is playing sound the user didn't silence. Only
+    // elements WE mute are tracked, so disable() never un-mutes a user's choice.
+    // No early-return for already-tracked elements: a script may have un-muted
+    // one, and the play listener routes it back here to be re-muted.
+    muteEl(el) {
+      if (!el) return false;
+      try {
+        if (el.muted === false) {
+          el.muted = true;
+          this.muted.add(el);
+          return true;
+        }
+      } catch {
+      }
+      return false;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.playHandler) {
+        document.removeEventListener("play", this.playHandler, true);
+        this.playHandler = null;
+      }
+      if (this.muted) {
+        for (const el of this.muted) {
+          try {
+            el.muted = false;
+          } catch {
+          }
+        }
+        this.muted.clear();
+        this.muted = null;
+      }
+      console.log("[AI4A11y] Mute Sounds disabled");
+      announce("Sounds unmuted");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yMuteSounds = MuteSounds;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -4183,6 +4282,7 @@ ${scope(":focus")} {
     if (settings2.bionicReading) BionicReading.enable();
     if (settings2.unpinSticky) UnpinSticky.enable();
     if (settings2.translatePage) TranslatePage.enable({ targetLang: settings2.translateTo });
+    if (settings2.muteSounds) MuteSounds.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -4376,6 +4476,7 @@ ${scope(":focus")} {
     BionicReading.disable();
     UnpinSticky.disable();
     TranslatePage.disable();
+    MuteSounds.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -4495,7 +4596,8 @@ ${scope(":focus")} {
           PageOutline: PageOutline.enabled || false,
           BionicReading: BionicReading.enabled || false,
           UnpinSticky: UnpinSticky.enabled || false,
-          TranslatePage: TranslatePage.enabled || false
+          TranslatePage: TranslatePage.enabled || false,
+          MuteSounds: MuteSounds.enabled || false
         }
       });
       return true;

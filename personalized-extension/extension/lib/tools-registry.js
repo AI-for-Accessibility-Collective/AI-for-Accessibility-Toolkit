@@ -251,6 +251,25 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "mute-sounds",
+    "name": "Mute Sounds",
+    "description": "Mutes all audio and video and blocks autoplay sound, for a quiet page — helpful for sensory-overload, anxiety, and concentration needs. Restores your own manual mutes untouched.",
+    "supportAreas": [
+      "sensory",
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "volume_off",
+    "emoji": "🔇",
+    "quickStart": false,
+    "settings": {
+      "muteSounds": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -590,6 +609,10 @@ globalThis.AA_TOOLS = {
   "translatePage": {
     "type": "boolean",
     "description": "Translate the page text into another language"
+  },
+  "muteSounds": {
+    "type": "boolean",
+    "description": "Mute all audio and video and block autoplay sound"
   },
   "keyboardNav": {
     "type": "boolean",

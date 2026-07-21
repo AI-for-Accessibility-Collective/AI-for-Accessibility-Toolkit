@@ -132,7 +132,8 @@
           showProgress: true,
           motionReducer: true,
           lineHeight: 1.8,
-          dismissOverlays: true
+          dismissOverlays: true,
+          muteSounds: true
         }
       },
       sensory: {
@@ -143,7 +144,8 @@
           focusMode: true,
           hideDistractions: true,
           showProgress: false,
-          dismissOverlays: true
+          dismissOverlays: true,
+          muteSounds: true
         }
       },
       photosensitive: {
@@ -189,7 +191,8 @@
       bionicReading: false,
       unpinSticky: false,
       translatePage: false,
-      translateTo: "English"
+      translateTo: "English",
+      muteSounds: false
     }
   };
 

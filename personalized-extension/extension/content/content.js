@@ -11,6 +11,7 @@ import { PageOutline } from '../../skills/builtin/page-outline.js';
 import { BionicReading } from '../../skills/builtin/bionic-reading.js';
 import { UnpinSticky } from '../../skills/builtin/unpin-sticky.js';
 import { TranslatePage } from '../../skills/builtin/translate-page.js';
+import { MuteSounds } from '../../skills/builtin/mute-sounds.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -36,6 +37,7 @@ const TOOL_MAP = {
   BionicReading,
   UnpinSticky,
   TranslatePage,
+  MuteSounds,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -181,7 +183,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds',
       'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -201,6 +203,7 @@ async function initFromStorage() {
     if (settings.bionicReading) enableTool('BionicReading');
     if (settings.unpinSticky) enableTool('UnpinSticky');
     if (settings.translatePage) enableTool('TranslatePage', { targetLang: settings.translateTo });
+    if (settings.muteSounds) enableTool('MuteSounds');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -317,7 +320,8 @@ function applyProfileSettings(settings) {
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
     motionReducer: 'MotionReducer', dismissOverlays: 'DismissOverlays',
     bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline',
-    bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage'
+    bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage',
+    muteSounds: 'MuteSounds'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {
