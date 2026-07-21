@@ -6,7 +6,7 @@
     "build": "node extension/src/build.js",
     "build:prod": "NODE_ENV=production node extension/src/build.js",
     "watch": "node extension/src/build.js --watch",
-    "test": "node tools/test/adapters-test.js && node tools/test/adapters-dom-test.js && node tools/test/profiles-test.js",
+    "test": "for f in tools/test/*-test.js; do node \"$f\" || exit 1; done",
     "validate:browser": "node tools/test/browser-validate.js"
   },
   "devDependencies": {

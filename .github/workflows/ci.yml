@@ -66,10 +66,11 @@ jobs:
           node toolkit/hosts/skill-demo/demo.js
 
       - name: Tools & profile tests
+        # Every tools/test/*-test.js (auditors/adapters + each standalone
+        # adapter test + profiles). browser-validate.js is intentionally NOT a
+        # *-test.js file — it needs a real Chromium and runs locally only.
         run: |
-          node tools/test/adapters-test.js
-          node tools/test/adapters-dom-test.js
-          node tools/test/profiles-test.js
+          for t in tools/test/*-test.js; do echo "== $t"; node "$t" || exit 1; done
 
       - name: Librarian regression tests
         run: |
