@@ -3,10 +3,13 @@
 // mode: nothing is inverted or re-themed — the page keeps its layout and
 // colors, just turned down to a lower-stimulation level.
 //
-// Reversible by construction: one root class + one injected <style> scoped
-// under that class, plus a pointer-events:none overlay div for extra dimming
-// that also covers contexts where CSS filters don't apply. disable() removes
-// all three and restores the page exactly.
+// The default is a clean brightness/saturation reduction via a single CSS
+// filter — the page stays crisp and readable, just calmer. An extra flat
+// overlay is available (options.dim) for the rare context where CSS filters
+// don't apply (e.g. some fullscreen plugins), but it is OFF by default because
+// a black veil over everything reads as muddy rather than a real adaptation.
+// Reversible by construction: disable() removes the class, style, and overlay
+// and restores the page exactly.
 import { announce } from '../utils/ai.js';
 
 export const ReduceBrightness = {
@@ -18,9 +21,9 @@ export const ReduceBrightness = {
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
-    const bright = options.brightness ?? 0.8; // 1 = unchanged, lower = dimmer
-    const sat = options.saturation ?? 0.85;   // 1 = unchanged, lower = muted
-    const dimLevel = options.dim ?? 0.15;     // overlay opacity, 0 = none
+    const bright = options.brightness ?? 0.82; // 1 = unchanged, lower = dimmer
+    const sat = options.saturation ?? 0.9;      // 1 = unchanged, lower = muted
+    const dimLevel = options.dim ?? 0;          // extra flat overlay, off by default
 
     try { document.documentElement.classList.add(this.htmlClass); } catch { /* detached */ }
 
@@ -30,17 +33,20 @@ export const ReduceBrightness = {
 html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
     (document.head || document.documentElement).appendChild(style);
 
-    // Overlay sits above everything but never intercepts input; it deepens the
-    // dim and still works where the filter doesn't (e.g. fullscreen plugins).
-    const overlay = document.createElement('div');
-    overlay.id = this.overlayId;
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
-    overlay.style.pointerEvents = 'none';
-    overlay.style.zIndex = '2147483646';
-    (document.body || document.documentElement).appendChild(overlay);
+    // Optional extra overlay — off by default. Only for contexts where the CSS
+    // filter can't reach (e.g. some fullscreen plugins). It never intercepts
+    // input. Left off, the filter alone does the dimming, which looks clean.
+    if (dimLevel > 0) {
+      const overlay = document.createElement('div');
+      overlay.id = this.overlayId;
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
+      overlay.style.pointerEvents = 'none';
+      overlay.style.zIndex = '2147483646';
+      (document.body || document.documentElement).appendChild(overlay);
+    }
 
     console.log('[AI4A11y] Reduce Brightness enabled');
     announce('Screen dimmed');
