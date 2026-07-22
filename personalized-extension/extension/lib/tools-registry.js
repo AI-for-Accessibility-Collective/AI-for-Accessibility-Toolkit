@@ -557,6 +557,26 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "language-tag",
+    "name": "Language Tags",
+    "description": "Detects text written in a different script from the page (e.g. a Chinese, Arabic, or Russian phrase in an English page) and marks it with a lang attribute so a screen reader switches to the right pronunciation instead of mangling it.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference"
+    ],
+    "requiresAI": false,
+    "icon": "language",
+    "emoji": "🇺🇳",
+    "quickStart": false,
+    "settings": {
+      "languageTag": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -964,6 +984,10 @@ globalThis.AA_TOOLS = {
   "expandAbbreviations": {
     "type": "boolean",
     "description": "Expand acronyms and abbreviations to their full form"
+  },
+  "languageTag": {
+    "type": "boolean",
+    "description": "Mark foreign-language text with a lang attribute for screen readers"
   },
   "keyboardNav": {
     "type": "boolean",

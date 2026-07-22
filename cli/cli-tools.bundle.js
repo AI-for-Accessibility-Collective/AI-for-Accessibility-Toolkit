@@ -4082,6 +4082,168 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yAbbreviationExpand = AbbreviationExpand;
 
+  // tools/adapters/language-tag.js
+  var MAX_TEXT_NODES3 = 2e3;
+  var SAMPLE_CHAR_BUDGET = 4e3;
+  var SCRIPT_RANGES = [
+    ["Latin", [[65, 90], [97, 122], [192, 591]]],
+    ["Han", [[19968, 40959], [13312, 19903], [63744, 64255]]],
+    ["Hiragana", [[12352, 12447]]],
+    ["Katakana", [[12448, 12543], [12784, 12799]]],
+    ["Hangul", [[44032, 55215], [4352, 4607], [12592, 12687]]],
+    ["Arabic", [[1536, 1791], [1872, 1919], [2208, 2303]]],
+    ["Cyrillic", [[1024, 1279], [1280, 1327]]],
+    ["Hebrew", [[1424, 1535]]],
+    ["Devanagari", [[2304, 2431]]],
+    ["Greek", [[880, 1023], [7936, 8191]]],
+    ["Thai", [[3584, 3711]]]
+  ];
+  var SCRIPT_LANG = {
+    Latin: "en",
+    Han: "zh",
+    Hiragana: "ja",
+    Katakana: "ja",
+    Hangul: "ko",
+    Arabic: "ar",
+    Cyrillic: "ru",
+    Hebrew: "he",
+    Devanagari: "hi",
+    Greek: "el",
+    Thai: "th"
+  };
+  var KANA_RE = /[぀-ヿㇰ-ㇿ]/;
+  function scriptOf(cp) {
+    for (const [script, ranges] of SCRIPT_RANGES) {
+      for (const [lo, hi] of ranges) if (cp >= lo && cp <= hi) return script;
+    }
+    return null;
+  }
+  var SAMPLE_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "NOSCRIPT", "SELECT", "OPTION"]);
+  function detectMainLang(root) {
+    const counts = /* @__PURE__ */ new Map();
+    let budget = SAMPLE_CHAR_BUDGET;
+    const walk = (node) => {
+      for (let child = node.firstChild; child && budget > 0; child = child.nextSibling) {
+        if (child.nodeType === 3) {
+          for (const ch of child.nodeValue) {
+            if (budget-- <= 0) break;
+            const script = scriptOf(ch.codePointAt(0));
+            if (script) counts.set(script, (counts.get(script) || 0) + 1);
+          }
+        } else if (child.nodeType === 1 && !SAMPLE_SKIP.has(child.tagName)) {
+          walk(child);
+        }
+      }
+    };
+    try {
+      walk(root);
+    } catch {
+    }
+    let main = "Latin", best = 0;
+    for (const [script, n] of counts) {
+      if (n > best) {
+        best = n;
+        main = script;
+      }
+    }
+    const kana = (counts.get("Hiragana") || 0) + (counts.get("Katakana") || 0);
+    if (main === "Han" && kana > 0) return "ja";
+    return SCRIPT_LANG[main] || "en";
+  }
+  var LanguageTag = {
+    markerClass: "ai4a11y-lang",
+    enabled: false,
+    handle: null,
+    // transformTextNodes handle (owns the exact-restore)
+    mainLang: null,
+    // page's dominant language while enabled
+    htmlLangAdded: false,
+    // we added <html lang>; remove it on disable
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const root = mainRoot();
+      if (!root) {
+        announce("Language tags: no readable text found");
+        return;
+      }
+      this.mainLang = typeof options.mainLang === "string" && options.mainLang ? options.mainLang : detectMainLang(root);
+      const html = document.documentElement;
+      if (html && !html.hasAttribute("lang")) {
+        html.setAttribute("lang", this.mainLang);
+        this.htmlLangAdded = true;
+      }
+      this.handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
+        skipClass: this.markerClass,
+        cap: MAX_TEXT_NODES3
+      });
+      const count = this.handle.records.length;
+      if (this.handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES3} text nodes`);
+      console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
+      announce(count ? "Language tags on" : "Language tags: no foreign-language text found");
+    },
+    // Rebuild one mixed-script text node as a marker <span>: runs of a foreign
+    // script become <span lang="xx"> children, everything else stays plain text
+    // nodes. Returns null (skip) when the node has no foreign-script run, so
+    // same-script text is left untouched.
+    buildWrapper(text) {
+      const hasKana = KANA_RE.test(text);
+      const runs = [];
+      for (const ch of text) {
+        const lang = this.langOfChar(ch.codePointAt(0), hasKana);
+        const last = runs[runs.length - 1];
+        if (last && last.lang === lang) last.text += ch;
+        else runs.push({ lang, text: ch });
+      }
+      if (!runs.some((run) => run.lang)) return null;
+      const span = document.createElement("span");
+      span.className = this.markerClass;
+      for (const run of runs) {
+        if (run.lang) {
+          const tagged = document.createElement("span");
+          tagged.setAttribute("lang", run.lang);
+          tagged.textContent = run.text;
+          span.appendChild(tagged);
+        } else {
+          span.appendChild(document.createTextNode(run.text));
+        }
+      }
+      return span;
+    },
+    // Language a character should be announced in, or null when it needs no tag
+    // (neutral chars, Latin, or the page's own language).
+    langOfChar(cp, hasKana) {
+      const script = scriptOf(cp);
+      if (!script || script === "Latin") return null;
+      let lang = SCRIPT_LANG[script];
+      if (script === "Han" && (hasKana || this.mainLang === "ja")) lang = "ja";
+      return lang === this.mainLang ? null : lang;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.handle) {
+        this.handle.restore();
+        this.handle = null;
+      }
+      if (this.htmlLangAdded) {
+        try {
+          document.documentElement.removeAttribute("lang");
+        } catch {
+        }
+        this.htmlLangAdded = false;
+      }
+      this.mainLang = null;
+      console.log("[AI4A11y] Language Tag disabled");
+      announce("Language tags off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yLanguageTag = LanguageTag;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
@@ -5817,7 +5979,8 @@ ${chunk}
           keyboardNav: true,
           pageOutline: true,
           announceUpdates: true,
-          describeOnDemand: true
+          describeOnDemand: true,
+          languageTag: true
         }
       },
       lowVision: {
@@ -6033,7 +6196,8 @@ ${chunk}
       readingRuler: false,
       confirmActions: false,
       rememberSpot: false,
-      expandAbbreviations: false
+      expandAbbreviations: false,
+      languageTag: false
     }
   };
 
@@ -6158,7 +6322,8 @@ ${chunk}
     readingRuler: ReadingRuler,
     confirmActions: ConfirmActions,
     rememberSpot: ReadingSpot,
-    expandAbbreviations: AbbreviationExpand
+    expandAbbreviations: AbbreviationExpand,
+    languageTag: LanguageTag
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -6222,7 +6387,9 @@ ${chunk}
       "rememberspot": "rememberSpot",
       "readingspot": "rememberSpot",
       "expandabbreviations": "expandAbbreviations",
-      "abbreviations": "expandAbbreviations"
+      "abbreviations": "expandAbbreviations",
+      "languagetag": "languageTag",
+      "langtag": "languageTag"
     };
     return map[lower] || name;
   }
@@ -6319,6 +6486,7 @@ ${chunk}
     if (profileTools.confirmActions) ConfirmActions.enable();
     if (profileTools.rememberSpot) ReadingSpot.enable();
     if (profileTools.expandAbbreviations) AbbreviationExpand.enable();
+    if (profileTools.languageTag) LanguageTag.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.voiceCommands) VoiceCommands.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
@@ -6376,7 +6544,8 @@ ${chunk}
       readingRuler: "A highlight band that follows your reading line",
       confirmActions: "Ask for confirmation before risky or final actions",
       rememberSpot: "Remember where you were reading and offer to jump back",
-      expandAbbreviations: "Expand abbreviations and acronyms to their full form"
+      expandAbbreviations: "Expand abbreviations and acronyms to their full form",
+      languageTag: "Tag foreign-language text so screen readers pronounce it correctly"
     };
     return descriptions[name] || "";
   }
