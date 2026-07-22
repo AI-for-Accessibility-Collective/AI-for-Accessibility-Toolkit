@@ -18,6 +18,27 @@
       <h2 id="landing-heading">Set up your accessibility support</h2>
       <p class="subtitle">Select areas where you need help, describe your needs, or both. Then choose how to proceed.</p>
 
+      <!-- Ability profiles: the same named profiles the basic extension uses,
+           so both extensions start from one shared model. Picking a profile
+           pre-selects the support areas below and tells the AI who you are. -->
+      <fieldset class="chip-fieldset">
+        <legend class="chip-legend">Start from a profile (optional)</legend>
+        <div class="chip-group" role="group" aria-label="Ability profiles">
+          <label class="chip"><input type="checkbox" name="profile" value="blind"><span class="chip-body">Blind</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="lowVision"><span class="chip-body">Low Vision</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="colorBlind"><span class="chip-body">Color Blind</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="deaf"><span class="chip-body">Deaf/HoH</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="motor"><span class="chip-body">Motor</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="dyslexia"><span class="chip-body">Dyslexia</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="adhd"><span class="chip-body">ADHD</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="cognitive"><span class="chip-body">Cognitive</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="olderAdult"><span class="chip-body">Older Adult</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="anxiety"><span class="chip-body">Anxiety</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="sensory"><span class="chip-body">Sensory</span></label>
+          <label class="chip"><input type="checkbox" name="profile" value="photosensitive"><span class="chip-body">Light Sensitive</span></label>
+        </div>
+      </fieldset>
+
       <!-- Support area chips -->
       <fieldset class="chip-fieldset">
         <legend class="chip-legend">Support areas (optional)</legend>
