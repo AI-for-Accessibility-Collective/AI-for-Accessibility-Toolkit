@@ -432,6 +432,27 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     await page.evaluate(() => { document.getElementById('__tall')?.remove(); window.scrollTo(0, 0); });
   }
 
+  // ── Explore a Chart (AI) — REAL: a chart becomes a navigable data table ─────
+  {
+    await page.evaluate(() => {
+      window.ai4a11y_extractChartData = () => ({ caption: 'Sales by year', headers: ['Year', 'Sales'], rows: [['2020', '$2M'], ['2023', '$5M']] });
+      const c = document.createElement('canvas'); c.id = 'chart1'; c.width = 220; c.height = 130;
+      const g = c.getContext('2d'); g.fillStyle = '#4285f4'; g.fillRect(20, 20, 40, 90); g.fillRect(90, 50, 40, 60);
+      document.querySelector('main').appendChild(c);
+    });
+    await enable('exploreChart');
+    check('chart: a "view data table" button is added to the chart', await exists('.ai4a11y-chart-btn'));
+    const table = await page.evaluate(async () => {
+      document.querySelector('.ai4a11y-chart-btn').click();
+      await new Promise((r) => setTimeout(r, 150));
+      const t = document.querySelector('#ai4a11y-chart-panel table');
+      return t ? { cap: (t.querySelector('caption') || {}).textContent || '', cols: t.querySelectorAll('th[scope="col"]').length, cells: t.querySelectorAll('td').length } : null;
+    });
+    check('chart: activating renders a real data table (caption + 2 headers + cells)', !!table && /Sales by year/.test(table.cap) && table.cols === 2 && table.cells >= 2);
+    await disable('exploreChart');
+    check('chart: button + panel removed after disable', !(await exists('.ai4a11y-chart-btn')) && !(await exists('#ai4a11y-chart-panel')));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

@@ -577,6 +577,27 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "explore-a-chart",
+    "name": "Explore Charts",
+    "description": "A chart, graph, or diagram is invisible to a screen reader. This reads the chart with AI and presents its data as a real, navigable HTML table (headers + rows) that a screen reader can read cell by cell — the biggest blind/low-vision gap on data-heavy pages.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "news",
+      "reference",
+      "finance",
+      "education"
+    ],
+    "requiresAI": true,
+    "icon": "table_chart",
+    "emoji": "📊",
+    "quickStart": false,
+    "settings": {
+      "exploreChart": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -988,6 +1009,10 @@ globalThis.AA_TOOLS = {
   "languageTag": {
     "type": "boolean",
     "description": "Mark foreign-language text with a lang attribute for screen readers"
+  },
+  "exploreChart": {
+    "type": "boolean",
+    "description": "Read a chart or graph as a navigable data table (AI)"
   },
   "keyboardNav": {
     "type": "boolean",

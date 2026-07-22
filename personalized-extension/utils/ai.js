@@ -91,6 +91,11 @@ export function announce(message) {
   }
 }
 
+export async function extractChartData(imageDataUrl, context) {
+  if (!_provider?.extractChartData) return null;
+  return _provider.extractChartData(imageDataUrl, context);
+}
+
 export function createChromeAIProvider() {
   function sendToBackground(prompt, images) {
     return new Promise((resolve, reject) => {
@@ -112,6 +117,14 @@ export function createChromeAIProvider() {
 
   return {
     sendToBackground,
+
+    async extractChartData(imageData, context) {
+      const text = await sendToBackground(
+        `Extract the data from this chart or graph as JSON. Context: ${context || ''}. Return ONLY valid JSON of the form {"caption": string, "headers": string[], "rows": string[][]}, each row aligned to the headers. If it is not a data chart, return {"caption":"","headers":[],"rows":[]}.`,
+        [imageData]
+      );
+      try { return JSON.parse(text); } catch { return null; }
+    },
 
     async describeImage(imageData) {
       return sendToBackground(
