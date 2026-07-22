@@ -194,9 +194,9 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     await enable('reduceBrightness');
     const filt = await css('html', 'filter');
     check(`brightness: a real brightness/saturate filter is applied (${filt})`, filt !== 'none' && /brightness|matrix/.test(filt));
-    check('brightness: a dimming overlay is added', await exists('#ai4a11y-dim-overlay'));
+    check('brightness: no flat black overlay by default (clean filter dim)', !(await exists('#ai4a11y-dim-overlay')));
     await disable('reduceBrightness');
-    check('brightness: filter and overlay removed after disable', (await css('html', 'filter')) === 'none' && !(await exists('#ai4a11y-dim-overlay')));
+    check('brightness: filter removed after disable', (await css('html', 'filter')) === 'none');
   }
 
   // ── Sound Visualizer — REAL: playing sound flashes a visible indicator ──────

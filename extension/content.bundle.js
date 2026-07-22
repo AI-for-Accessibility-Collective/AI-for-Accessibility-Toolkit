@@ -258,7 +258,7 @@
         }
       },
       photosensitive: {
-        name: "Photosensitive",
+        name: "Light Sensitive",
         description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
         tools: {
           darkMode: true,
@@ -4626,9 +4626,9 @@ ${scope(":focus")} {
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      const bright = options.brightness ?? 0.8;
-      const sat = options.saturation ?? 0.85;
-      const dimLevel = options.dim ?? 0.15;
+      const bright = options.brightness ?? 0.82;
+      const sat = options.saturation ?? 0.9;
+      const dimLevel = options.dim ?? 0;
       try {
         document.documentElement.classList.add(this.htmlClass);
       } catch {
@@ -4638,15 +4638,17 @@ ${scope(":focus")} {
       style.textContent = `
 html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
       (document.head || document.documentElement).appendChild(style);
-      const overlay = document.createElement("div");
-      overlay.id = this.overlayId;
-      overlay.setAttribute("aria-hidden", "true");
-      overlay.style.position = "fixed";
-      overlay.style.inset = "0";
-      overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
-      overlay.style.pointerEvents = "none";
-      overlay.style.zIndex = "2147483646";
-      (document.body || document.documentElement).appendChild(overlay);
+      if (dimLevel > 0) {
+        const overlay = document.createElement("div");
+        overlay.id = this.overlayId;
+        overlay.setAttribute("aria-hidden", "true");
+        overlay.style.position = "fixed";
+        overlay.style.inset = "0";
+        overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
+        overlay.style.pointerEvents = "none";
+        overlay.style.zIndex = "2147483646";
+        (document.body || document.documentElement).appendChild(overlay);
+      }
       console.log("[AI4A11y] Reduce Brightness enabled");
       announce("Screen dimmed");
     },

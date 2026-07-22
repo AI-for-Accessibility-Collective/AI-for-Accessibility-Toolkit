@@ -33,11 +33,8 @@ function run() {
     check('dims: the stylesheet dims and desaturates (brightness + saturate)',
       styles[0].textContent.includes('brightness(') && styles[0].textContent.includes('saturate('));
 
-    const overlay = doc.querySelector('#ai4a11y-dim-overlay');
-    check('dims: appends a fixed full-viewport dim overlay',
-      overlay !== null && overlay.style.position === 'fixed');
-    check('dims: the overlay never intercepts clicks (pointer-events: none)',
-      overlay.style.pointerEvents === 'none');
+    check('dims: no flat overlay by default (clean filter-only dim)',
+      doc.querySelector('#ai4a11y-dim-overlay') === null);
 
     // disable() restores the page exactly.
     ReduceBrightness.disable();
@@ -45,7 +42,19 @@ function run() {
       !doc.documentElement.classList.contains('ai4a11y-dimmed'));
     check('dims: disable removes the injected stylesheet',
       doc.querySelector('#ai4a11y-reduce-brightness-styles') === null);
-    check('dims: disable removes the overlay',
+  }
+
+  // The extra flat overlay is opt-in via options.dim, and cleans up on disable.
+  {
+    const doc = mount(`<p>content</p>`);
+    ReduceBrightness.enable({ dim: 0.2 });
+    const overlay = doc.querySelector('#ai4a11y-dim-overlay');
+    check('dims: options.dim adds a fixed full-viewport overlay',
+      overlay !== null && overlay.style.position === 'fixed');
+    check('dims: the overlay never intercepts clicks (pointer-events: none)',
+      overlay.style.pointerEvents === 'none');
+    ReduceBrightness.disable();
+    check('dims: disable removes the opt-in overlay',
       doc.querySelector('#ai4a11y-dim-overlay') === null);
   }
 
@@ -63,9 +72,8 @@ function run() {
     const doc = mount(`<p>content</p>`);
     ReduceBrightness.enable();
     ReduceBrightness.enable(); // must be a no-op
-    check('dims: second enable is a no-op (still one stylesheet, one overlay)',
-      doc.querySelectorAll('#ai4a11y-reduce-brightness-styles').length === 1 &&
-      doc.querySelectorAll('#ai4a11y-dim-overlay').length === 1);
+    check('dims: second enable is a no-op (still one stylesheet)',
+      doc.querySelectorAll('#ai4a11y-reduce-brightness-styles').length === 1);
     ReduceBrightness.disable();
     ReduceBrightness.disable(); // disabling twice is safe
     check('dims: double disable is safe', ReduceBrightness.enabled === false);
