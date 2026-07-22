@@ -59,6 +59,7 @@ import {
   ReadingRuler,
   ConfirmActions,
   ReadingSpot,
+  AbbreviationExpand,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -181,6 +182,7 @@ function applyVisualSettings(settings) {
   if (settings.readingRuler) ReadingRuler.enable();
   if (settings.confirmActions) ConfirmActions.enable();
   if (settings.rememberSpot) ReadingSpot.enable();
+  if (settings.expandAbbreviations) AbbreviationExpand.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -431,6 +433,7 @@ function revertAll() {
   ReadingRuler.disable();
   ConfirmActions.disable();
   ReadingSpot.disable();
+  AbbreviationExpand.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -575,7 +578,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         PersistentHover: PersistentHover.enabled || false,
         ReadingRuler: ReadingRuler.enabled || false,
         ConfirmActions: ConfirmActions.enabled || false,
-        ReadingSpot: ReadingSpot.enabled || false
+        ReadingSpot: ReadingSpot.enabled || false,
+        AbbreviationExpand: AbbreviationExpand.enabled || false
       }
     });
     return true;
