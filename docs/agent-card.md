@@ -28,7 +28,7 @@ Copy and fill in when proposing a new capability.
 - [ ] Cognitive (dyslexia / IDD / autism)
 - [ ] Speech (atypical speech)
 - [ ] Aging
-- [ ] Light Sensitive
+- [ ] Photosensitive
 - [ ] Anxiety
 - [ ] Other: ___
 
