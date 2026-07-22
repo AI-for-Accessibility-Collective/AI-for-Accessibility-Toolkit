@@ -96,8 +96,47 @@ function getFreeText() {
   return document.getElementById('freeText').value.trim();
 }
 
+// The 12 named profiles map onto the coarse support areas the wizard + AI use,
+// so "Start from a profile" feeds the exact same pipeline as the area chips —
+// both extensions now start from one shared, named-profile model.
+const PROFILE_AREAS = {
+  blind: ['vision'], lowVision: ['vision'], colorBlind: ['vision'],
+  deaf: ['hearing'], motor: ['motor'],
+  dyslexia: ['reading', 'cognitive'], adhd: ['cognitive'], cognitive: ['cognitive'],
+  olderAdult: ['vision', 'reading'], anxiety: ['sensory', 'cognitive'],
+  sensory: ['sensory'], photosensitive: ['sensory', 'vision'],
+};
+const PROFILE_NAMES = {
+  blind: 'Blind', lowVision: 'Low Vision', colorBlind: 'Color Blind',
+  deaf: 'Deaf or hard of hearing', motor: 'Motor', dyslexia: 'Dyslexia',
+  adhd: 'ADHD', cognitive: 'Cognitive', olderAdult: 'Older Adult',
+  anxiety: 'Anxiety', sensory: 'Sensory', photosensitive: 'Light Sensitive',
+};
+
+function getSelectedProfiles() {
+  return Array.from(document.querySelectorAll('input[name="profile"]:checked')).map(c => c.value);
+}
+
+// Picking a profile checks the support areas it implies (a union — it never
+// unchecks the user's own area choices), leaving the rest of onboarding as-is.
+function syncAreasFromProfiles() {
+  const areas = new Set();
+  getSelectedProfiles().forEach(p => (PROFILE_AREAS[p] || []).forEach(a => areas.add(a)));
+  document.querySelectorAll('input[name="support"]').forEach(cb => { if (areas.has(cb.value)) cb.checked = true; });
+}
+
+// Free-text needs plus any named profiles, so Quick Start's AI knows who this is.
+function describedNeeds() {
+  const names = getSelectedProfiles().map(p => PROFILE_NAMES[p]).filter(Boolean);
+  const free = getFreeText();
+  if (!names.length) return free;
+  const phrase = `The user identifies with these accessibility profiles: ${names.join(', ')}.`;
+  return free ? `${phrase} ${free}` : phrase;
+}
+
 // -- Path buttons --
 function setupPathButtons() {
+  document.querySelectorAll('input[name="profile"]').forEach(cb => cb.addEventListener('change', syncAreasFromProfiles));
   document.getElementById('quickStartBtn').addEventListener('click', startQuickStart);
   document.getElementById('personalizeBtn').addEventListener('click', startPersonalize);
   document.getElementById('recBackBtn').addEventListener('click', () => showPage('page-landing'));
@@ -129,7 +168,7 @@ async function startQuickStart() {
   finishBtn.hidden = true;
 
   try {
-    const prompt = buildPrompt(getSelectedAreas(), getFreeText());
+    const prompt = buildPrompt(getSelectedAreas(), describedNeeds());
     const raw = await callGemini(prompt, apiKey);
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in response');
