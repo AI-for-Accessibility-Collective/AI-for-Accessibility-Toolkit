@@ -26,6 +26,7 @@ import { PersistentHover } from '../../skills/builtin/persistent-hover.js';
 import { ReadingRuler } from '../../skills/builtin/reading-ruler.js';
 import { ConfirmActions } from '../../skills/builtin/confirm-actions.js';
 import { ReadingSpot } from '../../skills/builtin/reading-spot.js';
+import { AbbreviationExpand } from '../../skills/builtin/abbreviation-expand.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
@@ -66,6 +67,7 @@ const TOOL_MAP = {
   ReadingRuler,
   ConfirmActions,
   ReadingSpot,
+  AbbreviationExpand,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -211,7 +213,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot', 'expandAbbreviations',
       'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -246,6 +248,7 @@ async function initFromStorage() {
     if (settings.readingRuler) enableTool('ReadingRuler');
     if (settings.confirmActions) enableTool('ConfirmActions');
     if (settings.rememberSpot) enableTool('ReadingSpot');
+    if (settings.expandAbbreviations) enableTool('AbbreviationExpand');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -364,7 +367,7 @@ function applyProfileSettings(settings) {
     bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline',
     bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage',
     muteSounds: 'MuteSounds', defineWords: 'DefineWords', stopAutoAdvance: 'StopAutoAdvance',
-    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions', rememberSpot: 'ReadingSpot'
+    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions', rememberSpot: 'ReadingSpot', expandAbbreviations: 'AbbreviationExpand'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {

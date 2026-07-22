@@ -536,6 +536,27 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "abbreviation-expand",
+    "name": "Expand Abbreviations",
+    "description": "Marks acronyms and abbreviations with their full form so screen readers and readers get the whole phrase, and fills in <abbr> tags missing a title — a comprehension aid for cognitive and BLV users.",
+    "supportAreas": [
+      "cognitive"
+    ],
+    "siteRelevance": [
+      "news",
+      "education",
+      "reference",
+      "government"
+    ],
+    "requiresAI": false,
+    "icon": "title",
+    "emoji": "🔤",
+    "quickStart": false,
+    "settings": {
+      "expandAbbreviations": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -939,6 +960,10 @@ globalThis.AA_TOOLS = {
   "rememberSpot": {
     "type": "boolean",
     "description": "Remember and restore your reading position on a page"
+  },
+  "expandAbbreviations": {
+    "type": "boolean",
+    "description": "Expand acronyms and abbreviations to their full form"
   },
   "keyboardNav": {
     "type": "boolean",

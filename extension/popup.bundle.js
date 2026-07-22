@@ -119,7 +119,8 @@
           defineWords: true,
           stopAutoAdvance: true,
           confirmActions: true,
-          rememberSpot: true
+          rememberSpot: true,
+          expandAbbreviations: true
         }
       },
       olderAdult: {
@@ -228,7 +229,8 @@
       persistentHover: false,
       readingRuler: false,
       confirmActions: false,
-      rememberSpot: false
+      rememberSpot: false,
+      expandAbbreviations: false
     }
   };
 
