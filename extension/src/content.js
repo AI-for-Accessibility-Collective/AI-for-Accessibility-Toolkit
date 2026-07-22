@@ -60,6 +60,7 @@ import {
   ConfirmActions,
   ReadingSpot,
   AbbreviationExpand,
+  LanguageTag,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -183,6 +184,7 @@ function applyVisualSettings(settings) {
   if (settings.confirmActions) ConfirmActions.enable();
   if (settings.rememberSpot) ReadingSpot.enable();
   if (settings.expandAbbreviations) AbbreviationExpand.enable();
+  if (settings.languageTag) LanguageTag.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -434,6 +436,7 @@ function revertAll() {
   ConfirmActions.disable();
   ReadingSpot.disable();
   AbbreviationExpand.disable();
+  LanguageTag.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -579,7 +582,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         ReadingRuler: ReadingRuler.enabled || false,
         ConfirmActions: ConfirmActions.enabled || false,
         ReadingSpot: ReadingSpot.enabled || false,
-        AbbreviationExpand: AbbreviationExpand.enabled || false
+        AbbreviationExpand: AbbreviationExpand.enabled || false,
+        LanguageTag: LanguageTag.enabled || false
       }
     });
     return true;

@@ -14,7 +14,8 @@
           keyboardNav: true,
           pageOutline: true,
           announceUpdates: true,
-          describeOnDemand: true
+          describeOnDemand: true,
+          languageTag: true
         }
       },
       lowVision: {
@@ -230,7 +231,8 @@
       readingRuler: false,
       confirmActions: false,
       rememberSpot: false,
-      expandAbbreviations: false
+      expandAbbreviations: false,
+      languageTag: false
     }
   };
 

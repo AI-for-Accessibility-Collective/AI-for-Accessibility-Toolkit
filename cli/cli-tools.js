@@ -44,6 +44,7 @@ import { ReadingRuler } from '../tools/adapters/reading-ruler.js';
 import { ConfirmActions } from '../tools/adapters/confirm-actions.js';
 import { ReadingSpot } from '../tools/adapters/reading-spot.js';
 import { AbbreviationExpand } from '../tools/adapters/abbreviation-expand.js';
+import { LanguageTag } from '../tools/adapters/language-tag.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -205,6 +206,7 @@ const tools = {
   confirmActions: ConfirmActions,
   rememberSpot: ReadingSpot,
   expandAbbreviations: AbbreviationExpand,
+  languageTag: LanguageTag,
 };
 
 // Normalize tool name (handles case variations)
@@ -271,6 +273,8 @@ function normalizeTool(name) {
     'readingspot': 'rememberSpot',
     'expandabbreviations': 'expandAbbreviations',
     'abbreviations': 'expandAbbreviations',
+    'languagetag': 'languageTag',
+    'langtag': 'languageTag',
   };
   return map[lower] || name;
 }
@@ -381,6 +385,7 @@ function applyProfileByName(profileId) {
   if (profileTools.confirmActions) ConfirmActions.enable();
   if (profileTools.rememberSpot) ReadingSpot.enable();
   if (profileTools.expandAbbreviations) AbbreviationExpand.enable();
+  if (profileTools.languageTag) LanguageTag.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.voiceCommands) VoiceCommands.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
@@ -445,6 +450,7 @@ function getToolDescription(name) {
     confirmActions: 'Ask for confirmation before risky or final actions',
     rememberSpot: 'Remember where you were reading and offer to jump back',
     expandAbbreviations: 'Expand abbreviations and acronyms to their full form',
+    languageTag: 'Tag foreign-language text so screen readers pronounce it correctly',
   };
   return descriptions[name] || '';
 }
