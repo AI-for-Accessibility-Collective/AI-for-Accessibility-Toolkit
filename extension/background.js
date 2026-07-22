@@ -213,6 +213,37 @@ One sentence max. No fluff. Just the facts.` }
   return result;
 }
 
+// Extract a chart/graph's data as a structured table (for the explore-a-chart adapter)
+async function extractChartData(imageDataUrl, context = '') {
+  const keys = await getApiKeys();
+  if (!keys.gemini) {
+    throw new Error('Gemini API key not set. Open extension settings.');
+  }
+  const m = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!m) throw new Error('Invalid image data URL');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [
+          { inlineData: { mimeType: m[1], data: m[2] } },
+          { text: `Extract the data from this chart or graph as JSON. Context: ${context}. Return ONLY valid JSON of the form {"caption": string, "headers": string[], "rows": string[][]}, each row aligned to the headers. If it is not a data chart, return {"caption":"","headers":[],"rows":[]}.` }
+        ] }],
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+      })
+    }
+  );
+  if (!response.ok) {
+    const e = await response.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Gemini API error (${response.status})`);
+  }
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  try { return JSON.parse(text); } catch { return null; }
+}
+
 // Describe canvas/chart element
 async function describeElement(imageDataUrl, elementType = 'canvas', context = '') {
   const keys = await getApiKeys();
@@ -1147,6 +1178,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const handlers = {
     'describeImage': () => describeImage(message.imageData, message.options),
     'describeElement': () => describeElement(message.imageData, message.elementType, message.context),
+    'extractChartData': () => extractChartData(message.imageData, message.context),
     'describeVideoFrames': () => describeVideoFrames(message.frames, message.metadata),
     'simplifyText': () => simplifyText(message.text),
     'summarizeText': () => summarizeText(message.text),

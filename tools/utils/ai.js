@@ -126,3 +126,12 @@ export async function defineWord(word, context) {
   }
   return provider.defineWord(word, context);
 }
+
+// Pull a chart's underlying data out of an image of it.
+// Returns { caption, headers: string[], rows: string[][] } or null.
+export async function extractChartData(imageDataUrl, context) {
+  if (!provider?.extractChartData) {
+    return null;
+  }
+  return provider.extractChartData(imageDataUrl, context);
+}

@@ -342,6 +342,36 @@ Provide a brief, useful description (1-2 sentences) that helps a screen reader u
             except:
                 return result.strip()
 
+        # Extract a chart/graph's data as a structured table (explore-a-chart adapter)
+        def ai_extract_chart_data(image_data, context):
+            import tempfile
+            import base64
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                try:
+                    f.write(base64.b64decode(image_data))
+                except Exception:
+                    return None
+                temp_path = f.name
+            prompt = """Extract the data shown in this chart or graph as JSON.
+Return ONLY valid JSON of the form {"caption": string, "headers": [string], "rows": [[string]]}, where each row is aligned to the headers.
+If it is not a data chart, return {"caption": "", "headers": [], "rows": []}."""
+            result = ask_claude(temp_path, prompt)
+            Path(temp_path).unlink(missing_ok=True)
+            try:
+                data = json.loads(result)
+                if isinstance(data, dict) and 'headers' in data:
+                    return data
+                if isinstance(data, dict) and 'answer' in data:
+                    try:
+                        return json.loads(data['answer'])
+                    except Exception:
+                        return None
+                return data
+            except Exception:
+                return None
+
         # Improve ambiguous link text ("click here" → descriptive label)
         def ai_improve_link_text(link_text, href, context):
             prompt = f"""Improve this ambiguous link text for screen reader users.
@@ -385,6 +415,7 @@ Return ONLY a short header name (1-3 words)."""
         page.expose_function("ai4a11y_inferColumnHeader", ai_infer_column_header)
         page.expose_function("ai4a11y_translateText", ai_translate_text)
         page.expose_function("ai4a11y_defineWord", ai_define_word)
+        page.expose_function("ai4a11y_extractChartData", ai_extract_chart_data)
 
         _ai_callbacks_exposed.add(page_id)
         return True

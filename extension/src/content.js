@@ -61,6 +61,7 @@ import {
   ReadingSpot,
   AbbreviationExpand,
   LanguageTag,
+  ExploreAChart,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -91,6 +92,7 @@ setAIProvider({
   transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(unwrap),
   transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(unwrap),
   describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(unwrap),
+  extractChartData: (imageData, context) => sendMessage({ type: 'extractChartData', imageData, context }).then(unwrap),
   improveLinkText: (linkText, href, context) => sendMessage({ type: 'improveLinkText', linkText, href, context }).then(unwrap),
   inferColumnHeader: (sampleData) => sendMessage({ type: 'inferColumnHeader', sampleData }).then(unwrap),
   announce: (msg) => announce(msg),
@@ -185,6 +187,7 @@ function applyVisualSettings(settings) {
   if (settings.rememberSpot) ReadingSpot.enable();
   if (settings.expandAbbreviations) AbbreviationExpand.enable();
   if (settings.languageTag) LanguageTag.enable();
+  if (settings.exploreChart) ExploreAChart.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -437,6 +440,7 @@ function revertAll() {
   ReadingSpot.disable();
   AbbreviationExpand.disable();
   LanguageTag.disable();
+  ExploreAChart.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -583,7 +587,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         ConfirmActions: ConfirmActions.enabled || false,
         ReadingSpot: ReadingSpot.enabled || false,
         AbbreviationExpand: AbbreviationExpand.enabled || false,
-        LanguageTag: LanguageTag.enabled || false
+        LanguageTag: LanguageTag.enabled || false,
+        ExploreAChart: ExploreAChart.enabled || false
       }
     });
     return true;

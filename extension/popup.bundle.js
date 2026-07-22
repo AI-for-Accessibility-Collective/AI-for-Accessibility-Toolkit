@@ -15,7 +15,8 @@
           pageOutline: true,
           announceUpdates: true,
           describeOnDemand: true,
-          languageTag: true
+          languageTag: true,
+          exploreChart: true
         }
       },
       lowVision: {
@@ -34,7 +35,8 @@
           magnifier: true,
           reflowColumn: true,
           focusLocator: true,
-          persistentHover: true
+          persistentHover: true,
+          exploreChart: true
         }
       },
       colorBlind: {
@@ -232,7 +234,8 @@
       confirmActions: false,
       rememberSpot: false,
       expandAbbreviations: false,
-      languageTag: false
+      languageTag: false,
+      exploreChart: false
     }
   };
 

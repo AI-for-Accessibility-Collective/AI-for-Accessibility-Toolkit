@@ -164,6 +164,7 @@ export function getEnabledAdapters(profileId) {
   if (tools.rememberSpot) enabled.push('reading-spot');
   if (tools.expandAbbreviations) enabled.push('abbreviation-expand');
   if (tools.languageTag) enabled.push('language-tag');
+  if (tools.exploreChart) enabled.push('explore-a-chart');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');

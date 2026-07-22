@@ -45,6 +45,7 @@ import { ConfirmActions } from '../tools/adapters/confirm-actions.js';
 import { ReadingSpot } from '../tools/adapters/reading-spot.js';
 import { AbbreviationExpand } from '../tools/adapters/abbreviation-expand.js';
 import { LanguageTag } from '../tools/adapters/language-tag.js';
+import { ExploreAChart } from '../tools/adapters/explore-a-chart.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -155,6 +156,12 @@ function setupAIProvider() {
       }
       return null;
     },
+    extractChartData: async (imageData, context) => {
+      if (typeof window.ai4a11y_extractChartData === 'function') {
+        return await window.ai4a11y_extractChartData(imageData, context);
+      }
+      return null;
+    },
     improveLinkText: async (linkText, href, context) => {
       if (typeof window.ai4a11y_improveLinkText === 'function') {
         return await window.ai4a11y_improveLinkText(linkText, href, context);
@@ -207,6 +214,7 @@ const tools = {
   rememberSpot: ReadingSpot,
   expandAbbreviations: AbbreviationExpand,
   languageTag: LanguageTag,
+  exploreChart: ExploreAChart,
 };
 
 // Normalize tool name (handles case variations)
@@ -275,6 +283,9 @@ function normalizeTool(name) {
     'abbreviations': 'expandAbbreviations',
     'languagetag': 'languageTag',
     'langtag': 'languageTag',
+    'explorechart': 'exploreChart',
+    'charttable': 'exploreChart',
+    'chart': 'exploreChart',
   };
   return map[lower] || name;
 }
@@ -386,6 +397,7 @@ function applyProfileByName(profileId) {
   if (profileTools.rememberSpot) ReadingSpot.enable();
   if (profileTools.expandAbbreviations) AbbreviationExpand.enable();
   if (profileTools.languageTag) LanguageTag.enable();
+  if (profileTools.exploreChart) ExploreAChart.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.voiceCommands) VoiceCommands.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
@@ -451,6 +463,7 @@ function getToolDescription(name) {
     rememberSpot: 'Remember where you were reading and offer to jump back',
     expandAbbreviations: 'Expand abbreviations and acronyms to their full form',
     languageTag: 'Tag foreign-language text so screen readers pronounce it correctly',
+    exploreChart: 'Read a chart or graph as a navigable data table',
   };
   return descriptions[name] || '';
 }
