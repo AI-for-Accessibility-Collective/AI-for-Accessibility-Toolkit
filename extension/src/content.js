@@ -62,6 +62,9 @@ import {
   AbbreviationExpand,
   LanguageTag,
   ExploreAChart,
+  SpaFocus,
+  SkipLinks,
+  MathA11y,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
@@ -188,6 +191,9 @@ function applyVisualSettings(settings) {
   if (settings.expandAbbreviations) AbbreviationExpand.enable();
   if (settings.languageTag) LanguageTag.enable();
   if (settings.exploreChart) ExploreAChart.enable();
+  if (settings.spaFocus) SpaFocus.enable();
+  if (settings.skipLinks) SkipLinks.enable();
+  if (settings.mathAccessible) MathA11y.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -441,6 +447,9 @@ function revertAll() {
   AbbreviationExpand.disable();
   LanguageTag.disable();
   ExploreAChart.disable();
+  SpaFocus.disable();
+  SkipLinks.disable();
+  MathA11y.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -588,7 +597,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         ReadingSpot: ReadingSpot.enabled || false,
         AbbreviationExpand: AbbreviationExpand.enabled || false,
         LanguageTag: LanguageTag.enabled || false,
-        ExploreAChart: ExploreAChart.enabled || false
+        ExploreAChart: ExploreAChart.enabled || false,
+        SpaFocus: SpaFocus.enabled || false,
+        SkipLinks: SkipLinks.enabled || false,
+        MathA11y: MathA11y.enabled || false
       }
     });
     return true;
