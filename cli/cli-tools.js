@@ -46,6 +46,9 @@ import { ReadingSpot } from '../tools/adapters/reading-spot.js';
 import { AbbreviationExpand } from '../tools/adapters/abbreviation-expand.js';
 import { LanguageTag } from '../tools/adapters/language-tag.js';
 import { ExploreAChart } from '../tools/adapters/explore-a-chart.js';
+import { SpaFocus } from '../tools/adapters/spa-focus.js';
+import { SkipLinks } from '../tools/adapters/skip-links.js';
+import { MathA11y } from '../tools/adapters/math-a11y.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
@@ -215,6 +218,9 @@ const tools = {
   expandAbbreviations: AbbreviationExpand,
   languageTag: LanguageTag,
   exploreChart: ExploreAChart,
+  spaFocus: SpaFocus,
+  skipLinks: SkipLinks,
+  mathAccessible: MathA11y,
 };
 
 // Normalize tool name (handles case variations)
@@ -286,6 +292,13 @@ function normalizeTool(name) {
     'explorechart': 'exploreChart',
     'charttable': 'exploreChart',
     'chart': 'exploreChart',
+    'spafocus': 'spaFocus',
+    'routefocus': 'spaFocus',
+    'skiplinks': 'skipLinks',
+    'skipnav': 'skipLinks',
+    'mathaccessible': 'mathAccessible',
+    'matha11y': 'mathAccessible',
+    'math': 'mathAccessible',
   };
   return map[lower] || name;
 }
@@ -398,6 +411,9 @@ function applyProfileByName(profileId) {
   if (profileTools.expandAbbreviations) AbbreviationExpand.enable();
   if (profileTools.languageTag) LanguageTag.enable();
   if (profileTools.exploreChart) ExploreAChart.enable();
+  if (profileTools.spaFocus) SpaFocus.enable();
+  if (profileTools.skipLinks) SkipLinks.enable();
+  if (profileTools.mathAccessible) MathA11y.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.voiceCommands) VoiceCommands.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
@@ -464,6 +480,9 @@ function getToolDescription(name) {
     expandAbbreviations: 'Expand abbreviations and acronyms to their full form',
     languageTag: 'Tag foreign-language text so screen readers pronounce it correctly',
     exploreChart: 'Read a chart or graph as a navigable data table',
+    spaFocus: 'Announce and move focus on single-page-app navigations',
+    skipLinks: 'Add skip-to-content and skip-to-navigation links',
+    mathAccessible: 'Give math and equations an accessible name for screen readers',
   };
   return descriptions[name] || '';
 }

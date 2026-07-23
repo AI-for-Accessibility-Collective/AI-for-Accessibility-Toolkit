@@ -111,7 +111,10 @@
           announceUpdates: true,
           describeOnDemand: true,
           languageTag: true,
-          exploreChart: true
+          exploreChart: true,
+          spaFocus: true,
+          skipLinks: true,
+          mathAccessible: true
         }
       },
       lowVision: {
@@ -171,7 +174,8 @@
           stopAutoAdvance: true,
           focusLocator: true,
           persistentHover: true,
-          confirmActions: true
+          confirmActions: true,
+          skipLinks: true
         }
       },
       dyslexia: {
@@ -330,7 +334,10 @@
       rememberSpot: false,
       expandAbbreviations: false,
       languageTag: false,
-      exploreChart: false
+      exploreChart: false,
+      spaFocus: false,
+      skipLinks: false,
+      mathAccessible: false
     }
   };
 
@@ -6435,6 +6442,415 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yExploreAChart = ExploreAChart;
 
+  // tools/adapters/spa-focus.js
+  var REGION_ID2 = "ai4a11y-spa-focus-region";
+  var SETTLE_DELAY_MS = 150;
+  var SpaFocus = {
+    regionId: REGION_ID2,
+    enabled: false,
+    region: null,
+    lastPath: null,
+    // pathname+search last handled, so same-path pushes are ignored
+    settleTimer: null,
+    // debounce timeout, cleared on disable
+    popstateHandler: null,
+    // stored ref so disable() can removeEventListener
+    patchedHistory: null,
+    // the history object we patched, restored on disable
+    origPushState: null,
+    origReplaceState: null,
+    tabindexAdded: /* @__PURE__ */ new Set(),
+    // elements we gave tabindex="-1", stripped on disable
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.lastPath = window.location.pathname + window.location.search;
+      const region = document.createElement("div");
+      region.id = REGION_ID2;
+      region.setAttribute("aria-live", "assertive");
+      region.setAttribute("aria-atomic", "true");
+      region.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      (document.body || document.documentElement).appendChild(region);
+      this.region = region;
+      const self = this;
+      this.patchedHistory = window.history;
+      this.origPushState = window.history.pushState;
+      this.origReplaceState = window.history.replaceState;
+      window.history.pushState = function(...args) {
+        const result = self.origPushState.apply(this, args);
+        self.scheduleCheck();
+        return result;
+      };
+      window.history.replaceState = function(...args) {
+        const result = self.origReplaceState.apply(this, args);
+        self.scheduleCheck();
+        return result;
+      };
+      this.popstateHandler = () => {
+        if (!this.enabled) return;
+        this.scheduleCheck();
+      };
+      window.addEventListener("popstate", this.popstateHandler);
+      console.log("[AI4A11y] SPA Focus enabled");
+      announce("Announcing page changes in this app");
+    },
+    scheduleCheck() {
+      if (!this.enabled) return;
+      if (this.settleTimer) clearTimeout(this.settleTimer);
+      this.settleTimer = setTimeout(() => {
+        this.settleTimer = null;
+        if (!this.enabled) return;
+        this.checkRoute();
+      }, SETTLE_DELAY_MS);
+    },
+    checkRoute() {
+      const path = window.location.pathname + window.location.search;
+      if (path === this.lastPath) return;
+      this.lastPath = path;
+      const target = document.querySelector('main, [role="main"], #main, h1');
+      if (target) {
+        if (!target.hasAttribute("tabindex")) {
+          target.setAttribute("tabindex", "-1");
+          this.tabindexAdded.add(target);
+        }
+        target.focus({ preventScroll: false });
+      }
+      if (this.region) this.region.textContent = this.pageName(target);
+    },
+    // What to call the new page: its title if the app updates one, else the
+    // main heading's text, else a generic fallback so something is always said.
+    pageName(target) {
+      const title = (document.title || "").replace(/\s+/g, " ").trim();
+      if (title) return title;
+      let heading = null;
+      if (target) {
+        heading = /^H[1-6]$/.test(target.tagName) ? target : target.querySelector('h1, h2, [role="heading"]');
+      }
+      heading = heading || document.querySelector("h1");
+      const text = heading ? (heading.textContent || "").replace(/\s+/g, " ").trim() : "";
+      return text || "New page";
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.settleTimer) {
+        clearTimeout(this.settleTimer);
+        this.settleTimer = null;
+      }
+      if (this.patchedHistory) {
+        this.patchedHistory.pushState = this.origPushState;
+        this.patchedHistory.replaceState = this.origReplaceState;
+        this.patchedHistory = null;
+      }
+      this.origPushState = null;
+      this.origReplaceState = null;
+      if (this.popstateHandler) {
+        window.removeEventListener("popstate", this.popstateHandler);
+        this.popstateHandler = null;
+      }
+      for (const el of this.tabindexAdded) el.removeAttribute("tabindex");
+      this.tabindexAdded.clear();
+      try {
+        (_a = this.region || document.getElementById(REGION_ID2)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      this.region = null;
+      this.lastPath = null;
+      console.log("[AI4A11y] SPA Focus disabled");
+      announce("Stopped announcing page changes");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySpaFocus = SpaFocus;
+
+  // tools/adapters/skip-links.js
+  var MAIN_SELECTOR = 'main, [role="main"], #main, #content, .content';
+  var NAV_SELECTOR = 'nav, [role="navigation"]';
+  var SkipLinks = {
+    containerId: "ai4a11y-skip-links",
+    styleId: "ai4a11y-skip-links-styles",
+    enabled: false,
+    container: null,
+    styleHandle: null,
+    addedIdTargets: [],
+    // elements we assigned an id to — reverted on disable
+    addedTabindexTargets: [],
+    // elements we set tabindex="-1" on — reverted on disable
+    // Give `el` an id to link to, inventing one only when the page did not
+    // already provide it (and remembering the addition for disable()).
+    ensureId(el, base) {
+      if (el.id) return el.id;
+      let id = base;
+      for (let n = 2; document.getElementById(id); n++) id = `${base}-${n}`;
+      el.id = id;
+      this.addedIdTargets.push(el);
+      return id;
+    },
+    // A real <a href="#…"> so the link works even with no JS; the click handler
+    // upgrades it to also move keyboard focus, because plain fragment
+    // navigation scrolls the viewport but leaves focus behind on the link.
+    buildLink(target, idBase, label) {
+      const a = document.createElement("a");
+      a.href = `#${this.ensureId(target, idBase)}`;
+      a.textContent = label;
+      a.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (!target.hasAttribute("tabindex")) {
+          target.setAttribute("tabindex", "-1");
+          this.addedTabindexTargets.push(target);
+        }
+        try {
+          target.focus();
+        } catch {
+        }
+        try {
+          if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "start" });
+        } catch {
+        }
+      });
+      return a;
+    },
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const main = document.querySelector(options.mainSelector || MAIN_SELECTOR);
+      const nav = document.querySelector(options.navSelector || NAV_SELECTOR);
+      if (main || nav) {
+        this.styleHandle = injectStyle(this.styleId, `
+        #${this.containerId} a {
+          position: absolute;
+          top: 0; left: 0;
+          width: 1px; height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          clip-path: inset(50%);
+          white-space: nowrap;
+          z-index: 2147483647;
+        }
+        #${this.containerId} a:focus {
+          width: auto; height: auto;
+          margin: 8px;
+          padding: 12px 20px;
+          overflow: visible;
+          clip: auto;
+          clip-path: none;
+          border-radius: 999px;
+          border: 2px solid #1a5fb4;
+          background: #ffffff;
+          color: #1a5fb4;
+          font-size: 16px;
+          font-weight: 600;
+          text-decoration: underline;
+        }
+      `);
+        const container = document.createElement("div");
+        container.id = this.containerId;
+        if (main) container.appendChild(this.buildLink(main, "ai4a11y-main", "Skip to main content"));
+        if (nav && nav !== main) container.appendChild(this.buildLink(nav, "ai4a11y-nav", "Skip to navigation"));
+        const parent = document.body || document.documentElement;
+        parent.insertBefore(container, parent.firstChild);
+        this.container = container;
+      }
+      console.log("[AI4A11y] Skip Links enabled");
+      announce(main || nav ? "Skip links added at the top of the page" : "No main content or navigation region found to skip to");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.container) {
+        this.container.remove();
+        this.container = null;
+      }
+      if (this.styleHandle) {
+        this.styleHandle.remove();
+        this.styleHandle = null;
+      }
+      for (const el of this.addedIdTargets) {
+        try {
+          el.removeAttribute("id");
+        } catch {
+        }
+      }
+      this.addedIdTargets = [];
+      for (const el of this.addedTabindexTargets) {
+        try {
+          el.removeAttribute("tabindex");
+        } catch {
+        }
+      }
+      this.addedTabindexTargets = [];
+      console.log("[AI4A11y] Skip Links disabled");
+      announce("Skip links removed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
+
+  // tools/adapters/math-a11y.js
+  var MAX_ELEMENTS = 100;
+  var MATH_HINT_RE = /math|equation|latex|tex|formula/i;
+  var TEX_PARAM_RE = /^(tex|latex|formula|eq|chl)$/i;
+  var INVISIBLE_OPS_RE = /[⁡-⁤]/g;
+  var MAX_DEPTH = 20;
+  var LEAF_TAGS = /* @__PURE__ */ new Set(["mi", "mn", "mo", "mtext", "ms"]);
+  var SKIP_TAGS3 = /* @__PURE__ */ new Set(["annotation", "annotation-xml", "mphantom"]);
+  function hasAccessibleName2(el) {
+    const label = el.getAttribute("aria-label");
+    if (label && label.trim()) return true;
+    const labelledby = el.getAttribute("aria-labelledby");
+    return !!(labelledby && labelledby.trim());
+  }
+  function serializeMath(el, depth = 0) {
+    if (depth > MAX_DEPTH) return "";
+    const name = (el.localName || "").toLowerCase();
+    if (SKIP_TAGS3.has(name)) return "";
+    if (LEAF_TAGS.has(name)) return (el.textContent || "").replace(INVISIBLE_OPS_RE, "").trim();
+    const kids = [];
+    for (let c = el.firstElementChild; c; c = c.nextElementSibling) {
+      const s = serializeMath(c, depth + 1);
+      if (s) kids.push(s);
+    }
+    switch (name) {
+      case "mfrac":
+        return kids.join(" over ");
+      case "msup":
+        return kids.length === 2 ? `${kids[0]} to the power of ${kids[1]}` : kids.join(" ");
+      case "msub":
+        return kids.length === 2 ? `${kids[0]} sub ${kids[1]}` : kids.join(" ");
+      case "msubsup":
+        return kids.length === 3 ? `${kids[0]} sub ${kids[1]} to the power of ${kids[2]}` : kids.join(" ");
+      case "msqrt":
+        return `square root of ${kids.join(" ")}`;
+      case "mroot":
+        return kids.length === 2 ? `${kids[1]} root of ${kids[0]}` : `root of ${kids.join(" ")}`;
+      default:
+        if (kids.length) return kids.join(" ");
+        return el.firstElementChild ? "" : (el.textContent || "").replace(INVISIBLE_OPS_RE, "").trim();
+    }
+  }
+  function deriveLabel(math) {
+    const alttext = math.getAttribute("alttext");
+    if (alttext && alttext.trim()) return alttext.trim();
+    const ann = math.querySelector(
+      'annotation[encoding="application/x-tex"], annotation[encoding="application/x-latex"]'
+    );
+    if (ann && ann.textContent && ann.textContent.trim()) return "Math: " + ann.textContent.trim();
+    const spoken = serializeMath(math).replace(/\s+/g, " ").trim();
+    return spoken ? "Math: " + spoken : "Mathematical expression";
+  }
+  function safeDecode(s) {
+    try {
+      return decodeURIComponent(s.replace(/\+/g, " ")).trim() || null;
+    } catch {
+      return s.trim() || null;
+    }
+  }
+  function texFromUrl(src) {
+    let url;
+    try {
+      url = new URL(src, window.location.href);
+    } catch {
+      return null;
+    }
+    if (!MATH_HINT_RE.test(url.hostname + url.pathname)) return null;
+    const query = url.search.slice(1);
+    if (query) {
+      for (const part of query.split("&")) {
+        const eq = part.indexOf("=");
+        if (eq > 0 && TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+      }
+      return safeDecode(query);
+    }
+    const seg = (url.pathname.split("/").pop() || "").replace(/\.(png|svg|gif|jpe?g)$/i, "");
+    const decoded = seg ? safeDecode(seg) : null;
+    return decoded && /[\\^_{}]/.test(decoded) ? decoded : null;
+  }
+  var MathA11y = {
+    styleId: "ai4a11y-math-style",
+    enabled: false,
+    records: [],
+    // { el, attrs: [{ name, old }] } — old === null means "was absent"
+    styleHandle: null,
+    // injectStyle handle for the focus outline
+    // Record the attribute's prior state, then write it — the unit of reversibility.
+    setTracked(el, name, value, attrs) {
+      attrs.push({ name, old: el.hasAttribute(name) ? el.getAttribute(name) : null });
+      el.setAttribute(name, value);
+    },
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const cap = options.cap ?? MAX_ELEMENTS;
+      let mathCount = 0, imgCount = 0;
+      for (const math of document.querySelectorAll("math")) {
+        if (this.records.length >= cap) break;
+        if (math.getAttribute("aria-hidden") === "true") continue;
+        if (hasAccessibleName2(math)) continue;
+        const attrs = [];
+        this.setTracked(math, "aria-label", deriveLabel(math), attrs);
+        if (!math.hasAttribute("role")) this.setTracked(math, "role", "math", attrs);
+        this.records.push({ el: math, attrs });
+        mathCount++;
+      }
+      for (const img of document.querySelectorAll("img")) {
+        if (this.records.length >= cap) break;
+        if (img.getAttribute("aria-hidden") === "true") continue;
+        const alt = img.getAttribute("alt");
+        if (alt && alt.trim()) continue;
+        const src = img.getAttribute("src") || "";
+        if (!MATH_HINT_RE.test(`${img.className} ${alt || ""} ${src}`)) continue;
+        const tex = texFromUrl(src);
+        const attrs = [];
+        this.setTracked(
+          img,
+          "alt",
+          tex ? `Equation: ${tex}` : "Mathematical equation (no description available)",
+          attrs
+        );
+        this.records.push({ el: img, attrs });
+        imgCount++;
+      }
+      this.styleHandle = injectStyle(
+        this.styleId,
+        '[role="math"]:focus { outline: 2px solid #1a5fb4; outline-offset: 2px; }'
+      );
+      console.log(`[AI4A11y] Math A11y enabled (${mathCount} MathML, ${imgCount} images labeled)`);
+      announce(this.records.length ? "Math labels on" : "Math labels: no unlabeled math found");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      for (const { el, attrs } of this.records) {
+        for (const { name, old } of attrs) {
+          try {
+            if (old === null) el.removeAttribute(name);
+            else el.setAttribute(name, old);
+          } catch {
+          }
+        }
+      }
+      this.records = [];
+      if (this.styleHandle) {
+        this.styleHandle.remove();
+        this.styleHandle = null;
+      }
+      console.log("[AI4A11y] Math A11y disabled");
+      announce("Math labels off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yMathA11y = MathA11y;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -6632,6 +7048,9 @@ ${scope} table {
     if (settings2.expandAbbreviations) AbbreviationExpand.enable();
     if (settings2.languageTag) LanguageTag.enable();
     if (settings2.exploreChart) ExploreAChart.enable();
+    if (settings2.spaFocus) SpaFocus.enable();
+    if (settings2.skipLinks) SkipLinks.enable();
+    if (settings2.mathAccessible) MathA11y.enable();
     if (settings2.keyboardNav) KeyboardNavigator.enable();
     if (settings2.voiceCommands) VoiceCommands.enable();
     if (settings2.autoCaptions) {
@@ -6843,6 +7262,9 @@ ${scope} table {
     AbbreviationExpand.disable();
     LanguageTag.disable();
     ExploreAChart.disable();
+    SpaFocus.disable();
+    SkipLinks.disable();
+    MathA11y.disable();
     document.querySelectorAll(".ai4a11y-simplified").forEach((el) => {
       var _a, _b;
       const originalWrapper = el.querySelector(".ai4a11y-original-content");
@@ -6981,7 +7403,10 @@ ${scope} table {
           ReadingSpot: ReadingSpot.enabled || false,
           AbbreviationExpand: AbbreviationExpand.enabled || false,
           LanguageTag: LanguageTag.enabled || false,
-          ExploreAChart: ExploreAChart.enabled || false
+          ExploreAChart: ExploreAChart.enabled || false,
+          SpaFocus: SpaFocus.enabled || false,
+          SkipLinks: SkipLinks.enabled || false,
+          MathA11y: MathA11y.enabled || false
         }
       });
       return true;

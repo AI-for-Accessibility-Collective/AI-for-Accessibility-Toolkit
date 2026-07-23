@@ -16,7 +16,10 @@
           announceUpdates: true,
           describeOnDemand: true,
           languageTag: true,
-          exploreChart: true
+          exploreChart: true,
+          spaFocus: true,
+          skipLinks: true,
+          mathAccessible: true
         }
       },
       lowVision: {
@@ -76,7 +79,8 @@
           stopAutoAdvance: true,
           focusLocator: true,
           persistentHover: true,
-          confirmActions: true
+          confirmActions: true,
+          skipLinks: true
         }
       },
       dyslexia: {
@@ -235,7 +239,10 @@
       rememberSpot: false,
       expandAbbreviations: false,
       languageTag: false,
-      exploreChart: false
+      exploreChart: false,
+      spaFocus: false,
+      skipLinks: false,
+      mathAccessible: false
     }
   };
 

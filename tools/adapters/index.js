@@ -45,6 +45,9 @@ export { ReadingSpot } from './reading-spot.js';
 export { AbbreviationExpand } from './abbreviation-expand.js';
 export { LanguageTag } from './language-tag.js';
 export { ExploreAChart } from './explore-a-chart.js';
+export { SpaFocus } from './spa-focus.js';
+export { SkipLinks } from './skip-links.js';
+export { MathA11y } from './math-a11y.js';
 
 // Collect all axe handlers from adapters
 import { axeHandlers as altHandlers } from './generate-alt.js';

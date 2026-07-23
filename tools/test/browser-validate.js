@@ -453,6 +453,36 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('chart: button + panel removed after disable', !(await exists('.ai4a11y-chart-btn')) && !(await exists('#ai4a11y-chart-panel')));
   }
 
+  // ── Skip Links — REAL: a skip-to-content link is the body's first child ─────
+  {
+    await enable('skipLinks');
+    check('skip-links: a skip-links container is prepended to the body', await page.evaluate(() => {
+      const c = document.getElementById('ai4a11y-skip-links');
+      return !!c && document.body.firstElementChild === c && !!c.querySelector('a[href^="#"]');
+    }));
+    await disable('skipLinks');
+    check('skip-links: container removed after disable', !(await exists('#ai4a11y-skip-links')));
+  }
+
+  // ── Accessible Math — REAL: MathML gets role=math + an aria-label ───────────
+  {
+    await page.evaluate(() => {
+      const m = document.createElement('math'); m.id = 'm1';
+      m.innerHTML = '<mfrac><mn>1</mn><mn>2</mn></mfrac>';
+      document.querySelector('main').appendChild(m);
+    });
+    await enable('mathAccessible');
+    check('math: MathML gets role=math + a non-empty aria-label', await page.evaluate(() => {
+      const m = document.getElementById('m1');
+      return m.getAttribute('role') === 'math' && (m.getAttribute('aria-label') || '').length > 0;
+    }));
+    await disable('mathAccessible');
+    check('math: the added role/aria-label are removed after disable', await page.evaluate(() => {
+      const m = document.getElementById('m1');
+      return !m.getAttribute('role') && !m.getAttribute('aria-label');
+    }));
+  }
+
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed  (real headless Chromium)`);
   process.exit(fail ? 1 : 0);

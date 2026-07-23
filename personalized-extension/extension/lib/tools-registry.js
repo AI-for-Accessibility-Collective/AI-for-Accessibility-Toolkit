@@ -598,6 +598,62 @@ globalThis.AA_TOOLS = {
     }
   },
   {
+    "id": "spa-focus",
+    "name": "Announce Page Changes",
+    "description": "Single-page apps swap content without a real page load, leaving screen readers silent and keyboard focus stranded. Moves focus to the new main region and announces the new page on every in-app navigation.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "sync_alt",
+    "emoji": "🔁",
+    "quickStart": false,
+    "settings": {
+      "spaFocus": true
+    }
+  },
+  {
+    "id": "skip-links",
+    "name": "Skip Links",
+    "description": "Adds \"Skip to main content\" and \"Skip to navigation\" links as the first thing keyboard and screen-reader users reach, so they can jump past the header instead of tabbing through it on every page.",
+    "supportAreas": [
+      "vision",
+      "motor"
+    ],
+    "siteRelevance": [
+      "all"
+    ],
+    "requiresAI": false,
+    "icon": "keyboard_tab",
+    "emoji": "⏭️",
+    "quickStart": false,
+    "settings": {
+      "skipLinks": true
+    }
+  },
+  {
+    "id": "math-a11y",
+    "name": "Accessible Math",
+    "description": "Gives math an accessible name: MathML gets a spoken label from its structure or LaTeX, and equation images get useful alt text, so a screen reader can read the math instead of skipping it.",
+    "supportAreas": [
+      "vision"
+    ],
+    "siteRelevance": [
+      "education",
+      "reference"
+    ],
+    "requiresAI": false,
+    "icon": "functions",
+    "emoji": "🔢",
+    "quickStart": false,
+    "settings": {
+      "mathAccessible": true
+    }
+  },
+  {
     "id": "keyboard-nav",
     "name": "Keyboard Navigation",
     "description": "Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).",
@@ -1013,6 +1069,18 @@ globalThis.AA_TOOLS = {
   "exploreChart": {
     "type": "boolean",
     "description": "Read a chart or graph as a navigable data table (AI)"
+  },
+  "spaFocus": {
+    "type": "boolean",
+    "description": "Announce and move focus on single-page-app navigations"
+  },
+  "skipLinks": {
+    "type": "boolean",
+    "description": "Add skip-to-content and skip-to-navigation links"
+  },
+  "mathAccessible": {
+    "type": "boolean",
+    "description": "Give math and equations an accessible name for screen readers"
   },
   "keyboardNav": {
     "type": "boolean",

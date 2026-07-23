@@ -185,11 +185,11 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 
 | Profile | What it enables |
 |---------|-----------------|
-| `blind` | Auto alt text, labels, WCAG fixes, keyboard nav, page outline, announce updates, describe on demand, language tags, explore charts |
+| `blind` | Auto alt text, labels, WCAG fixes, keyboard nav, page outline, announce updates, describe on demand, language tags, explore charts, announce page changes, skip links, accessible math |
 | `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier, reflow to column, focus locator, explore charts |
 | `colorBlind` | Color filters, enhanced contrast |
 | `deaf` | Auto captions, visual emphasis, sound visualizer |
-| `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions |
+| `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions, skip links |
 | `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading, reading ruler |
 | `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading, reading ruler |
 | `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions, save reading spot, expand abbreviations |

@@ -20,7 +20,7 @@ const RECOGNIZED = new Set([
   'announceUpdates', 'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'confirmActions', 'contrastMode', 'darkMode',
   'defineWords', 'describeOnDemand', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
   'colorFilter', 'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
-  'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
+  'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
   'fixContrast',
 ]);
 const NUMERIC_RANGE = { fontScale: [50, 300], lineHeight: [1, 3], letterSpacing: [0, 1], speechRate: [0.3, 4] };
