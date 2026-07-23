@@ -138,6 +138,27 @@ globalThis.AA_SKILLS = ${JSON.stringify(skills, null, 2)};
   console.log(`skills-db.js: ${skills.length} built-in skills`);
 }
 
+// When a CANONICAL adapter (tools/adapters/*) is bundled into this extension,
+// its `../utils/ai.js` / `../utils/image.js` imports must resolve to THIS
+// extension's provider utils (createChromeAIProvider etc.), not the basic
+// extension's tools/utils. That lets the identical fork copies in
+// skills/builtin/ collapse to one-line re-exports of the canonical adapter —
+// one source of truth, with the provider swapped at build time. Forks that
+// genuinely diverged keep their own code and are untouched by this.
+const pextUtilsRedirect = {
+  name: 'pext-utils-redirect',
+  setup(build) {
+    build.onResolve({ filter: /\/utils\/(ai|image)\.js$/ }, (args) => {
+      const importer = (args.importer || '').replace(/\\/g, '/');
+      if (importer.includes('/tools/adapters/')) {
+        const which = args.path.match(/\/utils\/(ai|image)\.js$/)[1];
+        return { path: path.resolve(__dirname, 'utils', `${which}.js`) };
+      }
+      return null;
+    });
+  },
+};
+
 const contentConfig = {
   entryPoints: [path.resolve(__dirname, 'extension/content/content.js')],
   bundle: true,
@@ -146,6 +167,7 @@ const contentConfig = {
   target: 'chrome110',
   sourcemap: true,
   logLevel: 'info',
+  plugins: [pextUtilsRedirect],
 };
 
 // ---------------------------------------------------------------------------
