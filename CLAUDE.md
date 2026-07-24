@@ -10,25 +10,30 @@
 
 - `tools/` — Shared JS code (auditors, adapters, profiles, utils)
 - `extension/` — Chrome extension (imports from tools/, bundles via esbuild)
+- `toolkit/` — Platform-agnostic core (Librarian, datastore, skill layer)
 - `cli/` — Python CLI with Playwright + Claude
 - `tools/utils/ai.js` — AI provider abstraction so same adapters work in both contexts
 
 ## Terminology
 
-- **Adapter** (user-facing, in `personalized-extension/`) — a capability the
-  end user enables/builds that adapts a page for accessibility (formerly
-  "skill" in the UI). Built in the **Skill Builder** (formerly "Skill
-  Builder"). Note: this is the user/AI-facing layer and is a *different,
-  broader concept* from the `tools/adapters/` axe-rule fixers above — related
-  family (both adapt the page), different layer. Don't conflate them.
-- **`tools/adapters/`** — developer-authored modules that fix specific
-  accessibility issues flagged by auditors. Unchanged.
-- **Skill / `SKILL.md`** — reserved for model-facing guidance documents
-  (agent guidance, Librarian category playbooks), aligning with the Claude
-  "Skills" convention. *Internal identifiers in `personalized-extension/`
-  (`customSkills`, `skillRegistry`, `openSkillBuilder`, `aa-custom-` user-script
-  IDs, storage keys) still say "skill" — only user-facing strings were renamed
-  to "adapter"; an identifier rename would need a storage migration.*
+- **Adapter** — the executable code that adapts a page. Developer-authored
+  ones live in `tools/adapters/`; users generate their own in the **Adapter
+  Builder** (`personalized-extension/extension/adapter-builder/`), which
+  writes real JS run as a user-script. Build one only for a capability no
+  adapter has yet.
+- **Skill / `SKILL.md`** — a model-facing playbook that composes existing
+  adapters into a recipe for a need. Built in the **Skill Builder**
+  (`personalized-extension/extension/skill-builder/`) by the Engineer, or
+  hand-written in `toolkit/skills/builtin/`. No code. This is the common
+  case, and where onboarding sends the needs it couldn't cover — the Skill
+  Builder hands off to the Adapter Builder only when composition fails.
+- **Auditor** — code in `tools/auditors/` that finds issues for adapters to
+  fix.
+- *Internal identifiers in `personalized-extension/` (`customSkills`,
+  `skillRegistry`, `openSkillBuilder` → the Adapter Builder,
+  `openSkillManager` → the Skill Builder, `aa-custom-` user-script IDs,
+  storage keys) still say "skill" from an earlier naming — renaming them
+  needs a storage migration.*
 
 ## Build
 

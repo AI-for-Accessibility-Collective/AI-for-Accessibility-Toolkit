@@ -88,6 +88,26 @@ import { axeHandlers as carouselHandlers } from './fix-carousels.js';
 
 For a real end-to-end example, read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or `tools/adapters/fix-landmarks.js` (deterministic, with axe handler).
 
+### Making it available in the personalized extension
+
+`tools/adapters/` is the canonical copy. The personalized extension reaches it
+through a one-line re-export, so an adapter lands in both extensions with two
+small files:
+
+```js
+// personalized-extension/skills/builtin/fix-carousels.js
+export * from '../../../tools/adapters/fix-carousels.js';
+```
+
+Then register it in `personalized-extension/skills/registry.js` with its
+metadata (`supportAreas`, `settings`, a one-line `description` the recommender
+reads, `quickStart: true` to show it in fast onboarding), and add any new
+setting keys to `settingsMeta` in the same file.
+
+A handful of adapters in `skills/builtin/` still carry their own code because
+they genuinely diverged (they use the extension's AI provider directly). If
+you edit one of those, check whether `tools/adapters/` needs the same change.
+
 ## Adding a Profile
 
 Edit `tools/profiles/settings.json`:
@@ -100,7 +120,10 @@ Edit `tools/profiles/settings.json`:
 }
 ```
 
-**Available tools:** `fontScale`, `lineHeight`, `letterSpacing`, `largeCursor`, `enhanceFocus`, `readingGuide`, `dyslexiaFont`, `darkMode`, `motionReducer`, `colorFilter`, `contrastMode`, `fixContrast`, `autoWcagFix`, `autoDescribe`, `autoVideoDescribe`, `autoFixLabels`, `autoSimplify`, `autoSummarize`, `autoCaptions`, `focusMode`, `hideDistractions`, `showProgress`, `readerMode`, `keyboardNav`, `voiceCommands`
+**Available tools:** the full vocabulary — every key, its type, and its valid
+range — is `settingsMeta` in [`personalized-extension/skills/registry.js`](personalized-extension/skills/registry.js).
+Read it there rather than from a list in this file; it's the same vocabulary
+`validateSkill` checks recipes against, and it grows with every new adapter.
 
 ## Adding a Skill
 
@@ -150,6 +173,15 @@ AI tools need implementations in three places:
 ## Testing
 
 ```bash
+npm test                                        # Auditors, adapters, profiles
+node personalized-extension/test/librarian-test.js   # Librarian regression gate
+node personalized-extension/test/run-tests.js
+for f in toolkit/test/*-test.js; do node "$f"; done  # Core + skill layer
+```
+
+Then try it on real pages:
+
+```bash
 npm run build                                   # Build extension
 ai4a11y session start                           # Launch test browser
 ai4a11y session go https://example.com
@@ -158,13 +190,20 @@ ai4a11y session describe                        # AI describes the page
 ai4a11y session stop
 ```
 
-Load extension in Chrome and test on real sites.
+Two browser tests need a local Chromium and are skipped in CI —
+`personalized-extension/test/skills-page-test.js` and `demo-beats-e2e.js`. Run
+them locally if you touched the Skill Builder page or the demo.
 
 ## PR Guidelines
 
 - One feature per PR
 - Test on real sites
 - `npm run build` must pass
+- **Commit the rebuilt bundles.** `extension/content.bundle.js`,
+  `extension/popup.bundle.js`, `cli/cli-tools.bundle.js`, and the generated
+  `personalized-extension/extension/lib/{taxonomy,datastore,librarian,tools-registry,skills-db}.js`
+  are checked in, and CI fails if they drift from source. Run both builds
+  (root and `personalized-extension/`) and commit what changes.
 - Describe who benefits (which disability/profile)
 
 ## Code Style
