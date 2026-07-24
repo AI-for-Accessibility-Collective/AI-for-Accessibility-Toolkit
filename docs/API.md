@@ -19,6 +19,7 @@ setAIProvider({
   summarizeText: async (text) => { /* returns string */ },
   translateText: async (text, targetLang) => { /* returns string */ },
   defineWord: async (word, context) => { /* returns string */ },
+  extractChartData: async (imageDataUrl, context) => { /* returns { caption, headers, rows } */ },
   generateLabels: async (context) => { /* returns string */ },
   inferLabel: async (context) => { /* returns string */ },
   fixContrast: async (fg, bg) => { /* returns string hex color */ },
@@ -31,7 +32,7 @@ setAIProvider({
 });
 ```
 
-Methods you don't provide degrade gracefully: required ones (`describeImage`, `simplifyText`, …) throw a clear error; optional ones (`fixContrast`, `improveLinkText`, `inferColumnHeader`, `translateText`, `defineWord`, `transcribe*`, `describeElement`) return `null` so adapters skip that enhancement.
+Methods you don't provide degrade gracefully: required ones (`describeImage`, `simplifyText`, …) throw a clear error; optional ones (`fixContrast`, `improveLinkText`, `inferColumnHeader`, `translateText`, `defineWord`, `extractChartData`, `transcribe*`, `describeElement`) return `null` so adapters skip that enhancement.
 
 ### Provider Methods
 
@@ -44,6 +45,7 @@ Methods you don't provide degrade gracefully: required ones (`describeImage`, `s
 | `summarizeText` | `text: string` | `string` | Summarize long content (2-3 sentences) |
 | `translateText` | `text: string`, `targetLang: string` | `string` | Translate text into the target language |
 | `defineWord` | `word: string`, `context: string` | `string` | Plain-language definition of a word in context |
+| `extractChartData` | `imageDataUrl: string`, `context: string` | `{ caption, headers: string[], rows: string[][] }` | Read a chart image back as a data table (the `explore-a-chart` adapter) |
 | `generateLabels` | `{ elementType, html, context }` | `string` | Generate accessible name for element |
 | `inferLabel` | `{ elementType, html, context }` | `string` | Infer label for unlabeled form field |
 | `fixContrast` | `fg: string`, `bg: string` | `string` | Return fixed color meeting WCAG AA |
@@ -126,6 +128,10 @@ await improveAmbiguousLinks(findAmbiguousLinks());
 ```
 
 ### Visual Adapters
+
+A sample — `tools/adapters/index.js` exports the full set (magnifier, reading
+ruler, bionic reading, big targets, page outline, flash guard, and more). Run
+`ai4a11y list tools` for the current list with descriptions.
 
 ```javascript
 import {
@@ -321,6 +327,18 @@ ai4a11y list profiles              # List all profiles
 ai4a11y create <name> --type <auditor|adapter>
 ```
 
+### Everything else
+
+The commands above are the common ones. A session also drives the page —
+reading it (`ask`, `read`, `find`, `tables`, `heading`, `focused`), acting on
+it (`tap`, `type`, `hover`, `drag`, `key`, `dismiss`, `media`, `do`), moving
+around (`go`, `back`, `scroll`, `tab`, `arrow`, `skip`), and finding or
+fixing specific issues (`find-alt`, `find-labels`, `find-contrast`,
+`find-captions`, `find-all`, `fix-alt`, `fix-labels`, `fix-all`, `scan`).
+
+Run `ai4a11y session` with an unknown subcommand to print the current list —
+it's generated from the dispatcher, so it can't go stale.
+
 ## Message Protocol (Extension)
 
 Content script ↔ Background communication:
@@ -339,6 +357,7 @@ chrome.runtime.sendMessage({ type: 'describeImage', imageData: dataUrl }, respon
 'summarizeText'      // { text } → { result: string }
 'translateText'      // { text, targetLang } → { result: string }
 'defineWord'         // { word, context } → { result: string }
+'extractChartData'   // { imageData, context } → { result: { caption, headers, rows } }
 'transcribeAudio'    // { audioUrl } → { result: { type, text } }
 'transcribeVideo'    // { audioUrl } → { result: { type, text } }
 'inferLabel'         // { elementType, html, context } → { result: string }
