@@ -989,7 +989,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 
   if (msg.type === 'openSkillManager') {
-    chrome.tabs.create({ url: chrome.runtime.getURL('skill-builder/skills.html') });
+    let url = chrome.runtime.getURL('skill-builder/skills.html');
+    const params = new URLSearchParams();
+    // Needs onboarding (or a popup suggestion) couldn't cover with a built-in
+    // adapter. They come here first: most are a new combination of things
+    // that already exist, which is a skill. The page hands the leftovers to
+    // the Adapter Builder, which writes actual code.
+    if (msg.pendingSkills) params.set('pending', JSON.stringify(msg.pendingSkills));
+    if (msg.scope && msg.scope !== 'general') params.set('scope', msg.scope);
+    const qs = params.toString();
+    if (qs) url += '?' + qs;
+    chrome.tabs.create({ url });
     sendResponse({ success: true });
     return true;
   }

@@ -90,9 +90,15 @@ async function onBuild() {
 
   if (resp.error) { $('buildStatus').textContent = `Couldn't build: ${resp.error}`; return; }
   if (!resp.skill) {
-    $('buildStatus').textContent = resp.errors?.length
-      ? `The Engineer couldn't build this from existing adapters (${resp.errors.join('; ')}). Try the Adapter Builder for a fully custom capability.`
-      : 'No skill was produced. Try rephrasing the need.';
+    if (resp.errors?.length) {
+      // No existing adapter combination covers this, so it needs new code —
+      // link straight into the Adapter Builder with the need already filled in.
+      $('buildStatus').innerHTML =
+        `The Engineer couldn't build this from existing adapters (${escapeHtml(resp.errors.join('; '))}). `
+        + `<a href="${escapeHtml(adapterBuilderUrl(need))}">Build it in the Adapter Builder</a> instead.`;
+    } else {
+      $('buildStatus').textContent = 'No skill was produced. Try rephrasing the need.';
+    }
     return;
   }
 
@@ -128,6 +134,9 @@ async function onSave() {
     $('preview').hidden = true;
     $('needInput').value = '';
     builtSkill = null;
+    // Saving is what marks a handed-over need as done — a build alone doesn't,
+    // because the person may still reject it and try again.
+    if (pendingSource) dropPending(pendingSource);
     await loadSkills();
   } else {
     $('previewErrors').textContent = 'Could not save: ' + (resp.errors?.join('; ') || 'unknown error');
@@ -158,6 +167,95 @@ async function onImprove() {
   $('feedbackInput').value = '';
   $('buildStatus').textContent = resp.valid ? 'Revised. Review it below.' : 'Revised, but review the warnings.';
   renderPreview(resp.skill, resp.valid, resp.errors || []);
+}
+
+// ---- Needs handed over from onboarding or a suggestion ---------------------
+// Onboarding asks what you need, and anything no built-in adapter covers
+// arrives here in the person's own words. Most of those are a new
+// *combination* of adapters that already exist — that's a skill, so the
+// Engineer gets first go. A need with no adapter behind it at all is a new
+// capability, and writing that code is the Adapter Builder's job.
+let pendingNeeds = [];
+let pendingScope = 'general';
+let pendingSource = null;   // the queued need the current build came from
+
+// "category:news" → "on news sites"; "origin:nytimes.com" → "on nytimes.com".
+// The Engineer takes one plain-language need, so a scoped request carries its
+// sites in the sentence rather than as a separate field.
+function scopePhrase(scope) {
+  if (!scope || scope === 'general') return '';
+  const [kind, value] = scope.split(':');
+  if (!value) return '';
+  return kind === 'origin' ? ` on ${value}` : ` on ${value.replace(/-/g, ' ')} sites`;
+}
+
+function readHandoff() {
+  const params = new URLSearchParams(location.search);
+  try {
+    // URLSearchParams.get() already decodes — decoding again throws on any
+    // literal % in a need.
+    const parsed = JSON.parse(params.get('pending') || '[]');
+    pendingNeeds = Array.isArray(parsed)
+      ? parsed.filter((n) => n && typeof n.description === 'string' && n.description.trim())
+      : [];
+  } catch { pendingNeeds = []; }
+  const scope = params.get('scope') || 'general';
+  pendingScope = /^(general|category:[a-z-]+|context:[a-z-]+|origin:[a-z0-9.-]+)$/.test(scope)
+    ? scope : 'general';
+  renderPending();
+}
+
+function renderPending() {
+  const list = $('pendingList');
+  list.innerHTML = '';
+  if (!pendingNeeds.length) { $('pendingSection').hidden = true; return; }
+  $('pendingSection').hidden = false;
+
+  for (const need of pendingNeeds) {
+    const li = document.createElement('li');
+    li.className = 'skill-card';
+    li.innerHTML = `
+      <div class="skill-head"><span class="skill-name">${escapeHtml(need.name || need.description)}</span></div>
+      <p class="skill-desc">${escapeHtml(need.description)}</p>
+      <div class="skill-actions"></div>`;
+    const actions = li.querySelector('.skill-actions');
+
+    const build = document.createElement('button');
+    build.className = 'btn btn-primary';
+    build.textContent = 'Build this';
+    build.addEventListener('click', () => {
+      pendingSource = need;
+      $('needInput').value = need.description + scopePhrase(pendingScope);
+      checkedNeed = null;
+      hideReuseOffer();
+      $('needInput').focus();
+      onBuild();
+    });
+    actions.appendChild(build);
+
+    const skip = document.createElement('button');
+    skip.className = 'btn btn-text';
+    skip.textContent = 'Not now';
+    skip.addEventListener('click', () => { dropPending(need); });
+    actions.appendChild(skip);
+
+    list.appendChild(li);
+  }
+}
+
+function dropPending(need) {
+  pendingNeeds = pendingNeeds.filter((n) => n !== need);
+  if (pendingSource === need) pendingSource = null;
+  renderPending();
+}
+
+// The hand-off the other way: this need is a new capability, not a new
+// recipe. Carry it to the Adapter Builder so the person doesn't retype it.
+function adapterBuilderUrl(need) {
+  const params = new URLSearchParams();
+  params.set('pending', JSON.stringify([{ name: need, description: need, supportAreas: [] }]));
+  if (pendingScope !== 'general') params.set('scope', pendingScope);
+  return `../adapter-builder/builder.html?${params.toString()}`;
 }
 
 // ---- List + apply + delete -------------------------------------------------
@@ -306,6 +404,7 @@ function init() {
   });
   $('reuseBuildBtn').addEventListener('click', () => { hideReuseOffer(); onBuild(); });
   $('needInput').addEventListener('input', () => { checkedNeed = null; hideReuseOffer(); });
+  readHandoff();
   loadSkills();
 }
 

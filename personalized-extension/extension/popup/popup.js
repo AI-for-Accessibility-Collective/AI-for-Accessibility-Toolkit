@@ -728,12 +728,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Open the skill builder for the suggestion's custom skills, carrying the
-  // scope so the built skill is gated to the same sites as the settings.
+  // Open the Skill Builder for the needs this suggestion couldn't cover,
+  // carrying the scope so the built skill is gated to the same sites as the
+  // settings. Composing existing adapters is tried first; the Skill Builder
+  // hands anything that needs new code to the Adapter Builder.
   function openBuilderForSuggestion(suggestion) {
     const skills = suggestion?.newSkills || [];
     chrome.runtime.sendMessage({
-      type: 'openSkillBuilder', pendingSkills: skills, scope: suggestion?.scope || 'general',
+      type: 'openSkillManager', pendingSkills: skills, scope: suggestion?.scope || 'general',
     });
     window.close();
   }
