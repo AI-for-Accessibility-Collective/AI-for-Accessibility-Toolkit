@@ -39,6 +39,14 @@ Then load it and try it:
 
 Most adapters — bigger text, dark mode, wider spacing, a single-column reading view, dismissing popups, keeping focus visible — work right away with **no key**. The AI features (writing alt text, captions, plain-language summaries, translation) need a free [Gemini key](https://aistudio.google.com/apikey); paste it into the popup once.
 
+There's a second, personalized extension that adds onboarding, memory that learns what you need, and the Skill Builder. It builds separately:
+
+```bash
+cd personalized-extension && npm install && npm run build
+```
+
+Load `personalized-extension/extension/` the same way. Keep Developer mode on — the adapters it builds for you run as user-scripts, which Chrome only allows there.
+
 ### Command line — for developers and agents
 
 ```bash
@@ -61,7 +69,7 @@ Open the [test site](https://ai4a11y-test-site.vercel.app/) and try these — th
 - **Low Vision** → 150% text, a bold focus ring that follows your keyboard, and a magnifier that tracks the cursor.
 - **Motor** → bigger click targets, sticky bars unpinned, and a "click again to confirm" guard on Delete / Submit buttons.
 - **Blind** *(needs a Gemini key)* → missing alt text and video captions get written for you; press **Alt+D** on any element to hear what it is.
-- **Skill Builder** → type *"make Reddit calmer to read"* and it assembles a reusable recipe (less motion, fewer popups) you approve before it saves.
+- **Skill Builder** *(personalized extension)* → type *"make Reddit calmer to read"* and it assembles a reusable recipe (less motion, fewer popups) you approve before it saves.
 
 ### From the command line
 
@@ -135,7 +143,7 @@ Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CO
 - [x] Add privacy and sharing controls (keep private, or share with friends/family/org)
 - [ ] Build evaluation benchmark (test sites arena) (in progress)
 - [ ] Integrate team projects
-- [ ] Unify the two extensions on shared tools
+- [ ] Unify the two extensions on shared tools (in progress — most adapters now share one source)
 - [x] Co-design with disability community
 
 ### Month 6 — Ship
