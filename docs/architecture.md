@@ -76,6 +76,11 @@ Two paths produce new skills:
 3. The result goes through the **adaptive evaluation interface**, where the end user validates it. Fails → back to the Engineer. *Built:* the preview's **Try on this page** applies the unsaved skill to the live page, and a feedback box sends the rejected attempt + the person's words back to the Engineer for revision (`buildSkill(need, { previous, feedback })`).
 4. On success it is saved to the **Skills db** and the **Personal Ability Profile/Memory db** records the ability context (e.g., *low vision + anxiety*) and triggers (e.g., *news sites + videos*). *Built:* `saveSkill` logs the skill's `supportAreas` and `siteRelevance` as a high-weight observation the memory pipeline folds into the profile.
 
+Onboarding is the same door: needs it couldn't cover with a built-in adapter
+arrive in the Skill Builder as a queue, each one going through the reuse check
+and the Engineer above. Only a need no combination of adapters can cover is
+handed to the **Adapter Builder**, which writes new code — the rare case.
+
 **Implicit** — the user asks the **Assistant** for a one-off automation ("Turn on captions for this video"):
 1. Assistant asks: is this a common, reusable task? *Built:* a successful agent task on a categorized site triggers a consent-gated proposal (deterministic — works without an API key).
 2. No → just perform the one-off automation.
@@ -151,13 +156,15 @@ A few places carry parallel code on purpose. Knowing why keeps contributors
 from "fixing" intentional structure:
 
 - **Two Chrome extensions.** `extension/` (basic, imports top-level `tools/`)
-  and `personalized-extension/` (onboarding + Librarian memory + Adapter
-  Creator) are separate. The personalized one currently keeps its *own* copies
-  of the adapter family (`skills/builtin/`) and utils rather than importing
-  `tools/`. This **is** known debt — the one real consolidation on the roadmap
-  — but it's a deliberate migration (the two adapter APIs diverged and share a
-  provider singleton), not a quick merge. Until then, a page-fixing change may
-  need to land in both trees.
+  and `personalized-extension/` (onboarding + Librarian memory + both builders)
+  are separate. Their adapter corpora are now mostly one codebase: 29 of the 45
+  modules in `personalized-extension/skills/builtin/` are one-line re-exports
+  of the canonical `tools/adapters/` file, and the personalized build rewrites
+  the canonical adapter's `utils/ai.js` import to this extension's provider so
+  the same code runs in both. The remaining 16 genuinely diverged and still
+  carry their own code — a change to one of those may need to land in both
+  trees. Finishing that convergence, and sharing `utils/`, is the consolidation
+  still on the roadmap.
 - **`browser-harness` twice, in two languages.** `webapp/browser-harness/` is
   the upstream **Python** daemon (the web apps run it as a subprocess).
   `personalized-extension/extension/browser-harness/` is a **JavaScript**
@@ -196,7 +203,7 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance, save reading spot |
 | `anxiety` | Calm UI, reduced motion, dismiss popups, mute sounds |
 | `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds, reduce brightness |
-| `photosensitive` | Dark mode, reduced motion, reduce brightness, flash guard |
+| `photosensitive` (shown as **Light Sensitive**) | Dark mode, reduced motion, reduce brightness, flash guard |
 
 Profiles are defined in `tools/profiles/settings.js`. Users can also toggle individual tools, and every explicit change feeds the Librarian's continual-update loop.
 
