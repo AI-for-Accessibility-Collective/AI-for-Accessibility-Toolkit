@@ -27,11 +27,14 @@ toolkit/
 │   └── chrome/           # Chrome host adapter (entries bundled by
 │                         #   personalized-extension/build.js into
 │                         #   extension/lib/{taxonomy,datastore,librarian}.js)
-├── hosts/
-│   └── xr-demo/          # Runnable second consumer: node hosts/xr-demo/demo.js
+├── hosts/                 # Runnable consumers (no browser)
+│   ├── xr-demo/          # node hosts/xr-demo/demo.js — onboard once, render in XR
+│   └── skill-demo/       # node hosts/skill-demo/demo.js — the whole skill loop
 └── test/                  # Node tests (no browser, in-memory ports)
     ├── ability-model-test.js
-    └── broker-test.js
+    ├── broker-test.js
+    ├── skill-test.js, skill-apply-test.js, skill-edge-test.js
+    └── scenario-test.js, codesign-scenarios-test.js
 ```
 
 ## AbilityModel and Surfaces (Phase 1)
@@ -60,6 +63,10 @@ permission control" in the architecture diagram):
   which AbilityModel dimensions they may read (`ability.text`,
   `ability.vision`, …). The person's free-text self-description needs its
   own scope; raw memories and the episodic log are never reachable.
+- **Sharing level caps every grant** — each grant carries an audience
+  (personal / friends / anyone), and the profile's own `sharing` level is the
+  ceiling. `exportUnderstanding` re-checks it on every export, so lowering the
+  level immediately cuts off grants above it; blocked exports are audited.
 - **Insights arrive as proposals** — an app with write permission
   contributes through `importInsight()`, which routes into the Librarian's
   consent queue (same suppression/cooldown gates as internal inferences,
@@ -138,5 +145,6 @@ librarian.setGeminiCaller(async (prompt) => myLLM.complete(prompt));
   `logObservation` — the single entry point.
 - **Suggest, never apply**: profile-tier changes become proposals; nothing
   inferred auto-applies.
-- **Regression gate**: `personalized-extension/test/librarian-test.js` (69
-  asserts) must pass against the built Chrome artifacts after any change here.
+- **Regression gate**: `personalized-extension/test/librarian-test.js` (75
+  asserts) must pass against the built Chrome artifacts after any change here,
+  along with every `toolkit/test/*-test.js`.
