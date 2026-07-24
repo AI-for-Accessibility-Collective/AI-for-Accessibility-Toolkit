@@ -41,7 +41,12 @@ const BUILT = {
               ...mineSkills.map(s => ({ ...s, source: 'mine' })),
             ] };
           } else if (msg.type === 'librarianBuildSkill') {
-            resp = { skill: window.__BUILT, valid: true, errors: [] };
+            // No canned skill = the Engineer couldn't compose one from
+            // existing adapters, which is how the page decides to hand the
+            // need to the Adapter Builder.
+            resp = window.__BUILT
+              ? { skill: window.__BUILT, valid: true, errors: [] }
+              : { skill: null, valid: false, errors: ['no adapter covers this'] };
           } else if (msg.type === 'librarianSaveSkill') {
             mineSkills.push(msg.skill); resp = { saved: true, errors: [] };
           } else if (msg.type === 'librarianResolveSkill') {
@@ -196,6 +201,47 @@ const BUILT = {
     [...document.querySelectorAll('.skill-card')].find(c => /mixed-skill/.test(c.textContent)).querySelector('.btn-primary').textContent);
   check('mixed skill with a busy agent does not claim full success', mixedBtnText !== 'Applied ✓');
   check('mixed skill surfaces the part that failed', /busy/.test(mixedBtnText));
+
+  // Needs handed over from onboarding (or a popup suggestion) arrive as a
+  // ?pending= queue. They must reach the Engineer first — composing existing
+  // adapters is the common case — and a scoped request must carry its sites
+  // into the need the Engineer reads.
+  const handoff = encodeURIComponent(JSON.stringify([
+    { name: 'Quieter comments', description: 'collapse long comment threads', supportAreas: ['cognitive'] },
+  ]));
+  await page.goto(`file://${PAGE}?pending=${handoff}&scope=category:news`);
+  await page.waitForFunction(() => !document.getElementById('pendingSection').hidden, { timeout: 5000 });
+  check('handed-over needs are listed', await page.$eval('#pendingList', el => el.children.length) === 1);
+  check('handed-over need shows what was asked for',
+    (await page.$eval('#pendingList', el => el.textContent)).includes('collapse long comment threads'));
+
+  await page.evaluate(() => { window.__sent.length = 0; });
+  await page.evaluate(() => document.querySelector('#pendingList .btn-primary').click());
+  await page.waitForFunction(() => window.__sent.some(m => m.type === 'librarianBuildSkill'), { timeout: 5000 });
+  check('building a handed-over need goes to the Engineer with its scope', await page.evaluate(() =>
+    window.__sent.find(m => m.type === 'librarianBuildSkill').need === 'collapse long comment threads on news sites'));
+
+  await page.waitForFunction(() => !document.getElementById('preview').hidden, { timeout: 5000 });
+  await page.click('#saveBtn');
+  await page.waitForFunction(() => document.getElementById('pendingSection').hidden, { timeout: 5000 });
+  check('saving clears the need from the queue',
+    await page.$eval('#pendingList', el => el.children.length) === 0);
+
+  // A need no adapter combination covers is a new capability, not a new
+  // recipe — the page must hand it to the Adapter Builder, need included.
+  await page.evaluate(() => { window.__BUILT = null; });
+  await page.evaluate(() => { document.getElementById('needInput').value = ''; });
+  await page.type('#needInput', 'read my mind');
+  await page.click('#buildBtn');
+  await page.waitForFunction(() => document.querySelector('#buildStatus a'), { timeout: 5000 });
+  const handoffHref = await page.$eval('#buildStatus a', el => el.getAttribute('href'));
+  check('an uncomposable need links to the Adapter Builder', /adapter-builder\/builder\.html/.test(handoffHref));
+  // Read it back the way the Adapter Builder itself parses the queue.
+  const handoffNeed = await page.evaluate((href) => {
+    const q = new URLSearchParams(href.slice(href.indexOf('?')));
+    return JSON.parse(q.get('pending'))[0].description;
+  }, handoffHref);
+  check('the Adapter Builder hand-off carries the need', handoffNeed === 'read my mind');
 
   await browser.close();
   console.log(`\n${pass} passed, ${fail} failed`);

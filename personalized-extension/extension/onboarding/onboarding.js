@@ -533,7 +533,7 @@ async function saveAndFinish(enabledSkillIds, newSkills) {
   await chrome.storage.sync.set(syncSettings);
 
   if (newSkills.length > 0) {
-    chrome.runtime.sendMessage({ type: 'openSkillBuilder', pendingSkills: newSkills });
+    chrome.runtime.sendMessage({ type: 'openSkillManager', pendingSkills: newSkills });
   }
 
   window.close();
