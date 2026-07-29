@@ -180,6 +180,54 @@ export function gaps(c) {
   return out;
 }
 
+/**
+ * An answer to one interview question, read the way the person meant it.
+ *
+ * People answer a question the way they would answer a person: "forty-ish",
+ * "she's a 5", "friday would be good". Storing that verbatim gives a contract
+ * that says "under forty-ish", which no check can compare a price against.
+ *
+ * Returns the value AND how it was read, because the reading is a decision:
+ * the analysis has the agent say "I'll treat $40 as the ceiling, not a
+ * target", and a person who meant something else can only correct it if they
+ * are told.
+ *
+ * @returns {{value: any, note: string|null}}
+ */
+export function readAnswer(field, said) {
+  const t = tidy(said);
+  if (!t) return { value: null, note: null };
+
+  if (field === 'budget') {
+    const m = t.match(/(\d[\d,]*(?:\.\d\d)?)/);
+    if (!m) return { value: null, note: null };
+    const v = `$${m[1].replace(/,/g, '')}`;
+    return { value: v, note: `I’ll treat ${v} as the ceiling, not a target.` };
+  }
+
+  if (field === 'size') {
+    // "she's a 5", "size 5", "a 5" — the number or word is the answer.
+    const parsed = first(SIZE, /\bsize\b/i.test(t) ? t : `size ${t}`);
+    const v = parsed ? tidy(parsed.value) : t;
+    return { value: v, note: null };
+  }
+
+  if (field === 'deadline') {
+    const parsed = first(DEADLINE, /\b(by|before|in)\b/i.test(t) ? t : `by ${t}`);
+    return { value: parsed ? tidy(parsed.value) : t, note: null };
+  }
+
+  if (field === 'mustHaves') {
+    const parts = t.split(/,\s*|\s+and\s+/).map(tidy).filter(Boolean);
+    return { value: parts,
+             note: parts.length > 1
+               ? `${parts.join(' and ')}. Those are deal-breakers, then.`
+               : `${parts[0]}. That’s a deal-breaker, then.` };
+  }
+
+  return { value: t, note: null };
+}
+
 /** One line for the panel and for reading back aloud. */
 export function describe(c) {
   const bits = [c.item];
@@ -188,6 +236,72 @@ export function describe(c) {
   if (c.budget) bits.push(`under ${c.budget}`);
   if (c.quantity > 1) bits.push(`${c.quantity} of them`);
   return `${bits.filter(Boolean).join(', ')}.`;
+}
+
+/**
+ * The task the agent runs, assembled from the fields.
+ *
+ * Assembled, not written: every line is a field the person answered or a rule
+ * they have standing, so the agent's instructions and the checks it will be
+ * held to come from the same place and cannot disagree. A prompt written by
+ * hand somewhere else is a second contract that drifts from the first.
+ *
+ * The last two lines are not preferences. They exist because of failures in
+ * the recorded runs — an agent that reported "all checks passed" instead of
+ * what it saw, and a Buy Now button sitting next to Add to Cart.
+ *
+ * @param {object} c        the contract
+ * @param {Array<{text,on}>} rules standing rules currently in force
+ */
+export function toPrompt(c, rules = []) {
+  const lines = [`Buy: ${c.item}.`];
+  if (c.mustHaves?.length) lines.push(`Must have: ${c.mustHaves.join(', ')}.`);
+  if (c.size) lines.push(`Size: ${c.size}.`);
+  if (c.budget) lines.push(`Budget: under ${c.budget}.`);
+  lines.push(`Quantity: ${c.quantity || 1}. Do not order more.`);
+  if (c.deadline) lines.push(`Needed by: ${c.deadline}.`);
+
+  for (const r of rules) {
+    if (r?.on !== false && r?.text) lines.push(`${cap(r.text)}.`);
+  }
+
+  lines.push('Never place the order yourself — bring it to me and wait.');
+  lines.push('Read facts from the page in its own words. Never say a check '
+           + 'passed; say what you saw.');
+  return lines.join('\n');
+}
+
+const cap = (t) => String(t).charAt(0).toUpperCase() + String(t).slice(1).replace(/\.$/, '');
+
+/**
+ * What the interview still has to ask, in the order the analysis asks it.
+ *
+ * Four questions, not eleven. The standing tier is not asked up front — there
+ * is no delivery preference to state until checkout offers a choice — so those
+ * are reached when the task reaches them and promoted at that moment.
+ */
+export function interview(c, unlocks = {}) {
+  const ASK = {
+    mustHaves: 'Anything that would make you say no to one?',
+    size: 'What size?',
+    budget: 'What’s your ceiling on price?',
+    deadline: 'When do you need it by?',
+  };
+  // In the order the analysis asks them, which is not the order gaps() finds
+  // them in. Must-haves first is deliberate: it is the question that makes the
+  // person describe the thing rather than fill a field, and answering it often
+  // supplies the others in passing.
+  const ORDER = ['mustHaves', 'size', 'budget', 'deadline'];
+  return gaps(c)
+    .slice()
+    .sort((a, b) => ORDER.indexOf(a.field) - ORDER.indexOf(b.field))
+    .map((g) => ({
+      field: g.field,
+      ask: ASK[g.field] || g.ask,
+      unchecked: g.unchecked,
+      unlocks: (unlocks[g.field] || []).length,
+      examples: (unlocks[g.field] || []).slice(0, 3),
+    }));
 }
 
 /** A search query, for when the agent needs one and was given a sentence. */

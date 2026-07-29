@@ -74,6 +74,33 @@
 .va-start .va-do { margin-top: 0; white-space: nowrap; }
 .va-hint { margin: 9px 0 0; font-size: 11px; color: #86868b; }
 
+/* ── forming the contract ────────────────────────────────────────────────── */
+/* One question at a time, with room. The whole point of this stage is that it
+   is a short conversation rather than a form, and a form is what it becomes
+   the moment four fields are on screen together. */
+.va-form { padding: 16px 14px; }
+.va-form-step {
+  margin: 0 0 6px; font-size: 11px; letter-spacing: .5px;
+  text-transform: uppercase; color: #86868b;
+}
+.va-form-ask { margin: 0 0 5px; font-size: 16px; font-weight: 600; }
+.va-form-why { margin: 0 0 11px; font-size: 12px; color: #6e6e73; }
+.va-form-input {
+  flex: 1 1 auto; min-width: 0; font: inherit; padding: 7px 11px;
+  border: 1px solid #d2d2d7; border-radius: 999px; background: #fff; color: #1d1d1f;
+}
+.va-form-input:focus-visible { outline: 2px solid #06c; outline-offset: 1px; }
+.va-form-note {
+  margin: 10px 0 0; font-size: 12px; color: #1d1d1f;
+  padding: 7px 10px; background: #f5f5f7; border-radius: 8px;
+}
+.va-form-back {
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 10px;
+  background: #f5f5f7; font-size: 14px;
+}
+.va-form-promises { margin: 0 0 12px; padding-left: 18px; font-size: 12px; color: #6e6e73; }
+.va-form-promises li { margin: 2px 0; }
+
 /* ── what wasn't said ────────────────────────────────────────────────────── */
 /* A question, not a warning. Something unspecified is normal — people do not
    state everything up front — so this is the calm blue of an offer rather than
