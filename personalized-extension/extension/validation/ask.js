@@ -55,6 +55,18 @@ const SIZE = [
   /\b(\d+(?:\.\d+)?)\s+in\s+(?:kids?|women'?s?|men'?s?)\b/i,
 ];
 
+// When they need it by. The corpus's own example — "friday would be good" —
+// is how people say this: a weekday, not a date. Without it the arrives-in-time
+// check has nothing to compare the delivery date against, so it cannot fire at
+// all, and a parcel arriving after the day it was needed reads as a success.
+const DEADLINE = [
+  /\bby\s+(today|tomorrow|tonight|mon(?:day)?|tues?(?:day)?|wed(?:nesday)?|thur?s?(?:day)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i,
+  /\b(today|tomorrow|tonight)\b/i,
+  /\bbefore\s+(mon(?:day)?|tues?(?:day)?|wed(?:nesday)?|thur?s?(?:day)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i,
+  /\bin\s+(\d+\s+days?)\b/i,
+  /\bby\s+the\s+(\d+(?:st|nd|rd|th))\b/i,
+];
+
 const QUANTITY = [
   /\b(\d+)\s*(?:pairs?|packs?|boxes|units?|of them)\b/i,
   /\bqty\s*:?\s*(\d+)\b/i,
@@ -98,6 +110,9 @@ export function contractFromAsk(text) {
   const qty = first(QUANTITY, rest);
   if (qty) rest = rest.replace(qty.matched, ' ');
 
+  const by = first(DEADLINE, rest);
+  if (by) rest = rest.replace(by.matched, ' ');
+
   rest = tidy(rest.replace(OPENERS, ''));
 
   // The first clause names the thing; the rest constrain it.
@@ -121,6 +136,7 @@ export function contractFromAsk(text) {
     size: size ? tidy(size.value) : null,
     budget: budget ? `$${String(budget.value).replace(/,/g, '')}` : null,
     quantity: Number.isFinite(q) && q > 0 ? q : 1,
+    deadline: by ? tidy(by.value) : null,
     said,
   };
 }
@@ -132,6 +148,7 @@ const NEEDS = {
   budget: ['whether a price is inside what you said', 'shipping pushing the total over'],
   mustHaves: ['whether the item really has the features you asked for',
               'a substitution that drops one of them'],
+  deadline: ['whether it arrives in time', 'a delivery date that slipped past the day'],
 };
 
 /**
@@ -155,6 +172,10 @@ export function gaps(c) {
   if (!c.mustHaves?.length) {
     out.push({ field: 'mustHaves', ask: 'Anything it has to have?',
                unchecked: NEEDS.mustHaves });
+  }
+  if (!c.deadline) {
+    out.push({ field: 'deadline', ask: 'When do you need it by?',
+               unchecked: NEEDS.deadline });
   }
   return out;
 }
