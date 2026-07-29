@@ -64,6 +64,11 @@ const search = (F, c) => {
 
   out.push({
     widget: 'Count-first opener',
+    // The tutor's rule, from the video corpus: a few hundred means the query
+    // landed; four figures means it matched half the shop. The count is only
+    // a judgment once it sits on that scale.
+    paradigm: 1,
+    shape: { value: S.count, display: String(S.count) },
     say: `${S.count} products on this page` +
          (S.sponsoredInFirstTen ? `, and ${S.sponsoredInFirstTen} of the first ten are ads.` : '.'),
     from: F.resultSet.from, answerable: false,
@@ -74,6 +79,10 @@ const search = (F, c) => {
     const inside = lim && S.priceHigh <= lim;
     out.push({
       widget: 'Price sweep on demand',
+      paradigm: 3,
+      shape: lim ? { rows: [{ asked: `under ${money(lim)}`,
+                              found: `${money(S.priceLow)} – ${money(S.priceHigh)}`,
+                              match: inside }] } : null,
       say: `They run ${money(S.priceLow)} to ${money(S.priceHigh)}.` +
            (inside ? ` All inside your ${money(lim)}.` : ''),
       from: `${S.count} product prices`, answerable: false, confirming: !!inside,
@@ -85,6 +94,18 @@ const search = (F, c) => {
   if (badged && S.bestRated && badged.title !== S.bestRated.title) {
     out.push({
       widget: 'Badge decoder',
+      // Two voices on one question, and they disagree: the shop's label and
+      // the buyers' numbers. Drawn apart, which one is talking is obvious.
+      paradigm: 2,
+      shape: {
+        claim: `${badged.badge} — the best one here`,
+        sources: [
+          { who: 'the shop', said: `${badged.badge} label`, agrees: true },
+          { who: 'buyers', said: `${S.bestRated.rating}★ from ` +
+              `${S.bestRated.ratingCount.toLocaleString()} goes to a different one`,
+            agrees: false },
+        ],
+      },
       say: `The one carrying the shop's ${badged.badge} label isn't the best rated. ` +
            `The best rated has ${S.bestRated.rating} stars from ` +
            `${S.bestRated.ratingCount.toLocaleString()} ratings.`,
@@ -107,6 +128,8 @@ const search = (F, c) => {
   if (S.count && S.noPhoto === S.count) {
     out.push({
       widget: 'Unseen-photo stand-in',
+      paradigm: 4,
+      shape: { parts: [{ what: 'photos', checked: 0, of: S.count }] },
       say: `None of the ${S.count} has a photo your screen reader can reach. ` +
            `The pictures are there; they just aren't announced.`,
       from: 'no image entries in any tile', answerable: false,
@@ -117,6 +140,9 @@ const search = (F, c) => {
   if (now && typ && typ > now * 1.4) {
     out.push({
       widget: 'Typical-price truth check',
+      paradigm: 6,
+      shape: { points: [{ value: money(typ), when: 'claimed usual' },
+                        { value: money(now), when: 'now' }] },
       say: `The first one shows ${money(now)} against a claimed usual of ${money(typ)}. ` +
            `That's the shop's own reference, not a price I've seen.`,
       from: F.priceTypical.from, answerable: false,

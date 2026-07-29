@@ -159,9 +159,13 @@ const Validation = {
     // rather than of the task.
     // Appending has to happen inside the serialised write, for the same reason
     // -- reading the previous list outside it reintroduces the race.
+    // paradigm + shape travel with the finding. They are what let the overlay
+    // draw a gauge rather than another grey card, and dropping them here would
+    // silently flatten every finding back into a sentence.
     await publish({ append: rendered.map((f) => ({
       widget: f.finding.widget, level: f.level, say: f.finding.say,
       from: f.finding.from, confirming: !!f.finding.confirming,
+      paradigm: f.finding.paradigm || null, shape: f.finding.shape || null,
       control: f.visual?.control || null, phase,
     })) });
 
