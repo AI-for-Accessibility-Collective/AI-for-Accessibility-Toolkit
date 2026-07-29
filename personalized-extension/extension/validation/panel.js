@@ -17,8 +17,6 @@
 // It reads chrome.storage rather than keeping its own copy, so the panel and
 // the spoken channel can never disagree about what the run found.
 
-import { contractFromAsk, interview, readAnswer, describe as sayAsk } from './ask.js';
-
 const KEY = 'aa.validation';
 
 export function mountValidationPanel(root, { onControl } = {}) {
@@ -30,23 +28,6 @@ export function mountValidationPanel(root, { onControl } = {}) {
   root.setAttribute('aria-relevant', 'additions text');
 
   let state = null;
-
-  // Forming the contract.
-  //
-  // A person opens with a word. Everything after it — every check that
-  // compares the page against what they actually wanted — needs more than
-  // that, and each missing field silently switches off the validators that
-  // depend on it. An absent answer does not fail loudly; it just removes a
-  // check nobody hears not happening.
-  //
-  // Before this existed the panel took one sentence and started. That is the
-  // stage the flow calls "read back, confirmed", and skipping it meant the run
-  // began against whatever could be parsed out of a single line.
-  //
-  // Four questions, not eleven: the standing tier is not asked up front,
-  // because there is no delivery preference to state until checkout offers a
-  // choice. Those are reached when the task reaches them.
-  let draft = null;        // { contract, queue, i } while forming
 
   // Storage is shared with the service worker, so a field can arrive as a type
   // this view did not expect. One such value used to throw mid-render and
@@ -64,7 +45,6 @@ export function mountValidationPanel(root, { onControl } = {}) {
 
   function render() {
     root.textContent = '';
-    if (draft) { root.append(forming()); return; }
     if (!state || !state.contract) {
       root.append(startForm());
       return;
@@ -179,11 +159,7 @@ export function mountValidationPanel(root, { onControl } = {}) {
     const submit = () => {
       const said = input.value.trim();
       if (!said) { input.focus(); return; }
-      // Parse what they said, then ask about what they did not — rather than
-      // starting against a half-filled contract.
-      const contract = contractFromAsk(said);
-      draft = { contract, queue: interview(contract, state?.unlocks || {}), i: 0, notes: [] };
-      render();
+      onControl?.({ action: 'start', said });
     };
     go.addEventListener('click', submit);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
@@ -193,95 +169,6 @@ export function mountValidationPanel(root, { onControl } = {}) {
     s.append(el('p', 'va-hint',
       'Say it however you like. Anything you leave out, I’ll ask about — '
       + 'I won’t assume it.'));
-    return s;
-  }
-
-  // One question, then the next, then the whole thing read back.
-  function forming() {
-    const s = el('section', 'va-form');
-    const q = draft.queue[draft.i];
-
-    if (q) {
-      s.append(el('p', 'va-form-step', `${draft.i + 1} of ${draft.queue.length}`));
-      s.append(el('h2', 'va-form-ask', q.ask));
-      // What the answer buys. The questions are derived, not designed — each
-      // earns its place by switching specific checks back on — so saying so
-      // is the difference between being asked and being interrogated.
-      if (q.unlocks) {
-        s.append(el('p', 'va-form-why',
-          `Answering this switches on ${q.unlocks} check${q.unlocks === 1 ? '' : 's'}`
-          + (q.examples?.length ? ` — ${q.examples.join(', ')}` : '')));
-      } else {
-        s.append(el('p', 'va-form-why', `Without it I can’t check ${q.unchecked[0]}`));
-      }
-
-      const row = el('div', 'va-start-row');
-      const input = el('input', 'va-form-input');
-      input.type = 'text';
-      input.setAttribute('aria-label', q.ask);
-      const next = () => {
-        const { value, note } = readAnswer(q.field, input.value);
-        if (value != null && value !== '') {
-          draft.contract = { ...draft.contract, [q.field]: value };
-          // How it was read, said back. "forty-ish" becoming a $40 ceiling is
-          // a decision, and one the person can only correct if they hear it.
-          if (note) draft.notes = [...(draft.notes || []), note];
-        }
-        draft.i += 1;
-        render();
-      };
-      const go = el('button', 'va-do primary', 'Next');
-      go.addEventListener('click', next);
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') next(); });
-      const skip = el('button', 'va-do', 'Skip');
-      // Skipping is allowed and is not free — the checks it would have switched
-      // on stay off, and the panel keeps saying so rather than quietly moving on.
-      skip.addEventListener('click', () => { draft.i += 1; render(); });
-
-      // "That's everything" — done TELLING, not done with the task.
-      //
-      // Someone who has said all they have to say should not have to press
-      // Skip once per remaining question. This jumps to the read-back, where
-      // what stays unchecked is spelled out before anything starts.
-      const enough = el('button', 'va-do', 'That’s everything');
-      enough.addEventListener('click', () => { draft.i = draft.queue.length; render(); });
-      row.append(input, go, skip, enough);
-      s.append(row);
-      const last = (draft.notes || [])[draft.notes.length - 1];
-      if (last && draft.i > 0) s.append(el('p', 'va-form-note', last));
-      requestAnimationFrame(() => input.focus());
-      return s;
-    }
-
-    // Read back, and wait for a yes.
-    s.append(el('h2', 'va-form-ask', 'Sound right?'));
-    s.append(el('p', 'va-form-back', sayAsk(draft.contract)));
-    const promises = el('ul', 'va-form-promises');
-    for (const line of ['I won’t press Buy Now',
-                        'I won’t place the order — I’ll bring it to you first',
-                        'I’ll read facts from the page in its own words']) {
-      promises.append(el('li', null, line));
-    }
-    s.append(promises);
-
-    const left = interview(draft.contract, state?.unlocks || {});
-    if (left.length) {
-      s.append(el('p', 'va-form-why',
-        `${left.length} thing${left.length === 1 ? '' : 's'} you skipped, so `
-        + `${left.map((x) => x.unchecked[0]).join(' and ')} stay${left.length === 1 ? 's' : ''} unchecked.`));
-    }
-
-    const row = el('div', 'va-start-row');
-    const yes = el('button', 'va-do primary', 'Yes, go');
-    yes.addEventListener('click', () => {
-      const c = draft.contract;
-      draft = null;
-      onControl?.({ action: 'start', contract: c });
-    });
-    const back = el('button', 'va-do', 'Change something');
-    back.addEventListener('click', () => { draft.i = 0; render(); });
-    row.append(yes, back);
-    s.append(row);
     return s;
   }
 

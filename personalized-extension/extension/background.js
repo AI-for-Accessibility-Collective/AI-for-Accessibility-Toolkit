@@ -909,23 +909,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // ---- validation layer -------------------------------------------------
   if (msg.type === 'validationStart') {
     globalThis.Validation.start(msg.contract, msg.opts || {})
-      .then(async (r) => {
-        // The agent's task is assembled from the contract, not written
-        // separately — the instructions it follows and the checks it is held
-        // to then come from one place and cannot drift apart. It carries the
-        // standing rules too, so "never press Buy Now" is in the prompt AND
-        // enforced at the gate.
-        if (msg.alsoRunAgent && globalThis.BrowserAgent
-            && !globalThis.BrowserAgent.isRunning()) {
-          const rules = (await globalThis.Validation.summary?.()) ? null : null;
-          const book = (await chrome.storage.sync.get('aa.rulebook'))['aa.rulebook'] || [];
-          const task = globalThis.ValidationAsk.toPrompt(r.contract, book);
-          await _bhAgentLog?.({ kind: 'info', text: 'Task from your contract' });
-          globalThis.BrowserAgent.run(task, { tabMode: 'auto' }).catch(() => {});
-          r.task = task;
-        }
-        sendResponse(r);
-      })
+      .then((r) => sendResponse(r))
       .catch((e) => sendResponse({ error: e.message }));
     return true;
   }
