@@ -36,14 +36,23 @@ const missing = (why) => ({ value: null, from: why, absent: true });
 export const resultCount = (lines) => {
   // "1-48 of 944 results for" — the heading a screen reader speaks first.
   const l = find(lines, /of\s+[\d,]+\s+results/i);
-  if (!l) {
-    // Amazon also renders "over 1,000 results" when the count is approximate.
-    const over = find(lines, /over\s+[\d,]+\s+results/i);
-    if (over) return { ...got(count(capture([over], /over\s+([\d,]+)/i)), over.name),
-                       approximate: true };
-    return missing('no results heading in the tree');
-  }
-  return got(count(capture([l], /of\s+([\d,]+)\s+results/i)), l.name);
+  if (l) return got(count(capture([l], /of\s+([\d,]+)\s+results/i)), l.name);
+
+  // "over 1,000 results" when the count is approximate.
+  const over = find(lines, /over\s+[\d,]+\s+results/i);
+  if (over) return { ...got(count(capture([over], /over\s+([\d,]+)/i)), over.name),
+                     approximate: true };
+
+  // "1-48 of 944" without the word results, or a bare "944 results".
+  const range = find(lines, /\d+\s*-\s*\d+\s+of\s+[\d,]+/i);
+  if (range) return got(count(capture([range], /of\s+([\d,]+)/i)), range.name);
+  const bare = find(lines, /^[\d,]+\s+results/i);
+  if (bare) return got(count(capture([bare], /^([\d,]+)/)), bare.name);
+
+  // Genuinely absent: the main slot often carries no count at all, which is
+  // itself the finding -- the first number a person would want is not on the
+  // page in any form a screen reader reaches.
+  return missing('no result count anywhere in this tree');
 };
 
 export const sponsoredCount = (lines) => {
@@ -134,8 +143,11 @@ export const priceNow = (lines) => {
 export const priceTypical = (lines) => {
   // "$12.60 Typical: $19.50" — the crossed-out reference price, which reads to
   // a screen reader as a second number with the word Typical in front of it.
+  // Amazon writes this two ways: "Typical: $19.50" on some tiles and "Typical
+  // price: $12.99" on others. Matching only the first silently drops the whole
+  // price-cut check on half the pages.
   const l = find(lines, /typical/i);
-  return l ? got(money(capture([l], /Typical:\s*\$?([\d,.]+)/i)), l.name)
+  return l ? got(money(capture([l], /Typical(?:\s+price)?:\s*\$?([\d,.]+)/i)), l.name)
            : missing('no typical price shown');
 };
 
@@ -178,23 +190,48 @@ export const ratingCount = (lines) => {
 };
 
 export const sizeOptions = (lines) => {
-  const radios = byRole(lines, 'radio').map((l) => l.name).filter(Boolean);
+  // Exclude colour radios, whose labels are whole buy-box paragraphs carrying
+  // a price. A size label is short and has no money in it.
+  const radios = byRole(lines, 'radio').map((l) => l.name).filter(Boolean)
+    .filter((n) => !/\$/.test(n) && n.split(/\s+/).length <= 4);
   return radios.length ? got(radios, `${radios.length} size radios`)
                        : missing('no size selector in the tree');
 };
 
 export const selectedSize = (lines) => {
-  const checked = byRole(lines, 'radio').find((l) => hasFlag(l, 'checked'));
-  if (checked) return got(checked.name, `${checked.name} [checked]`);
-  // Amazon also states it as text above the radios: 'Size: 5 Big Kid'.
-  const l = find(lines, /^Size:/i);
-  return l ? got(l.name.replace(/^Size:\s*/i, ''), l.name)
-           : missing('no size appears selected');
+  // A product page carries several radiogroups. On a live page the first is
+  // colour, and each of its options is the whole buy-box blob -- "Pink $11.81
+  // $11.81 FREE Delivery Tomorrow In Stock". Taking the first checked radio
+  // therefore returns a paragraph where a size was wanted.
+  //
+  // The checked radio wins over the page's own "Size:" text. Observed live:
+  // the label read "Size: 11 Little Kid" while the checked radio was "12
+  // Little Kid", and the cart received the 12 — so the label is the hover
+  // state, not the selection. Trusting it would report a size that was never
+  // bought, which is worse than reporting none.
+  const checked = byRole(lines, 'radio').filter((l) => hasFlag(l, 'checked'));
+  const sizey = checked.find((l) => l.name.split(/\s+/).length <= 4 && !/\$/.test(l.name));
+  if (sizey) {
+    const stated = find(lines, /^Size:\s*\S/i);
+    const label = stated && stated.name.replace(/^Size:\s*/i, '').trim();
+    return { ...got(sizey.name, `${sizey.name} [checked]`),
+             // The page contradicting itself is a finding in its own right.
+             labelDisagrees: label && label !== sizey.name ? label : null };
+  }
+  const stated = find(lines, /^Size:\s*\S/i);
+  if (stated) return got(stated.name.replace(/^Size:\s*/i, '').trim(), stated.name);
+  return missing('no size stated, and no size-shaped radio is checked');
 };
 
 export const stockLine = (lines) => {
-  const l = find(lines, /in stock|out of stock|only \d+ left|currently unavailable/i);
-  return l ? got(l.name, l.name) : missing('no stock line by the buy box');
+  // "In Stock" also appears inside each colour option's label, which says
+  // nothing about the variant actually selected. The buy box's own line is a
+  // short standalone one.
+  const short = findAll(lines, /in stock|out of stock|only \d+ left|currently unavailable/i)
+    .filter((l) => l.name.split(/\s+/).length <= 6 && !/\$/.test(l.name));
+  if (short.length) return got(short[0].name, short[0].name);
+  const low = find(lines, /only \d+ left/i);
+  return low ? got(low.name, low.name) : missing('no standalone stock line by the buy box');
 };
 
 export const galleryCount = (lines) => {
