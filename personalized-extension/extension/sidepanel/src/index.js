@@ -392,10 +392,16 @@ if (vaRoot) {
   mountValidationPanel(vaRoot, {
     onControl: (c) => {
       if (c.action === 'start') {
-        // Checking only. Deliberately does NOT start the agent: someone can
-        // want their own shopping checked without handing it over, and a demo
-        // of the checking should not depend on an agent behaving.
-        chrome.runtime.sendMessage({ type: 'validationStart', contract: c.said });
+        // The confirmed contract starts the checking, and — if they want it —
+        // the agent, with the task assembled from the same fields. One
+        // contract, two consumers: an agent briefed from a prompt written
+        // somewhere else would be working to a different agreement than the
+        // one it is checked against.
+        chrome.runtime.sendMessage({
+          type: 'validationStart',
+          contract: c.contract || c.said,
+          alsoRunAgent: !!c.contract,
+        });
         return;
       }
       if (c.action === 'answer') {

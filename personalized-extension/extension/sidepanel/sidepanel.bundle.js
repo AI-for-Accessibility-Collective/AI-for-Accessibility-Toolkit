@@ -1,4 +1,163 @@
 (() => {
+  // extension/validation/ask.js
+  var OPENERS = /^\s*(?:can you |could you |please |i(?:'m| am)? ?(?:looking for|need|want|'d like)|find(?: me)?|get(?: me)?|buy(?: me)?|order(?: me)?|search for|shop for|help me (?:find|buy|get)|look for)\b[:,]?\s*/i;
+  var PACKAGING = /^\s*(?:an?|the|some)?\s*(?:pair|set|couple|bunch)\s+of\s+/i;
+  var LEAD_ARTICLE = /^\s*(?:an?|the|some)\s+/i;
+  var TAIL_FOR = /\s+for\s+(?:my|our|her|his|their|the|a|an)?\s*[\w' ]{1,24}$/i;
+  var BUDGET = [
+    /\bunder\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bbelow\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bless than\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bno more than\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bnothing over\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bat most\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bmax(?:imum)?\s*(?:of\s*)?\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\bbudget(?:\s+is)?\s*\$?\s*(\d[\d,]*(?:\.\d\d)?)/i,
+    /\$\s*(\d[\d,]*(?:\.\d\d)?)\s*or less\b/i
+  ];
+  var SIZE = [
+    /\bsize\s*:?\s*(\d+(?:\.\d+)?(?:\s?[a-z]{1,5})?)\b/i,
+    /\bsize\s*:?\s*(x{0,2}(?:small|medium|large)|s|m|l|xl|xxl)\b/i,
+    /\b(\d+(?:\.\d+)?)\s+in\s+(?:kids?|women'?s?|men'?s?)\b/i
+  ];
+  var DEADLINE = [
+    /\bby\s+(today|tomorrow|tonight|mon(?:day)?|tues?(?:day)?|wed(?:nesday)?|thur?s?(?:day)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i,
+    /\b(today|tomorrow|tonight)\b/i,
+    /\bbefore\s+(mon(?:day)?|tues?(?:day)?|wed(?:nesday)?|thur?s?(?:day)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i,
+    /\bin\s+(\d+\s+days?)\b/i,
+    /\bby\s+the\s+(\d+(?:st|nd|rd|th))\b/i
+  ];
+  var QUANTITY = [
+    /\b(\d+)\s*(?:pairs?|packs?|boxes|units?|of them)\b/i,
+    /\bqty\s*:?\s*(\d+)\b/i,
+    /\b(two|three|four|five|six)\s+(?:pairs?|packs?|of them)\b/i
+  ];
+  var WORD_NUM = { two: 2, three: 3, four: 4, five: 5, six: 6 };
+  var SPLIT_CLAUSE = /\s*(?:,|\band\b|\bwith\b|\bthat has\b|\bthat's\b|\bplus\b)\s*/i;
+  var first = (patterns, text) => {
+    for (const re of patterns) {
+      const m = text.match(re);
+      if (m) return { value: m[1], matched: m[0] };
+    }
+    return null;
+  };
+  var tidy = (s) => String(s || "").replace(/\s+/g, " ").replace(/^[\s,;.]+|[\s,;.]+$/g, "");
+  function contractFromAsk(text) {
+    const said = String(text || "");
+    let rest = said;
+    const budget = first(BUDGET, rest);
+    if (budget) rest = rest.replace(budget.matched, " ");
+    const size = first(SIZE, rest);
+    if (size) rest = rest.replace(size.matched, " ");
+    const qty = first(QUANTITY, rest);
+    if (qty) rest = rest.replace(qty.matched, " ");
+    const by = first(DEADLINE, rest);
+    if (by) rest = rest.replace(by.matched, " ");
+    rest = tidy(rest.replace(OPENERS, ""));
+    const clauses = rest.split(SPLIT_CLAUSE).map(tidy).filter(Boolean);
+    const head = clauses.shift() || "";
+    const item = tidy(head.replace(PACKAGING, "").replace(LEAD_ARTICLE, "").replace(TAIL_FOR, ""));
+    const mustHaves = clauses.map((c) => tidy(c.replace(PACKAGING, ""))).filter((c) => c && !/^for\b/i.test(c) && c.length > 1);
+    const q = qty ? WORD_NUM[String(qty.value).toLowerCase()] || parseInt(qty.value, 10) : 1;
+    return {
+      item: item || tidy(said) || "something",
+      mustHaves,
+      size: size ? tidy(size.value) : null,
+      budget: budget ? `$${String(budget.value).replace(/,/g, "")}` : null,
+      quantity: Number.isFinite(q) && q > 0 ? q : 1,
+      deadline: by ? tidy(by.value) : null,
+      said
+    };
+  }
+  var NEEDS = {
+    size: ["the size actually selected on the page", "a size that sold out mid-task"],
+    budget: ["whether a price is inside what you said", "shipping pushing the total over"],
+    mustHaves: [
+      "whether the item really has the features you asked for",
+      "a substitution that drops one of them"
+    ],
+    deadline: ["whether it arrives in time", "a delivery date that slipped past the day"]
+  };
+  function gaps(c) {
+    const out = [];
+    if (!c.size) {
+      out.push({ field: "size", ask: "What size do you need?", unchecked: NEEDS.size });
+    }
+    if (!c.budget) {
+      out.push({
+        field: "budget",
+        ask: "What's the most you want to spend?",
+        unchecked: NEEDS.budget
+      });
+    }
+    if (!c.mustHaves?.length) {
+      out.push({
+        field: "mustHaves",
+        ask: "Anything it has to have?",
+        unchecked: NEEDS.mustHaves
+      });
+    }
+    if (!c.deadline) {
+      out.push({
+        field: "deadline",
+        ask: "When do you need it by?",
+        unchecked: NEEDS.deadline
+      });
+    }
+    return out;
+  }
+  function readAnswer(field, said) {
+    const t = tidy(said);
+    if (!t) return { value: null, note: null };
+    if (field === "budget") {
+      const m = t.match(/(\d[\d,]*(?:\.\d\d)?)/);
+      if (!m) return { value: null, note: null };
+      const v = `$${m[1].replace(/,/g, "")}`;
+      return { value: v, note: `I\u2019ll treat ${v} as the ceiling, not a target.` };
+    }
+    if (field === "size") {
+      const parsed = first(SIZE, /\bsize\b/i.test(t) ? t : `size ${t}`);
+      const v = parsed ? tidy(parsed.value) : t;
+      return { value: v, note: null };
+    }
+    if (field === "deadline") {
+      const parsed = first(DEADLINE, /\b(by|before|in)\b/i.test(t) ? t : `by ${t}`);
+      return { value: parsed ? tidy(parsed.value) : t, note: null };
+    }
+    if (field === "mustHaves") {
+      const parts = t.split(/,\s*|\s+and\s+/).map(tidy).filter(Boolean);
+      return {
+        value: parts,
+        note: parts.length > 1 ? `${parts.join(" and ")}. Those are deal-breakers, then.` : `${parts[0]}. That\u2019s a deal-breaker, then.`
+      };
+    }
+    return { value: t, note: null };
+  }
+  function describe(c) {
+    const bits = [c.item];
+    if (c.mustHaves?.length) bits.push(c.mustHaves.join(" and "));
+    if (c.size) bits.push(`size ${c.size}`);
+    if (c.budget) bits.push(`under ${c.budget}`);
+    if (c.quantity > 1) bits.push(`${c.quantity} of them`);
+    return `${bits.filter(Boolean).join(", ")}.`;
+  }
+  function interview(c, unlocks = {}) {
+    const ASK = {
+      mustHaves: "Anything that would make you say no to one?",
+      size: "What size?",
+      budget: "What\u2019s your ceiling on price?",
+      deadline: "When do you need it by?"
+    };
+    const ORDER = ["mustHaves", "size", "budget", "deadline"];
+    return gaps(c).slice().sort((a, b) => ORDER.indexOf(a.field) - ORDER.indexOf(b.field)).map((g) => ({
+      field: g.field,
+      ask: ASK[g.field] || g.ask,
+      unchecked: g.unchecked,
+      unlocks: (unlocks[g.field] || []).length,
+      examples: (unlocks[g.field] || []).slice(0, 3)
+    }));
+  }
+
   // extension/validation/panel.js
   var KEY = "aa.validation";
   function mountValidationPanel(root, { onControl } = {}) {
@@ -6,6 +165,7 @@
     root.setAttribute("aria-live", "polite");
     root.setAttribute("aria-relevant", "additions text");
     let state = null;
+    let draft = null;
     const asList = (v) => Array.isArray(v) ? v : [];
     const el = (tag, cls, text) => {
       const n = document.createElement(tag);
@@ -15,6 +175,10 @@
     };
     function render() {
       root.textContent = "";
+      if (draft) {
+        root.append(forming());
+        return;
+      }
       if (!state || !state.contract) {
         root.append(startForm());
         return;
@@ -22,7 +186,7 @@
       const c = state.contract;
       const ask = el("section", "va-ask");
       ask.append(el("h2", null, "What you asked for"));
-      ask.append(el("p", null, describe(c)));
+      ask.append(el("p", null, describe2(c)));
       const edit = el("button", "va-edit", "Change something");
       edit.addEventListener("click", () => onControl?.({ action: "edit-ask" }));
       ask.append(edit);
@@ -107,7 +271,9 @@
           input.focus();
           return;
         }
-        onControl?.({ action: "start", said });
+        const contract = contractFromAsk(said);
+        draft = { contract, queue: interview(contract, state?.unlocks || {}), i: 0, notes: [] };
+        render();
       };
       go.addEventListener("click", submit);
       input.addEventListener("keydown", (e) => {
@@ -120,6 +286,86 @@
         "va-hint",
         "Say it however you like. Anything you leave out, I\u2019ll ask about \u2014 I won\u2019t assume it."
       ));
+      return s;
+    }
+    function forming() {
+      const s = el("section", "va-form");
+      const q = draft.queue[draft.i];
+      if (q) {
+        s.append(el("p", "va-form-step", `${draft.i + 1} of ${draft.queue.length}`));
+        s.append(el("h2", "va-form-ask", q.ask));
+        if (q.unlocks) {
+          s.append(el(
+            "p",
+            "va-form-why",
+            `Answering this switches on ${q.unlocks} check${q.unlocks === 1 ? "" : "s"}` + (q.examples?.length ? ` \u2014 ${q.examples.join(", ")}` : "")
+          ));
+        } else {
+          s.append(el("p", "va-form-why", `Without it I can\u2019t check ${q.unchecked[0]}`));
+        }
+        const row2 = el("div", "va-start-row");
+        const input = el("input", "va-form-input");
+        input.type = "text";
+        input.setAttribute("aria-label", q.ask);
+        const next = () => {
+          const { value, note } = readAnswer(q.field, input.value);
+          if (value != null && value !== "") {
+            draft.contract = { ...draft.contract, [q.field]: value };
+            if (note) draft.notes = [...draft.notes || [], note];
+          }
+          draft.i += 1;
+          render();
+        };
+        const go = el("button", "va-do primary", "Next");
+        go.addEventListener("click", next);
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") next();
+        });
+        const skip = el("button", "va-do", "Skip");
+        skip.addEventListener("click", () => {
+          draft.i += 1;
+          render();
+        });
+        row2.append(input, go, skip);
+        s.append(row2);
+        const last = (draft.notes || [])[draft.notes.length - 1];
+        if (last && draft.i > 0) s.append(el("p", "va-form-note", last));
+        requestAnimationFrame(() => input.focus());
+        return s;
+      }
+      s.append(el("h2", "va-form-ask", "Sound right?"));
+      s.append(el("p", "va-form-back", describe(draft.contract)));
+      const promises = el("ul", "va-form-promises");
+      for (const line of [
+        "I won\u2019t press Buy Now",
+        "I won\u2019t place the order \u2014 I\u2019ll bring it to you first",
+        "I\u2019ll read facts from the page in its own words"
+      ]) {
+        promises.append(el("li", null, line));
+      }
+      s.append(promises);
+      const left = interview(draft.contract, state?.unlocks || {});
+      if (left.length) {
+        s.append(el(
+          "p",
+          "va-form-why",
+          `${left.length} thing${left.length === 1 ? "" : "s"} you skipped, so ${left.map((x) => x.unchecked[0]).join(" and ")} stay${left.length === 1 ? "s" : ""} unchecked.`
+        ));
+      }
+      const row = el("div", "va-start-row");
+      const yes = el("button", "va-do primary", "Yes, go");
+      yes.addEventListener("click", () => {
+        const c = draft.contract;
+        draft = null;
+        onControl?.({ action: "start", contract: c });
+      });
+      const back = el("button", "va-do", "Change something");
+      back.addEventListener("click", () => {
+        draft.i = 0;
+        render();
+      });
+      row.append(yes, back);
+      s.append(row);
       return s;
     }
     const tone = (f) => f.confirming ? "ok" : f.level === "stop" ? "stop" : f.level === "aside" ? "note" : "quiet";
@@ -136,7 +382,7 @@
       }
       return [["Go on", "go on", true], ["Stop here", "stop", false]];
     }
-    function describe(c) {
+    function describe2(c) {
       const bits = [c.item];
       if (c.mustHaves?.length) bits.push(c.mustHaves.join(" and "));
       if (c.size) bits.push(`size ${c.size}`);
@@ -766,7 +1012,11 @@
     mountValidationPanel(vaRoot, {
       onControl: (c) => {
         if (c.action === "start") {
-          chrome.runtime.sendMessage({ type: "validationStart", contract: c.said });
+          chrome.runtime.sendMessage({
+            type: "validationStart",
+            contract: c.contract || c.said,
+            alsoRunAgent: !!c.contract
+          });
           return;
         }
         if (c.action === "answer") {

@@ -19,11 +19,14 @@
 //     same findings at the same time.
 
 import { createRun, setExtractorNames } from './run.js';
-import { contractFromAsk, gaps, describe, toQuery } from './ask.js';
+import { contractFromAsk, gaps, describe, toQuery, toPrompt, interview } from './ask.js';
 import { setParadigmMap, setCountZones } from '../../../tools/auditors/contract-mismatch.js';
 import { setControls } from './render.js';
 
 const KEY = 'aa.validation';
+
+// What each interview question switches on, from the analysis.
+let UNLOCKS = {};
 
 // Which phase a URL belongs to. The agent does not announce its phase, and
 // asking it to would mean trusting its account of where it is.
@@ -193,7 +196,7 @@ async function _publish(extra = {}) {
       // twice, which reads as two separate problems.
       findings: extra.findings || mergeFindings(prev.findings || [], extra.append || []),
       contract: contract || prev.contract || null,
-      acknowledged: [...acknowledged],
+      acknowledged: [...acknowledged], unlocks: UNLOCKS,
       ...s, steps, gate, rules: book,
       offer: run ? offerFrom(
         (extra.append || prev.findings || []), book) : null,
@@ -459,7 +462,7 @@ globalThis.Validation = Validation;
 
 // Exposed separately so the agent's start route can parse a sentence into a
 // contract before a run exists.
-globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery };
+globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery, toPrompt, interview };
 
 // The analysis, injected by the host that has it. The toolkit ships the
 // mechanism; the corpus stays in the research repository.
@@ -469,6 +472,7 @@ globalThis.ValidationCorpus = {
     setDefaults(corpus?.defaults || []);
     setParadigmMap(corpus?.widgets || {});
     setCountZones(corpus?.countZones);
+    UNLOCKS = corpus?.unlocks || {};
     setControls(corpus?.widgets || {});
     setExtractorNames(corpus?.extractorNames || {});
     const handed = Object.values(corpus?.widgets || {}).filter((w) => w.control).length;
