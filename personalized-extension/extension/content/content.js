@@ -957,10 +957,26 @@ async function wireAgentWatch() {
 
   wireAgentWatchHandlers();
 
+  // What the agent says about itself. It already publishes status and a log
+  // for the popup; this is the same state, surfaced where the person actually
+  // is — on the page, next to the box they typed into.
+  const pushAgent = (a) => {
+    if (!a) return AgentWatch.setAgent(null);
+    const last = (a.log || []).filter((l) => l.kind !== 'error').slice(-1)[0];
+    AgentWatch.setAgent({
+      status: a.status,
+      // The agent's own sentence for the step it is on, trimmed to something
+      // that fits beside the box rather than a paragraph of reasoning.
+      doing: last && last.text ? String(last.text).split(/[.\n]/)[0].slice(0, 90) : null,
+    });
+  };
+  chrome.storage.local.get('bhAgent').then((r) => pushAgent(r.bhAgent));
+
   const push = (state) => { try { AgentWatch.update(state); } catch (e) { console.warn(e); } };
   chrome.storage.local.get(AA_VALIDATION_KEY).then((r) => push(r[AA_VALIDATION_KEY]));
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes[AA_VALIDATION_KEY]) push(changes[AA_VALIDATION_KEY].newValue);
+    if (area === 'local' && changes.bhAgent) pushAgent(changes.bhAgent.newValue);
   });
 
   // The profile can change mid-task — someone turns on larger text, or asks
@@ -986,8 +1002,20 @@ function wireAgentWatchHandlers() {
   AgentWatch.onAnswer = (widget, response) =>
     chrome.runtime.sendMessage({ type: 'validationAnswer', widget, response }).catch(() => {});
   // The upward arrow: a correction made in one task becomes a standing rule.
+  // Say it, and say back what happened to it. A reply of {queued: 0} means no
+  // agent is running, which the person needs to hear — otherwise typing into
+  // the box while browsing alone looks broken rather than inapplicable.
   AgentWatch.onTell = (said) =>
-    chrome.runtime.sendMessage({ type: 'agentTell', said }).catch(() => {});
+    chrome.runtime.sendMessage({ type: 'agentTell', said })
+      .then((r) => {
+        if (r && r.queued === 0 && r.why) {
+          AgentWatch.setAgent({ ...(AgentWatch.agent || {}), status: 'idle', why: r.why });
+        }
+      })
+      .catch(() => {});
+
+  AgentWatch.onDone = () =>
+    chrome.runtime.sendMessage({ type: 'validationDone' }).catch(() => {});
   AgentWatch.onAcknowledge = (key) =>
     chrome.runtime.sendMessage({ type: 'validationAck', key }).catch(() => {});
   AgentWatch.onPromote = (offer, always) =>

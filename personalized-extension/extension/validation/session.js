@@ -236,7 +236,13 @@ const Validation = {
 
   async stop() {
     run = null;
-    await publish({ findings: [] });
+    // The contract goes too. Leaving it set kept the surface showing a task
+    // that had ended — findings gone, the ask still on screen — so there was
+    // no way back to starting a new one without reloading. Ending a task has
+    // to actually end it.
+    contract = null;
+    acknowledged.clear();
+    await publish({ findings: [], contract: null, steps: [], gate: { allowed: true } });
   },
 
   isRunning: () => !!run,
