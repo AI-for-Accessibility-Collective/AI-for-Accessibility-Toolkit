@@ -50,6 +50,19 @@ const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy
 let run = null;
 let contract = null;
 
+// What the person has actually dealt with.
+//
+// This used to live only in the overlay, which meant the session had no idea
+// what had been seen — so the agent could not wait for it even in principle.
+// The corpus records this as its own gap: "eyes that work, at a speed they
+// can't use". Five separate breakdowns say the same thing about the same
+// persona, and the cause is that nothing connected being unread to being
+// allowed to continue.
+const acknowledged = new Set();
+
+/** What identifies one finding. Must match the overlay's key exactly. */
+const fkey = (f) => `${f.widget}|${f.phase}|${f.say}`;
+
 // Findings live in storage, not in a module variable.
 //
 // An MV3 service worker is torn down after about thirty seconds of idle and
@@ -180,6 +193,7 @@ async function _publish(extra = {}) {
       // twice, which reads as two separate problems.
       findings: extra.findings || mergeFindings(prev.findings || [], extra.append || []),
       contract: contract || prev.contract || null,
+      acknowledged: [...acknowledged],
       ...s, steps, gate, rules: book,
       offer: run ? offerFrom(
         (extra.append || prev.findings || []), book) : null,
@@ -201,6 +215,7 @@ const Validation = {
   async start(c, opts = {}) {
     contract = typeof c === 'string' ? contractFromAsk(c) : c;
     run = createRun(contract, opts);
+    acknowledged.clear();
     // Checking is not a setting to remember to switch on. A layer that has to
     // be enabled separately is off exactly when it matters, because nobody
     // predicts the run that will go wrong. Starting a task turns on the
@@ -290,6 +305,36 @@ const Validation = {
    */
   async allow(actionDescription) {
     if (!run) return { allowed: true };
+
+    // Anything the person has not dealt with holds the agent — not only the
+    // four committing steps.
+    //
+    // Holding at commit points alone means the agent runs the whole search and
+    // the whole product page at machine speed and then stops once, by which
+    // time the findings are a backlog rather than something you were part of.
+    // Waiting on unread work is what makes the pace theirs.
+    //
+    // Ambient findings never hold: they are the ones deliberately not
+    // announced, so treating them as unread would be waiting for someone to
+    // acknowledge something we chose not to say.
+    const prev = await stored();
+    const unread = (prev.findings || [])
+      .filter((f) => f.level !== 'ambient' && !f.confirming)
+      .filter((f) => !acknowledged.has(fkey(f)));
+
+    if (unread.length) {
+      const first = unread[0];
+      return {
+        allowed: false,
+        waitingOn: unread.map((f) => f.widget),
+        unread: unread.length,
+        say: unread.length === 1
+          ? `Waiting on you: ${first.say}`
+          : `Waiting on you. ${unread.length} things I found that you haven't seen yet, `
+            + `starting with: ${first.say}`,
+      };
+    }
+
     if (!COMMITTING.test(String(actionDescription || ''))) return { allowed: true };
     const g = run.gate();
     if (!g.allowed) {
@@ -380,6 +425,24 @@ const Validation = {
     });
     return { changed: true, field: key, was: before, now: value,
              invalidated: stale.length };
+  },
+
+  /**
+   * The person has dealt with a finding — acted on it or waved it past.
+   *
+   * Both count. Waving something past is a real answer: it is how someone says
+   * "understood, carry on" without the layer treating silence as agreement,
+   * and without it the agent would wait forever on anything with no control.
+   */
+  async acknowledge(key) {
+    if (!key) return { unread: 0 };
+    acknowledged.add(key);
+    await publish();
+    const prev = await stored();
+    const left = (prev.findings || [])
+      .filter((f) => f.level !== 'ambient' && !f.confirming)
+      .filter((f) => !acknowledged.has(fkey(f))).length;
+    return { unread: left };
   },
 
   /** Findings that were never announced, for when someone asks. */

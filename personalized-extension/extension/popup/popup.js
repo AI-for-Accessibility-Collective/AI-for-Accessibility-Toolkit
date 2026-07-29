@@ -1,3 +1,12 @@
+// Show icon glyphs only once the icon font has actually loaded. Until then a
+// missing glyph renders as its own name — "auto_awesome" as a word next to the
+// Skills button — which reads as a bug in the copy rather than a missing font.
+if (document.fonts?.ready) {
+  document.fonts.ready.then(() => document.documentElement.classList.add('fonts-ready'));
+} else {
+  document.documentElement.classList.add('fonts-ready');
+}
+
 function setChecked(id, value) {
   const el = document.getElementById(id);
   if (el) el.checked = value;

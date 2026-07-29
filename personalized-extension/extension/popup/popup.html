@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Agentic A11y</title>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=article,build,center_focus_strong,check_circle,chevron_right,closed_caption,contrast,dark_mode,edit_note,expand_more,filter_center_focus,format_letter_spacing,format_line_spacing,format_size,image,key,keyboard,label,mic,motion_photos_pause,mouse,palette,play_arrow,refresh,restart_alt,stop,straighten,subtitles,summarize,sync,text_fields,verified,videocam,volume_up&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=ads_click,article,auto_awesome,block,bookmark,brightness_low,build,campaign,center_focus_strong,center_focus_weak,check_circle,chevron_right,closed_caption,contrast,dark_mode,dictionary,edit_note,expand_more,fact_check,filter_center_focus,flash_off,format_bold,format_letter_spacing,format_line_spacing,format_size,functions,graphic_eq,horizontal_rule,image,key,keyboard,keyboard_tab,label,language,link,mic,motion_photos_pause,mouse,palette,pause_circle,play_arrow,push_pin,refresh,restart_alt,search,search_insights,share,stop,straighten,subtitles,summarize,sync,sync_alt,table_chart,text_fields,title,toc,tooltip,translate,verified,verified_user,videocam,view_agenda,visibility,volume_off,volume_up,zoom_in&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="popup.css">
+  <style>
+    /* A Material Symbols glyph that is not in the requested set renders as its
+       own NAME — "auto_awesome" appeared as literal text beside the Skills
+       button. The request list is now generated from the icons actually used,
+       but the font can also simply fail to load (offline, blocked CDN), and
+       then every icon on the page turns into a word. Hiding the text until the
+       font is ready costs an icon and saves the sentence it sits in. */
+    .material-symbols-outlined { font-size: 0; }
+    .fonts-ready .material-symbols-outlined { font-size: inherit; }
+  </style>
 </head>
 <body>
   <header>

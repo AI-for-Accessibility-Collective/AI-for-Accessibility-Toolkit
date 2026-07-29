@@ -162,6 +162,10 @@ const search = (F, c) => {
   if (!S) return [];
   const out = [];
 
+  // What the page says it matched, which is a different question from what it
+  // is showing.
+  const total = F.resultCount?.absent ? null : F.resultCount?.value;
+
   out.push({
     widget: 'Count-first opener',
     // The tutor's rule, from the video corpus: a few hundred means the query
@@ -175,13 +179,27 @@ const search = (F, c) => {
           partLabel: `${S.sponsoredInFirstTen} of the first ${Math.min(10, S.count)} are ads`,
           action: 'skip-ads', actionLabel: 'Skip past the ads' }
       : (COUNT_ZONES?.[1]
-          ? { value: S.count, display: String(S.count),
+          ? { value: total ?? S.count, display: (total ?? S.count).toLocaleString(),
               mark: COUNT_ZONES[1].to, markLabel: `${COUNT_ZONES[1].to}`,
               source: 'a screen-reader tutor’s rule: past here, a query is matching too much' }
           : null),
-    say: `${S.count} products on this page` +
-         (S.sponsoredInFirstTen ? `, and ${S.sponsoredInFirstTen} of the first ten are ads.` : '.'),
-    from: F.resultSet.from, answerable: false,
+    // The number the page states, not the number of tiles we counted.
+    //
+    // Counting tiles gave "48 products on this page" on literally every full
+    // search, because Amazon paginates at 48 — a live number that never moves
+    // reads as a hardcoded one, and it is also the wrong fact. The person
+    // asked how many things match, and the page says so in its own heading:
+    // "1-48 of over 3,000 results". That total is what the analysis's
+    // count-first opener speaks, and it is what tells you the query is loose.
+    //
+    // The tile count stays, as what it actually is: the size of this page.
+    say: total != null
+      ? `${total.toLocaleString()} results${F.resultCount?.approximate ? ' or so' : ''}`
+        + `, showing ${S.count} on this page`
+        + (S.sponsoredInFirstTen ? `, and ${S.sponsoredInFirstTen} of the first ten are ads.` : '.')
+      : `${S.count} products on this page`
+        + (S.sponsoredInFirstTen ? `, and ${S.sponsoredInFirstTen} of the first ten are ads.` : '.'),
+    from: F.resultCount?.from || F.resultSet.from, answerable: false,
   });
 
   const lim = cap(c);
@@ -471,6 +489,27 @@ export function setParadigmMap(map) {
  * The plan already carries what could not be read, so nothing goes unaccounted
  * for — it is reported as unread, not as checked.
  */
+/**
+ * Is this value too degraded to say out loud?
+ *
+ * Not a quality score — three specific shapes of nonsense that the reader
+ * produces when a page names its controls badly.
+ */
+function junk(v) {
+  if (v == null || v === '') return true;
+  const parts = Array.isArray(v) ? v.map(String) : String(v).split(/\s*,\s*/);
+  if (parts.length >= 3) {
+    // The same token over and over: a control whose accessible name is the
+    // same generic word on every instance.
+    const uniq = new Set(parts.map((x) => x.trim().toLowerCase()));
+    if (uniq.size <= Math.max(1, Math.floor(parts.length / 3))) return true;
+  }
+  const t = String(v);
+  if (/^(submit|button|link|click here|image)$/i.test(t.trim())) return true;
+  // A "value" longer than a sentence is a chunk of page, not a fact.
+  return t.length > 120;
+}
+
 function fromAnalysis(facts, phase, already) {
   const out = [];
   for (const [widget, w] of Object.entries(PARADIGMS)) {
@@ -485,6 +524,20 @@ function fromAnalysis(facts, phase, already) {
     // slot that must render as money — filling it with the bare number turned
     // "$19.99 now, typical $23.99" into "19.99 now, typical 23.99", which
     // reads as a quantity rather than a price.
+    // A value has to be worth saying.
+    //
+    // Generated readbacks speak whatever the extractor returned, and an
+    // extractor can return junk: on one product page every size radio is
+    // named "Submit", so the sizes came out as
+    // "Submit,Submit,Submit,Submit,Submit,11 Little Kid" and the widget read
+    // it aloud with a straight face. A hand-written check has someone
+    // deciding it makes sense; a generated one has only this.
+    //
+    // Silence is the right failure again — the plan already records the
+    // extractor as unread, so the gap is accounted for rather than papered
+    // over with nonsense.
+    if (values.some((v) => junk(v.value))) continue;
+
     let i = 0;
     const say = w.template.replace(/\{(\d+)\}/g, () => {
       const v = values[i];
