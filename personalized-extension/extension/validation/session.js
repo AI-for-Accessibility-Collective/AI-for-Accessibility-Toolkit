@@ -19,6 +19,7 @@
 //     same findings at the same time.
 
 import { createRun } from './run.js';
+import { contractFromAsk, gaps, describe, toQuery } from './ask.js';
 
 const KEY = 'aa.validation';
 
@@ -42,26 +43,82 @@ const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy
 let run = null;
 let contract = null;
 
+// Findings live in storage, not in a module variable.
+//
+// An MV3 service worker is torn down after about thirty seconds of idle and
+// restarted on the next event, and everything held in module scope is lost
+// with it. A worker that restarts mid-task would come back with an empty
+// accumulator and the next publish would write that empty array over the real
+// findings — the panel goes blank and nothing in the logs says why. Reading
+// storage before appending survives the restart.
+/** Union by what the finding actually says, at the phase it says it. */
+function mergeFindings(prev, next) {
+  const key = (f) => `${f.widget}|${f.phase}|${f.say}`;
+  const have = new Set(prev.map(key));
+  return prev.concat(next.filter((f) => !have.has(key(f))));
+}
+
+async function stored() {
+  const r = await chrome.storage.local.get(KEY);
+  return r[KEY] || {};
+}
+
+// Writes to storage are serialised through this. Two observes can overlap --
+// the navigation trigger and an explicit call race on the same page -- and
+// each is a read-then-write on one key. Interleaved, the second read happens
+// before the first write, so one set of findings is written over the other and
+// the count can collapse rather than merge.
+let writing = Promise.resolve();
+const serialise = (fn) => (writing = writing.then(fn, fn));
+
 async function publish(extra = {}) {
+  return serialise(() => _publish(extra));
+}
+
+async function _publish(extra = {}) {
+  const prev = await stored();
   const s = run ? run.summary() : { steps: [], said: [], spokenWords: 0, waiting: 0 };
   const gate = run ? run.gate() : { allowed: true };
   await chrome.storage.local.set({
-    [KEY]: { contract, ...s, gate, updated: Date.now(), ...extra },
+    [KEY]: {
+      // Keep whatever was already recorded unless this call replaces it.
+      // Appending must not re-add what is already recorded. A page can be read
+      // more than once -- the navigation trigger and an explicit call both fire
+      // on the same page -- and without this the panel shows every finding
+      // twice, which reads as two separate problems.
+      findings: extra.findings || mergeFindings(prev.findings || [], extra.append || []),
+      contract: contract || prev.contract || null,
+      ...s, gate, updated: Date.now(),
+      ...(({ append, ...rest }) => rest)(extra),
+    },
   });
 }
 
 const Validation = {
-  /** Begin a task. `contract` is what the person asked for. */
+  /**
+   * Begin a task. `c` is what the person asked for — either a contract object
+   * or the sentence they said, which is parsed into one.
+   *
+   * Accepting a raw string matters: the caller with the person's words is the
+   * agent's start route, and requiring it to build a contract first would put
+   * the parsing decision somewhere that does not know what the checks need.
+   */
   async start(c, opts = {}) {
-    contract = c;
-    run = createRun(c, opts);
-    await publish({ findings: [] });
-    return { started: true };
+    contract = typeof c === 'string' ? contractFromAsk(c) : c;
+    run = createRun(contract, opts);
+    await publish({ findings: [], unspecified: gaps(contract) });
+    return { started: true, contract, unspecified: gaps(contract) };
   },
+
+  /**
+   * What the person did not say, and what stays unchecked because of it.
+   * The panel turns these into questions; nothing is guessed to fill them.
+   */
+  unspecified: () => (contract ? gaps(contract) : []),
 
   async stop() {
     run = null;
-    await publish();
+    await publish({ findings: [] });
   },
 
   isRunning: () => !!run,
@@ -82,23 +139,30 @@ const Validation = {
     const phase = opts.phase || phaseOf(snap.url);
     if (!phase) return { skipped: `no phase matches ${snap.url || 'this page'}` };
 
-    const { findings } = run.observe(snap.text, phase);
+    // Named `rendered`, not `findings`: destructuring into `findings` would
+    // shadow the module-level accumulator this function is meant to append to.
+    const { findings: rendered } = run.observe(snap.text, phase);
 
     // Only what is meant to be heard. Ambient findings stay reachable on
     // request rather than being announced.
-    const speak = findings
+    const speak = rendered
       .filter((f) => f.spoken?.speak)
       .map((f) => ({ say: f.spoken.speak, level: f.level, live: f.spoken.live,
                      widget: f.finding.widget }));
 
-    const marks = findings
+    const marks = rendered
       .filter((f) => f.visual && f.level !== 'ambient')
       .map((f) => ({ ...f.visual, level: f.level, widget: f.finding.widget }));
 
-    await publish({ findings: findings.map((f) => ({
+    // Accumulate across pages. A finding from Search is still true at Review
+    // order, and dropping it would make the panel a view of the current page
+    // rather than of the task.
+    // Appending has to happen inside the serialised write, for the same reason
+    // -- reading the previous list outside it reintroduces the race.
+    await publish({ append: rendered.map((f) => ({
       widget: f.finding.widget, level: f.level, say: f.finding.say,
-      confirming: !!f.finding.confirming, control: f.visual?.control || null,
-      phase,
+      from: f.finding.from, confirming: !!f.finding.confirming,
+      control: f.visual?.control || null, phase,
     })) });
 
     // The voice engine listens for this; the panel reads storage.
@@ -106,7 +170,7 @@ const Validation = {
       chrome.runtime.sendMessage({ type: 'validationSpeak', lines: speak, phase })
         .catch(() => {});   // nothing listening is fine — storage still has it
     }
-    return { phase, findings: findings.length, speak, marks, url: snap.url };
+    return { phase, findings: rendered.length, speak, marks, url: snap.url };
   },
 
   /**
@@ -146,4 +210,9 @@ const Validation = {
 };
 
 globalThis.Validation = Validation;
+
+// Exposed separately so the agent's start route can parse a sentence into a
+// contract before a run exists.
+globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery };
+
 export default Validation;

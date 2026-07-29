@@ -11,6 +11,7 @@ import { DismissOverlays } from '../../skills/builtin/dismiss-overlays.js';
 import { BigTargets } from '../../skills/builtin/big-targets.js';
 import { LinkHighlighter } from '../../skills/builtin/link-highlighter.js';
 import { PageOutline } from '../../skills/builtin/page-outline.js';
+import { AgentWatch } from '../../skills/builtin/agent-watch.js';
 import { BionicReading } from '../../skills/builtin/bionic-reading.js';
 import { UnpinSticky } from '../../skills/builtin/unpin-sticky.js';
 import { TranslatePage } from '../../skills/builtin/translate-page.js';
@@ -44,7 +45,7 @@ import { VoiceCommands } from '../../skills/builtin/voice-commands.js';
 import { ReadAloud } from '../../skills/builtin/read-aloud.js';
 import { GenerateLabels } from '../../skills/builtin/generate-labels.js';
 import { WcagFixes, axeHandlers as wcagAxeHandlers, RISKY_AXE_RULES } from '../../skills/builtin/wcag-fixes.js';
-import { axeHandlers as contrastAxeHandlers } from '../../skills/builtin/fix-contrast.js';
+import { FixContrast, axeHandlers as contrastAxeHandlers } from '../../skills/builtin/fix-contrast.js';
 import { axeHandlers as altTextAxeHandlers } from '../../skills/builtin/auto-alt-text.js';
 import { axeHandlers as labelsAxeHandlers } from '../../skills/builtin/generate-labels.js';
 import { axeHandlers as captionsAxeHandlers } from '../../skills/builtin/captions.js';
@@ -61,6 +62,7 @@ const TOOL_MAP = {
   BigTargets,
   LinkHighlighter,
   PageOutline,
+  AgentWatch,
   BionicReading,
   UnpinSticky,
   TranslatePage,
@@ -376,7 +378,7 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'agentWatch', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible',
       'fixContrast', 'autoWcagFix', 'wcagRiskyFixes', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
@@ -393,6 +395,7 @@ async function initFromStorage() {
     if (settings.bigTargets) enableTool('BigTargets');
     if (settings.highlightLinks) enableTool('LinkHighlighter');
     if (settings.pageOutline) enableTool('PageOutline');
+    if (settings.agentWatch) enableTool('AgentWatch');
     if (settings.bionicReading) enableTool('BionicReading');
     if (settings.unpinSticky) enableTool('UnpinSticky');
     if (settings.translatePage) enableTool('TranslatePage', { targetLang: settings.translateTo });
@@ -629,7 +632,7 @@ async function applyProfileSettings(settings) {
     darkMode: 'DarkMode', readerMode: 'ReaderMode',
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
     motionReducer: 'MotionReducer', dismissOverlays: 'DismissOverlays',
-    bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline',
+    bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline', agentWatch: 'AgentWatch',
     bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage',
     muteSounds: 'MuteSounds', defineWords: 'DefineWords', stopAutoAdvance: 'StopAutoAdvance',
     reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions', rememberSpot: 'ReadingSpot', expandAbbreviations: 'AbbreviationExpand', languageTag: 'LanguageTag', exploreChart: 'ExploreAChart', spaFocus: 'SpaFocus', skipLinks: 'SkipLinks', mathAccessible: 'MathA11y'
@@ -926,4 +929,63 @@ async function init() {
   }
 }
 
-init();
+// ── Agent Watch: the person's model in, the run's findings in, controls out ──
+//
+// The adapter is deliberately ignorant of chrome — it takes a state object and
+// renders it, which is what lets the same file run under the CLI's Playwright
+// host. This block is the Chrome-specific half: it feeds the adapter the
+// AbilityModel from the Librarian and the run state from storage, and sends
+// clicks back to the service worker that owns the run.
+//
+// Reading storage rather than listening for a message matters: the panel, the
+// spoken channel and this overlay then all render the SAME published state, so
+// they cannot disagree about what was found.
+const AA_VALIDATION_KEY = 'aa.validation';
+
+async function wireAgentWatch() {
+  if (!AgentWatch.enabled) return;
+
+  // The person's own model decides wording, type size, contrast and how much
+  // is shown. Failing to get it is not fatal — the adapter falls back to
+  // neutral rather than refusing to report.
+  try {
+    const r = await chrome.runtime.sendMessage({ type: 'librarianGetAbilityModel' });
+    if (r?.model) AgentWatch.model = { ...AgentWatch.model, ...r.model };
+  } catch (e) {
+    console.warn('[AI4A11y] agent-watch: no ability model, using neutral', e);
+  }
+
+  wireAgentWatchHandlers();
+
+  const push = (state) => { try { AgentWatch.update(state); } catch (e) { console.warn(e); } };
+  chrome.storage.local.get(AA_VALIDATION_KEY).then((r) => push(r[AA_VALIDATION_KEY]));
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes[AA_VALIDATION_KEY]) push(changes[AA_VALIDATION_KEY].newValue);
+  });
+
+  // The profile can change mid-task — someone turns on larger text, or asks
+  // for less detail, while the agent is working. Re-enabling with the new
+  // model rebuilds the generated stylesheet, which is where every
+  // model-dependent value lives; keeping the state across the swap means the
+  // findings survive a preference change.
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type !== 'agentWatchModel') return;
+    const state = AgentWatch.state;
+    AgentWatch.disable();
+    AgentWatch.enable({ model: msg.model, state });
+    wireAgentWatchHandlers();
+    sendResponse({ ok: true });
+  });
+}
+
+// Set separately from enable() so a re-enable after a profile change does not
+// lose them.
+function wireAgentWatchHandlers() {
+  AgentWatch.onControl = (control) =>
+    chrome.runtime.sendMessage({ type: 'validationControl', control }).catch(() => {});
+  AgentWatch.onAnswer = (widget, response) =>
+    chrome.runtime.sendMessage({ type: 'validationAnswer', widget, response }).catch(() => {});
+}
+
+init().then(wireAgentWatch);
+

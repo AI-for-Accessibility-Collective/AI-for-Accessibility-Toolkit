@@ -6,6 +6,7 @@
     root.setAttribute("aria-live", "polite");
     root.setAttribute("aria-relevant", "additions text");
     let state = null;
+    const asList = (v) => Array.isArray(v) ? v : [];
     const el = (tag, cls, text) => {
       const n = document.createElement(tag);
       if (cls) n.className = cls;
@@ -15,7 +16,7 @@
     function render() {
       root.textContent = "";
       if (!state || !state.contract) {
-        root.append(el("div", "va-empty", "No task running."));
+        root.append(startForm());
         return;
       }
       const c = state.contract;
@@ -26,6 +27,15 @@
       edit.addEventListener("click", () => onControl?.({ action: "edit-ask" }));
       ask.append(edit);
       root.append(ask);
+      for (const g of asList(state.unspecified)) {
+        const q = el("section", "va-gap");
+        q.append(el("p", "va-text", g.ask));
+        q.append(el("p", "va-where", `without it I can't check ${g.unchecked[0]}`));
+        const b = el("button", "va-do", "Tell it");
+        b.addEventListener("click", () => onControl?.({ action: "fill-gap", field: g.field }));
+        q.append(b);
+        root.append(q);
+      }
       if (state.gate && state.gate.allowed === false) {
         const gate = el("section", "va-gate");
         gate.setAttribute("role", "alertdialog");
@@ -78,6 +88,39 @@
       more.addEventListener("click", () => onControl?.({ action: "on-request" }));
       foot.append(more);
       root.append(foot);
+    }
+    function startForm() {
+      const s = el("section", "va-start");
+      const id = "va-ask-input";
+      const label = el("label", null, "What are you looking for?");
+      label.setAttribute("for", id);
+      s.append(label);
+      const row = el("div", "va-start-row");
+      const input = el("input");
+      input.id = id;
+      input.type = "text";
+      input.placeholder = "flat sandals with a back strap, size 5, under $40";
+      const go = el("button", "va-do primary", "Start checking");
+      const submit = () => {
+        const said = input.value.trim();
+        if (!said) {
+          input.focus();
+          return;
+        }
+        onControl?.({ action: "start", said });
+      };
+      go.addEventListener("click", submit);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submit();
+      });
+      row.append(input, go);
+      s.append(row);
+      s.append(el(
+        "p",
+        "va-hint",
+        "Say it however you like. Anything you leave out, I\u2019ll ask about \u2014 I won\u2019t assume it."
+      ));
+      return s;
     }
     const tone = (f) => f.confirming ? "ok" : f.level === "stop" ? "stop" : f.level === "aside" ? "note" : "quiet";
     function gateChoices(s) {
@@ -722,6 +765,10 @@
   if (vaRoot) {
     mountValidationPanel(vaRoot, {
       onControl: (c) => {
+        if (c.action === "start") {
+          chrome.runtime.sendMessage({ type: "validationStart", contract: c.said });
+          return;
+        }
         if (c.action === "answer") {
           chrome.runtime.sendMessage({
             type: "validationAnswer",

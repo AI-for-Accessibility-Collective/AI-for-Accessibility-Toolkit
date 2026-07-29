@@ -282,9 +282,19 @@ export const hiddenColorCount = (lines) => {
 
 // ─────────────────────────────────────────────────────────── the product page
 export const title = (lines) => {
-  const h = byRole(lines, 'heading').find((l) => flagValue(l, 'level') === '1') ||
-            byRole(lines, 'heading')[0];
-  return h ? got(h.name, h.name) : missing('no page heading');
+  // "Product details" and landmark descriptions are also level-1 headings, and
+  // taking the first one reported "Product summary presents key product
+  // information" as the product's title. The product's own heading is the
+  // longest of them: a real title is 60+ words of keyword stuffing, a section
+  // label is two.
+  const SECTION = /^(product details|about this item|top highlights|customer reviews|product summary|from the brand|product information)/i;
+  const h1 = byRole(lines, 'heading')
+    .filter((l) => flagValue(l, 'level') === '1' && l.name && !SECTION.test(l.name))
+    .sort((a, b) => b.name.length - a.name.length)[0];
+  if (h1) return got(h1.name, h1.name);
+  const any = byRole(lines, 'heading').filter((l) => l.name && !SECTION.test(l.name))
+    .sort((a, b) => b.name.length - a.name.length)[0];
+  return any ? got(any.name, any.name) : missing('no product heading on the page');
 };
 
 export const buyBoxPrice = (lines) => {
@@ -316,6 +326,14 @@ export const sizeOptions = (lines) => {
                        : missing('no size selector in the tree');
 };
 
+// Amazon renders several labelled values into one text node with no separator:
+// "Size: 5 Big KidColor: White Beige". Splitting on whitespace cannot find the
+// boundary because there is none -- the cut is where a capitalised word is
+// immediately followed by a colon, which is the next label starting.
+function cutAtNextLabel(v) {
+  return String(v).replace(/([A-Z][a-z]+):\s*.*$/, '').trim();
+}
+
 export const selectedSize = (lines) => {
   // A product page carries several radiogroups. On a live page the first is
   // colour, and each of its options is the whole buy-box blob -- "Pink $11.81
@@ -331,13 +349,13 @@ export const selectedSize = (lines) => {
   const sizey = checked.find((l) => l.name.split(/\s+/).length <= 4 && !/\$/.test(l.name));
   if (sizey) {
     const stated = find(lines, /^Size:\s*\S/i);
-    const label = stated && stated.name.replace(/^Size:\s*/i, '').trim();
+    const label = stated && cutAtNextLabel(stated.name.replace(/^Size:\s*/i, ''));
     return { ...got(sizey.name, `${sizey.name} [checked]`),
              // The page contradicting itself is a finding in its own right.
              labelDisagrees: label && label !== sizey.name ? label : null };
   }
   const stated = find(lines, /^Size:\s*\S/i);
-  if (stated) return got(stated.name.replace(/^Size:\s*/i, '').trim(), stated.name);
+  if (stated) return got(cutAtNextLabel(stated.name.replace(/^Size:\s*/i, '')), stated.name);
   return missing('no size stated, and no size-shaped radio is checked');
 };
 

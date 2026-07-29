@@ -82,14 +82,20 @@ export function decide(f, state = {}) {
     why = 'worth knowing, nothing is committed yet';
   }
 
-  // interactionStyle: a notch quieter or louder, never past the ends.
+  // A notch quieter or louder, never past the ends.
+  //
+  // The notch comes from the person's AbilityModel, which the Librarian
+  // already owns and which already roams across their devices — not from a
+  // setting private to this layer. Someone who told the toolkit once that they
+  // want summaries should not have to tell this surface again, and a
+  // preference that lives in two places disagrees with itself eventually.
   //
   // It cannot soften a stop that exists because something contradicts what the
-  // person said. Choosing "quiet" is a request for less chatter, not for less
+  // person said. Asking for less is a request for less chatter, not less
   // safety, and letting a preference disable the gate would mean the setting
   // most people pick is the one that removes the protection. Asides and
   // ambients move freely; the contradiction gate does not.
-  const shift = { quiet: -1, thorough: +1 }[state.style] || 0;
+  const shift = insistenceShift(state);
   const locked = level === 'stop' && f.contradicts;
   if (shift && !locked) {
     const moved = LEVELS[Math.max(0, Math.min(2, ORDER[level] + shift))];
@@ -106,6 +112,33 @@ export function decide(f, state = {}) {
     return { level: 'aside', why: `${why}, but there is nothing to decide here` };
   }
   return { level, why };
+}
+
+/**
+ * How much to soften or sharpen, read from the person's AbilityModel.
+ *
+ * Two fields in the model bear on this and they are not the same request:
+ *
+ *   cognition.summarize   wants less — fewer things, said shorter. One notch
+ *                         quieter, so asides become ambient and stay
+ *                         available on request rather than spoken.
+ *   vision.descriptions   is someone whose only channel is what gets said.
+ *                         An aside they never hear is not a quieter aside, it
+ *                         is nothing, so nothing is softened for them.
+ *
+ * `state.style` is still honoured when a caller passes it, because tests and
+ * the CLI host have no Librarian to read from.
+ *
+ * @param {{model?: object, style?: 'quiet'|'balanced'|'thorough'}} state
+ * @returns {-1|0|1}
+ */
+export function insistenceShift(state = {}) {
+  if (state.style) return { quiet: -1, thorough: +1 }[state.style] || 0;
+  const m = state.model;
+  if (!m) return 0;
+  if (m.vision?.descriptions) return 0;
+  if (m.cognition?.summarize) return -1;
+  return 0;
 }
 
 /** Highest level among findings — what the run as a whole should do. */
