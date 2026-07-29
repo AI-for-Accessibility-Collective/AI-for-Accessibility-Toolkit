@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Voice — Agentic A11y</title>
   <link rel="stylesheet" href="sidepanel.css">
+  <link rel="stylesheet" href="../validation/panel.css">
 </head>
 <body>
   <header class="vp-header">
@@ -11,6 +12,11 @@
     <button id="vp-proposals" class="vp-pill" hidden role="status" title="Suggestions waiting for your OK"></button>
     <span id="vp-status" class="vp-status disconnected">disconnected</span>
   </header>
+
+  <!-- Validation findings for the current task. Sits above the transcript
+       because it is about the task in progress, while the transcript is a
+       record of what was said. Empty and silent when no run is active. -->
+  <section id="va-panel" aria-label="Checks on this task"></section>
 
   <main class="vp-main">
     <div id="vp-error" class="vp-error" hidden></div>

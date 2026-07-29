@@ -1936,6 +1936,18 @@ ${lines.join("\n")}`;
     }
     return result;
   }
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type !== "validationSpeak" || !Array.isArray(msg.lines)) return;
+    const stop = msg.lines.find((l) => l.level === "stop");
+    const body = msg.lines.map((l) => l.say).join(" ");
+    if (!body.trim()) return;
+    live?.sendTextTurn(
+      stop ? `[Validation \u2014 STOP] Say exactly this and then wait for the user's answer. Do not continue the task, do not add anything: "${body}"` : `[Validation] Say exactly this, word for word, nothing added: "${body}"`,
+      // A stop interrupts; an aside waits for a gap, because talking over
+      // someone to tell them something non-urgent is its own failure.
+      { interrupt: !!stop }
+    );
+  });
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (!msg || typeof msg.type !== "string") return;
     if (!OFFSCREEN_MSG_TYPES.has(msg.type)) return;

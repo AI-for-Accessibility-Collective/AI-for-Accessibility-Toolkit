@@ -6,6 +6,13 @@ self.importScripts(
   'browser-harness/dist/agent.js'
 );
 
+// The validation layer (globalThis.Validation). Reads the page the agent is
+// on through the harness's own accessibility snapshot -- deliberately not
+// through the agent's account of the page -- and holds the agent at a gate
+// when a finding contradicts what the person asked for. Must load after the
+// harness, whose axSnapshot it calls.
+self.importScripts('validation/dist/validation.js');
+
 // Toolkit datastore layer -- taxonomy (globalThis.AA_TAXONOMY) and the
 // generated built-in tools registry (globalThis.AA_TOOLS) must load before
 // datastore.js, which exposes both via Datastore.global.*.
@@ -844,6 +851,40 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       console.warn('[BrowserAgent] run failed:', e.message);
     });
     sendResponse({ started: true });
+    return false;
+  }
+
+  // ---- validation layer -------------------------------------------------
+  if (msg.type === 'validationStart') {
+    globalThis.Validation.start(msg.contract, msg.opts || {})
+      .then((r) => sendResponse(r))
+      .catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationObserve') {
+    globalThis.Validation.observe(msg.tabId, msg.opts || {})
+      .then((r) => sendResponse(r))
+      .catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationAllow') {
+    globalThis.Validation.allow(msg.action)
+      .then((r) => sendResponse(r))
+      .catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationAnswer') {
+    globalThis.Validation.answer(msg.widget, msg.response)
+      .then((r) => sendResponse(r))
+      .catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationStop') {
+    globalThis.Validation.stop().then(() => sendResponse({ stopped: true }));
+    return true;
+  }
+  if (msg.type === 'validationOnRequest') {
+    sendResponse({ items: globalThis.Validation.onRequest() });
     return false;
   }
 

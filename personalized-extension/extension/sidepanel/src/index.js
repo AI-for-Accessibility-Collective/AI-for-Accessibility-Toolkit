@@ -1,3 +1,4 @@
+import { mountValidationPanel } from '../../validation/panel.js';
 // Side-panel entry. Bootstraps the store, mounts UI, and routes user
 // intent into voice* runtime messages.
 //
@@ -380,3 +381,30 @@ function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 main().catch((e) => {
   console.error('[sidepanel] init failed', e);
 });
+
+
+// ── validation panel ────────────────────────────────────────────────────────
+// Mounted alongside the voice transcript. Controls it emits are routed to the
+// service worker, which owns the run: answering a gate has to reach the agent
+// that is being held, not just update this view.
+const vaRoot = document.getElementById('va-panel');
+if (vaRoot) {
+  mountValidationPanel(vaRoot, {
+    onControl: (c) => {
+      if (c.action === 'answer') {
+        chrome.runtime.sendMessage({ type: 'validationAnswer',
+                                     widget: c.widget, response: c.response });
+        return;
+      }
+      if (c.action === 'on-request') {
+        chrome.runtime.sendMessage({ type: 'validationOnRequest' }, (r) => {
+          for (const i of (r?.items || [])) console.log('[also checked]', i.say);
+        });
+        return;
+      }
+      // Everything else is a control delegation removed -- re-sort, open
+      // another, change the size. These go to the agent as an instruction.
+      chrome.runtime.sendMessage({ type: 'validationControl', control: c });
+    },
+  });
+}
