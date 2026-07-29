@@ -1,1 +1,0 @@
-Not found: /@bjornlu/colorblind@1.0.3/dist/index.js

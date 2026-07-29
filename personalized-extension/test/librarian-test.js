@@ -131,6 +131,19 @@ function check(name, cond) {
   const p3 = await L.getProfile();
   check('accept applies profile change', acc.ok && p3.fields?.hearing?.captions === true);
 
+  // A profile-set proposal must never reach control-plane fields (consent,
+  // rate limits) — only ability fields under fields.* — even on accept. The
+  // user sees only the friendly aspectLabel, so a path outside fields.* is a
+  // silent-rewrite vector and must be refused.
+  const beforeCap = (await L.getProfile()).metaPreferences.maxProposalsPerWeek;
+  await L._draftProposals(
+    [{ aspect: 'profile.metaPreferences.maxProposalsPerWeek', aspectLabel: 'proposal cadence', change: { op: 'profile-set', path: 'metaPreferences.maxProposalsPerWeek', value: 999999 }, rationale: 'r', evidence: [] }],
+    { suppressions: await DS.get('mine.suppressions'), profile: await L.getProfile(), now: Date.now() });
+  const cpProp = (await L.listProposals()).find(p => p.aspect === 'profile.metaPreferences.maxProposalsPerWeek');
+  const cpResp = await L.respondToProposal(cpProp.id, 'accept');
+  const afterCap = (await L.getProfile()).metaPreferences.maxProposalsPerWeek;
+  check('profile-set proposal cannot write control-plane fields', cpResp.ok === false && afterCap === beforeCap);
+
   // 8. Reflection: promotion (3 origins, same category+setting) + hygiene
   for (const o of ['cnn.com', 'bbc.com', 'reuters.com']) {
     await DS.setMemoryShard(`origin:${o}`, [mk(`origin:${o}`, { motionReducer: true })]);
@@ -155,6 +168,8 @@ function check(name, cond) {
   const del = await L.deleteMemory('m-origin:nytimes.com-fontScale');
   const nyt = await DS.getMemoryShard('origin:nytimes.com');
   check('deleteMemory removes record', del === true && !nyt.some(r => r.id === 'm-origin:nytimes.com-fontScale'));
+  const delMiss = await L.deleteMemory('m-does-not-exist-anywhere');
+  check('deleteMemory reports false when nothing matched', delMiss === false);
 
   // 10. interpretNeeds prompt: registry-grounded + profile-conditioned
   const inp = await L.interpretNeedsPrompt('Make text easier to read for me on news sites');
@@ -191,6 +206,11 @@ function check(name, cond) {
   const created = profs.find(p => p.siteTypes?.includes('video') && p.autoApply);
   check('accept creates auto-apply profile', accR.ok && !!created);
   check('profile carries the action prompt', created && created.actions.some(a => a.prompt === 'Turn on captions for this video'));
+  // The implicit flow's last box: the accepted task is also a real skill in
+  // the Skills db, visible and applicable like any other.
+  const skillDocs = await DS.get('mine.skillDocs');
+  const taskSkill = (skillDocs || []).find(s => (s.recipe?.actions || []).some(a => a.prompt === 'Turn on captions for this video'));
+  check('accept also saves the task as a skill', !!taskSkill && (taskSkill.siteRelevance || []).includes('video'));
   // re-run of the same task after accept → no new proposal (already saved)
   await L.logObservation({
     type: 'agent-task', url: 'https://www.youtube.com/watch?v=xyz',
@@ -222,6 +242,28 @@ function check(name, cond) {
     text: 'bank task', data: { task: 'Enlarge the statement text', summary: 'done', success: true },
   });
   check('no proposals from no-memory zones', (await L.listProposals()).length === 0);
+  // A proposal-sourced skill save must never overwrite an existing skill
+  // that shares the name (proposal fields can be app-supplied via the
+  // broker): the trusted skill stays intact and the task lands under a
+  // disambiguated name instead.
+  await L.saveSkill({
+    name: 'hide-the-trending-panel', description: 'My trusted skill.',
+    supportAreas: [], siteRelevance: ['social'],
+    recipe: { adapters: [], actions: [{ name: 'Hide the trending panel', prompt: 'My trusted safe task' }] },
+    body: '# Mine',
+  });
+  await L.logObservation({
+    type: 'agent-task', url: 'https://www.reddit.com/r/all',
+    text: 'done', data: { task: 'Hide the trending panel', summary: 'done', success: true },
+  });
+  const colProps = await L.listProposals();
+  check('colliding task still proposes', colProps.length === 1);
+  await L.respondToProposal(colProps[0].id, 'accept');
+  const docsAfter = await DS.get('mine.skillDocs');
+  const original = docsAfter.find(s => s.name === 'hide-the-trending-panel');
+  const added = docsAfter.find(s => s.name === 'hide-the-trending-panel-2');
+  check('existing skill not overwritten by accepted task', original?.recipe.actions[0].prompt === 'My trusted safe task');
+  check('accepted task saved under a new name instead', added?.recipe.actions[0].prompt === 'Hide the trending panel');
 
   // 12. Explicit setting changes stick: a manual toggle must beat auto-apply
   // profiles and learned records on subsequent pages (the "my change

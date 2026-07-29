@@ -18,11 +18,11 @@ export async function describeImage(imageData) {
   return provider.describeImage(imageData);
 }
 
-export async function describeVideo(frames) {
+export async function describeVideo(frames, metadata = {}) {
   if (!provider?.describeVideo) {
     throw new Error('AI provider not set or missing describeVideo');
   }
-  return provider.describeVideo(frames);
+  return provider.describeVideo(frames, metadata);
 }
 
 export async function simplifyText(text, options = {}) {
@@ -37,13 +37,6 @@ export async function generateLabels(context) {
     throw new Error('AI provider not set or missing generateLabels');
   }
   return provider.generateLabels(context);
-}
-
-export async function generateCaptions(audioData) {
-  if (!provider?.generateCaptions) {
-    throw new Error('AI provider not set or missing generateCaptions');
-  }
-  return provider.generateCaptions(audioData);
 }
 
 export async function summarizeText(text) {
@@ -95,9 +88,50 @@ export async function transcribeAudio(audioUrl) {
   return provider.transcribeAudio(audioUrl);
 }
 
-export async function describeElement(element, context = {}) {
+export async function describeElement(imageData, elementType = 'canvas', context = '') {
   if (!provider?.describeElement) {
     return null;
   }
-  return provider.describeElement(element, context);
+  return provider.describeElement(imageData, elementType, context);
+}
+
+// Improve ambiguous link text ("click here" → descriptive label)
+export async function improveLinkText(linkText, href, context) {
+  if (!provider?.improveLinkText) {
+    return null;
+  }
+  return provider.improveLinkText(linkText, href, context);
+}
+
+// Infer a column header from sample cell values
+export async function inferColumnHeader(sampleData) {
+  if (!provider?.inferColumnHeader) {
+    return null;
+  }
+  return provider.inferColumnHeader(sampleData);
+}
+
+// Translate a block of text into the named target language (e.g. "Spanish").
+export async function translateText(text, targetLang) {
+  if (!provider?.translateText) {
+    return null;
+  }
+  return provider.translateText(text, targetLang);
+}
+
+// A short plain-language definition of a word/phrase, given its sentence context.
+export async function defineWord(word, context) {
+  if (!provider?.defineWord) {
+    return null;
+  }
+  return provider.defineWord(word, context);
+}
+
+// Pull a chart's underlying data out of an image of it.
+// Returns { caption, headers: string[], rows: string[][] } or null.
+export async function extractChartData(imageDataUrl, context) {
+  if (!provider?.extractChartData) {
+    return null;
+  }
+  return provider.extractChartData(imageDataUrl, context);
 }

@@ -609,6 +609,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.runtime.sendMessage({ type: 'openSkillBuilder' });
     window.close();
   });
+  document.getElementById('skillsBtn')?.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'openSkillManager' });
+    window.close();
+  });
 
   // Collapsible sections
   document.querySelectorAll('.section-header').forEach(header => {
@@ -741,7 +745,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const label = settingLabels[key] || key;
         const displayVal = typeof value === 'boolean' ? (value ? 'ON' : 'OFF') : String(value);
         const reason = result.reasons?.[key] || '';
-        item.innerHTML = `<span class="setting-name">${escapeHtml(label)}: ${displayVal}</span><span class="setting-reason">${escapeHtml(reason)}</span>`;
+        item.innerHTML = `<span class="setting-name">${escapeHtml(label)}: ${escapeHtml(displayVal)}</span><span class="setting-reason">${escapeHtml(reason)}</span>`;
         listEl.appendChild(item);
       }
     }
@@ -782,12 +786,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Open the skill builder for the suggestion's custom skills, carrying the
-  // scope so the built skill is gated to the same sites as the settings.
+  // Open the Skill Builder for the needs this suggestion couldn't cover,
+  // carrying the scope so the built skill is gated to the same sites as the
+  // settings. Composing existing adapters is tried first; the Skill Builder
+  // hands anything that needs new code to the Adapter Builder.
   function openBuilderForSuggestion(suggestion) {
     const skills = suggestion?.newSkills || [];
     chrome.runtime.sendMessage({
-      type: 'openSkillBuilder', pendingSkills: skills, scope: suggestion?.scope || 'general',
+      type: 'openSkillManager', pendingSkills: skills, scope: suggestion?.scope || 'general',
     });
     window.close();
   }
@@ -956,7 +962,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const nameSpan = document.createElement('div');
       nameSpan.style.cssText = 'flex:1;min-width:0';
       nameSpan.innerHTML = `<div class="profile-item-name">${escapeHtml(p.name)}</div>` +
-        (p.siteTypes?.length ? `<div class="profile-item-sites">${p.siteTypes.join(', ')}</div>` : '');
+        (p.siteTypes?.length ? `<div class="profile-item-sites">${escapeHtml(p.siteTypes.join(', '))}</div>` : '');
 
       const applyBtn = document.createElement('button');
       applyBtn.className = 'profile-item-btn apply';
@@ -1077,6 +1083,17 @@ function setupMemoryPanel() {
     await sendMessageP({ type: 'librarianSetPause', paused: !pauseToggle.checked });
   });
 
+  // The privacy layer's access-control choice: who may read the profile
+  // through the broker (only me / friends and family / anyone I allow).
+  const sharingSelect = document.getElementById('sharingSelect');
+  sharingSelect?.addEventListener('change', async () => {
+    await sendMessageP({
+      type: 'librarianSetProfileField',
+      path: 'metaPreferences.sharing',
+      value: sharingSelect.value,
+    });
+  });
+
   function scopeLabel(scope) {
     if (scope === 'general') return 'Everywhere';
     if (scope.startsWith('category:')) return 'On ' + scope.slice(9) + ' sites';
@@ -1101,6 +1118,9 @@ function setupMemoryPanel() {
     if (pauseToggle && profResp?.profile) {
       pauseToggle.checked = !profResp.profile.memoryPaused;
     }
+    if (sharingSelect && profResp?.profile) {
+      sharingSelect.value = profResp.profile.metaPreferences?.sharing || 'personal';
+    }
 
     // --- Proposals: the consent gate ---
     // Rendered into the top-of-popup banner so a pending suggestion ("Is
@@ -1120,6 +1140,16 @@ function setupMemoryPanel() {
       const why = document.createElement('div');
       why.className = 'proposal-rationale';
       why.textContent = p.rationale || '';
+      // Consent must show the payload, not just the pitch: for an action
+      // proposal, the aspectLabel and rationale can both be app-supplied
+      // (broker insights) — the exact task the agent would run is the one
+      // thing the person must see before saying yes.
+      let payload = null;
+      if (p.change?.op === 'add-profile-action' && p.change.action?.prompt) {
+        payload = document.createElement('div');
+        payload.className = 'proposal-rationale proposal-payload';
+        payload.textContent = `Exact task it will run: "${p.change.action.prompt}"`;
+      }
       const actions = document.createElement('div');
       actions.className = 'proposal-actions';
       const mk = (label, response, cls) => {
@@ -1134,6 +1164,7 @@ function setupMemoryPanel() {
       actions.appendChild(mk("Don't suggest this", 'suppress', 'btn-secondary'));
       card.appendChild(title);
       card.appendChild(why);
+      if (payload) card.appendChild(payload);
       card.appendChild(actions);
       return card;
     };

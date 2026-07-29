@@ -7,10 +7,37 @@ import { FocusMode } from '../../skills/builtin/focus-mode.js';
 import { VisualAssist } from '../../skills/builtin/visual-assist.js';
 import { MotionReducer } from '../../skills/builtin/motion-reducer.js';
 import { ReaderMode } from '../../skills/builtin/reader-mode.js';
+import { DismissOverlays } from '../../skills/builtin/dismiss-overlays.js';
+import { BigTargets } from '../../skills/builtin/big-targets.js';
+import { LinkHighlighter } from '../../skills/builtin/link-highlighter.js';
+import { PageOutline } from '../../skills/builtin/page-outline.js';
+import { BionicReading } from '../../skills/builtin/bionic-reading.js';
+import { UnpinSticky } from '../../skills/builtin/unpin-sticky.js';
+import { TranslatePage } from '../../skills/builtin/translate-page.js';
+import { MuteSounds } from '../../skills/builtin/mute-sounds.js';
+import { DefineWords } from '../../skills/builtin/define-words.js';
+import { StopAutoAdvance } from '../../skills/builtin/stop-auto-advance.js';
+import { ReduceBrightness } from '../../skills/builtin/reduce-brightness.js';
+import { SoundVisualizer } from '../../skills/builtin/sound-visualizer.js';
+import { LiveRegionAnnouncer } from '../../skills/builtin/live-region-announcer.js';
+import { Magnifier } from '../../skills/builtin/magnifier.js';
+import { FlashGuard } from '../../skills/builtin/flash-guard.js';
+import { DescribeOnDemand } from '../../skills/builtin/describe-on-demand.js';
+import { ReflowColumn } from '../../skills/builtin/reflow-column.js';
+import { FocusLocator } from '../../skills/builtin/focus-locator.js';
+import { PersistentHover } from '../../skills/builtin/persistent-hover.js';
+import { ReadingRuler } from '../../skills/builtin/reading-ruler.js';
+import { ConfirmActions } from '../../skills/builtin/confirm-actions.js';
+import { ReadingSpot } from '../../skills/builtin/reading-spot.js';
+import { AbbreviationExpand } from '../../skills/builtin/abbreviation-expand.js';
+import { LanguageTag } from '../../skills/builtin/language-tag.js';
+import { ExploreAChart } from '../../skills/builtin/explore-a-chart.js';
+import { SpaFocus } from '../../skills/builtin/spa-focus.js';
+import { SkipLinks } from '../../skills/builtin/skip-links.js';
+import { MathA11y } from '../../skills/builtin/math-a11y.js';
 import { ColorFilter } from '../../skills/builtin/color-filter.js';
 import { KeyboardNav } from '../../skills/builtin/keyboard-nav.js';
 import { AutoAltText } from '../../skills/builtin/auto-alt-text.js';
-import { FixContrast } from '../../skills/builtin/fix-contrast.js';
 import { SimplifyText } from '../../skills/builtin/simplify-text.js';
 import { Captions } from '../../skills/builtin/captions.js';
 import { VoiceCommands } from '../../skills/builtin/voice-commands.js';
@@ -30,6 +57,34 @@ const TOOL_MAP = {
   VisualAssist,
   MotionReducer,
   ReaderMode,
+  DismissOverlays,
+  BigTargets,
+  LinkHighlighter,
+  PageOutline,
+  BionicReading,
+  UnpinSticky,
+  TranslatePage,
+  MuteSounds,
+  DefineWords,
+  StopAutoAdvance,
+  ReduceBrightness,
+  SoundVisualizer,
+  LiveRegionAnnouncer,
+  Magnifier,
+  FlashGuard,
+  DescribeOnDemand,
+  ReflowColumn,
+  FocusLocator,
+  PersistentHover,
+  ReadingRuler,
+  ConfirmActions,
+  ReadingSpot,
+  AbbreviationExpand,
+  LanguageTag,
+  ExploreAChart,
+  SpaFocus,
+  SkipLinks,
+  MathA11y,
   ColorBlindMode: ColorFilter,
   KeyboardNavigator: KeyboardNav,
   VoiceCommands,
@@ -321,8 +376,8 @@ async function initFromStorage() {
       'enabled', 'darkMode', 'readerMode', 'keyboardNav', 'voiceCommands',
       'motionReducer', 'focusMode', 'hideDistractions', 'showProgress',
       'colorBlindMode', 'fontScale', 'lineHeight', 'letterSpacing',
-      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
-      'fixContrast', 'autoWcagFix', 'wcagRiskyFixes', 'autoFixLabels', 'autoDescribe',
+      'contrastMode', 'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide', 'dismissOverlays', 'bigTargets', 'highlightLinks', 'pageOutline', 'bionicReading', 'unpinSticky', 'translatePage', 'translateTo', 'muteSounds', 'defineWords', 'stopAutoAdvance', 'reduceBrightness', 'soundVisualizer', 'announceUpdates', 'magnifier', 'flashGuard', 'describeOnDemand', 'reflowColumn', 'focusLocator', 'persistentHover', 'readingRuler', 'confirmActions', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible',
+      'fixContrast', 'autoWcagFix', 'wcagRiskyFixes', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
       'autoCaptions', 'autoSimplify', 'autoSummarize'
     ]);
 
@@ -334,6 +389,34 @@ async function initFromStorage() {
     if (settings.darkMode) enableTool('DarkMode');
     if (settings.motionReducer) enableTool('MotionReducer');
     if (settings.readerMode) enableTool('ReaderMode');
+    if (settings.dismissOverlays) enableTool('DismissOverlays');
+    if (settings.bigTargets) enableTool('BigTargets');
+    if (settings.highlightLinks) enableTool('LinkHighlighter');
+    if (settings.pageOutline) enableTool('PageOutline');
+    if (settings.bionicReading) enableTool('BionicReading');
+    if (settings.unpinSticky) enableTool('UnpinSticky');
+    if (settings.translatePage) enableTool('TranslatePage', { targetLang: settings.translateTo });
+    if (settings.muteSounds) enableTool('MuteSounds');
+    if (settings.defineWords) enableTool('DefineWords');
+    if (settings.stopAutoAdvance) enableTool('StopAutoAdvance');
+    if (settings.reduceBrightness) enableTool('ReduceBrightness');
+    if (settings.soundVisualizer) enableTool('SoundVisualizer');
+    if (settings.announceUpdates) enableTool('LiveRegionAnnouncer');
+    if (settings.magnifier) enableTool('Magnifier');
+    if (settings.flashGuard) enableTool('FlashGuard');
+    if (settings.describeOnDemand) enableTool('DescribeOnDemand');
+    if (settings.reflowColumn) enableTool('ReflowColumn');
+    if (settings.focusLocator) enableTool('FocusLocator');
+    if (settings.persistentHover) enableTool('PersistentHover');
+    if (settings.readingRuler) enableTool('ReadingRuler');
+    if (settings.confirmActions) enableTool('ConfirmActions');
+    if (settings.rememberSpot) enableTool('ReadingSpot');
+    if (settings.expandAbbreviations) enableTool('AbbreviationExpand');
+    if (settings.languageTag) enableTool('LanguageTag');
+    if (settings.exploreChart) enableTool('ExploreAChart');
+    if (settings.spaFocus) enableTool('SpaFocus');
+    if (settings.skipLinks) enableTool('SkipLinks');
+    if (settings.mathAccessible) enableTool('MathA11y');
     if (settings.keyboardNav) enableTool('KeyboardNavigator');
     if (settings.voiceCommands) enableTool('VoiceCommands');
 
@@ -519,6 +602,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       default:                  result = { ok: false, detail: `unknown action: ${action}` };
     }
     sendResponse(result);
+  } else if (msg.type === 'applySkill') {
+    // Apply a skill's resolved settings to this page. The caller (Skills
+    // manager) already got explicit user consent via its "Apply" button, so
+    // this is a deliberate user action, not silent adaptation. The resolved
+    // plan is just settings, so it flows through the same adapter path.
+    if (msg.plan?.settings) {
+      applyProfileSettings(msg.plan.settings);
+    }
+    sendResponse({ success: true });
   }
   // No `return true` here: every matched branch above calls sendResponse
   // synchronously, and an unconditional `return true` would tell Chrome to
@@ -536,7 +628,11 @@ async function applyProfileSettings(settings) {
   const toolMapping = {
     darkMode: 'DarkMode', readerMode: 'ReaderMode',
     keyboardNav: 'KeyboardNavigator', voiceCommands: 'VoiceCommands',
-    motionReducer: 'MotionReducer'
+    motionReducer: 'MotionReducer', dismissOverlays: 'DismissOverlays',
+    bigTargets: 'BigTargets', highlightLinks: 'LinkHighlighter', pageOutline: 'PageOutline',
+    bionicReading: 'BionicReading', unpinSticky: 'UnpinSticky', translatePage: 'TranslatePage',
+    muteSounds: 'MuteSounds', defineWords: 'DefineWords', stopAutoAdvance: 'StopAutoAdvance',
+    reduceBrightness: 'ReduceBrightness', soundVisualizer: 'SoundVisualizer', announceUpdates: 'LiveRegionAnnouncer', magnifier: 'Magnifier', flashGuard: 'FlashGuard', describeOnDemand: 'DescribeOnDemand', reflowColumn: 'ReflowColumn', focusLocator: 'FocusLocator', persistentHover: 'PersistentHover', readingRuler: 'ReadingRuler', confirmActions: 'ConfirmActions', rememberSpot: 'ReadingSpot', expandAbbreviations: 'AbbreviationExpand', languageTag: 'LanguageTag', exploreChart: 'ExploreAChart', spaFocus: 'SpaFocus', skipLinks: 'SkipLinks', mathAccessible: 'MathA11y'
   };
 
   for (const [key, toolName] of Object.entries(toolMapping)) {
@@ -682,6 +778,14 @@ function detectPageContexts() {
 
 async function init() {
   try {
+    // Master switch. When the user has turned the extension off, apply nothing —
+    // not the stored baseline, not an auto-apply profile, not learned Librarian
+    // preferences. initFromStorage() checks this too, but profile auto-apply and
+    // the Librarian overlay below run outside it, so the check must live here to
+    // honor the off state on a fresh navigation.
+    const master = await chrome.storage.sync.get('enabled');
+    if (master.enabled === false) return;
+
     // Wire OS-signal auto-respect BEFORE the Librarian overlay so the Librarian
     // can override an OS-auto-enabled setting.  Only reducedMotion is consumed
     // in Wave 1b; the other four signals are read but not acted on yet:

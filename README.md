@@ -2,355 +2,120 @@
 
 # AI for Accessibility Toolkit
 
-**AI-powered web accessibility that adapts pages in real-time**
+**AI-powered web accessibility that adapts pages in real time**
 
-[![CI](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/actions/workflows/ci.yml/badge.svg)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/actions/workflows/ci.yml)
+[![CI](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/chuanenlin/AI-for-Accessibility-Toolkit-Draft)](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit)](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/graphs/contributors)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-[Quick Start](#quick-start) · [Tools](#tools) · [Interfaces](#interfaces) · [Profiles](#profiles) · [API](docs/API.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](#contributing)
+[Quick Start](#quick-start) · [Examples](#examples) · [How It Works](#how-it-works) · [Profiles](#profiles) · [Docs](docs/README.md) · [Contributing](#contributing)
 
 </div>
 
 ---
 
-Traditional accessibility tools like [axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) find issues. This toolkit **fixes them** — AI analyzes the page, understands user needs, and adapts content in real-time. Not a report. A working page.
+[axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) find accessibility problems and hand you a report. This one fixes them instead, live in the browser and tuned to the person reading the page.
+
+It's a Chrome extension, a developer CLI, and a small platform-agnostic core other apps can build on.
 
 ## Quick Start
 
-### 🧑 End User (Chrome Extension)
+### Chrome extension — no code
+
+It isn't on the Chrome Web Store yet, so build it once from source:
 
 ```bash
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
-cd AI-for-Accessibility-Toolkit-Draft && npm install && npm run build
+git clone https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git
+cd AI-for-Accessibility-Toolkit
+npm install && npm run build
 ```
-Load in Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select `extension/` folder
 
-Get a [Gemini API key](https://aistudio.google.com/apikey) → Extension popup → Settings → Paste key
+Then load it and try it:
 
-### 💻 Developer (CLI)
+1. Open `chrome://extensions` and turn on **Developer mode** (top-right).
+2. Click **Load unpacked** and choose the `extension/` folder.
+3. Open the [test site](https://ai4a11y-test-site.vercel.app/), click the toolbar icon, pick a profile, and watch the page change.
+
+Most adapters — bigger text, dark mode, wider spacing, a single-column reading view, dismissing popups, keeping focus visible — work right away with **no key**. The AI features (writing alt text, captions, plain-language summaries, translation) need a free [Gemini key](https://aistudio.google.com/apikey); paste it into the popup once.
+
+There's a second, personalized extension that adds onboarding, memory that learns what you need, and the Skill Builder. It builds separately:
+
+```bash
+cd personalized-extension && npm install && npm run build
+```
+
+Load `personalized-extension/extension/` the same way. Keep Developer mode on — the adapters it builds for you run as user-scripts, which Chrome only allows there.
+
+### Command line — for developers and agents
 
 ```bash
 pip install -e . && playwright install chromium
-export ANTHROPIC_API_KEY=sk-...
-```
 
-```bash
-ai4a11y session start                    # Launch browser
-ai4a11y session go https://example.com   # Navigate
-ai4a11y session audit                    # Run WCAG audit
-ai4a11y session enable darkMode          # Enable dark mode
-ai4a11y session profile lowVision        # Apply preset
-ai4a11y session describe                 # AI describes the page
-```
-
-### 💡 [See examples ↗](docs/API.md) — and give us a ⭐ if this helps!
-
-## Tools
-
-The toolkit ships with **auditors** (find issues) and **adapters** (fix them). Teams across the [AI for Accessibility Collective](#whos-building-this) contribute specialized tools — and you can add your own.
-
-| Auditors | Adapters |
-|----------|----------|
-| missing-alt | generate-alt, generate-labels, generate-captions |
-| missing-labels | fix-contrast, simplify-text, wcag-fixes |
-| missing-captions | visual-assist, dark-mode, focus-mode, reader-mode |
-| poor-contrast | motion-reducer, color-blind, keyboard-nav |
-| wcag-issues (axe-core) | read-aloud, voice-commands, auto-transcriber |
-
-Add your own: `ai4a11y create my-tool --type adapter` → see [CONTRIBUTING.md](CONTRIBUTING.md)
-
-**Test site:** [ai4a11y-test-site.vercel.app](https://ai4a11y-test-site.vercel.app/) — intentional accessibility issues for testing
-
-## Interfaces
-
-| Interface | For | AI Backend | Location |
-|-----------|-----|------------|----------|
-| **[Chrome Extension](#chrome-extension)** | End users — real-time page adaptation | Gemini | `extension/` |
-| **[Personalized Extension](#personalized-extension)** | AI-powered onboarding + custom skill builder | Gemini | `personalized-extension/` |
-| **[Text Control Web App](#text-control-recommended)** | Type commands to control the browser | Gemini | `webapp/textcontrol/` |
-| **[Voice Control Web App](#voice-control)** | Hands-free browser control via voice | Gemini Live | `webapp/voicecontrol/` |
-| **[CLI](#cli)** | Developers / coding agents — audits, automation | Claude | `cli/` |
-
-## Chrome Extension
-
-### Install
-
-```bash
-git clone https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft.git
-cd AI-for-Accessibility-Toolkit-Draft
-npm install && npm run build
-```
-
-Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select `extension/` folder
-
-**API key** (for AI features): Extension icon → Settings → Enter your Gemini API key
-
-### Getting a Gemini API Key
-
-1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Click **Create API Key**
-3. Copy the key and paste it in the extension settings
-
-**Note:** The free tier has limited quotas (15 req/min, 1500/day). For regular use, enable billing in [Google Cloud Console](https://console.cloud.google.com/).
-
-**Cost:** Gemini 2.5 Flash is ~$0.15 per 1M input tokens. Describing 100 images costs roughly $0.01-0.05.
-
-## Personalized Extension
-
-AI-powered onboarding that recommends skills based on your needs, plus a custom skill builder for gaps not covered by built-in skills.
-
-### Install
-
-```bash
-cd personalized-extension
-npm install && npm run build
-```
-
-Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → select `personalized-extension/extension/` folder
-
-On first install, an onboarding flow walks through your support areas, site types, and needs — then Gemini recommends which skills to enable.
-
-See [`personalized-extension/README.md`](personalized-extension/README.md) for full documentation.
-
-## Browser Control Web Apps
-
-Two browser automation agents — voice or text input. Both use Gemini + browser-harness to control Chrome. Requires Python 3.11+.
-
-### Prerequisites (shared)
-
-1. **Install uv** (fast Python package manager):
-   ```bash
-   # macOS/Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   
-   # Or with pip (slower but works everywhere)
-   pip install uv
-   ```
-
-2. **Chrome with remote debugging:**
-   ```bash
-   # macOS
-   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-     --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
-   
-   # Linux
-   google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
-   
-   # Windows (PowerShell)
-   & "C:\Program Files\Google\Chrome\Application\chrome.exe" `
-     --remote-debugging-port=9222 --user-data-dir=C:\temp\chrome-debug
-   ```
-
-   The backend auto-discovers Chrome on `localhost:9222` at startup (override with `BU_CDP_PORT` or `BU_CDP_WS`).
-
-3. **browser-harness** is bundled at `webapp/browser-harness/` and installed via `uv pip install -e ../../browser-harness` below. Only clone it yourself if the directory is missing:
-   ```bash
-   cd webapp && git clone https://github.com/browser-use/browser-harness.git
-   ```
-
-### Text Control (recommended)
-
-Type commands to control the browser. Uses Gemini 2.5 Flash.
-
-```bash
-cd webapp/textcontrol/backend
-cp .env.example .env
-# Edit .env with your Gemini API key
-
-uv run uvicorn main:app --host 0.0.0.0 --port 8080
-```
-
-Open http://localhost:8080 and type commands like "go to google.com".
-
-### Voice Control
-
-Talk to control the browser. Uses Gemini Live API (audio streaming).
-
-```bash
-# Backend
-cd webapp/voicecontrol/backend
-cp .env.example .env
-# Edit .env with your Gemini API key
-
-uv run python main.py
-
-# Frontend (new terminal, from repo root)
-cd webapp/voicecontrol/frontend
-npm install && npm run dev
-```
-
-Open http://localhost:3000, click **Start Session**, allow mic, and start talking.
-
-## CLI
-
-For developers, coding agents, and CI/CD pipelines. Requires Python 3.10+.
-
-### Install
-
-```bash
-pip install -e .
-playwright install chromium  # Download browser binaries
-```
-
-### Commands
-
-```bash
-# Scaffolding
-ai4a11y list tools                    # List all auditors and adapters
-ai4a11y list tools --json             # JSON output for coding agents
-ai4a11y list profiles                 # List accessibility profiles
-ai4a11y create my-adapter --type adapter --profiles blind,cognitive
-
-# Browser session (Playwright + Claude vision)
-ai4a11y session start                 # Launch browser
+ai4a11y session start                    # open a browser
 ai4a11y session go https://example.com
-ai4a11y session audit                 # Run WCAG audit (axe-core)
-ai4a11y session audit --json          # JSON output
-ai4a11y session describe              # AI describes the page
-ai4a11y session describe --json       # JSON output
-ai4a11y session stop                  # Close browser
-
-# Accessibility adapters
-ai4a11y session enable darkMode       # Enable dark mode
-ai4a11y session enable visualAssist fontScale=150 largeCursor=true
-ai4a11y session disable darkMode      # Disable dark mode
-ai4a11y session tools                 # List tools and their status
-ai4a11y session profile lowVision     # Apply a preset profile
-ai4a11y session profiles              # List all available profiles
+ai4a11y session audit                    # list what's inaccessible
 ```
 
-### Available Tools
+`audit` runs [axe-core](https://github.com/dequelabs/axe-core) and needs no key. The AI commands (`describe`, `simplify`) use Claude — run `export ANTHROPIC_API_KEY=sk-...` first. Add `--json` to any command for output you can pipe into scripts, CI, or an agent.
 
-| Tool | Description |
-|------|-------------|
-| `visualAssist` | Font scaling, spacing, cursor, focus enhancement |
-| `darkMode` | Dark color scheme |
-| `motionReducer` | Reduce animations and motion |
-| `focusMode` | Hide distractions, show reading progress |
-| `readAloud` | Text-to-speech for page content |
-| `readerMode` | Clean reading view (article extraction) |
-| `voiceCommands` | Voice-controlled navigation |
-| `keyboardNav` | Enhanced keyboard navigation |
-| `colorBlindMode` | Color vision deficiency filters |
-| `autoTranscriber` | Auto-generate captions for media |
+## Examples
 
-Requires `ANTHROPIC_API_KEY` environment variable for AI features.
+### In the extension
+
+Open the [test site](https://ai4a11y-test-site.vercel.app/) and try these — the first three need no key:
+
+- **Dyslexia** → text grows, line and letter spacing open up, and side clutter dims on a long article.
+- **Low Vision** → 150% text, a bold focus ring that follows your keyboard, and a magnifier that tracks the cursor.
+- **Motor** → bigger click targets, sticky bars unpinned, and a "click again to confirm" guard on Delete / Submit buttons.
+- **Blind** *(needs a Gemini key)* → missing alt text and video captions get written for you; press **Alt+D** on any element to hear what it is.
+- **Skill Builder** *(personalized extension)* → type *"make Reddit calmer to read"* and it assembles a reusable recipe (less motion, fewer popups) you approve before it saves.
+
+### From the command line
+
+```bash
+# 1. What's inaccessible on a page? (JSON pipes straight into CI or an agent)
+ai4a11y session start
+ai4a11y session go https://news.ycombinator.com
+ai4a11y session audit --json
+
+# 2. Adapt the page for someone, then read it back in plain language
+ai4a11y session profile dyslexia
+ai4a11y session enable visualAssist fontScale=150
+ai4a11y session describe
+
+# 3. Scaffold a new fix, pre-wired to the profiles it serves
+ai4a11y create fix-carousels --type adapter --profiles blind,motor
+```
+
+## How It Works
+
+Pick an ability profile. There are twelve, from Low Vision to Dyslexia to Deaf/HoH, and the page adapts as you browse.
+
+Underneath, **auditors** scan for problems like missing alt text or low contrast, and **adapters** fix them (dark mode, bigger text, AI alt text, captions). A **skill** bundles a few adapters into a named recipe for a common case, such as a reading aid that enlarges text and strips clutter at once.
+
+The personalized extension goes further: it remembers what you need, and its Skill Builder turns a plain-language request into a new skill. That engine lives in `toolkit/`, a standalone core meant to run beyond the browser.
+
+<p align="center">
+  <img src="docs/diagrams/toolkit-layers.png" alt="Toolkit layers: every interface runs on the same core" width="440">
+</p>
+
+The [architecture doc](docs/architecture.md) walks through the rest — the Librarian, Engineer, and Assistant agents, and how the core stays portable.
 
 ## Profiles
 
-Select a profile to automatically enable the right tools:
-
-| Profile | What it enables |
-|---------|-----------------|
-| **Blind** | Auto alt text, labels, WCAG fixes, keyboard nav |
-| **Low Vision** | Large text (150%), enhanced focus, high contrast |
-| **Color Blind** | Color filters (protanopia, deuteranopia, tritanopia) |
-| **Deaf/HoH** | Auto captions, visual emphasis |
-| **Motor** | Large cursor, enhanced focus, keyboard nav |
-| **Dyslexia** | OpenDyslexic font, wider spacing, focus mode |
-| **ADHD** | Focus mode, reduced motion, reader mode |
-| **Cognitive** | Simplified text, summaries |
-| **Elderly** | Large text, enhanced focus, simplified text |
-| **Anxiety** | Calm UI, reduced motion, reader mode |
-| **Sensory** | Reduced motion, dark mode, focus mode |
-| **Photosensitive** | Dark mode, reduced motion |
-
-## Directory Structure
-
-```
-AI-for-Accessibility-Toolkit-Draft/
-├── tools/                       # Shared JS code (browser-native)
-│   ├── auditors/               # Find issues (missing-alt, poor-contrast, etc.)
-│   ├── adapters/               # Fix issues (generate-alt, fix-contrast, etc.)
-│   ├── profiles/               # User presets (settings.js, settings.json)
-│   └── utils/                  # Shared utilities (ai.js, dom.js, color.js)
-│
-├── extension/                   # Chrome extension (basic)
-│   ├── src/content.js          # Imports tools/, sets Gemini provider
-│   ├── background.js           # Service worker (Gemini API)
-│   ├── popup.*                 # Extension UI
-│   └── manifest.json
-│
-├── personalized-extension/      # Chrome extension (AI onboarding + skill builder)
-│   ├── extension/              # Extension source
-│   ├── skill-creator/          # UI for creating custom skills
-│   ├── skills/                 # Built-in skill modules
-│   └── utils/                  # AI recommender, DOM utils
-│
-├── webapp/
-│   ├── browser-harness/        # CDP browser control daemon (bundled)
-│   ├── textcontrol/            # Text-input browser agent
-│   │   ├── backend/            # FastAPI + Gemini 2.5 Flash
-│   │   └── frontend/           # Vanilla HTML/CSS/JS
-│   └── voicecontrol/           # Voice-controlled browser agent
-│       ├── backend/            # FastAPI + Gemini Live API
-│       └── frontend/           # React UI (transcript, viewport, actions)
-│
-├── cli/                         # Python CLI
-│   ├── ai4a11y.py              # Playwright + Claude vision agent
-│   └── cli.py                  # Command wrapper
-│
-└── pyproject.toml               # pip install ai4a11y
-```
+Twelve built-in profiles — Blind, Low Vision, Color Blind, Deaf/HoH, Motor, Dyslexia, ADHD, Cognitive, Older Adult, Anxiety, Sensory, Light Sensitive. Each maps to evidence-based settings (W3C WCAG/COGA, WebAIM, NNGroup) in [`tools/profiles/settings.json`](tools/profiles/settings.json). Combine them and they merge — any profile that enables a fix wins, and the largest text size wins.
 
 ## Contributing
 
-### Adding an Adapter
+The common contributions:
 
-```bash
-ai4a11y create fix-tables --type adapter --profiles blind
-```
+- **Fix an issue** → add an adapter in `tools/adapters/`
+- **Detect an issue** → add an auditor in `tools/auditors/`
+- **Combine adapters for a need** → add a skill (`SKILL.md`) in `toolkit/skills/builtin/`
+- **Add a profile** → edit `tools/profiles/settings.json`
 
-This creates `tools/adapters/fix-tables.js` with:
-- Correct imports (`ai.js`, `dom.js`)
-- Metadata exports (`name`, `description`, `profiles`)
-- `run()` function template
-- `axeHandlers` for WCAG rule violations
-
-Then add to `tools/adapters/index.js` and rebuild:
-
-```bash
-npm run build
-```
-
-### Adding an Auditor
-
-```bash
-ai4a11y create missing-landmarks --type auditor
-```
-
-Creates `tools/auditors/missing-landmarks.js`. Add to `tools/auditors/index.js`.
-
-### Adding an AI Tool
-
-1. Add provider method in `tools/utils/ai.js`
-2. Add handler in `extension/background.js` (Gemini)
-3. Add handler in `cli/ai4a11y.py` (Claude)
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
-
-## Architecture
-
-**Tools** (auditors + adapters) live in `tools/` and run in the browser. The **AI provider** is swapped at runtime — Gemini for extensions, Claude for CLI. Both share the same adapters.
-
-See [docs/architecture.md](docs/architecture.md) for technical details.
-
-## Who's Building This
-
-| Team | Focus |
-|------|-------|
-| Google.org | NAI — Multimodal AI agents that adapt UIs in real-time |
-| Stanford | Accessible Interactive Simulations — sonification for BLV STEM learners |
-| MIT Media Lab | Universal Memory Assistant — wearable memory aid for older adults |
-| UW | AI-Augmented Storytelling — creative expression tools for BLV children |
-| UCL GDI Hub | Non-Standard Speech (Whisper fine-tunes), Founders Think |
-| RNID | Videoconferencing Agent — real-time accessibility nudges in meetings |
-| RIT / NTID | AI-Powered Tutoring Agent — English grammar tutor for DHH students |
-| The Arc | AI for Cognitive Accessibility — text simplification for IDD users |
-
-See [projects/](projects/) for contributed code.
+Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide and [docs/API.md](docs/API.md) for the API. The full list of interfaces and teams is in [docs/](docs/README.md).
 
 ## Roadmap
 
@@ -358,42 +123,48 @@ See [projects/](projects/) for contributed code.
 - [x] Set up repo
 - [x] Define architecture spec
 - [x] Define agent cards
-- [ ] Collect agent cards from all teams (in progress)
+- [x] Collect agent cards from all teams
 
 ### Month 3 — Build
 - [ ] Collect team codebases (in progress)
 - [x] Build Chrome extension (prototype 1)
+- [x] Build personalized extension (onboarding + memory)
 - [x] Build CLI (prototype 2)
 - [x] Implement ability profiles
 - [x] Support multiple ability profiles
+- [x] Build Ability Profile agent (learns your needs over time)
 - [x] Prepopulate basic accessibility tools (alt text, labels, contrast, dark mode, focus mode, etc.)
+- [x] Build skill layer (skills that combine adapters)
+- [x] Build Skill Builder agent (turns a plain-language request into a skill)
+- [x] Build a reusable core that works beyond the browser
+- [x] Add automated tests
+- [ ] Define design principles (in progress)
+- [x] Build adaptive validation interface (people review and correct adaptations)
+- [x] Add privacy and sharing controls (keep private, or share with friends/family/org)
 - [ ] Build evaluation benchmark (test sites arena) (in progress)
 - [ ] Integrate team projects
-- [ ] Co-design with disability community
+- [ ] Unify the two extensions on shared tools (in progress — most adapters now share one source)
+- [x] Co-design with disability community
 
 ### Month 6 — Ship
-- [ ] Write documentation
-- [ ] Create example applications
-- [ ] Test with users
+- [ ] Write documentation (in progress)
+- [ ] Create example applications (in progress)
+- [ ] Test with users (in progress)
+- [ ] Developer validation (hackathon)
+- [ ] Native mobile app (iOS)
+- [ ] XR agent — real-time adaptations in the physical world
+- [ ] Security review before public release
 - [ ] Publish to Chrome Web Store
 - [ ] Publish CLI to PyPI
 - [ ] Release publicly
 
 ## Contributors
 
-<a href="https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=chuanenlin/AI-for-Accessibility-Toolkit-Draft" />
-</a>
+[![Contributors](https://contrib.rocks/image?repo=AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit)](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/graphs/contributors)
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+## Security & License
 
-## Security
-
-Found a vulnerability? Please report it responsibly. See [SECURITY.md](SECURITY.md).
-
-## License
-
-Apache 2.0. See [LICENSE](LICENSE).
+Custom adapters are linted before running but have full page access — only install ones you trust. Report vulnerabilities via [SECURITY.md](SECURITY.md). Licensed under Apache 2.0 ([LICENSE](LICENSE)).
 
 ---
 

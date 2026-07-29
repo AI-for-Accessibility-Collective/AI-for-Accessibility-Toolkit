@@ -1,83 +1,75 @@
-# @a11y-toolkit/core
+# Toolkit Core
 
-The portable personal-memory / ability-model engine extracted from the
-AI-for-Accessibility Chrome extension. Platform-agnostic: the core touches no
-`chrome.*`, no `Date.now()`, and no DOM — it depends only on **injected
-ports**, so the same engine can run in a browser extension, an iOS app, an XR
-runtime, or a test.
-
-> **Status: Phase 0 of the refactor plan** ([../docs/toolkit-refactor-plan.md](../docs/toolkit-refactor-plan.md)).
-> This phase *carves the seam* with **zero behavior change** for the extension.
-> It does **not** yet split AbilityModel from SurfaceProfile (Phase 1), rename
-> the memory taxonomy (Phase 2), or add cross-app sharing (Phase 3). It is a
-> research prototype — see the plan for what's deliberately deferred.
-
-## Layout
+The platform-agnostic heart of the AI for Accessibility Toolkit: the **Librarian**
+(personal memory/profile agent), the **Datastore** (Global/Mine catalog facade),
+the **ability and surface model**, the **skill layer**, and **cross-app sync**.
+Pure logic — no `chrome.*`, no DOM, no `Date.now()`. Everything platform-specific
+arrives through injected **ports**, so the same engine runs in a Chrome extension
+today and an iOS or XR host tomorrow.
 
 ```
 toolkit/
-  index.js              createToolkit({ kv, clock, scheduler, consent, ... }) → { datastore, librarian }
-  core/
-    taxonomy.js         site-category vocabulary (pure data + methods)
-    datastore.js        createDatastore({ kv, clock, taxonomy, toolsRegistry }) — catalog facade
-    librarian.js        createLibrarian({ datastore, taxonomy, clock, scheduler, consent, demo })
-  ports/
-    index.js            the port interfaces (JSDoc) + no-op/system defaults
-  adapters/
-    chrome/             the ONLY place chrome.* lives
-      ports.js          chromeKV / chromeClock / chromeScheduler / chromeConsent / chromeDemo
-      *.entry.js        esbuild entry shims → built to the extension's lib/*.js classic scripts
+├── index.js               createToolkit({ kv, clock, scheduler, consent, ... })
+├── core/
+│   ├── ports.js           Port contracts a host must provide (JSDoc)
+│   ├── taxonomy.js        Site-category vocabulary + host classification
+│   ├── datastore.js       createDatastore({ areas, globalTier, clock })
+│   ├── librarian.js       createLibrarian({ datastore, taxonomy, kv, ... })
+│   ├── units.js           Typed units for ability magnitudes
+│   ├── strength.js        Requirement strength (how hard a need presses)
+│   ├── ability.js         Ability dimensions, device-independent
+│   ├── surface.js         SurfaceProfile — ability rendered for one device
+│   ├── memory-class.js    Memory taxonomy labels
+│   ├── ability-model.js   AbilityModel: the device-independent understanding
+│   ├── broker.js          Cross-app permission broker (grants, export, insights)
+│   ├── skill.js           SKILL.md parse / validate / resolve / match
+│   └── skill-builder.js   The Engineer: builds a SKILL.md from a plain need
+├── skills/builtin/        Starter SKILL.md playbooks
+├── surfaces/              AbilityModel → per-device rendering (web.js, xr.js)
+├── sync/                  Cross-app sharing: grants.js, blob.js, transport.js
+├── ports/                 Port index
+├── adapters/chrome/       Chrome host adapter. build.js bundles these entries
+│                          into personalized-extension/extension/lib/*.js
+├── hosts/                 Runnable consumers, no browser needed
+│   ├── xr-demo/           node hosts/xr-demo/demo.js
+│   └── skill-demo/        node hosts/skill-demo/demo.js
+└── test/                  Node tests against in-memory ports
 ```
 
-## Ports (Phase 0)
+## Two layers, and which is which
 
-| Port        | Purpose                                  | Chrome impl              |
-|-------------|------------------------------------------|--------------------------|
-| `KVStore`   | get/set/getAll over storage areas        | `chrome.storage.*`       |
-| `Clock`     | `now()` — the only source of time        | `Date.now()`             |
-| `Scheduler` | `every()` periodic + `debounce()`        | `chrome.alarms` + `setTimeout` |
-| `Consent`   | `notifyPending(count)` — proposal signal | `chrome.action` badge    |
-| `DemoHook`  | live-diagram instrumentation             | `globalThis.AA_DEMO_MODE` / `aaDemoTrace` |
+**Adapters** are the executable code that changes a page; they live in the
+repository-root `tools/adapters/`. A **skill** (`SKILL.md`) is a recipe naming
+which adapters to run, with what settings, in what order — plus optional
+**action steps** the browser agent performs. `core/skill.js` parses and resolves
+a skill **deterministically**: no model runs at apply time.
 
-The **LLM** is still injected post-construction via
-`librarian.setGeminiCaller(fn)` (the pre-existing seam, unchanged).
-`SecretStore`, `Sensors`, and `Surface` are named in the plan but are
-host-owned / later-phase and not wired here.
+## Ability, surfaces, and strength
 
-## How the Chrome extension consumes this
+`librarian.getAbilityModel()` returns what we understand about the person in
+device-independent terms — relative magnitudes in typed units, need-named enums,
+requirement strength, and per-dimension confidence. A **surface** renders that
+into one device's settings: `surfaces/web.js` produces web settings (font scale,
+dark mode), `surfaces/xr.js` produces XR parameters (angular text size,
+world-locked captions).
 
-The reference implementation is ES modules. The extension's service worker
-(`importScripts`) and popup (`<script>`) need classic scripts that assign
-`globalThis.AA_TAXONOMY` / `Datastore` / `Librarian`, so `build.js` bundles
-each `adapters/chrome/*.entry.js` to an IIFE — the same pattern the repo
-already uses for `harness.js` / `agent.js` / `tools-registry.js`.
+## Memory scoping and the privacy floor
 
-**`personalized-extension/extension/lib/{taxonomy,datastore,librarian}.js` are
-generated build outputs. Edit the source here under `toolkit/`, then
-`npm run build`.**
+Memory is sharded along a scope chain — `general → context:* → category:* →
+origin:*` — merged by specificity, so a narrow preference beats a general
+default. `taxonomy.js` marks finance, health and government as **no-memory zones
+by default**: profiles still adapt those pages, but nothing is recorded there
+without an explicit opt-in.
 
-## A new (non-Chrome) host
+## Cross-app sharing
 
-```js
-import { createToolkit } from '@a11y-toolkit/core';
-const { datastore, librarian } = createToolkit({
-  kv: myKVStore,            // required
-  clock: myClock,           // defaults to the system wall clock
-  scheduler: myScheduler,   // defaults to no-op (drive extract/reflect yourself)
-  consent: myConsent,       // defaults to no-op
-  toolsRegistry: myTools,   // the settings/tools registry, or null
-});
-librarian.setGeminiCaller(myLlm);  // optional slow lane
+`sync/` and `core/broker.js` implement sharing between apps as a **visible,
+scoped, default-deny grant**. Reads require a grant; writes arrive as proposals
+the local user resolves. A consuming app can never approve its own request.
+
+## Running the tests
+
+```bash
+cd toolkit && npm test          # ability model, broker, skill layer
+node --test test/phase1.test.mjs test/phase3.test.mjs test/phase3-crossapp.test.mjs
 ```
-
-## Tests (regression gate)
-
-Run from `personalized-extension/` after `npm run build`:
-
-- `node test/librarian-test.js` — 69 asserts, fast lane + reflection.
-- `node test/toolkit-ports-test.js` — the Phase 0 port-seam paths.
-- `node test/run-tests.js` — structural checks.
-
-Both unit tests load the **built** `lib/*.js` bundles, so they also prove the
-ES-module source survives esbuild + classic-script `eval` under the chrome
-mock.

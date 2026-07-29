@@ -256,6 +256,30 @@ Return ONLY the summary."""
             except:
                 return result.strip()
 
+        def ai_translate_text(text, target_lang="English"):
+            prompt = f"""Translate the following text into {target_lang or 'English'}.
+Preserve the meaning and tone. Do not add notes or explanations.
+
+Text:
+{text[:3000]}
+
+Return ONLY the translated text."""
+            result = ask_claude_text(prompt, timeout=60)
+            try:
+                return json.loads(result).get('answer', result)
+            except Exception:
+                return result.strip()
+
+        def ai_define_word(word, context=""):
+            prompt = f"""Define the word or phrase "{word}" in one short, plain-language sentence a general reader can understand, as used in this context: "{(context or '')[:400]}".
+
+Return ONLY the definition."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                return json.loads(result).get('answer', result)
+            except Exception:
+                return result.strip()
+
         # Generate label - takes context about element, returns accessible label
         def ai_generate_labels(context):
             ctx_str = json.dumps(context) if isinstance(context, dict) else str(context)
@@ -273,25 +297,29 @@ Return ONLY the label text."""
             except:
                 return result.strip()
 
-        # Fix contrast - takes fg/bg colors, returns adjusted colors
+        # Fix contrast - takes fg/bg colors, returns the adjusted foreground
+        # color as a hex string (the adapter assigns it to element.style.color)
         def ai_fix_contrast(fg, bg):
             prompt = f"""The foreground color {fg} on background {bg} has insufficient contrast.
-Suggest adjusted colors that:
-1. Meet WCAG AA contrast ratio (4.5:1 for normal text)
-2. Stay visually similar to the original
-3. Maintain readability
+Suggest an adjusted foreground color that:
+1. Meets WCAG AA contrast ratio (4.5:1 for normal text) against {bg}
+2. Stays visually similar to the original
+3. Maintains readability
 
-Return JSON: {{"foreground": "#hex", "background": "#hex"}}"""
+Return ONLY the hex color (e.g. #1a2b3c), nothing else."""
             result = ask_claude_text(prompt, timeout=30)
             try:
-                # Try to parse JSON from response
                 import re
-                match = re.search(r'\{[^}]+\}', result)
-                if match:
-                    return json.loads(match.group())
-                return {"foreground": fg, "background": bg}
+                text = (result or '').strip()
+                # Prefer an exact hex response; otherwise take the LAST hex in the
+                # text — a chatty model puts the *suggested* color last, after
+                # restating the bad one ("#1a2b3c has poor contrast, try #4d5e6f").
+                if re.fullmatch(r'#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}', text):
+                    return text
+                matches = re.findall(r'#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b', text)
+                return matches[-1] if matches else None
             except:
-                return {"foreground": fg, "background": bg}
+                return None
 
         # Describe element - takes screenshot + element info
         def ai_describe_element(image_data, element_type, context):
@@ -314,6 +342,68 @@ Provide a brief, useful description (1-2 sentences) that helps a screen reader u
             except:
                 return result.strip()
 
+        # Extract a chart/graph's data as a structured table (explore-a-chart adapter)
+        def ai_extract_chart_data(image_data, context):
+            import tempfile
+            import base64
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                try:
+                    f.write(base64.b64decode(image_data))
+                except Exception:
+                    return None
+                temp_path = f.name
+            prompt = """Extract the data shown in this chart or graph as JSON.
+Return ONLY valid JSON of the form {"caption": string, "headers": [string], "rows": [[string]]}, where each row is aligned to the headers.
+If it is not a data chart, return {"caption": "", "headers": [], "rows": []}."""
+            result = ask_claude(temp_path, prompt)
+            Path(temp_path).unlink(missing_ok=True)
+            try:
+                data = json.loads(result)
+                if isinstance(data, dict) and 'headers' in data:
+                    return data
+                if isinstance(data, dict) and 'answer' in data:
+                    try:
+                        return json.loads(data['answer'])
+                    except Exception:
+                        return None
+                return data
+            except Exception:
+                return None
+
+        # Improve ambiguous link text ("click here" → descriptive label)
+        def ai_improve_link_text(link_text, href, context):
+            prompt = f"""Improve this ambiguous link text for screen reader users.
+
+Current link text: "{link_text}"
+Link URL: {href}
+Surrounding context: "{context}"
+
+Generate a short, descriptive link text (2-5 words) that explains where the link goes.
+Return ONLY the improved link text."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
+        # Infer a table column header from sample cell values
+        def ai_infer_column_header(sample_data):
+            samples = sample_data if isinstance(sample_data, list) else [str(sample_data)]
+            sample_str = "\n".join(f"- {s}" for s in samples)
+            prompt = f"""What is the best column header for this table data? Sample values:
+{sample_str}
+
+Return ONLY a short header name (1-3 words)."""
+            result = ask_claude_text(prompt, timeout=30)
+            try:
+                data = json.loads(result)
+                return data.get('answer', result)
+            except:
+                return result.strip()
+
         # Expose functions to page
         page.expose_function("ai4a11y_describeImage", ai_describe_image)
         page.expose_function("ai4a11y_simplifyText", ai_simplify_text)
@@ -321,6 +411,11 @@ Provide a brief, useful description (1-2 sentences) that helps a screen reader u
         page.expose_function("ai4a11y_generateLabels", ai_generate_labels)
         page.expose_function("ai4a11y_fixContrast", ai_fix_contrast)
         page.expose_function("ai4a11y_describeElement", ai_describe_element)
+        page.expose_function("ai4a11y_improveLinkText", ai_improve_link_text)
+        page.expose_function("ai4a11y_inferColumnHeader", ai_infer_column_header)
+        page.expose_function("ai4a11y_translateText", ai_translate_text)
+        page.expose_function("ai4a11y_defineWord", ai_define_word)
+        page.expose_function("ai4a11y_extractChartData", ai_extract_chart_data)
 
         _ai_callbacks_exposed.add(page_id)
         return True
@@ -1348,8 +1443,8 @@ _IRIS_SYSTEM_PROMPT = (
 # Model selection is centralized so a future model bump is a one-line change.
 # Grounding is a constrained classification ('pick N from list'); vision reasons
 # over a screenshot. Per CLAUDE.md: Sonnet floor, Opus when possible.
-_IRIS_GROUND_MODEL = "claude-sonnet-4-6"   # text-only grounding from a11y candidates
-_IRIS_VISION_MODEL = "claude-opus-4-7"     # screenshot reasoning (describe / ask / visual tap)
+_IRIS_GROUND_MODEL = "claude-sonnet-5"     # text-only grounding from a11y candidates
+_IRIS_VISION_MODEL = "claude-opus-4-8"     # screenshot reasoning (describe / ask / visual tap)
 # ai4a11y wants fast, grounded vision descriptions — not deep multi-step reasoning.
 # --effort low tells Opus 4.7 to skip extended thinking; keeps latency predictable.
 _IRIS_VISION_EFFORT = "low"
@@ -1462,10 +1557,13 @@ def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
             env=_claude_cli_env(),
         )
         if result.returncode != 0:
-            return json.dumps({'error': f'cli failed: {result.stderr[:200]}'})
+            # Include an empty 'answer' so callers doing data.get('answer', result)
+            # degrade to "" (→ safe fallback) instead of leaking the raw error
+            # JSON into an aria-label / table header.
+            return json.dumps({'error': f'cli failed: {result.stderr[:200]}', 'answer': ''})
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        return json.dumps({'error': 'timeout'})
+        return json.dumps({'error': 'timeout', 'answer': ''})
 
 
 def plan_task(page, task, run_dir, context=""):
@@ -4596,7 +4694,7 @@ def session_profile(profile_name, json_output=False):
     """Apply an accessibility profile to the current page.
 
     Profiles: lowVision, blind, colorBlind, dyslexia, adhd, cognitive,
-              motor, photosensitive, deaf, anxiety, elderly, sensory
+              motor, photosensitive, deaf, anxiety, olderAdult, sensory
 
     Each profile enables a specific set of tools optimized for that need.
     The profile is saved and auto-applied to all future page navigations.
@@ -5789,7 +5887,7 @@ if __name__ == "__main__":
             if not sub_args:
                 print("usage: session profile <name>")
                 print("  profiles: lowVision, blind, colorBlind, dyslexia, adhd, cognitive,")
-                print("            motor, photosensitive, deaf, anxiety, elderly, sensory")
+                print("            motor, photosensitive, deaf, anxiety, olderAdult, sensory")
                 sys.exit(1)
             session_profile(sub_args[0], json_output=json_output)
         elif sub == "profiles":

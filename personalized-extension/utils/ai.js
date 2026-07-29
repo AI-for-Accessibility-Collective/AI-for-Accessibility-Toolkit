@@ -111,6 +111,16 @@ export async function describeElement(element, context) {
   return _provider.describeElement(element, context);
 }
 
+export async function translateText(text, targetLang) {
+  if (!_provider?.translateText) return null;
+  return _provider.translateText(text, targetLang);
+}
+
+export async function defineWord(word, context) {
+  if (!_provider?.defineWord) return null;
+  return _provider.defineWord(word, context);
+}
+
 export function announce(message) {
   if (_announceSuppressed) return;
   if (_provider?.announce) {
@@ -132,6 +142,11 @@ export async function isAIConfigured() {
       resolve(!!response.configured);
     });
   });
+}
+
+export async function extractChartData(imageDataUrl, context) {
+  if (!_provider?.extractChartData) return null;
+  return _provider.extractChartData(imageDataUrl, context);
 }
 
 export function createChromeAIProvider() {
@@ -157,6 +172,14 @@ export function createChromeAIProvider() {
 
   return {
     sendToBackground,
+
+    async extractChartData(imageData, context) {
+      const text = await sendToBackground(
+        `Extract the data from this chart or graph as JSON. Context: ${context || ''}. Return ONLY valid JSON of the form {"caption": string, "headers": string[], "rows": string[][]}, each row aligned to the headers. If it is not a data chart, return {"caption":"","headers":[],"rows":[]}.`,
+        [imageData]
+      );
+      try { return JSON.parse(text); } catch { return null; }
+    },
 
     async describeImage(imageData) {
       return sendToBackground(
@@ -196,6 +219,14 @@ export function createChromeAIProvider() {
         }
       }
       return sendToBackground(`Summarize the following text in 2-3 concise sentences. Return ONLY the summary.\n\n${text}`);
+    },
+
+    async translateText(text, targetLang) {
+      return sendToBackground(`Translate the following text into ${targetLang || 'English'}. Preserve the meaning and tone. Return ONLY the translated text.\n\n${text}`);
+    },
+
+    async defineWord(word, context) {
+      return sendToBackground(`Define the word or phrase "${word}" in one short, plain-language sentence, as used in: "${context || ''}". Return ONLY the definition.`);
     },
 
     async generateLabels(context) {

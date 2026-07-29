@@ -16,12 +16,22 @@ export async function generateLinkLabel(link) {
   // Try to infer from context first
   const context = getContextForElement(link);
 
-  const label = await inferLabel({
-    url: href,
-    elementType: 'link',
-    existingText,
-    context
-  });
+  // inferLabel throws when no AI provider is configured (the norm without an
+  // API key). Unguarded, the throw leaves the marker stuck at 'pending' — and
+  // since 'pending' reads as truthy, the element is skipped forever with no
+  // retry. Catch it and mark 'failed' like every sibling adapter does.
+  let label;
+  try {
+    label = await inferLabel({
+      elementType: 'link',
+      html: link.outerHTML?.substring(0, 500) || '',
+      context: [existingText, href, context].filter(Boolean).join(' | ')
+    });
+  } catch (e) {
+    console.warn('[AI4A11y] Link label inference failed:', e.message);
+    markProcessed(link, 'failed');
+    return null;
+  }
 
   if (label) {
     link.setAttribute('aria-label', label);
@@ -53,13 +63,19 @@ export async function generateButtonLabel(button) {
 
   // Fall back to AI
   const context = getContextForElement(button);
-  const svgContent = button.querySelector('svg')?.outerHTML || '';
 
-  const label = await inferLabel({
-    elementType: 'button',
-    context,
-    svgContent
-  });
+  let label;
+  try {
+    label = await inferLabel({
+      elementType: 'button',
+      html: button.outerHTML?.substring(0, 500) || '',
+      context
+    });
+  } catch (e) {
+    console.warn('[AI4A11y] Button label inference failed:', e.message);
+    markProcessed(button, 'failed');
+    return null;
+  }
 
   if (label) {
     button.setAttribute('aria-label', label);

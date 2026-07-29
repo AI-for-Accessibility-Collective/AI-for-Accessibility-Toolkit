@@ -2,6 +2,15 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Track failures across the scattered `console.log('FAIL: ...')` call sites
+// so this suite can gate CI (it exits 0 unconditionally otherwise).
+let _failures = 0;
+const _log = console.log.bind(console);
+console.log = (...args) => {
+  if (typeof args[0] === 'string' && args[0].startsWith('FAIL')) _failures++;
+  _log(...args);
+};
+
 const PORT = 8766;
 const ROOT = path.resolve(__dirname, '..');
 
@@ -1870,7 +1879,8 @@ server.listen(PORT, async () => {
   }
 
   console.log('\n=== DONE ===');
+  console.log(`\n=== DONE === (${_failures} failed)`);
 
   server.close();
-  process.exit(0);
+  process.exit(_failures ? 1 : 0);
 });

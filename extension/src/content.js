@@ -14,12 +14,19 @@ import { profiles, loadSettings, getSettings, isEnabled, updateSettings, getProf
 import { clearAllMarks, sleep } from '../../tools/utils/dom.js';
 import { runAxeAnalysis, getElementFromNode } from '../../tools/auditors/wcag-issues.js';
 import { findEmptyAltImages, findCanvasElements } from '../../tools/auditors/missing-alt.js';
+import { findAmbiguousLinks } from '../../tools/auditors/missing-labels.js';
 import {
   getAxeHandler,
   generateImageAlt,
   generateCanvasDescription,
+  generateVideoDescription,
   simplifyText,
   summarizeContent,
+  fixTargetBlank,
+  fixPositiveTabindex,
+  improveAmbiguousLinks,
+  fixAllTables,
+  fixLandmarks,
   VisualAssist,
   DarkMode,
   MotionReducer,
@@ -30,26 +37,67 @@ import {
   KeyboardNavigator,
   ColorBlindMode,
   AutoTranscriber,
+  DismissOverlays,
+  BigTargets,
+  LinkHighlighter,
+  PageOutline,
+  BionicReading,
+  UnpinSticky,
+  TranslatePage,
+  MuteSounds,
+  DefineWords,
+  StopAutoAdvance,
+  ReduceBrightness,
+  SoundVisualizer,
+  LiveRegionAnnouncer,
+  Magnifier,
+  FlashGuard,
+  DescribeOnDemand,
+  ReflowColumn,
+  FocusLocator,
+  PersistentHover,
+  ReadingRuler,
+  ConfirmActions,
+  ReadingSpot,
+  AbbreviationExpand,
+  LanguageTag,
+  ExploreAChart,
+  SpaFocus,
+  SkipLinks,
+  MathA11y,
 } from '../../tools/adapters/index.js';
 
 // Extension-specific imports
 import { resetStats, getStats, getFixLog, logFix, incrementStat } from './stats.js';
 import { sendMessage, notifyProgress, announce } from './utils/messaging.js';
 
-// Set up Chrome AI provider (bridges to background.js Gemini API)
+// Set up Chrome AI provider (bridges to background.js Gemini API).
+// unwrap returns the result, or THROWS the real error (a missing API key, a
+// blocked response) so an explicit user action like describe-on-demand can tell
+// the user WHY it failed instead of a blank "no description". Bulk adapters
+// already try/catch each call and degrade, so this doesn't change their
+// behaviour — it only lets the deliberate, one-off requests speak up.
+const unwrap = (r) => {
+  if (r && r.success === false) throw new Error(r.error || 'AI request failed');
+  return r?.result;
+};
 setAIProvider({
-  describeImage: (imageData) => sendMessage({ type: 'describeImage', imageData }).then(r => r?.result),
-  describeVideo: (frames, metadata) => sendMessage({ type: 'describeVideoFrames', frames, metadata }).then(r => r?.result),
-  simplifyText: (text) => sendMessage({ type: 'simplifyText', text }).then(r => r?.result),
-  summarizeText: (text) => sendMessage({ type: 'summarizeText', text }).then(r => r?.result),
-  generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
-  inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(r => r?.result),
-  fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(r => r?.result),
-  generateCaptions: (data) => sendMessage({ type: 'transcribeAudio', audioUrl: data.audioUrl }).then(r => r?.result),
-  getYouTubeTranscript: (videoId) => sendMessage({ type: 'getYouTubeTranscript', videoId }).then(r => r?.result),
-  transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(r => r?.result),
-  transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(r => r?.result),
-  describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(r => r?.result),
+  describeImage: (imageData) => sendMessage({ type: 'describeImage', imageData }).then(unwrap),
+  describeVideo: (frames, metadata) => sendMessage({ type: 'describeVideoFrames', frames, metadata }).then(unwrap),
+  simplifyText: (text) => sendMessage({ type: 'simplifyText', text }).then(unwrap),
+  summarizeText: (text) => sendMessage({ type: 'summarizeText', text }).then(unwrap),
+  translateText: (text, targetLang) => sendMessage({ type: 'translateText', text, targetLang }).then(unwrap),
+  defineWord: (word, context) => sendMessage({ type: 'defineWord', word, context }).then(unwrap),
+  generateLabels: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(unwrap),
+  inferLabel: (ctx) => sendMessage({ type: 'inferLabel', ...ctx }).then(unwrap),
+  fixContrast: (fg, bg) => sendMessage({ type: 'fixContrast', foreground: fg, background: bg }).then(unwrap),
+  getYouTubeTranscript: (videoId) => sendMessage({ type: 'getYouTubeTranscript', videoId }).then(unwrap),
+  transcribeVideo: (url) => sendMessage({ type: 'transcribeVideo', audioUrl: url }).then(unwrap),
+  transcribeAudio: (url) => sendMessage({ type: 'transcribeAudio', audioUrl: url }).then(unwrap),
+  describeElement: (imageData, elementType, context) => sendMessage({ type: 'describeElement', imageData, elementType, context }).then(unwrap),
+  extractChartData: (imageData, context) => sendMessage({ type: 'extractChartData', imageData, context }).then(unwrap),
+  improveLinkText: (linkText, href, context) => sendMessage({ type: 'improveLinkText', linkText, href, context }).then(unwrap),
+  inferColumnHeader: (sampleData) => sendMessage({ type: 'inferColumnHeader', sampleData }).then(unwrap),
   announce: (msg) => announce(msg),
 });
 
@@ -92,8 +140,8 @@ function applyVisualSettings(settings) {
     console.log('[AI4A11y] Applied visual settings:', visualOptions);
   }
 
-  // Color blind filter
-  const colorMode = settings.colorBlindMode || settings.colorFilter;
+  // Color filter (canonical key: colorFilter; colorBlindMode is legacy)
+  const colorMode = settings.colorFilter || settings.colorBlindMode;
   if (colorMode && colorMode !== 'none') {
     ColorBlindMode.enable(colorMode);
     console.log('[AI4A11y] Applied color blind mode:', colorMode);
@@ -118,6 +166,34 @@ function applyVisualSettings(settings) {
   }
 
   if (settings.readerMode) ReaderMode.enable();
+  if (settings.dismissOverlays) DismissOverlays.enable();
+  if (settings.bigTargets) BigTargets.enable();
+  if (settings.highlightLinks) LinkHighlighter.enable();
+  if (settings.pageOutline) PageOutline.enable();
+  if (settings.bionicReading) BionicReading.enable();
+  if (settings.unpinSticky) UnpinSticky.enable();
+  if (settings.translatePage) TranslatePage.enable({ targetLang: settings.translateTo });
+  if (settings.muteSounds) MuteSounds.enable();
+  if (settings.defineWords) DefineWords.enable();
+  if (settings.stopAutoAdvance) StopAutoAdvance.enable();
+  if (settings.reduceBrightness) ReduceBrightness.enable();
+  if (settings.soundVisualizer) SoundVisualizer.enable();
+  if (settings.announceUpdates) LiveRegionAnnouncer.enable();
+  if (settings.magnifier) Magnifier.enable();
+  if (settings.flashGuard) FlashGuard.enable();
+  if (settings.describeOnDemand) DescribeOnDemand.enable();
+  if (settings.reflowColumn) ReflowColumn.enable();
+  if (settings.focusLocator) FocusLocator.enable();
+  if (settings.persistentHover) PersistentHover.enable();
+  if (settings.readingRuler) ReadingRuler.enable();
+  if (settings.confirmActions) ConfirmActions.enable();
+  if (settings.rememberSpot) ReadingSpot.enable();
+  if (settings.expandAbbreviations) AbbreviationExpand.enable();
+  if (settings.languageTag) LanguageTag.enable();
+  if (settings.exploreChart) ExploreAChart.enable();
+  if (settings.spaFocus) SpaFocus.enable();
+  if (settings.skipLinks) SkipLinks.enable();
+  if (settings.mathAccessible) MathA11y.enable();
   if (settings.keyboardNav) KeyboardNavigator.enable();
   if (settings.voiceCommands) VoiceCommands.enable();
   if (settings.autoCaptions) {
@@ -169,15 +245,13 @@ async function doInit() {
     console.log('[AI4A11y] Starting scan...');
     notifyProgress('Analyzing', 10);
 
-    if (!isEnabled('autoWcagFix')) {
-      console.log('[AI4A11y] Auto WCAG fix disabled');
-      isRunning = false;
-      return;
+    if (isEnabled('autoWcagFix')) {
+      const violations = await runAxeAnalysis();
+      notifyProgress('Fixing', 30);
+      await processViolations(violations);
+    } else {
+      console.log('[AI4A11y] Auto WCAG fix disabled — skipping axe scan');
     }
-
-    const violations = await runAxeAnalysis();
-    notifyProgress('Fixing', 30);
-    await processViolations(violations);
     notifyProgress('Images', 50);
     await runAdditionalScans();
     notifyProgress('Text', 80);
@@ -234,11 +308,11 @@ async function processViolation(violation, node, el, settings) {
   const handler = getHandler(violation.id);
   if (!handler) return;
 
-  if (violation.id === 'color-contrast' && !isEnabled('fixContrast')) return;
+  if (violation.id.startsWith('color-contrast') && !isEnabled('fixContrast')) return;
   if (violation.id.includes('label') && !isEnabled('autoFixLabels')) return;
   if (violation.id.includes('caption') && !isEnabled('autoCaptions')) return;
 
-  if (violation.id === 'color-contrast') {
+  if (violation.id.startsWith('color-contrast')) {
     const style = getComputedStyle(el);
     await handler(el, style.color, style.backgroundColor);
   } else {
@@ -261,8 +335,43 @@ async function runAdditionalScans() {
     }
   }
 
-  fixTargetBlankLinks();
-  fixPositiveTabindexElements();
+  if (isEnabled('autoVideoDescribe')) {
+    const videos = Array.from(document.querySelectorAll('video'))
+      .filter(v => !v.dataset.ai4a11yProcessed && !v.getAttribute('aria-label'));
+    if (videos.length > 0) {
+      console.log(`[AI4A11y] Describing ${videos.length} videos`);
+      for (const video of videos) {
+        await generateVideoDescription(video).catch(e => console.warn('[AI4A11y] Video description failed:', e));
+      }
+    }
+  }
+
+  if (isEnabled('autoFixLabels')) {
+    const ambiguousLinks = findAmbiguousLinks();
+    if (ambiguousLinks.length > 0) {
+      console.log(`[AI4A11y] Improving ${ambiguousLinks.length} ambiguous links`);
+      await improveAmbiguousLinks(ambiguousLinks);
+    }
+    await fixAllTables();
+  }
+
+  if (isEnabled('autoWcagFix')) {
+    fixLandmarks();
+  }
+
+  // These two run regardless of the shared ai4a11yProcessed flag: an earlier
+  // fixer (e.g. ambiguous-link labeling) may have marked the same element,
+  // and these fix *different* attributes. Each has its own idempotency guard
+  // (rel already has noopener / tabindex already normalized), so they're safe
+  // to re-check every scan without the shared mutex.
+  document.querySelectorAll('a[target="_blank"]').forEach(link => {
+    if ((link.getAttribute('rel') || '').includes('noopener')) return;
+    fixTargetBlank(link);
+  });
+
+  document.querySelectorAll('[tabindex]').forEach(el => {
+    if (parseInt(el.getAttribute('tabindex')) > 0) fixPositiveTabindex(el);
+  });
 }
 
 async function runTextProcessing() {
@@ -302,30 +411,6 @@ function findLongContent() {
     });
 }
 
-function fixTargetBlankLinks() {
-  document.querySelectorAll('a[target="_blank"]').forEach(link => {
-    if (link.dataset.ai4a11yProcessed) return;
-    const rel = link.getAttribute('rel') || '';
-    if (rel.includes('noopener')) return;
-    const parts = rel.split(/\s+/).filter(Boolean);
-    if (!parts.includes('noopener')) parts.push('noopener');
-    if (!parts.includes('noreferrer')) parts.push('noreferrer');
-    link.setAttribute('rel', parts.join(' '));
-    link.dataset.ai4a11yProcessed = 'true';
-  });
-}
-
-function fixPositiveTabindexElements() {
-  document.querySelectorAll('[tabindex]').forEach(el => {
-    if (el.dataset.ai4a11yProcessed) return;
-    const val = parseInt(el.getAttribute('tabindex'));
-    if (val > 0) {
-      el.setAttribute('tabindex', '0');
-      el.dataset.ai4a11yProcessed = 'true';
-    }
-  });
-}
-
 function revertAll() {
   VisualAssist.disable();
   MotionReducer.disable();
@@ -337,6 +422,34 @@ function revertAll() {
   VoiceCommands.disable();
   KeyboardNavigator.disable();
   AutoTranscriber.disable();
+  DismissOverlays.disable();
+  BigTargets.disable();
+  LinkHighlighter.disable();
+  PageOutline.disable();
+  BionicReading.disable();
+  UnpinSticky.disable();
+  TranslatePage.disable();
+  MuteSounds.disable();
+  DefineWords.disable();
+  StopAutoAdvance.disable();
+  ReduceBrightness.disable();
+  SoundVisualizer.disable();
+  LiveRegionAnnouncer.disable();
+  Magnifier.disable();
+  FlashGuard.disable();
+  DescribeOnDemand.disable();
+  ReflowColumn.disable();
+  FocusLocator.disable();
+  PersistentHover.disable();
+  ReadingRuler.disable();
+  ConfirmActions.disable();
+  ReadingSpot.disable();
+  AbbreviationExpand.disable();
+  LanguageTag.disable();
+  ExploreAChart.disable();
+  SpaFocus.disable();
+  SkipLinks.disable();
+  MathA11y.disable();
 
   document.querySelectorAll('.ai4a11y-simplified').forEach(el => {
     const originalWrapper = el.querySelector('.ai4a11y-original-content');
@@ -355,10 +468,8 @@ function revertAll() {
   });
 
   document.querySelectorAll('a.ai4a11y-adapted').forEach(link => {
-    if (link.dataset.ai4a11yOriginal) {
-      link.textContent = link.dataset.ai4a11yOriginal;
-      link.classList.remove('ai4a11y-adapted');
-    }
+    link.removeAttribute('aria-label');
+    link.classList.remove('ai4a11y-adapted');
   });
 
   document.querySelectorAll('.ai4a11y-contrast-fixed').forEach(el => {
@@ -399,7 +510,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     loadSettings(async () => {
       const r = await sendMessage({ type: 'getSettings' });
       return r?.result;
-    }).then(() => { if (msg.rescan) rescan(); });
+    }).then(() => {
+      // apply:true (sent when a profile is applied) turns the newly-enabled
+      // adapters on live; manual single-toggle changes omit it and drive tools
+      // through their own enable/disable messages instead.
+      if (msg.apply) applyVisualSettings(getSettings());
+      if (msg.rescan) rescan();
+    });
     sendResponse({ success: true });
     return true;
   }
@@ -455,7 +572,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         ReaderMode: ReaderMode.enabled || false,
         VoiceCommands: VoiceCommands.enabled || false,
         KeyboardNavigator: KeyboardNavigator.enabled || false,
-        AutoTranscriber: AutoTranscriber.enabled || false
+        AutoTranscriber: AutoTranscriber.enabled || false,
+        DismissOverlays: DismissOverlays.enabled || false,
+        BigTargets: BigTargets.enabled || false,
+        LinkHighlighter: LinkHighlighter.enabled || false,
+        PageOutline: PageOutline.enabled || false,
+        BionicReading: BionicReading.enabled || false,
+        UnpinSticky: UnpinSticky.enabled || false,
+        TranslatePage: TranslatePage.enabled || false,
+        MuteSounds: MuteSounds.enabled || false,
+        DefineWords: DefineWords.enabled || false,
+        StopAutoAdvance: StopAutoAdvance.enabled || false,
+        ReduceBrightness: ReduceBrightness.enabled || false,
+        SoundVisualizer: SoundVisualizer.enabled || false,
+        LiveRegionAnnouncer: LiveRegionAnnouncer.enabled || false,
+        Magnifier: Magnifier.enabled || false,
+        FlashGuard: FlashGuard.enabled || false,
+        DescribeOnDemand: DescribeOnDemand.enabled || false,
+        ReflowColumn: ReflowColumn.enabled || false,
+        FocusLocator: FocusLocator.enabled || false,
+        PersistentHover: PersistentHover.enabled || false,
+        ReadingRuler: ReadingRuler.enabled || false,
+        ConfirmActions: ConfirmActions.enabled || false,
+        ReadingSpot: ReadingSpot.enabled || false,
+        AbbreviationExpand: AbbreviationExpand.enabled || false,
+        LanguageTag: LanguageTag.enabled || false,
+        ExploreAChart: ExploreAChart.enabled || false,
+        SpaFocus: SpaFocus.enabled || false,
+        SkipLinks: SkipLinks.enabled || false,
+        MathA11y: MathA11y.enabled || false
       }
     });
     return true;

@@ -57,6 +57,36 @@
     }
     return provider.transcribeAudio(audioUrl);
   }
+  async function improveLinkText(linkText, href, context) {
+    if (!(provider == null ? void 0 : provider.improveLinkText)) {
+      return null;
+    }
+    return provider.improveLinkText(linkText, href, context);
+  }
+  async function inferColumnHeader(sampleData) {
+    if (!(provider == null ? void 0 : provider.inferColumnHeader)) {
+      return null;
+    }
+    return provider.inferColumnHeader(sampleData);
+  }
+  async function translateText(text, targetLang) {
+    if (!(provider == null ? void 0 : provider.translateText)) {
+      return null;
+    }
+    return provider.translateText(text, targetLang);
+  }
+  async function defineWord(word, context) {
+    if (!(provider == null ? void 0 : provider.defineWord)) {
+      return null;
+    }
+    return provider.defineWord(word, context);
+  }
+  async function extractChartData(imageDataUrl, context) {
+    if (!(provider == null ? void 0 : provider.extractChartData)) {
+      return null;
+    }
+    return provider.extractChartData(imageDataUrl, context);
+  }
 
   // tools/adapters/visual-assist.js
   var VisualAssist = {
@@ -170,17 +200,14 @@
       return css;
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     },
     // Reading guide element and handler
     readingGuideEl: null,
     readingGuideHandler: null,
     enableReadingGuide() {
-      if (this.readingGuideEl)
-        return;
+      if (this.readingGuideEl) return;
       this.readingGuideEl = document.createElement("div");
       this.readingGuideEl.className = "ai4a11y-reading-guide";
       document.body.appendChild(this.readingGuideEl);
@@ -188,8 +215,7 @@
       this.lastMouseY = 0;
       this.readingGuideHandler = (e) => {
         this.lastMouseY = e.clientY;
-        if (this.readingGuideRafPending)
-          return;
+        if (this.readingGuideRafPending) return;
         this.readingGuideRafPending = true;
         requestAnimationFrame(() => {
           this.readingGuideRafPending = false;
@@ -246,8 +272,7 @@
       announce("Dark mode enabled");
     },
     enableCSSFallback() {
-      if (document.getElementById(this.styleId))
-        return;
+      if (document.getElementById(this.styleId)) return;
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
@@ -302,6 +327,7 @@
   var MotionReducer = {
     styleId: "ai4a11y-motion-reducer-styles",
     enabled: false,
+    gifOriginals: null,
     currentSettings: {
       stopAnimations: true,
       pauseVideos: true,
@@ -309,10 +335,10 @@
       disableParallax: true
     },
     enable(options = {}) {
-      if (this.enabled)
-        return;
+      if (this.enabled) return;
       this.currentSettings = { ...this.currentSettings, ...options };
       this.enabled = true;
+      this.gifOriginals = /* @__PURE__ */ new Map();
       const s = this.currentSettings;
       let css = "";
       if (s.stopAnimations) {
@@ -345,10 +371,8 @@
       style.id = this.styleId;
       style.textContent = css;
       document.head.appendChild(style);
-      if (s.pauseVideos)
-        this.pauseAllVideos();
-      if (s.stopGifs)
-        this.stopGifs();
+      if (s.pauseVideos) this.pauseAllVideos();
+      if (s.stopGifs) this.stopGifs();
       const pauseAnimations = (deadline) => {
         const elements = document.querySelectorAll("*");
         let i = 0;
@@ -379,25 +403,31 @@
       announce("Motion reduced");
     },
     disable() {
-      var _a;
-      if (!this.enabled)
-        return;
+      var _a, _b;
+      if (!this.enabled) return;
       this.enabled = false;
       (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
       document.querySelectorAll("[data-ai4a11y-gif-src]").forEach((canvas) => {
-        const img = document.createElement("img");
-        img.src = canvas.dataset.ai4a11yGifSrc;
-        img.alt = canvas.getAttribute("alt") || "";
-        img.className = canvas.className;
-        canvas.replaceWith(img);
+        var _a2;
+        const original = (_a2 = this.gifOriginals) == null ? void 0 : _a2.get(canvas);
+        if (original) {
+          canvas.replaceWith(original);
+        } else {
+          const img = document.createElement("img");
+          img.src = canvas.dataset.ai4a11yGifSrc;
+          img.setAttribute("alt", canvas.getAttribute("aria-label") || "");
+          img.className = canvas.className;
+          canvas.replaceWith(img);
+        }
       });
+      (_b = this.gifOriginals) == null ? void 0 : _b.clear();
       document.querySelectorAll('[style*="animation-play-state"]').forEach((el) => {
         el.style.animationPlayState = "";
       });
-      document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach((video) => {
+      document.querySelectorAll('video[data-ai4a11y-was-playing="true"]').forEach((video) => {
         video.play().catch(() => {
         });
-        delete video.dataset.ai4a11yWasPaused;
+        delete video.dataset.ai4a11yWasPlaying;
       });
       console.log("[AI4A11y] Motion Reducer disabled");
       announce("Motion restored");
@@ -406,7 +436,7 @@
       document.querySelectorAll("video").forEach((video) => {
         if (!video.paused) {
           video.pause();
-          video.dataset.ai4a11yWasPaused = "false";
+          video.dataset.ai4a11yWasPlaying = "true";
         }
       });
       document.querySelectorAll("iframe").forEach((iframe) => {
@@ -421,20 +451,20 @@
     },
     stopGifs() {
       document.querySelectorAll('img[src$=".gif"], img[src*=".gif?"]').forEach((img) => {
-        if (img.dataset.ai4a11yGifStopped)
-          return;
+        if (img.dataset.ai4a11yGifStopped) return;
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth || img.width || 100;
         canvas.height = img.naturalHeight || img.height || 100;
         canvas.className = img.className;
-        canvas.setAttribute("alt", img.alt || "");
+        canvas.setAttribute("aria-label", img.alt || "");
         canvas.setAttribute("role", "img");
         canvas.dataset.ai4a11yGifSrc = img.src;
         const ctx = canvas.getContext("2d");
         const tempImg = new Image();
-        tempImg.crossOrigin = "anonymous";
         tempImg.onload = () => {
+          var _a;
           ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+          (_a = this.gifOriginals) == null ? void 0 : _a.set(canvas, img);
           img.replaceWith(canvas);
           canvas.dataset.ai4a11yGifStopped = "true";
         };
@@ -453,7 +483,7 @@
       }
     }
   };
-  window.__ai4a11yMotionReducer = MotionReducer;
+  if (typeof window !== "undefined") window.__ai4a11yMotionReducer = MotionReducer;
 
   // tools/adapters/focus-mode.js
   var FocusMode = {
@@ -557,8 +587,7 @@
       document.body.appendChild(this.progressEl);
       this.progressRafPending = false;
       this.progressHandler = () => {
-        if (this.progressRafPending)
-          return;
+        if (this.progressRafPending) return;
         this.progressRafPending = true;
         requestAnimationFrame(() => {
           this.progressRafPending = false;
@@ -608,7 +637,7 @@
       highlightColor: "#ffeb3b"
     },
     getVoices() {
-      return speechSynthesis.getVoices();
+      return typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
     },
     setVoice(voiceName) {
       const voices = this.getVoices();
@@ -627,8 +656,7 @@
       }
     },
     speakPage(options = {}) {
-      if (options.rate)
-        this.settings.rate = options.rate;
+      if (options.rate) this.settings.rate = options.rate;
       const main = document.querySelector('main, article, [role="main"], .content, #content');
       const target = main || document.body;
       const text = this.extractReadableText(target);
@@ -644,8 +672,11 @@
     },
     async speak(text) {
       this.stop();
-      if (!text)
+      if (!text) return;
+      if (typeof EasySpeech === "undefined" && typeof speechSynthesis === "undefined") {
+        announce("Text-to-speech is not available in this browser");
         return;
+      }
       this.speaking = true;
       this.paused = false;
       this.words = text.split(/\s+/);
@@ -712,19 +743,19 @@
         console.error("[AI4A11y] Speech error:", event.error);
         this.speaking = false;
       };
-      speechSynthesis.speak(this.utterance);
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.speak(this.utterance);
       console.log("[AI4A11y] Read Aloud started");
       announce("Reading started");
     },
     pause() {
-      if (this.speaking && !this.paused) {
+      if (this.speaking && !this.paused && typeof speechSynthesis !== "undefined") {
         speechSynthesis.pause();
         this.paused = true;
         announce("Reading paused");
       }
     },
     resume() {
-      if (this.paused) {
+      if (this.paused && typeof speechSynthesis !== "undefined") {
         speechSynthesis.resume();
         this.paused = false;
         announce("Reading resumed");
@@ -737,7 +768,7 @@
         } catch (e) {
         }
       }
-      speechSynthesis.cancel();
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
       this.speaking = false;
       this.paused = false;
     },
@@ -764,7 +795,7 @@
       }
     }
   };
-  window.__ai4a11yReadAloud = ReadAloud;
+  if (typeof window !== "undefined") window.__ai4a11yReadAloud = ReadAloud;
 
   // tools/adapters/reader-mode.js
   var ReaderMode = {
@@ -781,6 +812,7 @@
       textColor: "#333"
     },
     enable(options = {}) {
+      if (this.enabled) return;
       if (typeof Readability === "undefined") {
         console.warn("[AI4A11y] Readability library not loaded");
         announce("Reader mode not available");
@@ -848,8 +880,7 @@
       console.log("[AI4A11y] Reader Mode enabled");
       announce("Reader mode enabled. Press Escape to exit.");
       this.escapeHandler = (e) => {
-        if (e.key === "Escape")
-          this.disable();
+        if (e.key === "Escape") this.disable();
       };
       document.addEventListener("keydown", this.escapeHandler);
     },
@@ -919,7 +950,7 @@
       }
     }
   };
-  window.__ai4a11yReaderMode = ReaderMode;
+  if (typeof window !== "undefined") window.__ai4a11yReaderMode = ReaderMode;
 
   // tools/adapters/voice-commands.js
   var VoiceCommands = {
@@ -951,28 +982,22 @@
         const links = Array.from(document.querySelectorAll("a[href]"));
         const current = document.activeElement;
         const idx = links.indexOf(current);
-        if (idx < links.length - 1)
-          links[idx + 1].focus();
-        else if (links.length > 0)
-          links[0].focus();
+        if (idx < links.length - 1) links[idx + 1].focus();
+        else if (links.length > 0) links[0].focus();
       },
       "previous link": () => {
         const links = Array.from(document.querySelectorAll("a[href]"));
         const current = document.activeElement;
         const idx = links.indexOf(current);
-        if (idx > 0)
-          links[idx - 1].focus();
-        else if (links.length > 0)
-          links[links.length - 1].focus();
+        if (idx > 0) links[idx - 1].focus();
+        else if (links.length > 0) links[links.length - 1].focus();
       },
       "next button": () => {
         const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
         const current = document.activeElement;
         const idx = buttons.indexOf(current);
-        if (idx < buttons.length - 1)
-          buttons[idx + 1].focus();
-        else if (buttons.length > 0)
-          buttons[0].focus();
+        if (idx < buttons.length - 1) buttons[idx + 1].focus();
+        else if (buttons.length > 0) buttons[0].focus();
       },
       "read page": () => {
         var _a;
@@ -984,11 +1009,13 @@
       }
     },
     enable(options = {}) {
+      if (this.enabled) return;
       if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
         announce("Voice recognition not supported in this browser");
         return;
       }
       this.settings = { ...this.settings, ...options };
+      this._fatal = false;
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = this.settings.continuous;
@@ -1008,10 +1035,18 @@
         if (event.error !== "no-speech") {
           this.showFeedback(`Error: ${event.error}`, "error");
         }
+        if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
+          this._fatal = true;
+          announce("Voice commands unavailable \u2014 microphone blocked or missing");
+        }
       };
       this.recognition.onend = () => {
-        if (this.enabled)
-          this.recognition.start();
+        if (this.enabled && !this._fatal) {
+          try {
+            this.recognition.start();
+          } catch {
+          }
+        }
       };
       this.createFeedbackElement();
       this.recognition.start();
@@ -1037,8 +1072,7 @@
     },
     createFeedbackElement() {
       var _a;
-      if (this.feedbackElement)
-        return;
+      if (this.feedbackElement) return;
       this.feedbackElement = document.createElement("div");
       this.feedbackElement.id = "ai4a11y-voice-feedback";
       this.feedbackElement.setAttribute("role", "status");
@@ -1074,8 +1108,7 @@
       document.body.appendChild(this.feedbackElement);
     },
     showFeedback(text, type) {
-      if (!this.feedbackElement)
-        return;
+      if (!this.feedbackElement) return;
       const textEl = this.feedbackElement.querySelector(".ai4a11y-voice-text");
       if (textEl) {
         textEl.textContent = text;
@@ -1114,8 +1147,7 @@
       const elements = document.querySelectorAll('a, button, [role="button"], input[type="submit"]');
       for (const el of elements) {
         const elText = (el.textContent || el.value || el.getAttribute("aria-label") || "").toLowerCase();
-        if (elText.includes(text.toLowerCase()))
-          return el;
+        if (elText.includes(text.toLowerCase())) return el;
       }
       return null;
     },
@@ -1123,13 +1155,11 @@
       this.commands[phrase.toLowerCase()] = action;
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
-  window.__ai4a11yVoiceCommands = VoiceCommands;
+  if (typeof window !== "undefined") window.__ai4a11yVoiceCommands = VoiceCommands;
 
   // tools/adapters/keyboard-nav.js
   var KeyboardNavigator = {
@@ -1145,13 +1175,12 @@
       showTabSequence: false
     },
     enable(options = {}) {
+      if (this.enabled) return;
       this.settings = { ...this.settings, ...options };
       this.enabled = true;
       this.injectStyles();
-      if (this.settings.showSkipLinks)
-        this.createSkipLinks();
-      if (this.settings.showTabSequence)
-        this.showTabSequence();
+      if (this.settings.showSkipLinks) this.createSkipLinks();
+      if (this.settings.showTabSequence) this.showTabSequence();
       this.setupKeyboardShortcuts();
       console.log("[AI4A11y] Keyboard Navigator enabled");
       announce("Keyboard navigation enhanced");
@@ -1169,10 +1198,8 @@
       }
       this.modifiedElements.forEach((el) => {
         el.removeAttribute("tabindex");
-        if (el.id === "ai4a11y-main-content")
-          el.removeAttribute("id");
-        if (el.id === "ai4a11y-nav")
-          el.removeAttribute("id");
+        if (el.id === "ai4a11y-main-content") el.removeAttribute("id");
+        if (el.id === "ai4a11y-nav") el.removeAttribute("id");
       });
       this.modifiedElements = [];
       console.log("[AI4A11y] Keyboard Navigator disabled");
@@ -1228,14 +1255,13 @@
       document.head.appendChild(style);
     },
     createSkipLinks() {
-      if (this.skipLinkElement)
-        return;
+      if (this.skipLinkElement) return;
       const container = document.createElement("div");
       container.id = "ai4a11y-skip-links";
       const main = document.querySelector('main, [role="main"], #main, #content, article');
       if (main) {
-        if (!main.id)
-          main.id = "ai4a11y-main-content";
+        if (!main.id) main.id = "ai4a11y-main-content";
+        if (main.id === "ai4a11y-main-content" && !this.modifiedElements.includes(main)) this.modifiedElements.push(main);
         const skipToMain = document.createElement("a");
         skipToMain.href = "#" + main.id;
         skipToMain.className = "ai4a11y-skip-link";
@@ -1243,8 +1269,7 @@
         skipToMain.addEventListener("click", (e) => {
           e.preventDefault();
           main.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(main))
-            this.modifiedElements.push(main);
+          if (!this.modifiedElements.includes(main)) this.modifiedElements.push(main);
           main.focus();
           main.scrollIntoView({ behavior: "smooth" });
         });
@@ -1252,8 +1277,8 @@
       }
       const nav = document.querySelector('nav, [role="navigation"]');
       if (nav) {
-        if (!nav.id)
-          nav.id = "ai4a11y-nav";
+        if (!nav.id) nav.id = "ai4a11y-nav";
+        if (nav.id === "ai4a11y-nav" && !this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
         const skipToNav = document.createElement("a");
         skipToNav.href = "#" + nav.id;
         skipToNav.className = "ai4a11y-skip-link";
@@ -1262,8 +1287,7 @@
         skipToNav.addEventListener("click", (e) => {
           e.preventDefault();
           nav.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(nav))
-            this.modifiedElements.push(nav);
+          if (!this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
           nav.focus();
         });
         container.appendChild(skipToNav);
@@ -1296,49 +1320,40 @@
     },
     setupKeyboardShortcuts() {
       this.shortcutHandler = (e) => {
+        const focusTracked = (el) => {
+          if (!el) return;
+          el.setAttribute("tabindex", "-1");
+          if (!this.modifiedElements.includes(el)) this.modifiedElements.push(el);
+          el.focus();
+          return el;
+        };
         if (e.altKey && e.key === "1") {
           e.preventDefault();
-          const main = document.querySelector('main, [role="main"], #main, #content');
-          if (main) {
-            main.setAttribute("tabindex", "-1");
-            main.focus();
-          }
+          focusTracked(document.querySelector('main, [role="main"], #main, #content'));
         }
         if (e.altKey && e.key === "2") {
           e.preventDefault();
-          const nav = document.querySelector('nav, [role="navigation"]');
-          if (nav) {
-            nav.setAttribute("tabindex", "-1");
-            nav.focus();
-          }
+          focusTracked(document.querySelector('nav, [role="navigation"]'));
         }
         if (e.altKey && e.key === "h") {
           e.preventDefault();
-          const h = document.querySelector("h1, h2, h3");
-          if (h) {
-            h.setAttribute("tabindex", "-1");
-            h.focus();
-            h.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
+          const h = focusTracked(document.querySelector("h1, h2, h3"));
+          if (h) h.scrollIntoView({ behavior: "smooth", block: "center" });
         }
         if (e.altKey && e.key === "f") {
           e.preventDefault();
-          if (this.tabSequenceOverlay)
-            this.hideTabSequence();
-          else
-            this.showTabSequence();
+          if (this.tabSequenceOverlay) this.hideTabSequence();
+          else this.showTabSequence();
         }
       };
       document.addEventListener("keydown", this.shortcutHandler);
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
-  window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
+  if (typeof window !== "undefined") window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
 
   // tools/adapters/color-blind.js
   var ColorBlindMode = {
@@ -1382,8 +1397,7 @@
       announce("Color blind correction removed");
     },
     injectSvgFilters() {
-      if (document.getElementById(this.filterId))
-        return;
+      if (document.getElementById(this.filterId)) return;
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.id = this.filterId;
       svg.setAttribute("style", "position:absolute;width:0;height:0");
@@ -1434,39 +1448,3529 @@
   };
   window.__ai4a11yColorBlindMode = ColorBlindMode;
 
+  // tools/adapters/dismiss-overlays.js
+  var OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
+  function classNameOf(el) {
+    const c = el.className;
+    if (typeof c === "string") return c;
+    if (c && typeof c.baseVal === "string") return c.baseVal;
+    return "";
+  }
+  var DismissOverlays = {
+    styleId: "ai4a11y-dismiss-overlays-styles",
+    hiddenClass: "ai4a11y-overlay-dismissed",
+    enabled: false,
+    hidden: null,
+    // Set of elements we hid (for exact restore)
+    observer: null,
+    prevBodyOverflow: null,
+    prevHtmlOverflow: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.hidden = /* @__PURE__ */ new Set();
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `.${this.hiddenClass} { display: none !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      this.prevBodyOverflow = document.body ? document.body.style.overflow : null;
+      this.prevHtmlOverflow = document.documentElement ? document.documentElement.style.overflow : null;
+      if (document.body && document.body.style.overflow === "hidden") document.body.style.overflow = "";
+      if (document.documentElement && document.documentElement.style.overflow === "hidden") document.documentElement.style.overflow = "";
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Dismiss Overlays enabled (${count} hidden)`);
+      announce(count ? `Hid ${count} popup${count === 1 ? "" : "s"}` : "Watching for popups to hide");
+    },
+    // Scan a root for overlays and hide them; returns how many were hidden.
+    sweep(root) {
+      let n = 0;
+      let candidates;
+      try {
+        candidates = root.querySelectorAll('div, section, aside, dialog, [role="dialog"], [aria-modal="true"]');
+      } catch {
+        return 0;
+      }
+      for (const el of candidates) if (this.consider(el)) n++;
+      return n;
+    },
+    // Hide one element if it looks like a blocking overlay. Returns true if hidden.
+    consider(el) {
+      if (!el || el.nodeType !== 1 || this.hidden.has(el)) return false;
+      if (el.classList && el.classList.contains(this.hiddenClass)) return false;
+      if (!this.isOverlay(el)) {
+        if (el.querySelector) {
+          const inner = this.sweep(el);
+          if (inner) return true;
+        }
+        return false;
+      }
+      el.classList.add(this.hiddenClass);
+      this.hidden.add(el);
+      return true;
+    },
+    isOverlay(el) {
+      if (el.getAttribute && el.getAttribute("aria-modal") === "true") return true;
+      const nameHit = OVERLAY_NAME_RE.test(el.id || "") || OVERLAY_NAME_RE.test(classNameOf(el)) || OVERLAY_NAME_RE.test(el.getAttribute && el.getAttribute("aria-label") || "");
+      if (!nameHit) return false;
+      let pos = "";
+      try {
+        pos = (getComputedStyle(el).position || "").toLowerCase();
+      } catch {
+      }
+      const blocking = pos === "fixed" || pos === "sticky" || el.getAttribute && el.getAttribute("role") === "dialog";
+      return blocking;
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (this.hidden) {
+        for (const el of this.hidden) (_b = el.classList) == null ? void 0 : _b.remove(this.hiddenClass);
+        this.hidden.clear();
+        this.hidden = null;
+      }
+      if (document.body && this.prevBodyOverflow !== null) document.body.style.overflow = this.prevBodyOverflow;
+      if (document.documentElement && this.prevHtmlOverflow !== null) document.documentElement.style.overflow = this.prevHtmlOverflow;
+      this.prevBodyOverflow = this.prevHtmlOverflow = null;
+      console.log("[AI4A11y] Dismiss Overlays disabled");
+      announce("Popups restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yDismissOverlays = DismissOverlays;
+
+  // tools/adapters/big-targets.js
+  var TARGET_SELECTORS = ["a", "button", "input", '[role="button"]', "[onclick]"];
+  var BigTargets = {
+    styleId: "ai4a11y-big-targets-styles",
+    bodyClass: "ai4a11y-big-targets",
+    enabled: false,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const minSize = options.minSize || 44;
+      const gap = options.gap || 6;
+      const scope = (suffix = "") => TARGET_SELECTORS.map((s) => `body.${this.bodyClass} ${s}${suffix}`).join(",\n");
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+${scope()} {
+  min-width: ${minSize}px !important;
+  min-height: ${minSize}px !important;
+  padding: 8px 12px !important;
+  margin: ${gap}px !important;
+  box-sizing: border-box !important;
+}
+/* min-width/height are ignored on inline boxes, and bare links are inline. */
+body.${this.bodyClass} a { display: inline-block !important; }
+${scope(":focus")} {
+  outline: 3px solid #1a73e8 !important;
+  outline-offset: 2px !important;
+}`;
+      (document.head || document.documentElement).appendChild(style);
+      try {
+        if (document.body) document.body.classList.add(this.bodyClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Bigger Click Targets enabled");
+      announce("Click targets enlarged");
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        if (document.body) document.body.classList.remove(this.bodyClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Bigger Click Targets disabled");
+      announce("Click targets restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
+
+  // tools/adapters/link-highlighter.js
+  var LinkHighlighter = {
+    styleId: "ai4a11y-link-highlighter-styles",
+    bodyClass: "ai4a11y-highlight-links",
+    dataAttr: "data-ai4a11y-linkhl",
+    enabled: false,
+    titled: null,
+    // Set of links WE titled (for exact restore)
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.titled = /* @__PURE__ */ new Set();
+      const color = options && options.color || "#0b57d0";
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+      .${this.bodyClass} a[href] {
+        text-decoration: underline !important;
+        text-decoration-thickness: 2px !important;
+        text-underline-offset: 2px !important;
+        font-weight: 600 !important;
+        color: ${color} !important;
+      }
+      .${this.bodyClass} a[href]:focus,
+      .${this.bodyClass} a[href]:focus-visible {
+        outline: 3px solid ${color} !important;
+        outline-offset: 2px !important;
+      }
+    `;
+      (document.head || document.documentElement).appendChild(style);
+      if (document.body) document.body.classList.add(this.bodyClass);
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Link Highlighter enabled (${count} destinations revealed)`);
+      announce(count ? `Links highlighted, ${count} destination${count === 1 ? "" : "s"} revealed` : "Links highlighted");
+    },
+    // Reveal destination hosts for every untitled link under root; returns how
+    // many links were titled.
+    sweep(root) {
+      let n = 0;
+      let links;
+      try {
+        links = root.querySelectorAll("a[href]");
+      } catch {
+        return 0;
+      }
+      for (const a of links) if (this.reveal(a)) n++;
+      return n;
+    },
+    // An added node may itself be a link, or contain links.
+    consider(node) {
+      if (!node || node.nodeType !== 1) return;
+      try {
+        if (node.matches && node.matches("a[href]")) this.reveal(node);
+      } catch {
+      }
+      if (node.querySelectorAll) this.sweep(node);
+    },
+    // Set one link's title to its destination host. Returns true if we titled
+    // it. NEVER overwrites a title the page already set — that text is the
+    // page's own description and must survive disable() untouched.
+    reveal(a) {
+      if (!a || a.nodeType !== 1 || this.titled.has(a)) return false;
+      if (a.hasAttribute("title")) return false;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#")) return false;
+      let host = "";
+      try {
+        host = new URL(href, window.location.href).host;
+      } catch {
+        return false;
+      }
+      if (!host) return false;
+      a.setAttribute("title", host);
+      a.setAttribute(this.dataAttr, "");
+      this.titled.add(a);
+      return true;
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (document.body) document.body.classList.remove(this.bodyClass);
+      if (this.titled) {
+        for (const a of this.titled) {
+          try {
+            a.removeAttribute("title");
+            a.removeAttribute(this.dataAttr);
+          } catch {
+          }
+        }
+        this.titled.clear();
+        this.titled = null;
+      }
+      console.log("[AI4A11y] Link Highlighter disabled");
+      announce("Link highlighting off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yLinkHighlighter = LinkHighlighter;
+
+  // tools/adapters/page-outline.js
+  var PageOutline = {
+    containerId: "ai4a11y-page-outline",
+    enabled: false,
+    addedIds: null,
+    // Set of headings we gave a generated id (for exact restore)
+    addedTabindex: null,
+    // Set of headings we gave tabindex="-1" (for exact restore)
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.addedIds = /* @__PURE__ */ new Set();
+      this.addedTabindex = /* @__PURE__ */ new Set();
+      const selector = options.selector || "h1, h2, h3";
+      let headings = [];
+      try {
+        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
+      } catch {
+      }
+      const nav = document.createElement("nav");
+      nav.id = this.containerId;
+      nav.setAttribute("role", "navigation");
+      nav.setAttribute("aria-label", "Page outline");
+      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
+      if (headings.length === 0) {
+        const note = document.createElement("p");
+        note.textContent = "No headings on this page";
+        nav.appendChild(note);
+      } else {
+        const list = document.createElement("ul");
+        list.style.cssText = "list-style: none; margin: 0; padding: 0;";
+        let n = 0;
+        for (const heading of headings) {
+          if (!heading.id) {
+            let id;
+            do {
+              id = `ai4a11y-outline-h-${n++}`;
+            } while (document.getElementById(id));
+            heading.id = id;
+            this.addedIds.add(heading);
+          }
+          const item = document.createElement("li");
+          const level = Number(heading.tagName[1]) || 1;
+          item.style.paddingLeft = `${(level - 1) * 16}px`;
+          const link = document.createElement("a");
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent.trim();
+          link.addEventListener("click", () => this.jumpTo(heading));
+          item.appendChild(link);
+          list.appendChild(item);
+        }
+        nav.appendChild(list);
+      }
+      try {
+        (document.body || document.documentElement).appendChild(nav);
+      } catch {
+      }
+      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
+      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
+    },
+    // Move both the viewport and keyboard/screen-reader focus to the heading.
+    // Headings aren't focusable by default, so add tabindex="-1" — tracked so
+    // disable() removes it again.
+    jumpTo(heading) {
+      var _a;
+      try {
+        if (!heading.hasAttribute("tabindex")) {
+          heading.setAttribute("tabindex", "-1");
+          (_a = this.addedTabindex) == null ? void 0 : _a.add(heading);
+        }
+        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
+        heading.focus();
+      } catch {
+      }
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      (_a = document.getElementById(this.containerId)) == null ? void 0 : _a.remove();
+      if (this.addedIds) {
+        for (const h of this.addedIds) h.removeAttribute("id");
+        this.addedIds.clear();
+        this.addedIds = null;
+      }
+      if (this.addedTabindex) {
+        for (const h of this.addedTabindex) h.removeAttribute("tabindex");
+        this.addedTabindex.clear();
+        this.addedTabindex = null;
+      }
+      console.log("[AI4A11y] Page Outline disabled");
+      announce("Page outline removed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
+
+  // tools/adapters/_primitives.js
+  function injectStyle(id, css, doc = typeof document !== "undefined" ? document : null) {
+    if (!doc) return { remove() {
+    } };
+    let el = doc.getElementById(id);
+    if (!el) {
+      el = doc.createElement("style");
+      el.id = id;
+      (doc.head || doc.documentElement).appendChild(el);
+    }
+    el.textContent = css;
+    return { el, remove() {
+      var _a;
+      try {
+        (_a = doc.getElementById(id)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+    } };
+  }
+  var DEFAULT_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION"]);
+  var HTML_NS = "http://www.w3.org/1999/xhtml";
+  function transformTextNodes(root, transform, opts = {}) {
+    const doc = root && root.ownerDocument ? root.ownerDocument : typeof document !== "undefined" ? document : null;
+    const records = [];
+    if (!root || !doc) return { records, capped: false, restore() {
+    } };
+    const skipTags = opts.skipTags || DEFAULT_SKIP;
+    const skipClass = opts.skipClass || null;
+    const cap = opts.cap ?? 5e3;
+    const texts = [];
+    const walk = (node) => {
+      for (let child = node.firstChild; child; child = child.nextSibling) {
+        if (child.nodeType === 3) {
+          if (child.nodeValue && child.nodeValue.trim()) texts.push(child);
+        } else if (child.nodeType === 1) {
+          const tag = child.tagName;
+          if (skipTags.has(tag)) continue;
+          if (child.namespaceURI && child.namespaceURI !== HTML_NS) continue;
+          if (child.isContentEditable === true) continue;
+          const ce = child.getAttribute && child.getAttribute("contenteditable");
+          if (ce === "" || ce === "true") continue;
+          if (skipClass && child.classList && child.classList.contains(skipClass)) continue;
+          walk(child);
+        }
+      }
+    };
+    try {
+      walk(root);
+    } catch {
+    }
+    let capped = false;
+    for (const textNode of texts) {
+      if (records.length >= cap) {
+        capped = true;
+        break;
+      }
+      let replacement;
+      try {
+        replacement = transform(textNode.nodeValue, textNode);
+      } catch {
+        replacement = null;
+      }
+      if (!replacement) continue;
+      try {
+        textNode.parentNode.replaceChild(replacement, textNode);
+        records.push({ replacement, original: textNode });
+      } catch {
+      }
+    }
+    return {
+      records,
+      capped,
+      restore() {
+        for (const { replacement, original } of records) {
+          try {
+            if (replacement.parentNode) replacement.parentNode.replaceChild(original, replacement);
+          } catch {
+          }
+        }
+        records.length = 0;
+      }
+    };
+  }
+  function mainRoot(doc = typeof document !== "undefined" ? document : null) {
+    if (!doc) return null;
+    return doc.querySelector('main, article, [role="main"], .content, #content') || doc.body || null;
+  }
+
+  // tools/adapters/bionic-reading.js
+  var MAX_TEXT_NODES = 2e3;
+  var BionicReading = {
+    markerClass: "ai4a11y-bionic",
+    enabled: false,
+    handle: null,
+    // transformTextNodes handle (owns the exact-restore)
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const ratio = typeof options.boldRatio === "number" && options.boldRatio > 0 && options.boldRatio <= 1 ? options.boldRatio : 0.4;
+      const root = mainRoot();
+      if (!root) {
+        announce("Bionic reading: no readable text found");
+        return;
+      }
+      this.handle = transformTextNodes(root, (text) => this.buildSpan(text, ratio), {
+        skipClass: this.markerClass,
+        cap: MAX_TEXT_NODES
+      });
+      const count = this.handle.records.length;
+      if (this.handle.capped) console.log(`[AI4A11y] Bionic Reading: capped at ${MAX_TEXT_NODES} text nodes`);
+      console.log(`[AI4A11y] Bionic Reading enabled (${count} text blocks)`);
+      announce(count ? "Bionic reading on" : "Bionic reading: no readable text found");
+    },
+    // Rebuild one text node's content as a marker <span>, bolding each word's
+    // prefix. Whitespace runs are preserved verbatim.
+    buildSpan(text, ratio) {
+      const span = document.createElement("span");
+      span.className = this.markerClass;
+      for (const part of text.split(/(\s+)/)) {
+        if (!part) continue;
+        if (/\s/.test(part)) span.appendChild(document.createTextNode(part));
+        else this.boldWord(span, part, ratio);
+      }
+      return span;
+    },
+    // One word: <b>prefix</b> + plain text node for the rest.
+    boldWord(span, word, ratio) {
+      const prefixLen = Math.min(word.length, Math.ceil(word.length * ratio));
+      const b = document.createElement("b");
+      b.textContent = word.slice(0, prefixLen);
+      span.appendChild(b);
+      if (prefixLen < word.length) span.appendChild(document.createTextNode(word.slice(prefixLen)));
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.handle) {
+        this.handle.restore();
+        this.handle = null;
+      }
+      console.log("[AI4A11y] Bionic Reading disabled");
+      announce("Bionic reading off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yBionicReading = BionicReading;
+
+  // tools/adapters/unpin-sticky.js
+  var UnpinSticky = {
+    styleId: "ai4a11y-unpin-sticky-styles",
+    unpinnedClass: "ai4a11y-unpinned",
+    enabled: false,
+    unpinned: null,
+    // Set of elements we unpinned (for exact restore)
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.unpinned = /* @__PURE__ */ new Set();
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `.${this.unpinnedClass} { position: static !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) {
+                this.consider(node);
+                if (node.querySelectorAll) this.sweep(node);
+              }
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log(`[AI4A11y] Unpin Sticky Bars enabled (${count} unpinned)`);
+      announce(count ? `Unpinned ${count} sticky bar${count === 1 ? "" : "s"}` : "Watching for sticky bars to unpin");
+    },
+    // Scan a root for pinned elements and unpin them; returns how many.
+    sweep(root) {
+      let n = 0;
+      let candidates;
+      try {
+        candidates = root.querySelectorAll("*");
+      } catch {
+        return 0;
+      }
+      for (const el of candidates) if (this.consider(el)) n++;
+      return n;
+    },
+    // Unpin one element if its computed position is fixed or sticky. Returns
+    // true if unpinned. Never touches our own injected nodes.
+    consider(el) {
+      if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
+      if (el.id === this.styleId) return false;
+      if (el.classList && el.classList.contains(this.unpinnedClass)) return false;
+      let pos = "";
+      try {
+        pos = (getComputedStyle(el).position || "").toLowerCase();
+      } catch {
+        return false;
+      }
+      if (pos !== "fixed" && pos !== "sticky") return false;
+      el.classList.add(this.unpinnedClass);
+      this.unpinned.add(el);
+      return true;
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (this.unpinned) {
+        for (const el of this.unpinned) (_b = el.classList) == null ? void 0 : _b.remove(this.unpinnedClass);
+        this.unpinned.clear();
+        this.unpinned = null;
+      }
+      console.log("[AI4A11y] Unpin Sticky Bars disabled");
+      announce("Sticky bars restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
+
+  // tools/adapters/translate-page.js
+  var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
+  var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
+  var MAX_BLOCKS = 80;
+  var BATCH = 4;
+  var TranslatePage = {
+    enabled: false,
+    translated: null,
+    // Set of { el, originalNodes: Node[] }
+    targetLang: "English",
+    async enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.translated = /* @__PURE__ */ new Set();
+      this.targetLang = options.targetLang || options.lang || "English";
+      const root = document.querySelector('main, article, [role="main"]') || document.body;
+      if (!root) {
+        announce("Nothing to translate");
+        return;
+      }
+      let blocks;
+      try {
+        blocks = [...root.querySelectorAll(BLOCK_SEL)].filter((el) => el.textContent.trim().length > 1 && !el.closest(SKIP_ANCESTOR) && !el.querySelector(BLOCK_SEL));
+      } catch {
+        blocks = [];
+      }
+      const targets = blocks.slice(0, MAX_BLOCKS);
+      if (blocks.length > targets.length) {
+        console.log(`[AI4A11y] Translate: translating ${targets.length} of ${blocks.length} blocks (cost cap)`);
+      }
+      announce(`Translating to ${this.targetLang}\u2026`);
+      let done = 0;
+      for (let i = 0; i < targets.length && this.enabled; i += BATCH) {
+        await Promise.all(targets.slice(i, i + BATCH).map(async (el) => {
+          const original = el.textContent;
+          let out;
+          try {
+            out = await translateText(original, this.targetLang);
+          } catch {
+            return;
+          }
+          if (!out || !this.enabled || !el.isConnected) return;
+          const originalNodes = [...el.childNodes];
+          el.textContent = out;
+          this.translated.add({ el, originalNodes });
+          done++;
+        }));
+      }
+      console.log(`[AI4A11y] Translate Page: ${done} blocks \u2192 ${this.targetLang}`);
+      announce(done ? `Translated ${done} passages to ${this.targetLang}` : "Translation unavailable");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.translated) {
+        for (const { el, originalNodes } of this.translated) {
+          try {
+            if (!el.isConnected) continue;
+            el.textContent = "";
+            for (const node of originalNodes) el.appendChild(node);
+          } catch {
+          }
+        }
+        this.translated.clear();
+        this.translated = null;
+      }
+      announce("Original text restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yTranslatePage = TranslatePage;
+
+  // tools/adapters/mute-sounds.js
+  var MuteSounds = {
+    enabled: false,
+    muted: null,
+    // Set of elements we muted (for exact restore)
+    observer: null,
+    playHandler: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.muted = /* @__PURE__ */ new Set();
+      const count = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.consider(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      this.playHandler = (e) => {
+        if (!this.enabled) return;
+        const el = e.target;
+        if (el && (el.tagName === "VIDEO" || el.tagName === "AUDIO")) this.muteEl(el);
+      };
+      document.addEventListener("play", this.playHandler, true);
+      console.log(`[AI4A11y] Mute Sounds enabled (${count} muted)`);
+      announce(count ? `Muted ${count} sound source${count === 1 ? "" : "s"}` : "Watching for sounds to mute");
+    },
+    // Scan a root for media and mute it; returns how many were muted.
+    sweep(root) {
+      let n = 0;
+      let media;
+      try {
+        media = root.querySelectorAll("video, audio");
+      } catch {
+        return 0;
+      }
+      for (const el of media) if (this.muteEl(el)) n++;
+      return n;
+    },
+    // An added node may itself be media, or contain media (embedded players).
+    consider(node) {
+      if (node.tagName === "VIDEO" || node.tagName === "AUDIO") this.muteEl(node);
+      if (node.querySelectorAll) this.sweep(node);
+    },
+    // Mute one element if it is playing sound the user didn't silence. Only
+    // elements WE mute are tracked, so disable() never un-mutes a user's choice.
+    // No early-return for already-tracked elements: a script may have un-muted
+    // one, and the play listener routes it back here to be re-muted.
+    muteEl(el) {
+      if (!el) return false;
+      try {
+        if (el.muted === false) {
+          el.muted = true;
+          this.muted.add(el);
+          return true;
+        }
+      } catch {
+      }
+      return false;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.playHandler) {
+        document.removeEventListener("play", this.playHandler, true);
+        this.playHandler = null;
+      }
+      if (this.muted) {
+        for (const el of this.muted) {
+          try {
+            el.muted = false;
+          } catch {
+          }
+        }
+        this.muted.clear();
+        this.muted = null;
+      }
+      console.log("[AI4A11y] Mute Sounds disabled");
+      announce("Sounds unmuted");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yMuteSounds = MuteSounds;
+
+  // tools/adapters/define-words.js
+  var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "A", "BUTTON"]);
+  var MAX_WORDS = 500;
+  var STYLE_ID = "ai4a11y-define-styles";
+  var TOOLTIP_ID = "ai4a11y-define-tooltip";
+  var CONTEXT_SEL = "p, li, blockquote, figcaption, dd, dt, td, th, h1, h2, h3, h4, h5, h6";
+  var CONTEXT_CHARS = 200;
+  var DefineWords = {
+    markerClass: "ai4a11y-define",
+    // the per-word interactive spans
+    wrapperClass: "ai4a11y-define-wrap",
+    // the text-node replacement wrappers
+    enabled: false,
+    wrapped: null,
+    // Set of { span (wrapper), originalNode } (for exact restore)
+    definitions: null,
+    // Map lowercased word -> definition (null cached too, so a dead provider isn't re-asked)
+    showHandler: null,
+    hideHandler: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.wrapped = /* @__PURE__ */ new Set();
+      this.definitions = /* @__PURE__ */ new Map();
+      const minLength = typeof options.minLength === "number" && options.minLength > 0 ? options.minLength : 8;
+      let root = null;
+      try {
+        root = document.querySelector('main, article, [role="main"]') || document.body;
+      } catch {
+      }
+      if (!root) {
+        console.log("[AI4A11y] Define Words: no content root found");
+        announce("Define words: no readable text found");
+        return;
+      }
+      const textNodes = [];
+      try {
+        this.collect(root, textNodes);
+      } catch {
+      }
+      let count = 0;
+      for (const textNode of textNodes) {
+        if (count >= MAX_WORDS) break;
+        try {
+          const parent = textNode.parentNode;
+          if (!parent) continue;
+          const built = this.buildWrapper(textNode.nodeValue, minLength, MAX_WORDS - count);
+          if (!built) continue;
+          parent.replaceChild(built.wrap, textNode);
+          this.wrapped.add({ span: built.wrap, originalNode: textNode });
+          count += built.wrappedCount;
+        } catch {
+        }
+      }
+      if (count >= MAX_WORDS) console.log(`[AI4A11y] Define Words: capped at ${MAX_WORDS} words`);
+      this.injectStyles();
+      this.showHandler = (e) => this.handleShow(e);
+      this.hideHandler = (e) => this.handleHide(e);
+      document.addEventListener("mouseover", this.showHandler);
+      document.addEventListener("focusin", this.showHandler);
+      document.addEventListener("mouseout", this.hideHandler);
+      document.addEventListener("focusout", this.hideHandler);
+      console.log(`[AI4A11y] Define Words enabled (${count} words)`);
+      announce(count ? "Word definitions on: hover or focus an underlined word" : "Define words: no long words found");
+    },
+    // Depth-first text-node collection under root, skipping SKIP_TAGS subtrees
+    // and wrappers we already built.
+    collect(el, out) {
+      for (const node of el.childNodes) {
+        if (node.nodeType === 3) {
+          if (/\S/.test(node.nodeValue)) out.push(node);
+        } else if (node.nodeType === 1 && !SKIP_TAGS.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass))) {
+          this.collect(node, out);
+        }
+      }
+    },
+    // Rebuild one text node as a wrapper <span>: qualifying words (alphabetic,
+    // long enough, within budget) become interactive spans; everything else —
+    // short words, punctuation, whitespace — is re-emitted verbatim as text.
+    // Returns null when nothing qualified, so the caller leaves the node alone.
+    buildWrapper(text, minLength, budget) {
+      const wrap = document.createElement("span");
+      wrap.className = this.wrapperClass;
+      let last = 0, wrappedCount = 0;
+      const re = /[A-Za-z]+/g;
+      let m;
+      while (m = re.exec(text)) {
+        if (m[0].length < minLength || wrappedCount >= budget) continue;
+        if (m.index > last) wrap.appendChild(document.createTextNode(text.slice(last, m.index)));
+        wrap.appendChild(this.buildWordSpan(m[0]));
+        last = m.index + m[0].length;
+        wrappedCount++;
+      }
+      if (!wrappedCount) return null;
+      if (last < text.length) wrap.appendChild(document.createTextNode(text.slice(last)));
+      return { wrap, wrappedCount };
+    },
+    buildWordSpan(word) {
+      const span = document.createElement("span");
+      span.className = this.markerClass;
+      span.setAttribute("tabindex", "0");
+      span.setAttribute("role", "button");
+      span.setAttribute("aria-label", `Define ${word}`);
+      span.textContent = word;
+      return span;
+    },
+    injectStyles() {
+      try {
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+        .${this.markerClass} {
+          text-decoration: underline dotted;
+          text-underline-offset: 2px;
+          cursor: help;
+        }
+        .${this.markerClass}:focus {
+          outline: 2px solid #4A90D9;
+          outline-offset: 1px;
+        }
+        #${TOOLTIP_ID} {
+          position: absolute;
+          z-index: 2147483647;
+          max-width: 320px;
+          padding: 8px 10px;
+          background: #1c1c1e;
+          color: #ffffff;
+          font: 14px/1.4 system-ui, sans-serif;
+          border-radius: 6px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+          pointer-events: none;
+        }`;
+        (document.head || document.documentElement).appendChild(style);
+      } catch {
+      }
+    },
+    handleShow(event) {
+      try {
+        const target = event.target;
+        const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+        if (span) this.showDefinition(span).catch(() => {
+        });
+      } catch {
+      }
+    },
+    handleHide(event) {
+      try {
+        const target = event.target;
+        if (target && target.closest && target.closest(`.${this.markerClass}`)) this.hideTooltip();
+      } catch {
+      }
+    },
+    async showDefinition(span) {
+      if (!this.enabled || !this.definitions) return;
+      const word = (span.textContent || "").trim();
+      if (!word) return;
+      const key = word.toLowerCase();
+      let def;
+      if (this.definitions.has(key)) {
+        def = this.definitions.get(key);
+      } else {
+        let def2;
+        try {
+          def2 = await defineWord(word, this.sentenceContext(span));
+        } catch {
+          def2 = null;
+        }
+        if (!this.enabled || !this.definitions) return;
+        this.definitions.set(key, def2 || null);
+        def = def2;
+      }
+      if (!def) return;
+      this.showTooltip(span, def);
+    },
+    // The surrounding sentence(s) for the AI prompt: the enclosing text block's
+    // content, whitespace-collapsed and truncated to a bounded prompt size.
+    sentenceContext(span) {
+      try {
+        const block = span.closest(CONTEXT_SEL) || span.parentNode;
+        return ((block == null ? void 0 : block.textContent) || "").replace(/\s+/g, " ").trim().slice(0, CONTEXT_CHARS);
+      } catch {
+        return "";
+      }
+    },
+    showTooltip(span, text) {
+      try {
+        let tip = document.getElementById(TOOLTIP_ID);
+        if (!tip) {
+          tip = document.createElement("div");
+          tip.id = TOOLTIP_ID;
+          tip.setAttribute("role", "tooltip");
+          document.body.appendChild(tip);
+        }
+        tip.textContent = text;
+        const rect = span.getBoundingClientRect();
+        tip.style.left = `${Math.max(0, rect.left + (window.scrollX || 0))}px`;
+        tip.style.top = `${rect.bottom + (window.scrollY || 0) + 6}px`;
+        tip.style.display = "block";
+      } catch {
+      }
+    },
+    hideTooltip() {
+      try {
+        const tip = document.getElementById(TOOLTIP_ID);
+        if (tip) tip.style.display = "none";
+      } catch {
+      }
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.showHandler) {
+        document.removeEventListener("mouseover", this.showHandler);
+        document.removeEventListener("focusin", this.showHandler);
+        this.showHandler = null;
+      }
+      if (this.hideHandler) {
+        document.removeEventListener("mouseout", this.hideHandler);
+        document.removeEventListener("focusout", this.hideHandler);
+        this.hideHandler = null;
+      }
+      try {
+        (_a = document.getElementById(TOOLTIP_ID)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(STYLE_ID)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      if (this.wrapped) {
+        for (const { span, originalNode } of this.wrapped) {
+          try {
+            (_c = span.parentNode) == null ? void 0 : _c.replaceChild(originalNode, span);
+          } catch {
+          }
+        }
+        this.wrapped.clear();
+        this.wrapped = null;
+      }
+      if (this.definitions) {
+        this.definitions.clear();
+        this.definitions = null;
+      }
+      console.log("[AI4A11y] Define Words disabled");
+      announce("Word definitions off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yDefineWords = DefineWords;
+
+  // tools/adapters/stop-auto-advance.js
+  var CAROUSEL_SELECTOR = '[class*="carousel"], [class*="slider"], [class*="rotat"], [class*="ticker"], [class*="marquee"], [aria-roledescription="carousel"]';
+  var StopAutoAdvance = {
+    styleId: "ai4a11y-stop-autoadvance-styles",
+    enabled: false,
+    removedMetas: null,
+    // Array of { node, parent, nextSibling } for exact restore
+    pausedMedia: null,
+    // Set of media elements we paused (resume exactly these)
+    stoppedMarquees: null,
+    // Set of <marquee> elements we stopped
+    observer: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.removedMetas = [];
+      this.pausedMedia = /* @__PURE__ */ new Set();
+      this.stoppedMarquees = /* @__PURE__ */ new Set();
+      let metas = [];
+      try {
+        metas = Array.from(document.querySelectorAll("meta[http-equiv]"));
+      } catch {
+      }
+      for (const meta of metas) {
+        try {
+          if ((meta.getAttribute("http-equiv") || "").trim().toLowerCase() !== "refresh") continue;
+          this.removedMetas.push({ node: meta, parent: meta.parentNode, nextSibling: meta.nextSibling });
+          meta.remove();
+        } catch {
+        }
+      }
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      const descendants = CAROUSEL_SELECTOR.split(", ").map((s) => `${s} *`).join(", ");
+      style.textContent = `${CAROUSEL_SELECTOR}, ${descendants} { animation-play-state: paused !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      const stilled = this.sweep(document);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) this.considerLate(node);
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      const total = this.removedMetas.length + stilled;
+      console.log(`[AI4A11y] Stop Auto-Advance enabled (${total} stopped)`);
+      announce(total ? `Stopped ${total} auto-advancing item${total === 1 ? "" : "s"}; carousels paused` : "Paused carousels; watching for auto-playing media");
+    },
+    // Still every playing media element and running marquee under root.
+    // Returns how many were stopped.
+    sweep(root) {
+      let n = 0;
+      let media = [];
+      try {
+        media = root.querySelectorAll("video, audio");
+      } catch {
+        return 0;
+      }
+      for (const el of media) if (this.considerMedia(el)) n++;
+      let marquees = [];
+      try {
+        marquees = root.querySelectorAll("marquee");
+      } catch {
+        return n;
+      }
+      for (const el of marquees) if (this.considerMarquee(el)) n++;
+      return n;
+    },
+    // Pause one media element if it is currently playing. Returns true if we
+    // paused it (and will therefore resume it on disable).
+    considerMedia(el) {
+      try {
+        if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
+        if (typeof el.pause === "function") el.pause();
+        this.pausedMedia.add(el);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    considerMarquee(el) {
+      try {
+        if (!el || this.stoppedMarquees.has(el)) return false;
+        if (typeof el.stop === "function") el.stop();
+        this.stoppedMarquees.add(el);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    // A node added after enable: still it if it is itself media/marquee,
+    // otherwise sweep whatever it contains.
+    considerLate(el) {
+      const tag = (el.tagName || "").toLowerCase();
+      if (tag === "video" || tag === "audio") {
+        this.considerMedia(el);
+        return;
+      }
+      if (tag === "marquee") {
+        this.considerMarquee(el);
+        return;
+      }
+      if (el.querySelectorAll) this.sweep(el);
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      if (this.removedMetas) {
+        for (const { node, parent, nextSibling } of this.removedMetas) {
+          if (!parent) continue;
+          try {
+            parent.insertBefore(node, nextSibling);
+          } catch {
+            try {
+              parent.appendChild(node);
+            } catch {
+            }
+          }
+        }
+        this.removedMetas = null;
+      }
+      if (this.pausedMedia) {
+        for (const el of this.pausedMedia) {
+          try {
+            if (typeof el.play === "function") (_c = (_b = el.play()) == null ? void 0 : _b.catch) == null ? void 0 : _c.call(_b, () => {
+            });
+          } catch {
+          }
+        }
+        this.pausedMedia.clear();
+        this.pausedMedia = null;
+      }
+      if (this.stoppedMarquees) {
+        for (const el of this.stoppedMarquees) {
+          try {
+            if (typeof el.start === "function") el.start();
+          } catch {
+          }
+        }
+        this.stoppedMarquees.clear();
+        this.stoppedMarquees = null;
+      }
+      console.log("[AI4A11y] Stop Auto-Advance disabled");
+      announce("Auto-advancing content resumed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yStopAutoAdvance = StopAutoAdvance;
+
+  // tools/adapters/reduce-brightness.js
+  var ReduceBrightness = {
+    styleId: "ai4a11y-reduce-brightness-styles",
+    htmlClass: "ai4a11y-dimmed",
+    overlayId: "ai4a11y-dim-overlay",
+    enabled: false,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const bright = options.brightness ?? 0.82;
+      const sat = options.saturation ?? 0.9;
+      const dimLevel = options.dim ?? 0;
+      try {
+        document.documentElement.classList.add(this.htmlClass);
+      } catch {
+      }
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
+      (document.head || document.documentElement).appendChild(style);
+      if (dimLevel > 0) {
+        const overlay = document.createElement("div");
+        overlay.id = this.overlayId;
+        overlay.setAttribute("aria-hidden", "true");
+        overlay.style.position = "fixed";
+        overlay.style.inset = "0";
+        overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
+        overlay.style.pointerEvents = "none";
+        overlay.style.zIndex = "2147483646";
+        (document.body || document.documentElement).appendChild(overlay);
+      }
+      console.log("[AI4A11y] Reduce Brightness enabled");
+      announce("Screen dimmed");
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        (_a = document.documentElement) == null ? void 0 : _a.classList.remove(this.htmlClass);
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      try {
+        (_c = document.getElementById(this.overlayId)) == null ? void 0 : _c.remove();
+      } catch {
+      }
+      console.log("[AI4A11y] Reduce Brightness disabled");
+      announce("Screen brightness restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReduceBrightness = ReduceBrightness;
+
+  // tools/adapters/sound-visualizer.js
+  var INDICATOR_ID = "ai4a11y-sound-indicator";
+  var FLASH_MS = 1200;
+  function isAudible(el) {
+    if (!el || !el.tagName) return false;
+    const tag = el.tagName.toUpperCase();
+    if (tag !== "VIDEO" && tag !== "AUDIO") return false;
+    return el.muted !== true && el.volume > 0;
+  }
+  var SoundVisualizer = {
+    enabled: false,
+    indicator: null,
+    playHandler: null,
+    volumeHandler: null,
+    hideTimer: null,
+    flashMs: FLASH_MS,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.flashMs = Number(options.duration) > 0 ? Number(options.duration) : FLASH_MS;
+      const indicator = document.createElement("div");
+      indicator.id = INDICATOR_ID;
+      indicator.setAttribute("role", "status");
+      indicator.setAttribute("aria-live", "polite");
+      indicator.style.cssText = "position: fixed; top: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; border-radius: 8px;background: rgba(0, 0, 0, 0.85); color: #fff;font: 600 15px/1.2 system-ui, sans-serif;pointer-events: none; display: none;";
+      (document.body || document.documentElement).appendChild(indicator);
+      this.indicator = indicator;
+      this.playHandler = (e) => {
+        if (!this.enabled) return;
+        if (isAudible(e.target)) this.flash();
+      };
+      this.volumeHandler = (e) => {
+        if (!this.enabled) return;
+        if (isAudible(e.target) && e.target.paused === false) this.flash();
+      };
+      document.addEventListener("play", this.playHandler, true);
+      document.addEventListener("volumechange", this.volumeHandler, true);
+      console.log("[AI4A11y] Sound Visualizer enabled");
+      announce("Sound indicator on \u2014 a visual cue will flash when the page plays sound");
+    },
+    // Show the indicator, restarting the auto-hide window on every new cue.
+    flash() {
+      if (!this.indicator) return;
+      this.indicator.textContent = "\u{1F50A} Sound playing";
+      this.indicator.style.display = "block";
+      if (this.hideTimer) clearTimeout(this.hideTimer);
+      this.hideTimer = setTimeout(() => {
+        this.hideTimer = null;
+        if (this.indicator) this.indicator.style.display = "none";
+      }, this.flashMs);
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        if (this.playHandler) document.removeEventListener("play", this.playHandler, true);
+        if (this.volumeHandler) document.removeEventListener("volumechange", this.volumeHandler, true);
+      } catch {
+      }
+      this.playHandler = this.volumeHandler = null;
+      if (this.hideTimer) {
+        clearTimeout(this.hideTimer);
+        this.hideTimer = null;
+      }
+      (_a = this.indicator) == null ? void 0 : _a.remove();
+      this.indicator = null;
+      console.log("[AI4A11y] Sound Visualizer disabled");
+      announce("Sound indicator off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySoundVisualizer = SoundVisualizer;
+
+  // tools/adapters/live-region-announcer.js
+  var REGION_ID = "ai4a11y-live-region";
+  var MAX_ANNOUNCE_CHARS = 200;
+  var LiveRegionAnnouncer = {
+    regionId: REGION_ID,
+    enabled: false,
+    region: null,
+    observer: null,
+    debounceMs: 300,
+    debounceTimer: null,
+    pending: "",
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.debounceMs = options.debounceMs ?? 300;
+      this.pending = "";
+      const region = document.createElement("div");
+      region.id = REGION_ID;
+      region.setAttribute("aria-live", "polite");
+      region.setAttribute("aria-atomic", "false");
+      region.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      (document.body || document.documentElement).appendChild(region);
+      this.region = region;
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          this.onMutations(mutations);
+        });
+        const target = document.querySelector('main, [role="main"]') || document.body;
+        if (target) this.observer.observe(target, { childList: true, subtree: true, characterData: false });
+      }
+      console.log("[AI4A11y] Live-Region Announcer enabled");
+      announce("Announcing page updates");
+    },
+    onMutations(mutations) {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType !== 1) continue;
+          const text = this.summarize(node);
+          if (!text) continue;
+          if (this.isUrgent(node)) this.speak(text);
+          else {
+            this.pending = text;
+            this.schedule();
+          }
+        }
+      }
+    },
+    // Short spoken summary of an inserted element, or '' if it isn't worth
+    // announcing (our own region, scripts/styles, near-empty nodes).
+    summarize(el) {
+      if (!el || el.nodeType !== 1) return "";
+      if (this.region && (this.region.contains(el) || el.contains && el.contains(this.region))) return "";
+      const tag = el.tagName;
+      if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "TEMPLATE") return "";
+      let text = (el.textContent || "").replace(/\s+/g, " ").trim();
+      if (text.length < 3) return "";
+      if (text.length > MAX_ANNOUNCE_CHARS) text = text.slice(0, MAX_ANNOUNCE_CHARS - 1) + "\u2026";
+      return text;
+    },
+    // The page already marked this node as an announcement — speak it now.
+    isUrgent(el) {
+      if (!el.getAttribute) return false;
+      const role = el.getAttribute("role");
+      return role === "alert" || role === "status" || el.hasAttribute("aria-live");
+    },
+    speak(text) {
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = null;
+      }
+      this.pending = "";
+      if (this.region) this.region.textContent = text;
+    },
+    schedule() {
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
+        this.debounceTimer = null;
+        if (!this.enabled || !this.region || !this.pending) return;
+        this.region.textContent = this.pending;
+        this.pending = "";
+      }, this.debounceMs);
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = null;
+      }
+      this.pending = "";
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      try {
+        (_a = this.region || document.getElementById(REGION_ID)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      this.region = null;
+      console.log("[AI4A11y] Live-Region Announcer disabled");
+      announce("Stopped announcing page updates");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yLiveRegionAnnouncer = LiveRegionAnnouncer;
+
+  // tools/adapters/magnifier.js
+  var Magnifier = {
+    lensId: "ai4a11y-magnifier",
+    enabled: false,
+    lens: null,
+    moveHandler: null,
+    // ref kept so disable() can remove the exact listener
+    leaveHandler: null,
+    rafId: null,
+    lastEvent: null,
+    lastUpdate: 0,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const fontSize = Number(options.fontSize) || 32;
+      const lens = document.createElement("div");
+      lens.id = this.lensId;
+      lens.setAttribute("aria-hidden", "true");
+      lens.style.cssText = `
+      display: none;
+      position: fixed;
+      max-width: min(60vw, 640px);
+      padding: 12px 18px;
+      font-size: ${fontSize}px;
+      line-height: 1.35;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #ffffff;
+      background: #111111;
+      border: 2px solid #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+      overflow-wrap: break-word;
+      pointer-events: none;
+      z-index: 2147483646;
+    `;
+      (document.body || document.documentElement).appendChild(lens);
+      this.lens = lens;
+      this.moveHandler = (e) => this.onMove(e);
+      this.leaveHandler = () => this.hide();
+      document.addEventListener("mousemove", this.moveHandler, { passive: true });
+      document.addEventListener("mouseleave", this.leaveHandler);
+      console.log("[AI4A11y] Magnifier enabled");
+      announce("Magnifier on. Move the pointer over text to enlarge it");
+    },
+    // Coalesce the mousemove firehose into one lens update per frame (or a
+    // ~30ms gate where requestAnimationFrame doesn't exist).
+    onMove(e) {
+      if (!this.enabled) return;
+      this.lastEvent = e;
+      if (typeof requestAnimationFrame === "function") {
+        if (this.rafId !== null) return;
+        this.rafId = requestAnimationFrame(() => {
+          this.rafId = null;
+          this.update();
+        });
+      } else {
+        const now = Date.now();
+        if (now - this.lastUpdate < 30) return;
+        this.lastUpdate = now;
+        this.update();
+      }
+    },
+    update() {
+      const lens = this.lens;
+      const e = this.lastEvent;
+      if (!this.enabled || !lens || !e) return;
+      try {
+        if (typeof document.elementFromPoint !== "function") return;
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        if (!el || el === lens || lens.contains(el)) return;
+        const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+        if (!text) {
+          this.hide();
+          return;
+        }
+        lens.textContent = text.length > 180 ? `${text.slice(0, 180)}\u2026` : text;
+        lens.style.display = "block";
+        this.position(e.clientX, e.clientY);
+      } catch {
+      }
+    },
+    // Offset the lens from the cursor, flipping to the other side rather than
+    // running off the viewport edge.
+    position(x, y) {
+      const lens = this.lens;
+      if (!lens) return;
+      const vw = window.innerWidth || 1024;
+      const vh = window.innerHeight || 768;
+      let w = 0, h = 0;
+      try {
+        const r = lens.getBoundingClientRect();
+        w = r.width || 0;
+        h = r.height || 0;
+      } catch {
+      }
+      let left = x + 24;
+      let top = y + 24;
+      if (left + w > vw) left = Math.max(8, x - w - 24);
+      if (top + h > vh) top = Math.max(8, y - h - 24);
+      lens.style.left = `${left}px`;
+      lens.style.top = `${top}px`;
+    },
+    hide() {
+      if (this.lens) this.lens.style.display = "none";
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.moveHandler) {
+        document.removeEventListener("mousemove", this.moveHandler);
+        this.moveHandler = null;
+      }
+      if (this.leaveHandler) {
+        document.removeEventListener("mouseleave", this.leaveHandler);
+        this.leaveHandler = null;
+      }
+      if (this.rafId !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+      this.lastEvent = null;
+      this.lastUpdate = 0;
+      (_a = document.getElementById(this.lensId)) == null ? void 0 : _a.remove();
+      this.lens = null;
+      console.log("[AI4A11y] Magnifier disabled");
+      announce("Magnifier off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yMagnifier = Magnifier;
+
+  // tools/adapters/flash-guard.js
+  var FlashGuard = {
+    styleId: "ai4a11y-flash-guard-styles",
+    enabled: false,
+    tracked: null,
+    // Set of { video, hadAutoplay, wasPlaying } for exact restore
+    observer: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.tracked = /* @__PURE__ */ new Set();
+      document.querySelectorAll("video").forEach((video) => this.guardVideo(video));
+      const style = document.createElement("style");
+      style.id = this.styleId;
+      style.textContent = `
+      video, canvas, img[src*=".gif"], img[src$=".gif"], [class*="gif"] {
+        filter: brightness(0.8) contrast(0.85) !important;
+      }
+    `;
+      (document.head || document.documentElement).appendChild(style);
+      if (typeof MutationObserver !== "undefined") {
+        this.observer = new MutationObserver((mutations) => {
+          if (!this.enabled) return;
+          for (const m of mutations) {
+            for (const node of m.addedNodes) {
+              if (node.nodeType !== 1) continue;
+              if (node.tagName === "VIDEO") this.guardVideo(node);
+              if (node.querySelectorAll) {
+                node.querySelectorAll("video").forEach((v) => this.guardVideo(v));
+              }
+            }
+          }
+        });
+        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      }
+      console.log("[AI4A11y] Flash Guard enabled");
+      announce("Flash protection on: videos paused and media dimmed");
+    },
+    // Pause one video and strip its autoplay, recording prior state for restore.
+    guardVideo(video) {
+      if (!video || !this.tracked) return;
+      for (const t of this.tracked) if (t.video === video) return;
+      try {
+        this.tracked.add({
+          video,
+          hadAutoplay: video.hasAttribute("autoplay"),
+          wasPlaying: !video.paused
+        });
+        video.pause();
+        video.removeAttribute("autoplay");
+        video.autoplay = false;
+      } catch (e) {
+      }
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (this.tracked) {
+        for (const { video, hadAutoplay, wasPlaying } of this.tracked) {
+          try {
+            if (hadAutoplay) {
+              video.setAttribute("autoplay", "");
+              video.autoplay = true;
+            }
+            if (wasPlaying) {
+              const p = video.play();
+              if (p && p.catch) p.catch(() => {
+              });
+            }
+          } catch (e) {
+          }
+        }
+        this.tracked.clear();
+        this.tracked = null;
+      }
+      console.log("[AI4A11y] Flash Guard disabled");
+      announce("Flash protection off: media restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFlashGuard = FlashGuard;
+
+  // tools/utils/image.js
+  async function imageToDataUrl(img) {
+    var _a, _b;
+    if (((_a = img.src) == null ? void 0 : _a.startsWith("data:")) || ((_b = img.src) == null ? void 0 : _b.startsWith("blob:"))) {
+      return img.src;
+    }
+    try {
+      const response = await fetch(img.src);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return imageToCanvas(img);
+    }
+  }
+  function imageToCanvas(img) {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    try {
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch (e) {
+      console.warn("[AI4A11y] Canvas tainted, cannot export:", e);
+      return null;
+    }
+  }
+  function getImageSize(img) {
+    return {
+      width: img.naturalWidth || img.width || 0,
+      height: img.naturalHeight || img.height || 0
+    };
+  }
+  function isLikelyDecorative(img) {
+    const { width, height } = getImageSize(img);
+    if (width < 20 && height < 20) return true;
+    if (width === 1 && height === 1) return true;
+    if (img.getAttribute("role") === "presentation") return true;
+    if (img.getAttribute("role") === "none") return true;
+    return false;
+  }
+
+  // tools/adapters/describe-on-demand.js
+  var DescribeOnDemand = {
+    styleId: "ai4a11y-describe-styles",
+    enabled: false,
+    panel: null,
+    live: null,
+    lastHover: null,
+    _reqSeq: 0,
+    _keyHandler: null,
+    _clickHandler: null,
+    _moveHandler: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      injectStyle(this.styleId, `
+      #ai4a11y-describe-panel {
+        position: fixed; bottom: 16px; right: 16px; max-width: 360px; z-index: 2147483647;
+        background: #10141a; color: #f2f5f9; border: 2px solid #1a73e8; border-radius: 10px;
+        padding: 12px 14px; font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+      }
+      #ai4a11y-describe-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
+      #ai4a11y-describe-panel .ai4a11y-describe-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+    `);
+      this.live = document.createElement("div");
+      this.live.id = "ai4a11y-describe-live";
+      this.live.setAttribute("aria-live", "polite");
+      this.live.setAttribute("aria-atomic", "true");
+      this.live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      (document.body || document.documentElement).appendChild(this.live);
+      this._keyHandler = (e) => {
+        if (e.altKey && e.code === "KeyD") {
+          e.preventDefault();
+          this.describe(this.target());
+        }
+        if (e.key === "Escape") this.hide();
+      };
+      document.addEventListener("keydown", this._keyHandler, true);
+      this._clickHandler = (e) => {
+        if (e.altKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.describe(e.target);
+        }
+      };
+      document.addEventListener("click", this._clickHandler, true);
+      this._moveHandler = (e) => {
+        this.lastHover = e.target;
+      };
+      document.addEventListener("mouseover", this._moveHandler, true);
+      announce("Describe on demand ready. Press Alt plus D to describe the focused element, or Alt-click one.");
+    },
+    target() {
+      const a = document.activeElement;
+      if (a && a !== document.body && a !== document.documentElement) return a;
+      return this.lastHover;
+    },
+    async describe(el) {
+      if (!el || el === document.body || el === document.documentElement) {
+        this.show("Focus or point at an element first, then press Alt+D.");
+        return;
+      }
+      const token = ++this._reqSeq;
+      this.show("Describing\u2026");
+      let desc = null, errMsg = null;
+      try {
+        if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
+          const dataUrl = await imageToDataUrl(el);
+          desc = dataUrl ? await describeImage(dataUrl) : null;
+        } else if (el.tagName === "CANVAS" && typeof el.toDataURL === "function") {
+          let dataUrl = null;
+          try {
+            dataUrl = el.toDataURL();
+          } catch {
+            dataUrl = null;
+          }
+          desc = dataUrl ? await describeImage(dataUrl) : null;
+        } else {
+          const label = el.getAttribute && (el.getAttribute("aria-label") || el.getAttribute("title")) || "";
+          const text = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+          if (text.length > 60) desc = await summarizeText(text);
+          else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
+        }
+      } catch (e) {
+        desc = null;
+        errMsg = e && e.message ? e.message : null;
+      }
+      if (token !== this._reqSeq) return;
+      this.show(desc || errMsg || "No description is available for that element.");
+    },
+    show(text) {
+      if (!this.panel) {
+        this.panel = document.createElement("div");
+        this.panel.id = "ai4a11y-describe-panel";
+        this.panel.setAttribute("role", "dialog");
+        this.panel.setAttribute("aria-label", "Element description");
+        const h = document.createElement("h2");
+        h.textContent = "Description";
+        const close = document.createElement("button");
+        close.className = "ai4a11y-describe-close";
+        close.setAttribute("aria-label", "Close description");
+        close.textContent = "\u2715";
+        close.addEventListener("click", () => this.hide());
+        const body = document.createElement("p");
+        body.className = "ai4a11y-describe-body";
+        body.style.margin = "0";
+        this.panel.append(close, h, body);
+        (document.body || document.documentElement).appendChild(this.panel);
+      }
+      this.panel.querySelector(".ai4a11y-describe-body").textContent = text;
+      this.panel.style.display = "block";
+      if (this.live) this.live.textContent = text;
+    },
+    hide() {
+      if (this.panel) this.panel.style.display = "none";
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this._keyHandler) document.removeEventListener("keydown", this._keyHandler, true);
+      if (this._clickHandler) document.removeEventListener("click", this._clickHandler, true);
+      if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
+      this._keyHandler = this._clickHandler = this._moveHandler = null;
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      (_b = this.panel) == null ? void 0 : _b.remove();
+      this.panel = null;
+      (_c = this.live) == null ? void 0 : _c.remove();
+      this.live = null;
+      this.lastHover = null;
+      announce("Describe on demand off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yDescribeOnDemand = DescribeOnDemand;
+
+  // tools/adapters/reflow-column.js
+  var ReflowColumn = {
+    styleId: "ai4a11y-reflow-column-styles",
+    rootClass: "ai4a11y-reflow",
+    enabled: false,
+    style: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const width = options.width || 720;
+      const scope = `html.${this.rootClass}`;
+      this.style = injectStyle(this.styleId, `
+${scope} body {
+  max-width: ${width}px !important;
+  margin: 0 auto !important;
+}
+/* Floats and CSS multi-column are what put content side by side. */
+${scope} * {
+  float: none !important;
+  column-count: 1 !important;
+}
+/* Linearize the common layout containers so rows stack into one column. */
+${scope} [style*="display: flex"],
+${scope} [style*="display:flex"],
+${scope} [style*="display: grid"],
+${scope} [style*="display:grid"],
+${scope} main,
+${scope} section,
+${scope} article {
+  display: block !important;
+  max-width: 100% !important;
+}
+/* Media and tables must shrink to the column, never widen it. */
+${scope} img,
+${scope} video,
+${scope} table {
+  max-width: 100% !important;
+  height: auto !important;
+}`);
+      try {
+        document.documentElement.classList.add(this.rootClass);
+      } catch {
+      }
+      console.log("[AI4A11y] Reflow enabled");
+      announce("Page reflowed into a single column");
+    },
+    disable() {
+      var _a, _b;
+      if (!this.enabled) return;
+      this.enabled = false;
+      try {
+        document.documentElement.classList.remove(this.rootClass);
+      } catch {
+      }
+      try {
+        (_a = this.style) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      try {
+        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      } catch {
+      }
+      this.style = null;
+      console.log("[AI4A11y] Reflow disabled");
+      announce("Page layout restored");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReflowColumn = ReflowColumn;
+
+  // tools/adapters/focus-locator.js
+  var FocusLocator = {
+    styleId: "ai4a11y-focus-locator-styles",
+    ringId: "ai4a11y-focus-ring",
+    enabled: false,
+    styleHandle: null,
+    ring: null,
+    tracked: null,
+    // the element the ring is currently following
+    focusInHandler: null,
+    focusOutHandler: null,
+    scrollHandler: null,
+    resizeHandler: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const color = options && options.color || "#ffbf00";
+      this.styleHandle = injectStyle(this.styleId, `
+      *:focus, *:focus-visible {
+        outline: 4px solid ${color} !important;
+        outline-offset: 3px !important;
+        box-shadow: 0 0 0 7px color-mix(in srgb, ${color} 40%, transparent) !important;
+      }
+    `);
+      const ring = document.createElement("div");
+      ring.id = this.ringId;
+      ring.setAttribute("aria-hidden", "true");
+      ring.style.cssText = [
+        "position: fixed",
+        "display: none",
+        "pointer-events: none",
+        `border: 3px solid ${color}`,
+        "border-radius: 4px",
+        "background: none",
+        "z-index: 2147483646",
+        "box-sizing: border-box"
+      ].join("; ");
+      (document.body || document.documentElement).appendChild(ring);
+      this.ring = ring;
+      this.focusInHandler = (event) => {
+        if (!this.enabled) return;
+        const el = event.target;
+        if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
+        this.tracked = el;
+        this.position();
+      };
+      this.focusOutHandler = () => {
+        this.tracked = null;
+        if (this.ring) this.ring.style.display = "none";
+      };
+      document.addEventListener("focusin", this.focusInHandler, true);
+      document.addEventListener("focusout", this.focusOutHandler, true);
+      this.scrollHandler = () => this.position();
+      this.resizeHandler = () => this.position();
+      window.addEventListener("scroll", this.scrollHandler, { capture: true, passive: true });
+      window.addEventListener("resize", this.resizeHandler, { passive: true });
+      console.log("[AI4A11y] Focus Locator enabled");
+      announce("Focus highlighting on");
+    },
+    // Draw the ring over the tracked element's current viewport rect. Hides
+    // (rather than drawing a stray ring) once the element leaves the DOM.
+    position() {
+      if (!this.enabled || !this.ring || !this.tracked) return;
+      if (this.tracked.isConnected === false) {
+        this.ring.style.display = "none";
+        return;
+      }
+      try {
+        const rect = this.tracked.getBoundingClientRect();
+        this.ring.style.top = `${rect.top}px`;
+        this.ring.style.left = `${rect.left}px`;
+        this.ring.style.width = `${rect.width}px`;
+        this.ring.style.height = `${rect.height}px`;
+        this.ring.style.display = "block";
+      } catch {
+      }
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.focusInHandler) {
+        document.removeEventListener("focusin", this.focusInHandler, true);
+        this.focusInHandler = null;
+      }
+      if (this.focusOutHandler) {
+        document.removeEventListener("focusout", this.focusOutHandler, true);
+        this.focusOutHandler = null;
+      }
+      if (this.scrollHandler) {
+        window.removeEventListener("scroll", this.scrollHandler, { capture: true });
+        this.scrollHandler = null;
+      }
+      if (this.resizeHandler) {
+        window.removeEventListener("resize", this.resizeHandler);
+        this.resizeHandler = null;
+      }
+      this.tracked = null;
+      if (this.styleHandle) {
+        this.styleHandle.remove();
+        this.styleHandle = null;
+      }
+      if (this.ring) {
+        this.ring.remove();
+        this.ring = null;
+      }
+      console.log("[AI4A11y] Focus Locator disabled");
+      announce("Focus highlighting off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFocusLocator = FocusLocator;
+
+  // tools/adapters/persistent-hover.js
+  var PersistentHover = {
+    styleId: "ai4a11y-persistent-hover-styles",
+    tipId: "ai4a11y-hover-tip",
+    enabled: false,
+    style: null,
+    // injectStyle handle
+    tip: null,
+    // the single reusable tooltip element
+    current: null,
+    // the titled element the tooltip is showing for
+    onMouseOver: null,
+    // stored listener refs (for exact removal)
+    onKeyDown: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const background = options && options.background || "#1c1c1e";
+      const color = options && options.color || "#ffffff";
+      this.style = injectStyle(this.styleId, `
+      #${this.tipId} {
+        position: fixed;
+        z-index: 2147483647;
+        max-width: 320px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: ${background};
+        color: ${color};
+        font: 500 15px/1.45 system-ui, -apple-system, sans-serif;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        pointer-events: auto !important;
+      }
+    `);
+      const tip = document.createElement("div");
+      tip.id = this.tipId;
+      tip.setAttribute("role", "tooltip");
+      tip.hidden = true;
+      tip.style.pointerEvents = "auto";
+      (document.body || document.documentElement).appendChild(tip);
+      this.tip = tip;
+      this.onMouseOver = (e) => {
+        if (!this.enabled) return;
+        const target = e.target;
+        if (!target || target.nodeType !== 1) return;
+        if (this.tip && (target === this.tip || this.tip.contains(target))) return;
+        const el = target.closest ? target.closest("[title]") : null;
+        if (!el) return;
+        const text = (el.getAttribute("title") || "").trim();
+        if (!text || el === this.current) return;
+        this.show(el, text);
+      };
+      document.addEventListener("mouseover", this.onMouseOver, true);
+      this.onKeyDown = (e) => {
+        if (!this.enabled) return;
+        if (e.key === "Escape") this.hide();
+      };
+      document.addEventListener("keydown", this.onKeyDown, true);
+      console.log("[AI4A11y] Persistent Hover enabled");
+      announce("Hover tooltips now stay on screen. Press Escape to dismiss one");
+    },
+    // Fill the tooltip with the element's title text (textContent, never
+    // innerHTML) and place it just below the element.
+    show(el, text) {
+      if (!this.tip) return;
+      this.current = el;
+      this.tip.textContent = text;
+      let rect = null;
+      try {
+        rect = el.getBoundingClientRect();
+      } catch {
+      }
+      const x = rect ? rect.left : 0;
+      const y = (rect ? rect.bottom : 0) + 6;
+      this.tip.style.left = `${Math.max(0, x)}px`;
+      this.tip.style.top = `${Math.max(0, y)}px`;
+      this.tip.hidden = false;
+    },
+    hide() {
+      if (this.tip) this.tip.hidden = true;
+      this.current = null;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.onMouseOver) {
+        document.removeEventListener("mouseover", this.onMouseOver, true);
+        this.onMouseOver = null;
+      }
+      if (this.onKeyDown) {
+        document.removeEventListener("keydown", this.onKeyDown, true);
+        this.onKeyDown = null;
+      }
+      if (this.style) {
+        this.style.remove();
+        this.style = null;
+      }
+      if (this.tip) {
+        this.tip.remove();
+        this.tip = null;
+      }
+      this.current = null;
+      console.log("[AI4A11y] Persistent Hover disabled");
+      announce("Persistent hover off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPersistentHover = PersistentHover;
+
+  // tools/adapters/reading-ruler.js
+  var ReadingRuler = {
+    bandId: "ai4a11y-reading-ruler",
+    enabled: false,
+    band: null,
+    shadeTop: null,
+    shadeBottom: null,
+    height: 40,
+    moveHandler: null,
+    // stored ref so disable() removes exactly this listener
+    frame: null,
+    // pending rAF/timer id, cancelled on disable
+    lastY: 0,
+    raf: null,
+    cancelRaf: null,
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.height = options.height || 40;
+      const band = document.createElement("div");
+      band.id = this.bandId;
+      band.setAttribute("aria-hidden", "true");
+      band.style.cssText = `position: fixed; left: 0; right: 0; height: ${this.height}px; background: rgba(255, 255, 0, 0.18); border-top: 1px solid rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(0, 0, 0, 0.15); pointer-events: none; z-index: 2147483645;`;
+      (document.body || document.documentElement).appendChild(band);
+      this.band = band;
+      if (options.dim !== false) {
+        const shade = () => {
+          const el = document.createElement("div");
+          el.setAttribute("aria-hidden", "true");
+          el.style.cssText = "position: fixed; left: 0; right: 0; background: rgba(0, 0, 0, 0.12); pointer-events: none; z-index: 2147483644;";
+          (document.body || document.documentElement).appendChild(el);
+          return el;
+        };
+        this.shadeTop = shade();
+        this.shadeBottom = shade();
+      }
+      const hasRaf = typeof requestAnimationFrame === "function";
+      this.raf = hasRaf ? (fn) => requestAnimationFrame(fn) : (fn) => setTimeout(fn, 16);
+      this.cancelRaf = hasRaf ? (id) => cancelAnimationFrame(id) : (id) => clearTimeout(id);
+      this.moveHandler = (event) => {
+        this.lastY = event.clientY;
+        if (this.frame !== null) return;
+        this.frame = this.raf(() => {
+          this.frame = null;
+          if (this.enabled) this.position(this.lastY);
+        });
+      };
+      document.addEventListener("mousemove", this.moveHandler);
+      this.position(typeof window !== "undefined" && window.innerHeight ? window.innerHeight / 2 : 0);
+      console.log("[AI4A11y] Reading Ruler enabled");
+      announce("Reading ruler on. It follows your cursor.");
+    },
+    // Center the band (and reflow the shades) around viewport y-coordinate `y`.
+    position(y) {
+      if (!this.band) return;
+      const top = Math.round(y - this.height / 2);
+      this.band.style.top = `${top}px`;
+      if (this.shadeTop) {
+        this.shadeTop.style.top = "0px";
+        this.shadeTop.style.height = `${Math.max(0, top)}px`;
+      }
+      if (this.shadeBottom) {
+        this.shadeBottom.style.top = `${top + this.height}px`;
+        this.shadeBottom.style.bottom = "0px";
+      }
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.moveHandler) {
+        document.removeEventListener("mousemove", this.moveHandler);
+        this.moveHandler = null;
+      }
+      if (this.frame !== null) {
+        this.cancelRaf(this.frame);
+        this.frame = null;
+      }
+      this.raf = this.cancelRaf = null;
+      (_a = this.band) == null ? void 0 : _a.remove();
+      this.band = null;
+      (_b = this.shadeTop) == null ? void 0 : _b.remove();
+      this.shadeTop = null;
+      (_c = this.shadeBottom) == null ? void 0 : _c.remove();
+      this.shadeBottom = null;
+      console.log("[AI4A11y] Reading Ruler disabled");
+      announce("Reading ruler off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
+
+  // tools/adapters/confirm-actions.js
+  var DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account)\b/i;
+  var ConfirmActions = {
+    promptId: "ai4a11y-confirm-prompt",
+    armedAttr: "data-ai4a11y-armed",
+    enabled: false,
+    clickHandler: null,
+    // stored ref so disable() removes this exact listener
+    prompt: null,
+    // the injected "Click again to confirm" element
+    promptTimer: null,
+    armed: null,
+    // Set of elements currently carrying the data flag
+    windowMs: 4e3,
+    // how long a first click stays armed
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.armed = /* @__PURE__ */ new Set();
+      this.windowMs = typeof options.windowMs === "number" ? options.windowMs : 4e3;
+      this.clickHandler = (e) => this.onClick(e);
+      document.addEventListener("click", this.clickHandler, true);
+      console.log("[AI4A11y] Confirm Actions enabled");
+      announce("Confirm actions on: risky buttons need a second click");
+    },
+    onClick(e) {
+      if (!this.enabled) return;
+      if (e.isTrusted === false) return;
+      const t = e.target;
+      if (!t || t.nodeType !== 1) return;
+      if (this.prompt && (t === this.prompt || this.prompt.contains(t))) return;
+      const el = t.closest ? t.closest('button, [type="submit"], a') : null;
+      if (!el || !this.looksDestructive(el)) return;
+      if (el.hasAttribute(this.armedAttr)) {
+        this.clearArmed();
+        return;
+      }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      this.clearArmed();
+      el.setAttribute(this.armedAttr, "true");
+      this.armed.add(el);
+      this.showPrompt(el);
+      this.promptTimer = setTimeout(() => this.clearArmed(), this.windowMs);
+    },
+    looksDestructive(el) {
+      const name = (el.getAttribute && el.getAttribute("aria-label") || el.value || el.textContent || "").replace(/\s+/g, " ").trim();
+      if (!name || name.length > 40) return false;
+      return DESTRUCTIVE_RE.test(name);
+    },
+    showPrompt(el) {
+      const prompt = document.createElement("span");
+      prompt.id = this.promptId;
+      prompt.setAttribute("role", "status");
+      prompt.textContent = "Click again to confirm";
+      prompt.style.cssText = "position:fixed;z-index:2147483647;margin:0;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;pointer-events:none;";
+      (document.body || document.documentElement).appendChild(prompt);
+      let rect = null;
+      try {
+        rect = el.getBoundingClientRect();
+      } catch {
+      }
+      prompt.style.left = `${rect ? Math.max(4, rect.left) : 4}px`;
+      prompt.style.top = `${rect ? Math.max(4, rect.top - 24) : 4}px`;
+      this.prompt = prompt;
+    },
+    // Drop any pending confirmation: timer, prompt, and armed flags.
+    clearArmed() {
+      var _a;
+      if (this.promptTimer) {
+        clearTimeout(this.promptTimer);
+        this.promptTimer = null;
+      }
+      if (this.prompt) {
+        this.prompt.remove();
+        this.prompt = null;
+      }
+      if (this.armed) {
+        for (const el of this.armed) (_a = el.removeAttribute) == null ? void 0 : _a.call(el, this.armedAttr);
+        this.armed.clear();
+      }
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.clickHandler) {
+        document.removeEventListener("click", this.clickHandler, true);
+        this.clickHandler = null;
+      }
+      this.clearArmed();
+      this.armed = null;
+      console.log("[AI4A11y] Confirm Actions disabled");
+      announce("Confirm actions off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yConfirmActions = ConfirmActions;
+
+  // tools/adapters/reading-spot.js
+  var KEY_PREFIX = "ai4a11y-spot:";
+  var SAVE_DELAY_MS = 500;
+  var ReadingSpot = {
+    buttonId: "ai4a11y-spot-restore",
+    enabled: false,
+    key: null,
+    savedY: null,
+    // the spot from a previous visit, if any
+    restorePending: false,
+    // a jump-back button is showing and not yet used
+    scrollHandler: null,
+    // stored ref so disable() can removeEventListener
+    saveTimer: null,
+    // debounce timeout, cleared on disable
+    // localStorage can throw on ANY access in private mode or a sandboxed
+    // frame, so every touch goes through these two guarded helpers. Access is
+    // via `window.localStorage` (never the bare global) so tests can stub it.
+    readSpot() {
+      try {
+        if (typeof window.localStorage === "undefined") return null;
+        const raw = window.localStorage.getItem(this.key);
+        const y = raw === null ? NaN : Number(raw);
+        return Number.isFinite(y) ? y : null;
+      } catch {
+        return null;
+      }
+    },
+    saveSpot(y) {
+      try {
+        if (typeof window.localStorage === "undefined") return;
+        window.localStorage.setItem(this.key, String(y));
+      } catch {
+      }
+    },
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.key = options.key || KEY_PREFIX + window.location.pathname + window.location.search;
+      const savedY = this.readSpot();
+      this.savedY = savedY;
+      this.restorePending = false;
+      if (savedY !== null && savedY > 0 && !document.getElementById(this.buttonId)) {
+        this.restorePending = true;
+        const btn = document.createElement("button");
+        btn.id = this.buttonId;
+        btn.type = "button";
+        btn.textContent = "Jump back to where you were";
+        btn.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; font-size: 16px; border-radius: 8px;border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;";
+        btn.addEventListener("click", () => {
+          window.scrollTo(0, savedY);
+          this.restorePending = false;
+          btn.remove();
+        });
+        (document.body || document.documentElement).appendChild(btn);
+      }
+      this.scrollHandler = () => {
+        if (!this.enabled) return;
+        if (this.saveTimer) clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+          this.saveTimer = null;
+          if (!this.enabled) return;
+          const y = window.scrollY;
+          if (this.restorePending && this.savedY != null && y <= this.savedY) return;
+          this.restorePending = false;
+          this.saveSpot(y);
+        }, SAVE_DELAY_MS);
+      };
+      window.addEventListener("scroll", this.scrollHandler, { passive: true });
+      console.log("[AI4A11y] Save Reading Spot enabled");
+      announce(savedY !== null && savedY > 0 ? "Found your last reading spot \u2014 a jump-back button was added" : "Saving your reading spot as you scroll");
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.scrollHandler) {
+        window.removeEventListener("scroll", this.scrollHandler);
+        this.scrollHandler = null;
+      }
+      if (this.saveTimer) {
+        clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+      }
+      this.restorePending = false;
+      this.savedY = null;
+      (_a = document.getElementById(this.buttonId)) == null ? void 0 : _a.remove();
+      console.log("[AI4A11y] Save Reading Spot disabled");
+      announce("Reading spot saving turned off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yReadingSpot = ReadingSpot;
+
+  // tools/adapters/abbreviation-expand.js
+  var MAX_TEXT_NODES2 = 2e3;
+  var STYLE_ID2 = "ai4a11y-abbr-styles";
+  var SKIP_TAGS2 = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION", "ABBR"]);
+  var DICTIONARY = {
+    WCAG: "Web Content Accessibility Guidelines",
+    ARIA: "Accessible Rich Internet Applications",
+    API: "Application Programming Interface",
+    URL: "Uniform Resource Locator",
+    HTML: "HyperText Markup Language",
+    CSS: "Cascading Style Sheets",
+    PDF: "Portable Document Format",
+    FAQ: "Frequently Asked Questions",
+    CEO: "Chief Executive Officer",
+    CFO: "Chief Financial Officer",
+    CTO: "Chief Technology Officer",
+    CPU: "Central Processing Unit",
+    GPU: "Graphics Processing Unit",
+    RAM: "Random Access Memory",
+    USB: "Universal Serial Bus",
+    HTTP: "HyperText Transfer Protocol",
+    HTTPS: "HyperText Transfer Protocol Secure",
+    JSON: "JavaScript Object Notation",
+    SQL: "Structured Query Language",
+    GPS: "Global Positioning System",
+    ATM: "Automated Teller Machine",
+    NASA: "National Aeronautics and Space Administration",
+    FBI: "Federal Bureau of Investigation",
+    CIA: "Central Intelligence Agency",
+    UN: "United Nations",
+    EU: "European Union",
+    DNA: "deoxyribonucleic acid",
+    ETA: "estimated time of arrival",
+    ASAP: "as soon as possible",
+    DIY: "do it yourself",
+    FYI: "for your information",
+    IMO: "in my opinion",
+    TBD: "to be determined",
+    AKA: "also known as",
+    RSVP: "please reply",
+    DOB: "date of birth",
+    "e.g.": "for example",
+    "i.e.": "that is",
+    "vs.": "versus",
+    "etc.": "and so on"
+  };
+  var AbbreviationExpand = {
+    markerClass: "ai4a11y-abbr",
+    // the injected <abbr> elements
+    wrapperClass: "ai4a11y-abbr-wrap",
+    // the text-node replacement wrappers
+    enabled: false,
+    handle: null,
+    // transformTextNodes handle (owns the exact-restore)
+    titled: null,
+    // pre-existing <abbr> elements whose title WE set
+    style: null,
+    // injectStyle handle
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.titled = [];
+      const dict = Object.assign(/* @__PURE__ */ Object.create(null), DICTIONARY, options.dictionary || {});
+      const matcher = this.buildMatcher(dict);
+      const root = mainRoot();
+      if (!root || !matcher) {
+        announce("Abbreviation expansion: no readable text found");
+        return;
+      }
+      this.fillTitles(root, dict);
+      this.handle = transformTextNodes(root, (text) => this.buildWrapper(text, dict, matcher), {
+        skipTags: SKIP_TAGS2,
+        skipClass: this.wrapperClass,
+        cap: MAX_TEXT_NODES2
+      });
+      this.style = injectStyle(STYLE_ID2, `
+      .${this.markerClass} {
+        text-decoration: underline dotted;
+        text-underline-offset: 2px;
+        cursor: help;
+      }`);
+      const count = this.handle.records.length + this.titled.length;
+      if (this.handle.capped) console.log(`[AI4A11y] Abbreviation Expand: capped at ${MAX_TEXT_NODES2} text nodes`);
+      console.log(`[AI4A11y] Abbreviation Expand enabled (${this.handle.records.length} text blocks, ${this.titled.length} existing abbr titles)`);
+      announce(count ? "Abbreviation expansion on" : "Abbreviation expansion: no known abbreviations found");
+    },
+    // One global alternation over the dictionary keys, longest-first so HTTPS
+    // wins over HTTP at the same position. Word boundaries are checked manually
+    // per match (see buildWrapper) because keys like "e.g." end in non-word
+    // characters where \b does not behave.
+    buildMatcher(dict) {
+      const keys = Object.keys(dict).filter((k) => k && typeof dict[k] === "string" && dict[k]).sort((a, b) => b.length - a.length);
+      if (!keys.length) return null;
+      const escaped = keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      return new RegExp(`(?:${escaped.join("|")})`, "g");
+    },
+    // Set title on every dictionary-known <abbr> under root that has none,
+    // remembering each so disable() can remove exactly what we added.
+    fillTitles(root, dict) {
+      for (const abbr of root.querySelectorAll("abbr:not([title])")) {
+        try {
+          if (abbr.classList.contains(this.markerClass)) continue;
+          const expansion = dict[(abbr.textContent || "").trim()];
+          if (typeof expansion !== "string" || !expansion) continue;
+          abbr.setAttribute("title", expansion);
+          this.titled.push(abbr);
+        } catch {
+        }
+      }
+    },
+    // Rebuild one text node's content as a wrapper <span> where each dictionary
+    // match becomes <abbr class=... title=...>MATCH</abbr> and everything else
+    // is re-emitted verbatim as text. Whole-word only: a match glued to a word
+    // character on either side ("APIs", "SCRAPI") is skipped. Returns null when
+    // nothing matched, so the caller leaves the node untouched.
+    buildWrapper(text, dict, matcher) {
+      matcher.lastIndex = 0;
+      let wrap = null;
+      let last = 0;
+      let m;
+      while (m = matcher.exec(text)) {
+        const start = m.index;
+        const end = start + m[0].length;
+        if (start > 0 && /\w/.test(text[start - 1])) continue;
+        if (end < text.length && /\w/.test(text[end])) continue;
+        if (!wrap) {
+          wrap = document.createElement("span");
+          wrap.className = this.wrapperClass;
+        }
+        if (start > last) wrap.appendChild(document.createTextNode(text.slice(last, start)));
+        const abbr = document.createElement("abbr");
+        abbr.className = this.markerClass;
+        abbr.setAttribute("title", dict[m[0]]);
+        abbr.textContent = m[0];
+        wrap.appendChild(abbr);
+        last = end;
+      }
+      if (!wrap) return null;
+      if (last < text.length) wrap.appendChild(document.createTextNode(text.slice(last)));
+      return wrap;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.handle) {
+        this.handle.restore();
+        this.handle = null;
+      }
+      if (this.titled) {
+        for (const abbr of this.titled) {
+          try {
+            abbr.removeAttribute("title");
+          } catch {
+          }
+        }
+        this.titled = null;
+      }
+      if (this.style) {
+        this.style.remove();
+        this.style = null;
+      }
+      console.log("[AI4A11y] Abbreviation Expand disabled");
+      announce("Abbreviation expansion off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yAbbreviationExpand = AbbreviationExpand;
+
+  // tools/adapters/language-tag.js
+  var MAX_TEXT_NODES3 = 2e3;
+  var SAMPLE_CHAR_BUDGET = 4e3;
+  var SCRIPT_RANGES = [
+    ["Latin", [[65, 90], [97, 122], [192, 591]]],
+    ["Han", [[19968, 40959], [13312, 19903], [63744, 64255]]],
+    ["Hiragana", [[12352, 12447]]],
+    ["Katakana", [[12448, 12543], [12784, 12799]]],
+    ["Hangul", [[44032, 55215], [4352, 4607], [12592, 12687]]],
+    ["Arabic", [[1536, 1791], [1872, 1919], [2208, 2303]]],
+    ["Cyrillic", [[1024, 1279], [1280, 1327]]],
+    ["Hebrew", [[1424, 1535]]],
+    ["Devanagari", [[2304, 2431]]],
+    ["Greek", [[880, 1023], [7936, 8191]]],
+    ["Thai", [[3584, 3711]]]
+  ];
+  var SCRIPT_LANG = {
+    Latin: "en",
+    Han: "zh",
+    Hiragana: "ja",
+    Katakana: "ja",
+    Hangul: "ko",
+    Arabic: "ar",
+    Cyrillic: "ru",
+    Hebrew: "he",
+    Devanagari: "hi",
+    Greek: "el",
+    Thai: "th"
+  };
+  var KANA_RE = /[぀-ヿㇰ-ㇿ]/;
+  function scriptOf(cp) {
+    for (const [script, ranges] of SCRIPT_RANGES) {
+      for (const [lo, hi] of ranges) if (cp >= lo && cp <= hi) return script;
+    }
+    return null;
+  }
+  var SAMPLE_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "NOSCRIPT", "SELECT", "OPTION"]);
+  function detectMainLang(root) {
+    const counts = /* @__PURE__ */ new Map();
+    let budget = SAMPLE_CHAR_BUDGET;
+    const walk = (node) => {
+      for (let child = node.firstChild; child && budget > 0; child = child.nextSibling) {
+        if (child.nodeType === 3) {
+          for (const ch of child.nodeValue) {
+            if (budget-- <= 0) break;
+            const script = scriptOf(ch.codePointAt(0));
+            if (script) counts.set(script, (counts.get(script) || 0) + 1);
+          }
+        } else if (child.nodeType === 1 && !SAMPLE_SKIP.has(child.tagName)) {
+          walk(child);
+        }
+      }
+    };
+    try {
+      walk(root);
+    } catch {
+    }
+    let main = "Latin", best = 0;
+    for (const [script, n] of counts) {
+      if (n > best) {
+        best = n;
+        main = script;
+      }
+    }
+    const kana = (counts.get("Hiragana") || 0) + (counts.get("Katakana") || 0);
+    if (main === "Han" && kana > 0) return "ja";
+    return SCRIPT_LANG[main] || "en";
+  }
+  var LanguageTag = {
+    markerClass: "ai4a11y-lang",
+    enabled: false,
+    handle: null,
+    // transformTextNodes handle (owns the exact-restore)
+    mainLang: null,
+    // page's dominant language while enabled
+    htmlLangAdded: false,
+    // we added <html lang>; remove it on disable
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const root = mainRoot();
+      if (!root) {
+        announce("Language tags: no readable text found");
+        return;
+      }
+      this.mainLang = typeof options.mainLang === "string" && options.mainLang ? options.mainLang : detectMainLang(root);
+      const html = document.documentElement;
+      if (html && !html.hasAttribute("lang")) {
+        html.setAttribute("lang", this.mainLang);
+        this.htmlLangAdded = true;
+      }
+      this.handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
+        skipClass: this.markerClass,
+        cap: MAX_TEXT_NODES3
+      });
+      const count = this.handle.records.length;
+      if (this.handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES3} text nodes`);
+      console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
+      announce(count ? "Language tags on" : "Language tags: no foreign-language text found");
+    },
+    // Rebuild one mixed-script text node as a marker <span>: runs of a foreign
+    // script become <span lang="xx"> children, everything else stays plain text
+    // nodes. Returns null (skip) when the node has no foreign-script run, so
+    // same-script text is left untouched.
+    buildWrapper(text) {
+      const hasKana = KANA_RE.test(text);
+      const runs = [];
+      for (const ch of text) {
+        const lang = this.langOfChar(ch.codePointAt(0), hasKana);
+        const last = runs[runs.length - 1];
+        if (last && last.lang === lang) last.text += ch;
+        else runs.push({ lang, text: ch });
+      }
+      if (!runs.some((run) => run.lang)) return null;
+      const span = document.createElement("span");
+      span.className = this.markerClass;
+      for (const run of runs) {
+        if (run.lang) {
+          const tagged = document.createElement("span");
+          tagged.setAttribute("lang", run.lang);
+          tagged.textContent = run.text;
+          span.appendChild(tagged);
+        } else {
+          span.appendChild(document.createTextNode(run.text));
+        }
+      }
+      return span;
+    },
+    // Language a character should be announced in, or null when it needs no tag
+    // (neutral chars, Latin, or the page's own language).
+    langOfChar(cp, hasKana) {
+      const script = scriptOf(cp);
+      if (!script || script === "Latin") return null;
+      let lang = SCRIPT_LANG[script];
+      if (script === "Han" && (hasKana || this.mainLang === "ja")) lang = "ja";
+      return lang === this.mainLang ? null : lang;
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.handle) {
+        this.handle.restore();
+        this.handle = null;
+      }
+      if (this.htmlLangAdded) {
+        try {
+          document.documentElement.removeAttribute("lang");
+        } catch {
+        }
+        this.htmlLangAdded = false;
+      }
+      this.mainLang = null;
+      console.log("[AI4A11y] Language Tag disabled");
+      announce("Language tags off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yLanguageTag = LanguageTag;
+
+  // tools/adapters/explore-a-chart.js
+  var CHART_HINT = /chart|graph|plot|diagram/i;
+  var HTML_NS2 = "http://www.w3.org/1999/xhtml";
+  var MAX_CHARTS = 20;
+  var MAX_ROWS = 200;
+  var ExploreAChart = {
+    styleId: "ai4a11y-chart-styles",
+    enabled: false,
+    panel: null,
+    live: null,
+    charts: [],
+    buttons: [],
+    lastHover: null,
+    _reqSeq: 0,
+    _keyHandler: null,
+    _moveHandler: null,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      injectStyle(this.styleId, `
+      .ai4a11y-chart-btn {
+        display: inline-block; margin: 4px 0; padding: 4px 10px;
+        background: #1a73e8; color: #fff; border: none; border-radius: 6px;
+        font: 13px/1.4 system-ui, sans-serif; cursor: pointer;
+      }
+      .ai4a11y-chart-btn:focus-visible { outline: 3px solid #8ab4f8; outline-offset: 2px; }
+      #ai4a11y-chart-panel {
+        position: fixed; bottom: 16px; right: 16px; max-width: 480px; max-height: 70vh;
+        overflow: auto; z-index: 2147483647;
+        background: #10141a; color: #f2f5f9; border: 2px solid #1a73e8; border-radius: 10px;
+        padding: 12px 14px; font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+      }
+      #ai4a11y-chart-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
+      #ai4a11y-chart-panel .ai4a11y-chart-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+      #ai4a11y-chart-panel table { border-collapse: collapse; width: 100%; margin-top: 4px; }
+      #ai4a11y-chart-panel caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
+      #ai4a11y-chart-panel th, #ai4a11y-chart-panel td { border: 1px solid #3c4043; padding: 4px 8px; text-align: left; }
+      #ai4a11y-chart-panel thead th { color: #8ab4f8; }
+    `);
+      this.live = document.createElement("div");
+      this.live.id = "ai4a11y-chart-live";
+      this.live.setAttribute("aria-live", "polite");
+      this.live.setAttribute("aria-atomic", "true");
+      this.live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      (document.body || document.documentElement).appendChild(this.live);
+      this.charts = this.findCharts();
+      for (const chart of this.charts) this.attachButton(chart);
+      this._keyHandler = (e) => {
+        if (e.altKey && e.code === "KeyT") {
+          e.preventDefault();
+          this.open(this.target());
+        }
+        if (e.key === "Escape") this.hide();
+      };
+      document.addEventListener("keydown", this._keyHandler, true);
+      this._moveHandler = (e) => {
+        this.lastHover = e.target;
+      };
+      document.addEventListener("mouseover", this._moveHandler, true);
+      announce(`Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? "" : "s"} found. Tab to a View data table button, or press Alt plus T on a chart.`);
+    },
+    // Chart candidates: anything that renders data visually but exposes no text.
+    findCharts() {
+      const seen = /* @__PURE__ */ new Set();
+      const out = [];
+      const push = (el) => {
+        if (el && !seen.has(el)) {
+          seen.add(el);
+          out.push(el);
+        }
+      };
+      document.querySelectorAll("canvas").forEach(push);
+      document.querySelectorAll('svg[role="img"]').forEach(push);
+      document.querySelectorAll("svg").forEach((s) => {
+        if (s.querySelector("text")) push(s);
+      });
+      document.querySelectorAll("img").forEach((img) => {
+        if (CHART_HINT.test(`${img.getAttribute("alt") || ""} ${img.getAttribute("src") || ""}`)) push(img);
+      });
+      document.querySelectorAll('[role="img"]').forEach(push);
+      return out.slice(0, MAX_CHARTS);
+    },
+    attachButton(chart) {
+      const parent = chart.parentElement;
+      if (!parent || parent.namespaceURI && parent.namespaceURI !== HTML_NS2) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ai4a11y-chart-btn";
+      btn.textContent = "View data table";
+      const hint = this.contextText(chart);
+      btn.setAttribute("aria-label", hint ? `View data table for chart: ${hint}` : "View data table for this chart");
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.open(chart);
+      });
+      chart.insertAdjacentElement("afterend", btn);
+      this.buttons.push(btn);
+    },
+    target() {
+      return this.chartFor(document.activeElement) || this.chartFor(this.lastHover);
+    },
+    // The tracked chart that el is (or is inside of), walking up the tree.
+    chartFor(el) {
+      while (el && el.nodeType === 1) {
+        if (this.charts.includes(el)) return el;
+        el = el.parentElement;
+      }
+      return null;
+    },
+    async open(chart) {
+      if (!chart) {
+        this.showMessage('No chart selected. Tab to a "View data table" button, or hover a chart and press Alt+T.');
+        return;
+      }
+      const token = ++this._reqSeq;
+      this.showMessage("Reading chart data\u2026");
+      let data = null, errMsg = null;
+      try {
+        const dataUrl = await this.capture(chart);
+        data = dataUrl ? await extractChartData(dataUrl, this.contextText(chart)) : null;
+      } catch (e) {
+        data = null;
+        errMsg = e && e.message ? e.message : null;
+      }
+      if (token !== this._reqSeq || !this.enabled) return;
+      if (data && Array.isArray(data.headers) && Array.isArray(data.rows)) {
+        this.showTable(data);
+      } else {
+        this.showMessage(errMsg || "Couldn't read this chart's data. Check that your AI key is set in the extension settings.");
+      }
+    },
+    // A data URL of the chart's pixels, whatever it is rendered with.
+    async capture(el) {
+      const tag = el.tagName ? el.tagName.toLowerCase() : "";
+      if (tag === "canvas" && typeof el.toDataURL === "function") {
+        try {
+          return el.toDataURL();
+        } catch {
+          return null;
+        }
+      }
+      if (tag === "svg") {
+        try {
+          const str = new XMLSerializer().serializeToString(el);
+          return "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(str)));
+        } catch {
+          return null;
+        }
+      }
+      if (tag === "img") return imageToDataUrl(el);
+      const inner = el.querySelector && el.querySelector("canvas, svg, img");
+      return inner ? this.capture(inner) : null;
+    },
+    // Nearby text that anchors the extraction — the chart's label/alt/title plus
+    // any <figcaption> — so the model knows what it is looking at.
+    contextText(el) {
+      var _a;
+      const bits = [];
+      const attr = (n) => el.getAttribute && el.getAttribute(n) || "";
+      if (attr("aria-label")) bits.push(attr("aria-label"));
+      if (attr("alt")) bits.push(attr("alt"));
+      if (attr("title")) bits.push(attr("title"));
+      const cap = el.closest && ((_a = el.closest("figure")) == null ? void 0 : _a.querySelector("figcaption"));
+      if (cap && cap.textContent.trim()) bits.push(cap.textContent.replace(/\s+/g, " ").trim());
+      return bits.join(" \u2014 ").slice(0, 300);
+    },
+    ensurePanel() {
+      if (this.panel) return;
+      this.panel = document.createElement("div");
+      this.panel.id = "ai4a11y-chart-panel";
+      this.panel.setAttribute("role", "dialog");
+      this.panel.setAttribute("aria-label", "Chart data table");
+      const close = document.createElement("button");
+      close.className = "ai4a11y-chart-close";
+      close.setAttribute("aria-label", "Close chart data table");
+      close.textContent = "\u2715";
+      close.addEventListener("click", () => this.hide());
+      const h = document.createElement("h2");
+      h.textContent = "Chart data";
+      const body = document.createElement("div");
+      body.className = "ai4a11y-chart-body";
+      this.panel.append(close, h, body);
+      (document.body || document.documentElement).appendChild(this.panel);
+    },
+    showMessage(text) {
+      this.ensurePanel();
+      const p = document.createElement("p");
+      p.style.margin = "0";
+      p.textContent = text;
+      this.panel.querySelector(".ai4a11y-chart-body").replaceChildren(p);
+      this.panel.style.display = "block";
+      if (this.live) this.live.textContent = text;
+    },
+    // Model output goes in via textContent ONLY — never innerHTML.
+    showTable(data) {
+      this.ensurePanel();
+      const caption = typeof data.caption === "string" && data.caption ? data.caption : "Chart data";
+      const table = document.createElement("table");
+      const cap = document.createElement("caption");
+      cap.textContent = caption;
+      table.appendChild(cap);
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      for (const h of data.headers) {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        th.textContent = String(h);
+        headRow.appendChild(th);
+      }
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      const rows = data.rows.slice(0, MAX_ROWS);
+      for (const row of rows) {
+        if (!Array.isArray(row)) continue;
+        const tr = document.createElement("tr");
+        row.forEach((cell, i) => {
+          const c = document.createElement(i === 0 ? "th" : "td");
+          if (i === 0) c.setAttribute("scope", "row");
+          c.textContent = String(cell);
+          tr.appendChild(c);
+        });
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      this.panel.querySelector(".ai4a11y-chart-body").replaceChildren(table);
+      this.panel.style.display = "block";
+      if (this.live) this.live.textContent = `${caption}. Table with ${rows.length} rows and ${data.headers.length} columns.`;
+    },
+    hide() {
+      if (this.panel) this.panel.style.display = "none";
+    },
+    disable() {
+      var _a, _b, _c;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this._keyHandler) document.removeEventListener("keydown", this._keyHandler, true);
+      if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
+      this._keyHandler = this._moveHandler = null;
+      for (const btn of this.buttons) {
+        try {
+          btn.remove();
+        } catch {
+        }
+      }
+      this.buttons = [];
+      this.charts = [];
+      try {
+        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      (_b = this.panel) == null ? void 0 : _b.remove();
+      this.panel = null;
+      (_c = this.live) == null ? void 0 : _c.remove();
+      this.live = null;
+      this.lastHover = null;
+      announce("Explore a chart off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yExploreAChart = ExploreAChart;
+
+  // tools/adapters/spa-focus.js
+  var REGION_ID2 = "ai4a11y-spa-focus-region";
+  var SETTLE_DELAY_MS = 150;
+  var SpaFocus = {
+    regionId: REGION_ID2,
+    enabled: false,
+    region: null,
+    lastPath: null,
+    // pathname+search last handled, so same-path pushes are ignored
+    settleTimer: null,
+    // debounce timeout, cleared on disable
+    popstateHandler: null,
+    // stored ref so disable() can removeEventListener
+    patchedHistory: null,
+    // the history object we patched, restored on disable
+    origPushState: null,
+    origReplaceState: null,
+    tabindexAdded: /* @__PURE__ */ new Set(),
+    // elements we gave tabindex="-1", stripped on disable
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.lastPath = window.location.pathname + window.location.search;
+      const region = document.createElement("div");
+      region.id = REGION_ID2;
+      region.setAttribute("aria-live", "assertive");
+      region.setAttribute("aria-atomic", "true");
+      region.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      (document.body || document.documentElement).appendChild(region);
+      this.region = region;
+      const self = this;
+      this.patchedHistory = window.history;
+      this.origPushState = window.history.pushState;
+      this.origReplaceState = window.history.replaceState;
+      window.history.pushState = function(...args) {
+        const result = self.origPushState.apply(this, args);
+        self.scheduleCheck();
+        return result;
+      };
+      window.history.replaceState = function(...args) {
+        const result = self.origReplaceState.apply(this, args);
+        self.scheduleCheck();
+        return result;
+      };
+      this.popstateHandler = () => {
+        if (!this.enabled) return;
+        this.scheduleCheck();
+      };
+      window.addEventListener("popstate", this.popstateHandler);
+      console.log("[AI4A11y] SPA Focus enabled");
+      announce("Announcing page changes in this app");
+    },
+    scheduleCheck() {
+      if (!this.enabled) return;
+      if (this.settleTimer) clearTimeout(this.settleTimer);
+      this.settleTimer = setTimeout(() => {
+        this.settleTimer = null;
+        if (!this.enabled) return;
+        this.checkRoute();
+      }, SETTLE_DELAY_MS);
+    },
+    checkRoute() {
+      const path = window.location.pathname + window.location.search;
+      if (path === this.lastPath) return;
+      this.lastPath = path;
+      const target = document.querySelector('main, [role="main"], #main, h1');
+      if (target) {
+        if (!target.hasAttribute("tabindex")) {
+          target.setAttribute("tabindex", "-1");
+          this.tabindexAdded.add(target);
+        }
+        target.focus({ preventScroll: false });
+      }
+      if (this.region) this.region.textContent = this.pageName(target);
+    },
+    // What to call the new page: its title if the app updates one, else the
+    // main heading's text, else a generic fallback so something is always said.
+    pageName(target) {
+      const title = (document.title || "").replace(/\s+/g, " ").trim();
+      if (title) return title;
+      let heading = null;
+      if (target) {
+        heading = /^H[1-6]$/.test(target.tagName) ? target : target.querySelector('h1, h2, [role="heading"]');
+      }
+      heading = heading || document.querySelector("h1");
+      const text = heading ? (heading.textContent || "").replace(/\s+/g, " ").trim() : "";
+      return text || "New page";
+    },
+    disable() {
+      var _a;
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.settleTimer) {
+        clearTimeout(this.settleTimer);
+        this.settleTimer = null;
+      }
+      if (this.patchedHistory) {
+        this.patchedHistory.pushState = this.origPushState;
+        this.patchedHistory.replaceState = this.origReplaceState;
+        this.patchedHistory = null;
+      }
+      this.origPushState = null;
+      this.origReplaceState = null;
+      if (this.popstateHandler) {
+        window.removeEventListener("popstate", this.popstateHandler);
+        this.popstateHandler = null;
+      }
+      for (const el of this.tabindexAdded) el.removeAttribute("tabindex");
+      this.tabindexAdded.clear();
+      try {
+        (_a = this.region || document.getElementById(REGION_ID2)) == null ? void 0 : _a.remove();
+      } catch {
+      }
+      this.region = null;
+      this.lastPath = null;
+      console.log("[AI4A11y] SPA Focus disabled");
+      announce("Stopped announcing page changes");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySpaFocus = SpaFocus;
+
+  // tools/adapters/skip-links.js
+  var MAIN_SELECTOR = 'main, [role="main"], #main, #content, .content';
+  var NAV_SELECTOR = 'nav, [role="navigation"]';
+  var SkipLinks = {
+    containerId: "ai4a11y-skip-links",
+    styleId: "ai4a11y-skip-links-styles",
+    enabled: false,
+    container: null,
+    styleHandle: null,
+    addedIdTargets: [],
+    // elements we assigned an id to — reverted on disable
+    addedTabindexTargets: [],
+    // elements we set tabindex="-1" on — reverted on disable
+    // Give `el` an id to link to, inventing one only when the page did not
+    // already provide it (and remembering the addition for disable()).
+    ensureId(el, base) {
+      if (el.id) return el.id;
+      let id = base;
+      for (let n = 2; document.getElementById(id); n++) id = `${base}-${n}`;
+      el.id = id;
+      this.addedIdTargets.push(el);
+      return id;
+    },
+    // A real <a href="#…"> so the link works even with no JS; the click handler
+    // upgrades it to also move keyboard focus, because plain fragment
+    // navigation scrolls the viewport but leaves focus behind on the link.
+    buildLink(target, idBase, label) {
+      const a = document.createElement("a");
+      a.href = `#${this.ensureId(target, idBase)}`;
+      a.textContent = label;
+      a.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (!target.hasAttribute("tabindex")) {
+          target.setAttribute("tabindex", "-1");
+          this.addedTabindexTargets.push(target);
+        }
+        try {
+          target.focus();
+        } catch {
+        }
+        try {
+          if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "start" });
+        } catch {
+        }
+      });
+      return a;
+    },
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const main = document.querySelector(options.mainSelector || MAIN_SELECTOR);
+      const nav = document.querySelector(options.navSelector || NAV_SELECTOR);
+      if (main || nav) {
+        this.styleHandle = injectStyle(this.styleId, `
+        #${this.containerId} a {
+          position: absolute;
+          top: 0; left: 0;
+          width: 1px; height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          clip-path: inset(50%);
+          white-space: nowrap;
+          z-index: 2147483647;
+        }
+        #${this.containerId} a:focus {
+          width: auto; height: auto;
+          margin: 8px;
+          padding: 12px 20px;
+          overflow: visible;
+          clip: auto;
+          clip-path: none;
+          border-radius: 999px;
+          border: 2px solid #1a5fb4;
+          background: #ffffff;
+          color: #1a5fb4;
+          font-size: 16px;
+          font-weight: 600;
+          text-decoration: underline;
+        }
+      `);
+        const container = document.createElement("div");
+        container.id = this.containerId;
+        if (main) container.appendChild(this.buildLink(main, "ai4a11y-main", "Skip to main content"));
+        if (nav && nav !== main) container.appendChild(this.buildLink(nav, "ai4a11y-nav", "Skip to navigation"));
+        const parent = document.body || document.documentElement;
+        parent.insertBefore(container, parent.firstChild);
+        this.container = container;
+      }
+      console.log("[AI4A11y] Skip Links enabled");
+      announce(main || nav ? "Skip links added at the top of the page" : "No main content or navigation region found to skip to");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this.container) {
+        this.container.remove();
+        this.container = null;
+      }
+      if (this.styleHandle) {
+        this.styleHandle.remove();
+        this.styleHandle = null;
+      }
+      for (const el of this.addedIdTargets) {
+        try {
+          el.removeAttribute("id");
+        } catch {
+        }
+      }
+      this.addedIdTargets = [];
+      for (const el of this.addedTabindexTargets) {
+        try {
+          el.removeAttribute("tabindex");
+        } catch {
+        }
+      }
+      this.addedTabindexTargets = [];
+      console.log("[AI4A11y] Skip Links disabled");
+      announce("Skip links removed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
+
+  // tools/adapters/math-a11y.js
+  var MAX_ELEMENTS = 100;
+  var MATH_HINT_RE = /math|equation|latex|tex|formula/i;
+  var TEX_PARAM_RE = /^(tex|latex|formula|eq|chl)$/i;
+  var INVISIBLE_OPS_RE = /[⁡-⁤]/g;
+  var MAX_DEPTH = 20;
+  var LEAF_TAGS = /* @__PURE__ */ new Set(["mi", "mn", "mo", "mtext", "ms"]);
+  var SKIP_TAGS3 = /* @__PURE__ */ new Set(["annotation", "annotation-xml", "mphantom"]);
+  function hasAccessibleName(el) {
+    const label = el.getAttribute("aria-label");
+    if (label && label.trim()) return true;
+    const labelledby = el.getAttribute("aria-labelledby");
+    return !!(labelledby && labelledby.trim());
+  }
+  function serializeMath(el, depth = 0) {
+    if (depth > MAX_DEPTH) return "";
+    const name = (el.localName || "").toLowerCase();
+    if (SKIP_TAGS3.has(name)) return "";
+    if (LEAF_TAGS.has(name)) return (el.textContent || "").replace(INVISIBLE_OPS_RE, "").trim();
+    const kids = [];
+    for (let c = el.firstElementChild; c; c = c.nextElementSibling) {
+      const s = serializeMath(c, depth + 1);
+      if (s) kids.push(s);
+    }
+    switch (name) {
+      case "mfrac":
+        return kids.join(" over ");
+      case "msup":
+        return kids.length === 2 ? `${kids[0]} to the power of ${kids[1]}` : kids.join(" ");
+      case "msub":
+        return kids.length === 2 ? `${kids[0]} sub ${kids[1]}` : kids.join(" ");
+      case "msubsup":
+        return kids.length === 3 ? `${kids[0]} sub ${kids[1]} to the power of ${kids[2]}` : kids.join(" ");
+      case "msqrt":
+        return `square root of ${kids.join(" ")}`;
+      case "mroot":
+        return kids.length === 2 ? `${kids[1]} root of ${kids[0]}` : `root of ${kids.join(" ")}`;
+      default:
+        if (kids.length) return kids.join(" ");
+        return el.firstElementChild ? "" : (el.textContent || "").replace(INVISIBLE_OPS_RE, "").trim();
+    }
+  }
+  function deriveLabel(math) {
+    const alttext = math.getAttribute("alttext");
+    if (alttext && alttext.trim()) return alttext.trim();
+    const ann = math.querySelector(
+      'annotation[encoding="application/x-tex"], annotation[encoding="application/x-latex"]'
+    );
+    if (ann && ann.textContent && ann.textContent.trim()) return "Math: " + ann.textContent.trim();
+    const spoken = serializeMath(math).replace(/\s+/g, " ").trim();
+    return spoken ? "Math: " + spoken : "Mathematical expression";
+  }
+  function safeDecode(s) {
+    try {
+      return decodeURIComponent(s.replace(/\+/g, " ")).trim() || null;
+    } catch {
+      return s.trim() || null;
+    }
+  }
+  function texFromUrl(src) {
+    let url;
+    try {
+      url = new URL(src, window.location.href);
+    } catch {
+      return null;
+    }
+    if (!MATH_HINT_RE.test(url.hostname + url.pathname)) return null;
+    const query = url.search.slice(1);
+    if (query) {
+      for (const part of query.split("&")) {
+        const eq = part.indexOf("=");
+        if (eq > 0 && TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+      }
+      return safeDecode(query);
+    }
+    const seg = (url.pathname.split("/").pop() || "").replace(/\.(png|svg|gif|jpe?g)$/i, "");
+    const decoded = seg ? safeDecode(seg) : null;
+    return decoded && /[\\^_{}]/.test(decoded) ? decoded : null;
+  }
+  var MathA11y = {
+    styleId: "ai4a11y-math-style",
+    enabled: false,
+    records: [],
+    // { el, attrs: [{ name, old }] } — old === null means "was absent"
+    styleHandle: null,
+    // injectStyle handle for the focus outline
+    // Record the attribute's prior state, then write it — the unit of reversibility.
+    setTracked(el, name, value, attrs) {
+      attrs.push({ name, old: el.hasAttribute(name) ? el.getAttribute(name) : null });
+      el.setAttribute(name, value);
+    },
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      const cap = options.cap ?? MAX_ELEMENTS;
+      let mathCount = 0, imgCount = 0;
+      for (const math of document.querySelectorAll("math")) {
+        if (this.records.length >= cap) break;
+        if (math.getAttribute("aria-hidden") === "true") continue;
+        if (hasAccessibleName(math)) continue;
+        const attrs = [];
+        this.setTracked(math, "aria-label", deriveLabel(math), attrs);
+        if (!math.hasAttribute("role")) this.setTracked(math, "role", "math", attrs);
+        this.records.push({ el: math, attrs });
+        mathCount++;
+      }
+      for (const img of document.querySelectorAll("img")) {
+        if (this.records.length >= cap) break;
+        if (img.getAttribute("aria-hidden") === "true") continue;
+        const alt = img.getAttribute("alt");
+        if (alt && alt.trim()) continue;
+        const src = img.getAttribute("src") || "";
+        if (!MATH_HINT_RE.test(`${img.className} ${alt || ""} ${src}`)) continue;
+        const tex = texFromUrl(src);
+        const attrs = [];
+        this.setTracked(
+          img,
+          "alt",
+          tex ? `Equation: ${tex}` : "Mathematical equation (no description available)",
+          attrs
+        );
+        this.records.push({ el: img, attrs });
+        imgCount++;
+      }
+      this.styleHandle = injectStyle(
+        this.styleId,
+        '[role="math"]:focus { outline: 2px solid #1a5fb4; outline-offset: 2px; }'
+      );
+      console.log(`[AI4A11y] Math A11y enabled (${mathCount} MathML, ${imgCount} images labeled)`);
+      announce(this.records.length ? "Math labels on" : "Math labels: no unlabeled math found");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      for (const { el, attrs } of this.records) {
+        for (const { name, old } of attrs) {
+          try {
+            if (old === null) el.removeAttribute(name);
+            else el.setAttribute(name, old);
+          } catch {
+          }
+        }
+      }
+      this.records = [];
+      if (this.styleHandle) {
+        this.styleHandle.remove();
+        this.styleHandle = null;
+      }
+      console.log("[AI4A11y] Math A11y disabled");
+      announce("Math labels off");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yMathA11y = MathA11y;
+
   // tools/adapters/auto-transcriber.js
   var AutoTranscriber = {
     enabled: false,
     observer: null,
     videoStates: /* @__PURE__ */ new Map(),
     styleId: "ai4a11y-caption-helper-styles",
+    _enableTimer: null,
+    _pagehideHandler: null,
     enable() {
-      if (this.enabled)
-        return;
+      if (this.enabled) return;
       this.enabled = true;
       this.injectStyles();
       this.setupVideoObserver();
       this.enableCaptionsOnAllVideos();
-      setTimeout(() => this.enableCaptionsOnAllVideos(), 1e3);
+      this._enableTimer = setTimeout(() => {
+        this._enableTimer = null;
+        if (this.enabled) this.enableCaptionsOnAllVideos();
+      }, 1e3);
       console.log("[AI4A11y] Auto Transcriber enabled");
       announce("Auto Transcriber enabled");
     },
     disable() {
       var _a, _b;
-      if (!this.enabled)
-        return;
+      if (!this.enabled) return;
       this.enabled = false;
+      if (this._enableTimer) {
+        clearTimeout(this._enableTimer);
+        this._enableTimer = null;
+      }
+      if (this._pagehideHandler) {
+        window.removeEventListener("pagehide", this._pagehideHandler);
+        this._pagehideHandler = null;
+      }
       (_a = this.observer) == null ? void 0 : _a.disconnect();
       this.observer = null;
       document.querySelectorAll(".ai4a11y-audio-btn, .ai4a11y-caption-box").forEach((el) => el.remove());
       (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      document.querySelectorAll("video[data-ai4a11y-setup]").forEach((v) => {
+        delete v.dataset.ai4a11ySetup;
+      });
       this.videoStates.clear();
       console.log("[AI4A11y] Auto Transcriber disabled");
       announce("Auto Transcriber disabled");
     },
     injectStyles() {
-      if (document.getElementById(this.styleId))
-        return;
+      if (document.getElementById(this.styleId)) return;
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
@@ -1511,8 +5015,7 @@
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              if (node.tagName === "VIDEO")
-                this.setupVideo(node);
+              if (node.tagName === "VIDEO") this.setupVideo(node);
               if (node.tagName === "IFRAME" && ((_a = node.src) == null ? void 0 : _a.includes("youtube"))) {
                 this.enableYouTubeCaptions(node);
               }
@@ -1521,15 +5024,15 @@
           }
           for (const node of mutation.removedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              if (node.tagName === "VIDEO")
-                this.cleanupVideo(node);
+              if (node.tagName === "VIDEO") this.cleanupVideo(node);
               (_e = (_d = node.querySelectorAll) == null ? void 0 : _d.call(node, "video")) == null ? void 0 : _e.forEach((v) => this.cleanupVideo(v));
             }
           }
         }
       });
       this.observer.observe(document.body, { childList: true, subtree: true });
-      window.addEventListener("pagehide", () => this.disable(), { once: true });
+      this._pagehideHandler = () => this.disable();
+      window.addEventListener("pagehide", this._pagehideHandler, { once: true });
     },
     cleanupVideo(video) {
       var _a, _b;
@@ -1543,16 +5046,13 @@
     enableCaptionsOnAllVideos() {
       document.querySelectorAll("video").forEach((v) => this.setupVideo(v));
       document.querySelectorAll('iframe[src*="youtube"]').forEach((f) => this.enableYouTubeCaptions(f));
-      if (location.hostname.includes("youtube.com"))
-        this.enableYouTubePageCaptions();
+      if (location.hostname.includes("youtube.com")) this.enableYouTubePageCaptions();
     },
     setupVideo(video) {
-      if (video.dataset.ai4a11ySetup)
-        return;
+      if (video.dataset.ai4a11ySetup) return;
       video.dataset.ai4a11ySetup = "true";
       const rect = video.getBoundingClientRect();
-      if (rect.width < 100 || rect.height < 75)
-        return;
+      if (rect.width < 100 || rect.height < 75) return;
       let wrapper = video.parentElement;
       if (getComputedStyle(wrapper).position === "static") {
         wrapper.style.position = "relative";
@@ -1571,8 +5071,7 @@
     },
     async toggleTranscription(video, btn) {
       const state = this.videoStates.get(video);
-      if (!state)
-        return;
+      if (!state) return;
       if (state.isTranscribing) {
         state.isTranscribing = false;
         btn.classList.remove("recording");
@@ -1605,8 +5104,7 @@
       }
     },
     enableYouTubeCaptions(iframe) {
-      if (iframe.dataset.ai4a11yCaptionsEnabled)
-        return;
+      if (iframe.dataset.ai4a11yCaptionsEnabled) return;
       iframe.dataset.ai4a11yCaptionsEnabled = "true";
       const src = iframe.src;
       if (!src.includes("cc_load_policy=1")) {
@@ -1621,92 +5119,35 @@
       }
     },
     toggle() {
-      if (this.enabled)
-        this.disable();
-      else
-        this.enable();
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
   window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
-  // tools/utils/image.js
-  async function imageToDataUrl(img) {
-    var _a, _b;
-    if (((_a = img.src) == null ? void 0 : _a.startsWith("data:")) || ((_b = img.src) == null ? void 0 : _b.startsWith("blob:"))) {
-      return img.src;
-    }
-    try {
-      const response = await fetch(img.src);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (e) {
-      return imageToCanvas(img);
-    }
-  }
-  function imageToCanvas(img) {
-    const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth || img.width;
-    canvas.height = img.naturalHeight || img.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    try {
-      return canvas.toDataURL("image/jpeg", 0.85);
-    } catch (e) {
-      console.warn("[AI4A11y] Canvas tainted, cannot export:", e);
-      return null;
-    }
-  }
-  function getImageSize(img) {
-    return {
-      width: img.naturalWidth || img.width || 0,
-      height: img.naturalHeight || img.height || 0
-    };
-  }
-  function isLikelyDecorative(img) {
-    const { width, height } = getImageSize(img);
-    if (width < 20 && height < 20)
-      return true;
-    if (width === 1 && height === 1)
-      return true;
-    if (img.getAttribute("role") === "presentation")
-      return true;
-    if (img.getAttribute("role") === "none")
-      return true;
-    return false;
-  }
-
   // tools/utils/dom.js
   function isVisible(el) {
-    if (!el)
-      return false;
+    if (!el) return false;
     const style = getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden")
-      return false;
-    if (parseFloat(style.opacity) === 0)
-      return false;
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    if (parseFloat(style.opacity) === 0) return false;
     const rect = el.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
   }
-  function hasAccessibleName(el) {
+  function hasAccessibleName2(el) {
     var _a, _b;
-    if (el.getAttribute("aria-label"))
-      return true;
-    if (el.getAttribute("title"))
-      return true;
-    if ((_a = el.textContent) == null ? void 0 : _a.trim())
-      return true;
+    if (el.getAttribute("aria-label")) return true;
+    if (el.getAttribute("title")) return true;
+    if ((_a = el.textContent) == null ? void 0 : _a.trim()) return true;
     const labelledBy = el.getAttribute("aria-labelledby");
     if (labelledBy) {
       const target = document.getElementById(labelledBy);
-      if ((_b = target == null ? void 0 : target.textContent) == null ? void 0 : _b.trim())
-        return true;
+      if ((_b = target == null ? void 0 : target.textContent) == null ? void 0 : _b.trim()) return true;
     }
     return false;
+  }
+  function looksLikeNavClass(el) {
+    return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
   }
   function markProcessed(el, status = "done") {
     el.dataset.ai4a11yProcessed = status;
@@ -1721,8 +5162,7 @@
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function generateImageAlt(img) {
-    if (img.dataset.ai4a11yProcessed)
-      return null;
+    if (img.dataset.ai4a11yProcessed) return null;
     markProcessed(img, "pending");
     try {
       const dataUrl = await imageToDataUrl(img);
@@ -1749,8 +5189,7 @@
     }
   }
   async function generateSvgDescription(svg) {
-    if (svg.dataset.ai4a11yProcessed)
-      return null;
+    if (svg.dataset.ai4a11yProcessed) return null;
     markProcessed(svg, "pending");
     try {
       const serializer = new XMLSerializer();
@@ -2026,19 +5465,24 @@
   var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function generateLinkLabel(link) {
-    var _a;
-    if (link.dataset.ai4a11yProcessed)
-      return null;
+    var _a, _b;
+    if (link.dataset.ai4a11yProcessed) return null;
     markProcessed(link, "pending");
     const href = link.href || "";
     const existingText = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
     const context = getContextForElement(link);
-    const label = await inferLabel({
-      url: href,
-      elementType: "link",
-      existingText,
-      context
-    });
+    let label;
+    try {
+      label = await inferLabel({
+        elementType: "link",
+        html: ((_b = link.outerHTML) == null ? void 0 : _b.substring(0, 500)) || "",
+        context: [existingText, href, context].filter(Boolean).join(" | ")
+      });
+    } catch (e) {
+      console.warn("[AI4A11y] Link label inference failed:", e.message);
+      markProcessed(link, "failed");
+      return null;
+    }
     if (label) {
       link.setAttribute("aria-label", label);
       markProcessed(link, "done");
@@ -2052,8 +5496,7 @@
   }
   async function generateButtonLabel(button) {
     var _a;
-    if (button.dataset.ai4a11yProcessed)
-      return null;
+    if (button.dataset.ai4a11yProcessed) return null;
     markProcessed(button, "pending");
     const inferred = inferButtonLabel(button);
     if (inferred) {
@@ -2064,12 +5507,18 @@
       return inferred;
     }
     const context = getContextForElement(button);
-    const svgContent = ((_a = button.querySelector("svg")) == null ? void 0 : _a.outerHTML) || "";
-    const label = await inferLabel({
-      elementType: "button",
-      context,
-      svgContent
-    });
+    let label;
+    try {
+      label = await inferLabel({
+        elementType: "button",
+        html: ((_a = button.outerHTML) == null ? void 0 : _a.substring(0, 500)) || "",
+        context
+      });
+    } catch (e) {
+      console.warn("[AI4A11y] Button label inference failed:", e.message);
+      markProcessed(button, "failed");
+      return null;
+    }
     if (label) {
       button.setAttribute("aria-label", label);
       markProcessed(button, "done");
@@ -2081,8 +5530,7 @@
     return null;
   }
   async function generateIframeTitle(iframe) {
-    if (iframe.dataset.ai4a11yProcessed)
-      return null;
+    if (iframe.dataset.ai4a11yProcessed) return null;
     markProcessed(iframe, "pending");
     const src = iframe.src || "";
     for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
@@ -2110,8 +5558,7 @@
     }
   }
   async function generateFormLabel(input) {
-    if (input.dataset.ai4a11yProcessed)
-      return null;
+    if (input.dataset.ai4a11yProcessed) return null;
     markProcessed(input, "pending");
     if (input.placeholder) {
       input.setAttribute("aria-label", input.placeholder);
@@ -2171,8 +5618,7 @@
   function getContextForElement(el) {
     var _a;
     const parent = el.parentElement;
-    if (!parent)
-      return "";
+    if (!parent) return "";
     const clone = parent.cloneNode(true);
     clone.querySelectorAll("script, style").forEach((s) => s.remove());
     return ((_a = clone.textContent) == null ? void 0 : _a.trim().substring(0, 200)) || "";
@@ -2192,8 +5638,7 @@
       const clone = parent.cloneNode(true);
       clone.querySelectorAll("input, select, textarea, button").forEach((e) => e.remove());
       const text = (_c = clone.textContent) == null ? void 0 : _c.trim();
-      if (text && text.length < 50)
-        return text.replace(/:$/, "");
+      if (text && text.length < 50) return text.replace(/:$/, "");
     }
     return null;
   }
@@ -2212,8 +5657,7 @@
   });
   async function generateVideoCaptions(video) {
     var _a;
-    if (video.dataset.ai4a11yCaptioned)
-      return null;
+    if (video.dataset.ai4a11yCaptioned) return null;
     video.dataset.ai4a11yCaptioned = "pending";
     const src = video.src || ((_a = video.querySelector("source")) == null ? void 0 : _a.src);
     if (!src) {
@@ -2226,7 +5670,7 @@
         const text = result.text;
         addCaptionTrack(video, text);
         video.dataset.ai4a11yCaptioned = "done";
-        incrementStat3("wcag");
+        incrementStat3("captions");
         logFix3("captions", video, "(none)", "(generated)");
         console.log("[AI4A11y] Added video captions");
         return text;
@@ -2241,8 +5685,7 @@
   }
   async function generateAudioCaptions(audio) {
     var _a;
-    if (audio.dataset.ai4a11yCaptioned)
-      return null;
+    if (audio.dataset.ai4a11yCaptioned) return null;
     audio.dataset.ai4a11yCaptioned = "pending";
     const src = audio.src || ((_a = audio.querySelector("source")) == null ? void 0 : _a.src);
     if (!src) {
@@ -2255,7 +5698,7 @@
         const text = result.text;
         addTranscriptBlock(audio, text);
         audio.dataset.ai4a11yCaptioned = "done";
-        incrementStat3("wcag");
+        incrementStat3("captions");
         logFix3("transcript", audio, "(none)", "(generated)");
         console.log("[AI4A11y] Added audio transcript");
         return text;
@@ -2327,8 +5770,7 @@ ${chunk}
   });
   async function simplifyText2(element) {
     var _a;
-    if (element.dataset.ai4a11ySimplified)
-      return null;
+    if (element.dataset.ai4a11ySimplified) return null;
     element.dataset.ai4a11ySimplified = "pending";
     if (element.tagName === "TABLE" || element.querySelector("table")) {
       element.dataset.ai4a11ySimplified = "skipped";
@@ -2377,7 +5819,7 @@ ${chunk}
         element.appendChild(textContainer);
         element.appendChild(toggleBtn);
         element.dataset.ai4a11ySimplified = "done";
-        incrementStat4("wcag");
+        incrementStat4("text");
         logFix4("simplify", element, "(complex)", "(simplified)");
         console.log("[AI4A11y] Simplified text");
         return simplified;
@@ -2392,8 +5834,7 @@ ${chunk}
   }
   async function summarizeContent(element) {
     var _a;
-    if (element.dataset.ai4a11ySummarize)
-      return null;
+    if (element.dataset.ai4a11ySummarize) return null;
     element.dataset.ai4a11ySummarize = "pending";
     if (element.tagName === "TABLE") {
       element.dataset.ai4a11ySummarize = "skipped";
@@ -2427,7 +5868,7 @@ ${chunk}
         summaryBox.appendChild(content);
         element.insertBefore(summaryBox, element.firstChild);
         element.dataset.ai4a11ySummarize = "done";
-        incrementStat4("wcag");
+        incrementStat4("text");
         logFix4("summarize", element, "(long)", "(summarized)");
         return summary;
       }
@@ -2469,8 +5910,7 @@ ${chunk}
   }
   function getLuminance(color) {
     const rgb = parseColor(color);
-    if (!rgb)
-      return null;
+    if (!rgb) return null;
     const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
       c = c / 255;
       return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -2480,24 +5920,40 @@ ${chunk}
   function getContrastRatio(color1, color2) {
     const l1 = getLuminance(color1);
     const l2 = getLuminance(color2);
-    if (l1 === null || l2 === null)
-      return null;
+    if (l1 === null || l2 === null) return null;
     const lighter = Math.max(l1, l2);
     const darker = Math.min(l1, l2);
     return (lighter + 0.05) / (darker + 0.05);
   }
+  function parseRgba(color) {
+    if (!color) return null;
+    const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
+    const rgb = parseColor(color);
+    return rgb ? { ...rgb, a: 1 } : null;
+  }
   function getEffectiveBackground(element) {
+    const layers = [];
     let el = element;
     while (el) {
-      const bg = getComputedStyle(el).backgroundColor;
-      if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
-        return bg;
+      const parsed = parseRgba(getComputedStyle(el).backgroundColor);
+      if (parsed && parsed.a > 0) {
+        layers.push(parsed);
+        if (parsed.a >= 1) break;
       }
-      if (el === document.documentElement)
-        break;
+      if (el === document.documentElement) break;
       el = el.parentElement;
     }
-    return "rgb(255, 255, 255)";
+    let base = { r: 255, g: 255, b: 255 };
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const top = layers[i];
+      base = {
+        r: Math.round(top.r * top.a + base.r * (1 - top.a)),
+        g: Math.round(top.g * top.a + base.g * (1 - top.a)),
+        b: Math.round(top.b * top.a + base.b * (1 - top.a))
+      };
+    }
+    return `rgb(${base.r}, ${base.g}, ${base.b})`;
   }
 
   // tools/adapters/fix-contrast.js
@@ -2506,8 +5962,7 @@ ${chunk}
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function fixLowContrast(element, color, background) {
-    if (element.dataset.ai4a11yProcessed)
-      return null;
+    if (element.dataset.ai4a11yProcessed) return null;
     markProcessed(element, "pending");
     if (!background || background === "transparent") {
       background = getEffectiveBackground(element);
@@ -2534,8 +5989,7 @@ ${chunk}
     return fixedColor;
   }
   function fixIndistinguishableLink(link) {
-    if (link.dataset.ai4a11yProcessed)
-      return;
+    if (link.dataset.ai4a11yProcessed) return;
     markProcessed(link, "done");
     link.style.textDecoration = "underline";
     incrementStat5("wcag");
@@ -2555,8 +6009,7 @@ ${chunk}
   });
   function fixInvalidLang(element) {
     const currentLang = element.getAttribute("lang");
-    if (!currentLang)
-      return;
+    if (!currentLang) return;
     const baseLang = currentLang.split("-")[0].toLowerCase();
     const newLang = VALID_LANGS.has(baseLang) ? baseLang : "en";
     element.setAttribute("lang", newLang);
@@ -2582,13 +6035,11 @@ ${chunk}
   }
   function fixHeadingOrder(element) {
     const match = element.tagName.match(/^H([1-6])$/);
-    if (!match)
-      return;
+    if (!match) return;
     const currentLevel = parseInt(match[1]);
     const allHeadings = Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6"));
     const idx = allHeadings.indexOf(element);
-    if (idx === -1 || idx === 0)
-      return;
+    if (idx === -1 || idx === 0) return;
     const prevHeading = allHeadings[idx - 1];
     const prevLevel = parseInt(prevHeading.tagName[1]);
     if (currentLevel > prevLevel + 1) {
@@ -2617,10 +6068,8 @@ ${chunk}
   function fixTargetBlank(element) {
     const rel = element.getAttribute("rel") || "";
     const parts = rel.split(/\s+/).filter(Boolean);
-    if (!parts.includes("noopener"))
-      parts.push("noopener");
-    if (!parts.includes("noreferrer"))
-      parts.push("noreferrer");
+    if (!parts.includes("noopener")) parts.push("noopener");
+    if (!parts.includes("noreferrer")) parts.push("noreferrer");
     element.setAttribute("rel", parts.join(" "));
     markProcessed(element, "done");
     incrementStat6("wcag");
@@ -2668,8 +6117,7 @@ ${chunk}
   }
   function fixNestedInteractive(element) {
     const parent = element.closest("a, button");
-    if (!parent || element === parent)
-      return;
+    if (!parent || element === parent) return;
     if (element.tagName === "BUTTON") {
       const span = document.createElement("span");
       while (element.firstChild) {
@@ -2690,8 +6138,7 @@ ${chunk}
   }
   function fixTargetSize(element) {
     const rect = element.getBoundingClientRect();
-    if (rect.width >= 44 && rect.height >= 44)
-      return;
+    if (rect.width >= 44 && rect.height >= 44) return;
     const needWidth = Math.max(0, (44 - rect.width) / 2);
     const needHeight = Math.max(0, (44 - rect.height) / 2);
     const display = getComputedStyle(element).display;
@@ -2737,8 +6184,7 @@ ${chunk}
   }
   function detectLanguage() {
     const meta = document.querySelector('meta[http-equiv="content-language"]');
-    if (meta == null ? void 0 : meta.content)
-      return meta.content.split("-")[0];
+    if (meta == null ? void 0 : meta.content) return meta.content.split("-")[0];
     const patterns = {
       "/es/": "es",
       "/fr/": "fr",
@@ -2748,8 +6194,7 @@ ${chunk}
       "/ko/": "ko"
     };
     for (const [pattern, lang] of Object.entries(patterns)) {
-      if (location.href.includes(pattern))
-        return lang;
+      if (location.href.includes(pattern)) return lang;
     }
     return "en";
   }
@@ -2794,16 +6239,213 @@ ${chunk}
     "marquee": replaceObsoleteElement
   };
 
-  // tools/adapters/index.js
+  // tools/adapters/fix-links.js
+  var logFix7 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat7 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  var MAX_LINKS_PER_PAGE = 10;
+  async function improveAmbiguousLink(link) {
+    var _a, _b, _c;
+    if (link.dataset.ai4a11yProcessed) return null;
+    markProcessed(link, "pending");
+    const text = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
+    const context = ((_c = (_b = link.closest("p, li, td, article, section")) == null ? void 0 : _b.textContent) == null ? void 0 : _c.trim().substring(0, 200)) || "";
+    try {
+      const improved = await improveLinkText(text, link.href, context);
+      if (improved && improved.toLowerCase() !== text.toLowerCase()) {
+        link.setAttribute("aria-label", improved);
+        link.classList.add("ai4a11y-adapted");
+        markProcessed(link, "done");
+        incrementStat7("labels");
+        logFix7("link text", link, text, improved);
+        return improved;
+      }
+    } catch (e) {
+      console.warn("[AI4A11y] improveAmbiguousLink failed:", e);
+    }
+    markProcessed(link, "failed");
+    return null;
+  }
+  async function improveAmbiguousLinks(links) {
+    const batch = Array.from(links).slice(0, MAX_LINKS_PER_PAGE);
+    const results = [];
+    for (const link of batch) {
+      results.push(await improveAmbiguousLink(link));
+    }
+    return results.filter(Boolean);
+  }
+
+  // tools/adapters/fix-tables.js
+  var logFix8 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat8 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  var MAX_AI_TABLES_PER_PAGE = 10;
+  var MAX_AI_COLUMNS = 12;
+  async function fixTableHeaders(table) {
+    if (table.dataset.ai4a11yProcessed) return false;
+    if (table.querySelector("th")) return false;
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if (rows.length < 2) return false;
+    markProcessed(table, "pending");
+    const firstRowCells = Array.from(rows[0].querySelectorAll("td"));
+    if (firstRowCells.length === 0) {
+      markProcessed(table, "skipped");
+      return false;
+    }
+    const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*%?$/.test(t) || /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t);
+    const dataLikeCount = firstRowCells.filter((c) => {
+      var _a;
+      return isDataLike(((_a = c.textContent) == null ? void 0 : _a.trim()) || "");
+    }).length;
+    const looksLikeHeader = dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
+      var _a;
+      const text = ((_a = cell.textContent) == null ? void 0 : _a.trim()) || "";
+      if (!text || text.length > 40) return false;
+      const below = rows.slice(1, 4).map((r) => {
+        var _a2, _b;
+        return (_b = (_a2 = r.querySelectorAll("td")[i]) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim();
+      });
+      return !below.includes(text);
+    });
+    if (looksLikeHeader) {
+      firstRowCells.forEach((cell) => {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        while (cell.firstChild) th.appendChild(cell.firstChild);
+        cell.replaceWith(th);
+      });
+      markProcessed(table, "done");
+      incrementStat8("wcag");
+      logFix8("table headers", table, "(no headers)", "first row \u2192 column headers");
+      return true;
+    }
+    if (rows.length < 4) {
+      markProcessed(table, "skipped");
+      return false;
+    }
+    try {
+      const columnCount = firstRowCells.length;
+      const headers = [];
+      for (let col = 0; col < columnCount; col++) {
+        const samples = rows.slice(0, 5).map((r) => {
+          var _a, _b;
+          return (_b = (_a = r.querySelectorAll("td")[col]) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
+        }).filter(Boolean);
+        const header = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        headers.push(header || `Column ${col + 1}`);
+      }
+      const thead = document.createElement("thead");
+      thead.dataset.ai4a11yGenerated = "true";
+      const headerRow = document.createElement("tr");
+      for (const label of headers) {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      }
+      thead.appendChild(headerRow);
+      table.prepend(thead);
+      markProcessed(table, "done");
+      incrementStat8("wcag");
+      logFix8("table headers", table, "(no headers)", headers.join(", "));
+      return true;
+    } catch (e) {
+      console.warn("[AI4A11y] fixTableHeaders failed:", e);
+      markProcessed(table, "failed");
+      return false;
+    }
+  }
+  async function fixAllTables() {
+    const candidates = Array.from(document.querySelectorAll("table")).filter((t) => !t.dataset.ai4a11yProcessed && !t.querySelector("th") && t.querySelectorAll("tr").length >= 2).filter((t) => !t.getAttribute("role") || t.getAttribute("role") === "table");
+    const tables = candidates.slice(0, MAX_AI_TABLES_PER_PAGE);
+    if (candidates.length > tables.length) {
+      console.log(`[AI4A11y] fix-tables: fixing ${tables.length} of ${candidates.length} headerless tables this pass (cost cap)`);
+    }
+    const results = [];
+    for (const table of tables) {
+      results.push(await fixTableHeaders(table));
+    }
+    return results.filter(Boolean).length;
+  }
+
+  // tools/adapters/fix-landmarks.js
+  var logFix9 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat9 = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  var LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+  function ensureMainLandmark() {
+    if (document.querySelector('main, [role="main"]')) return false;
+    const isCandidate = (el) => {
+      var _a;
+      const tag = el.tagName.toLowerCase();
+      if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
+      if (el.getAttribute("role")) return false;
+      if ((((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) <= 100) return false;
+      if (el.querySelector(LANDMARK_SELECTOR)) return false;
+      return true;
+    };
+    let level = Array.from(document.body.children);
+    let candidates = level.filter(isCandidate);
+    if (candidates.length === 0) {
+      const shell = level.find((el) => {
+        var _a;
+        return (((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) > 100 && el.querySelector(LANDMARK_SELECTOR);
+      });
+      if (shell) candidates = Array.from(shell.children).filter(isCandidate);
+    }
+    if (candidates.length === 0) return false;
+    const main = candidates.reduce((a, b) => {
+      var _a, _b;
+      return (((_a = a.textContent) == null ? void 0 : _a.length) || 0) >= (((_b = b.textContent) == null ? void 0 : _b.length) || 0) ? a : b;
+    });
+    main.setAttribute("role", "main");
+    markProcessed(main, "done");
+    incrementStat9("wcag");
+    logFix9("landmark", main, "(no main landmark)", 'role="main"');
+    console.log('[AI4A11y] Added role="main" landmark');
+    return true;
+  }
+  function ensureStructuralLandmarks() {
+    let fixed = 0;
+    document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
+      var _a;
+      if (!looksLikeNavClass(el)) return;
+      if (el.closest('nav, [role="navigation"]')) return;
+      const links = el.querySelectorAll("a").length;
+      const textLength = ((_a = el.textContent) == null ? void 0 : _a.trim().length) || 1;
+      if (links >= 3 && links * 15 / textLength > 0.5) {
+        el.setAttribute("role", "navigation");
+        incrementStat9("wcag");
+        logFix9("landmark", el, "(unmarked nav)", 'role="navigation"');
+        fixed++;
+      }
+    });
+    return fixed;
+  }
+  function fixLandmarks() {
+    let count = 0;
+    if (ensureMainLandmark()) count++;
+    count += ensureStructuralLandmarks();
+    return count;
+  }
   var axeHandlers6 = {
+    "landmark-one-main": () => ensureMainLandmark()
+  };
+
+  // tools/adapters/index.js
+  var axeHandlers7 = {
     ...axeHandlers,
     ...axeHandlers2,
     ...axeHandlers3,
     ...axeHandlers4,
-    ...axeHandlers5
+    ...axeHandlers5,
+    ...axeHandlers6
   };
   function getAxeHandler(ruleId) {
-    return axeHandlers6[ruleId] || null;
+    return axeHandlers7[ruleId] || null;
   }
 
   // tools/auditors/wcag-issues.js
@@ -2825,31 +6467,24 @@ ${chunk}
   // tools/auditors/missing-alt.js
   function findImagesWithoutAlt() {
     return Array.from(document.querySelectorAll("img")).filter((img) => {
-      if (wasProcessed(img))
-        return false;
-      if (!isVisible(img))
-        return false;
-      if (!img.hasAttribute("alt"))
-        return true;
+      if (wasProcessed(img)) return false;
+      if (!isVisible(img)) return false;
+      if (!img.hasAttribute("alt")) return true;
       return false;
     });
   }
   function findEmptyAltImages() {
     return Array.from(document.querySelectorAll('img[alt=""]')).filter((img) => {
-      if (wasProcessed(img))
-        return false;
-      if (!isVisible(img))
-        return false;
-      if (isLikelyDecorative(img))
-        return false;
+      if (wasProcessed(img)) return false;
+      if (!isVisible(img)) return false;
+      if (isLikelyDecorative(img)) return false;
       const { width, height } = getImageSize(img);
       return width > 100 && height > 100;
     });
   }
   function findCanvasElements() {
     return Array.from(document.querySelectorAll("canvas")).filter((canvas) => {
-      if (wasProcessed(canvas))
-        return false;
+      if (wasProcessed(canvas)) return false;
       const rect = canvas.getBoundingClientRect();
       return rect.width > 50 && rect.height > 50;
     });
@@ -2859,13 +6494,10 @@ ${chunk}
   function findVideosWithoutCaptions() {
     return Array.from(document.querySelectorAll("video")).filter((video) => {
       var _a;
-      if (wasProcessed(video))
-        return false;
-      if (!isVisible(video))
-        return false;
+      if (wasProcessed(video)) return false;
+      if (!isVisible(video)) return false;
       const tracks = video.querySelectorAll('track[kind="captions"], track[kind="subtitles"]');
-      if (tracks.length > 0)
-        return false;
+      if (tracks.length > 0) return false;
       if (((_a = video.textTracks) == null ? void 0 : _a.length) > 0) {
         for (const track of video.textTracks) {
           if (track.kind === "captions" || track.kind === "subtitles") {
@@ -2879,18 +6511,13 @@ ${chunk}
   function findAudioWithoutTranscripts() {
     return Array.from(document.querySelectorAll("audio")).filter((audio) => {
       var _a;
-      if (wasProcessed(audio))
-        return false;
-      if (!isVisible(audio))
-        return false;
+      if (wasProcessed(audio)) return false;
+      if (!isVisible(audio)) return false;
       const parent = audio.parentElement;
-      if (!parent)
-        return true;
+      if (!parent) return true;
       const text = ((_a = parent.textContent) == null ? void 0 : _a.toLowerCase()) || "";
-      if (text.includes("transcript"))
-        return false;
-      if (audio.querySelector("track"))
-        return false;
+      if (text.includes("transcript")) return false;
+      if (audio.querySelector("track")) return false;
       return true;
     });
   }
@@ -2898,11 +6525,29 @@ ${chunk}
   // tools/auditors/missing-labels.js
   function findEmptyLinks() {
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
-      if (wasProcessed(link))
-        return false;
-      if (!isVisible(link))
-        return false;
-      return !hasAccessibleName(link);
+      if (wasProcessed(link)) return false;
+      if (!isVisible(link)) return false;
+      return !hasAccessibleName2(link);
+    });
+  }
+  function findAmbiguousLinks() {
+    const ambiguousTexts = [
+      "click here",
+      "here",
+      "read more",
+      "more",
+      "learn more",
+      "continue",
+      "link",
+      "this",
+      "this link"
+    ];
+    return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
+      var _a;
+      if (wasProcessed(link)) return false;
+      if (!isVisible(link)) return false;
+      const text = (_a = link.textContent) == null ? void 0 : _a.trim().toLowerCase();
+      return text && ambiguousTexts.includes(text);
     });
   }
   function findEmptyButtons() {
@@ -2911,35 +6556,25 @@ ${chunk}
       ...document.querySelectorAll('[role="button"]')
     ];
     return buttons.filter((btn) => {
-      if (wasProcessed(btn))
-        return false;
-      if (!isVisible(btn))
-        return false;
-      return !hasAccessibleName(btn);
+      if (wasProcessed(btn)) return false;
+      if (!isVisible(btn)) return false;
+      return !hasAccessibleName2(btn);
     });
   }
   function findUnlabeledInputs() {
     const inputs = document.querySelectorAll("input, select, textarea");
     return Array.from(inputs).filter((input) => {
-      if (wasProcessed(input))
-        return false;
-      if (!isVisible(input))
-        return false;
-      if (input.type === "hidden")
-        return false;
-      if (input.getAttribute("aria-label"))
-        return false;
-      if (input.getAttribute("aria-labelledby"))
-        return false;
+      if (wasProcessed(input)) return false;
+      if (!isVisible(input)) return false;
+      if (input.type === "hidden") return false;
+      if (input.getAttribute("aria-label")) return false;
+      if (input.getAttribute("aria-labelledby")) return false;
       if (input.id) {
         const label = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
-        if (label)
-          return false;
+        if (label) return false;
       }
-      if (input.closest("label"))
-        return false;
-      if (input.title)
-        return false;
+      if (input.closest("label")) return false;
+      if (input.title) return false;
       return true;
     });
   }
@@ -2951,21 +6586,17 @@ ${chunk}
     );
     const found = [];
     textElements.forEach((el) => {
-      if (wasProcessed(el))
-        return;
-      if (!isVisible(el))
-        return;
+      if (wasProcessed(el)) return;
+      if (!isVisible(el)) return;
       const hasDirectText = Array.from(el.childNodes).some(
         (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim()
       );
-      if (!hasDirectText)
-        return;
+      if (!hasDirectText) return;
       const style = getComputedStyle(el);
       const color = style.color;
       const background = getEffectiveBackground(el);
       const ratio = getContrastRatio(color, background);
-      if (ratio === null)
-        return;
+      if (ratio === null) return;
       const fontSize = parseFloat(style.fontSize);
       const fontWeight = parseInt(style.fontWeight) || 400;
       const isLarge = fontSize >= 24 || fontSize >= 18.66 && fontWeight >= 700;
@@ -2983,164 +6614,288 @@ ${chunk}
     return found;
   }
 
-  // tools/profiles/settings.js
-  var defaults = {
-    enabled: true,
-    // AI tools
-    autoDescribe: true,
-    autoVideoDescribe: false,
-    autoSimplify: false,
-    autoWcagFix: true,
-    autoSummarize: false,
-    autoFixLabels: true,
-    autoCaptions: false,
-    fixContrast: true,
-    // Visual tools
-    darkMode: false,
-    dyslexiaFont: false,
-    largeCursor: false,
-    enhanceFocus: false,
-    readingGuide: false,
-    motionReducer: false,
-    // Reading tools
-    readerMode: false,
-    focusMode: false,
-    // Navigation tools
-    keyboardNav: false,
-    voiceCommands: false,
-    // Display settings
-    fontScale: 100,
-    lineHeight: 1.5,
-    letterSpacing: 0,
-    colorFilter: "none"
-  };
-  var settings = { ...defaults };
-  var profiles = {
-    // Vision impairments
-    lowVision: {
-      name: "Low Vision",
-      description: "Larger text, enhanced focus indicators",
-      tools: {
-        fontScale: 150,
-        lineHeight: 2,
-        largeCursor: true,
-        enhanceFocus: true,
-        fixContrast: true
+  // tools/auditors/missing-landmarks.js
+  function pageMissingMainLandmark() {
+    return !document.querySelector('main, [role="main"]');
+  }
+  var SECTIONING = "article, aside, main, nav, section";
+  function hasPageBanner() {
+    if (document.querySelector('[role="banner"]')) return true;
+    return Array.from(document.querySelectorAll("header")).some((h) => !h.closest(SECTIONING));
+  }
+  function hasPageContentinfo() {
+    if (document.querySelector('[role="contentinfo"]')) return true;
+    return Array.from(document.querySelectorAll("footer")).some((f) => !f.closest(SECTIONING));
+  }
+  function findUnmarkedNavigation() {
+    return Array.from(document.querySelectorAll('div[class*="nav" i]:not([role])')).filter((el) => {
+      if (!looksLikeNavClass(el)) return false;
+      if (!isVisible(el)) return false;
+      if (el.closest('nav, [role="navigation"]')) return false;
+      return el.querySelectorAll("a").length >= 3;
+    });
+  }
+  function auditLandmarks() {
+    return {
+      hasMain: !pageMissingMainLandmark(),
+      hasBanner: hasPageBanner(),
+      hasContentinfo: hasPageContentinfo(),
+      hasNavigation: !!document.querySelector('nav, [role="navigation"]'),
+      unmarkedNavCandidates: findUnmarkedNavigation().length
+    };
+  }
+
+  // tools/profiles/settings.json
+  var settings_default = {
+    $comment: "Single source of truth for ability profiles. Consumed by tools/profiles/settings.js (bundled into the extension + CLI tools) and read directly by cli/cli.py. Values are evidence-based \u2014 sources: W3C WCAG, W3C COGA, WebAIM Low Vision Survey, AASPIRE autism study, NNGroup UX research.",
+    profiles: {
+      blind: {
+        name: "Blind",
+        description: "Optimized for screen reader users: structure, labels, descriptions",
+        tools: {
+          autoWcagFix: true,
+          autoFixLabels: true,
+          autoDescribe: true,
+          autoVideoDescribe: true,
+          keyboardNav: true,
+          pageOutline: true,
+          announceUpdates: true,
+          describeOnDemand: true,
+          languageTag: true,
+          exploreChart: true,
+          spaFocus: true,
+          skipLinks: true,
+          mathAccessible: true
+        }
+      },
+      lowVision: {
+        name: "Low Vision",
+        description: "Larger text (150%), spacing, large cursor, enhanced focus, contrast fixes",
+        tools: {
+          autoWcagFix: true,
+          fontScale: 150,
+          lineHeight: 2,
+          letterSpacing: 0.12,
+          largeCursor: true,
+          enhanceFocus: true,
+          fixContrast: true,
+          highlightLinks: true,
+          unpinSticky: true,
+          magnifier: true,
+          reflowColumn: true,
+          focusLocator: true,
+          persistentHover: true,
+          exploreChart: true
+        }
+      },
+      colorBlind: {
+        name: "Color Blindness",
+        description: "Contrast fixes and image descriptions; pick your own filter type in Visual Assist",
+        tools: {
+          fixContrast: true,
+          autoDescribe: true,
+          enhanceFocus: true
+        }
+      },
+      deaf: {
+        name: "Deaf/HoH",
+        description: "Auto captions for media, visual focus for non-audio navigation",
+        tools: {
+          autoCaptions: true,
+          enhanceFocus: true,
+          autoDescribe: false,
+          autoVideoDescribe: false,
+          soundVisualizer: true
+        }
+      },
+      motor: {
+        name: "Motor",
+        description: "Keyboard navigation, voice commands, large targets, proper labels",
+        tools: {
+          autoWcagFix: true,
+          autoFixLabels: true,
+          largeCursor: true,
+          enhanceFocus: true,
+          keyboardNav: true,
+          voiceCommands: true,
+          dismissOverlays: true,
+          bigTargets: true,
+          pageOutline: true,
+          unpinSticky: true,
+          stopAutoAdvance: true,
+          focusLocator: true,
+          persistentHover: true,
+          confirmActions: true,
+          skipLinks: true
+        }
+      },
+      dyslexia: {
+        name: "Dyslexia",
+        description: "Letter spacing 0.12em (WCAG 1.4.12), double line height, focus mode",
+        tools: {
+          fontScale: 115,
+          lineHeight: 2,
+          letterSpacing: 0.12,
+          focusMode: true,
+          highlightLinks: true,
+          bionicReading: true,
+          readingRuler: true
+        }
+      },
+      adhd: {
+        name: "ADHD",
+        description: "Reduced distractions, progress indicators, summaries for long content",
+        tools: {
+          autoSummarize: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true,
+          motionReducer: true,
+          dismissOverlays: true,
+          bionicReading: true,
+          readingRuler: true
+        }
+      },
+      cognitive: {
+        name: "Cognitive",
+        description: "Simplified text (grade 6-8), summaries, clear progress",
+        tools: {
+          fontScale: 120,
+          lineHeight: 1.8,
+          autoSimplify: true,
+          autoSummarize: true,
+          dismissOverlays: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true,
+          highlightLinks: true,
+          defineWords: true,
+          stopAutoAdvance: true,
+          confirmActions: true,
+          rememberSpot: true,
+          expandAbbreviations: true
+        }
+      },
+      olderAdult: {
+        name: "Older Adult",
+        description: "Larger text, spacing, captions for hearing loss, simplified content",
+        tools: {
+          fontScale: 130,
+          lineHeight: 1.7,
+          letterSpacing: 0.12,
+          largeCursor: true,
+          enhanceFocus: true,
+          autoSimplify: true,
+          autoCaptions: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true,
+          bigTargets: true,
+          highlightLinks: true,
+          stopAutoAdvance: true,
+          rememberSpot: true
+        }
+      },
+      anxiety: {
+        name: "Anxiety",
+        description: "Calm interface, reduced motion, progress indicators reduce uncertainty",
+        tools: {
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: true,
+          motionReducer: true,
+          lineHeight: 1.8,
+          dismissOverlays: true,
+          muteSounds: true
+        }
+      },
+      sensory: {
+        name: "Sensory Processing",
+        description: "Overload prevention: no motion, no progress spinners, fewer distractions",
+        tools: {
+          motionReducer: true,
+          focusMode: true,
+          hideDistractions: true,
+          showProgress: false,
+          dismissOverlays: true,
+          muteSounds: true,
+          reduceBrightness: true
+        }
+      },
+      photosensitive: {
+        name: "Light Sensitive",
+        description: "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
+        tools: {
+          darkMode: true,
+          motionReducer: true,
+          reduceBrightness: true,
+          flashGuard: true
+        }
       }
     },
-    blind: {
-      name: "Blind",
-      description: "Optimized for screen reader users",
-      tools: {
-        autoDescribe: true,
-        autoVideoDescribe: true,
-        autoFixLabels: true,
-        autoWcagFix: true,
-        keyboardNav: true
-      }
-    },
-    colorBlind: {
-      name: "Color Blindness",
-      description: "Color filters and enhanced contrast",
-      tools: {
-        fixContrast: true,
-        colorFilter: "deuteranopia"
-      }
-    },
-    // Reading/cognitive
-    dyslexia: {
-      name: "Dyslexia",
-      description: "Dyslexia-friendly font and spacing",
-      tools: {
-        dyslexiaFont: true,
-        fontScale: 115,
-        lineHeight: 2,
-        letterSpacing: 0.12,
-        focusMode: true
-      }
-    },
-    adhd: {
-      name: "ADHD",
-      description: "Reduced distractions, focus mode",
-      tools: {
-        focusMode: true,
-        motionReducer: true,
-        readerMode: true
-      }
-    },
-    cognitive: {
-      name: "Cognitive",
-      description: "Simplified text, summaries",
-      tools: {
-        autoSimplify: true,
-        autoSummarize: true,
-        fontScale: 120,
-        lineHeight: 1.8,
-        focusMode: true
-      }
-    },
-    // Motor
-    motor: {
-      name: "Motor",
-      description: "Keyboard navigation, large targets",
-      tools: {
-        largeCursor: true,
-        enhanceFocus: true,
-        keyboardNav: true
-      }
-    },
-    // Sensory
-    photosensitive: {
-      name: "Photosensitive",
-      description: "Dark mode, reduced motion",
-      tools: {
-        darkMode: true,
-        motionReducer: true
-      }
-    },
-    deaf: {
-      name: "Deaf/HoH",
-      description: "Auto captions for media",
-      tools: {
-        autoCaptions: true,
-        autoVideoDescribe: true,
-        enhanceFocus: true
-      }
-    },
-    // Mental health
-    anxiety: {
-      name: "Anxiety",
-      description: "Calm interface, reduced motion",
-      tools: {
-        focusMode: true,
-        motionReducer: true,
-        readerMode: true,
-        lineHeight: 1.8
-      }
-    },
-    // Older adults
-    elderly: {
-      name: "Elderly",
-      description: "Larger text, simplified content",
-      tools: {
-        fontScale: 150,
-        lineHeight: 1.8,
-        enhanceFocus: true,
-        autoSimplify: true,
-        autoSummarize: true
-      }
-    },
-    // Sensory processing
-    sensory: {
-      name: "Sensory Processing",
-      description: "Reduced stimulation, calm interface",
-      tools: {
-        motionReducer: true,
-        darkMode: true,
-        focusMode: true
-      }
+    defaults: {
+      enabled: true,
+      autoDescribe: true,
+      autoVideoDescribe: false,
+      autoSimplify: false,
+      autoWcagFix: true,
+      autoSummarize: false,
+      autoFixLabels: true,
+      autoCaptions: false,
+      fixContrast: true,
+      darkMode: false,
+      dyslexiaFont: false,
+      largeCursor: false,
+      enhanceFocus: false,
+      readingGuide: false,
+      motionReducer: false,
+      dismissOverlays: false,
+      bigTargets: false,
+      readerMode: false,
+      focusMode: false,
+      hideDistractions: false,
+      showProgress: true,
+      keyboardNav: false,
+      voiceCommands: false,
+      fontScale: 100,
+      lineHeight: 1.5,
+      letterSpacing: 0,
+      contrastMode: "none",
+      colorFilter: "none",
+      highlightLinks: false,
+      pageOutline: false,
+      bionicReading: false,
+      unpinSticky: false,
+      translatePage: false,
+      translateTo: "English",
+      muteSounds: false,
+      defineWords: false,
+      stopAutoAdvance: false,
+      reduceBrightness: false,
+      soundVisualizer: false,
+      announceUpdates: false,
+      magnifier: false,
+      flashGuard: false,
+      describeOnDemand: false,
+      reflowColumn: false,
+      focusLocator: false,
+      persistentHover: false,
+      readingRuler: false,
+      confirmActions: false,
+      rememberSpot: false,
+      expandAbbreviations: false,
+      languageTag: false,
+      exploreChart: false,
+      spaFocus: false,
+      skipLinks: false,
+      mathAccessible: false
     }
   };
+
+  // tools/profiles/settings.js
+  var profiles = settings_default.profiles;
+  var defaults = settings_default.defaults;
+  var settings = { ...defaults };
   function getProfile(profileId) {
     return profiles[profileId];
   }
@@ -3174,6 +6929,18 @@ ${chunk}
         }
         return null;
       },
+      translateText: async (text, targetLang) => {
+        if (typeof window.ai4a11y_translateText === "function") {
+          return await window.ai4a11y_translateText(text, targetLang);
+        }
+        return null;
+      },
+      defineWord: async (word, context) => {
+        if (typeof window.ai4a11y_defineWord === "function") {
+          return await window.ai4a11y_defineWord(word, context);
+        }
+        return null;
+      },
       generateLabels: async (ctx) => {
         if (typeof window.ai4a11y_generateLabels === "function") {
           return await window.ai4a11y_generateLabels(ctx);
@@ -3198,6 +6965,24 @@ ${chunk}
         }
         return null;
       },
+      extractChartData: async (imageData, context) => {
+        if (typeof window.ai4a11y_extractChartData === "function") {
+          return await window.ai4a11y_extractChartData(imageData, context);
+        }
+        return null;
+      },
+      improveLinkText: async (linkText, href, context) => {
+        if (typeof window.ai4a11y_improveLinkText === "function") {
+          return await window.ai4a11y_improveLinkText(linkText, href, context);
+        }
+        return null;
+      },
+      inferColumnHeader: async (sampleData) => {
+        if (typeof window.ai4a11y_inferColumnHeader === "function") {
+          return await window.ai4a11y_inferColumnHeader(sampleData);
+        }
+        return null;
+      },
       announce: (msg) => console.log(`[Announce] ${msg}`)
     });
   }
@@ -3211,7 +6996,35 @@ ${chunk}
     voiceCommands: VoiceCommands,
     keyboardNav: KeyboardNavigator,
     colorBlindMode: ColorBlindMode,
-    autoTranscriber: AutoTranscriber
+    autoTranscriber: AutoTranscriber,
+    dismissOverlays: DismissOverlays,
+    bigTargets: BigTargets,
+    highlightLinks: LinkHighlighter,
+    pageOutline: PageOutline,
+    bionicReading: BionicReading,
+    unpinSticky: UnpinSticky,
+    translatePage: TranslatePage,
+    muteSounds: MuteSounds,
+    defineWords: DefineWords,
+    stopAutoAdvance: StopAutoAdvance,
+    reduceBrightness: ReduceBrightness,
+    soundVisualizer: SoundVisualizer,
+    announceUpdates: LiveRegionAnnouncer,
+    magnifier: Magnifier,
+    flashGuard: FlashGuard,
+    describeOnDemand: DescribeOnDemand,
+    reflowColumn: ReflowColumn,
+    focusLocator: FocusLocator,
+    persistentHover: PersistentHover,
+    readingRuler: ReadingRuler,
+    confirmActions: ConfirmActions,
+    rememberSpot: ReadingSpot,
+    expandAbbreviations: AbbreviationExpand,
+    languageTag: LanguageTag,
+    exploreChart: ExploreAChart,
+    spaFocus: SpaFocus,
+    skipLinks: SkipLinks,
+    mathAccessible: MathA11y
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -3229,7 +7042,65 @@ ${chunk}
       "colorblind": "colorBlindMode",
       "colorfilter": "colorBlindMode",
       "autotranscriber": "autoTranscriber",
-      "autocaptions": "autoTranscriber"
+      "autocaptions": "autoTranscriber",
+      "dismissoverlays": "dismissOverlays",
+      "dismisspopups": "dismissOverlays",
+      "bigtargets": "bigTargets",
+      "biggertargets": "bigTargets",
+      "highlightlinks": "highlightLinks",
+      "linkhighlighter": "highlightLinks",
+      "pageoutline": "pageOutline",
+      "outline": "pageOutline",
+      "bionicreading": "bionicReading",
+      "bionic": "bionicReading",
+      "unpinsticky": "unpinSticky",
+      "unpin": "unpinSticky",
+      "translatepage": "translatePage",
+      "translate": "translatePage",
+      "mutesounds": "muteSounds",
+      "mute": "muteSounds",
+      "definewords": "defineWords",
+      "define": "defineWords",
+      "stopautoadvance": "stopAutoAdvance",
+      "stopauto": "stopAutoAdvance",
+      "reducebrightness": "reduceBrightness",
+      "dim": "reduceBrightness",
+      "soundvisualizer": "soundVisualizer",
+      "soundviz": "soundVisualizer",
+      "announceupdates": "announceUpdates",
+      "liveregion": "announceUpdates",
+      "magnifier": "magnifier",
+      "lens": "magnifier",
+      "flashguard": "flashGuard",
+      "flash": "flashGuard",
+      "describeondemand": "describeOnDemand",
+      "describe": "describeOnDemand",
+      "reflowcolumn": "reflowColumn",
+      "reflow": "reflowColumn",
+      "focuslocator": "focusLocator",
+      "focusring": "focusLocator",
+      "persistenthover": "persistentHover",
+      "hover": "persistentHover",
+      "readingruler": "readingRuler",
+      "ruler": "readingRuler",
+      "confirmactions": "confirmActions",
+      "confirm": "confirmActions",
+      "rememberspot": "rememberSpot",
+      "readingspot": "rememberSpot",
+      "expandabbreviations": "expandAbbreviations",
+      "abbreviations": "expandAbbreviations",
+      "languagetag": "languageTag",
+      "langtag": "languageTag",
+      "explorechart": "exploreChart",
+      "charttable": "exploreChart",
+      "chart": "exploreChart",
+      "spafocus": "spaFocus",
+      "routefocus": "spaFocus",
+      "skiplinks": "skipLinks",
+      "skipnav": "skipLinks",
+      "mathaccessible": "mathAccessible",
+      "matha11y": "mathAccessible",
+      "math": "mathAccessible"
     };
     return map[lower] || name;
   }
@@ -3289,38 +7160,54 @@ ${chunk}
     }
     const profileTools = profile.tools || {};
     const visualOpts = {};
-    if (profileTools.fontScale)
-      visualOpts.fontScale = profileTools.fontScale;
-    if (profileTools.lineHeight)
-      visualOpts.lineHeight = profileTools.lineHeight;
-    if (profileTools.letterSpacing)
-      visualOpts.letterSpacing = profileTools.letterSpacing;
-    if (profileTools.largeCursor)
-      visualOpts.largeCursor = true;
-    if (profileTools.enhanceFocus)
-      visualOpts.enhanceFocus = true;
-    if (profileTools.dyslexiaFont)
-      visualOpts.dyslexiaFont = true;
-    if (profileTools.readingGuide)
-      visualOpts.readingGuide = true;
+    if (profileTools.fontScale) visualOpts.fontScale = profileTools.fontScale;
+    if (profileTools.lineHeight) visualOpts.lineHeight = profileTools.lineHeight;
+    if (profileTools.letterSpacing) visualOpts.letterSpacing = profileTools.letterSpacing;
+    if (profileTools.largeCursor) visualOpts.largeCursor = true;
+    if (profileTools.enhanceFocus) visualOpts.enhanceFocus = true;
+    if (profileTools.dyslexiaFont) visualOpts.dyslexiaFont = true;
+    if (profileTools.readingGuide) visualOpts.readingGuide = true;
     if (Object.keys(visualOpts).length > 0) {
       VisualAssist.enable(visualOpts);
     }
-    if (profileTools.darkMode)
-      DarkMode.enable();
-    if (profileTools.motionReducer)
-      MotionReducer.enable();
-    if (profileTools.focusMode)
-      FocusMode.enable();
-    if (profileTools.readerMode)
-      ReaderMode.enable();
-    if (profileTools.keyboardNav)
-      KeyboardNavigator.enable();
+    if (profileTools.darkMode) DarkMode.enable();
+    if (profileTools.motionReducer) MotionReducer.enable();
+    if (profileTools.focusMode) FocusMode.enable();
+    if (profileTools.readerMode) ReaderMode.enable();
+    if (profileTools.dismissOverlays) DismissOverlays.enable();
+    if (profileTools.bigTargets) BigTargets.enable();
+    if (profileTools.highlightLinks) LinkHighlighter.enable();
+    if (profileTools.pageOutline) PageOutline.enable();
+    if (profileTools.bionicReading) BionicReading.enable();
+    if (profileTools.unpinSticky) UnpinSticky.enable();
+    if (profileTools.translatePage) TranslatePage.enable({ targetLang: profileTools.translateTo });
+    if (profileTools.muteSounds) MuteSounds.enable();
+    if (profileTools.defineWords) DefineWords.enable();
+    if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
+    if (profileTools.reduceBrightness) ReduceBrightness.enable();
+    if (profileTools.soundVisualizer) SoundVisualizer.enable();
+    if (profileTools.announceUpdates) LiveRegionAnnouncer.enable();
+    if (profileTools.magnifier) Magnifier.enable();
+    if (profileTools.flashGuard) FlashGuard.enable();
+    if (profileTools.describeOnDemand) DescribeOnDemand.enable();
+    if (profileTools.reflowColumn) ReflowColumn.enable();
+    if (profileTools.focusLocator) FocusLocator.enable();
+    if (profileTools.persistentHover) PersistentHover.enable();
+    if (profileTools.readingRuler) ReadingRuler.enable();
+    if (profileTools.confirmActions) ConfirmActions.enable();
+    if (profileTools.rememberSpot) ReadingSpot.enable();
+    if (profileTools.expandAbbreviations) AbbreviationExpand.enable();
+    if (profileTools.languageTag) LanguageTag.enable();
+    if (profileTools.exploreChart) ExploreAChart.enable();
+    if (profileTools.spaFocus) SpaFocus.enable();
+    if (profileTools.skipLinks) SkipLinks.enable();
+    if (profileTools.mathAccessible) MathA11y.enable();
+    if (profileTools.keyboardNav) KeyboardNavigator.enable();
+    if (profileTools.voiceCommands) VoiceCommands.enable();
     if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
       ColorBlindMode.enable(profileTools.colorFilter);
     }
-    if (profileTools.autoCaptions)
-      AutoTranscriber.enable();
+    if (profileTools.autoCaptions) AutoTranscriber.enable();
     return {
       success: true,
       profile: profileId,
@@ -3349,7 +7236,35 @@ ${chunk}
       voiceCommands: "Voice-controlled navigation",
       keyboardNav: "Enhanced keyboard navigation",
       colorBlindMode: "Color vision deficiency filters",
-      autoTranscriber: "Auto-generate captions for media"
+      autoTranscriber: "Auto-generate captions for media",
+      dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals",
+      bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)",
+      highlightLinks: "Underline and strengthen links and reveal where each one leads",
+      pageOutline: "On-page heading navigator to jump between sections",
+      bionicReading: "Bold the start of each word to guide the eye (dyslexia/ADHD aid)",
+      unpinSticky: "Un-fix sticky headers/bars so they stop eating the viewport when zoomed",
+      translatePage: "Translate the page text into another language (AI)",
+      muteSounds: "Mute all audio and video and block autoplay sound",
+      defineWords: "Show plain-language definitions of hard words on hover (AI)",
+      stopAutoAdvance: "Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)",
+      reduceBrightness: "Dim and desaturate the page for a low-stimulation view",
+      soundVisualizer: "Flash a visual indicator when the page plays sound (Deaf/HoH)",
+      announceUpdates: "Announce dynamic content changes to screen readers (live region)",
+      magnifier: "A lens that magnifies the text under the cursor",
+      flashGuard: "Block autoplay and dim video/animation for seizure safety (WCAG 2.3.1)",
+      describeOnDemand: "Alt+click or Alt+D to get an AI description of any element",
+      reflowColumn: "Force page content into one readable column (WCAG 1.4.10)",
+      focusLocator: "Show a strong always-visible indicator of keyboard focus",
+      persistentHover: "Keep hover tooltips visible and dismissible (WCAG 1.4.13)",
+      readingRuler: "A highlight band that follows your reading line",
+      confirmActions: "Ask for confirmation before risky or final actions",
+      rememberSpot: "Remember where you were reading and offer to jump back",
+      expandAbbreviations: "Expand abbreviations and acronyms to their full form",
+      languageTag: "Tag foreign-language text so screen readers pronounce it correctly",
+      exploreChart: "Read a chart or graph as a navigable data table",
+      spaFocus: "Announce and move focus on single-page-app navigations",
+      skipLinks: "Add skip-to-content and skip-to-navigation links",
+      mathAccessible: "Give math and equations an accessible name for screen readers"
     };
     return descriptions[name] || "";
   }
@@ -3431,14 +7346,13 @@ ${chunk}
   };
   var aiFixes = {
     async describeImages() {
-      const { images } = await auditors.findMissingAlt();
+      const { noAlt, emptyAlt } = auditors.findMissingAlt();
       const results = [];
-      for (const img of images) {
+      for (const img of [...noAlt, ...emptyAlt]) {
         const el = document.querySelector(img.selector);
         if (el) {
           const alt = await generateImageAlt(el);
           if (alt) {
-            el.alt = alt;
             results.push({ selector: img.selector, alt });
           }
         }
@@ -3447,25 +7361,25 @@ ${chunk}
     },
     async simplifyText(selector) {
       const el = selector ? document.querySelector(selector) : document.body;
-      if (!el)
-        return null;
-      const simplified = await simplifyText2(el.textContent);
-      return simplified;
+      if (!el) return null;
+      return await simplifyText2(el);
     },
     async summarize(selector) {
       const el = selector ? document.querySelector(selector) : document.body;
-      if (!el)
-        return null;
-      const summary = await summarizeContent(el.textContent);
-      return summary;
+      if (!el) return null;
+      return await summarizeContent(el);
+    },
+    async improveLinks() {
+      return await improveAmbiguousLinks(findAmbiguousLinks());
+    },
+    async fixTables() {
+      return await fixAllTables();
     },
     async fixAxeViolation(ruleId, selector) {
       const handler = getAxeHandler(ruleId);
-      if (!handler)
-        return { error: `No handler for rule: ${ruleId}` };
+      if (!handler) return { error: `No handler for rule: ${ruleId}` };
       const el = document.querySelector(selector);
-      if (!el)
-        return { error: `Element not found: ${selector}` };
+      if (!el) return { error: `Element not found: ${selector}` };
       await handler(el);
       return { success: true };
     }
@@ -3522,11 +7436,9 @@ ${chunk}
       const nodes = violation.nodes || [];
       for (const node of nodes) {
         const selector = (_a = node.target) == null ? void 0 : _a[0];
-        if (!selector)
-          continue;
+        if (!selector) continue;
         const el = document.querySelector(selector);
-        if (!el || el.dataset.ai4a11yProcessed)
-          continue;
+        if (!el || el.dataset.ai4a11yProcessed) continue;
         if (nonAiFixes[ruleId]) {
           try {
             nonAiFixes[ruleId](el);
@@ -3598,12 +7510,9 @@ ${chunk}
   function findComplexText() {
     return Array.from(document.querySelectorAll("p, li, td, div")).filter((el) => {
       var _a;
-      if (el.dataset.ai4a11yProcessed)
-        return false;
-      if (el.dataset.ai4a11ySimplified)
-        return false;
-      if (el.querySelector("p, div, article, section"))
-        return false;
+      if (el.dataset.ai4a11yProcessed) return false;
+      if (el.dataset.ai4a11ySimplified) return false;
+      if (el.querySelector("p, div, article, section")) return false;
       const text = ((_a = el.textContent) == null ? void 0 : _a.trim()) || "";
       return text.length > 200 && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > 15);
     }).slice(0, 10);
@@ -3611,12 +7520,9 @@ ${chunk}
   function findLongContent() {
     return Array.from(document.querySelectorAll("p, article, section, .article-body, .content")).filter((el) => {
       var _a;
-      if (el.dataset.ai4a11ySummarized)
-        return false;
-      if (el.dataset.ai4a11yProcessed)
-        return false;
-      if (el.closest("[data-ai4a11y-summarized]"))
-        return false;
+      if (el.dataset.ai4a11ySummarized) return false;
+      if (el.dataset.ai4a11yProcessed) return false;
+      if (el.closest("[data-ai4a11y-summarized]")) return false;
       const text = ((_a = el.textContent) == null ? void 0 : _a.trim()) || "";
       return text.length > 500;
     }).slice(0, 5);
@@ -3625,31 +7531,25 @@ ${chunk}
     var _a;
     const state = window._ai4a11ySessionState || {};
     const profileName = state.activeProfile;
-    if (!profileName)
-      return false;
+    if (!profileName) return false;
     const profile = getProfile(profileName);
-    if (!profile)
-      return false;
+    if (!profile) return false;
     return !!((_a = profile.tools) == null ? void 0 : _a[setting]);
   }
   function getActiveProfileSettings() {
     const state = window._ai4a11ySessionState || {};
     const profileName = state.activeProfile;
-    if (!profileName)
-      return {};
+    if (!profileName) return {};
     const profile = getProfile(profileName);
     return (profile == null ? void 0 : profile.tools) || {};
   }
   function getSelector(el) {
-    if (!el || !el.tagName)
-      return "unknown";
+    if (!el || !el.tagName) return "unknown";
     const tag = el.tagName.toLowerCase();
-    if (el.id)
-      return `#${el.id}`;
+    if (el.id) return `#${el.id}`;
     if (el.className && typeof el.className === "string") {
       const classes = el.className.trim().split(/\s+/).filter((c) => c).slice(0, 2).join(".");
-      if (classes)
-        return `${tag}.${classes}`;
+      if (classes) return `${tag}.${classes}`;
     }
     return tag;
   }
@@ -3671,12 +7571,17 @@ ${chunk}
       findMissingLabels: auditors.findMissingLabels,
       findMissingCaptions: auditors.findMissingCaptions,
       findPoorContrast: auditors.findPoorContrast,
+      findAmbiguousLinks,
+      auditLandmarks,
       runFullAudit: auditors.runFullAudit,
       // AI fixes
       aiFixes,
       describeImages: aiFixes.describeImages,
       simplifyText: aiFixes.simplifyText,
       summarize: aiFixes.summarize,
+      improveLinks: aiFixes.improveLinks,
+      fixTables: aiFixes.fixTables,
+      fixLandmarks,
       fixAxeViolation: aiFixes.fixAxeViolation,
       // Full scan (like extension)
       runFullScan,
@@ -3691,7 +7596,7 @@ ${chunk}
         window._ai4a11ySessionState = state;
       },
       // Axe handlers
-      axeHandlers: axeHandlers6,
+      axeHandlers: axeHandlers7,
       getAxeHandler,
       // Direct adapter access
       VisualAssist,

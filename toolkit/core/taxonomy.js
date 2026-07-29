@@ -100,4 +100,8 @@ export const taxonomy = {
   },
 };
 
+// Alias. The skill layer and its tests were written against the name TAXONOMY;
+// this module exports the same object under both names so either import works.
+export const TAXONOMY = taxonomy;
+
 export default taxonomy;

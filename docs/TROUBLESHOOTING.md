@@ -21,7 +21,7 @@ Common issues and solutions for the AI for Accessibility Toolkit.
 **Solutions:**
 1. Open extension popup → Settings
 2. Verify Gemini API key is entered correctly
-3. Test the key at [Google AI Studio](https://aistudio.google.com/)
+3. Test the key at [Google AI Studio](https://aistudio.google.com/apikey)
 4. Check browser console for API errors (F12 → Console)
 
 **Rate limits:** Free tier allows 15 requests/minute, 1500/day. For heavier use, enable billing in [Google Cloud Console](https://console.cloud.google.com/).
@@ -160,7 +160,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8080
 
 **Solutions:**
 1. Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
-2. Check Node version: `node --version` (requires Node 18+)
+2. Check Node version: `node --version` (requires Node 20.19+)
 3. Review esbuild errors in terminal output
 
 ### Missing dependencies
@@ -176,7 +176,7 @@ pip install -e .               # CLI
 
 If your issue isn't listed:
 
-1. Search [existing issues](https://github.com/chuanenlin/AI-for-Accessibility-Toolkit-Draft/issues)
+1. Search [existing issues](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/issues)
 2. Open a new issue with:
    - Browser/OS version
    - Steps to reproduce
