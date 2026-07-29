@@ -28,6 +28,7 @@
 // Pairs with the `contract-mismatch` auditor, which produces the findings.
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
+import { renderShape, shapeCss } from './agent-watch-shapes.js';
 
 const STYLE_ID = 'ai4a11y-agent-watch-style';
 
@@ -242,6 +243,15 @@ export const AgentWatch = {
       t.textContent = phrase(f, m);
       li.appendChild(t);
 
+      // The shape carries the judgment the sentence leaves to the reader.
+      // Someone who asked for summaries is asking for less to take in, so the
+      // geometry goes and the sentence stays — it is the sentence that holds
+      // the claim.
+      if (!m.cognition.summarize) {
+        const shape = renderShape(f);
+        if (shape) li.appendChild(shape);
+      }
+
       // Provenance is the page's own words. Dropped only when someone has
       // asked for simpler content, where a second line of raw page text costs
       // more than the traceability buys.
@@ -415,5 +425,6 @@ function css(m) {
 @media (prefers-reduced-motion: reduce) {
   #${AgentWatch.containerId} { transition: none; }
 }
+${shapeCss(AgentWatch.containerId, base, muted, line, high)}
 `;
 }
