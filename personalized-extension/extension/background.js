@@ -941,6 +941,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch((e) => sendResponse({ error: e.message }));
     return true;
   }
+  if (msg.type === 'agentTell') {
+    // Straight into the agent's queue, applied before its next action. If no
+    // agent is running the person is checking their own browsing, and there is
+    // nothing to steer — say so rather than swallowing it.
+    const said = String(msg.said || '').trim();
+    if (!said) { sendResponse({ error: 'nothing said' }); return false; }
+    if (!globalThis.BrowserAgent?.isRunning?.()) {
+      sendResponse({ queued: 0, why: 'no agent is running — this is your own browsing' });
+      return false;
+    }
+    sendResponse(globalThis.BrowserAgent.interject(said));
+    return false;
+  }
   if (msg.type === 'validationAck') {
     globalThis.Validation.acknowledge(msg.key)
       .then(sendResponse).catch((e) => sendResponse({ error: e.message }));

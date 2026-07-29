@@ -235,6 +235,60 @@ export const AgentWatch = {
     if (held) this.root.classList.add('aw-held');
     else this.root.classList.remove('aw-held');
 
+    // Said before the collapse check, so it is there whether the panel is
+    // open or folded to one line. "At any time" cannot mean "once you have
+    // opened the right section" — the moment you want to say something is
+    // usually the moment you are watching the page, not the panel.
+    // ── say something to it, at any time ────────────────────────────────────
+    //
+    // The controls beside a finding cover the moves the analysis names —
+    // re-sort, open a different one, change the size. They cannot cover
+    // "actually she likes purple" or "skip anything from that seller", and a
+    // person watching a delegate work will always have something to say that
+    // nobody enumerated in advance.
+    //
+    // Without this the only way to redirect a run was to stop it and start
+    // again, which throws away everything checked so far. It sits at the
+    // bottom, always, whatever else the surface is showing.
+    const tell = document.createElement('form');
+    tell.className = 'aw-tell';
+    const tellId = `${this.containerId}-tell`;
+    const lab = document.createElement('label');
+    lab.className = 'aw-tell-label';
+    lab.setAttribute('for', tellId);
+    lab.textContent = 'Tell it something';
+    const field = document.createElement('input');
+    field.id = tellId;
+    field.type = 'text';
+    field.className = 'aw-tell-input';
+    field.placeholder = 'she likes purple · skip that seller · slow down';
+    const send = document.createElement('button');
+    send.type = 'submit';
+    send.className = 'aw-do';
+    send.textContent = 'Send';
+    tell.append(lab, field, send);
+
+    const note = document.createElement('p');
+    note.className = 'aw-tell-said';
+    note.setAttribute('role', 'status');      // announced without stealing focus
+    if (this.lastTold) note.textContent = `Told it: ${this.lastTold}`;
+    tell.appendChild(note);
+
+    tell.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const said = field.value.trim();
+      if (!said) return;
+      field.value = '';
+      this.lastTold = said;
+      this.onTell?.(said);
+      // Said back immediately. An instruction is applied before the agent's
+      // next action, which can be seconds away, and silence in between reads
+      // as the message having gone nowhere.
+      note.textContent = `Told it: ${said}`;
+    });
+    this.root.appendChild(tell);
+
+
     if (this.collapsed && !held) return;
 
     // ── the gate ────────────────────────────────────────────────────────────
@@ -436,6 +490,8 @@ export const AgentWatch = {
   onControl: null,
   onAnswer: null,
   onAcknowledge: null,   // the person dealt with a finding; the agent may move on
+  onTell: null,          // free text, straight to the agent, at any time
+  lastTold: null,
   onEditAsk: null,      // a field of the Living Prompt was changed
   onPromote: null,      // an offered rule was accepted or declined
   onToggleRule: null,   // a standing rule was switched off or on
@@ -625,6 +681,26 @@ function css(m) {
 #${AgentWatch.containerId} .aw-none {
   margin: 0; padding: 14px; color: ${muted};
 }
+/* Tell it something — always there, whatever else is on screen. */
+#${AgentWatch.containerId} .aw-tell {
+  display: grid; grid-template-columns: 1fr auto; gap: 7px;
+  padding: 10px 14px; border-top: 1px solid ${line};
+}
+#${AgentWatch.containerId} .aw-tell-label {
+  grid-column: 1 / -1; font-size: ${Math.round(base * 0.78)}px;
+  text-transform: uppercase; letter-spacing: .5px; color: ${muted};
+}
+#${AgentWatch.containerId} .aw-tell-input {
+  font: inherit; min-width: 0; padding: 6px 11px;
+  border: 1px solid ${high ? '#000' : line}; border-radius: 999px;
+  background: ${bg}; color: ${fg};
+}
+#${AgentWatch.containerId} .aw-tell-input:focus-visible { outline: 3px solid #06c; outline-offset: 1px; }
+#${AgentWatch.containerId} .aw-tell .aw-do { margin-top: 0; }
+#${AgentWatch.containerId} .aw-tell-said {
+  grid-column: 1 / -1; margin: 0; font-size: ${Math.round(base * 0.8)}px; color: ${muted};
+}
+
 #${AgentWatch.containerId} .aw-foot {
   margin: 0; padding: 9px 14px; border-top: 1px solid ${line};
   font-size: ${Math.round(base * 0.82)}px; color: ${muted};
