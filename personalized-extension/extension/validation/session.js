@@ -200,6 +200,11 @@ const Validation = {
   async start(c, opts = {}) {
     contract = typeof c === 'string' ? contractFromAsk(c) : c;
     run = createRun(contract, opts);
+    // Checking is not a setting to remember to switch on. A layer that has to
+    // be enabled separately is off exactly when it matters, because nobody
+    // predicts the run that will go wrong. Starting a task turns on the
+    // surface that reports on it.
+    try { await chrome.storage.sync.set({ agentWatch: true }); } catch { /* not fatal */ }
     await publish({ findings: [], unspecified: gaps(contract) });
     return { started: true, contract, unspecified: gaps(contract) };
   },
