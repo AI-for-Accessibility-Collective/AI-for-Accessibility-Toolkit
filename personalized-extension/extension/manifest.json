@@ -62,6 +62,14 @@
       "matches": [
         "<all_urls>"
       ]
+    },
+    {
+      "resources": [
+        "validation/corpus.json"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

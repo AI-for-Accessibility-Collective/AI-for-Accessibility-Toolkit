@@ -13,3 +13,7 @@ dist/
 build/
 *.egg
 .claude/worktrees/
+
+# The analysis, copied in from the research repository by its install script.
+# Mechanism lives here; the corpus text does not.
+personalized-extension/extension/validation/corpus.json

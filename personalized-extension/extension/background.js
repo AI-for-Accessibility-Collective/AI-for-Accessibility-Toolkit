@@ -13,6 +13,22 @@ self.importScripts(
 // harness, whose axSnapshot it calls.
 self.importScripts('validation/dist/validation.js');
 
+// The analysis, loaded once at startup if it is present.
+//
+// Shipped as a file rather than compiled in, and gitignored here, because it
+// carries research text that belongs in the research repository — the
+// extension holds the mechanism. Absent, the layer still runs: it just has no
+// paradigm map, so findings fall back to their sentence and no standing rule
+// is ever offered. Degrading is the point; inventing the content would not be.
+fetch(chrome.runtime.getURL('validation/corpus.json'))
+  .then((r) => (r.ok ? r.json() : null))
+  .then((c) => {
+    if (!c) return;
+    const n = globalThis.ValidationCorpus?.load(c);
+    console.log('[AI4A11y] analysis loaded:', n);
+  })
+  .catch(() => {});   // no corpus file is a supported state, not an error
+
 // Toolkit datastore layer -- taxonomy (globalThis.AA_TAXONOMY) and the
 // generated built-in tools registry (globalThis.AA_TOOLS) must load before
 // datastore.js, which exposes both via Datastore.global.*.
