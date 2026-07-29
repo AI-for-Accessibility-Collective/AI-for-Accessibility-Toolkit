@@ -1,0 +1,420 @@
+// The reader: page facts, pulled from the accessibility tree.
+//
+// This is the layer everything else waits on. A validator can only speak if
+// something hands it a value, and the value has to come from the page rather
+// than from the agent's account of the page — that separation is the whole
+// point, so the reader consumes the same accessibility tree a screen-reader
+// user gets and nothing else.
+//
+// Two consequences worth stating, because they shape every extractor here:
+//
+//   * If a fact is not in the tree, the reader cannot return it, and it must
+//     say so rather than guess. `null` means "not present in what the page
+//     exposes" — which is itself a finding, not a failure.
+//   * Anything the reader CAN see, a screen-reader user could also have
+//     reached. So the layer can never report a fact from a channel that person
+//     does not have.
+//
+// Every extractor is written against real captured page trees and verified by
+// reader.test.js. An extractor with no fixture is marked untested rather than
+// quietly trusted.
+
+import { parseAria, byRole, find, findAll, capture, money, count,
+         hasFlag, flagValue } from './aria-parse.js';
+
+/**
+ * @typedef {Object} Read
+ * @property {*} value        what the page says, or null when absent
+ * @property {string} from    the line it came from, for showing your working
+ * @property {boolean} [absent] true when the page simply does not carry it
+ */
+
+const got = (value, from) => ({ value, from });
+const missing = (why) => ({ value: null, from: why, absent: true });
+
+// ─────────────────────────────────────────────────────────── search results
+export const resultCount = (lines) => {
+  // "1-48 of 944 results for" — the heading a screen reader speaks first.
+  const l = find(lines, /of\s+[\d,]+\s+results/i);
+  if (!l) {
+    // Amazon also renders "over 1,000 results" when the count is approximate.
+    const over = find(lines, /over\s+[\d,]+\s+results/i);
+    if (over) return { ...got(count(capture([over], /over\s+([\d,]+)/i)), over.name),
+                       approximate: true };
+    return missing('no results heading in the tree');
+  }
+  return got(count(capture([l], /of\s+([\d,]+)\s+results/i)), l.name);
+};
+
+export const sponsoredCount = (lines) => {
+  const tags = findAll(lines, /^sponsored$/i);
+  return got(tags.length, `${tags.length} lines reading "Sponsored"`);
+};
+
+export const firstOrganicIndex = (lines) => {
+  // Position of the first result tile not preceded by a Sponsored marker.
+  const tiles = byRole(lines, 'listitem').filter((l) => /\$/.test(l.name));
+  const idx = tiles.findIndex((t) => !/sponsored/i.test(t.name));
+  return idx < 0 ? missing('no unsponsored tile found') : got(idx + 1, tiles[idx]?.name);
+};
+
+export const tilePrices = (lines) => {
+  const prices = findAll(lines, /\$[\d,]+\.?\d*/).map((l) => money(l.name)).filter((n) => n != null);
+  return prices.length ? got(prices, `${prices.length} prices on the page`)
+                       : missing('no prices in the tree');
+};
+
+export const tileRatings = (lines) => {
+  const rs = findAll(lines, /out of 5 stars/i)
+    .map((l) => Number(capture([l], /([\d.]+) out of 5/i))).filter((n) => !isNaN(n));
+  return rs.length ? got(rs, `${rs.length} star ratings`) : missing('no ratings in the tree');
+};
+
+export const tileRatingCounts = (lines) => {
+  const cs = findAll(lines, /^\(?[\d,]+\)?$/).map((l) => count(l.name)).filter((n) => n != null);
+  return cs.length ? got(cs, `${cs.length} rating counts`) : missing('no rating counts');
+};
+
+export const tileHasPhoto = (lines) => {
+  // The finding this exists for: a result tile's photo often has NO entry in
+  // the tree at all, so a screen reader announces a tile that sounds text-only.
+  const imgs = byRole(lines, 'img');
+  return got(imgs.length > 0, imgs.length ? `${imgs.length} images announced`
+                                          : 'no image entry in the tile');
+};
+
+export const photoAltText = (lines) => {
+  const alts = byRole(lines, 'img').map((l) => l.name).filter(Boolean);
+  if (!alts.length) return missing('images carry no alternative text');
+  const distinct = new Set(alts);
+  // Seven photos all announcing "Product Image" is the same as none: the
+  // gallery is unnavigable because nothing distinguishes one from another.
+  return { ...got(alts, `${alts.length} images, ${distinct.size} distinct descriptions`),
+           useless: distinct.size === 1 && alts.length > 1 };
+};
+
+export const filterNames = (lines) => {
+  const boxes = byRole(lines, 'checkbox').map((l) => l.name).filter(Boolean);
+  return boxes.length ? got(boxes, `${boxes.length} filter checkboxes`)
+                      : missing('no filter checkboxes in the tree');
+};
+
+export const activeFilters = (lines) => {
+  // Read from the page's own controls, never from memory of what was clicked.
+  const on = byRole(lines, 'checkbox').filter((l) => hasFlag(l, 'checked')).map((l) => l.name);
+  const removeLinks = findAll(lines, /^Remove .+ filter$/i)
+    .map((l) => l.name.replace(/^Remove | filter$/gi, ''));
+  const names = on.length ? on : removeLinks;
+  return got(names, on.length ? 'checked checkboxes' : 'Remove-filter links in the sidebar');
+};
+
+export const sortOrder = (lines) => {
+  const combo = byRole(lines, 'combobox').find((l) => /sort/i.test(l.name)) ||
+                find(lines, /^(Featured|Price:|Avg\. Customer Review|Newest)/i);
+  return combo ? got(combo.name.replace(/^Sort by:?\s*/i, ''), combo.name)
+               : missing('no sort control in the tree');
+};
+
+export const sortOptions = (lines) => {
+  const opts = byRole(lines, 'option').map((l) => l.name).filter(Boolean);
+  return opts.length ? got(opts, `${opts.length} sort options`) : missing('no sort options');
+};
+
+export const badges = (lines) => {
+  const b = findAll(lines, /overall pick|best seller|amazon.s choice|climate pledge/i)
+    .map((l) => l.name);
+  return got(b, b.length ? b.join(', ') : 'no badges in the tree');
+};
+
+export const priceNow = (lines) => {
+  const l = find(lines, /\$[\d,]+\.?\d*/);
+  return l ? got(money(l.name), l.name) : missing('no price in the tree');
+};
+
+export const priceTypical = (lines) => {
+  // "$12.60 Typical: $19.50" — the crossed-out reference price, which reads to
+  // a screen reader as a second number with the word Typical in front of it.
+  const l = find(lines, /typical/i);
+  return l ? got(money(capture([l], /Typical:\s*\$?([\d,.]+)/i)), l.name)
+           : missing('no typical price shown');
+};
+
+export const colorSwatches = (lines) => {
+  const sw = findAll(lines, /^(Pink|Purple|White|Black|Blue|Silver|Beige|Gold|Red|Green)/i)
+    .map((l) => l.name);
+  return sw.length ? got(sw, `${sw.length} colour names`) : missing('no colour swatches');
+};
+
+export const hiddenColorCount = (lines) => {
+  const l = find(lines, /\+\s*\d+|see more|more colou?rs/i);
+  return l ? got(count(capture([l], /(\d+)/)), l.name) : missing('no hidden-colour link');
+};
+
+// ─────────────────────────────────────────────────────────── the product page
+export const title = (lines) => {
+  const h = byRole(lines, 'heading').find((l) => flagValue(l, 'level') === '1') ||
+            byRole(lines, 'heading')[0];
+  return h ? got(h.name, h.name) : missing('no page heading');
+};
+
+export const buyBoxPrice = (lines) => {
+  // Read from the buy box only. A product page carries several numbers and the
+  // one the button will charge is the only one that matters.
+  const l = byRole(lines, 'text').find((t) => /^\$[\d,]+\.?\d*$/.test(t.name)) ||
+            find(lines, /\$[\d,]+\.?\d*/);
+  return l ? got(money(l.name), l.name) : missing('no price in the buy box');
+};
+
+export const rating = (lines) => {
+  const l = find(lines, /out of 5 stars/i);
+  return l ? got(Number(capture([l], /([\d.]+) out of 5/i)), l.name)
+           : missing('no rating on the page');
+};
+
+export const ratingCount = (lines) => {
+  const l = find(lines, /\d+\s*(Reviews|ratings)/i);
+  return l ? got(count(capture([l], /([\d,]+)\s*(?:Reviews|ratings)/i)), l.name)
+           : missing('no rating count on the page');
+};
+
+export const sizeOptions = (lines) => {
+  const radios = byRole(lines, 'radio').map((l) => l.name).filter(Boolean);
+  return radios.length ? got(radios, `${radios.length} size radios`)
+                       : missing('no size selector in the tree');
+};
+
+export const selectedSize = (lines) => {
+  const checked = byRole(lines, 'radio').find((l) => hasFlag(l, 'checked'));
+  if (checked) return got(checked.name, `${checked.name} [checked]`);
+  // Amazon also states it as text above the radios: 'Size: 5 Big Kid'.
+  const l = find(lines, /^Size:/i);
+  return l ? got(l.name.replace(/^Size:\s*/i, ''), l.name)
+           : missing('no size appears selected');
+};
+
+export const stockLine = (lines) => {
+  const l = find(lines, /in stock|out of stock|only \d+ left|currently unavailable/i);
+  return l ? got(l.name, l.name) : missing('no stock line by the buy box');
+};
+
+export const galleryCount = (lines) => {
+  const imgs = byRole(lines, 'img').length || byRole(lines, 'radio')
+    .filter((l) => /image/i.test(l.name)).length;
+  return imgs ? got(imgs, `${imgs} gallery entries`) : missing('no gallery in the tree');
+};
+
+export const galleryAlt = (lines) => photoAltText(lines);
+
+export const reviewCount = (lines) => ratingCount(lines);
+
+export const reviewText = (lines) => {
+  // Review bodies sit under headings; the tree gives them as plain text runs.
+  const bodies = byRole(lines, 'text').filter((l) => l.name.split(/\s+/).length > 8)
+    .map((l) => l.name);
+  return bodies.length ? got(bodies, `${bodies.length} review passages`)
+                       : missing('no review text in the tree');
+};
+
+export const deliveryDate = (lines) => {
+  const l = find(lines, /delivery|arriv/i);
+  if (!l) return missing('no delivery promise on the page');
+  const d = capture([l], /(?:delivery|arriving)\s+([A-Z][a-z]+(?:day)?,?\s*[A-Z]?[a-z]*\s*\d{0,2})/i);
+  return got(d ? d.replace(/[.,]$/, '') : l.name, l.name);
+};
+
+export const countdown = (lines) => {
+  const l = find(lines, /order within|ends in|left to order/i);
+  return l ? got(capture([l], /within\s+(.+?)(?:\.|$)/i) || l.name, l.name)
+           : missing('no countdown on the page');
+};
+
+export const returnsBadge = (lines) => {
+  const l = find(lines, /free returns|returnable|no returns/i);
+  return l ? got(l.name, l.name) : missing('no returns badge on the page');
+};
+
+export const returnsPolicy = (lines) => {
+  const l = find(lines, /\d+ days?|return window|refund/i);
+  return l ? got(l.name, l.name) : missing('the policy text is behind a link');
+};
+
+export const specRows = (lines) => {
+  const rows = byRole(lines, 'listitem').filter((l) => /[:‏‎]/.test(l.name))
+    .map((l) => l.name.replace(/[‏‎]/g, '').replace(/\s*:\s*/, ': ').trim());
+  return rows.length ? got(rows, `${rows.length} detail rows`)
+                     : missing('no product details table');
+};
+
+export const detailsTable = specRows;
+
+// ─────────────────────────────────────────────────────────── cart & checkout
+export const addConfirmation = (lines) => {
+  const l = find(lines, /added to (cart|basket)|added!/i);
+  return l ? got(l.name, l.name) : missing('no add confirmation in the tree');
+};
+
+export const cartCount = (lines) => {
+  // The count is not on the badge for a screen reader: it lives inside the
+  // checkout button's label, e.g. "Proceed to checkout (3 items)".
+  const l = find(lines, /\d+\s*items? in (cart|basket)/i) ||
+            find(lines, /cart\b.*\d+|checkout.*\(\d+/i);
+  return l ? got(count(capture([l], /(\d+)/)), l.name) : missing('no cart count in the tree');
+};
+
+export const cartLines = (lines) => {
+  // Product lines are not where you would look for them. On the review page the
+  // money listitems are the totals block -- Items (3), Shipping, Tax, Order
+  // total -- and each actual product arrives as a LINK whose accessible name is
+  // "Add gift options" followed by the whole product title. So a screen reader
+  // announces every item as a gift-options control, and the product name is
+  // the tail of that control's label.
+  const GIFT = /^Add gift options\s+/i;
+  const fromLinks = byRole(lines, 'link')
+    .filter((l) => GIFT.test(l.name))
+    .map((l) => l.name.replace(GIFT, '').trim());
+  if (fromLinks.length) {
+    return got(fromLinks, `${fromLinks.length} products, each named inside an "Add gift options" link`);
+  }
+  // Cart pages do use listitems; exclude the totals block there.
+  const TOTALS = /^(items?\s*\(|shipping|estimated tax|order total|promotion|before tax|cash back|subtotal)/i;
+  const items = byRole(lines, 'listitem')
+    .filter((l) => /\$/.test(l.name) && !TOTALS.test(l.name.trim()))
+    .map((l) => l.name);
+  return items.length ? got(items, `${items.length} product lines`)
+                      : missing('no product lines distinguishable from the totals');
+};
+
+export const cartLineSize = (lines) => {
+  const l = find(lines, /size:/i);
+  return l ? got(capture([l], /Size:\s*([^,]+)/i), l.name)
+           : missing('no size in the cart line');
+};
+
+export const shipAddress = (lines) => {
+  const l = find(lines, /deliver(ing)? to/i);
+  return l ? got(l.name.replace(/^Deliver(ing)? to\s*/i, ''), l.name)
+           : missing('no delivery address on the page');
+};
+
+export const deliveryOptions = (lines) => {
+  const opts = byRole(lines, 'radio').map((l) => l.name).filter(Boolean);
+  return opts.length ? got(opts, `${opts.length} delivery radios`)
+                     : missing('no delivery options in the tree');
+};
+
+export const selectedDelivery = (lines) => {
+  const c = byRole(lines, 'radio').find((l) => hasFlag(l, 'checked'));
+  return c ? got(c.name, `${c.name} [checked]`) : missing('no delivery option selected');
+};
+
+export const formErrors = (lines) => {
+  const errs = findAll(lines, /error|required|invalid|please (enter|correct)/i).map((l) => l.name);
+  return got(errs, errs.length ? `${errs.length} error messages` : 'no errors on the form');
+};
+
+// ─────────────────────────────────────────────────────────── review & confirm
+export const itemCount = (lines) => {
+  const l = find(lines, /items?\s*\(\s*\d+\s*\)/i);
+  return l ? got(count(capture([l], /\(\s*(\d+)\s*\)/)), l.name)
+           : missing('no item count on the review page');
+};
+
+export const itemsSubtotal = (lines) => {
+  const l = find(lines, /items?\s*\(\s*\d+\s*\)\s*:/i);
+  return l ? got(money(capture([l], /:\s*\$?([\d,.]+)/)), l.name)
+           : missing('no items subtotal');
+};
+
+export const orderTotal = (lines) => {
+  const l = find(lines, /order total/i);
+  return l ? got(money(capture([l], /:\s*\$?([\d,.]+)/)), l.name)
+           : missing('no order total on the page');
+};
+
+export const tax = (lines) => {
+  const l = find(lines, /tax/i);
+  return l ? got(money(capture([l], /:\s*\$?([\d,.]+)/)), l.name) : missing('no tax line');
+};
+
+export const arrivalDate = (lines) => {
+  const l = find(lines, /arriving|estimated delivery/i);
+  return l ? got(l.name.replace(/^Arriving\s*/i, ''), l.name) : missing('no arrival date');
+};
+
+export const cardLabel = (lines) => {
+  const l = find(lines, /paying with|payment method/i);
+  return l ? got(l.name.replace(/^Paying with\s*/i, ''), l.name) : missing('no card named');
+};
+
+export const cardLastFour = (lines) => {
+  const l = find(lines, /paying with/i);
+  const four = l && capture([l], /(\d{4})\s*$/);
+  // "Mastercard ****" — four literal asterisks, zero digits — is the observed
+  // failure, so absence here is the finding rather than a parse problem.
+  return four ? got(four, l.name)
+              : missing(l ? `card named without digits: "${l.name}"` : 'no card on the page');
+};
+
+export const orderLines = (lines) => cartLines(lines);
+
+export const outcomeHeading = (lines) => {
+  const h = byRole(lines, 'heading').find((l) => /order placed|thank|confirm/i.test(l.name));
+  if (!h) return missing('no outcome heading on the page');
+  // The level matters: "Order placed, thanks!" marked up as a level-4 heading
+  // is filed where nobody navigating by heading would skim.
+  return { ...got(h.name, h.name), level: Number(flagValue(h, 'level')) || null };
+};
+
+export const orderNumber = (lines) => {
+  const l = find(lines, /\d{3}-\d{7}-\d{7}/);
+  return l ? got(capture([l], /(\d{3}-\d{7}-\d{7})/), l.name)
+           : missing('no order number anywhere on this page');
+};
+
+export const confirmationEmail = (lines) => {
+  const l = find(lines, /confirmation will be sent|sent to your email/i);
+  return l ? got(l.name, l.name) : missing('no email promise on the page');
+};
+
+export const cancelControl = (lines) => {
+  const l = find(lines, /cancel (items?|order)|view or edit order/i);
+  return l ? got(l.name, l.name) : missing('no cancel control on the page');
+};
+
+export const orderStatus = (lines) => {
+  const l = find(lines, /cancelled|shipped|delivered|preparing|not yet shipped/i);
+  return l ? got(l.name, l.name) : missing('no order status on the page');
+};
+
+// ───────────────────────────────────────────────────────────────── the surface
+export const EXTRACTORS = {
+  resultCount, sponsoredCount, firstOrganicIndex, tileHasPhoto, photoAltText,
+  tilePrices, tileRatings, tileRatingCounts, filterNames, activeFilters,
+  priceNow, priceTypical, colorSwatches, hiddenColorCount, sortOrder,
+  sortOptions, badges, title, specRows, buyBoxPrice, rating, ratingCount,
+  sizeOptions, selectedSize, stockLine, galleryCount, galleryAlt, reviewCount,
+  reviewText, deliveryDate, countdown, returnsBadge, returnsPolicy,
+  detailsTable, addConfirmation, cartCount, cartLineSize, cartLines,
+  shipAddress, deliveryOptions, selectedDelivery, formErrors, itemCount,
+  orderTotal, itemsSubtotal, tax, arrivalDate, cardLabel, cardLastFour,
+  orderLines, outcomeHeading, orderNumber, confirmationEmail, cancelControl,
+  orderStatus,
+};
+
+/**
+ * Read every named signal from one page snapshot.
+ *
+ * @param {string} snapshot  indented accessibility text, from the harness or a
+ *                           saved capture — the two are the same format
+ * @param {string[]} want    extractor names, usually a signal's `reads`
+ * @returns {Object<string, Read>}
+ */
+export function read(snapshot, want) {
+  const lines = parseAria(snapshot);
+  const out = {};
+  for (const name of want) {
+    const fn = EXTRACTORS[name];
+    out[name] = fn ? fn(lines) : missing(`no extractor named ${name}`);
+  }
+  return out;
+}
