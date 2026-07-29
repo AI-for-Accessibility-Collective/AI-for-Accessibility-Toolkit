@@ -1,0 +1,175 @@
+/* Validation panel.
+
+   Deliberately continuous with sidepanel.css — same system font stack, same
+   #1d1d1f on #fafafa, same pill shapes and semantic colours. A second visual
+   language inside one extension makes the layer read as a bolted-on thing
+   rather than part of the assistant.
+
+   The restraint is a design position, not a shortage of ideas. This surface is
+   for the persona who can still see the page: interrupting them to describe
+   something they could look at is pure cost, so a finding is a quiet mark
+   beside the thing it concerns, and the loud element is the CONTROL — the
+   action delegation took away. Anything that competes with the page for
+   attention is working against the person using it. */
+
+* { box-sizing: border-box; }
+
+.va {
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: #1d1d1f;
+}
+
+/* ── the ask ─────────────────────────────────────────────────────────────── */
+.va-ask {
+  padding: 10px 14px;
+  background: #fff;
+  border-bottom: 1px solid #e5e5e7;
+}
+.va-ask h2 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #86868b;
+}
+.va-ask p { margin: 0; }
+.va-ask .va-edit {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #06c;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.va-ask .va-edit:hover { text-decoration: underline; }
+
+/* ── findings ────────────────────────────────────────────────────────────── */
+.va-list { list-style: none; margin: 0; padding: 6px 0; }
+
+.va-item {
+  display: flex;
+  gap: 9px;
+  padding: 8px 14px;
+  align-items: flex-start;
+}
+/* No border, no card, no shadow. A list of boxes reads as a dashboard; this is
+   meant to be glanced past unless something is wrong. */
+.va-item + .va-item { border-top: 1px solid #f0f0f2; }
+
+.va-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 6px;
+  background: #c7c7cc;
+}
+.va-item.ok    .va-dot { background: #34c759; }
+.va-item.note  .va-dot { background: #ff9500; }
+.va-item.stop  .va-dot { background: #ff3b30; }
+.va-item.quiet .va-dot { background: #d1d1d6; }
+
+.va-body { flex: 1 1 auto; min-width: 0; }
+.va-text { margin: 0; }
+.va-item.quiet .va-text { color: #86868b; }
+
+.va-where {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #86868b;
+  /* The page's own words, so a claim can always be traced back. */
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The control is the point of this surface, so it is the only thing with
+   affordance. */
+.va-do {
+  margin-top: 6px;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 11px;
+  border: 1px solid #d2d2d7;
+  border-radius: 999px;
+  background: #fff;
+  color: #1d1d1f;
+  cursor: pointer;
+}
+.va-do:hover  { background: #f5f5f7; }
+.va-do:active { background: #ebebed; }
+.va-do:focus-visible { outline: 2px solid #06c; outline-offset: 2px; }
+
+/* ── the gate ────────────────────────────────────────────────────────────── */
+/* The one element allowed to be loud. Everything above can be ignored; this
+   cannot, because the agent is held until it is answered. */
+.va-gate {
+  margin: 10px 14px;
+  padding: 12px 14px;
+  border: 1px solid #ffd0cd;
+  border-radius: 10px;
+  background: #fff5f5;
+}
+.va-gate h2 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #c0362c;
+}
+.va-gate p { margin: 0 0 10px; }
+.va-answers { display: flex; gap: 8px; flex-wrap: wrap; }
+.va-answers .va-do { margin-top: 0; }
+.va-answers .va-do.primary {
+  background: #1d1d1f;
+  border-color: #1d1d1f;
+  color: #fff;
+}
+.va-answers .va-do.primary:hover { background: #000; }
+
+/* ── footer ──────────────────────────────────────────────────────────────── */
+.va-foot {
+  padding: 8px 14px;
+  border-top: 1px solid #e5e5e7;
+  font-size: 11px;
+  color: #86868b;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.va-foot button {
+  font: inherit;
+  color: #06c;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.va-empty {
+  padding: 22px 14px;
+  text-align: center;
+  color: #86868b;
+}
+
+/* Respect the person's settings rather than asserting our own. */
+@media (prefers-color-scheme: dark) {
+  .va { color: #f5f5f7; }
+  .va-ask, .va-item { background: transparent; }
+  .va-ask { border-bottom-color: #38383a; }
+  .va-item + .va-item { border-top-color: #2c2c2e; }
+  .va-do { background: #1c1c1e; border-color: #48484a; color: #f5f5f7; }
+  .va-do:hover { background: #2c2c2e; }
+  .va-gate { background: #2a1a1a; border-color: #5c2b28; }
+  .va-gate h2 { color: #ff6961; }
+  .va-answers .va-do.primary { background: #f5f5f7; color: #1d1d1f; border-color: #f5f5f7; }
+  .va-foot { border-top-color: #38383a; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

@@ -32,6 +32,72 @@ import { parseAria, byRole, find, findAll, capture, money, count,
 const got = (value, from) => ({ value, from });
 const missing = (why) => ({ value: null, from: why, absent: true });
 
+// ───────────────────────────────────────────────────────────── result tiles
+//
+// A results page is not a flat list of facts, it is a list of PRODUCTS, and
+// almost everything the analysis asks about Search is a relationship between
+// them: this price against the others, this rating against the best available,
+// this tile against the one the agent picked. Reading the tree as one flat run
+// cannot express any of that -- it produced a "discount" by comparing one
+// tile's price against a different tile's reference price.
+//
+// So the tree is grouped first. A tile is a listitem that contains a product
+// heading and a price, and everything nested under it belongs to it.
+export function tiles(lines) {
+  const out = [];
+  let cur = null;
+  for (const l of lines) {
+    if (l.role === 'listitem') {
+      // A new listitem at or above the depth of the current one ends it.
+      if (cur && l.depth <= cur.depth) { if (isProduct(cur)) out.push(cur); cur = null; }
+      if (!cur) cur = { depth: l.depth, lines: [] };
+      continue;
+    }
+    if (cur && l.depth > cur.depth) cur.lines.push(l);
+    else if (cur) { if (isProduct(cur)) out.push(cur); cur = null; }
+  }
+  if (cur && isProduct(cur)) out.push(cur);
+  return out.map(readTile);
+}
+
+const isProduct = (t) => t.lines.some((l) => /\$[\d,]+/.test(l.name))
+                      && t.lines.some((l) => l.role === 'heading' && l.name.length > 8);
+
+function readTile(t) {
+  const L = t.lines;
+  const txt = L.map((l) => l.name).join(' | ');
+  const headings = L.filter((l) => l.role === 'heading' && l.name.length > 8);
+  // The long heading is the product; a short one before it is the brand.
+  const titleLine = headings.sort((a, b) => b.name.length - a.name.length)[0];
+  const priceLine = L.find((l) => /^\$[\d,]+/.test(l.name));
+  const ratingLine = L.find((l) => /out of 5 stars/i.test(l.name));
+  // "4.4 out of 5 stars, rating details" also matches a naive /ratings?/ and
+  // yields 4 as the count. The rating-count line is a link whose whole name is
+  // the number and the word.
+  const countLine = L.find((l) => /^[\d,]+\s+ratings?$/i.test(l.name.trim()));
+
+  return {
+    title: titleLine ? titleLine.name : null,
+    brand: headings.find((h) => h !== titleLine)?.name || null,
+    // "Sponsored" never appears as its own line. It is inside the ad-feedback
+    // button's name, inside the link's name, or prefixed to the heading.
+    sponsored: /sponsored/i.test(txt),
+    price: priceLine ? money(priceLine.name.match(/^\$[\d,.]+/)[0]) : null,
+    typical: /typical|list:/i.test(txt)
+      ? money((txt.match(/(?:Typical(?:\s+price)?|List):\s*\$?([\d,.]+)/i) || [])[1]) : null,
+    rating: ratingLine ? Number((ratingLine.name.match(/([\d.]+) out of 5/i) || [])[1]) : null,
+    ratingCount: countLine ? count(countLine.name) : null,
+    badge: (txt.match(/Overall Pick|Best Seller|Amazon's Choice|Limited [\w ]*deal/i) || [])[0] || null,
+    // A product photo has no entry in the tile's accessibility tree at all.
+    // The only images announced are the Prime badge and a brand logo, so a
+    // screen reader hears a tile that sounds text-only. `hasPhoto` is
+    // therefore almost always false, and that IS the finding.
+    hasPhoto: L.some((l) => l.role === 'img'
+      && !/^(prime|sponsored)$/i.test(l.name)
+      && l.name.length > 12),
+  };
+}
+
 // ─────────────────────────────────────────────────────────── search results
 export const resultCount = (lines) => {
   // "1-48 of 944 results for" — the heading a screen reader speaks first.
@@ -56,32 +122,40 @@ export const resultCount = (lines) => {
 };
 
 export const sponsoredCount = (lines) => {
-  const tags = findAll(lines, /^sponsored$/i);
-  return got(tags.length, `${tags.length} lines reading "Sponsored"`);
+  // Counting lines that read exactly "Sponsored" finds almost nothing: the
+  // word lives inside an ad-feedback button's accessible name, or prefixed to
+  // the product heading. It has to be counted per tile.
+  const t = tiles(lines);
+  if (!t.length) return missing('no product tiles found in this tree');
+  const ads = t.filter((x) => x.sponsored).length;
+  const firstTen = t.slice(0, 10).filter((x) => x.sponsored).length;
+  return { ...got(ads, `${ads} of ${t.length} tiles carry a Sponsored marker`),
+           ofFirstTen: firstTen, total: t.length };
 };
 
 export const firstOrganicIndex = (lines) => {
-  // Position of the first result tile not preceded by a Sponsored marker.
-  const tiles = byRole(lines, 'listitem').filter((l) => /\$/.test(l.name));
-  const idx = tiles.findIndex((t) => !/sponsored/i.test(t.name));
-  return idx < 0 ? missing('no unsponsored tile found') : got(idx + 1, tiles[idx]?.name);
+  const t = tiles(lines);
+  const idx = t.findIndex((x) => !x.sponsored);
+  return idx < 0 ? missing('every tile on this page is sponsored')
+                 : got(idx + 1, `${t[idx].title?.slice(0, 40)}`);
 };
 
 export const tilePrices = (lines) => {
-  const prices = findAll(lines, /\$[\d,]+\.?\d*/).map((l) => money(l.name)).filter((n) => n != null);
-  return prices.length ? got(prices, `${prices.length} prices on the page`)
-                       : missing('no prices in the tree');
+  // One price per product, not every dollar figure on the page. The flat scan
+  // returned 123 numbers for a 48-result page by counting carousels, reference
+  // prices and "also bought" strips.
+  const p = tiles(lines).map((t) => t.price).filter((n) => n != null);
+  return p.length ? got(p, `${p.length} product prices`) : missing('no tile prices');
 };
 
 export const tileRatings = (lines) => {
-  const rs = findAll(lines, /out of 5 stars/i)
-    .map((l) => Number(capture([l], /([\d.]+) out of 5/i))).filter((n) => !isNaN(n));
-  return rs.length ? got(rs, `${rs.length} star ratings`) : missing('no ratings in the tree');
+  const r = tiles(lines).map((t) => t.rating).filter((n) => n != null);
+  return r.length ? got(r, `${r.length} product ratings`) : missing('no tile ratings');
 };
 
 export const tileRatingCounts = (lines) => {
-  const cs = findAll(lines, /^\(?[\d,]+\)?$/).map((l) => count(l.name)).filter((n) => n != null);
-  return cs.length ? got(cs, `${cs.length} rating counts`) : missing('no rating counts');
+  const c = tiles(lines).map((t) => t.ratingCount).filter((n) => n != null);
+  return c.length ? got(c, `${c.length} rating counts`) : missing('no rating counts');
 };
 
 export const tileHasPhoto = (lines) => {
@@ -129,6 +203,35 @@ export const sortOptions = (lines) => {
   return opts.length ? got(opts, `${opts.length} sort options`) : missing('no sort options');
 };
 
+/**
+ * The result set as one object: how many, how they spread, what carries a
+ * badge. This is what the Search phase actually needs — a person choosing
+ * between products needs the shape of the set, not one product's facts.
+ */
+export const resultSet = (lines) => {
+  const t = tiles(lines);
+  if (!t.length) return missing('no product tiles in this tree');
+  const prices = t.map((x) => x.price).filter((n) => n != null);
+  const rated = t.filter((x) => x.rating != null);
+  return got({
+    count: t.length,
+    sponsored: t.filter((x) => x.sponsored).length,
+    sponsoredInFirstTen: t.slice(0, 10).filter((x) => x.sponsored).length,
+    priceLow: prices.length ? Math.min(...prices) : null,
+    priceHigh: prices.length ? Math.max(...prices) : null,
+    // Ranking by stars alone crowns a 5.0 from 5 ratings over a 4.4 from
+    // 2,715 -- which is the failure the analysis records, not a ranking. A
+    // rating needs enough behind it to mean anything, so thin records are
+    // reported separately rather than winning.
+    bestRated: rated.filter((x) => (x.ratingCount || 0) >= 50)
+      .sort((a, b) => b.rating - a.rating)[0] || null,
+    bestRatedThin: rated.filter((x) => (x.ratingCount || 0) < 50)
+      .sort((a, b) => b.rating - a.rating)[0] || null,
+    withBadge: t.filter((x) => x.badge).map((x) => ({ badge: x.badge, title: x.title })),
+    noPhoto: t.filter((x) => !x.hasPhoto).length,
+  }, `${t.length} product tiles`);
+};
+
 export const badges = (lines) => {
   const b = findAll(lines, /overall pick|best seller|amazon.s choice|climate pledge/i)
     .map((l) => l.name);
@@ -136,6 +239,15 @@ export const badges = (lines) => {
 };
 
 export const priceNow = (lines) => {
+  // On a results page this is the first PRODUCT's price. Taking the first
+  // dollar figure anywhere compared one tile's price against another tile's
+  // reference price and reported the difference as a discount.
+  const t = tiles(lines);
+  if (t.length) {
+    const first = t.find((x) => x.price != null);
+    return first ? got(first.price, `${first.title?.slice(0, 40)}`)
+                 : missing('no tile carries a price');
+  }
   const l = find(lines, /\$[\d,]+\.?\d*/);
   return l ? got(money(l.name), l.name) : missing('no price in the tree');
 };
@@ -143,11 +255,17 @@ export const priceNow = (lines) => {
 export const priceTypical = (lines) => {
   // "$12.60 Typical: $19.50" — the crossed-out reference price, which reads to
   // a screen reader as a second number with the word Typical in front of it.
-  // Amazon writes this two ways: "Typical: $19.50" on some tiles and "Typical
-  // price: $12.99" on others. Matching only the first silently drops the whole
-  // price-cut check on half the pages.
-  const l = find(lines, /typical/i);
-  return l ? got(money(capture([l], /Typical(?:\s+price)?:\s*\$?([\d,.]+)/i)), l.name)
+  // Must come from the same tile as priceNow, or the "discount" is a
+  // comparison between two different products.
+  const t = tiles(lines);
+  if (t.length) {
+    const first = t.find((x) => x.price != null);
+    return first?.typical != null
+      ? got(first.typical, `${first.title?.slice(0, 34)}: $${first.price} vs $${first.typical}`)
+      : missing('the first product shows no reference price');
+  }
+  const l = find(lines, /typical|list:/i);
+  return l ? got(money(capture([l], /(?:Typical(?:\s+price)?|List):\s*\$?([\d,.]+)/i)), l.name)
            : missing('no typical price shown');
 };
 
@@ -425,6 +543,7 @@ export const orderStatus = (lines) => {
 
 // ───────────────────────────────────────────────────────────────── the surface
 export const EXTRACTORS = {
+  resultSet,
   resultCount, sponsoredCount, firstOrganicIndex, tileHasPhoto, photoAltText,
   tilePrices, tileRatings, tileRatingCounts, filterNames, activeFilters,
   priceNow, priceTypical, colorSwatches, hiddenColorCount, sortOrder,

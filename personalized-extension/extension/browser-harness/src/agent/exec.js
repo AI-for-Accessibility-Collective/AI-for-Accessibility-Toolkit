@@ -25,8 +25,42 @@ import {
 import { _bhAgentGroupTab } from './tabs.js';
 import { _bhAgentShowPageCursor } from './notify.js';
 
+/**
+ * Ask the validation layer whether this action may happen.
+ *
+ * The gate is checked HERE, in the executor, rather than in the model's
+ * prompt. A rule the agent is asked to respect is a rule it can step over on a
+ * bad turn, and the failure this guards against is precisely an agent that
+ * notices a problem and continues anyway. Checking at the point of action
+ * means the click does not happen, whatever the model decided.
+ *
+ * No validation run in progress means no gate — this is inert unless a task
+ * has explicitly started one.
+ */
+async function _bhAgentGate(action) {
+  const V = globalThis.Validation;
+  if (!V || !V.isRunning()) return { allowed: true };
+  const described = [action.action, action.text, action.label, action.selector,
+                     action.url].filter(Boolean).join(' ');
+  try {
+    return await V.allow(described);
+  } catch {
+    return { allowed: true };   // never let the guard itself break a run
+  }
+}
+
 export async function _bhAgentExec(tabId, action, task) {
   const H = globalThis.BrowserHarness;
+
+  const gate = await _bhAgentGate(action);
+  if (!gate.allowed) {
+    _bhAgentLog({ kind: 'action', action: 'blocked',
+                  detail: `held: ${(gate.waitingOn || []).join(', ')}` });
+    return { keepGoing: true,
+             summary: `Held. ${gate.say || 'Waiting on the person.'} ` +
+                      `Do not retry this step; wait for their answer.` };
+  }
+
   switch (action.action) {
     case 'click': {
       // Model emits coords in image-pixel space; convert to CSS pixels for

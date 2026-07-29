@@ -1,4 +1,120 @@
 (() => {
+  // extension/validation/panel.js
+  var KEY = "aa.validation";
+  function mountValidationPanel(root, { onControl } = {}) {
+    root.classList.add("va");
+    root.setAttribute("aria-live", "polite");
+    root.setAttribute("aria-relevant", "additions text");
+    let state = null;
+    const el = (tag, cls, text) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    };
+    function render() {
+      root.textContent = "";
+      if (!state || !state.contract) {
+        root.append(el("div", "va-empty", "No task running."));
+        return;
+      }
+      const c = state.contract;
+      const ask = el("section", "va-ask");
+      ask.append(el("h2", null, "What you asked for"));
+      ask.append(el("p", null, describe(c)));
+      const edit = el("button", "va-edit", "Change something");
+      edit.addEventListener("click", () => onControl?.({ action: "edit-ask" }));
+      ask.append(edit);
+      root.append(ask);
+      if (state.gate && state.gate.allowed === false) {
+        const gate = el("section", "va-gate");
+        gate.setAttribute("role", "alertdialog");
+        gate.setAttribute("aria-label", "The agent is waiting for you");
+        gate.append(el("h2", null, "Waiting for you"));
+        gate.append(el("p", null, state.gate.say || "Something needs your decision."));
+        const answers = el("div", "va-answers");
+        for (const [label, response, primary] of gateChoices(state)) {
+          const b = el("button", `va-do${primary ? " primary" : ""}`, label);
+          b.addEventListener("click", () => onControl?.({
+            action: "answer",
+            widget: (state.gate.waitingOn || [])[0],
+            response
+          }));
+          answers.append(b);
+        }
+        gate.append(answers);
+        root.append(gate);
+        requestAnimationFrame(() => gate.querySelector(".va-do")?.focus());
+      }
+      const findings = (state.findings || []).filter((f) => f.level !== "ambient" || f.confirming);
+      if (!findings.length) {
+        root.append(el("div", "va-empty", "Nothing to flag yet."));
+      } else {
+        const list = el("ul", "va-list");
+        for (const f of findings) {
+          const li = el("li", `va-item ${tone(f)}`);
+          li.append(el("span", "va-dot"));
+          const body = el("div", "va-body");
+          body.append(el("p", "va-text", f.say));
+          if (f.from) body.append(el("p", "va-where", f.from));
+          if (f.control) {
+            const b = el("button", "va-do", f.control.label);
+            b.addEventListener("click", () => onControl?.(f.control));
+            body.append(b);
+          }
+          li.append(body);
+          list.append(li);
+        }
+        root.append(list);
+      }
+      const foot = el("div", "va-foot");
+      const n = (state.said || []).length;
+      foot.append(el(
+        "span",
+        null,
+        `${n} thing${n === 1 ? "" : "s"} said \xB7 ${state.spokenWords || 0} words`
+      ));
+      const more = el("button", null, "What else did you check?");
+      more.addEventListener("click", () => onControl?.({ action: "on-request" }));
+      foot.append(more);
+      root.append(foot);
+    }
+    const tone = (f) => f.confirming ? "ok" : f.level === "stop" ? "stop" : f.level === "aside" ? "note" : "quiet";
+    function gateChoices(s) {
+      const w = ((s.gate.waitingOn || [])[0] || "").toLowerCase();
+      if (/size/.test(w)) {
+        return [["Use it anyway", "use it", false], ["Change the size", "change it", true]];
+      }
+      if (/extra items|cap/.test(w)) {
+        return [["Remove the extras", "remove them", true], ["Go ahead", "go ahead", false]];
+      }
+      if (/land/.test(w)) {
+        return [["Try again", "try again", true], ["Stop here", "stop", false]];
+      }
+      return [["Go on", "go on", true], ["Stop here", "stop", false]];
+    }
+    function describe(c) {
+      const bits = [c.item];
+      if (c.mustHaves?.length) bits.push(c.mustHaves.join(" and "));
+      if (c.size) bits.push(`size ${c.size}`);
+      if (c.budget) bits.push(`under ${c.budget}`);
+      if (c.deadline) bits.push(`by ${c.deadline}`);
+      return `${bits.filter(Boolean).join(", ")}.`;
+    }
+    chrome.storage.local.get(KEY).then((r) => {
+      state = r[KEY] || null;
+      render();
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== "local" || !changes[KEY]) return;
+      state = changes[KEY].newValue;
+      render();
+    });
+    return { render, get state() {
+      return state;
+    } };
+  }
+
   // extension/sidepanel/src/store.js
   var STATE_KEY = "voiceState";
   var RESUME_HANDLE_KEY = "voiceResumeHandle";
@@ -602,4 +718,26 @@
   main().catch((e) => {
     console.error("[sidepanel] init failed", e);
   });
+  var vaRoot = document.getElementById("va-panel");
+  if (vaRoot) {
+    mountValidationPanel(vaRoot, {
+      onControl: (c) => {
+        if (c.action === "answer") {
+          chrome.runtime.sendMessage({
+            type: "validationAnswer",
+            widget: c.widget,
+            response: c.response
+          });
+          return;
+        }
+        if (c.action === "on-request") {
+          chrome.runtime.sendMessage({ type: "validationOnRequest" }, (r) => {
+            for (const i of r?.items || []) console.log("[also checked]", i.say);
+          });
+          return;
+        }
+        chrome.runtime.sendMessage({ type: "validationControl", control: c });
+      }
+    });
+  }
 })();
