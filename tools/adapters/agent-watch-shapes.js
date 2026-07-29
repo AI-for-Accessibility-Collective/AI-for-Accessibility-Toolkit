@@ -47,6 +47,48 @@ const svg = (w, h, label) => {
   return s;
 };
 
+// Make part of a shape something you can press.
+//
+// A shape that only depicts is a picture of a problem. The paradigms in the
+// analysis are interactions — poke the world means point at anything and hear
+// its exact words; the coverage map exists so you can say "read those now";
+// the fork exists so you can open the road not taken. Rendering them as static
+// geometry keeps the diagram and throws away the affordance, which is the part
+// that returns control to the person.
+//
+// So each shape's parts are real buttons: reachable by keyboard, named for
+// screen readers, and carrying the action they perform.
+let ACT = null;
+
+/** @param {(a: {action: string, label: string, arg?: any}) => void} fn */
+export function setActionHandler(fn) {
+  ACT = fn;
+}
+
+const act = (node, { action, label, arg, describedBy }) => {
+  if (!ACT) return node;                    // no handler: stays a plain shape
+  node.classList.add('aw-act');
+  // A <button> is already a button. Announcing "button button" and managing a
+  // tabindex it already has is the kind of ARIA that makes things worse.
+  const native = node.tagName === 'BUTTON';
+  if (native) node.type = 'button';
+  else {
+    node.setAttribute('role', 'button');
+    node.setAttribute('tabindex', '0');
+  }
+  node.setAttribute('aria-label', describedBy || label);
+  const fire = () => ACT({ action, label, arg });
+  node.addEventListener('click', fire);
+  // A native button already does Enter and Space; binding them again fires
+  // twice.
+  if (!native) {
+    node.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
+    });
+  }
+  return node;
+};
+
 const put = (parent, tag, attrs) => {
   const n = document.createElementNS(NS, tag);
   for (const k in attrs) n.setAttribute(k, attrs[k]);
@@ -96,6 +138,12 @@ function gauge(f) {
     const t = put(s, 'text', { x: 0, y: 25, 'font-size': 9, fill: 'currentColor', opacity: 0.7 });
     t.textContent = d.partLabel || `${d.part} of ${d.whole}`;
     box.appendChild(s);
+    if (d.action) {
+      box.appendChild(act(el('button', 'aw-act aw-act-inline',
+        d.actionLabel || `Leave out the ${d.part}`),
+        { action: d.action, label: d.partLabel || 'these', arg: d,
+          describedBy: d.actionLabel || `Leave out the ${d.part}` }));
+    }
     return box;
   }
 
@@ -147,6 +195,11 @@ function triangulation(f) {
     const li = el('li', `aw-tri-src aw-${src.agrees === false ? 'no' : src.agrees ? 'yes' : 'unknown'}`);
     li.appendChild(el('span', 'aw-tri-who', src.who));
     li.appendChild(el('span', 'aw-tri-said', src.said || (src.agrees ? 'agrees' : 'says nothing')));
+    // Press a source to have it read again from the live page. The whole
+    // paradigm is that sources can disagree; being able to go back to one is
+    // what makes that more than an assertion.
+    act(li, { action: 'check-source', label: src.who, arg: src,
+              describedBy: `Read ${src.who} again from the page` });
     list.appendChild(li);
   }
   box.appendChild(list);
@@ -178,6 +231,12 @@ function diff(f) {
     const row = el('div', `aw-diff-row aw-${r.match === false ? 'no' : r.match ? 'yes' : 'unknown'}`);
     row.appendChild(el('span', 'aw-diff-mine', r.asked));
     row.appendChild(el('span', 'aw-diff-theirs', r.found == null ? 'not found' : String(r.found)));
+    // Only the rows that do not match: pressing a row that agrees would do
+    // nothing, and a control that does nothing teaches people to stop pressing.
+    if (r.match === false) {
+      act(row, { action: 'fix-field', label: r.asked, arg: r,
+                 describedBy: `Fix this: you asked for ${r.asked}, the page says ${r.found}` });
+    }
     box.appendChild(row);
   }
   return box;
@@ -210,6 +269,10 @@ function coverage(f) {
     }
     row.appendChild(s);
     row.appendChild(el('span', 'aw-cov-n', done ? `${done}/${total}` : `none of ${total}`));
+    if (done < total) {
+      act(row, { action: 'cover', label: p.what, arg: { what: p.what, of: total, checked: done },
+                 describedBy: `Check the ${total - done} ${p.what} nobody has looked at` });
+    }
     box.appendChild(row);
   }
   return box;
@@ -242,8 +305,17 @@ function timeline(f) {
       x, y: 36, 'text-anchor': 'middle', 'font-size': 8.5, fill: 'currentColor', opacity: 0.6,
     });
     w.textContent = p.when;
+
   });
   box.appendChild(s);
+  // The action lives OUTSIDE the drawing. The svg is aria-hidden — everything
+  // it shows is already in the sentence — and a focusable element inside an
+  // aria-hidden subtree is reachable by tab but invisible to a screen reader,
+  // which is worse than either being present or absent.
+  const now = d.points[d.points.length - 1];
+  box.appendChild(act(el('button', 'aw-act aw-act-inline', `Re-read ${now.value} now`),
+    { action: 're-read', label: now.value, arg: now,
+      describedBy: `Read ${now.value} again from the page now` }));
   return box;
 }
 
@@ -262,6 +334,8 @@ function airlock(f) {
     const li = el('li', `aw-lock-fact aw-${fact.ok === false ? 'no' : 'yes'}`);
     li.appendChild(el('span', 'aw-lock-what', fact.what));
     li.appendChild(el('span', 'aw-lock-val', fact.value));
+    act(li, { action: 'change-fact', label: fact.what, arg: fact,
+              describedBy: `Change ${fact.what}, currently ${fact.value}` });
     list.appendChild(li);
   }
   box.appendChild(list);
@@ -284,6 +358,10 @@ function fork(f) {
     // Same fields in the same order on both sides — that ordering is what
     // makes them diffable without holding either in memory.
     for (const line of item.facts || []) col.appendChild(el('p', 'aw-fork-fact', line));
+    if (side === 'passed over') {
+      act(col, { action: 'open-other', label: item.name, arg: item,
+                 describedBy: `Open ${item.name}, the one that was passed over` });
+    }
     box.appendChild(col);
   }
   return box;
@@ -301,6 +379,8 @@ function magnifier(f) {
   const box = el('div', 'aw-shape aw-mag');
   const q = el('blockquote', 'aw-mag-quote');
   q.textContent = d.quote;
+  act(q, { action: 're-read', label: 'this text', arg: d,
+           describedBy: 'Read this from the page again, right now' });
   box.appendChild(q);
   const foot = el('p', 'aw-mag-foot');
   foot.append(el('span', 'aw-mag-where', d.where || 'the live page'));
@@ -348,6 +428,8 @@ function auditSheet(f) {
     const li = el('li', `aw-audit-line aw-${l.ok === false ? 'no' : l.ok ? 'yes' : 'unknown'}`);
     li.appendChild(el('span', 'aw-audit-src', l.source));
     li.appendChild(el('span', 'aw-audit-said', l.said));
+    act(li, { action: 'check-source', label: l.source, arg: l,
+              describedBy: `Check ${l.source} again` });
     list.appendChild(li);
   }
   box.appendChild(list);
@@ -371,6 +453,8 @@ function path(f) {
     body.appendChild(el('span', 'aw-path-what', st.what));
     body.appendChild(el('span', 'aw-path-who', st.yours ? 'you press' : 'I do this'));
     li.appendChild(body);
+    act(li, { action: st.yours ? 'take-me-there' : 'do-step', label: st.what, arg: st,
+              describedBy: st.yours ? `Take me to: ${st.what}` : `Do this step: ${st.what}` });
     list.appendChild(li);
   });
   box.appendChild(list);
@@ -404,8 +488,11 @@ function funnel(f) {
   box.appendChild(el('p', 'aw-fun-said', d.sentence));
   // Nothing is thrown away — the rest stays reachable by asking. Saying so is
   // what separates a summary from a loss.
-  box.appendChild(el('p', 'aw-fun-rest',
-    d.rest || 'Everything else is still there — ask for any line.'));
+  const rest = el('p', 'aw-fun-rest',
+    d.rest || 'Everything else is still there — ask for any line.');
+  act(rest, { action: 'expand', label: 'everything', arg: d,
+              describedBy: `Read all ${d.wasWords} words, not the summary` });
+  box.appendChild(rest);
   return box;
 }
 
@@ -447,6 +534,22 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
   const px = (n) => `${Math.round(base * n)}px`;
   return `
 #${id} .aw-shape { margin: 7px 0 2px; color: inherit; }
+
+/* Anything you can press. The hit target is the whole row, because a 6px dot
+   is not a target — and every one of these is reachable by keyboard with a
+   visible focus ring, since this surface is used by people who never see a
+   hover state. */
+#${id} .aw-act { cursor: pointer; border-radius: 5px; }
+#${id} .aw-act:hover { background: rgba(0,0,0,.05); }
+#${id} .aw-act:focus-visible { outline: 3px solid #06c; outline-offset: 1px; }
+#${id} .aw-act::after {
+  content: "›"; margin-left: 5px; opacity: .5; font-weight: 700;
+}
+#${id} .aw-act-inline {
+  display: inline-block; margin-top: 7px; font: inherit;
+  font-size: ${px(0.88)}; padding: 3px 10px; border: 1px solid ${line};
+  border-radius: 999px; background: none; color: inherit;
+}
 
 /* 1 — proportion and marked scale */
 #${id} .aw-prop svg, #${id} .aw-scale svg {

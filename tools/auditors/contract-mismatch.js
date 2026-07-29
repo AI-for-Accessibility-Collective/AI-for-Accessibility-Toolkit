@@ -166,10 +166,19 @@ const search = (F, c) => {
     widget: 'Count-first opener',
     // The tutor's rule, from the video corpus: a few hundred means the query
     // landed; four figures means it matched half the shop. The count is only
-    // The tutor's rule, carried from the analysis rather than invented here:
-    // a targeted query returns a targeted number, and "over 1,000" is the
-    // recorded value of a query that stopped being targeted.
-    shape: { value: S.count, display: String(S.count), zones: COUNT_ZONES },
+    // A proportion when there are ads to count — how many of the first ten
+    // are paid placement is a ratio, and a ratio needs no threshold to mean
+    // something. Otherwise the count against the one reference the analysis
+    // supplies, drawn as a reference and attributed, never as a verdict.
+    shape: S.sponsoredInFirstTen
+      ? { part: S.sponsoredInFirstTen, whole: Math.min(10, S.count),
+          partLabel: `${S.sponsoredInFirstTen} of the first ${Math.min(10, S.count)} are ads`,
+          action: 'skip-ads', actionLabel: 'Skip past the ads' }
+      : (COUNT_ZONES?.[1]
+          ? { value: S.count, display: String(S.count),
+              mark: COUNT_ZONES[1].to, markLabel: `${COUNT_ZONES[1].to}`,
+              source: 'a screen-reader tutor’s rule: past here, a query is matching too much' }
+          : null),
     say: `${S.count} products on this page` +
          (S.sponsoredInFirstTen ? `, and ${S.sponsoredInFirstTen} of the first ten are ads.` : '.'),
     from: F.resultSet.from, answerable: false,
