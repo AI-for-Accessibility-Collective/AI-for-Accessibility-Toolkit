@@ -67,6 +67,96 @@ export function setCountZones(zones) {
   COUNT_ZONES = Array.isArray(zones) && zones.length ? zones : null;
 }
 
+// ── many products at once ───────────────────────────────────────────────────
+//
+// Everything else here assumes one product. The real reason to delegate is
+// breadth — open eight, read the specs and the reviews for each, decide from
+// all of it — and that changes the kind of loss entirely.
+//
+// With one product the failure is OMISSION: nobody opened the photos. With
+// eight it is COMPRESSION: the agent looked at three hundred things and said
+// one sentence, and the discarding is invisible. Breadth makes the reporting
+// problem worse in exact proportion to how much it helps the decision.
+//
+// Four losses that only exist once there is more than one candidate, and none
+// of which any single-product check can see:
+//
+//   the discard pile   candidates that vanished without trace
+//   uneven depth       40 reviews read for one, none for four — the comparison
+//                      LOOKS symmetric, and that symmetry is itself a claim
+//   the missing cell   on screen a blank is visible; by ear, silence is
+//                      indistinguishable from "not reached yet"
+//   staleness spread   a set gathered over minutes, presented as a snapshot
+const manyProducts = (F, c) => {
+  const S = F.resultSet?.value;
+  if (!S || !(S.count > 1)) return [];
+  const lim = cap(c);
+  const out = [];
+
+  // The discard pile. A sighted person sees the grid and knows roughly what was
+  // skipped; delegated, the skipped leave no trace at all.
+  if (lim && S.priceHigh != null && S.priceHigh > lim) {
+    const over = (S.prices || []).filter((p) => p > lim).length;
+    if (over) {
+      out.push({
+        widget: 'Discard pile',
+        say: `${over} of the ${S.count} are over your ${money(lim)}. `
+           + `They are not in what I'd suggest.`,
+        from: `${S.count} product prices`, answerable: false,
+        paradigmHint: 4,
+      });
+    }
+  }
+
+  // Uneven depth. Reporting a comparison across candidates read to different
+  // depths presents an asymmetry as a symmetry.
+  if (S.noPhoto != null && S.noPhoto > 0 && S.noPhoto < S.count) {
+    out.push({
+      widget: 'Uneven depth',
+      say: `I could see photos for ${S.count - S.noPhoto} of the ${S.count}. `
+         + `The rest I have only read about.`,
+      from: `${S.noPhoto} tiles with no reachable image`, answerable: false,
+    });
+  }
+
+  // Where the variance actually is. An attribute every candidate shares costs
+  // N cells to say and settles nothing; only the spread can change a decision.
+  // Where the variance is — measured against the other dimensions, not against
+  // a number chosen here.
+  //
+  // This used to fire when prices spanned 2x or more, and 2x was invented: it
+  // decided that a $10-to-$20 spread "is the thing most likely to decide this"
+  // and a $10-to-$19 spread is not. The claim the analysis actually makes is
+  // comparative — report the dimension with the most decisive spread — which
+  // needs no threshold at all, only something to compare against.
+  const spreads = [];
+  if (S.priceLow > 0 && S.priceHigh != null) {
+    spreads.push({ what: 'price', span: S.priceHigh / S.priceLow,
+                   says: `${money(S.priceLow)} to ${money(S.priceHigh)}` });
+  }
+  const rs = (S.ratings || []).filter((r) => r > 0);
+  if (rs.length > 1) {
+    spreads.push({ what: 'rating', span: Math.max(...rs) / Math.min(...rs),
+                   says: `${Math.min(...rs)} to ${Math.max(...rs)} stars` });
+  }
+  if (spreads.length > 1) {
+    spreads.sort((a, b) => b.span - a.span);
+    const [top, next] = spreads;
+    // Only worth saying when one dimension actually separates them more than
+    // the others do. Equal spreads decide nothing, and saying so would be the
+    // same arbitrary call in a different costume.
+    if (top.span > next.span) {
+      out.push({
+        widget: 'Widest gap',
+        say: `They differ most on ${top.what}: ${top.says}. `
+           + `On ${next.what} they are closer together.`,
+        from: `${S.count} products compared`, answerable: true,
+      });
+    }
+  }
+  return out;
+};
+
 const search = (F, c) => {
   const S = F.resultSet?.value;
   if (!S) return [];
@@ -121,15 +211,23 @@ const search = (F, c) => {
     });
   }
 
-  // A high score from almost no ratings outranks a real one on stars alone.
-  const thin = S.bestRatedThin;
-  if (thin?.rating && S.bestRated && thin.rating > S.bestRated.rating) {
+  // The highest rated and the most rated, when they are not the same product.
+  //
+  // No verdict on which is better — that used to be decided here by a hidden
+  // 50-rating floor, so a 4.8 from 40 quietly stopped counting as "the best
+  // rated" and nobody was told the rule existed. Both numbers, side by side,
+  // is the whole finding: a score means something different from three
+  // ratings than from three thousand, and which matters is not ours to settle.
+  const best = S.bestRated, most = S.mostRated;
+  if (best && most && best.title !== most.title) {
     out.push({
       widget: 'Stars never alone',
-      say: `Something here shows ${thin.rating} stars, but from only ` +
-           `${thin.ratingCount} rating${thin.ratingCount === 1 ? '' : 's'}. ` +
-           `That's a thin record, not a better product.`,
-      from: `${thin.ratingCount} ratings`, answerable: false,
+      say: `Highest rated: ${best.rating} stars from `
+         + `${(best.ratingCount || 0).toLocaleString()}. `
+         + `Most reviewed: ${most.rating} stars from `
+         + `${(most.ratingCount || 0).toLocaleString()}.`,
+      from: 'two different products on this page', answerable: true,
+      paradigmHint: 12,
     });
   }
 
@@ -143,8 +241,12 @@ const search = (F, c) => {
     });
   }
 
+  // A "typical" price is worth questioning when it is above every price this
+  // page is actually charging — that is a fact about the page, not a ratio
+  // chosen here. The old test fired at 1.4x, which decided that a 40% claimed
+  // saving is suspicious and a 39% one is fine.
   const now = F.priceNow?.value, typ = F.priceTypical?.value;
-  if (now && typ && typ > now * 1.4) {
+  if (now && typ && S && typ > (S.priceHigh ?? now)) {
     out.push({
       widget: 'Typical-price truth check',
       shape: { points: [{ value: money(typ), when: 'claimed usual' },
@@ -201,6 +303,12 @@ const checkItem = (F, c) => {
       from: F.selectedSize.from,
       // Explicitly stated, so this stops even though nothing is committed yet.
       contradicts: true, answerable: true,
+      // Declared here, not left to the signal map. This check's signal is a
+      // readback with no control of its own, but the remedy is obvious and it
+      // is the one the person is being held for — a gate that can only offer
+      // "go on or stop" is asking them to accept or abandon, when what they
+      // actually want is the third option.
+      control: { label: 'Change the size', action: 'pick-size' },
     });
   }
   // The page contradicting itself is a finding in its own right.
@@ -313,7 +421,7 @@ const confirm = (F) => {
 };
 
 export const CHECKS = {
-  Search: search, 'Check item': checkItem, 'Add to cart': addToCart,
+  Search: (F, c) => search(F, c).concat(manyProducts(F, c)), 'Check item': checkItem, 'Add to cart': addToCart,
   'Review order': reviewOrder, Confirm: confirm,
 };
 
@@ -340,10 +448,75 @@ export function setParadigmMap(map) {
   PARADIGMS = map || {};
 }
 
+/**
+ * The widgets the analysis specifies but no hand-written check covers.
+ *
+ * Each one names the extractors it needs and carries its sentence with the
+ * readings punched out as slots. If every extractor read something and the
+ * slots fill exactly, it speaks in the analysis's own words with today's
+ * values. If anything is missing it stays silent.
+ *
+ * Silence is the correct failure here. A sentence half-filled with today's
+ * numbers and half with the recording it was written from is a false claim,
+ * and this layer exists because a confident false claim is worse than nothing.
+ * The plan already carries what could not be read, so nothing goes unaccounted
+ * for — it is reported as unread, not as checked.
+ */
+function fromAnalysis(facts, phase, already) {
+  const out = [];
+  for (const [widget, w] of Object.entries(PARADIGMS)) {
+    if (w.phase !== phase || already.has(widget)) continue;
+    if (!w.needs?.length || !w.template) continue;
+
+    const values = w.needs.map((n) => facts[n]).filter((f) => f && !f.absent);
+    if (values.length !== w.needs.length) continue;      // something was unreadable
+    if (w.slots !== values.length) continue;             // arity does not line up
+
+    // The slot remembers what it was. A template built from "$19.50" leaves a
+    // slot that must render as money — filling it with the bare number turned
+    // "$19.99 now, typical $23.99" into "19.99 now, typical 23.99", which
+    // reads as a quantity rather than a price.
+    let i = 0;
+    const say = w.template.replace(/\{(\d+)\}/g, () => {
+      const v = values[i];
+      const wasMoney = (w.slotKinds || [])[i] === 'money';
+      i += 1;
+      return wasMoney && typeof v.value === 'number' ? money(v.value) : String(v.value);
+    });
+    if (/\{\d+\}/.test(say)) continue;                   // a slot went unfilled
+
+    out.push({
+      widget,
+      say,
+      from: values.map((v) => v.from).filter(Boolean)[0] || null,
+      answerable: false,
+      // Generated readbacks state what the page says. They do not contradict
+      // the person — only a hand-written comparison can know that — so they
+      // never hold the agent.
+      contradicts: false,
+    });
+  }
+  return out;
+}
+
+// Which part of the ask a finding rests on. Read off the widget's own wording,
+// because a check that mentions the size is a check about the size — and the
+// alternative, a hand-kept table, would fall out of date the first time a
+// check was reworded.
+function against(f) {
+  const t = `${f.widget} ${f.say}`.toLowerCase();
+  if (/\bsize\b/.test(t)) return 'size';
+  if (/budget|\$|price|cost|spend/.test(t)) return 'budget';
+  if (/arriv|deliver|by (mon|tue|wed|thu|fri|sat|sun)|in time/.test(t)) return 'deadline';
+  if (/title|strap|flat|feature|must/.test(t)) return 'mustHaves';
+  return null;
+}
+
 export function checkPage(facts, phase, contract) {
   const fn = CHECKS[phase];
-  if (!fn) return [];
-  return fn(facts, contract).map((f) => {
+  const written = fn ? fn(facts, contract) : [];
+  const covered = new Set(written.map((f) => f.widget));
+  return written.concat(fromAnalysis(facts, phase, covered)).map((f) => {
     // The shape is attached here, from the map, so no check has to know its
     // own paradigm — the assignment belongs to the analysis, not to the code
     // that happens to produce the finding.
@@ -351,6 +524,9 @@ export function checkPage(facts, phase, contract) {
     return {
       phase, contradicts: false, answerable: true,
       paradigm: p?.paradigm ?? null,
+      // Which field of the ask this was checked against, so editing that field
+      // can retire exactly the findings that stop being true — and only those.
+      checkedAgainst: against(f),
       ...f,
     };
   });

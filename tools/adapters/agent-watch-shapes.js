@@ -54,55 +54,80 @@ const put = (parent, tag, attrs) => {
   return n;
 };
 
-// ── 1. the glance, translated — a gauge ─────────────────────────────────────
+// ── 1. the glance, translated ───────────────────────────────────────────────
 //
-// The tutor's scale. A count is meaningless until it is placed: 0 is a dead
-// end, a few hundred means the query landed, four figures means it is too
-// loose. The needle does the judging that the number alone leaves to you.
+// A count means nothing until it is placed against something. The question is
+// what.
+//
+// This was a gauge with three zones — dead end / right / too loose — and the
+// thresholds were doing work they could not support. "Under a thousand is
+// right" is one blind tutor's working rule for whether a QUERY is too loose;
+// it is not a fact about shopping, and drawing it as a scale with a good
+// region turned an attributed heuristic into an objective verdict. A person
+// reading it would have no way to know that 800 and 1,000 were a judgement
+// rather than a measurement.
+//
+// Two honest replacements, and which one is used depends on what the number
+// is:
+//
+//   a PROPORTION when the finding is a share of something — 8 of the first 10
+//   are ads. No threshold is needed: the ratio is the claim, and it is
+//   self-evidently a lot or a little without anyone drawing a line.
+//
+//   a MARKED SCALE when there is a real reference point, which is then
+//   ATTRIBUTED. The needle sits where today's count is, one mark shows the
+//   reference, and the label says whose rule it is. A reader can then disagree
+//   with the rule instead of with the number.
 function gauge(f) {
   const d = f.shape || {};
-  const box = el('div', 'aw-shape aw-gauge');
+
+  // a proportion: part of a whole, no judgement required
+  if (Number.isFinite(d.part) && Number.isFinite(d.whole) && d.whole > 0) {
+    const box = el('div', 'aw-shape aw-prop');
+    const W = 300, H = 26;
+    const s = svg(W, H, `${d.part} of ${d.whole}`);
+    const unit = W / d.whole;
+    for (let i = 0; i < d.whole; i++) {
+      put(s, 'rect', {
+        x: i * unit + 1, y: 4, width: Math.max(2, unit - 2), height: 11,
+        fill: 'currentColor', opacity: i < d.part ? 0.85 : 0.16,
+      });
+    }
+    const t = put(s, 'text', { x: 0, y: 25, 'font-size': 9, fill: 'currentColor', opacity: 0.7 });
+    t.textContent = d.partLabel || `${d.part} of ${d.whole}`;
+    box.appendChild(s);
+    return box;
+  }
+
+  // a marked scale, with the reference attributed to whoever holds it
   const n = Number(d.value);
-  if (!Number.isFinite(n)) return null;
+  if (!Number.isFinite(n) || !d.mark) return null;
+  const box = el('div', 'aw-shape aw-scale');
+  const W = 300, H = 40;
+  const s = svg(W, H, 'where today\u2019s count sits');
+  const top = Math.max(n, d.mark) * 2;
+  const x = (v) => 8 + (Math.log10(Math.max(v, 1)) / Math.log10(Math.max(top, 10))) * (W - 16);
 
-  const W = 300, H = 46;
-  const s = svg(W, H, 'count on a scale');
-  // Log scale: the interesting range spans 0 to 10,000 and a linear axis puts
-  // every real search in the leftmost tenth.
-  const x = (v) => 8 + (Math.log10(Math.max(v, 1)) / 4) * (W - 16);
-
-  // Zones come with the finding, from the analysis. The numbers that belong
-  // here are the ones the corpus records — a blind tutor's working rule that
-  // a few hundred results means the query landed and four figures means it
-  // matched half the shop — not thresholds picked to make a chart look right.
-  const zones = d.zones;
-  if (!Array.isArray(zones) || !zones.length) return null;
-  let from = 0;
-  zones.forEach((z, i) => {
-    put(s, 'rect', {
-      x: x(from), y: 16, width: Math.max(2, x(z.to) - x(from)), height: 7,
-      fill: 'currentColor', opacity: i === 1 ? 0.5 : 0.16,
-    });
-    const t = put(s, 'text', {
-      x: (x(from) + x(z.to)) / 2, y: 38, 'text-anchor': 'middle',
-      'font-size': 9, fill: 'currentColor', opacity: 0.65,
-    });
-    t.textContent = z.label;
-    from = z.to;
+  put(s, 'line', { x1: 8, y1: 20, x2: W - 8, y2: 20, stroke: 'currentColor', opacity: 0.25 });
+  // the reference, dashed — a rule of thumb, drawn as one
+  put(s, 'line', {
+    x1: x(d.mark), y1: 12, x2: x(d.mark), y2: 28,
+    stroke: 'currentColor', opacity: 0.5, 'stroke-dasharray': '2 2',
   });
-
-  // the needle
-  put(s, 'line', { x1: x(n), y1: 8, x2: x(n), y2: 27, stroke: 'currentColor', 'stroke-width': 2 });
-  put(s, 'polygon', {
-    points: `${x(n) - 4},8 ${x(n) + 4},8 ${x(n)},14`, fill: 'currentColor',
+  const ml = put(s, 'text', {
+    x: x(d.mark), y: 38, 'text-anchor': 'middle', 'font-size': 8.5,
+    fill: 'currentColor', opacity: 0.6,
   });
+  ml.textContent = d.markLabel || String(d.mark);
+
+  put(s, 'circle', { cx: x(n), cy: 20, r: 4, fill: 'currentColor' });
   const v = put(s, 'text', {
-    x: Math.min(W - 4, Math.max(14, x(n))), y: 6, 'text-anchor': 'middle',
-    'font-size': 10, 'font-weight': 700, fill: 'currentColor',
+    x: x(n), y: 12, 'text-anchor': 'middle', 'font-size': 10,
+    'font-weight': 700, fill: 'currentColor',
   });
   v.textContent = d.display || String(n);
-
   box.appendChild(s);
+  if (d.source) box.appendChild(el('p', 'aw-scale-src', d.source));
   return box;
 }
 
@@ -423,8 +448,13 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
   return `
 #${id} .aw-shape { margin: 7px 0 2px; color: inherit; }
 
-/* 1 — gauge */
-#${id} .aw-gauge svg { display: block; overflow: visible; margin-top: 8px; }
+/* 1 — proportion and marked scale */
+#${id} .aw-prop svg, #${id} .aw-scale svg {
+  display: block; overflow: visible; margin-top: 6px;
+}
+#${id} .aw-scale-src {
+  margin: 2px 0 0; font-size: ${px(0.78)}; color: ${muted}; font-style: italic;
+}
 
 /* 2 — triangulation */
 #${id} .aw-tri-claim { margin: 0 0 5px; font-style: italic; }

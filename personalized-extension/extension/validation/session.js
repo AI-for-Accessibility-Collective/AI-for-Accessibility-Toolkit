@@ -18,9 +18,10 @@
 //   * publishes to chrome.storage so the panel and the voice engine see the
 //     same findings at the same time.
 
-import { createRun } from './run.js';
+import { createRun, setExtractorNames } from './run.js';
 import { contractFromAsk, gaps, describe, toQuery } from './ask.js';
 import { setParadigmMap, setCountZones } from '../../../tools/auditors/contract-mismatch.js';
+import { setControls } from './render.js';
 
 const KEY = 'aa.validation';
 
@@ -271,6 +272,7 @@ const Validation = {
       widget: f.finding.widget, level: f.level, say: f.finding.say,
       from: f.finding.from, confirming: !!f.finding.confirming,
       paradigm: f.finding.paradigm || null, shape: f.finding.shape || null,
+      checkedAgainst: f.finding.checkedAgainst || null,
       control: f.visual?.control || null, phase,
     })), phase });
 
@@ -340,6 +342,46 @@ const Validation = {
     return { changed: true, on: r.on };
   },
 
+  /**
+   * Change one field of the ask, mid-run.
+   *
+   * Editing is not free, and saying so is the point. Anything already checked
+   * against the old value stops being checked — without that, a run
+   * manufactures the breakdown the corpus records at Search, where after a
+   * re-sort every position you were told is wrong while the old verifications
+   * still read as passed.
+   *
+   * The invalidated findings are dropped rather than re-labelled: a finding
+   * about "size 5" is not a finding about "size 6", and keeping it greyed out
+   * would leave a claim on screen that is no longer being made.
+   */
+  async editAsk(field, value) {
+    if (!contract || !field) return { changed: false };
+    const key = { buying: 'item', 'must have': 'mustHaves', size: 'size',
+                  budget: 'budget', 'how many': 'quantity',
+                  'needed by': 'deadline' }[field] || field;
+    const before = contract[key];
+    if (String(before) === String(value)) return { changed: false };
+
+    contract = { ...contract,
+      [key]: key === 'mustHaves' ? String(value).split(/,\s*/).filter(Boolean)
+           : key === 'quantity' ? (parseInt(value, 10) || 1)
+           : value };
+
+    // Everything checked against the old answer is no longer checked.
+    const prev = await stored();
+    const stale = (prev.findings || []).filter((f) => f.checkedAgainst === key);
+    const kept = (prev.findings || []).filter((f) => f.checkedAgainst !== key);
+
+    run = createRun(contract, { style: 'balanced' });
+    await publish({
+      findings: kept,
+      invalidated: stale.map((f) => f.say),
+    });
+    return { changed: true, field: key, was: before, now: value,
+             invalidated: stale.length };
+  },
+
   /** Findings that were never announced, for when someone asks. */
   onRequest: () => (run ? run.onRequest() : []),
 
@@ -364,8 +406,12 @@ globalThis.ValidationCorpus = {
     setDefaults(corpus?.defaults || []);
     setParadigmMap(corpus?.widgets || {});
     setCountZones(corpus?.countZones);
+    setControls(corpus?.widgets || {});
+    setExtractorNames(corpus?.extractorNames || {});
+    const handed = Object.values(corpus?.widgets || {}).filter((w) => w.control).length;
     return { promotable: PROMOTABLE.length,
              defaults: DEFAULT_RULES.length,
+             controls: handed,
              widgets: Object.keys(corpus?.widgets || {}).length,
              zones: (corpus?.countZones || []).length };
   },

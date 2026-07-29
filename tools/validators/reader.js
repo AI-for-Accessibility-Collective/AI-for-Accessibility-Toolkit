@@ -228,14 +228,25 @@ export const resultSet = (lines) => {
     sponsoredInFirstTen: t.slice(0, 10).filter((x) => x.sponsored).length,
     priceLow: prices.length ? Math.min(...prices) : null,
     priceHigh: prices.length ? Math.max(...prices) : null,
-    // Ranking by stars alone crowns a 5.0 from 5 ratings over a 4.4 from
-    // 2,715 -- which is the failure the analysis records, not a ranking. A
-    // rating needs enough behind it to mean anything, so thin records are
-    // reported separately rather than winning.
-    bestRated: rated.filter((x) => (x.ratingCount || 0) >= 50)
-      .sort((a, b) => b.rating - a.rating)[0] || null,
-    bestRatedThin: rated.filter((x) => (x.ratingCount || 0) < 50)
-      .sort((a, b) => b.rating - a.rating)[0] || null,
+      // The whole list, not just the ends. How many fall outside what the
+      // person said is what makes the discard pile reportable — "8 of them
+      // are over your $40" instead of a range to do arithmetic on.
+      prices,
+      // Two facts, no ruling.
+      //
+      // Ranking by stars alone crowns a 5.0 from 5 ratings over a 4.4 from
+      // 2,715, which is the failure the analysis records. But the fix that
+      // replaced it was worse in a quieter way: it required 50 ratings to be
+      // eligible, so a 4.8 from 40 was dropped from "the best rated" with
+      // nobody told, and 50 was a number chosen here with nothing behind it.
+      //
+      // So neither is elected. The highest rated and the most rated are both
+      // reported, and where they are different products that difference IS
+      // the finding — it is what a person would want to weigh, and weighing
+      // it is theirs to do.
+      bestRated: rated.slice().sort((a, b) => b.rating - a.rating)[0] || null,
+      mostRated: rated.slice()
+        .sort((a, b) => (b.ratingCount || 0) - (a.ratingCount || 0))[0] || null,
     withBadge: t.filter((x) => x.badge).map((x) => ({ badge: x.badge, title: x.title })),
     noPhoto: t.filter((x) => !x.hasPhoto).length,
   }, `${t.length} product tiles`);
