@@ -50,6 +50,13 @@ function phaseOf(url) {
 // these — stopping the agent from scrolling would be theatre.
 const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now/i;
 
+// Actions that change the world rather than look at it.
+//
+// The distinction is the difference between a paced run and a deadlocked one:
+// scroll, wait, screenshot and read leave the page as they found it, so
+// holding them buys nothing and costs the agent its eyes.
+const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|close|switch|go[_ ]?(back|forward)|refresh|upload|drag|add|remove|place|buy|checkout/i;
+
 let run = null;
 let contract = null;
 
@@ -315,17 +322,26 @@ const Validation = {
   async allow(actionDescription) {
     if (!run) return { allowed: true };
 
-    // Anything the person has not dealt with holds the agent — not only the
-    // four committing steps.
+    // Anything the person has not dealt with holds the agent — but only from
+    // CHANGING anything, never from looking.
     //
-    // Holding at commit points alone means the agent runs the whole search and
-    // the whole product page at machine speed and then stops once, by which
-    // time the findings are a backlog rather than something you were part of.
-    // Waiting on unread work is what makes the pace theirs.
+    // Holding every action deadlocked it. Scrolling and waiting are how the
+    // agent perceives the page, so blocking those stopped it producing the
+    // very findings the person was being asked to read: it scrolled, was
+    // blocked, retried, was blocked, for the rest of the run. The observed log
+    // is a column of "scroll — action blocked" with nothing else happening.
     //
-    // Ambient findings never hold: they are the ones deliberately not
-    // announced, so treating them as unread would be waiting for someone to
+    // Perceiving is free. Acting waits. That keeps the pace with the person —
+    // nothing changes under them while they have unread work — without
+    // stopping the agent from being able to see.
+    //
+    // Ambient findings never hold either: they are the ones deliberately not
+    // announced, so waiting on them would be waiting for someone to
     // acknowledge something we chose not to say.
+    if (!CHANGES_SOMETHING.test(String(actionDescription || ''))) {
+      return { allowed: true };
+    }
+
     const prev = await stored();
     const unread = (prev.findings || [])
       .filter((f) => f.level !== 'ambient' && !f.confirming)

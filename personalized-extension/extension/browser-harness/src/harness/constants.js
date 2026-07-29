@@ -28,6 +28,19 @@ export const BH_AUTO_DISMISS_MS = 500;
 // 30s aligns with the alarm period and only flags genuinely-wedged
 // requests, not normal slow ones.
 export const BH_NETWORK_STALL_MS = 30000;
+// After this, an entry is not a stalled request — it is a leaked one.
+//
+// A tracked request either completes, fails, or dies with its renderer. Any
+// entry still open after two minutes has had its terminal event lost: a
+// keepalive telemetry beacon typed as Fetch, a request cancelled during a
+// navigation the frameNavigated hook did not see, a long-poll that no mime
+// type identifies. It is never going to be reaped by an event, so the sweep
+// reaps it by age.
+//
+// The signature is unmistakable in a log: a real stall clears when the request
+// lands, while a leak only ever counts up — 52s, 82s, 112s, 142s, 172s, one
+// line per step, for the rest of the run.
+export const BH_NET_MAX_AGE_MS = 120000;
 // Only track request types that *should* complete in bounded time.
 // EventSource (SSE), Ping (sendBeacon), Manifest, websocket-adjacent, and
 // most analytics flavours are persistent or fire-and-forget by design --
