@@ -204,11 +204,14 @@ function triangulation(f) {
   }
   box.appendChild(list);
 
+  // The verdict only when it is not already obvious from the rows. With one
+  // source, "only one source says so" is the finding; with three agreeing, the
+  // three plus signs have said it.
   const agree = d.sources.filter((s) => s.agrees).length;
-  box.appendChild(el('p', 'aw-tri-verdict',
-    agree >= 2 ? `${agree} sources agree.`
-      : agree === 1 ? 'Only one source says so.'
-        : 'No source confirms this.'));
+  if (agree <= 1) {
+    box.appendChild(el('p', 'aw-tri-verdict',
+      agree === 1 ? 'Only one source says so.' : 'No source confirms this.'));
+  }
   return box;
 }
 
@@ -242,36 +245,70 @@ function diff(f) {
   return box;
 }
 
-// ── 4. what I didn't look at — a coverage map ───────────────────────────────
+// ── 4. what I didn't look at ────────────────────────────────────────────────
 //
-// Drawn to scale, because the proportion IS the finding. "I read 40 reviews"
-// sounds thorough; 40 of 84 next to 0 of 7 photos does not. In the spoken
-// channel the same proportion becomes listening time.
+// Drawn as a remainder, not as progress.
+//
+// This was a fill bar: a dark portion growing left to right against a light
+// track, with "1/7" beside it. Every bar of that shape says the same thing —
+// here is how far along you are toward filling it — and that smuggles in a
+// goal nobody set. Reading all 84 reviews is not the target. Opening all 20
+// colours is not the target. There IS no target, and inventing one turns a
+// statement about what was skipped into a score that is always failing.
+//
+// So the UNEXAMINED part is what gets drawn, because that is the finding: 84
+// reviews nobody read is a quantity of unexamined things, not 0% of a job. The
+// looked-at part is a small solid mark beside it, and the number says what is
+// left rather than what fraction is done.
 function coverage(f) {
   const d = f.shape || {};
   if (!Array.isArray(d.parts) || !d.parts.length) return null;
   const box = el('div', 'aw-shape aw-cov');
 
   for (const p of d.parts) {
-    const total = Math.max(1, Number(p.of) || 1);
+    const total = Math.max(0, Number(p.of) || 0);
     const done = Math.min(total, Math.max(0, Number(p.checked) || 0));
+    const left = total - done;
+    if (!total) continue;
+
     const row = el('div', 'aw-cov-row');
     row.appendChild(el('span', 'aw-cov-what', p.what));
 
-    const W = 150, H = 9;
-    const s = svg(W, H, `${done} of ${total}`);
-    put(s, 'rect', { x: 0, y: 1, width: W, height: H - 2, fill: 'currentColor', opacity: 0.13 });
-    if (done) {
-      put(s, 'rect', {
-        x: 0, y: 1, width: Math.max(2, (done / total) * W), height: H - 2,
-        fill: 'currentColor', opacity: 0.75,
-      });
+    // One tick per thing, up to a point. Below that, the count IS the picture
+    // and drawing 84 marks would be decoration; above it, a proportional
+    // block carries the same "this many were never opened".
+    const W = 150, H = 10;
+    const s = svg(W, H, `${left} of ${total} ${p.what} not looked at`);
+    if (total <= 24) {
+      const unit = W / total;
+      for (let i = 0; i < total; i++) {
+        const looked = i < done;
+        put(s, 'rect', {
+          x: i * unit + 1, y: 1, width: Math.max(2, unit - 2), height: H - 2,
+          fill: 'currentColor', opacity: looked ? 0.75 : 0.14,
+          ...(looked ? {} : { stroke: 'currentColor', 'stroke-opacity': 0.35 }),
+        });
+      }
+    } else {
+      const cut = (done / total) * W;
+      if (cut > 0) put(s, 'rect', { x: 0, y: 1, width: cut, height: H - 2,
+        fill: 'currentColor', opacity: 0.75 });
+      put(s, 'rect', { x: cut, y: 1, width: W - cut, height: H - 2,
+        fill: 'currentColor', opacity: 0.12,
+        stroke: 'currentColor', 'stroke-opacity': 0.35 });
     }
     row.appendChild(s);
-    row.appendChild(el('span', 'aw-cov-n', done ? `${done}/${total}` : `none of ${total}`));
-    if (done < total) {
-      act(row, { action: 'cover', label: p.what, arg: { what: p.what, of: total, checked: done },
-                 describedBy: `Check the ${total - done} ${p.what} nobody has looked at` });
+
+    // The number names the remainder. "none of 84" and "1/7" both read as a
+    // score; "84 not read" is the fact.
+    row.appendChild(el('span', 'aw-cov-n',
+      left === 0 ? 'all looked at'
+                 : `${left} not ${p.verb || 'looked at'}`));
+
+    if (left > 0) {
+      act(row, { action: 'cover', label: p.what,
+                 arg: { what: p.what, of: total, checked: done },
+                 describedBy: `Look at the ${left} ${p.what} nobody has opened` });
     }
     box.appendChild(row);
   }
@@ -328,7 +365,8 @@ function airlock(f) {
   const d = f.shape || {};
   if (!Array.isArray(d.facts) || !d.facts.length) return null;
   const box = el('div', 'aw-shape aw-lock');
-  if (d.headline) box.appendChild(el('p', 'aw-lock-head', d.headline));
+  // The border is the chamber. Writing "nothing irreversible happens outside
+  // this box" inside the box is the drawing explaining itself.
   const list = el('ul', 'aw-lock-list');
   for (const fact of d.facts) {
     const li = el('li', `aw-lock-fact aw-${fact.ok === false ? 'no' : 'yes'}`);
@@ -422,7 +460,9 @@ function auditSheet(f) {
   const d = f.shape || {};
   if (!Array.isArray(d.lines) || !d.lines.length) return null;
   const box = el('div', 'aw-shape aw-audit');
-  box.appendChild(el('p', 'aw-audit-head', d.headline || 'Checked against other sources'));
+  // No headline. "Checked against other sources" sat directly under a sentence
+  // that had just said what was checked — a caption for something already
+  // captioned. The sources being listed IS the claim.
   const list = el('ul', 'aw-audit-list');
   for (const l of d.lines) {
     const li = el('li', `aw-audit-line aw-${l.ok === false ? 'no' : l.ok ? 'yes' : 'unknown'}`);
@@ -461,37 +501,29 @@ function path(f) {
   return box;
 }
 
-// ── 11. the world, rebuilt — a funnel ───────────────────────────────────────
+// ── 11. the world, rebuilt ──────────────────────────────────────────────────
 //
-// The corpus's 287-word cart readback against the one sentence that answers
-// the question. The funnel shows the ratio, because the compression is the
-// claim being made: everything discarded is still answerable, not gone.
+// The claim is NOT that the summary is short. It was drawn as a funnel with
+// "287 words" narrowing to "18", which reads as an achievement — compression
+// presented as the accomplishment, with shorter implicitly better. Nobody set
+// that goal either, and a person who wants the detail is then reading a
+// picture of their own preference being overruled.
+//
+// What actually matters is that nothing was thrown away. So the sentence is
+// the sentence, and beside it is the way back to everything behind it. The
+// word count stays as a size, not as a score: 287 words tells you what asking
+// would cost, which is the fact that decides whether to ask.
 function funnel(f) {
   const d = f.shape || {};
-  if (!d.wasWords || !d.sentence) return null;
+  if (!d.sentence) return null;
   const box = el('div', 'aw-shape aw-fun');
-
-  const W = 300, H = 34;
-  const s = svg(W, H, 'compression');
-  put(s, 'polygon', {
-    points: `0,2 ${W},14 ${W},20 0,32`, fill: 'currentColor', opacity: 0.15,
-  });
-  const a = put(s, 'text', { x: 2, y: 21, 'font-size': 9, fill: 'currentColor', opacity: 0.75 });
-  a.textContent = `${d.wasWords} words`;
-  const b = put(s, 'text', {
-    x: W - 2, y: 20, 'text-anchor': 'end', 'font-size': 9,
-    'font-weight': 700, fill: 'currentColor',
-  });
-  b.textContent = d.nowWords ? `${d.nowWords}` : '1 sentence';
-  box.appendChild(s);
-
   box.appendChild(el('p', 'aw-fun-said', d.sentence));
-  // Nothing is thrown away — the rest stays reachable by asking. Saying so is
-  // what separates a summary from a loss.
-  const rest = el('p', 'aw-fun-rest',
-    d.rest || 'Everything else is still there — ask for any line.');
+  const rest = el('button', 'aw-act aw-act-inline',
+    d.wasWords ? `Read all ${d.wasWords} words instead` : 'Read all of it instead');
   act(rest, { action: 'expand', label: 'everything', arg: d,
-              describedBy: `Read all ${d.wasWords} words, not the summary` });
+              describedBy: d.wasWords
+                ? `Read the full ${d.wasWords} words this was shortened from`
+                : 'Read the full text this was shortened from' });
   box.appendChild(rest);
   return box;
 }
@@ -601,7 +633,7 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 }
 #${id} .aw-cov-what { flex: 0 0 30%; color: ${muted}; }
 #${id} .aw-cov-row svg { flex: 1 1 auto; }
-#${id} .aw-cov-n { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+#${id} .aw-cov-n { flex: 0 0 auto; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* 6 — timeline */
 #${id} .aw-time svg { display: block; overflow: visible; }
