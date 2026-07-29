@@ -543,6 +543,18 @@ export const skillRegistry = [
     quickStart: false,
     settings: { autoWcagFix: true },
   },
+  {
+    id: 'agent-watch',
+    name: 'Watch the Assistant',
+    description: "Shows what the assistant is doing on your behalf and where the page stopped matching what you asked for — wrong size, over budget, a feature the item does not have. Reads the page through the accessibility tree rather than trusting the assistant's summary, cites the page's own words for every finding, and holds the assistant before anything hard to undo until you answer.",
+    supportAreas: ['vision', 'cognitive', 'motor'],
+    siteRelevance: ['shopping', 'all'],
+    requiresAI: false,
+    icon: 'fact_check',
+    emoji: '🔎',
+    quickStart: false,
+    settings: { agentWatch: true },
+  },
 ];
 
 // Typed vocabulary for every chrome.storage.sync setting the tools control.
@@ -550,6 +562,7 @@ export const skillRegistry = [
 // popup's "what support do you need?" interpretNeeds call) — this replaces
 // the hand-maintained list that used to live inline in background.js.
 export const settingsMeta = {
+  agentWatch:      { type: 'boolean', description: 'Check what the assistant does against what you asked for' },
   darkMode:        { type: 'boolean', description: 'Dark theme' },
   fontScale:       { type: 'number', range: [50, 200], description: 'Font size percentage' },
   lineHeight:      { type: 'number', range: [1.0, 3.0], description: 'Line spacing' },

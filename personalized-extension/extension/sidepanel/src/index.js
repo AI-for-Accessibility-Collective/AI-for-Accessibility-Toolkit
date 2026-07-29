@@ -391,6 +391,13 @@ const vaRoot = document.getElementById('va-panel');
 if (vaRoot) {
   mountValidationPanel(vaRoot, {
     onControl: (c) => {
+      if (c.action === 'start') {
+        // Checking only. Deliberately does NOT start the agent: someone can
+        // want their own shopping checked without handing it over, and a demo
+        // of the checking should not depend on an agent behaving.
+        chrome.runtime.sendMessage({ type: 'validationStart', contract: c.said });
+        return;
+      }
       if (c.action === 'answer') {
         chrome.runtime.sendMessage({ type: 'validationAnswer',
                                      widget: c.widget, response: c.response });

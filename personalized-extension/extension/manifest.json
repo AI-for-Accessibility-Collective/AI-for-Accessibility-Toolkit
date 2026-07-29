@@ -14,7 +14,8 @@
     "tabGroups",
     "notifications",
     "sidePanel",
-    "offscreen"
+    "offscreen",
+    "webNavigation"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -35,8 +36,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/content.bundle.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/content.bundle.js"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -47,8 +52,16 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["onboarding/*", "adapter-builder/*", "skill-builder/*", "demo/*", "lib/OpenDyslexic-Regular.woff2"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "onboarding/*",
+        "adapter-builder/*",
+        "skill-builder/*",
+        "demo/*",
+        "lib/OpenDyslexic-Regular.woff2"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

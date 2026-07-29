@@ -29,6 +29,13 @@ export function mountValidationPanel(root, { onControl } = {}) {
 
   let state = null;
 
+  // Storage is shared with the service worker, so a field can arrive as a type
+  // this view did not expect. One such value used to throw mid-render and
+  // erase the whole panel — every finding gone, no error visible, looking
+  // exactly like "nothing was found". A surface whose job is to report
+  // problems must never fail silently, so a wrong type costs one section.
+  const asList = (v) => (Array.isArray(v) ? v : []);
+
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -39,7 +46,7 @@ export function mountValidationPanel(root, { onControl } = {}) {
   function render() {
     root.textContent = '';
     if (!state || !state.contract) {
-      root.append(el('div', 'va-empty', 'No task running.'));
+      root.append(startForm());
       return;
     }
 
@@ -52,6 +59,21 @@ export function mountValidationPanel(root, { onControl } = {}) {
     edit.addEventListener('click', () => onControl?.({ action: 'edit-ask' }));
     ask.append(edit);
     root.append(ask);
+
+    // ── what wasn't said ────────────────────────────────────────────────────
+    // A field left blank silently switches off the checks that depend on it.
+    // Showing which ones is the difference between a layer that quietly does
+    // less and one that says so — and it turns the omission into a question
+    // the person can answer in one tap rather than a gap only we can see.
+    for (const g of asList(state.unspecified)) {
+      const q = el('section', 'va-gap');
+      q.append(el('p', 'va-text', g.ask));
+      q.append(el('p', 'va-where', `without it I can't check ${g.unchecked[0]}`));
+      const b = el('button', 'va-do', 'Tell it');
+      b.addEventListener('click', () => onControl?.({ action: 'fill-gap', field: g.field }));
+      q.append(b);
+      root.append(q);
+    }
 
     // ── the gate, when the agent is held ────────────────────────────────────
     if (state.gate && state.gate.allowed === false) {
@@ -108,6 +130,46 @@ export function mountValidationPanel(root, { onControl } = {}) {
     more.addEventListener('click', () => onControl?.({ action: 'on-request' }));
     foot.append(more);
     root.append(foot);
+  }
+
+  // Checking without delegating.
+  //
+  // The layer's job is to hold a page to what someone said they wanted, and
+  // that is worth doing whether or not an agent is the one clicking. Someone
+  // shopping themselves still cannot see that the size on the page stopped
+  // matching the size they asked for.
+  //
+  // It is also the only honest way to demonstrate the layer: an agent driving
+  // a live retail site fails for its own reasons, and when it does, everyone
+  // watching concludes the checking is what broke.
+  function startForm() {
+    const s = el('section', 'va-start');
+    const id = 'va-ask-input';
+    const label = el('label', null, 'What are you looking for?');
+    label.setAttribute('for', id);
+    s.append(label);
+
+    const row = el('div', 'va-start-row');
+    const input = el('input');
+    input.id = id;
+    input.type = 'text';
+    input.placeholder = 'flat sandals with a back strap, size 5, under $40';
+    const go = el('button', 'va-do primary', 'Start checking');
+
+    const submit = () => {
+      const said = input.value.trim();
+      if (!said) { input.focus(); return; }
+      onControl?.({ action: 'start', said });
+    };
+    go.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+
+    row.append(input, go);
+    s.append(row);
+    s.append(el('p', 'va-hint',
+      'Say it however you like. Anything you leave out, I’ll ask about — '
+      + 'I won’t assume it.'));
+    return s;
   }
 
   const tone = (f) => (f.confirming ? 'ok'

@@ -119,7 +119,7 @@ export function createRun(contract, opts = {}) {
         .reduce((n, s) => n + s.say.split(/\s+/).length, 0);
       return {
         steps: steps.slice(), said: said.slice(),
-        spokenWords: words, waiting: waiting.length, gaps: gaps.length,
+        spokenWords: words, waiting: waiting.length, unreadable: gaps.length,
       };
     },
   };

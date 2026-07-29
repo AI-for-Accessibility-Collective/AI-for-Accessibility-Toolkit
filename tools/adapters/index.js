@@ -70,3 +70,6 @@ export const axeHandlers = {
 export function getAxeHandler(ruleId) {
   return axeHandlers[ruleId] || null;
 }
+
+// Agent oversight — reports on a delegate rather than adapting a page.
+export { AgentWatch } from './agent-watch.js';

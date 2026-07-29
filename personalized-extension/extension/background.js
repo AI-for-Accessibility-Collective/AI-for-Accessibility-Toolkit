@@ -27,6 +27,23 @@ self.importScripts(
   'lib/web-surface.js'
 );
 
+// Read every page the agent lands on while a validation run is active.
+//
+// Without this the layer is inert -- it can check a page but nothing ever asks
+// it to, so a run would produce findings only where someone remembered to call
+// observe. Navigation is the right trigger because the thing being checked is
+// what the page now says, and settling is when it says it.
+chrome.webNavigation?.onCompleted?.addListener((d) => {
+  if (d.frameId !== 0) return;                       // top frame only
+  if (!globalThis.Validation?.isRunning?.()) return;
+  // Let the page settle. Amazon renders prices and stock after first paint,
+  // and reading too early reports absences that are really just lateness.
+  setTimeout(() => {
+    globalThis.Validation.observe(d.tabId).catch((e) =>
+      console.warn('[validation] observe failed:', e.message));
+  }, 1200);
+});
+
 // Voice-mode data routes (offscreen tool calls that need chrome.tabs /
 // chrome.scripting / Librarian). Own onMessage listener, voice* data types
 // only. Loaded after lib/ so the toolkit globals it reads exist.
@@ -842,6 +859,25 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ error: 'agent already running' });
       return false;
     }
+    // Start checking at the same moment the agent starts acting.
+    //
+    // Not a separate button. A validation layer someone has to remember to
+    // switch on is off exactly when it matters — nobody predicts the run that
+    // will go wrong. Delegating and being able to check what was delegated are
+    // one action, so they are one call.
+    //
+    // `msg.contract` is honoured when the caller already built one (the panel
+    // does, after asking about the gaps); otherwise the task sentence is
+    // parsed, and whatever could not be read from it becomes a question rather
+    // than a guess.
+    if (globalThis.Validation && !globalThis.Validation.isRunning()) {
+      try {
+        const contract = msg.contract || globalThis.ValidationAsk.contractFromAsk(msg.task);
+        globalThis.Validation.start(contract, { style: msg.style || 'balanced' });
+      } catch (e) {
+        console.warn('validation did not start:', e);   // never block the agent
+      }
+    }
     globalThis.BrowserAgent.run(msg.task, {
       tabId: msg.tabId,
       tabMode: msg.tabMode,
@@ -883,6 +919,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     globalThis.Validation.stop().then(() => sendResponse({ stopped: true }));
     return true;
   }
+  if (msg.type === 'validationControl') {
+    // A control the panel offered -- re-sort, open another, change the size.
+    // These are what delegation took away, so they go to the agent as a fresh
+    // instruction rather than being simulated here.
+    const c = msg.control || {};
+    const say = {
+      're-sort': `Re-sort the results by ${c.arg || 'rating'} and tell me the new first result.`,
+      'pick-size': 'Read me the sizes on this page and wait for me to choose.',
+      'remove-extras': 'Remove everything from the cart that is not the item we picked today.',
+      'open-other': 'Open the next best match instead and read me its title.',
+      'halt': 'Stop what you are doing and wait.',
+    }[c.action];
+    if (!say) { sendResponse({ error: `no instruction for ${c.action}` }); return false; }
+    if (globalThis.BrowserAgent?.isRunning?.()) {
+      globalThis.BrowserAgent.interject?.(say);
+    }
+    chrome.runtime.sendMessage({
+      type: 'validationSpeak', phase: 'control',
+      lines: [{ say, level: 'aside', live: 'polite', widget: c.action }],
+    }).catch(() => {});
+    sendResponse({ sent: say });
+    return false;
+  }
+
   if (msg.type === 'validationOnRequest') {
     sendResponse({ items: globalThis.Validation.onRequest() });
     return false;

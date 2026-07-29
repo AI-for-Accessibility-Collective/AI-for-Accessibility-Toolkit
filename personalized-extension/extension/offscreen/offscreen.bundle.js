@@ -1,6 +1,7 @@
 (() => {
   // skills/registry.js
   var settingsMeta = {
+    agentWatch: { type: "boolean", description: "Check what the assistant does against what you asked for" },
     darkMode: { type: "boolean", description: "Dark theme" },
     fontScale: { type: "number", range: [50, 200], description: "Font size percentage" },
     lineHeight: { type: "number", range: [1, 3], description: "Line spacing" },
