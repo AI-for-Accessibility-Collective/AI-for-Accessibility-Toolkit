@@ -5,7 +5,7 @@
 // importScripts so this file doesn't have to know about the Gemini API.
 
 import { setGeminiCaller } from './state.js';
-import { bhAgentRun, bhAgentStop, bhAgentIsRunning, bhAgentClear } from './run.js';
+import { bhAgentRun, bhAgentStop, bhAgentIsRunning, bhAgentClear, bhAgentInterject } from './run.js';
 import './tabs.js'; // registers chrome.tabs.onCreated/onUpdated/onRemoved listeners
 
 globalThis.BrowserAgent = {
@@ -13,5 +13,6 @@ globalThis.BrowserAgent = {
   stop: bhAgentStop,
   clear: bhAgentClear,
   isRunning: bhAgentIsRunning,
+  interject: bhAgentInterject,
   setGeminiCaller,
 };

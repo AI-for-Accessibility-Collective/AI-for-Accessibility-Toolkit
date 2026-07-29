@@ -91,6 +91,20 @@ export const AgentWatch = {
 
     const box = document.createElement('section');
     box.id = this.containerId;
+    // Invisible to the agent, in every sense it can perceive.
+    //
+    // The agent enumerates the page and clicks by index, and this surface is
+    // in that page. In a recorded run it spent ten steps trying to dismiss
+    // "the helper overlay" to reach Amazon's buy box underneath, pressed our
+    // own "Got it" and "Leave it" — which would have marked the person's
+    // findings as dealt with — and at one point missed and clicked a size
+    // radio instead. The layer that exists to check the agent was corrupting
+    // the run and answering on the person's behalf.
+    //
+    // data-bh-ignore is the harness's own opt-out; the other two are for any
+    // enumeration that walks the accessibility tree or the DOM instead.
+    box.setAttribute('data-bh-ignore', 'true');
+    box.setAttribute('data-ai4a11y-ui', 'true');
     box.setAttribute('role', 'complementary');
     box.setAttribute('aria-label', 'What the assistant is doing');
     // Polite: the agent working is not an emergency. The one thing that IS
@@ -121,6 +135,7 @@ export const AgentWatch = {
     if (!this.enabled) return;
     const wasPhase = this.state?.phase;
     this.state = state || null;
+    for (const k of state?.acknowledged || []) this.settled.add(k);
     // Landing somewhere with nothing to check — a sign-in wall, a help page —
     // folds the surface back up. The task's findings are still there and one
     // press away; what changes is that they stop being presented as though
@@ -200,7 +215,9 @@ export const AgentWatch = {
     head.type = 'button';
     head.setAttribute('aria-expanded', String(!this.collapsed));
     head.textContent = held
-      ? 'Waiting for you'
+      ? (s.gate?.unread
+          ? `Waiting for you · ${s.gate.unread} unread`
+          : 'Waiting for you')
       : !s.phase
         // Only when there is genuinely nothing in front of them. Saying
         // "nothing to check here" above a finding is the panel contradicting
@@ -319,6 +336,7 @@ export const AgentWatch = {
       skip.textContent = f.control ? 'Leave it' : 'Got it';
       skip.addEventListener('click', () => {
         this.settled.add(keyOf(f));
+        this.onAcknowledge?.(keyOf(f));
         this.render();
       });
       row.appendChild(skip);
@@ -417,6 +435,7 @@ export const AgentWatch = {
   /** Set by the host: what to do when a control or a gate answer is clicked. */
   onControl: null,
   onAnswer: null,
+  onAcknowledge: null,   // the person dealt with a finding; the agent may move on
   onEditAsk: null,      // a field of the Living Prompt was changed
   onPromote: null,      // an offered rule was accepted or declined
   onToggleRule: null,   // a standing rule was switched off or on
@@ -517,8 +536,13 @@ function css(m) {
 
   return `
 #${AgentWatch.containerId} {
-  position: fixed; top: 16px; right: 16px; z-index: 2147483646;
-  width: ${width}px; max-height: 76vh; overflow-y: auto;
+  /* Bottom-right, not top-right.
+     Top-right is where a shop puts the thing you are trying to reach — on a
+     product page that is the buy box, price and Add to Cart. Sitting on top of
+     it made the surface an obstacle for a sighted person and a trap for the
+     agent. */
+  position: fixed; bottom: 16px; right: 16px; z-index: 2147483646;
+  width: ${width}px; max-height: 62vh; overflow-y: auto;
   background: ${bg}; color: ${fg};
   border: ${high ? '3px solid #000' : '1px solid #d2d2d7'};
   border-radius: 12px;

@@ -88,6 +88,29 @@ One word only.`;
  * Run a task to completion. Persists progress to chrome.storage.local.bhAgent.
  * Returns when the loop exits (done / max steps / error / stopped).
  */
+// What the person said mid-run, waiting to be handed to the agent.
+//
+// Pressing "Sort by rating" used to call BrowserAgent.interject?.() — a method
+// that does not exist, so optional chaining swallowed it and the press did
+// nothing at all. Every control the validation layer offers was decoration.
+//
+// This is the queue those presses land in. It is drained at the top of each
+// step and put into the history as the person's own turn, which is the only
+// place the model reliably re-reads.
+const _bhPending = [];
+
+/**
+ * The person redirected the run. Applied before the next action.
+ *
+ * @param {string} instruction in their terms — "open the runner-up instead"
+ */
+export function bhAgentInterject(instruction) {
+  const t = String(instruction || '').trim();
+  if (!t) return { queued: 0 };
+  _bhPending.push(t);
+  return { queued: _bhPending.length };
+}
+
 export async function bhAgentRun(task, opts = {}) {
   if (isRunning()) throw new Error('agent already running');
   setRunning(true);
@@ -217,6 +240,14 @@ export async function bhAgentRun(task, opts = {}) {
     let pendingError = null;
     let pendingRaw = null;
     for (let step = 0; step < maxSteps; step++) {
+        // Anything the person said since the last action goes in first, as
+        // their own turn. Ahead of the stop check, because "stop" is one of
+        // the things they may have just said.
+        while (_bhPending.length) {
+          const said = _bhPending.shift();
+          history.push({ role: 'user', content: `[You interrupted] ${said}` });
+          await _bhAgentLog({ kind: 'info', text: `You: ${said}` });
+        }
       if (shouldStop()) {
         await _bhAgentPatch({ status: 'stopped', endedAt: Date.now() });
         await _bhAgentLog({ kind: 'info', text: 'Stopped by user' });

@@ -319,6 +319,17 @@
     let capped = false;
     for (let i = 0; i < all.length; i++) {
       const { el, offsetX, offsetY } = all[i];
+        // Never the assistant's own UI.
+        //
+        // Anything the extension draws on the page is furniture for the
+        // PERSON, not part of the site the agent is working on. Enumerating
+        // it put our controls in the agent's index: in a recorded run it
+        // spent ten steps trying to dismiss "the helper overlay" blocking
+        // the buy box, pressed our own Got it and Leave it — which marks the
+        // person's findings as dealt with — and missed once into a size
+        // radio. An agent that can answer the questions meant for the person
+        // is not being checked by them.
+        if (el.closest && el.closest('[data-bh-ignore]')) continue;
       if (!isStrict(el)) continue;
       const rect = el.getBoundingClientRect();
       if (!isVisible(el, rect)) continue;
