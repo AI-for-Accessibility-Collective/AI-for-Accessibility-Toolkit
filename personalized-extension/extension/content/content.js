@@ -986,6 +986,8 @@ function wireAgentWatchHandlers() {
   AgentWatch.onAnswer = (widget, response) =>
     chrome.runtime.sendMessage({ type: 'validationAnswer', widget, response }).catch(() => {});
   // The upward arrow: a correction made in one task becomes a standing rule.
+  AgentWatch.onTell = (said) =>
+    chrome.runtime.sendMessage({ type: 'agentTell', said }).catch(() => {});
   AgentWatch.onAcknowledge = (key) =>
     chrome.runtime.sendMessage({ type: 'validationAck', key }).catch(() => {});
   AgentWatch.onPromote = (offer, always) =>
