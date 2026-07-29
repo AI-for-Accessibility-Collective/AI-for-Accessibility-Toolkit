@@ -62,6 +62,7 @@ export const AgentWatch = {
   root: null,
   styleHandle: null,
   spoken: null,       // what has already been said, so nothing repeats
+  settled: null,      // findings the person has answered or waved past
   collapsed: true,
 
   /**
@@ -76,6 +77,7 @@ export const AgentWatch = {
     this.enabled = true;
     this.model = merge(options.model);
     this.spoken = new Set();
+    this.settled = new Set();
     this.collapsed = true;
 
     this.styleHandle = injectStyle(STYLE_ID, css(this.model));
@@ -104,6 +106,7 @@ export const AgentWatch = {
     this.styleHandle = null;
     this.state = null;
     this.spoken = null;
+    this.settled = null;
   },
 
   /** New findings from the run. Re-renders, and speaks anything that must be. */
@@ -235,43 +238,45 @@ export const AgentWatch = {
       requestAnimationFrame(() => g.querySelector('.aw-do')?.focus());
     }
 
-    // ── the findings ────────────────────────────────────────────────────────
+    // ── one thing at a time ─────────────────────────────────────────────────
     //
-    // An empty list has two very different causes, and collapsing them would
-    // be the exact confusion this layer exists to remove: nothing checked yet,
-    // versus checked and nothing needs you. Say which.
-    if (!shown.length) {
+    // Not a list. A list of eleven findings is a dashboard, and a dashboard is
+    // the wrong shape here in two separate ways.
+    //
+    // On a linear channel it is unusable: eleven items read aloud is a memory
+    // test, and the corpus is explicit that facing "what would you like to
+    // do?" after a long readback is the hardest moment in the task. But it is
+    // wrong for someone who can see the page too, because each finding carries
+    // a CONTROL — re-sort, open a different one, change the size — and acting
+    // on one changes the page the others were about. Showing them together
+    // implies they can be judged together, and they cannot.
+    //
+    // So: the most decisive unresolved finding, with its control, and a count
+    // of what is behind it. Answer or wave it past, and the next arrives.
+    // Nothing is hidden; it is queued.
+    const queue = shown.filter((f) => !this.settled.has(keyOf(f)));
+    if (!queue.length) {
       const note = document.createElement('p');
       note.className = 'aw-none';
       note.textContent = all.length
-        ? `Nothing needs you. ${all.length} thing${all.length === 1 ? '' : 's'} checked so far.`
+        ? (shown.length ? `All ${shown.length} looked at.`
+                        : `Nothing needs you. ${all.length} checked so far.`)
         : 'Nothing to flag yet.';
       this.root.appendChild(note);
-      return;
-    }
-    const list = document.createElement('ul');
-    list.className = 'aw-list';
-    for (const f of shown) {
-      const li = document.createElement('li');
-      li.className = `aw-item aw-${f.confirming ? 'ok' : f.level}`;
+    } else {
+      const f = queue[0];
+      const li = document.createElement('div');
+      li.className = `aw-item aw-one aw-${f.confirming ? 'ok' : f.level}`;
 
       const t = document.createElement('p');
       t.className = 'aw-text';
       t.textContent = phrase(f, m);
       li.appendChild(t);
 
-      // The shape carries the judgment the sentence leaves to the reader.
-      // Someone who asked for summaries is asking for less to take in, so the
-      // geometry goes and the sentence stays — it is the sentence that holds
-      // the claim.
       if (!m.cognition.summarize) {
         const shape = renderShape(f);
         if (shape) li.appendChild(shape);
       }
-
-      // Provenance is the page's own words. Dropped only when someone has
-      // asked for simpler content, where a second line of raw page text costs
-      // more than the traceability buys.
       if (f.from && !m.cognition.simplify) {
         const w = document.createElement('p');
         w.className = 'aw-from';
@@ -279,43 +284,88 @@ export const AgentWatch = {
         li.appendChild(w);
       }
 
+      const row = document.createElement('div');
+      row.className = 'aw-row';
       if (f.control) {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'aw-do';
+        b.className = 'aw-do aw-primary';
         b.textContent = f.control.label;
-        b.addEventListener('click', () => this.onControl?.(f.control));
-        li.appendChild(b);
+        b.addEventListener('click', () => {
+          this.settled.add(keyOf(f));
+          this.onControl?.(f.control);
+          this.render();
+        });
+        row.appendChild(b);
       }
-      list.appendChild(li);
-    }
-    this.root.appendChild(list);
+      // Waving something past is a real answer, not a dismissal: it is how
+      // someone says "understood, carry on" without the layer treating silence
+      // as agreement.
+      const skip = document.createElement('button');
+      skip.type = 'button';
+      skip.className = 'aw-do';
+      skip.textContent = f.control ? 'Leave it' : 'Got it';
+      skip.addEventListener('click', () => {
+        this.settled.add(keyOf(f));
+        this.render();
+      });
+      row.appendChild(skip);
+      li.appendChild(row);
 
-    // ── the three surfaces ──────────────────────────────────────────────────
+      if (queue.length > 1) {
+        const more = document.createElement('p');
+        more.className = 'aw-queue';
+        more.textContent = `${queue.length - 1} more after this.`;
+        li.appendChild(more);
+      }
+      this.root.appendChild(li);
+      // Focus follows the queue, so answering does not send a keyboard or
+      // screen-reader user back to the top of the panel each time.
+      if (this.settled.size) {
+        requestAnimationFrame(() => li.querySelector('.aw-do')?.focus());
+      }
+    }
+
+    // ── the three surfaces, behind a disclosure ─────────────────────────────
     //
-    // Order matters and it is the reverse of the time scales: what is true
-    // right now sits closest to the findings it explains, and the standing
-    // rules sit furthest away because they change least. Someone scanning
-    // top-down reads the task, then the moment, then the permanent.
+    // What is true right now, what is true for this task, what is true across
+    // every task. They persist so that an utterance is never the only copy of
+    // something — 17 of the recorded breakdowns are things said once and
+    // unreachable afterwards, and that is what these exist to end.
+    //
+    // But persisting and being displayed are different questions. Shown by
+    // default they bury the one thing that actually needs answering under a
+    // history of what already happened, which is how this surface turned into
+    // a dashboard.
+    const more = document.createElement('details');
+    more.className = 'aw-more';
+    const sum = document.createElement('summary');
+    const nRules = (s.rules || []).length;
+    sum.textContent = `The task so far${nRules ? ` · ${nRules} standing rule${nRules === 1 ? '' : 's'}` : ''}`;
+    more.appendChild(sum);
+
     const plan = livingPlan(s.steps, { compact: m.cognition.summarize });
-    if (plan) this.root.appendChild(plan);
+    if (plan) more.appendChild(plan);
 
     const prompt = livingPrompt(s.contract, {
       invalidated: s.invalidated || [],
       onEdit: (field) => this.onEditAsk?.(field),
     });
-    if (prompt) this.root.appendChild(prompt);
+    if (prompt) more.appendChild(prompt);
 
-    // Shown when there is anything to show, or anything to offer. An empty
-    // rulebook with no offer is not worth the space — but an empty rulebook
-    // WITH an offer is the moment the whole promotion idea becomes visible.
-    if ((s.rules || []).length || s.offer) {
-      this.root.appendChild(rulebook(s.rules || [], {
+    if (nRules || s.offer) {
+      more.appendChild(rulebook(s.rules || [], {
         offer: s.offer,
         onPromote: (o, always) => this.onPromote?.(o, always),
         onToggle: (r) => this.onToggleRule?.(r),
       }));
     }
+    this.root.appendChild(more);
+
+    // An offered rule is the exception. It is the moment a correction becomes
+    // permanent, it only makes sense right after the thing that caused it, and
+    // it is gone once the task moves on — so it comes out from behind the fold.
+    if (s.offer) more.open = true;
 
     // Progress cues are a preference with a real split: some people want to
     // know how much was checked, and for others a running tally is one more
@@ -355,11 +405,22 @@ export const AgentWatch = {
  * the order the checks ran, roughly most-decisive first — survives.
  */
 function byPhase(findings, current) {
-  if (!current) return findings;
-  const here = findings.filter((f) => f.phase === current);
-  const earlier = findings.filter((f) => f.phase !== current);
-  return here.concat(earlier);
+  const key = (f) => [
+    current && f.phase === current ? 0 : 1,   // this page before earlier ones
+    URGENCY[f.level] ?? 3,                    // a held agent before anything advisory
+    f.control ? 0 : 1,                        // actionable before informational
+  ];
+  return findings.slice().sort((a, b) => {
+    const [x, y] = [key(a), key(b)];
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
+    return 0;
+  });
 }
+
+/** What identifies one finding across re-renders. */
+const keyOf = (f) => `${f.widget}|${f.phase}|${f.say}`;
+
+const URGENCY = { stop: 0, aside: 1, ambient: 2 };
 
 function visible(s, m) {
   let out = (s.findings || []).filter((f) => f.level !== 'ambient' || f.confirming);
@@ -381,14 +442,25 @@ function phrase(f, m) {
   return first ? first[0] : say;
 }
 
-// Answers offered at a gate, derived from what is being waited on so the
-// person answers a question about their own task rather than a generic yes/no.
+/**
+ * Answers offered at a gate.
+ *
+ * Taken from the control the held finding already carries, not from a table of
+ * phrasings kept here. Those controls come from the analysis — they are the
+ * actions delegation took away, named there — so a hand-written map in this
+ * file is the same wording maintained in two places, drifting apart. It also
+ * could not keep up: it matched on the widget's name, so a widget the analysis
+ * renamed silently fell through to a generic yes/no.
+ *
+ * The second option is always to stop, because that is the one answer no
+ * finding has to supply: a gate you cannot decline is not a checkpoint.
+ */
 function choices(s) {
-  const w = ((s.gate?.waitingOn || [])[0] || '').toLowerCase();
-  if (/size/.test(w)) return [['Change the size', 'change it', true], ['Use it anyway', 'use it', false]];
-  if (/extra|cap/.test(w)) return [['Remove the extras', 'remove them', true], ['Go ahead', 'go ahead', false]];
-  if (/land|match/.test(w)) return [['Try again', 'try again', true], ['Stop here', 'stop', false]];
-  return [['Go on', 'go on', true], ['Stop here', 'stop', false]];
+  const waiting = new Set(s.gate?.waitingOn || []);
+  const held = (s.findings || []).find((f) => waiting.has(f.widget) && f.control?.label);
+  return held
+    ? [[held.control.label, held.control.label, true], ['Stop here', 'stop', false]]
+    : [['Go on', 'go on', true], ['Stop here', 'stop', false]];
 }
 
 // ── the stylesheet, built from the model ────────────────────────────────────
@@ -447,6 +519,24 @@ function css(m) {
   padding: 9px 14px 9px ${Math.round(base * 1.85)}px; position: relative;
 }
 #${AgentWatch.containerId} .aw-item + .aw-item { border-top: 1px solid ${line}; }
+
+/* One at a time: the single open question gets the room a list would have
+   spent on nine others, so it can carry its shape and its control unhurried. */
+#${AgentWatch.containerId} .aw-one { padding: 12px 14px 14px ${Math.round(base * 1.85)}px; }
+#${AgentWatch.containerId} .aw-one .aw-row { margin-top: 11px; }
+#${AgentWatch.containerId} .aw-queue {
+  margin: 10px 0 0; font-size: ${Math.round(base * 0.82)}px; color: ${muted};
+}
+
+/* The task so far — present, and not in the way. */
+#${AgentWatch.containerId} .aw-more { border-top: 1px solid ${line}; }
+#${AgentWatch.containerId} .aw-more > summary {
+  padding: 9px 14px; cursor: pointer; color: ${muted};
+  font-size: ${Math.round(base * 0.84)}px;
+}
+#${AgentWatch.containerId} .aw-more > summary:focus-visible { outline: 3px solid #06c; outline-offset: -3px; }
+#${AgentWatch.containerId} .aw-more[open] > summary { color: inherit; }
+#${AgentWatch.containerId} .aw-more .aw-surf:first-of-type { border-top: 0; }
 /* Never colour alone: each level carries its own mark, so the distinction
    survives any colour vision and any high-contrast mode that flattens hue. */
 #${AgentWatch.containerId} .aw-item::before {

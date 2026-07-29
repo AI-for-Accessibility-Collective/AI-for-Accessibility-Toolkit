@@ -82,11 +82,16 @@ async function stored() {
 // full of them.
 const RULES_KEY = 'aa.rulebook';
 
-const DEFAULT_RULES = [
-  // Never offered, never asked. Someone who has stated no preferences at all
-  // should still not have money spent without being asked.
-  { id: 'no-buy-now', text: 'never press Buy Now', on: true, default: true },
-];
+// In force before anyone is asked anything. Injected with the rest of the
+// analysis — the corpus marks which rules are defaults by their behaviour, and
+// a protection typed in here is a protection that can drift out of the
+// analysis that justifies it. Empty until loaded, and an empty rulebook is
+// honest: it says nothing is standing rather than implying something is.
+let DEFAULT_RULES = [];
+
+function setDefaults(list) {
+  DEFAULT_RULES = Array.isArray(list) ? list : [];
+}
 
 async function rules() {
   try {
@@ -351,9 +356,11 @@ globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery };
 globalThis.ValidationCorpus = {
   load(corpus) {
     setPromotable(corpus?.promotable || []);
+    setDefaults(corpus?.defaults || []);
     setParadigmMap(corpus?.widgets || {});
     setCountZones(corpus?.countZones);
     return { promotable: PROMOTABLE.length,
+             defaults: DEFAULT_RULES.length,
              widgets: Object.keys(corpus?.widgets || {}).length,
              zones: (corpus?.countZones || []).length };
   },
