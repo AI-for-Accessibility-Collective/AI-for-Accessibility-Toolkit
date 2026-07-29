@@ -71,11 +71,12 @@ function gauge(f) {
   // every real search in the leftmost tenth.
   const x = (v) => 8 + (Math.log10(Math.max(v, 1)) / 4) * (W - 16);
 
-  const zones = d.zones || [
-    { to: 1, label: 'dead end' },
-    { to: 800, label: 'right' },
-    { to: 10000, label: 'too loose' },
-  ];
+  // Zones come with the finding, from the analysis. The numbers that belong
+  // here are the ones the corpus records — a blind tutor's working rule that
+  // a few hundred results means the query landed and four figures means it
+  // matched half the shop — not thresholds picked to make a chart look right.
+  const zones = d.zones;
+  if (!Array.isArray(zones) || !zones.length) return null;
   let from = 0;
   zones.forEach((z, i) => {
     put(s, 'rect', {
@@ -263,14 +264,139 @@ function fork(f) {
   return box;
 }
 
+// ── 5. poke the world — a magnifier ─────────────────────────────────────────
+//
+// The page's exact words, re-read from the live page at a named moment, not
+// recalled from the agent's account of it. The corpus's demand is verbatim:
+// this is the one shape whose content must not be tidied, because tidying is
+// the failure it exists to catch.
+function magnifier(f) {
+  const d = f.shape || {};
+  if (!d.quote) return null;
+  const box = el('div', 'aw-shape aw-mag');
+  const q = el('blockquote', 'aw-mag-quote');
+  q.textContent = d.quote;
+  box.appendChild(q);
+  const foot = el('p', 'aw-mag-foot');
+  foot.append(el('span', 'aw-mag-where', d.where || 'the live page'));
+  // "live" and the time are the claim: this was read now, not remembered.
+  foot.append(el('span', 'aw-mag-when', d.when ? `live · ${d.when}` : 'live'));
+  box.appendChild(foot);
+  return box;
+}
+
+// ── 8. rules from corrections — a switchboard ───────────────────────────────
+//
+// Every correction the person made, still on, and audible the moment it fires.
+// A rule you cannot see is indistinguishable from a rule that quietly stopped
+// working, which is why each switch shows what it has actually caught.
+function switchboard(f) {
+  const d = f.shape || {};
+  if (!Array.isArray(d.rules) || !d.rules.length) return null;
+  const box = el('div', 'aw-shape aw-sw');
+  const list = el('ul', 'aw-sw-list');
+  for (const r of d.rules) {
+    const li = el('li', `aw-sw-rule${r.fired ? ' aw-sw-fired' : ''}`);
+    li.appendChild(el('span', 'aw-sw-toggle', r.on === false ? 'off' : 'on'));
+    const body = el('div', 'aw-sw-body');
+    body.appendChild(el('span', 'aw-sw-name', r.name));
+    if (r.fired) body.appendChild(el('span', 'aw-sw-fired-note', r.fired));
+    li.appendChild(body);
+    list.appendChild(li);
+  }
+  box.appendChild(list);
+  return box;
+}
+
+// ── 9. the auditor — a stamped sheet ────────────────────────────────────────
+//
+// Every line checked against a source the doer could not have written. That
+// restriction is the whole paradigm: an agent confirming its own report is
+// worth nothing, so only second sources appear here, each named.
+function auditSheet(f) {
+  const d = f.shape || {};
+  if (!Array.isArray(d.lines) || !d.lines.length) return null;
+  const box = el('div', 'aw-shape aw-audit');
+  box.appendChild(el('p', 'aw-audit-head', d.headline || 'Checked against other sources'));
+  const list = el('ul', 'aw-audit-list');
+  for (const l of d.lines) {
+    const li = el('li', `aw-audit-line aw-${l.ok === false ? 'no' : l.ok ? 'yes' : 'unknown'}`);
+    li.appendChild(el('span', 'aw-audit-src', l.source));
+    li.appendChild(el('span', 'aw-audit-said', l.said));
+    list.appendChild(li);
+  }
+  box.appendChild(list);
+  return box;
+}
+
+// ── 10. the escort — a numbered path ────────────────────────────────────────
+//
+// The agent drives the browser; the person makes the press. Used where the
+// agent must not own the action — an irreversible control, a login wall — so
+// the steps are numbered and the one the person owns is marked as theirs.
+function path(f) {
+  const d = f.shape || {};
+  if (!Array.isArray(d.steps) || !d.steps.length) return null;
+  const box = el('div', 'aw-shape aw-path');
+  const list = el('ol', 'aw-path-list');
+  d.steps.forEach((st, i) => {
+    const li = el('li', `aw-path-step${st.yours ? ' aw-path-yours' : ''}`);
+    li.appendChild(el('span', 'aw-path-n', String(i + 1)));
+    const body = el('div', 'aw-path-body');
+    body.appendChild(el('span', 'aw-path-what', st.what));
+    body.appendChild(el('span', 'aw-path-who', st.yours ? 'you press' : 'I do this'));
+    li.appendChild(body);
+    list.appendChild(li);
+  });
+  box.appendChild(list);
+  return box;
+}
+
+// ── 11. the world, rebuilt — a funnel ───────────────────────────────────────
+//
+// The corpus's 287-word cart readback against the one sentence that answers
+// the question. The funnel shows the ratio, because the compression is the
+// claim being made: everything discarded is still answerable, not gone.
+function funnel(f) {
+  const d = f.shape || {};
+  if (!d.wasWords || !d.sentence) return null;
+  const box = el('div', 'aw-shape aw-fun');
+
+  const W = 300, H = 34;
+  const s = svg(W, H, 'compression');
+  put(s, 'polygon', {
+    points: `0,2 ${W},14 ${W},20 0,32`, fill: 'currentColor', opacity: 0.15,
+  });
+  const a = put(s, 'text', { x: 2, y: 21, 'font-size': 9, fill: 'currentColor', opacity: 0.75 });
+  a.textContent = `${d.wasWords} words`;
+  const b = put(s, 'text', {
+    x: W - 2, y: 20, 'text-anchor': 'end', 'font-size': 9,
+    'font-weight': 700, fill: 'currentColor',
+  });
+  b.textContent = d.nowWords ? `${d.nowWords}` : '1 sentence';
+  box.appendChild(s);
+
+  box.appendChild(el('p', 'aw-fun-said', d.sentence));
+  // Nothing is thrown away — the rest stays reachable by asking. Saying so is
+  // what separates a summary from a loss.
+  box.appendChild(el('p', 'aw-fun-rest',
+    d.rest || 'Everything else is still there — ask for any line.'));
+  return box;
+}
+
 /** paradigm number → renderer. Missing numbers fall back to the sentence. */
 export const SHAPES = {
   1: gauge,
   2: triangulation,
   3: diff,
   4: coverage,
+  5: magnifier,
   6: timeline,
   7: airlock,
+  8: switchboard,
+  9: auditSheet,
+  10: path,
+  11: funnel,
   12: fork,
 };
 
@@ -292,7 +418,7 @@ export function renderShape(f) {
 }
 
 /** The CSS for every shape, sized from the person's type scale. */
-export function shapeCss(id, base, muted, line, high) {
+export function shapeCss(id, base, muted, line, high, bg = '#fff') {
   const px = (n) => `${Math.round(base * n)}px`;
   return `
 #${id} .aw-shape { margin: 7px 0 2px; color: inherit; }
@@ -362,6 +488,71 @@ export function shapeCss(id, base, muted, line, high) {
 #${id} .aw-lock-fact.aw-yes::before { content: "✓"; }
 #${id} .aw-lock-fact.aw-no::before  { content: "✗"; }
 #${id} .aw-lock-what { flex: 0 0 42%; color: ${muted}; }
+
+/* 5 — magnifier */
+#${id} .aw-mag-quote {
+  margin: 0; padding: 6px 0 6px 10px; border-left: 3px solid currentColor;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: ${px(0.88)};
+}
+#${id} .aw-mag-foot {
+  display: flex; justify-content: space-between; gap: 8px;
+  margin: 4px 0 0 13px; font-size: ${px(0.78)}; color: ${muted};
+}
+
+/* 8 — switchboard */
+#${id} .aw-sw-list { list-style: none; margin: 0; padding: 0; }
+#${id} .aw-sw-rule {
+  display: flex; gap: 8px; align-items: baseline; padding: 3px 0;
+  font-size: ${px(0.92)};
+}
+#${id} .aw-sw-toggle {
+  flex: 0 0 auto; font-size: ${px(0.7)}; text-transform: uppercase;
+  letter-spacing: .5px; border: 1px solid currentColor; border-radius: 3px;
+  padding: 0 4px;
+}
+#${id} .aw-sw-body { display: flex; flex-direction: column; min-width: 0; }
+#${id} .aw-sw-fired-note { color: ${muted}; font-size: ${px(0.84)}; }
+#${id} .aw-sw-fired .aw-sw-name { font-weight: 600; }
+
+/* 9 — audit sheet */
+#${id} .aw-audit {
+  border: 1px solid ${line}; border-radius: 8px; padding: 8px 10px;
+}
+#${id} .aw-audit-head {
+  margin: 0 0 5px; font-size: ${px(0.78)}; text-transform: uppercase;
+  letter-spacing: .4px; color: ${muted};
+}
+#${id} .aw-audit-list { list-style: none; margin: 0; padding: 0; }
+#${id} .aw-audit-line {
+  display: flex; gap: 8px; padding: 3px 0 3px 15px; position: relative;
+  font-size: ${px(0.92)};
+}
+#${id} .aw-audit-line::before { position: absolute; left: 0; font-weight: 700; }
+#${id} .aw-audit-line.aw-yes::before { content: "✓"; }
+#${id} .aw-audit-line.aw-no::before  { content: "✗"; }
+#${id} .aw-audit-line.aw-unknown::before { content: "?"; opacity: .55; }
+#${id} .aw-audit-src { flex: 0 0 40%; color: ${muted}; }
+
+/* 10 — numbered path */
+#${id} .aw-path-list { list-style: none; margin: 0; padding: 0; counter-reset: p; }
+#${id} .aw-path-step { display: flex; gap: 9px; padding: 4px 0; font-size: ${px(0.92)}; }
+#${id} .aw-path-n {
+  flex: 0 0 auto; width: ${px(1.35)}; height: ${px(1.35)}; line-height: ${px(1.35)};
+  text-align: center; border-radius: 50%; border: 1px solid currentColor;
+  font-size: ${px(0.74)};
+}
+#${id} .aw-path-body { display: flex; flex-direction: column; min-width: 0; }
+#${id} .aw-path-who { font-size: ${px(0.78)}; color: ${muted}; }
+/* The step the person owns is filled — so its digit must flip, or the number
+   disappears on the one step that matters most. */
+#${id} .aw-path-yours .aw-path-n { background: currentColor; color: ${bg}; }
+#${id} .aw-path-yours .aw-path-what { font-weight: 600; }
+
+/* 11 — funnel */
+#${id} .aw-fun svg { display: block; }
+#${id} .aw-fun-said { margin: 4px 0 0; font-weight: 600; }
+#${id} .aw-fun-rest { margin: 3px 0 0; font-size: ${px(0.84)}; color: ${muted}; }
 
 /* 12 — fork */
 #${id} .aw-fork { display: flex; gap: 9px; }

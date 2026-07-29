@@ -55,7 +55,11 @@ export function createRun(contract, opts = {}) {
       const facts = read(snapshot, want);
 
       for (const [k, v] of Object.entries(facts)) {
-        if (v.absent) gaps.push({ phase, extractor: k, why: v.from });
+        // Recorded once per extractor per phase. Re-reading a page does not
+        // make the same unreadable thing unreadable twice.
+        if (v.absent && !gaps.some((g) => g.phase === phase && g.extractor === k)) {
+          gaps.push({ phase, extractor: k, why: v.from });
+        }
       }
 
       const findings = checkPage(facts, phase, contract);
@@ -69,12 +73,21 @@ export function createRun(contract, opts = {}) {
         if (r.spoken?.holds) waiting.push({ widget: f.widget, ask: f.say, phase });
       }
 
-      steps.push({
+      // One entry per page, updated — not one per read.
+      //
+      // A page is read more than once: the navigation trigger fires and an
+      // explicit observe follows. Pushing each time turned the plan into
+      // "Search / Search / Check item / Check item", which reads as though the
+      // agent went round in circles. The last read is the current truth.
+      const prior = steps.find((x) => x.phase === phase);
+      const entry = {
         phase,
         read: Object.values(facts).filter((f) => !f.absent).length,
         of: Object.keys(facts).length,
-        spoke: rendered.filter((r) => r.level !== 'ambient').length,
-      });
+        spoke: (prior?.spoke || 0) + rendered.filter((r) => r.level !== 'ambient').length,
+      };
+      if (prior) Object.assign(prior, entry);
+      else steps.push(entry);
       return { facts, findings: rendered };
     },
 
@@ -114,11 +127,47 @@ export function createRun(contract, opts = {}) {
     /** What the layer could not read. A developer's list, never spoken. */
     gaps: () => gaps.slice(),
 
+    /**
+     * The Living Plan — what happened, in the person's terms.
+     *
+     * Three marks, and the third is why this exists:
+     *   done     the page was read and checked
+     *   failed   something the reader could not get at
+     *   skipped  a check that never ran
+     *
+     * A skipped check is the failure the corpus records most often: an
+     * unflagged absence reads exactly like a passed check. Listing only what
+     * happened would reproduce it here, in the surface built to prevent it —
+     * so the things that did NOT happen are carried in the same list, with
+     * their own mark, not in a footnote.
+     */
+    plan() {
+      const out = [];
+      for (const st of steps) {
+        out.push({
+          state: 'done',
+          what: st.phase,
+          detail: `read ${st.read} of ${st.of} things · said ${st.spoke}`,
+        });
+        // Grouped per phase: five separate "could not read X" lines for one
+        // page is noise, one line naming five is a fact.
+        const missed = gaps.filter((g) => g.phase === st.phase);
+        if (missed.length) {
+          out.push({
+            state: 'failed',
+            what: `couldn't read ${missed.length} thing${missed.length === 1 ? '' : 's'} here`,
+            detail: missed.map((g) => g.extractor).join(', '),
+          });
+        }
+      }
+      return out;
+    },
+
     summary() {
       const words = said.filter((s) => s.level !== 'ambient')
         .reduce((n, s) => n + s.say.split(/\s+/).length, 0);
       return {
-        steps: steps.slice(), said: said.slice(),
+        steps: this.plan(), said: said.slice(),
         spokenWords: words, waiting: waiting.length, unreadable: gaps.length,
       };
     },

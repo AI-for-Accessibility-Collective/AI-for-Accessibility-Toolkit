@@ -43,6 +43,15 @@ const missing = (why) => ({ value: null, from: why, absent: true });
 //
 // So the tree is grouped first. A tile is a listitem that contains a product
 // heading and a price, and everything nested under it belongs to it.
+// KNOWN DISCREPANCY, unresolved: this returns 70 product tiles on a search
+// page whose own markup marks 60 as search results
+// (`[data-component-type=s-search-result]`). The extra ten are a sponsored
+// brand carousel that is indistinguishable here — in the accessibility tree it
+// is a listitem with a heading and a price, exactly like a result, and it sits
+// AFTER the page's own "Results" heading, so that heading cannot be used as
+// the boundary. prototype/truth.py fails on this deliberately rather than
+// rounding it away: the number feeds the count the person is told and the ad
+// ratio computed from it.
 export function tiles(lines) {
   const out = [];
   let cur = null;
@@ -297,12 +306,24 @@ export const title = (lines) => {
   return any ? got(any.name, any.name) : missing('no product heading on the page');
 };
 
+// A price with a word in front of it is a range, a filter or a comparison —
+// "Under $10", "Up to $25", "Typical: $19.50", "$6 – $130+". None of them is
+// what the button will charge. The loose fallback that matched any line with a
+// dollar sign in it read Amazon's own price-filter rail as the product's
+// price, and reported a $10.00 sandal that does not exist.
+const NOT_A_PRICE = /\b(under|over|up to|from|typical|list|was|save|off|between|per|shipping|total)\b|[–—]|\+\s*$|&\s*up/i;
+
 export const buyBoxPrice = (lines) => {
   // Read from the buy box only. A product page carries several numbers and the
   // one the button will charge is the only one that matters.
-  const l = byRole(lines, 'text').find((t) => /^\$[\d,]+\.?\d*$/.test(t.name)) ||
-            find(lines, /\$[\d,]+\.?\d*/);
-  return l ? got(money(l.name), l.name) : missing('no price in the buy box');
+  const exact = byRole(lines, 'text').find((t) => /^\$[\d,]+\.?\d*$/.test(t.name.trim()));
+  if (exact) return got(money(exact.name), exact.name);
+
+  const near = lines.find((t) => /\$[\d,]+\.?\d*/.test(t.name)
+    && !NOT_A_PRICE.test(t.name)
+    && t.role !== 'link'          // a link with a price in it is a tile or a filter
+    && t.name.length < 40);       // a price inside a sentence is not the buy box
+  return near ? got(money(near.name), near.name) : missing('no price in the buy box');
 };
 
 export const rating = (lines) => {

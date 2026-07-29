@@ -909,6 +909,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch((e) => sendResponse({ error: e.message }));
     return true;
   }
+  if (msg.type === 'validationPromote') {
+    globalThis.Validation.promote(msg.offer, msg.always)
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationToggleRule') {
+    globalThis.Validation.toggleRule(msg.id)
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
   if (msg.type === 'validationAnswer') {
     globalThis.Validation.answer(msg.widget, msg.response)
       .then((r) => sendResponse(r))
