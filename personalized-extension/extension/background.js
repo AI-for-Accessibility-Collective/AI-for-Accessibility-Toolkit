@@ -925,6 +925,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch((e) => sendResponse({ error: e.message }));
     return true;
   }
+  if (msg.type === 'validationEdit') {
+    globalThis.Validation.editAsk(msg.field, msg.value)
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
   if (msg.type === 'validationPromote') {
     globalThis.Validation.promote(msg.offer, msg.always)
       .then(sendResponse).catch((e) => sendResponse({ error: e.message }));

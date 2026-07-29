@@ -79,26 +79,29 @@ export function renderVisual(finding, level) {
   };
 }
 
-/** The action delegation took away, per finding. This is the sighted
- *  persona's actual remedy — knowing is not the problem, reaching is. */
+// The action delegation took away, per finding.
+//
+// Read from the analysis, which declares one per signal — "set or clear a
+// filter", "change the size", "choose the delivery option". The hand-written
+// version this replaces matched on the widget's NAME, so it covered five of
+// the eleven and would silently drop any widget the analysis renamed.
+//
+// This is the sighted persona's actual remedy. Knowing is not their problem;
+// reaching is. A finding without its control is bad news delivered on time.
+let CONTROLS = {};
+
+/** @param {Object<string, {control: {label, action}}>} byWidget from the analysis */
+export function setControls(byWidget) {
+  CONTROLS = byWidget || {};
+}
+
 function controlFor(f) {
-  const w = f.widget;
-  if (/badge decoder|stars never alone/i.test(w)) {
-    return { label: 'Sort by rating', action: 're-sort', arg: 'rating' };
-  }
-  if (/no exact match|two answers about size/i.test(w)) {
-    return { label: 'Change size', action: 'pick-size' };
-  }
-  if (/extra items/i.test(w)) {
-    return { label: 'Remove the extras', action: 'remove-extras' };
-  }
-  if (/word match|unseen-photo/i.test(w)) {
-    return { label: 'Open a different one', action: 'open-other' };
-  }
-  if (/spending cap|did it land/i.test(w)) {
-    return { label: 'Stop here', action: 'halt' };
-  }
-  return null;
+  // A check's own control wins. The corpus maps controls to SIGNALS, which is
+  // right for the eleven the analysis names, but a check often knows something
+  // the signal does not — the size-mismatch check can hand back "change the
+  // size" even though its signal ("which size went in?") is a readback with no
+  // control of its own. Corpus first would have silently dropped those.
+  return f.control || CONTROLS[f.widget]?.control || null;
 }
 
 /** First clause, up to a natural break. */

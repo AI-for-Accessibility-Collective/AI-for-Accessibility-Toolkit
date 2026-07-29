@@ -36,6 +36,15 @@ const READS = {
             'orderStatus'],
 };
 
+// Plain names for the extractors, supplied with the rest of the analysis.
+// Empty means fall back to the internal name — ugly, but never wrong.
+let NAMES = {};
+
+/** @param {Object<string,string>} map extractor → the question it answers */
+export function setExtractorNames(map) {
+  NAMES = map || {};
+}
+
 export function createRun(contract, opts = {}) {
   const style = opts.style || 'balanced';
   const channels = { speech: opts.speech !== false, visual: opts.visual !== false };
@@ -144,19 +153,27 @@ export function createRun(contract, opts = {}) {
     plan() {
       const out = [];
       for (const st of steps) {
+        // "read 9 of 9 things · said 6" is our bookkeeping, not their answer.
+        // What they want to know is whether the page was fully readable and
+        // whether anything came of it.
+        const missed = st.of - st.read;
         out.push({
           state: 'done',
           what: st.phase,
-          detail: `read ${st.read} of ${st.of} things · said ${st.spoke}`,
+          detail: missed
+            ? `${missed} thing${missed === 1 ? '' : 's'} here I couldn't read`
+            : (st.spoke ? `${st.spoke} worth mentioning` : 'nothing to flag'),
         });
         // Grouped per phase: five separate "could not read X" lines for one
         // page is noise, one line naming five is a fact.
-        const missed = gaps.filter((g) => g.phase === st.phase);
-        if (missed.length) {
+        const unread = gaps.filter((g) => g.phase === st.phase);
+        if (unread.length) {
+          // Named the way the analysis names them, not by our variable names.
+          const named = [...new Set(unread.map((g) => NAMES[g.extractor] || g.extractor))];
           out.push({
             state: 'failed',
-            what: `couldn't read ${missed.length} thing${missed.length === 1 ? '' : 's'} here`,
-            detail: missed.map((g) => g.extractor).join(', '),
+            what: `couldn't read ${named.length} thing${named.length === 1 ? '' : 's'}`,
+            detail: named.join(' · '),
           });
         }
       }

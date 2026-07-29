@@ -63,6 +63,8 @@ export const AgentWatch = {
   styleHandle: null,
   spoken: null,       // what has already been said, so nothing repeats
   settled: null,      // findings the person has answered or waved past
+  historyOpen: false, // survives re-render — see below
+  openSurfaces: null, // which of the three the person has opened
   collapsed: true,
 
   /**
@@ -78,6 +80,7 @@ export const AgentWatch = {
     this.model = merge(options.model);
     this.spoken = new Set();
     this.settled = new Set();
+    this.openSurfaces = new Set();
     this.collapsed = true;
 
     this.styleHandle = injectStyle(STYLE_ID, css(this.model));
@@ -176,6 +179,7 @@ export const AgentWatch = {
     // their cart, which reads as though the layer has not noticed where they
     // are. What persists and what leads are different questions.
     const shown = byPhase(visible(s, m), s.phase);
+    const queueLength = shown.filter((f) => !this.settled.has(keyOf(f))).length;
     // Counted from everything checked, NOT from what this person is shown.
     //
     // Asking for summaries hides findings from the list, and if the header
@@ -194,7 +198,11 @@ export const AgentWatch = {
     head.textContent = held
       ? 'Waiting for you'
       : !s.phase
-        ? `Nothing to check here · ${all.length} from this task`
+        // Only when there is genuinely nothing in front of them. Saying
+        // "nothing to check here" above a finding is the panel contradicting
+        // itself in two adjacent lines.
+        ? (queueLength ? `${queueLength} to look at, from earlier`
+                       : `Nothing to check here · ${all.length} checked so far`)
       : stops.length
         ? `${stops.length} thing${stops.length === 1 ? '' : 's'} to look at`
         : all.length
@@ -339,33 +347,55 @@ export const AgentWatch = {
     // a dashboard.
     const more = document.createElement('details');
     more.className = 'aw-more';
+    // Opened by the person, and it stays open.
+    //
+    // The panel re-renders on every storage write, and rebuilding the element
+    // reset it — so anything they opened snapped shut the moment the next
+    // finding landed. Reading the task history while a task is running was
+    // effectively impossible.
+    more.open = this.historyOpen;
+    more.addEventListener('toggle', () => { this.historyOpen = more.open; });
     const sum = document.createElement('summary');
     const nRules = (s.rules || []).length;
     sum.textContent = `The task so far${nRules ? ` · ${nRules} standing rule${nRules === 1 ? '' : 's'}` : ''}`;
     more.appendChild(sum);
 
-    const plan = livingPlan(s.steps, { compact: m.cognition.summarize });
+    // Each surface remembers whether it is open, for the same reason the
+    // history does: the panel rebuilds on every storage write, and a section
+    // that closes itself whenever a finding lands cannot be read at all while
+    // a task is running.
+    const remember = (node, key) => {
+      if (!node) return node;
+      node.open = this.openSurfaces.has(key) || node.open;
+      node.addEventListener('toggle', () => {
+        if (node.open) this.openSurfaces.add(key);
+        else this.openSurfaces.delete(key);
+      });
+      return node;
+    };
+
+    const plan = remember(livingPlan(s.steps, { compact: m.cognition.summarize }), 'plan');
     if (plan) more.appendChild(plan);
 
-    const prompt = livingPrompt(s.contract, {
+    const prompt = remember(livingPrompt(s.contract, {
       invalidated: s.invalidated || [],
-      onEdit: (field) => this.onEditAsk?.(field),
-    });
+      onEdit: (field, value) => this.onEditAsk?.(field, value),
+    }), 'prompt');
     if (prompt) more.appendChild(prompt);
 
     if (nRules || s.offer) {
-      more.appendChild(rulebook(s.rules || [], {
+      more.appendChild(remember(rulebook(s.rules || [], {
         offer: s.offer,
         onPromote: (o, always) => this.onPromote?.(o, always),
         onToggle: (r) => this.onToggleRule?.(r),
-      }));
+      }), 'rules'));
     }
     this.root.appendChild(more);
 
     // An offered rule is the exception. It is the moment a correction becomes
     // permanent, it only makes sense right after the thing that caused it, and
     // it is gone once the task moves on — so it comes out from behind the fold.
-    if (s.offer) more.open = true;
+    if (s.offer) { more.open = true; this.historyOpen = true; }
 
     // Progress cues are a preference with a real split: some people want to
     // know how much was checked, and for others a running tally is one more

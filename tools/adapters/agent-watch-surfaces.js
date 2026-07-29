@@ -30,6 +30,25 @@
 //     most repeated failure in the corpus, and a plan that lists only
 //     successes manufactures it.
 
+/**
+ * A section that opens on demand.
+ *
+ * Three surfaces open at once is still a wall, just a wall one click further
+ * in. Each one answers a different question — what I did, what you asked for,
+ * what holds from now on — and someone opening the history usually wants one
+ * of the three, not all of them.
+ */
+const section = (cls, heading, open = false) => {
+  const d = document.createElement('details');
+  d.className = `aw-surf ${cls}`;
+  d.open = open;
+  const sum = document.createElement('summary');
+  sum.className = 'aw-surf-head';
+  sum.textContent = heading;
+  d.appendChild(sum);
+  return d;
+};
+
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -47,11 +66,35 @@ const el = (tag, cls, text) => {
  * legible as "opened the best-rated match", because by ear they are otherwise
  * the same silence.
  */
-export function livingPlan(steps, { compact = false } = {}) {
+export function livingPlan(steps, { compact = false, totalPhases = 6 } = {}) {
   if (!Array.isArray(steps) || !steps.length) return null;
-  const box = el('section', 'aw-surf aw-plan');
-  box.setAttribute('aria-label', 'What the assistant is doing right now');
-  box.appendChild(el('h3', 'aw-surf-head', 'Right now'));
+  // "Right now" was wrong: this is a record of what already happened, and
+  // labelling a history as the present made the whole panel read as stale.
+  // No aria-label — the summary already names it, and a landmark labelled
+  // twice is read twice.
+  // Named as the analysis names it. "What I did" was clearer than "Right now"
+  // but it renamed a concept that already has a name and is used across the
+  // project, the paper and the corpus — so the surface and the writing about
+  // it stopped matching.
+  const failed = steps.filter((s) => s.state !== 'done').length;
+  const box = section('aw-plan',
+    failed ? `Living Plan · ${failed} I couldn't do` : 'Living Plan');
+
+  // How far through, at a glance. Six phases are known in advance, so this is
+  // a real fraction rather than a guess — and where a task has stalled is
+  // exactly what a person who delegated it cannot otherwise see.
+  const done = steps.filter((s) => s.state === 'done').length;
+  const bar = el('div', 'aw-plan-bar');
+  bar.setAttribute('role', 'progressbar');
+  bar.setAttribute('aria-valuenow', String(done));
+  bar.setAttribute('aria-valuemin', '0');
+  bar.setAttribute('aria-valuemax', String(totalPhases));
+  bar.setAttribute('aria-label', `${done} of ${totalPhases} steps done`);
+  const fill = el('div', 'aw-plan-fill');
+  fill.style.width = `${Math.round((done / Math.max(1, totalPhases)) * 100)}%`;
+  bar.appendChild(fill);
+  box.appendChild(bar);
+  box.appendChild(el('p', 'aw-plan-count', `${done} of ${totalPhases} steps`));
 
   const list = el('ol', 'aw-plan-list');
   const shown = compact ? steps.slice(-3) : steps;
@@ -59,16 +102,15 @@ export function livingPlan(steps, { compact = false } = {}) {
     const kind = s.state === 'failed' ? 'failed' : s.state === 'skipped' ? 'skipped' : 'done';
     const li = el('li', `aw-plan-step aw-plan-${kind}`);
     li.appendChild(el('span', 'aw-plan-what', s.what));
-    if (s.detail) li.appendChild(el('span', 'aw-plan-detail', s.detail));
+    // "nothing to flag" under a step already marked done is the same fact
+    // twice. The mark carries it.
+    if (s.detail && s.detail !== 'nothing to flag') {
+      li.appendChild(el('span', 'aw-plan-detail', s.detail));
+    }
     list.appendChild(li);
   }
   box.appendChild(list);
 
-  const skipped = steps.filter((s) => s.state === 'skipped').length;
-  if (skipped) {
-    box.appendChild(el('p', 'aw-plan-note',
-      `${skipped} thing${skipped === 1 ? '' : 's'} nobody checked.`));
-  }
   return box;
 }
 
@@ -83,9 +125,7 @@ export function livingPlan(steps, { compact = false } = {}) {
  */
 export function livingPrompt(contract, { invalidated = [], onEdit } = {}) {
   if (!contract) return null;
-  const box = el('section', 'aw-surf aw-prompt');
-  box.setAttribute('aria-label', 'What you asked for');
-  box.appendChild(el('h3', 'aw-surf-head', 'This task'));
+  const box = section('aw-prompt', 'Living Prompt');
 
   const fields = [
     ['buying', contract.item],
@@ -100,12 +140,29 @@ export function livingPrompt(contract, { invalidated = [], onEdit } = {}) {
   for (const [k, v] of fields) {
     const row = el('div', 'aw-prompt-row');
     row.appendChild(el('dt', null, k));
-    const dd = el('dd', null, v);
+    // Editable where it is shown, rather than a link to somewhere else. The
+    // analysis is explicit that editing mid-run is a real move and that its
+    // cost has to be stated — that is much harder to mean if changing a field
+    // takes you out of the surface that would tell you.
+    const dd = el('dd', null, null);
     if (onEdit) {
-      const b = el('button', 'aw-prompt-edit', 'change');
-      b.type = 'button';
-      b.addEventListener('click', () => onEdit(k));
-      dd.appendChild(b);
+      const input = el('input', 'aw-prompt-value');
+      input.type = 'text';
+      input.value = v;
+      input.setAttribute('aria-label', k);
+      const commit = () => {
+        const next = input.value.trim();
+        if (next && next !== v) onEdit(k, next);
+        else input.value = v;
+      };
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') { input.value = v; input.blur(); }
+      });
+      dd.appendChild(input);
+    } else {
+      dd.textContent = v;
     }
     row.appendChild(dd);
     dl.appendChild(row);
@@ -137,11 +194,10 @@ export function livingPrompt(contract, { invalidated = [], onEdit } = {}) {
  * been stated before the page raised them.
  */
 export function rulebook(rules, { offer, onPromote, onToggle } = {}) {
-  const box = el('section', 'aw-surf aw-rules');
-  box.setAttribute('aria-label', 'Your standing rules');
   const n = (rules || []).length;
-  box.appendChild(el('h3', 'aw-surf-head',
-    n ? `Always (${n})` : 'Always'));
+  // Opens itself only when there is something to answer.
+  const box = section('aw-rules',
+    n ? `Rulebook · ${n} in force` : 'Rulebook · empty', !!offer);
 
   if (!n) {
     box.appendChild(el('p', 'aw-rules-empty',
@@ -150,9 +206,15 @@ export function rulebook(rules, { offer, onPromote, onToggle } = {}) {
     const list = el('ul', 'aw-rules-list');
     for (const r of rules) {
       const li = el('li', `aw-rules-rule${r.on === false ? ' aw-rules-off' : ''}`);
-      const t = el('button', 'aw-rules-toggle', r.on === false ? 'off' : 'on');
+      // A switch, with its state in the accessibility tree rather than only in
+      // the word printed on it. A rule that is off has to be legible as off to
+      // someone who never sees the styling.
+      const t = el('button', 'aw-rules-toggle');
       t.type = 'button';
-      t.setAttribute('aria-pressed', String(r.on !== false));
+      t.setAttribute('role', 'switch');
+      t.setAttribute('aria-checked', String(r.on !== false));
+      t.setAttribute('aria-label', `${r.text} — ${r.on === false ? 'off' : 'on'}`);
+      t.appendChild(el('span', 'aw-rules-knob'));
       if (onToggle) t.addEventListener('click', () => onToggle(r));
       li.appendChild(t);
       li.appendChild(el('span', 'aw-rules-text', r.text));
@@ -185,11 +247,14 @@ export function rulebook(rules, { offer, onPromote, onToggle } = {}) {
 export function surfaceCss(id, base, muted, line, high) {
   const px = (n) => `${Math.round(base * n)}px`;
   return `
-#${id} .aw-surf { padding: 10px 14px; border-top: 1px solid ${line}; }
-#${id} .aw-surf-head {
-  margin: 0 0 6px; font-size: ${px(0.78)}; font-weight: 600;
+#${id} .aw-surf { padding: 8px 14px; border-top: 1px solid ${line}; }
+#${id} .aw-surf > summary.aw-surf-head {
+  margin: 0; padding: 3px 0; cursor: pointer;
+  font-size: ${px(0.78)}; font-weight: 600;
   text-transform: uppercase; letter-spacing: .5px; color: ${muted};
 }
+#${id} .aw-surf[open] > summary.aw-surf-head { margin-bottom: 6px; color: inherit; }
+#${id} .aw-surf > summary:focus-visible { outline: 3px solid #06c; outline-offset: 2px; }
 
 /* the living plan */
 #${id} .aw-plan-list { list-style: none; margin: 0; padding: 0; }
@@ -219,6 +284,15 @@ export function surfaceCss(id, base, muted, line, high) {
   flex: 1 1 auto; margin: 0; display: flex; gap: 7px;
   justify-content: space-between; min-width: 0;
 }
+#${id} .aw-prompt-value {
+  flex: 1 1 auto; min-width: 0; font: inherit; color: inherit;
+  background: none; border: 0; border-bottom: 1px dashed ${line};
+  padding: 1px 2px; border-radius: 2px;
+}
+#${id} .aw-prompt-value:hover { border-bottom-style: solid; }
+#${id} .aw-prompt-value:focus {
+  outline: none; border-bottom: 1px solid currentColor; background: rgba(0,0,0,.03);
+}
 #${id} .aw-prompt-edit {
   flex: 0 0 auto; font: inherit; font-size: ${px(0.8)}; background: none;
   border: 0; padding: 0; color: inherit; opacity: .55;
@@ -230,6 +304,16 @@ export function surfaceCss(id, base, muted, line, high) {
   border: 1px solid currentColor; border-radius: 7px;
 }
 
+/* the living plan's progress */
+#${id} .aw-plan-bar {
+  height: 4px; border-radius: 2px; background: currentColor;
+  opacity: .18; margin: 2px 0 5px; overflow: hidden;
+}
+#${id} .aw-plan-fill { height: 100%; background: currentColor; opacity: 1; }
+#${id} .aw-plan-count {
+  margin: 0 0 7px; font-size: ${px(0.8)}; color: ${muted};
+}
+
 /* the rulebook */
 #${id} .aw-rules-empty { margin: 0; font-size: ${px(0.88)}; color: ${muted}; }
 #${id} .aw-rules-list { list-style: none; margin: 0; padding: 0; }
@@ -238,10 +322,18 @@ export function surfaceCss(id, base, muted, line, high) {
   font-size: ${px(0.92)};
 }
 #${id} .aw-rules-toggle {
-  flex: 0 0 auto; font: inherit; font-size: ${px(0.7)}; text-transform: uppercase;
-  letter-spacing: .5px; border: 1px solid currentColor; border-radius: 3px;
-  padding: 0 4px; background: none; color: inherit; cursor: pointer;
+  flex: 0 0 auto; width: ${px(1.9)}; height: ${px(1.05)}; padding: 1px;
+  border: 1px solid currentColor; border-radius: 999px;
+  background: none; cursor: pointer; position: relative;
 }
+#${id} .aw-rules-knob {
+  display: block; width: ${px(0.72)}; height: ${px(0.72)}; border-radius: 50%;
+  background: currentColor; transform: translateX(${px(0.82)});
+  ${'' /* off slides back, and the border stays so the track is still visible */}
+}
+#${id} .aw-rules-toggle[aria-checked="false"] { opacity: .55; }
+#${id} .aw-rules-toggle[aria-checked="false"] .aw-rules-knob { transform: translateX(0); }
+#${id} .aw-rules-toggle:focus-visible { outline: 3px solid #06c; outline-offset: 2px; }
 #${id} .aw-rules-off { opacity: .5; }
 #${id} .aw-rules-offer {
   margin: 9px 0 0; padding: 9px 11px; border-radius: 8px;
