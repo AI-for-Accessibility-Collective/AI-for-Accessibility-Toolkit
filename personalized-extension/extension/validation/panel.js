@@ -237,7 +237,15 @@ export function mountValidationPanel(root, { onControl } = {}) {
       // Skipping is allowed and is not free — the checks it would have switched
       // on stay off, and the panel keeps saying so rather than quietly moving on.
       skip.addEventListener('click', () => { draft.i += 1; render(); });
-      row.append(input, go, skip);
+
+      // "That's everything" — done TELLING, not done with the task.
+      //
+      // Someone who has said all they have to say should not have to press
+      // Skip once per remaining question. This jumps to the read-back, where
+      // what stays unchecked is spelled out before anything starts.
+      const enough = el('button', 'va-do', 'That’s everything');
+      enough.addEventListener('click', () => { draft.i = draft.queue.length; render(); });
+      row.append(input, go, skip, enough);
       s.append(row);
       const last = (draft.notes || [])[draft.notes.length - 1];
       if (last && draft.i > 0) s.append(el('p', 'va-form-note', last));

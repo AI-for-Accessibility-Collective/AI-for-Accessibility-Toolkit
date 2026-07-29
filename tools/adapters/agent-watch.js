@@ -316,7 +316,12 @@ export const AgentWatch = {
     const end = document.createElement('button');
     end.type = 'button';
     end.className = 'aw-do aw-end';
-    end.textContent = 'That’s it, I’m done';
+    // "That's it, I'm done" reads as "I've finished telling you things" —
+    // which is what a person is doing most of the time they look at this
+    // panel. It ended the whole task instead. The label has to name the
+    // consequence, not the mood.
+    end.textContent = 'End this task';
+    end.setAttribute('aria-label', 'End this task and stop the assistant');
     end.addEventListener('click', () => this.onDone?.());
     this.root.appendChild(end);
 

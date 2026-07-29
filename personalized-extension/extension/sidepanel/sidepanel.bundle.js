@@ -326,7 +326,12 @@
           draft.i += 1;
           render();
         });
-        row2.append(input, go, skip);
+        const enough = el("button", "va-do", "That\u2019s everything");
+        enough.addEventListener("click", () => {
+          draft.i = draft.queue.length;
+          render();
+        });
+        row2.append(input, go, skip, enough);
         s.append(row2);
         const last = (draft.notes || [])[draft.notes.length - 1];
         if (last && draft.i > 0) s.append(el("p", "va-form-note", last));
