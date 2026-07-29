@@ -941,6 +941,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch((e) => sendResponse({ error: e.message }));
     return true;
   }
+  if (msg.type === 'validationDone') {
+    // The person ends the task. Stops the agent too — a run whose checking has
+    // been ended is a run nobody is watching, and that is the one state this
+    // whole layer exists to prevent.
+    (async () => {
+      try { globalThis.BrowserAgent?.stop?.(); } catch (e) { /* not fatal */ }
+      const s = await globalThis.Validation.summary?.();
+      await globalThis.Validation.stop();
+      sendResponse({ ended: true, summary: s || null });
+    })();
+    return true;
+  }
   if (msg.type === 'agentTell') {
     // Straight into the agent's queue, applied before its next action. If no
     // agent is running the person is checking their own browsing, and there is

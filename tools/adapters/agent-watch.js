@@ -274,6 +274,25 @@ export const AgentWatch = {
     if (this.lastTold) note.textContent = `Told it: ${this.lastTold}`;
     tell.appendChild(note);
 
+    // What it is doing about it.
+    //
+    // Saying "Told it: …" and nothing more is a receipt, not an answer — the
+    // person is left watching a box that has already forgotten them. The agent
+    // publishes its own status and step; this is where that becomes visible to
+    // someone who is not looking at the popup.
+    const doing = document.createElement('p');
+    doing.className = 'aw-doing';
+    doing.setAttribute('role', 'status');
+    const a = this.agent;
+    doing.textContent = !a || a.status === 'idle'
+      ? 'Nothing is running — you’re browsing, and I’m checking as you go.'
+      : a.status === 'running'
+        ? (a.doing ? `It’s ${a.doing}` : 'It’s working.')
+        : a.status === 'done' ? 'It says it has finished.'
+        : a.status === 'stopped' ? 'It stopped.'
+        : `It ${a.status}.`;
+    tell.appendChild(doing);
+
     tell.addEventListener('submit', (e) => {
       e.preventDefault();
       const said = field.value.trim();
@@ -287,6 +306,20 @@ export const AgentWatch = {
       note.textContent = `Told it: ${said}`;
     });
     this.root.appendChild(tell);
+
+    // ── done ────────────────────────────────────────────────────────────────
+    //
+    // A task has to be endable. Without this the only ways out were closing
+    // the tab or letting the agent decide it had finished — and the agent
+    // deciding is exactly the judgement this layer exists not to take on
+    // trust. Ending is the person's call, and it stops the agent too.
+    const end = document.createElement('button');
+    end.type = 'button';
+    end.className = 'aw-do aw-end';
+    end.textContent = 'That’s it, I’m done';
+    end.addEventListener('click', () => this.onDone?.());
+    this.root.appendChild(end);
+
 
 
     if (this.collapsed && !held) return;
@@ -491,7 +524,15 @@ export const AgentWatch = {
   onAnswer: null,
   onAcknowledge: null,   // the person dealt with a finding; the agent may move on
   onTell: null,          // free text, straight to the agent, at any time
+  onDone: null,          // the person says the task is finished
   lastTold: null,
+  agent: null,           // {status, step, doing} — what the delegate is up to
+
+  /** What the agent is doing, so the person is not talking into silence. */
+  setAgent(a) {
+    this.agent = a || null;
+    if (this.enabled) this.render();
+  },
   onEditAsk: null,      // a field of the Living Prompt was changed
   onPromote: null,      // an offered rule was accepted or declined
   onToggleRule: null,   // a standing rule was switched off or on
@@ -697,6 +738,13 @@ function css(m) {
 }
 #${AgentWatch.containerId} .aw-tell-input:focus-visible { outline: 3px solid #06c; outline-offset: 1px; }
 #${AgentWatch.containerId} .aw-tell .aw-do { margin-top: 0; }
+#${AgentWatch.containerId} .aw-doing {
+  grid-column: 1 / -1; margin: 2px 0 0;
+  font-size: ${Math.round(base * 0.84)}px; color: ${fg};
+}
+#${AgentWatch.containerId} .aw-end {
+  display: block; width: calc(100% - 28px); margin: 0 14px 12px; text-align: center;
+}
 #${AgentWatch.containerId} .aw-tell-said {
   grid-column: 1 / -1; margin: 0; font-size: ${Math.round(base * 0.8)}px; color: ${muted};
 }
