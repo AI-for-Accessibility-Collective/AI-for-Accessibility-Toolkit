@@ -28,7 +28,7 @@
 // Pairs with the `contract-mismatch` auditor, which produces the findings.
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
-import { renderShape, shapeCss } from './agent-watch-shapes.js';
+import { renderShape, shapeCss, setActionHandler } from './agent-watch-shapes.js';
 import { livingPlan, livingPrompt, rulebook, surfaceCss } from './agent-watch-surfaces.js';
 
 const STYLE_ID = 'ai4a11y-agent-watch-style';
@@ -82,6 +82,10 @@ export const AgentWatch = {
     this.settled = new Set();
     this.openSurfaces = new Set();
     this.collapsed = true;
+
+    // Presses inside a shape are controls like any other — they go back to
+    // whoever owns the run, not into a private path here.
+    setActionHandler((a) => this.onControl?.({ ...a, fromShape: true }));
 
     this.styleHandle = injectStyle(STYLE_ID, css(this.model));
 
