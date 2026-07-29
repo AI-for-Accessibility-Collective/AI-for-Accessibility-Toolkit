@@ -24,8 +24,8 @@ export function axProp(node, name) {
 /**
  * Render AX nodes as indented text:
  *
- *   - heading "Delivering to David Lin" [level=2]
- *   - listitem "Order total: $48.20"
+ *   - heading "Delivering to Jane Smith" [level=2]
+ *   - listitem "Order total: $31.40"
  *
  * @param {Array<Object>} nodes  raw nodes from Accessibility.getFullAXTree
  * @param {{url?: string, maxDepth?: number}} [opts]

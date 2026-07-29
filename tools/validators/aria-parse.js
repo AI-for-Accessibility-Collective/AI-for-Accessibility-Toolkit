@@ -47,7 +47,7 @@ export function parseAria(text) {
     // Whole entry wrapped in single quotes when the name contains a colon or
     // a hash: `- 'link "Quick & Delicious #recipe"'`. A node with children
     // carries a trailing colon outside the quotes, as in
-    // `- 'link "$12.60 Typical: $19.50"':` — which is how a price-cut tile
+    // `- 'link "$8.99 Typical: $14.99"':` — which is how a discounted tile
     // arrives, so the closing quote must be found rather than assumed last.
     if (rest.length > 1 && rest[0] === "'") {
       const close = rest.lastIndexOf("'");
@@ -106,14 +106,14 @@ export function capture(lines, re) {
   return null;
 }
 
-/** Parse "$12.93" / "12.93" / "$1,234.50" into a number, or null. */
+/** Parse "$24.50" / "24.50" / "$1,234.50" into a number, or null. */
 export function money(s) {
   if (s == null) return null;
   const m = /-?\$?\s*([\d,]+(?:\.\d{1,2})?)/.exec(String(s));
   return m ? Number(m[1].replace(/,/g, '')) : null;
 }
 
-/** Parse "944" / "1,048" into a number, or null. */
+/** Parse "512" / "1,048" into a number, or null. */
 export function count(s) {
   if (s == null) return null;
   const m = /([\d,]+)/.exec(String(s));
