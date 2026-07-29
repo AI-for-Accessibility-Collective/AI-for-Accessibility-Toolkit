@@ -29,6 +29,7 @@
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
 import { renderShape, shapeCss } from './agent-watch-shapes.js';
+import { livingPlan, livingPrompt, rulebook, surfaceCss } from './agent-watch-surfaces.js';
 
 const STYLE_ID = 'ai4a11y-agent-watch-style';
 
@@ -108,7 +109,13 @@ export const AgentWatch = {
   /** New findings from the run. Re-renders, and speaks anything that must be. */
   update(state) {
     if (!this.enabled) return;
+    const wasPhase = this.state?.phase;
     this.state = state || null;
+    // Landing somewhere with nothing to check — a sign-in wall, a help page —
+    // folds the surface back up. The task's findings are still there and one
+    // press away; what changes is that they stop being presented as though
+    // they were about the page in front of you.
+    if (state && !state.phase && wasPhase !== state.phase) this.collapsed = true;
     // A held agent is the one thing that opens the panel by itself, because
     // the task cannot continue until it is answered.
     if (state?.gate && state.gate.allowed === false) this.collapsed = false;
@@ -157,7 +164,15 @@ export const AgentWatch = {
     }
     this.root.classList.remove('aw-idle');
 
-    const shown = visible(s, m);
+    // Newest page first.
+    //
+    // Findings persist across pages on purpose — a Search finding is still
+    // true at Review order, and dropping it would make this a view of the
+    // current page rather than of the task. But leaving them in arrival order
+    // puts "70 products on this page" at the top while someone is looking at
+    // their cart, which reads as though the layer has not noticed where they
+    // are. What persists and what leads are different questions.
+    const shown = byPhase(visible(s, m), s.phase);
     // Counted from everything checked, NOT from what this person is shown.
     //
     // Asking for summaries hides findings from the list, and if the header
@@ -175,6 +190,8 @@ export const AgentWatch = {
     head.setAttribute('aria-expanded', String(!this.collapsed));
     head.textContent = held
       ? 'Waiting for you'
+      : !s.phase
+        ? `Nothing to check here · ${all.length} from this task`
       : stops.length
         ? `${stops.length} thing${stops.length === 1 ? '' : 's'} to look at`
         : all.length
@@ -274,6 +291,32 @@ export const AgentWatch = {
     }
     this.root.appendChild(list);
 
+    // ── the three surfaces ──────────────────────────────────────────────────
+    //
+    // Order matters and it is the reverse of the time scales: what is true
+    // right now sits closest to the findings it explains, and the standing
+    // rules sit furthest away because they change least. Someone scanning
+    // top-down reads the task, then the moment, then the permanent.
+    const plan = livingPlan(s.steps, { compact: m.cognition.summarize });
+    if (plan) this.root.appendChild(plan);
+
+    const prompt = livingPrompt(s.contract, {
+      invalidated: s.invalidated || [],
+      onEdit: (field) => this.onEditAsk?.(field),
+    });
+    if (prompt) this.root.appendChild(prompt);
+
+    // Shown when there is anything to show, or anything to offer. An empty
+    // rulebook with no offer is not worth the space — but an empty rulebook
+    // WITH an offer is the moment the whole promotion idea becomes visible.
+    if ((s.rules || []).length || s.offer) {
+      this.root.appendChild(rulebook(s.rules || [], {
+        offer: s.offer,
+        onPromote: (o, always) => this.onPromote?.(o, always),
+        onToggle: (r) => this.onToggleRule?.(r),
+      }));
+    }
+
     // Progress cues are a preference with a real split: some people want to
     // know how much was checked, and for others a running tally is one more
     // thing demanding attention. `null` means no signal either way, so it is
@@ -290,6 +333,9 @@ export const AgentWatch = {
   /** Set by the host: what to do when a control or a gate answer is clicked. */
   onControl: null,
   onAnswer: null,
+  onEditAsk: null,      // a field of the Living Prompt was changed
+  onPromote: null,      // an offered rule was accepted or declined
+  onToggleRule: null,   // a standing rule was switched off or on
 };
 
 // ── what the person actually sees ───────────────────────────────────────────
@@ -302,6 +348,19 @@ export const AgentWatch = {
  * asked for less — an unread list of twelve is worth less than a read list of
  * two.
  */
+/**
+ * The current page's findings first, everything earlier after it.
+ *
+ * Stable within each group, so the order a page produced them in — which is
+ * the order the checks ran, roughly most-decisive first — survives.
+ */
+function byPhase(findings, current) {
+  if (!current) return findings;
+  const here = findings.filter((f) => f.phase === current);
+  const earlier = findings.filter((f) => f.phase !== current);
+  return here.concat(earlier);
+}
+
 function visible(s, m) {
   let out = (s.findings || []).filter((f) => f.level !== 'ambient' || f.confirming);
   if (m.cognition.summarize) out = out.filter((f) => f.level === 'stop');
@@ -425,6 +484,7 @@ function css(m) {
 @media (prefers-reduced-motion: reduce) {
   #${AgentWatch.containerId} { transition: none; }
 }
-${shapeCss(AgentWatch.containerId, base, muted, line, high)}
+${shapeCss(AgentWatch.containerId, base, muted, line, high, bg)}
+${surfaceCss(AgentWatch.containerId, base, muted, line, high)}
 `;
 }

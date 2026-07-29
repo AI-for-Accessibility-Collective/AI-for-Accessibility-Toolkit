@@ -57,6 +57,16 @@ const shortName = (t) => {
 // Everything here is a relationship between products. A person choosing needs
 // the shape of the set, which is what a sighted person gets free from the
 // page's layout and a screen-reader user gets not at all.
+// Where a result count sits on the scale a person judges it by. Supplied by
+// the host with the analysis; without it the gauge does not draw, because a
+// needle on an invented scale is a confident claim about nothing.
+let COUNT_ZONES = null;
+
+/** @param {Array<{to:number,label:string}>} zones from the analysis */
+export function setCountZones(zones) {
+  COUNT_ZONES = Array.isArray(zones) && zones.length ? zones : null;
+}
+
 const search = (F, c) => {
   const S = F.resultSet?.value;
   if (!S) return [];
@@ -66,9 +76,10 @@ const search = (F, c) => {
     widget: 'Count-first opener',
     // The tutor's rule, from the video corpus: a few hundred means the query
     // landed; four figures means it matched half the shop. The count is only
-    // a judgment once it sits on that scale.
-    paradigm: 1,
-    shape: { value: S.count, display: String(S.count) },
+    // The tutor's rule, carried from the analysis rather than invented here:
+    // a targeted query returns a targeted number, and "over 1,000" is the
+    // recorded value of a query that stopped being targeted.
+    shape: { value: S.count, display: String(S.count), zones: COUNT_ZONES },
     say: `${S.count} products on this page` +
          (S.sponsoredInFirstTen ? `, and ${S.sponsoredInFirstTen} of the first ten are ads.` : '.'),
     from: F.resultSet.from, answerable: false,
@@ -79,7 +90,6 @@ const search = (F, c) => {
     const inside = lim && S.priceHigh <= lim;
     out.push({
       widget: 'Price sweep on demand',
-      paradigm: 3,
       shape: lim ? { rows: [{ asked: `under ${money(lim)}`,
                               found: `${money(S.priceLow)} – ${money(S.priceHigh)}`,
                               match: inside }] } : null,
@@ -95,8 +105,6 @@ const search = (F, c) => {
     out.push({
       widget: 'Badge decoder',
       // Two voices on one question, and they disagree: the shop's label and
-      // the buyers' numbers. Drawn apart, which one is talking is obvious.
-      paradigm: 2,
       shape: {
         claim: `${badged.badge} — the best one here`,
         sources: [
@@ -128,7 +136,6 @@ const search = (F, c) => {
   if (S.count && S.noPhoto === S.count) {
     out.push({
       widget: 'Unseen-photo stand-in',
-      paradigm: 4,
       shape: { parts: [{ what: 'photos', checked: 0, of: S.count }] },
       say: `None of the ${S.count} has a photo your screen reader can reach. ` +
            `The pictures are there; they just aren't announced.`,
@@ -140,7 +147,6 @@ const search = (F, c) => {
   if (now && typ && typ > now * 1.4) {
     out.push({
       widget: 'Typical-price truth check',
-      paradigm: 6,
       shape: { points: [{ value: money(typ), when: 'claimed usual' },
                         { value: money(now), when: 'now' }] },
       say: `The first one shows ${money(now)} against a claimed usual of ${money(typ)}. ` +
@@ -218,7 +224,7 @@ const checkItem = (F, c) => {
 // ── Add to cart ──────────────────────────────────────────────────────────────
 const addToCart = (F, c) => {
   const out = [];
-  const size = F.cartLineSize?.value;
+  const size = String(F.cartLineSize?.value || '').trim();
 
   // The highest-value catch in the corpus: the product page says what is
   // selected, only the cart says what was actually bought.
@@ -319,8 +325,33 @@ export const CHECKS = {
  * @param {Object} contract what the person asked for
  * @returns {Array<Object>} findings, each carrying what the policy needs
  */
+// Which shape each widget's finding wants, keyed by widget name.
+//
+// Injected, never written here. The assignment is derived from the analysis by
+// a generator that lives with the analysis, because a paradigm chosen by hand
+// drifts from the corpus it claims to implement — measured at 31% agreement
+// the one time it was tried. This file therefore knows how to USE a map and
+// nothing about what is in one; with no map, findings fall back to their
+// sentence, which is the honest default rather than a guessed shape.
+let PARADIGMS = {};
+
+/** @param {Object<string, {paradigm: number}>} map by widget name */
+export function setParadigmMap(map) {
+  PARADIGMS = map || {};
+}
+
 export function checkPage(facts, phase, contract) {
   const fn = CHECKS[phase];
   if (!fn) return [];
-  return fn(facts, contract).map((f) => ({ phase, contradicts: false, answerable: true, ...f }));
+  return fn(facts, contract).map((f) => {
+    // The shape is attached here, from the map, so no check has to know its
+    // own paradigm — the assignment belongs to the analysis, not to the code
+    // that happens to produce the finding.
+    const p = PARADIGMS[f.widget];
+    return {
+      phase, contradicts: false, answerable: true,
+      paradigm: p?.paradigm ?? null,
+      ...f,
+    };
+  });
 }

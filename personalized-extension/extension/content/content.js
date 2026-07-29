@@ -985,6 +985,14 @@ function wireAgentWatchHandlers() {
     chrome.runtime.sendMessage({ type: 'validationControl', control }).catch(() => {});
   AgentWatch.onAnswer = (widget, response) =>
     chrome.runtime.sendMessage({ type: 'validationAnswer', widget, response }).catch(() => {});
+  // The upward arrow: a correction made in one task becomes a standing rule.
+  AgentWatch.onPromote = (offer, always) =>
+    chrome.runtime.sendMessage({ type: 'validationPromote', offer, always }).catch(() => {});
+  AgentWatch.onToggleRule = (rule) =>
+    chrome.runtime.sendMessage({ type: 'validationToggleRule', id: rule.id }).catch(() => {});
+  AgentWatch.onEditAsk = (field) =>
+    chrome.runtime.sendMessage({ type: 'validationControl',
+                                 control: { action: 'edit-ask', field } }).catch(() => {});
 }
 
 init().then(wireAgentWatch);
