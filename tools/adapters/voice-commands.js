@@ -53,12 +53,17 @@ export const VoiceCommands = {
   },
 
   enable(options = {}) {
+    // Idempotent: a second enable() would spawn a second SpeechRecognition
+    // (two mic streams, each command firing twice) while the first keeps
+    // restarting itself via onend.
+    if (this.enabled) return;
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       announce('Voice recognition not supported in this browser');
       return;
     }
 
     this.settings = { ...this.settings, ...options };
+    this._fatal = false;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     this.recognition = new SpeechRecognition();
     this.recognition.continuous = this.settings.continuous;
@@ -80,10 +85,18 @@ export const VoiceCommands = {
       if (event.error !== 'no-speech') {
         this.showFeedback(`Error: ${event.error}`, 'error');
       }
+      // Permission/hardware failures won't fix themselves — stop the restart
+      // loop instead of spinning start→error→end→start until manual disable.
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
+        this._fatal = true;
+        announce('Voice commands unavailable — microphone blocked or missing');
+      }
     };
 
     this.recognition.onend = () => {
-      if (this.enabled) this.recognition.start();
+      if (this.enabled && !this._fatal) {
+        try { this.recognition.start(); } catch { /* already started / stopping */ }
+      }
     };
 
     this.createFeedbackElement();
@@ -211,4 +224,4 @@ export const VoiceCommands = {
   }
 };
 
-window.__ai4a11yVoiceCommands = VoiceCommands;
+if (typeof window !== 'undefined') window.__ai4a11yVoiceCommands = VoiceCommands;

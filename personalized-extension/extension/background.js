@@ -13,6 +13,7 @@ self.importScripts(
   'lib/demo-trace.js',
   'lib/taxonomy.js',
   'lib/tools-registry.js',
+  'lib/skills-db.js',
   'lib/datastore.js',
   'lib/librarian.js',
   // Web SurfaceAdapter + abilityModel→webSettings derivation (globalThis.WebSurface).
@@ -37,7 +38,7 @@ Datastore.runMigrations().catch((e) =>
 // synchronously without a storage round-trip.
 chrome.storage.local.get('aaDemoMode', (d) => { globalThis.AA_DEMO_MODE = !!(d && d.aaDemoMode); });
 
-const GEMINI_MODEL = 'gemini-3.1-flash-image-preview';
+const GEMINI_MODEL = 'gemini-3.5-flash';
 const USER_SCRIPT_ID_PREFIX = 'aa-custom-';
 
 function getApiUrl(apiKey, model) {
@@ -90,19 +91,28 @@ function wrapSkillCode(code, scope) {
   if (!scope || scope === 'general') {
     return `(function(){\n${code}\n})();`;
   }
+  // Detect content contexts (taxonomy: video/form/document) so context:*
+  // scopes can be evaluated by the background scope gate.
+  const detectContexts = `var __ctx=[];`
+    + `try{if(document.querySelector('video'))__ctx.push('video');`
+    + `if(document.querySelector('form'))__ctx.push('form');`
+    + `if((document.body&&document.body.innerText||'').length>5000)__ctx.push('document');}catch(e){}`;
   return `(function(){\n`
     + `var __run=function(){\n${code}\n};\n`
+    + detectContexts + `\n`
     + `try{chrome.runtime.sendMessage(`
-    + `{type:'aaScopeCheck',scope:${JSON.stringify(scope)},hostname:location.hostname},`
+    + `{type:'aaScopeCheck',scope:${JSON.stringify(scope)},hostname:location.hostname,contexts:__ctx},`
     + `function(resp){if(chrome.runtime.lastError)return;if(resp&&resp.match){try{__run()}catch(e){}}});`
     + `}catch(e){}\n})();`;
 }
 
 async function syncCustomUserScripts() {
   if (!userScriptsAvailable()) return;
-  let data;
+  let data, sync;
   try {
-    data = await chrome.storage.local.get(['customSkills', 'extensionEnabled']);
+    data = await chrome.storage.local.get(['customSkills']);
+    // Master switch lives in storage.sync as `enabled` (written by popup/onboarding)
+    sync = await chrome.storage.sync.get(['enabled']);
   } catch { return; }
 
   let registered;
@@ -121,7 +131,7 @@ async function syncCustomUserScripts() {
 
   const ours = registered.filter(s => s.id.startsWith(USER_SCRIPT_ID_PREFIX));
   const ourIds = new Set(ours.map(s => s.id));
-  const enabled = data.extensionEnabled !== false;
+  const enabled = sync.enabled !== false;
   const customSkills = enabled ? (data.customSkills || []) : [];
 
   const desired = customSkills
@@ -158,8 +168,12 @@ async function syncCustomUserScripts() {
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'local') return;
-  if (changes.customSkills || changes.extensionEnabled) {
+  if (area === 'local' && changes.customSkills) {
+    syncCustomUserScripts();
+  }
+  // Master switch: `enabled` in storage.sync — unregister/re-register custom
+  // adapters when the user toggles the extension.
+  if (area === 'sync' && changes.enabled) {
     syncCustomUserScripts();
   }
 });
@@ -184,12 +198,14 @@ async function callGemini(prompt, apiKey, optsOrImages) {
   const parts = [{ text: prompt }];
   if (images && images.length > 0) {
     for (const dataUrl of images) {
-      const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
-      if (match) {
-        parts.push({
-          inlineData: { mimeType: match[1], data: match[2] }
-        });
+      const match = typeof dataUrl === 'string' && dataUrl.match(/^data:(.+?);base64,(.+)$/);
+      if (!match) {
+        // Refuse a non-data-URL image instead of silently dropping it: a
+        // dropped image leaves Gemini describing nothing and inventing an
+        // answer — the worst outcome for a screen-reader user relying on it.
+        throw new Error('Image must be a base64 data URL, not a page URL');
       }
+      parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
     }
   }
   // Audio parts: pre-extracted {mimeType, data} objects from the decode pipeline.
@@ -1033,6 +1049,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         } else if (scope.startsWith('category:')) {
           const cat = await globalThis.Librarian.getSiteCategory(host, { allowLlm: false });
           match = cat === scope.slice(9);
+        } else if (scope.startsWith('context:')) {
+          // Content contexts (video/form/document) are page properties the
+          // sender detects; it passes them as msg.contexts (array of ids).
+          match = Array.isArray(msg.contexts) && msg.contexts.includes(scope.slice(8));
         }
         sendResponse({ match });
       } catch (e) {
@@ -1376,7 +1396,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 
   if (msg.type === 'openSkillBuilder') {
-    let url = chrome.runtime.getURL('skill-builder/builder.html');
+    let url = chrome.runtime.getURL('adapter-builder/builder.html');
     const params = new URLSearchParams();
     if (msg.pendingSkills) params.set('pending', JSON.stringify(msg.pendingSkills));
     // Carry the scope so a skill built from a scoped request ("...on news
@@ -1389,10 +1409,26 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === 'openSkillManager') {
+    let url = chrome.runtime.getURL('skill-builder/skills.html');
+    const params = new URLSearchParams();
+    // Needs onboarding (or a popup suggestion) couldn't cover with a built-in
+    // adapter. They come here first: most are a new combination of things
+    // that already exist, which is a skill. The page hands the leftovers to
+    // the Adapter Builder, which writes actual code.
+    if (msg.pendingSkills) params.set('pending', JSON.stringify(msg.pendingSkills));
+    if (msg.scope && msg.scope !== 'general') params.set('scope', msg.scope);
+    const qs = params.toString();
+    if (qs) url += '?' + qs;
+    chrome.tabs.create({ url });
+    sendResponse({ success: true });
+    return true;
+  }
+
   // --- Librarian (personal memory/profile agent) ---
   // Fast lane: deterministic queries + mechanical writes. The slow lane
   // (extract/reflect) runs on alarms; the *Now variants exist for debugging.
-  if (msg.type && msg.type.startsWith('librarian')) {
+  if (msg.type && (msg.type.startsWith('librarian') || msg.type.startsWith('broker'))) {
     const L = globalThis.Librarian;
     if (!L) { sendResponse({ error: 'librarian not loaded' }); return false; }
     (async () => {
@@ -1400,6 +1436,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         switch (msg.type) {
           case 'librarianGetProfile':
             sendResponse({ profile: await L.getProfile() }); break;
+          case 'librarianGetAbilityModel':
+            sendResponse({ model: await L.getAbilityModel() }); break;
+          case 'librarianListProcedural':
+            sendResponse({ procedural: await L.listProcedural(msg.category || null) }); break;
+          case 'brokerListGrants':
+            sendResponse({ grants: await globalThis.Broker.listGrants() }); break;
+          case 'brokerCreateGrant':
+            sendResponse({ grant: await globalThis.Broker.createGrant(msg.grant || {}) }); break;
+          case 'brokerRevokeGrant':
+            sendResponse({ revoked: await globalThis.Broker.revokeGrant(msg.grantId) }); break;
+          case 'brokerExportUnderstanding':
+            sendResponse({ understanding: await globalThis.Broker.exportUnderstanding(msg.grantId) }); break;
+          case 'brokerAuditLog':
+            sendResponse({ audit: await globalThis.Broker.getAuditLog() }); break;
           case 'librarianSetProfileField':
             sendResponse({ profile: await L.setProfileField(msg.path, msg.value) }); break;
           case 'librarianRecordScopedSettings':
@@ -1472,6 +1522,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse(await L.importProfileBlob(msg.blob)); break;
           case 'librarianImportInsightOutbox':
             sendResponse(await L.importInsightOutbox(msg.outbox)); break;
+          // -- Skill layer (Engineer + Skills db) --
+          case 'librarianListSkills':
+            sendResponse({ skills: await L.listSkills() }); break;
+          case 'librarianRetrieveSkill':
+            sendResponse({ skill: await L.retrieveSkill(msg.url, msg.contexts || []) }); break;
+          case 'librarianFindSkill':
+            sendResponse({ skill: await L.findSkillForNeed(msg.need) }); break;
+          case 'librarianBuildSkill':
+            sendResponse(await L.buildSkill(msg.need, { previous: msg.previous || null, feedback: msg.feedback || '' })); break;
+          case 'librarianResolveSkill':
+            sendResponse({ plan: L.resolveSkill(msg.skill) }); break;
+          case 'librarianSaveSkill':
+            sendResponse(await L.saveSkill(msg.skill)); break;
+          case 'librarianDeleteSkill':
+            sendResponse({ deleted: await L.deleteSkill(msg.name) }); break;
           default:
             sendResponse({ error: `unknown librarian message: ${msg.type}` });
         }
@@ -1512,6 +1577,35 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ success: true });
       });
     });
+    return true;
+  }
+
+  // Apply-path for skills whose recipe carries agent actions (reusable tasks
+  // saved as skills): the Skill Builder page resolved the skill and asks the
+  // browser agent to run the task on the tab the person chose. The Apply
+  // click on the page is the consent.
+  if (msg.type === 'runSkillActions') {
+    (async () => {
+      const actions = msg.actions || [];
+      if (!actions.length || !globalThis.BrowserAgent) {
+        sendResponse({ skipped: true });
+        return;
+      }
+      if (globalThis.BrowserAgent.isRunning()) {
+        sendResponse({ skipped: true, reason: 'agent_busy' });
+        return;
+      }
+      sendResponse({ started: true, count: actions.length });
+      for (const action of actions) {
+        if (globalThis.BrowserAgent.isRunning()) break;
+        try {
+          console.log(`[AgenticA11y] Running skill action: ${action.name || action.prompt}`);
+          await globalThis.BrowserAgent.run(action.prompt, { tabId: msg.tabId ?? null });
+        } catch (e) {
+          console.warn(`[AgenticA11y] Skill action failed: ${e.message}`);
+        }
+      }
+    })();
     return true;
   }
 

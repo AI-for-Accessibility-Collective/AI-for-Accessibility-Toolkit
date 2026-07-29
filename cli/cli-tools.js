@@ -21,12 +21,43 @@ import { ReaderMode } from '../tools/adapters/reader-mode.js';
 import { VoiceCommands } from '../tools/adapters/voice-commands.js';
 import { KeyboardNavigator } from '../tools/adapters/keyboard-nav.js';
 import { ColorBlindMode } from '../tools/adapters/color-blind.js';
+import { DismissOverlays } from '../tools/adapters/dismiss-overlays.js';
+import { BigTargets } from '../tools/adapters/big-targets.js';
+import { LinkHighlighter } from '../tools/adapters/link-highlighter.js';
+import { PageOutline } from '../tools/adapters/page-outline.js';
+import { BionicReading } from '../tools/adapters/bionic-reading.js';
+import { UnpinSticky } from '../tools/adapters/unpin-sticky.js';
+import { TranslatePage } from '../tools/adapters/translate-page.js';
+import { MuteSounds } from '../tools/adapters/mute-sounds.js';
+import { DefineWords } from '../tools/adapters/define-words.js';
+import { StopAutoAdvance } from '../tools/adapters/stop-auto-advance.js';
+import { ReduceBrightness } from '../tools/adapters/reduce-brightness.js';
+import { SoundVisualizer } from '../tools/adapters/sound-visualizer.js';
+import { LiveRegionAnnouncer } from '../tools/adapters/live-region-announcer.js';
+import { Magnifier } from '../tools/adapters/magnifier.js';
+import { FlashGuard } from '../tools/adapters/flash-guard.js';
+import { DescribeOnDemand } from '../tools/adapters/describe-on-demand.js';
+import { ReflowColumn } from '../tools/adapters/reflow-column.js';
+import { FocusLocator } from '../tools/adapters/focus-locator.js';
+import { PersistentHover } from '../tools/adapters/persistent-hover.js';
+import { ReadingRuler } from '../tools/adapters/reading-ruler.js';
+import { ConfirmActions } from '../tools/adapters/confirm-actions.js';
+import { ReadingSpot } from '../tools/adapters/reading-spot.js';
+import { AbbreviationExpand } from '../tools/adapters/abbreviation-expand.js';
+import { LanguageTag } from '../tools/adapters/language-tag.js';
+import { ExploreAChart } from '../tools/adapters/explore-a-chart.js';
+import { SpaFocus } from '../tools/adapters/spa-focus.js';
+import { SkipLinks } from '../tools/adapters/skip-links.js';
+import { MathA11y } from '../tools/adapters/math-a11y.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
 
 // Import AI-powered adapters
 import {
   generateImageAlt,
   generateCanvasDescription,
+  improveAmbiguousLinks,
+  fixAllTables,
+  fixLandmarks,
   getAxeHandler,
   axeHandlers
 } from '../tools/adapters/index.js';
@@ -55,8 +86,9 @@ import {
 import { runAxeAnalysis, getElementFromNode } from '../tools/auditors/wcag-issues.js';
 import { findEmptyAltImages, findCanvasElements, findImagesWithoutAlt } from '../tools/auditors/missing-alt.js';
 import { findVideosWithoutCaptions, findAudioWithoutTranscripts } from '../tools/auditors/missing-captions.js';
-import { findEmptyLinks, findEmptyButtons, findUnlabeledInputs } from '../tools/auditors/missing-labels.js';
+import { findEmptyLinks, findEmptyButtons, findUnlabeledInputs, findAmbiguousLinks } from '../tools/auditors/missing-labels.js';
 import { findLowContrastText } from '../tools/auditors/poor-contrast.js';
+import { auditLandmarks } from '../tools/auditors/missing-landmarks.js';
 
 // Import profiles
 import {
@@ -91,6 +123,18 @@ function setupAIProvider() {
       }
       return null;
     },
+    translateText: async (text, targetLang) => {
+      if (typeof window.ai4a11y_translateText === 'function') {
+        return await window.ai4a11y_translateText(text, targetLang);
+      }
+      return null;
+    },
+    defineWord: async (word, context) => {
+      if (typeof window.ai4a11y_defineWord === 'function') {
+        return await window.ai4a11y_defineWord(word, context);
+      }
+      return null;
+    },
     generateLabels: async (ctx) => {
       if (typeof window.ai4a11y_generateLabels === 'function') {
         return await window.ai4a11y_generateLabels(ctx);
@@ -115,6 +159,24 @@ function setupAIProvider() {
       }
       return null;
     },
+    extractChartData: async (imageData, context) => {
+      if (typeof window.ai4a11y_extractChartData === 'function') {
+        return await window.ai4a11y_extractChartData(imageData, context);
+      }
+      return null;
+    },
+    improveLinkText: async (linkText, href, context) => {
+      if (typeof window.ai4a11y_improveLinkText === 'function') {
+        return await window.ai4a11y_improveLinkText(linkText, href, context);
+      }
+      return null;
+    },
+    inferColumnHeader: async (sampleData) => {
+      if (typeof window.ai4a11y_inferColumnHeader === 'function') {
+        return await window.ai4a11y_inferColumnHeader(sampleData);
+      }
+      return null;
+    },
     announce: (msg) => console.log(`[Announce] ${msg}`),
   });
 }
@@ -131,6 +193,34 @@ const tools = {
   keyboardNav: KeyboardNavigator,
   colorBlindMode: ColorBlindMode,
   autoTranscriber: AutoTranscriber,
+  dismissOverlays: DismissOverlays,
+  bigTargets: BigTargets,
+  highlightLinks: LinkHighlighter,
+  pageOutline: PageOutline,
+  bionicReading: BionicReading,
+  unpinSticky: UnpinSticky,
+  translatePage: TranslatePage,
+  muteSounds: MuteSounds,
+  defineWords: DefineWords,
+  stopAutoAdvance: StopAutoAdvance,
+  reduceBrightness: ReduceBrightness,
+  soundVisualizer: SoundVisualizer,
+  announceUpdates: LiveRegionAnnouncer,
+  magnifier: Magnifier,
+  flashGuard: FlashGuard,
+  describeOnDemand: DescribeOnDemand,
+  reflowColumn: ReflowColumn,
+  focusLocator: FocusLocator,
+  persistentHover: PersistentHover,
+  readingRuler: ReadingRuler,
+  confirmActions: ConfirmActions,
+  rememberSpot: ReadingSpot,
+  expandAbbreviations: AbbreviationExpand,
+  languageTag: LanguageTag,
+  exploreChart: ExploreAChart,
+  spaFocus: SpaFocus,
+  skipLinks: SkipLinks,
+  mathAccessible: MathA11y,
 };
 
 // Normalize tool name (handles case variations)
@@ -151,6 +241,64 @@ function normalizeTool(name) {
     'colorfilter': 'colorBlindMode',
     'autotranscriber': 'autoTranscriber',
     'autocaptions': 'autoTranscriber',
+    'dismissoverlays': 'dismissOverlays',
+    'dismisspopups': 'dismissOverlays',
+    'bigtargets': 'bigTargets',
+    'biggertargets': 'bigTargets',
+    'highlightlinks': 'highlightLinks',
+    'linkhighlighter': 'highlightLinks',
+    'pageoutline': 'pageOutline',
+    'outline': 'pageOutline',
+    'bionicreading': 'bionicReading',
+    'bionic': 'bionicReading',
+    'unpinsticky': 'unpinSticky',
+    'unpin': 'unpinSticky',
+    'translatepage': 'translatePage',
+    'translate': 'translatePage',
+    'mutesounds': 'muteSounds',
+    'mute': 'muteSounds',
+    'definewords': 'defineWords',
+    'define': 'defineWords',
+    'stopautoadvance': 'stopAutoAdvance',
+    'stopauto': 'stopAutoAdvance',
+    'reducebrightness': 'reduceBrightness',
+    'dim': 'reduceBrightness',
+    'soundvisualizer': 'soundVisualizer',
+    'soundviz': 'soundVisualizer',
+    'announceupdates': 'announceUpdates',
+    'liveregion': 'announceUpdates',
+    'magnifier': 'magnifier',
+    'lens': 'magnifier',
+    'flashguard': 'flashGuard',
+    'flash': 'flashGuard',
+    'describeondemand': 'describeOnDemand',
+    'describe': 'describeOnDemand',
+    'reflowcolumn': 'reflowColumn',
+    'reflow': 'reflowColumn',
+    'focuslocator': 'focusLocator',
+    'focusring': 'focusLocator',
+    'persistenthover': 'persistentHover',
+    'hover': 'persistentHover',
+    'readingruler': 'readingRuler',
+    'ruler': 'readingRuler',
+    'confirmactions': 'confirmActions',
+    'confirm': 'confirmActions',
+    'rememberspot': 'rememberSpot',
+    'readingspot': 'rememberSpot',
+    'expandabbreviations': 'expandAbbreviations',
+    'abbreviations': 'expandAbbreviations',
+    'languagetag': 'languageTag',
+    'langtag': 'languageTag',
+    'explorechart': 'exploreChart',
+    'charttable': 'exploreChart',
+    'chart': 'exploreChart',
+    'spafocus': 'spaFocus',
+    'routefocus': 'spaFocus',
+    'skiplinks': 'skipLinks',
+    'skipnav': 'skipLinks',
+    'mathaccessible': 'mathAccessible',
+    'matha11y': 'mathAccessible',
+    'math': 'mathAccessible',
   };
   return map[lower] || name;
 }
@@ -238,7 +386,36 @@ function applyProfileByName(profileId) {
   if (profileTools.motionReducer) MotionReducer.enable();
   if (profileTools.focusMode) FocusMode.enable();
   if (profileTools.readerMode) ReaderMode.enable();
+  if (profileTools.dismissOverlays) DismissOverlays.enable();
+  if (profileTools.bigTargets) BigTargets.enable();
+  if (profileTools.highlightLinks) LinkHighlighter.enable();
+  if (profileTools.pageOutline) PageOutline.enable();
+  if (profileTools.bionicReading) BionicReading.enable();
+  if (profileTools.unpinSticky) UnpinSticky.enable();
+  if (profileTools.translatePage) TranslatePage.enable({ targetLang: profileTools.translateTo });
+  if (profileTools.muteSounds) MuteSounds.enable();
+  if (profileTools.defineWords) DefineWords.enable();
+  if (profileTools.stopAutoAdvance) StopAutoAdvance.enable();
+  if (profileTools.reduceBrightness) ReduceBrightness.enable();
+  if (profileTools.soundVisualizer) SoundVisualizer.enable();
+  if (profileTools.announceUpdates) LiveRegionAnnouncer.enable();
+  if (profileTools.magnifier) Magnifier.enable();
+  if (profileTools.flashGuard) FlashGuard.enable();
+  if (profileTools.describeOnDemand) DescribeOnDemand.enable();
+  if (profileTools.reflowColumn) ReflowColumn.enable();
+  if (profileTools.focusLocator) FocusLocator.enable();
+  if (profileTools.persistentHover) PersistentHover.enable();
+  if (profileTools.readingRuler) ReadingRuler.enable();
+  if (profileTools.confirmActions) ConfirmActions.enable();
+  if (profileTools.rememberSpot) ReadingSpot.enable();
+  if (profileTools.expandAbbreviations) AbbreviationExpand.enable();
+  if (profileTools.languageTag) LanguageTag.enable();
+  if (profileTools.exploreChart) ExploreAChart.enable();
+  if (profileTools.spaFocus) SpaFocus.enable();
+  if (profileTools.skipLinks) SkipLinks.enable();
+  if (profileTools.mathAccessible) MathA11y.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
+  if (profileTools.voiceCommands) VoiceCommands.enable();
   if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
     ColorBlindMode.enable(profileTools.colorFilter);
   }
@@ -278,6 +455,34 @@ function getToolDescription(name) {
     keyboardNav: 'Enhanced keyboard navigation',
     colorBlindMode: 'Color vision deficiency filters',
     autoTranscriber: 'Auto-generate captions for media',
+    dismissOverlays: 'Hide cookie banners, newsletter popups, and blocking modals',
+    bigTargets: 'Enlarge and space out small clickable controls (WCAG 2.5.8)',
+    highlightLinks: 'Underline and strengthen links and reveal where each one leads',
+    pageOutline: 'On-page heading navigator to jump between sections',
+    bionicReading: 'Bold the start of each word to guide the eye (dyslexia/ADHD aid)',
+    unpinSticky: 'Un-fix sticky headers/bars so they stop eating the viewport when zoomed',
+    translatePage: 'Translate the page text into another language (AI)',
+    muteSounds: 'Mute all audio and video and block autoplay sound',
+    defineWords: 'Show plain-language definitions of hard words on hover (AI)',
+    stopAutoAdvance: 'Pause auto-carousels, auto-refresh, and autoplay (WCAG 2.2.2)',
+    reduceBrightness: 'Dim and desaturate the page for a low-stimulation view',
+    soundVisualizer: 'Flash a visual indicator when the page plays sound (Deaf/HoH)',
+    announceUpdates: 'Announce dynamic content changes to screen readers (live region)',
+    magnifier: 'A lens that magnifies the text under the cursor',
+    flashGuard: 'Block autoplay and dim video/animation for seizure safety (WCAG 2.3.1)',
+    describeOnDemand: 'Alt+click or Alt+D to get an AI description of any element',
+    reflowColumn: 'Force page content into one readable column (WCAG 1.4.10)',
+    focusLocator: 'Show a strong always-visible indicator of keyboard focus',
+    persistentHover: 'Keep hover tooltips visible and dismissible (WCAG 1.4.13)',
+    readingRuler: 'A highlight band that follows your reading line',
+    confirmActions: 'Ask for confirmation before risky or final actions',
+    rememberSpot: 'Remember where you were reading and offer to jump back',
+    expandAbbreviations: 'Expand abbreviations and acronyms to their full form',
+    languageTag: 'Tag foreign-language text so screen readers pronounce it correctly',
+    exploreChart: 'Read a chart or graph as a navigable data table',
+    spaFocus: 'Announce and move focus on single-page-app navigations',
+    skipLinks: 'Add skip-to-content and skip-to-navigation links',
+    mathAccessible: 'Give math and equations an accessible name for screen readers',
   };
   return descriptions[name] || '';
 }
@@ -364,14 +569,13 @@ const auditors = {
 // AI-powered fix functions
 const aiFixes = {
   async describeImages() {
-    const { images } = await auditors.findMissingAlt();
+    const { noAlt, emptyAlt } = auditors.findMissingAlt();
     const results = [];
-    for (const img of images) {
+    for (const img of [...noAlt, ...emptyAlt]) {
       const el = document.querySelector(img.selector);
       if (el) {
         const alt = await generateImageAlt(el);
         if (alt) {
-          el.alt = alt;
           results.push({ selector: img.selector, alt });
         }
       }
@@ -380,17 +584,24 @@ const aiFixes = {
   },
 
   async simplifyText(selector) {
+    // Adapter operates on elements (rewrites in place, keeps original)
     const el = selector ? document.querySelector(selector) : document.body;
     if (!el) return null;
-    const simplified = await simplifyText(el.textContent);
-    return simplified;
+    return await simplifyText(el);
   },
 
   async summarize(selector) {
     const el = selector ? document.querySelector(selector) : document.body;
     if (!el) return null;
-    const summary = await summarizeContent(el.textContent);
-    return summary;
+    return await summarizeContent(el);
+  },
+
+  async improveLinks() {
+    return await improveAmbiguousLinks(findAmbiguousLinks());
+  },
+
+  async fixTables() {
+    return await fixAllTables();
   },
 
   async fixAxeViolation(ruleId, selector) {
@@ -617,6 +828,8 @@ if (typeof window !== 'undefined') {
     findMissingLabels: auditors.findMissingLabels,
     findMissingCaptions: auditors.findMissingCaptions,
     findPoorContrast: auditors.findPoorContrast,
+    findAmbiguousLinks,
+    auditLandmarks,
     runFullAudit: auditors.runFullAudit,
 
     // AI fixes
@@ -624,6 +837,9 @@ if (typeof window !== 'undefined') {
     describeImages: aiFixes.describeImages,
     simplifyText: aiFixes.simplifyText,
     summarize: aiFixes.summarize,
+    improveLinks: aiFixes.improveLinks,
+    fixTables: aiFixes.fixTables,
+    fixLandmarks,
     fixAxeViolation: aiFixes.fixAxeViolation,
 
     // Full scan (like extension)

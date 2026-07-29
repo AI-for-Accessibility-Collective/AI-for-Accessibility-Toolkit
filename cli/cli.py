@@ -276,8 +276,8 @@ def run_session_command(args, json_output=False):
     """Run ai4a11y.py session command."""
     core_path = SCRIPT_DIR / "ai4a11y.py"
 
-    # Build command
-    cmd = ["python", str(core_path), "session"] + args
+    # Build command (sys.executable — bare "python" may not exist, e.g. macOS)
+    cmd = [sys.executable, str(core_path), "session"] + args
 
     # Add JSON flag if needed
     if json_output:

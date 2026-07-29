@@ -1,120 +1,187 @@
 {
+  "$comment": "Single source of truth for ability profiles. Consumed by tools/profiles/settings.js (bundled into the extension + CLI tools) and read directly by cli/cli.py. Values are evidence-based — sources: W3C WCAG, W3C COGA, WebAIM Low Vision Survey, AASPIRE autism study, NNGroup UX research.",
   "profiles": {
-    "lowVision": {
-      "name": "Low Vision",
-      "description": "Larger text, enhanced focus indicators",
-      "tools": {
-        "fontScale": 150,
-        "lineHeight": 2.0,
-        "largeCursor": true,
-        "enhanceFocus": true,
-        "fixContrast": true
-      }
-    },
     "blind": {
       "name": "Blind",
-      "description": "Optimized for screen reader users",
+      "description": "Optimized for screen reader users: structure, labels, descriptions",
       "tools": {
+        "autoWcagFix": true,
+        "autoFixLabels": true,
         "autoDescribe": true,
         "autoVideoDescribe": true,
-        "autoFixLabels": true,
+        "keyboardNav": true,
+        "pageOutline": true,
+        "announceUpdates": true,
+        "describeOnDemand": true,
+        "languageTag": true,
+        "exploreChart": true,
+        "spaFocus": true,
+        "skipLinks": true,
+        "mathAccessible": true
+      }
+    },
+    "lowVision": {
+      "name": "Low Vision",
+      "description": "Larger text (150%), spacing, large cursor, enhanced focus, contrast fixes",
+      "tools": {
         "autoWcagFix": true,
-        "keyboardNav": true
+        "fontScale": 150,
+        "lineHeight": 2.0,
+        "letterSpacing": 0.12,
+        "largeCursor": true,
+        "enhanceFocus": true,
+        "fixContrast": true,
+        "highlightLinks": true,
+        "unpinSticky": true,
+        "magnifier": true,
+        "reflowColumn": true,
+        "focusLocator": true,
+        "persistentHover": true,
+        "exploreChart": true
       }
     },
     "colorBlind": {
       "name": "Color Blindness",
-      "description": "Color filters and enhanced contrast",
+      "description": "Contrast fixes and image descriptions; pick your own filter type in Visual Assist",
       "tools": {
         "fixContrast": true,
-        "colorFilter": "deuteranopia"
-      }
-    },
-    "dyslexia": {
-      "name": "Dyslexia",
-      "description": "Dyslexia-friendly font and spacing",
-      "tools": {
-        "dyslexiaFont": true,
-        "fontScale": 115,
-        "lineHeight": 2.0,
-        "letterSpacing": 0.12,
-        "focusMode": true
-      }
-    },
-    "adhd": {
-      "name": "ADHD",
-      "description": "Reduced distractions, focus mode",
-      "tools": {
-        "focusMode": true,
-        "motionReducer": true,
-        "readerMode": true
-      }
-    },
-    "cognitive": {
-      "name": "Cognitive",
-      "description": "Simplified text, summaries",
-      "tools": {
-        "autoSimplify": true,
-        "autoSummarize": true,
-        "fontScale": 120,
-        "lineHeight": 1.8,
-        "focusMode": true
-      }
-    },
-    "motor": {
-      "name": "Motor",
-      "description": "Keyboard navigation, large targets",
-      "tools": {
-        "largeCursor": true,
-        "enhanceFocus": true,
-        "keyboardNav": true
-      }
-    },
-    "photosensitive": {
-      "name": "Photosensitive",
-      "description": "Dark mode, reduced motion",
-      "tools": {
-        "darkMode": true,
-        "motionReducer": true
+        "autoDescribe": true,
+        "enhanceFocus": true
       }
     },
     "deaf": {
       "name": "Deaf/HoH",
-      "description": "Auto captions for media",
+      "description": "Auto captions for media, visual focus for non-audio navigation",
       "tools": {
         "autoCaptions": true,
-        "autoVideoDescribe": true,
-        "enhanceFocus": true
+        "enhanceFocus": true,
+        "autoDescribe": false,
+        "autoVideoDescribe": false,
+        "soundVisualizer": true
+      }
+    },
+    "motor": {
+      "name": "Motor",
+      "description": "Keyboard navigation, voice commands, large targets, proper labels",
+      "tools": {
+        "autoWcagFix": true,
+        "autoFixLabels": true,
+        "largeCursor": true,
+        "enhanceFocus": true,
+        "keyboardNav": true,
+        "voiceCommands": true,
+        "dismissOverlays": true,
+        "bigTargets": true,
+        "pageOutline": true,
+        "unpinSticky": true,
+        "stopAutoAdvance": true,
+        "focusLocator": true,
+        "persistentHover": true,
+        "confirmActions": true,
+        "skipLinks": true
+      }
+    },
+    "dyslexia": {
+      "name": "Dyslexia",
+      "description": "Letter spacing 0.12em (WCAG 1.4.12), double line height, focus mode",
+      "tools": {
+        "fontScale": 115,
+        "lineHeight": 2.0,
+        "letterSpacing": 0.12,
+        "focusMode": true,
+        "highlightLinks": true,
+        "bionicReading": true,
+        "readingRuler": true
+      }
+    },
+    "adhd": {
+      "name": "ADHD",
+      "description": "Reduced distractions, progress indicators, summaries for long content",
+      "tools": {
+        "autoSummarize": true,
+        "focusMode": true,
+        "hideDistractions": true,
+        "showProgress": true,
+        "motionReducer": true,
+        "dismissOverlays": true,
+        "bionicReading": true,
+        "readingRuler": true
+      }
+    },
+    "cognitive": {
+      "name": "Cognitive",
+      "description": "Simplified text (grade 6-8), summaries, clear progress",
+      "tools": {
+        "fontScale": 120,
+        "lineHeight": 1.8,
+        "autoSimplify": true,
+        "autoSummarize": true,
+        "dismissOverlays": true,
+        "focusMode": true,
+        "hideDistractions": true,
+        "showProgress": true,
+        "highlightLinks": true,
+        "defineWords": true,
+        "stopAutoAdvance": true,
+        "confirmActions": true,
+        "rememberSpot": true,
+        "expandAbbreviations": true
+      }
+    },
+    "olderAdult": {
+      "name": "Older Adult",
+      "description": "Larger text, spacing, captions for hearing loss, simplified content",
+      "tools": {
+        "fontScale": 130,
+        "lineHeight": 1.7,
+        "letterSpacing": 0.12,
+        "largeCursor": true,
+        "enhanceFocus": true,
+        "autoSimplify": true,
+        "autoCaptions": true,
+        "focusMode": true,
+        "hideDistractions": true,
+        "showProgress": true,
+        "bigTargets": true,
+        "highlightLinks": true,
+        "stopAutoAdvance": true,
+        "rememberSpot": true
       }
     },
     "anxiety": {
       "name": "Anxiety",
-      "description": "Calm interface, reduced motion",
+      "description": "Calm interface, reduced motion, progress indicators reduce uncertainty",
       "tools": {
         "focusMode": true,
+        "hideDistractions": true,
+        "showProgress": true,
         "motionReducer": true,
-        "readerMode": true,
-        "lineHeight": 1.8
-      }
-    },
-    "elderly": {
-      "name": "Elderly",
-      "description": "Larger text, simplified content",
-      "tools": {
-        "fontScale": 150,
         "lineHeight": 1.8,
-        "enhanceFocus": true,
-        "autoSimplify": true,
-        "autoSummarize": true
+        "dismissOverlays": true,
+        "muteSounds": true
       }
     },
     "sensory": {
       "name": "Sensory Processing",
-      "description": "Reduced stimulation, calm interface",
+      "description": "Overload prevention: no motion, no progress spinners, fewer distractions",
       "tools": {
         "motionReducer": true,
+        "focusMode": true,
+        "hideDistractions": true,
+        "showProgress": false,
+        "dismissOverlays": true,
+        "muteSounds": true,
+        "reduceBrightness": true
+      }
+    },
+    "photosensitive": {
+      "name": "Light Sensitive",
+      "description": "Dark mode and reduced motion (WCAG 2.3.3, migraine/seizure prevention)",
+      "tools": {
         "darkMode": true,
-        "focusMode": true
+        "motionReducer": true,
+        "reduceBrightness": true,
+        "flashGuard": true
       }
     }
   },
@@ -134,13 +201,45 @@
     "enhanceFocus": false,
     "readingGuide": false,
     "motionReducer": false,
+    "dismissOverlays": false,
+    "bigTargets": false,
     "readerMode": false,
     "focusMode": false,
+    "hideDistractions": false,
+    "showProgress": true,
     "keyboardNav": false,
     "voiceCommands": false,
     "fontScale": 100,
     "lineHeight": 1.5,
     "letterSpacing": 0,
-    "colorFilter": "none"
+    "contrastMode": "none",
+    "colorFilter": "none",
+    "highlightLinks": false,
+    "pageOutline": false,
+    "bionicReading": false,
+    "unpinSticky": false,
+    "translatePage": false,
+    "translateTo": "English",
+    "muteSounds": false,
+    "defineWords": false,
+    "stopAutoAdvance": false,
+    "reduceBrightness": false,
+    "soundVisualizer": false,
+    "announceUpdates": false,
+    "magnifier": false,
+    "flashGuard": false,
+    "describeOnDemand": false,
+    "reflowColumn": false,
+    "focusLocator": false,
+    "persistentHover": false,
+    "readingRuler": false,
+    "confirmActions": false,
+    "rememberSpot": false,
+    "expandAbbreviations": false,
+    "languageTag": false,
+    "exploreChart": false,
+    "spaFocus": false,
+    "skipLinks": false,
+    "mathAccessible": false
   }
 }

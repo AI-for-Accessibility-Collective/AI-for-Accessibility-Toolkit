@@ -3,6 +3,9 @@
  * Handles AI API calls for image description, text simplification, etc.
  */
 
+// One place to bump the Gemini model, instead of editing the URL in every call.
+const GEMINI_MODEL = 'gemini-3.5-flash';
+
 // Get API keys from storage
 async function getApiKeys() {
   try {
@@ -169,7 +172,7 @@ async function describeImageGemini(imageDataUrl, options, geminiKey) {
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -193,8 +196,11 @@ One sentence max. No fluff. Just the facts.` }
   );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Gemini API error');
+    // Guard the parse: a proxy 502 returns an HTML body, and an unguarded
+    // response.json() would surface "Unexpected token '<'" instead of the
+    // real HTTP status.
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Gemini API error (${response.status})`);
   }
 
   const data = await response.json();
@@ -207,6 +213,37 @@ One sentence max. No fluff. Just the facts.` }
   return result;
 }
 
+// Extract a chart/graph's data as a structured table (for the explore-a-chart adapter)
+async function extractChartData(imageDataUrl, context = '') {
+  const keys = await getApiKeys();
+  if (!keys.gemini) {
+    throw new Error('Gemini API key not set. Open extension settings.');
+  }
+  const m = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!m) throw new Error('Invalid image data URL');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [
+          { inlineData: { mimeType: m[1], data: m[2] } },
+          { text: `Extract the data from this chart or graph as JSON. Context: ${context}. Return ONLY valid JSON of the form {"caption": string, "headers": string[], "rows": string[][]}, each row aligned to the headers. If it is not a data chart, return {"caption":"","headers":[],"rows":[]}.` }
+        ] }],
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+      })
+    }
+  );
+  if (!response.ok) {
+    const e = await response.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Gemini API error (${response.status})`);
+  }
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  try { return JSON.parse(text); } catch { return null; }
+}
+
 // Describe canvas/chart element
 async function describeElement(imageDataUrl, elementType = 'canvas', context = '') {
   const keys = await getApiKeys();
@@ -217,7 +254,7 @@ async function describeElement(imageDataUrl, elementType = 'canvas', context = '
   // For role-img without image data, use context-based description
   if (elementType === 'role-img' && context && !imageDataUrl) {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -273,7 +310,7 @@ Aim for 4-6 detailed sentences.`
 
   const isVideoFrame = elementType === 'video frame';
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -342,7 +379,7 @@ Write a comprehensive description (6-10 sentences) that helps someone understand
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -455,7 +492,7 @@ async function describeVideoFromUrl(videoUrl, prompt, apiKey) {
     // Step 4: Generate content with the file
     console.log('[AI4A11y BG] Generating description...');
     const genResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -518,7 +555,7 @@ async function simplifyText(text) {
 
   console.log('[AI4A11y BG] Calling Gemini API...');
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -577,6 +614,54 @@ Return ONLY the simplified text:`
   return resultText || text;
 }
 
+// Translate text into a target language
+async function translateText(text, targetLang) {
+  text = (text || '').trim();
+  if (!text) return '';
+  const keys = await getApiKeys();
+  if (!keys.gemini) throw new Error('Gemini API key not set');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `Translate the following text into ${targetLang || 'English'}. Preserve the meaning and tone. Do not add notes or explanations. Return ONLY the translated text.\n\n${text}` }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+      })
+    }
+  );
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(`Gemini API error: ${response.status} - ${errData.error?.message || 'Unknown'}`);
+  }
+  const data = await response.json();
+  if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') return text;
+  return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim() || text;
+}
+
+// Plain-language definition of a word/phrase in its sentence context
+async function defineWord(word, context) {
+  word = (word || '').trim();
+  if (!word) return '';
+  const keys = await getApiKeys();
+  if (!keys.gemini) throw new Error('Gemini API key not set');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `Define the word or phrase "${word}" in one short, plain-language sentence a general reader can understand, as it is used in this context: "${context || ''}". Return ONLY the definition.` }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 256 }
+      })
+    }
+  );
+  if (!response.ok) return '';
+  const data = await response.json();
+  return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+}
+
 // Summarize long text
 async function summarizeText(text) {
   text = text.trim().replace(/\s+/g, ' ');
@@ -588,7 +673,7 @@ async function summarizeText(text) {
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -733,7 +818,7 @@ async function transcribeWithGemini(mediaUrl, apiKey) {
 
     // Ask Gemini to transcribe AND describe audio
     const genResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -818,7 +903,7 @@ async function describeSound(audioDataUrl) {
   const base64Data = base64Match[2];
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -845,7 +930,7 @@ async function improveLinkText(linkText, href, surroundingText) {
   if (!keys.gemini) return linkText;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -878,7 +963,7 @@ async function inferElementName(elementType, html, context) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -910,7 +995,7 @@ async function generateHeading(content) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -941,7 +1026,7 @@ async function inferColumnHeader(sampleData) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1062,7 +1147,7 @@ async function generateSummaryText(content) {
   if (!keys.gemini) return null;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${keys.gemini}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1093,9 +1178,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const handlers = {
     'describeImage': () => describeImage(message.imageData, message.options),
     'describeElement': () => describeElement(message.imageData, message.elementType, message.context),
+    'extractChartData': () => extractChartData(message.imageData, message.context),
     'describeVideoFrames': () => describeVideoFrames(message.frames, message.metadata),
     'simplifyText': () => simplifyText(message.text),
     'summarizeText': () => summarizeText(message.text),
+    'translateText': () => translateText(message.text, message.targetLang),
+    'defineWord': () => defineWord(message.word, message.context),
     'transcribeAudio': () => transcribeAudio(message.audioUrl || message.audioData),
     'transcribeVideo': () => transcribeAudio(message.audioUrl || message.audioData),
     'describeSound': () => describeSound(message.audioUrl || message.audioData),
@@ -1121,15 +1209,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       });
     }),
-    'getSettings': () => chrome.storage.sync.get([
-      'enabled', 'autoDescribe', 'autoSimplify', 'autoSummarize', 'autoWcagFix', 'autoFixLabels',
-      'autoVideoDescribe', 'autoCaptions', 'fixContrast',
-      'darkMode', 'readerMode', 'focusMode', 'keyboardNav', 'voiceCommands', 'motionReducer',
-      'hideDistractions', 'showProgress', 'colorBlindMode',
-      'fontScale', 'lineHeight', 'letterSpacing', 'contrastMode',
-      'dyslexiaFont', 'largeCursor', 'enhanceFocus', 'readingGuide',
-      'selectedProfiles', 'geminiKey', 'falKey'
-    ])
+    // Return the ENTIRE sync store. The content script's applyVisualSettings
+    // reads every adapter's setting key, so a hand-kept whitelist here silently
+    // strands any tool not listed — which was every newer adapter (reflow,
+    // focus locator, confirm actions, reading spot, describe on demand, …) plus
+    // a dozen older ones. get(null) fetches all keys and never goes stale.
+    'getSettings': () => chrome.storage.sync.get(null)
   };
 
   const handler = handlers[message.type];
@@ -1165,7 +1250,7 @@ chrome.runtime.onInstalled.addListener(() => {
         motionReducer: false,
         hideDistractions: false,
         showProgress: true,
-        colorBlindMode: 'none',
+        colorFilter: 'none',
         contrastMode: 'none',
         // Visual assist
         fontScale: 100,
@@ -1177,7 +1262,7 @@ chrome.runtime.onInstalled.addListener(() => {
         readingGuide: false,
         speechRate: 1,
         // Profile
-        selectedProfile: 'none'
+        selectedProfiles: []
       });
     }
   });
