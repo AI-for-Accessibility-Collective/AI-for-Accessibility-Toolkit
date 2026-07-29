@@ -24,6 +24,7 @@ import { bhHandleDialog } from './dialog.js';
 import { bhGotoUrl, bhGoBack, bhGoForward, bhRefresh, bhPageInfo } from './navigation.js';
 import { bhClickAt, bhTypeText, bhPressKey, bhScroll, bhFillInput } from './input.js';
 import { bhEnumerateInteractive } from './interactive.js';
+import { bhAxTree, bhAxSnapshot, bhRenderAx } from './ax.js';
 import { bhClickIndex } from './actions/click.js';
 import { bhTypeIndex } from './actions/type.js';
 import { bhDropdownOptions, bhSelectDropdown } from './actions/dropdown.js';
@@ -66,6 +67,11 @@ globalThis.BrowserHarness = {
   ensureRealTab: bhEnsureRealTab,
   iframeTarget: bhIframeTarget,
   enumerateInteractive: bhEnumerateInteractive,
+  // Semantic page read. enumerateInteractive answers "what can I click";
+  // these answer "what does the page say".
+  axTree: bhAxTree,
+  axSnapshot: bhAxSnapshot,
+  renderAx: bhRenderAx,
   drawHighlights: bhDrawHighlights,
   clickIndex: bhClickIndex,
   typeIndex: bhTypeIndex,
