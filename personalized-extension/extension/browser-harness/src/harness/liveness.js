@@ -10,6 +10,7 @@
 import {
   BH_LIVENESS_PERIOD_MIN,
   BH_NETWORK_STALL_MS,
+  BH_NET_MAX_AGE_MS,
   BH_PING_TIMEOUT_MS,
   BH_UNRESPONSIVE_THRESHOLD,
 } from './constants.js';
@@ -53,8 +54,13 @@ if (typeof chrome !== 'undefined' && chrome.alarms && !chrome.alarms.onAlarm._bh
     // record the oldest age per tab so the agent can mention it.
     const now = Date.now();
     BH_HEALTH.networkStall.clear();
-    for (const { tabId, t } of BH_NET_INFLIGHT.values()) {
+    for (const [rid, { tabId, t }] of BH_NET_INFLIGHT) {
       const age = now - t;
+      // Reap the leaked ones rather than reporting them for the rest of the
+      // run. A real stall clears when its request lands; a leak only ever
+      // counts up — 52s, 82s, 112s, 142s — one line per step, filling the
+      // agent's context with a fact it can do nothing about.
+      if (age >= BH_NET_MAX_AGE_MS) { BH_NET_INFLIGHT.delete(rid); continue; }
       if (age >= BH_NETWORK_STALL_MS) {
         const prev = BH_HEALTH.networkStall.get(tabId) || 0;
         if (age > prev) BH_HEALTH.networkStall.set(tabId, age);
