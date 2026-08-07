@@ -63,9 +63,8 @@ export const AgentWatch = {
   styleHandle: null,
   spoken: null,       // what has already been said, so nothing repeats
   settled: null,      // findings the person has answered or waved past
-  historyOpen: false, // survives re-render — see below
   openSurfaces: null, // which of the three the person has opened
-  collapsed: true,
+  collapsed: false,  // open by default; only the person collapses it
 
   /**
    * @param {object} [options]
@@ -80,8 +79,8 @@ export const AgentWatch = {
     this.model = merge(options.model);
     this.spoken = new Set();
     this.settled = new Set();
-    this.openSurfaces = new Set();
-    this.collapsed = true;
+    this.openSurfaces = new Set(['plan', 'prompt', 'rules']);
+    this.collapsed = false;
 
     // Presses inside a shape are controls like any other — they go back to
     // whoever owns the run, not into a private path here.
@@ -106,7 +105,7 @@ export const AgentWatch = {
     box.setAttribute('data-bh-ignore', 'true');
     box.setAttribute('data-ai4a11y-ui', 'true');
     box.setAttribute('role', 'complementary');
-    box.setAttribute('aria-label', 'What the assistant is doing');
+    box.setAttribute('aria-label', 'What the agent is doing');
     // Polite: the agent working is not an emergency. The one thing that IS
     // urgent — a held gate — sets assertive on its own region below.
     box.setAttribute('aria-live', 'polite');
@@ -133,14 +132,12 @@ export const AgentWatch = {
   /** New findings from the run. Re-renders, and speaks anything that must be. */
   update(state) {
     if (!this.enabled) return;
-    const wasPhase = this.state?.phase;
     this.state = state || null;
     for (const k of state?.acknowledged || []) this.settled.add(k);
-    // Landing somewhere with nothing to check — a sign-in wall, a help page —
-    // folds the surface back up. The task's findings are still there and one
-    // press away; what changes is that they stop being presented as though
-    // they were about the page in front of you.
-    if (state && !state.phase && wasPhase !== state.phase) this.collapsed = true;
+    // Never auto-collapse. An earlier version folded the surface on pages
+    // with nothing to check, and since phase is empty during every
+    // navigation settle, the panel folded itself constantly. Everything
+    // stays expanded; only the person collapses it, and only by choice.
     // A held agent is the one thing that opens the panel by itself, because
     // the task cannot continue until it is answered.
     if (state?.gate && state.gate.allowed === false) this.collapsed = false;
@@ -181,6 +178,26 @@ export const AgentWatch = {
     if (!this.root) return;
     const s = this.state;
     const m = this.model;
+
+    // The rebuild must not cost the person the box they are typing into or
+    // their place in the panel. bhAgent writes several log entries per step,
+    // and each one re-renders - without this, half-typed instructions were
+    // erased within seconds. Same treatment panel.js already has.
+    const prevField = this.root.querySelector('.aw-tell-input');
+    const keepText = prevField ? prevField.value : '';
+    const wasTyping = prevField && document.activeElement === prevField
+      ? { start: prevField.selectionStart, end: prevField.selectionEnd }
+      : null;
+    const keepScroll = this.root.scrollTop;
+    const restore = () => {
+      const nf = this.root.querySelector('.aw-tell-input');
+      if (nf && keepText) nf.value = keepText;
+      if (nf && wasTyping) {
+        nf.focus();
+        try { nf.setSelectionRange(wasTyping.start, wasTyping.end); } catch { /* fine */ }
+      }
+      this.root.scrollTop = keepScroll;
+    };
     this.root.textContent = '';
 
     if (!s || !s.contract) {
@@ -214,31 +231,43 @@ export const AgentWatch = {
     head.className = 'aw-head';
     head.type = 'button';
     head.setAttribute('aria-expanded', String(!this.collapsed));
+    // The headline is the agent's state - what the person handed the task to
+    // is the thing they want one glance to answer for. The detail line below
+    // carries the full step, so the head keeps just the short verb. Held
+    // outranks everything: a waiting agent IS the agent's state.
+    const ag = this.agent;
+    const agentLine = ag?.status === 'running'
+      ? `The agent is ${ag.verb
+          || (ag.doing || 'working').split(' (')[0].replace(/^(\S+(?:\s\S+){0,3}).*/, '$1')}`
+      : ag?.status === 'done' ? 'The agent says it’s done'
+      : ag?.status === 'stopped' ? 'The agent stopped'
+      : ag && ag.status && ag.status !== 'idle' ? 'The agent hit a problem'
+      : null;
     head.textContent = held
       ? (s.gate?.unread
-          ? `Waiting for you · ${s.gate.unread} unread`
+          ? `Waiting for you, ${s.gate.unread} unread`
           : 'Waiting for you')
-      : !s.phase
+      : agentLine
+      || (!s.phase
         // Only when there is genuinely nothing in front of them. Saying
         // "nothing to check here" above a finding is the panel contradicting
         // itself in two adjacent lines.
         ? (queueLength ? `${queueLength} to look at, from earlier`
-                       : `Nothing to check here · ${all.length} checked so far`)
+                       : `Nothing to check here, ${all.length} checked so far`)
       : stops.length
         ? `${stops.length} thing${stops.length === 1 ? '' : 's'} to look at`
         : all.length
           ? `Checked ${all.length} thing${all.length === 1 ? '' : 's'}`
-          : 'Checking as it goes';
-    head.addEventListener('click', () => { this.collapsed = !this.collapsed; this.render(); });
+          : 'Checking as it goes');
+    head.addEventListener('click', () => {
+      this.collapsed = !this.collapsed;
+      this.render();
+    });
     this.root.appendChild(head);
 
     if (held) this.root.classList.add('aw-held');
     else this.root.classList.remove('aw-held');
 
-    // Said before the collapse check, so it is there whether the panel is
-    // open or folded to one line. "At any time" cannot mean "once you have
-    // opened the right section" — the moment you want to say something is
-    // usually the moment you are watching the page, not the panel.
     // ── say something to it, at any time ────────────────────────────────────
     //
     // The controls beside a finding cover the moves the analysis names —
@@ -256,12 +285,12 @@ export const AgentWatch = {
     const lab = document.createElement('label');
     lab.className = 'aw-tell-label';
     lab.setAttribute('for', tellId);
-    lab.textContent = 'Tell it something';
+    lab.textContent = 'Tell the agent something';
     const field = document.createElement('input');
     field.id = tellId;
     field.type = 'text';
     field.className = 'aw-tell-input';
-    field.placeholder = 'she likes purple · skip that seller · slow down';
+    field.placeholder = 'she likes purple, skip that seller, slow down';
     const send = document.createElement('button');
     send.type = 'submit';
     send.className = 'aw-do';
@@ -271,27 +300,25 @@ export const AgentWatch = {
     const note = document.createElement('p');
     note.className = 'aw-tell-said';
     note.setAttribute('role', 'status');      // announced without stealing focus
-    if (this.lastTold) note.textContent = `Told it: ${this.lastTold}`;
+    if (this.lastTold) note.textContent = `Told the agent: ${this.lastTold}`;
     tell.appendChild(note);
 
-    // What it is doing about it.
-    //
-    // Saying "Told it: …" and nothing more is a receipt, not an answer — the
-    // person is left watching a box that has already forgotten them. The agent
-    // publishes its own status and step; this is where that becomes visible to
-    // someone who is not looking at the popup.
+    // The subtitle under the headline. The head names the agent and the
+    // verb; this carries the full step, so it does not repeat the subject.
+    // When there is nothing to add, it is not rendered.
     const doing = document.createElement('p');
     doing.className = 'aw-doing';
     doing.setAttribute('role', 'status');
     const a = this.agent;
     doing.textContent = !a || a.status === 'idle'
-      ? 'Nothing is running — you’re browsing, and I’m checking as you go.'
+      ? 'Nothing is running. You’re browsing, and I’m checking as you go.'
       : a.status === 'running'
-        ? (a.doing ? `It’s ${a.doing}` : 'It’s working.')
-        : a.status === 'done' ? 'It says it has finished.'
-        : a.status === 'stopped' ? 'It stopped.'
-        : `It ${a.status}.`;
-    tell.appendChild(doing);
+        // The step number is the person's handle on progress; the sentence is
+        // the agent's own reason, already said plainly by the host.
+        ? (a.doing ? `${a.step ? `Step ${a.step}: ` : ''}${a.doing}` : '')
+        : a.status === 'done' ? (a.summary || '')
+        : a.status === 'stopped' ? ''
+        : String(a.status);
 
     tell.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -303,16 +330,27 @@ export const AgentWatch = {
       // Said back immediately. An instruction is applied before the agent's
       // next action, which can be seconds away, and silence in between reads
       // as the message having gone nowhere.
-      note.textContent = `Told it: ${said}`;
+      note.textContent = `Told the agent: ${said}`;
     });
-    this.root.appendChild(tell);
 
-    // ── done ────────────────────────────────────────────────────────────────
+    // ── the footer: counts on the left, the way out on the right ────────────
     //
     // A task has to be endable. Without this the only ways out were closing
     // the tab or letting the agent decide it had finished — and the agent
     // deciding is exactly the judgement this layer exists not to take on
     // trust. Ending is the person's call, and it stops the agent too.
+    const foot = document.createElement('div');
+    foot.className = 'aw-foot';
+    // Progress cues are a preference with a real split: some people want to
+    // know how much was checked, and for others a running tally is one more
+    // thing demanding attention. `null` means no signal either way, so it is
+    // shown — the count is the cheapest evidence that checking happened.
+    if (m.cognition.progressCues !== false && !m.cognition.summarize) {
+      const tally = document.createElement('span');
+      const n = (s.said || []).length;
+      tally.textContent = `${n} said aloud, ${s.spokenWords || 0} words`;
+      foot.appendChild(tally);
+    }
     const end = document.createElement('button');
     end.type = 'button';
     end.className = 'aw-do aw-end';
@@ -321,13 +359,45 @@ export const AgentWatch = {
     // panel. It ended the whole task instead. The label has to name the
     // consequence, not the mood.
     end.textContent = 'End this task';
-    end.setAttribute('aria-label', 'End this task and stop the assistant');
+    end.setAttribute('aria-label', 'End this task and stop the agent');
     end.addEventListener('click', () => this.onDone?.());
-    this.root.appendChild(end);
+    foot.appendChild(end);
 
+    // What is happening right now sits with the title, not inside the input
+    // box - it is status, and the input is for talking back.
+    if (doing.textContent) this.root.appendChild(doing);
 
+    // The agent asked and offered choices - so the choices are buttons,
+    // right under its question. Pressing one continues the task; the tell
+    // box below stays the free-text way to answer differently.
+    if (a?.status === 'done' && Array.isArray(a.options) && a.options.length) {
+      const asks = document.createElement('div');
+      asks.className = 'aw-row aw-asks';
+      for (const opt of a.options) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'aw-do';
+        b.textContent = opt.length > 42 ? `${opt.slice(0, 39)}…` : opt;
+        b.title = opt;
+        b.setAttribute('aria-label', `Go with ${opt}`);
+        b.addEventListener('click', () => {
+          this.lastTold = opt;
+          this.onTell?.(`Go with "${opt}". Do that now.`);
+          this.render();
+        });
+        asks.appendChild(b);
+      }
+      this.root.appendChild(asks);
+    }
 
-    if (this.collapsed && !held) return;
+    // Collapsed keeps the status and the two controls that must never be more
+    // than one press away: the input and the way out.
+    if (this.collapsed && !held) {
+      this.root.appendChild(tell);
+      this.root.appendChild(foot);
+      restore();
+      return;
+    }
 
     // ── the gate ────────────────────────────────────────────────────────────
     if (held) {
@@ -335,7 +405,7 @@ export const AgentWatch = {
       g.className = 'aw-gate';
       g.setAttribute('role', 'alertdialog');
       g.setAttribute('aria-live', 'assertive');
-      g.setAttribute('aria-label', 'The assistant is waiting for you');
+      g.setAttribute('aria-label', 'Waiting for you');
 
       const p = document.createElement('p');
       p.textContent = s.gate.say || 'Something needs your decision.';
@@ -356,7 +426,45 @@ export const AgentWatch = {
       this.root.appendChild(g);
       // The only place focus moves on its own — the run cannot proceed
       // without an answer, so landing here saves hunting for it.
-      requestAnimationFrame(() => g.querySelector('.aw-do')?.focus());
+      const gateKey = (s.gate?.waitingOn || []).join('|') + (s.gate?.say || '');
+      if (gateKey !== this._focusedGate) {
+        this._focusedGate = gateKey;
+        requestAnimationFrame(() => g.querySelector('.aw-do')?.focus());
+      }
+    }
+
+    // ── the probe card: measured options, waiting for a pick ────────────────
+    if (s.probe) {
+      const pr = document.createElement('div');
+      pr.className = 'aw-probe';
+      pr.setAttribute('role', 'group');
+      pr.setAttribute('aria-label', 'Narrower searches, measured');
+      const q = document.createElement('p');
+      q.className = 'aw-text';
+      q.textContent = s.probe.ask || 'Pick one.';
+      pr.appendChild(q);
+      const row = document.createElement('div');
+      row.className = 'aw-row';
+      for (const o of s.probe.options || []) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'aw-do';
+        // The count is the point: it is read off the page, not estimated.
+        b.textContent = o.count ? `${o.query} (${o.count} results)` : `${o.query} (count unreadable)`;
+        b.addEventListener('click', () =>
+          this.onControl?.({ action: 'probe-pick', query: o.query }));
+        row.appendChild(b);
+      }
+      if ((s.probe.options || []).length) {
+        const keep = document.createElement('button');
+        keep.type = 'button';
+        keep.className = 'aw-do';
+        keep.textContent = 'Keep the current search';
+        keep.addEventListener('click', () => this.onControl?.({ action: 'probe-pick' }));
+        row.appendChild(keep);
+      }
+      pr.appendChild(row);
+      this.root.appendChild(pr);
     }
 
     // ── one thing at a time ─────────────────────────────────────────────────
@@ -375,7 +483,8 @@ export const AgentWatch = {
     // So: the most decisive unresolved finding, with its control, and a count
     // of what is behind it. Answer or wave it past, and the next arrives.
     // Nothing is hidden; it is queued.
-    const queue = shown.filter((f) => !this.settled.has(keyOf(f)));
+    const heldNow = new Set((held && s.gate.waitingOn) || []);
+    const queue = shown.filter((f) => !this.settled.has(keyOf(f)) && !heldNow.has(f.widget));
     if (!queue.length) {
       const note = document.createElement('p');
       note.className = 'aw-none';
@@ -414,7 +523,13 @@ export const AgentWatch = {
         b.textContent = f.control.label;
         b.addEventListener('click', () => {
           this.settled.add(keyOf(f));
+          // Control first, so the instruction is queued for the agent before
+          // the acknowledge releases the hold - then acknowledge, because
+          // acting on a finding IS dealing with it. Without the acknowledge
+          // the session still counted it unread and kept the agent held, so
+          // the very instruction this press just sent could never run.
           this.onControl?.(f.control);
+          this.onAcknowledge?.(keyOf(f));
           this.render();
         });
         row.appendChild(b);
@@ -425,7 +540,7 @@ export const AgentWatch = {
       const skip = document.createElement('button');
       skip.type = 'button';
       skip.className = 'aw-do';
-      skip.textContent = f.control ? 'Leave it' : 'Got it';
+      skip.textContent = f.control ? (f.control.decline || 'Leave it') : 'Got it';
       skip.addEventListener('click', () => {
         this.settled.add(keyOf(f));
         this.onAcknowledge?.(keyOf(f));
@@ -444,7 +559,11 @@ export const AgentWatch = {
       // Focus follows the queue, so answering does not send a keyboard or
       // screen-reader user back to the top of the panel each time.
       if (this.settled.size) {
-        requestAnimationFrame(() => li.querySelector('.aw-do')?.focus());
+        const oneKey = keyOf(f);
+        if (oneKey !== this._focusedOne) {
+          this._focusedOne = oneKey;
+          requestAnimationFrame(() => li.querySelector('.aw-do')?.focus());
+        }
       }
     }
 
@@ -459,25 +578,11 @@ export const AgentWatch = {
     // default they bury the one thing that actually needs answering under a
     // history of what already happened, which is how this surface turned into
     // a dashboard.
-    const more = document.createElement('details');
-    more.className = 'aw-more';
-    // Opened by the person, and it stays open.
-    //
-    // The panel re-renders on every storage write, and rebuilding the element
-    // reset it — so anything they opened snapped shut the moment the next
-    // finding landed. Reading the task history while a task is running was
-    // effectively impossible.
-    more.open = this.historyOpen;
-    more.addEventListener('toggle', () => { this.historyOpen = more.open; });
-    const sum = document.createElement('summary');
     const nRules = (s.rules || []).length;
-    sum.textContent = `The task so far${nRules ? ` · ${nRules} standing rule${nRules === 1 ? '' : 's'}` : ''}`;
-    more.appendChild(sum);
 
-    // Each surface remembers whether it is open, for the same reason the
-    // history does: the panel rebuilds on every storage write, and a section
-    // that closes itself whenever a finding lands cannot be read at all while
-    // a task is running.
+    // Each surface remembers whether it is open: the panel rebuilds on every
+    // storage write, and a section that closes itself whenever a finding
+    // lands cannot be read at all while a task is running.
     const remember = (node, key) => {
       if (!node) return node;
       node.open = this.openSurfaces.has(key) || node.open;
@@ -489,39 +594,25 @@ export const AgentWatch = {
     };
 
     const plan = remember(livingPlan(s.steps, { compact: m.cognition.summarize }), 'plan');
-    if (plan) more.appendChild(plan);
+    if (plan) this.root.appendChild(plan);
 
     const prompt = remember(livingPrompt(s.contract, {
       invalidated: s.invalidated || [],
       onEdit: (field, value) => this.onEditAsk?.(field, value),
     }), 'prompt');
-    if (prompt) more.appendChild(prompt);
+    if (prompt) this.root.appendChild(prompt);
 
     if (nRules || s.offer) {
-      more.appendChild(remember(rulebook(s.rules || [], {
+      this.root.appendChild(remember(rulebook(s.rules || [], {
         offer: s.offer,
         onPromote: (o, always) => this.onPromote?.(o, always),
         onToggle: (r) => this.onToggleRule?.(r),
       }), 'rules'));
     }
-    this.root.appendChild(more);
 
-    // An offered rule is the exception. It is the moment a correction becomes
-    // permanent, it only makes sense right after the thing that caused it, and
-    // it is gone once the task moves on — so it comes out from behind the fold.
-    if (s.offer) { more.open = true; this.historyOpen = true; }
-
-    // Progress cues are a preference with a real split: some people want to
-    // know how much was checked, and for others a running tally is one more
-    // thing demanding attention. `null` means no signal either way, so it is
-    // shown — the count is the cheapest evidence that checking happened.
-    if (m.cognition.progressCues !== false && !m.cognition.summarize) {
-      const foot = document.createElement('p');
-      foot.className = 'aw-foot';
-      const n = (s.said || []).length;
-      foot.textContent = `${n} said aloud · ${s.spokenWords || 0} words`;
-      this.root.appendChild(foot);
-    }
+    this.root.appendChild(tell);
+    this.root.appendChild(foot);
+    restore();
   },
 
   /** Set by the host: what to do when a control or a gate answer is clicked. */
@@ -630,7 +721,7 @@ function css(m) {
   const fg = high ? '#000' : '#1d1d1f';
   const bg = high ? '#fff' : '#fff';
   const line = high ? '#000' : '#e5e5e7';
-  const muted = high ? '#000' : '#6e6e73';
+  const muted = high ? '#000' : '#6b7280';
   // Someone who relies on descriptions is not reading this box — the spoken
   // channel is their channel. It stays in the DOM for the screen reader and
   // stops competing for space it is not being read in.
@@ -646,29 +737,29 @@ function css(m) {
   position: fixed; bottom: 16px; right: 16px; z-index: 2147483646;
   width: ${width}px; max-height: 62vh; overflow-y: auto;
   background: ${bg}; color: ${fg};
-  border: ${high ? '3px solid #000' : '1px solid #d2d2d7'};
-  border-radius: 12px;
+  border: ${high ? '3px solid #000' : '1px solid #d1d5db'};
+  border-radius: 10px;
   box-shadow: ${high ? 'none' : '0 6px 28px rgba(0,0,0,.14)'};
   font: ${base}px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   ${m.motion === 'reduced' ? '' : 'transition: box-shadow .18s ease;'}
 }
 #${AgentWatch.containerId}.aw-idle { display: none; }
-#${AgentWatch.containerId}.aw-held { border-color: ${high ? '#000' : '#e5534b'}; }
+#${AgentWatch.containerId}.aw-held { border-color: ${high ? '#000' : '#991b1b'}; }
 
 #${AgentWatch.containerId} .aw-head {
   display: block; width: 100%; text-align: left;
   padding: 11px 14px; border: 0; border-bottom: 1px solid ${line};
   background: none; color: inherit; font: inherit; font-weight: 600;
-  cursor: pointer; border-radius: 12px 12px 0 0;
+  cursor: pointer; border-radius: 10px 10px 0 0;
 }
-#${AgentWatch.containerId} .aw-head:focus-visible { outline: 3px solid #06c; outline-offset: -3px; }
+#${AgentWatch.containerId} .aw-head:focus-visible { outline: 3px solid #1a73e8; outline-offset: -3px; }
 
 #${AgentWatch.containerId} .aw-gate {
   margin: 12px 14px; padding: 12px;
-  border: 1px solid ${high ? '#000' : '#ffd0cd'}; border-radius: 10px;
-  background: ${high ? '#fff' : '#fff5f5'};
+  border: 1px solid ${high ? '#000' : '#fca5a5'}; border-radius: 8px;
+  background: ${high ? '#fff' : '#fee2e2'};
 }
-#${AgentWatch.containerId} .aw-gate p { margin: 0 0 10px; }
+#${AgentWatch.containerId} .aw-gate p { margin: 0 0 10px; font-weight: 500; }
 #${AgentWatch.containerId} .aw-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
 #${AgentWatch.containerId} .aw-list { list-style: none; margin: 0; padding: 4px 0; }
@@ -685,49 +776,41 @@ function css(m) {
 #${AgentWatch.containerId} .aw-one { padding: 12px 14px 14px ${Math.round(base * 1.85)}px; }
 #${AgentWatch.containerId} .aw-one .aw-row { margin-top: 11px; }
 #${AgentWatch.containerId} .aw-queue {
-  margin: 10px 0 0; font-size: ${Math.round(base * 0.82)}px; color: ${muted};
+  margin: 10px 0 0; font-size: ${Math.round(base * 0.78)}px; color: ${muted};
 }
 
-/* The task so far — present, and not in the way. */
-#${AgentWatch.containerId} .aw-more { border-top: 1px solid ${line}; }
-#${AgentWatch.containerId} .aw-more > summary {
-  padding: 9px 14px; cursor: pointer; color: ${muted};
-  font-size: ${Math.round(base * 0.84)}px;
-}
-#${AgentWatch.containerId} .aw-more > summary:focus-visible { outline: 3px solid #06c; outline-offset: -3px; }
-#${AgentWatch.containerId} .aw-more[open] > summary { color: inherit; }
-#${AgentWatch.containerId} .aw-more .aw-surf:first-of-type { border-top: 0; }
 /* Never colour alone: each level carries its own mark, so the distinction
    survives any colour vision and any high-contrast mode that flattens hue. */
 #${AgentWatch.containerId} .aw-item::before {
   position: absolute; left: ${Math.round(base * 0.78)}px; top: 9px; font-weight: 700;
 }
-#${AgentWatch.containerId} .aw-ok::before     { content: "✓"; color: ${high ? '#000' : '#1d8a4e'}; }
-#${AgentWatch.containerId} .aw-aside::before  { content: "!"; color: ${high ? '#000' : '#b26a00'}; }
-#${AgentWatch.containerId} .aw-stop::before   { content: "■"; color: ${high ? '#000' : '#c0362c'}; }
+#${AgentWatch.containerId} .aw-ok::before     { content: "✓"; color: ${high ? '#000' : '#059669'}; }
+#${AgentWatch.containerId} .aw-aside::before  { content: "!"; color: ${high ? '#000' : '#b45309'}; }
+#${AgentWatch.containerId} .aw-stop::before   { content: "■"; color: ${high ? '#000' : '#991b1b'}; }
 #${AgentWatch.containerId} .aw-ambient::before{ content: "·"; color: ${muted}; }
 
 #${AgentWatch.containerId} .aw-text { margin: 0; }
 #${AgentWatch.containerId} .aw-from {
-  margin: 3px 0 0; font-size: ${Math.round(base * 0.82)}px; color: ${muted};
+  margin: 3px 0 0; font-size: ${Math.round(base * 0.78)}px; color: ${muted};
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #${AgentWatch.containerId} .aw-do {
-  margin-top: 7px; font: inherit; font-size: ${Math.round(base * 0.9)}px;
-  padding: 5px 12px; border: 1px solid ${high ? '#000' : '#d2d2d7'};
-  border-radius: 999px; background: ${bg}; color: ${fg}; cursor: pointer;
+  margin-top: 7px; font: inherit; font-size: ${Math.round(base * 0.86)}px;
+  padding: 5px 12px; border: 1px solid ${high ? '#000' : '#d1d5db'};
+  border-radius: 6px; background: ${bg}; color: ${fg}; cursor: pointer;
 }
 #${AgentWatch.containerId} .aw-row .aw-do { margin-top: 0; }
-#${AgentWatch.containerId} .aw-do:hover { background: ${high ? '#eee' : '#f5f5f7'}; }
-#${AgentWatch.containerId} .aw-do:focus-visible { outline: 3px solid #06c; outline-offset: 2px; }
+#${AgentWatch.containerId} .aw-do:hover { background: ${high ? '#eee' : '#f3f4f6'}; }
+#${AgentWatch.containerId} .aw-do:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
 #${AgentWatch.containerId} .aw-primary {
-  background: ${high ? '#000' : '#1d1d1f'}; border-color: ${high ? '#000' : '#1d1d1f'}; color: #fff;
+  background: ${high ? '#000' : '#1a73e8'}; border-color: ${high ? '#000' : '#1a73e8'}; color: #fff;
 }
+#${AgentWatch.containerId} .aw-primary:hover { background: ${high ? '#000' : '#1858b8'}; }
 #${AgentWatch.containerId} .aw-none {
   margin: 0; padding: 14px; color: ${muted};
 }
-/* Tell it something — always there, whatever else is on screen. */
+/* Tell the agent something — always there, whatever else is on screen. */
 #${AgentWatch.containerId} .aw-tell {
   display: grid; grid-template-columns: 1fr auto; gap: 7px;
   padding: 10px 14px; border-top: 1px solid ${line};
@@ -738,26 +821,33 @@ function css(m) {
 }
 #${AgentWatch.containerId} .aw-tell-input {
   font: inherit; min-width: 0; padding: 6px 11px;
-  border: 1px solid ${high ? '#000' : line}; border-radius: 999px;
+  border: 1px solid ${high ? '#000' : '#d1d5db'}; border-radius: 6px;
   background: ${bg}; color: ${fg};
 }
-#${AgentWatch.containerId} .aw-tell-input:focus-visible { outline: 3px solid #06c; outline-offset: 1px; }
+#${AgentWatch.containerId} .aw-tell-input:focus-visible { outline: 3px solid #1a73e8; outline-offset: 1px; }
 #${AgentWatch.containerId} .aw-tell .aw-do { margin-top: 0; }
+#${AgentWatch.containerId} .aw-probe {
+  margin: 10px 14px; padding: 10px 12px;
+  border: 1px solid ${line}; border-radius: 8px;
+}
+#${AgentWatch.containerId} .aw-probe .aw-row { margin-top: 8px; }
+#${AgentWatch.containerId} .aw-asks { padding: 0 14px 10px; }
+#${AgentWatch.containerId} .aw-asks .aw-do { margin-top: 0; }
 #${AgentWatch.containerId} .aw-doing {
-  grid-column: 1 / -1; margin: 2px 0 0;
-  font-size: ${Math.round(base * 0.84)}px; color: ${fg};
+  margin: 0; padding: 8px 14px 10px;
+  font-size: ${Math.round(base * 0.86)}px; color: ${fg};
 }
-#${AgentWatch.containerId} .aw-end {
-  display: block; width: calc(100% - 28px); margin: 0 14px 12px; text-align: center;
-}
+#${AgentWatch.containerId} .aw-end { margin: 0 0 0 auto; flex: 0 0 auto; }
 #${AgentWatch.containerId} .aw-tell-said {
-  grid-column: 1 / -1; margin: 0; font-size: ${Math.round(base * 0.8)}px; color: ${muted};
+  grid-column: 1 / -1; margin: 0; font-size: ${Math.round(base * 0.78)}px; color: ${muted};
 }
 
 #${AgentWatch.containerId} .aw-foot {
-  margin: 0; padding: 9px 14px; border-top: 1px solid ${line};
-  font-size: ${Math.round(base * 0.82)}px; color: ${muted};
+  margin: 0; padding: 8px 14px; border-top: 1px solid ${line};
+  font-size: ${Math.round(base * 0.78)}px; color: ${muted};
+  display: flex; align-items: center; gap: 10px;
 }
+#${AgentWatch.containerId} .aw-foot .aw-do { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   #${AgentWatch.containerId} { transition: none; }
 }
