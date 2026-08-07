@@ -45,17 +45,18 @@ function phaseOf(url) {
 
 // Steps that commit something. The gate is checked before these, and only
 // these — stopping the agent from scrolling would be theatre.
-const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now/i;
+const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now|finish the task/i;
 
 // Actions that change the world rather than look at it.
 //
 // The distinction is the difference between a paced run and a deadlocked one:
 // scroll, wait, screenshot and read leave the page as they found it, so
 // holding them buys nothing and costs the agent its eyes.
-const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|close|switch|go[_ ]?(back|forward)|refresh|upload|drag|add|remove|place|buy|checkout/i;
+const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|close|switch|go[_ ]?(back|forward)|refresh|upload|drag|add|remove|place|buy|checkout|finish the task/i;
 
 let run = null;
 let contract = null;
+let runOpts = {};
 
 // What the person has actually dealt with.
 //
@@ -83,6 +84,23 @@ function mergeFindings(prev, next) {
   const key = (f) => `${f.widget}|${f.phase}|${f.say}`;
   const have = new Set(prev.map(key));
   return prev.concat(next.filter((f) => !have.has(key(f))));
+}
+
+// `run` and `contract` live in module scope, and the comment above about the
+// worker being torn down applies to them too: a restart mid-task nulls them,
+// and allow() answering "no run, go ahead" would switch the whole layer off
+// silently. Everything needed to rebuild is already published on every write -
+// so read it back. The rebuilt run loses its in-memory waiting list, but the
+// unread-findings check reads storage, so unacknowledged stops still hold.
+async function rehydrate() {
+  if (run) return true;
+  const prev = await stored();
+  if (!prev.contract) return false;
+  contract = prev.contract;
+  runOpts = prev.opts || {};
+  run = createRun(contract, runOpts);
+  for (const k of prev.acknowledged || []) acknowledged.add(k);
+  return true;
 }
 
 async function stored() {
@@ -177,8 +195,14 @@ async function publish(extra = {}) {
 
 async function _publish(extra = {}) {
   const prev = await stored();
-  const s = run ? run.summary() : { steps: [], said: [], spokenWords: 0, waiting: 0 };
-  const gate = run ? run.gate() : { allowed: true };
+  // A worker restart nulls `run` while callers can still publish. Writing
+  // module defaults over the stored session then erases exactly what
+  // rehydrate() needs - the acknowledged list, the plan, a held gate. When
+  // the run is gone, the stored values stand in.
+  const s = run ? run.summary()
+    : { steps: prev.steps || [], said: prev.said || [],
+        spokenWords: prev.spokenWords || 0, waiting: prev.waiting || 0 };
+  const gate = run ? run.gate() : (prev.gate || { allowed: true });
   const book = await rules();
 
   // A check that never ran because nobody said the size is not a check that
@@ -186,24 +210,35 @@ async function _publish(extra = {}) {
   // an unflagged absence is the failure the whole layer exists to surface, and
   // the plan is the last place that should reproduce it.
   const blanks = contract ? gaps(contract) : [];
-  const steps = (s.steps || []).concat(blanks.map((g) => ({
+  // Stored steps already carry their blanks; re-adding them would double
+  // every skipped line after a restart.
+  const steps = run ? (s.steps || []).concat(blanks.map((g) => ({
     state: 'skipped',
     what: `didn't check ${g.unchecked[0]}`,
     detail: `you haven't told me: ${g.field}`,
-  })));
+  }))) : (s.steps || []);
+  // Keep whatever was already recorded unless this call replaces it.
+  // Appending must not re-add what is already recorded. A page can be read
+  // more than once -- the navigation trigger and an explicit call both fire
+  // on the same page -- and without this the panel shows every finding
+  // twice, which reads as two separate problems.
+  const merged = extra.findings || mergeFindings(prev.findings || [], extra.append || []);
   await chrome.storage.local.set({
     [KEY]: {
-      // Keep whatever was already recorded unless this call replaces it.
-      // Appending must not re-add what is already recorded. A page can be read
-      // more than once -- the navigation trigger and an explicit call both fire
-      // on the same page -- and without this the panel shows every finding
-      // twice, which reads as two separate problems.
-      findings: extra.findings || mergeFindings(prev.findings || [], extra.append || []),
+      findings: merged,
+      // A probe result stays up until something replaces or clears it - it
+      // must survive the unrelated publishes that happen constantly.
+      probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
       contract: contract || prev.contract || null,
-      acknowledged: [...acknowledged],
+      // Union, never replacement: a publish arriving before rehydrate has
+      // run must not shrink the stored list back to whatever this worker
+      // instance happens to have seen.
+      acknowledged: [...new Set([...(prev.acknowledged || []), ...acknowledged])],
+      opts: run ? runOpts : (prev.opts || runOpts),
       ...s, steps, gate, rules: book,
-      offer: run ? offerFrom(
-        (extra.append || prev.findings || []), book) : null,
+      // Offered against everything on record: computing it against only this
+      // call's appends meant any quiet page withdrew a standing offer.
+      offer: run ? offerFrom(merged, book) : (prev.offer || null),
       updated: Date.now(),
       ...(({ append, ...rest }) => rest)(extra),
     },
@@ -221,6 +256,7 @@ const Validation = {
    */
   async start(c, opts = {}) {
     contract = typeof c === 'string' ? contractFromAsk(c) : c;
+    runOpts = opts;
     run = createRun(contract, opts);
     acknowledged.clear();
     // Checking is not a setting to remember to switch on. A layer that has to
@@ -228,7 +264,7 @@ const Validation = {
     // predicts the run that will go wrong. Starting a task turns on the
     // surface that reports on it.
     try { await chrome.storage.sync.set({ agentWatch: true }); } catch { /* not fatal */ }
-    await publish({ findings: [], unspecified: gaps(contract) });
+    await publish({ findings: [], probe: null, unspecified: gaps(contract) });
     return { started: true, contract, unspecified: gaps(contract) };
   },
 
@@ -246,10 +282,19 @@ const Validation = {
     // to actually end it.
     contract = null;
     acknowledged.clear();
-    await publish({ findings: [], contract: null, steps: [], gate: { allowed: true } });
+    await publish({ findings: [], contract: null, probe: null, steps: [], gate: { allowed: true } });
   },
 
   isRunning: () => !!run,
+
+  /**
+   * Like isRunning, but willing to rebuild after a worker restart. The
+   * steering path must use THIS one: the sync check reads the module
+   * variable, which a restart nulls while the stored session lives on.
+   */
+  async ensureRunning() {
+    return !!run || rehydrate();
+  },
 
   /**
    * Read the page the agent is on and check it.
@@ -259,7 +304,7 @@ const Validation = {
    * person could not have reached themselves.
    */
   async observe(tabId, opts = {}) {
-    if (!run) return { skipped: 'no validation run in progress' };
+    if (!run && !(await rehydrate())) return { skipped: 'no validation run in progress' };
     const H = globalThis.BrowserHarness;
     if (!H?.axSnapshot) return { error: 'harness has no accessibility read' };
 
@@ -317,7 +362,7 @@ const Validation = {
    * A held gate is not advice — the action does not happen.
    */
   async allow(actionDescription) {
-    if (!run) return { allowed: true };
+    if (!run && !(await rehydrate())) return { allowed: true };
 
     // Anything the person has not dealt with holds the agent — but only from
     // CHANGING anything, never from looking.
@@ -351,8 +396,8 @@ const Validation = {
         waitingOn: unread.map((f) => f.widget),
         unread: unread.length,
         say: unread.length === 1
-          ? `Waiting on you: ${first.say}`
-          : `Waiting on you. ${unread.length} things I found that you haven't seen yet, `
+          ? `Waiting for you: ${first.say}`
+          : `Waiting for you. ${unread.length} things I found that you haven't seen yet, `
             + `starting with: ${first.say}`,
       };
     }
@@ -371,8 +416,17 @@ const Validation = {
 
   /** Resolve a stop so the agent can continue. */
   async answer(widget, response) {
-    if (!run) return { resolved: false };
+    if (!run && !(await rehydrate())) return { resolved: false };
     const r = run.answer(widget, response);
+    // Answering a widget's question deals with that widget's findings too.
+    // Without this the same widget kept holding the agent through the
+    // unread-findings check after its question was already answered - the
+    // overlay's Got-it happened to paper over it, the side panel had no way
+    // out at all.
+    const prev = await stored();
+    for (const f of prev.findings || []) {
+      if (f.widget === widget) acknowledged.add(fkey(f));
+    }
     await publish();
     return r;
   },
@@ -387,6 +441,7 @@ const Validation = {
    */
   async promote(offer, always) {
     if (!offer) return { saved: false };
+    if (!run) await rehydrate();
     if (!always) return { saved: false, why: 'just this once' };
     const book = await rules();
     if (book.some((r) => r.id === offer.id)) return { saved: false, why: 'already in force' };
@@ -398,6 +453,7 @@ const Validation = {
 
   /** Switch a standing rule off or back on. */
   async toggleRule(id) {
+    if (!run) await rehydrate();
     const book = await rules();
     const r = book.find((x) => x.id === id);
     if (!r) return { changed: false };
@@ -440,7 +496,7 @@ const Validation = {
     const stale = (prev.findings || []).filter((f) => f.checkedAgainst === key);
     const kept = (prev.findings || []).filter((f) => f.checkedAgainst !== key);
 
-    run = createRun(contract, { style: 'balanced' });
+    run = createRun(contract, runOpts);
     await publish({
       findings: kept,
       invalidated: stale.map((f) => f.say),
@@ -458,6 +514,7 @@ const Validation = {
    */
   async acknowledge(key) {
     if (!key) return { unread: 0 };
+    if (!run) await rehydrate();
     acknowledged.add(key);
     await publish();
     const prev = await stored();
@@ -465,6 +522,13 @@ const Validation = {
       .filter((f) => f.level !== 'ambient' && !f.confirming)
       .filter((f) => !acknowledged.has(fkey(f))).length;
     return { unread: left };
+  },
+
+  /** Write extra fields into the published state (the probe card, mainly). */
+  async annotate(extra) {
+    if (!run) await rehydrate();
+    await publish(extra || {});
+    return { ok: true };
   },
 
   /** Findings that were never announced, for when someone asks. */
