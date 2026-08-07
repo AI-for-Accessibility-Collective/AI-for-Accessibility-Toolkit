@@ -1,16 +1,22 @@
 /* Validation panel.
 
-   Deliberately continuous with sidepanel.css — same system font stack, same
-   #1d1d1f on #fafafa, same pill shapes and semantic colours. A second visual
-   language inside one extension makes the layer read as a bolted-on thing
-   rather than part of the assistant.
+   One design system, and it is sidepanel.css's: 13px content / 12px secondary /
+   11px meta, 6px radius on anything pressable, 8px on cards, #1a73e8 for the
+   accent and focus, the same grey and semantic families. An earlier version
+   claimed continuity while actually using a second palette (Apple greys and blue,
+   pill buttons, a black primary) — which made the two halves of the panel read
+   as two products. Every value below appears in sidepanel.css first.
 
    The restraint is a design position, not a shortage of ideas. This surface is
    for the persona who can still see the page: interrupting them to describe
    something they could look at is pure cost, so a finding is a quiet mark
    beside the thing it concerns, and the loud element is the CONTROL — the
    action delegation took away. Anything that competes with the page for
-   attention is working against the person using it. */
+   attention is working against the person using it.
+
+   No dark-mode block on purpose: the sidepanel that hosts this surface is
+   light-only, and a half of a panel that follows the OS while the other half
+   does not is a seam, not respect for the setting. */
 
 * { box-sizing: border-box; }
 
@@ -19,31 +25,33 @@
   color: #1d1d1f;
 }
 
+/* Section headers, all one treatment — the vp-status pattern. */
+.va h2 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
 /* ── the ask ─────────────────────────────────────────────────────────────── */
 .va-ask {
   padding: 10px 14px;
   background: #fff;
   border-bottom: 1px solid #e5e5e7;
 }
-.va-ask h2 {
-  margin: 0 0 4px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: #86868b;
-}
 .va-ask p { margin: 0; }
 .va-ask .va-edit {
   margin-top: 6px;
   font-size: 12px;
-  color: #06c;
+  color: #1a73e8;
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
 }
-.va-ask .va-edit:hover { text-decoration: underline; }
+.va-ask .va-edit:hover { color: #1858b8; text-decoration: underline; }
 
 /* ── starting ────────────────────────────────────────────────────────────── */
 /* One field. Anything more is a form, and a form asks people to know their
@@ -57,33 +65,33 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #86868b;
+  color: #6b7280;
 }
-.va-start-row { display: flex; gap: 7px; }
+.va-start-row { display: flex; gap: 6px; }
 .va-start input {
   flex: 1 1 auto;
   min-width: 0;
   font: inherit;
-  padding: 7px 11px;
-  border: 1px solid #d2d2d7;
-  border-radius: 999px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   background: #fff;
   color: #1d1d1f;
 }
-.va-start input:focus-visible { outline: 2px solid #06c; outline-offset: 1px; }
+.va-start input:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
 .va-start .va-do { margin-top: 0; white-space: nowrap; }
-.va-hint { margin: 9px 0 0; font-size: 11px; color: #86868b; }
+.va-hint { margin: 9px 0 0; font-size: 11px; color: #9ca3af; }
 
 /* ── what wasn't said ────────────────────────────────────────────────────── */
 /* A question, not a warning. Something unspecified is normal — people do not
-   state everything up front — so this is the calm blue of an offer rather than
-   the amber of a problem. */
+   state everything up front — so this is the calm indigo of an offer (the
+   vp-pill family) rather than the amber of a problem. */
 .va-gap {
   margin: 8px 14px 0;
-  padding: 9px 12px;
-  border: 1px solid #d6e4f7;
-  border-radius: 10px;
-  background: #f5f9ff;
+  padding: 8px 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #eef2ff;
 }
 .va-gap .va-text { font-weight: 500; }
 .va-gap .va-where { font-family: inherit; white-space: normal; margin-top: 2px; }
@@ -108,21 +116,21 @@
   height: 6px;
   border-radius: 50%;
   margin-top: 6px;
-  background: #c7c7cc;
+  background: #d1d5db;
 }
-.va-item.ok    .va-dot { background: #34c759; }
-.va-item.note  .va-dot { background: #ff9500; }
-.va-item.stop  .va-dot { background: #ff3b30; }
-.va-item.quiet .va-dot { background: #d1d1d6; }
+.va-item.ok    .va-dot { background: #059669; }
+.va-item.note  .va-dot { background: #b45309; }
+.va-item.stop  .va-dot { background: #991b1b; }
+.va-item.quiet .va-dot { background: #e5e7eb; }
 
 .va-body { flex: 1 1 auto; min-width: 0; }
 .va-text { margin: 0; }
-.va-item.quiet .va-text { color: #86868b; }
+.va-item.quiet .va-text { color: #6b7280; }
 
 .va-where {
   margin: 2px 0 0;
   font-size: 11px;
-  color: #86868b;
+  color: #6b7280;
   /* The page's own words, so a claim can always be traced back. */
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   overflow: hidden;
@@ -131,88 +139,68 @@
 }
 
 /* The control is the point of this surface, so it is the only thing with
-   affordance. */
+   affordance. Identical to .vp-btn. */
 .va-do {
   margin-top: 6px;
   font: inherit;
   font-size: 12px;
-  padding: 4px 11px;
-  border: 1px solid #d2d2d7;
-  border-radius: 999px;
+  padding: 5px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   background: #fff;
   color: #1d1d1f;
   cursor: pointer;
 }
-.va-do:hover  { background: #f5f5f7; }
-.va-do:active { background: #ebebed; }
-.va-do:focus-visible { outline: 2px solid #06c; outline-offset: 2px; }
+.va-do:hover  { background: #f3f4f6; }
+.va-do:active { background: #e5e7eb; }
+.va-do:focus-visible { outline: 2px solid #1a73e8; outline-offset: 2px; }
 
 /* ── the gate ────────────────────────────────────────────────────────────── */
 /* The one element allowed to be loud. Everything above can be ignored; this
    cannot, because the agent is held until it is answered. */
 .va-gate {
   margin: 10px 14px;
-  padding: 12px 14px;
-  border: 1px solid #ffd0cd;
-  border-radius: 10px;
-  background: #fff5f5;
+  padding: 10px 12px;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  background: #fee2e2;
 }
-.va-gate h2 {
-  margin: 0 0 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: #c0362c;
-}
-.va-gate p { margin: 0 0 10px; }
+.va-gate h2 { margin-bottom: 6px; color: #991b1b; }
+.va-gate p { margin: 0 0 10px; font-weight: 500; }
 .va-answers { display: flex; gap: 8px; flex-wrap: wrap; }
 .va-answers .va-do { margin-top: 0; }
 .va-do.primary {
-  background: #1d1d1f;
-  border-color: #1d1d1f;
+  background: #1a73e8;
+  border-color: #1a73e8;
   color: #fff;
 }
-.va-do.primary:hover { background: #000; }
+.va-do.primary:hover { background: #1858b8; }
 
 /* ── footer ──────────────────────────────────────────────────────────────── */
 .va-foot {
   padding: 8px 14px;
   border-top: 1px solid #e5e5e7;
   font-size: 11px;
-  color: #86868b;
+  color: #6b7280;
   display: flex;
   justify-content: space-between;
   gap: 10px;
 }
 .va-foot button {
   font: inherit;
-  color: #06c;
+  color: #1a73e8;
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
 }
+.va-foot button:hover { color: #1858b8; text-decoration: underline; }
 
 .va-empty {
-  padding: 22px 14px;
+  padding: 24px 14px;
   text-align: center;
-  color: #86868b;
-}
-
-/* Respect the person's settings rather than asserting our own. */
-@media (prefers-color-scheme: dark) {
-  .va { color: #f5f5f7; }
-  .va-ask, .va-item { background: transparent; }
-  .va-ask { border-bottom-color: #38383a; }
-  .va-item + .va-item { border-top-color: #2c2c2e; }
-  .va-do { background: #1c1c1e; border-color: #48484a; color: #f5f5f7; }
-  .va-do:hover { background: #2c2c2e; }
-  .va-gap { background: #14203a; border-color: #2b4570; }
-  .va-gate { background: #2a1a1a; border-color: #5c2b28; }
-  .va-gate h2 { color: #ff6961; }
-  .va-do.primary { background: #f5f5f7; color: #1d1d1f; border-color: #f5f5f7; }
-  .va-foot { border-top-color: #38383a; }
+  font-size: 13px;
+  color: #6b7280;
 }
 
 @media (prefers-reduced-motion: reduce) {
