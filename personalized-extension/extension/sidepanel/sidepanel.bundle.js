@@ -6,6 +6,8 @@
     root.setAttribute("aria-live", "polite");
     root.setAttribute("aria-relevant", "additions text");
     let state = null;
+    let lastPainted = null;
+    let focusedGate = null;
     const asList = (v) => Array.isArray(v) ? v : [];
     const el = (tag, cls, text) => {
       const n = document.createElement(tag);
@@ -14,6 +16,15 @@
       return n;
     };
     function render() {
+      const now = JSON.stringify(state ? { ...state, updated: 0 } : null);
+      if (now === lastPainted) return;
+      lastPainted = now;
+      const openKeys = [...root.querySelectorAll("details[open] > summary")].map((n2) => n2.textContent);
+      const active = document.activeElement;
+      const activeKey = root.contains(active) ? active.dataset?.vaKey || null : null;
+      const activeText = root.contains(active) ? active.textContent : null;
+      const typing = root.contains(active) && active.tagName === "INPUT" ? { value: active.value, start: active.selectionStart, end: active.selectionEnd } : null;
+      const scroll = root.scrollTop;
       root.textContent = "";
       if (!state || !state.contract) {
         root.append(startForm());
@@ -31,7 +42,8 @@
         const q = el("section", "va-gap");
         q.append(el("p", "va-text", g.ask));
         q.append(el("p", "va-where", `without it I can't check ${g.unchecked[0]}`));
-        const b = el("button", "va-do", "Tell it");
+        const b = el("button", "va-do", "Answer");
+        b.dataset.vaKey = `gap:${g.field}`;
         b.addEventListener("click", () => onControl?.({ action: "fill-gap", field: g.field }));
         q.append(b);
         root.append(q);
@@ -54,9 +66,16 @@
         }
         gate.append(answers);
         root.append(gate);
-        requestAnimationFrame(() => gate.querySelector(".va-do")?.focus());
+        const gateKey = (state.gate.waitingOn || []).join("|") + (state.gate.say || "");
+        if (gateKey !== focusedGate) {
+          focusedGate = gateKey;
+          requestAnimationFrame(() => gate.querySelector(".va-do")?.focus());
+        }
       }
-      const findings = (state.findings || []).filter((f) => f.level !== "ambient" || f.confirming);
+      const heldNow = new Set(
+        state.gate && state.gate.allowed === false && state.gate.waitingOn || []
+      );
+      const findings = (state.findings || []).filter((f) => f.level !== "ambient" || f.confirming).filter((f) => !heldNow.has(f.widget));
       if (!findings.length) {
         root.append(el("div", "va-empty", "Nothing to flag yet."));
       } else {
@@ -69,6 +88,7 @@
           if (f.from) body.append(el("p", "va-where", f.from));
           if (f.control) {
             const b = el("button", "va-do", f.control.label);
+            b.dataset.vaKey = `do:${f.widget}`;
             b.addEventListener("click", () => onControl?.(f.control));
             body.append(b);
           }
@@ -82,12 +102,38 @@
       foot.append(el(
         "span",
         null,
-        `${n} thing${n === 1 ? "" : "s"} said \xB7 ${state.spokenWords || 0} words`
+        `${n} said aloud, ${state.spokenWords || 0} words`
       ));
       const more = el("button", null, "What else did you check?");
       more.addEventListener("click", () => onControl?.({ action: "on-request" }));
       foot.append(more);
       root.append(foot);
+      for (const sum of root.querySelectorAll("details > summary")) {
+        if (openKeys.includes(sum.textContent)) sum.parentElement.open = true;
+      }
+      if (typing) {
+        const input = root.querySelector("input");
+        if (input) {
+          input.value = typing.value;
+          input.focus();
+          try {
+            input.setSelectionRange(typing.start, typing.end);
+          } catch {
+          }
+        }
+      } else if (activeKey || activeText) {
+        const byKey = activeKey ? root.querySelector(`[data-va-key="${CSS.escape(activeKey)}"]`) : null;
+        if (byKey) byKey.focus();
+        else if (activeText) {
+          for (const b of root.querySelectorAll("button")) {
+            if (b.textContent === activeText) {
+              b.focus();
+              break;
+            }
+          }
+        }
+      }
+      root.scrollTop = scroll;
     }
     function startForm() {
       const s = el("section", "va-start");
@@ -133,6 +179,15 @@
       }
       if (/land/.test(w)) {
         return [["Try again", "try again", true], ["Stop here", "stop", false]];
+      }
+      if (/count|result|loose|alarm/.test(w)) {
+        return [["Narrow it down", "narrow it down", true], ["Keep them all", "keep them all", false]];
+      }
+      if (/photo/.test(w)) {
+        return [["Describe the photos", "describe the photos", true], ["Skip it", "skip", false]];
+      }
+      if (/total|price|cost/.test(w)) {
+        return [["Check it with me", "read it to me first", true], ["Go ahead", "go ahead", false]];
       }
       return [["Go on", "go on", true], ["Stop here", "stop", false]];
     }

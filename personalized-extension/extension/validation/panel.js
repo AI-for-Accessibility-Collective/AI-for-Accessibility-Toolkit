@@ -28,6 +28,8 @@ export function mountValidationPanel(root, { onControl } = {}) {
   root.setAttribute('aria-relevant', 'additions text');
 
   let state = null;
+  let lastPainted = null;   // skip rebuilds when nothing changed
+  let focusedGate = null;   // focus the gate once per new hold, not per render
 
   // Storage is shared with the service worker, so a field can arrive as a type
   // this view did not expect. One such value used to throw mid-render and
@@ -44,6 +46,28 @@ export function mountValidationPanel(root, { onControl } = {}) {
   };
 
   function render() {
+    // A storage write that changes nothing must not cost the person their
+    // scroll position, their focus, or the text they are mid-typing.
+    // `updated` is a timestamp that changes on every publish - leaving it in
+    // meant the guard never matched and every publish rebuilt the panel.
+    const now = JSON.stringify(state ? { ...state, updated: 0 } : null);
+    if (now === lastPainted) return;
+    lastPainted = now;
+
+    // What the person had before the rebuild, restored after it.
+    const openKeys = [...root.querySelectorAll('details[open] > summary')]
+      .map((n) => n.textContent);
+    const active = document.activeElement;
+    // A stable key beats button text: several gap sections all say "Answer",
+    // and matching by text sent focus to the first one - the wrong question,
+    // for exactly the keyboard and screen reader users this panel serves.
+    const activeKey = root.contains(active) ? (active.dataset?.vaKey || null) : null;
+    const activeText = root.contains(active) ? active.textContent : null;
+    const typing = root.contains(active) && active.tagName === 'INPUT'
+      ? { value: active.value, start: active.selectionStart, end: active.selectionEnd }
+      : null;
+    const scroll = root.scrollTop;
+
     root.textContent = '';
     if (!state || !state.contract) {
       root.append(startForm());
@@ -69,7 +93,8 @@ export function mountValidationPanel(root, { onControl } = {}) {
       const q = el('section', 'va-gap');
       q.append(el('p', 'va-text', g.ask));
       q.append(el('p', 'va-where', `without it I can't check ${g.unchecked[0]}`));
-      const b = el('button', 'va-do', 'Tell it');
+      const b = el('button', 'va-do', 'Answer');
+      b.dataset.vaKey = `gap:${g.field}`;
       b.addEventListener('click', () => onControl?.({ action: 'fill-gap', field: g.field }));
       q.append(b);
       root.append(q);
@@ -94,12 +119,24 @@ export function mountValidationPanel(root, { onControl } = {}) {
       gate.append(answers);
       root.append(gate);
       // The one place focus moves on its own, because the run cannot proceed
-      // until this is answered.
-      requestAnimationFrame(() => gate.querySelector('.va-do')?.focus());
+      // until this is answered - and only when the hold is new, so re-renders
+      // while the person reads elsewhere do not keep dragging them back.
+      const gateKey = (state.gate.waitingOn || []).join('|') + (state.gate.say || '');
+      if (gateKey !== focusedGate) {
+        focusedGate = gateKey;
+        requestAnimationFrame(() => gate.querySelector('.va-do')?.focus());
+      }
     }
 
     // ── findings ────────────────────────────────────────────────────────────
-    const findings = (state.findings || []).filter((f) => f.level !== 'ambient' || f.confirming);
+    // The finding the gate is holding for renders in the gate block above,
+    // with the gate's own answers - listing it again below gave the same
+    // question two different button rows. One question, one place.
+    const heldNow = new Set(
+      (state.gate && state.gate.allowed === false && state.gate.waitingOn) || []);
+    const findings = (state.findings || [])
+      .filter((f) => f.level !== 'ambient' || f.confirming)
+      .filter((f) => !heldNow.has(f.widget));
     if (!findings.length) {
       root.append(el('div', 'va-empty', 'Nothing to flag yet.'));
     } else {
@@ -112,6 +149,7 @@ export function mountValidationPanel(root, { onControl } = {}) {
         if (f.from) body.append(el('p', 'va-where', f.from));
         if (f.control) {
           const b = el('button', 'va-do', f.control.label);
+          b.dataset.vaKey = `do:${f.widget}`;
           b.addEventListener('click', () => onControl?.(f.control));
           body.append(b);
         }
@@ -125,11 +163,35 @@ export function mountValidationPanel(root, { onControl } = {}) {
     const foot = el('div', 'va-foot');
     const n = (state.said || []).length;
     foot.append(el('span', null,
-      `${n} thing${n === 1 ? '' : 's'} said · ${state.spokenWords || 0} words`));
+      `${n} said aloud, ${state.spokenWords || 0} words`));
     const more = el('button', null, 'What else did you check?');
     more.addEventListener('click', () => onControl?.({ action: 'on-request' }));
     foot.append(more);
     root.append(foot);
+
+    // ── restore what the rebuild would otherwise have taken ────────────────
+    for (const sum of root.querySelectorAll('details > summary')) {
+      if (openKeys.includes(sum.textContent)) sum.parentElement.open = true;
+    }
+    if (typing) {
+      const input = root.querySelector('input');
+      if (input) {
+        input.value = typing.value;
+        input.focus();
+        try { input.setSelectionRange(typing.start, typing.end); } catch { /* number inputs */ }
+      }
+    } else if (activeKey || activeText) {
+      const byKey = activeKey
+        ? root.querySelector(`[data-va-key="${CSS.escape(activeKey)}"]`)
+        : null;
+      if (byKey) byKey.focus();
+      else if (activeText) {
+        for (const b of root.querySelectorAll('button')) {
+          if (b.textContent === activeText) { b.focus(); break; }
+        }
+      }
+    }
+    root.scrollTop = scroll;
   }
 
   // Checking without delegating.
@@ -188,6 +250,15 @@ export function mountValidationPanel(root, { onControl } = {}) {
     }
     if (/land/.test(w)) {
       return [['Try again', 'try again', true], ['Stop here', 'stop', false]];
+    }
+    if (/count|result|loose|alarm/.test(w)) {
+      return [['Narrow it down', 'narrow it down', true], ['Keep them all', 'keep them all', false]];
+    }
+    if (/photo/.test(w)) {
+      return [['Describe the photos', 'describe the photos', true], ['Skip it', 'skip', false]];
+    }
+    if (/total|price|cost/.test(w)) {
+      return [['Check it with me', 'read it to me first', true], ['Go ahead', 'go ahead', false]];
     }
     return [['Go on', 'go on', true], ['Stop here', 'stop', false]];
   }
