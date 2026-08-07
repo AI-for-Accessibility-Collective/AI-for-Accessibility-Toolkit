@@ -173,7 +173,7 @@ export function createRun(contract, opts = {}) {
           out.push({
             state: 'failed',
             what: `couldn't read ${named.length} thing${named.length === 1 ? '' : 's'}`,
-            detail: named.join(' · '),
+            detail: named.join(', '),
           });
         }
       }
