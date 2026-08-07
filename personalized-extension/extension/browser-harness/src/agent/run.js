@@ -535,6 +535,24 @@ export async function bhAgentRun(task, opts = {}) {
       pendingRaw = null;
       if (!result.keepGoing) {
         const summary = result.summary || action.summary || 'task complete';
+        // Declaring done does not end a run the validation layer is holding.
+        // The recorded escape: an unanswered hold, and the model exits with
+        // "It says it has finished" at 1 of 6 steps - done as a way around
+        // the gate. A question ("which option?") may end the run; walking
+        // away from an unanswered hold may not.
+        try {
+          const V = globalThis.Validation;
+          if (V?.isRunning?.()) {
+            const g = await V.allow('finish the task');
+            if (g && g.allowed === false) {
+              await _bhAgentLog({ kind: 'info', step: step + 1,
+                text: `Tried to finish while the person is still being waited on; continuing. ${g.say || ''}` });
+              bhAgentInterject(`You are not done. ${g.say || 'Something is waiting on the person.'} `
+                + 'Wait for their answer, keep observing the page, and do not declare done again until nothing is waiting.');
+              continue;
+            }
+          }
+        } catch { /* the guard must never break a legitimate finish */ }
         await _bhAgentPatch({ status: 'done', endedAt: Date.now(), summary });
         await _bhAgentLog({ kind: 'done', text: summary });
         _bhAgentNotify('done', task, summary);
