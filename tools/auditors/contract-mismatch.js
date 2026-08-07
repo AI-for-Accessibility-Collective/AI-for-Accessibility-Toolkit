@@ -104,6 +104,8 @@ const manyProducts = (F, c) => {
            + `They are not in what I'd suggest.`,
         from: `${S.count} product prices`, answerable: false,
         paradigmHint: 4,
+        control: { label: 'Read me what was skipped', action: 'compare-diff',
+                   decline: 'Fine as is' },
       });
     }
   }
@@ -116,6 +118,8 @@ const manyProducts = (F, c) => {
       say: `I could see photos for ${S.count - S.noPhoto} of the ${S.count}. `
          + `The rest I have only read about.`,
       from: `${S.noPhoto} tiles with no reachable image`, answerable: false,
+      control: { label: 'Describe the photos', action: 'photos-describe',
+                 decline: 'Got it' },
     });
   }
 
@@ -151,6 +155,8 @@ const manyProducts = (F, c) => {
         say: `They differ most on ${top.what}: ${top.says}. `
            + `On ${next.what} they are closer together.`,
         from: `${S.count} products compared`, answerable: true,
+        control: { label: 'Read me the differences', action: 'compare-diff',
+                   decline: 'Fine as is' },
       });
     }
   }
@@ -408,7 +414,9 @@ const reviewOrder = (F, c) => {
   if (total && lim && total > lim) {
     out.push({ widget: 'The spending cap',
                say: `${money(total)} order. Over the ${money(lim)} you set.`,
-               from: F.orderTotal.from, contradicts: true, answerable: true });
+               from: F.orderTotal.from, contradicts: true, answerable: true,
+               control: { label: 'Hold on, check it with me', action: 'approve-change',
+                          decline: 'Go ahead' } });
   }
 
   if (F.cardLabel?.value && !F.cardLastFour?.value) {
