@@ -960,14 +960,72 @@ async function wireAgentWatch() {
   // What the agent says about itself. It already publishes status and a log
   // for the popup; this is the same state, surfaced where the person actually
   // is — on the page, next to the box they typed into.
+  // The log speaks in engine terms - batch prefixes, "terminates sequence",
+  // "Screenshot skipped this step". None of that is what the agent is DOING,
+  // and showing whichever line happened to be last produced sentences like
+  // "It's Action scroll terminates sequence; skipping 2 remaining." So: only
+  // real actions feed this line, the action name is said in plain words, and
+  // the model's own reason rides along when it reads like one.
+  const PLAIN_ACTION = {
+    click: 'clicking', click_index: 'clicking',
+    type: 'typing', type_index: 'typing', fill_input: 'filling in a field',
+    press_key: 'pressing a key', upload_file: 'attaching a file',
+    select_dropdown: 'picking from a menu', dropdown_options: 'reading a menu',
+    navigate: 'opening a page', open_tab: 'opening a new tab',
+    switch_tab: 'switching tabs', close_tab: 'closing a tab',
+    go_back: 'going back a page', go_forward: 'going forward a page',
+    refresh: 'reloading the page', scroll: 'reading down the page',
+    wait: 'waiting for the page', wait_for_element: 'waiting for the page',
+    wait_for_network_idle: 'waiting for the page',
+    handle_dialog: 'answering a popup', js: 'reading the page',
+    read_skill: 'checking its notes', write_skill: 'writing itself a note',
+    done: 'finishing up',
+  };
   const pushAgent = (a) => {
     if (!a) return AgentWatch.setAgent(null);
-    const last = (a.log || []).filter((l) => l.kind !== 'error').slice(-1)[0];
+    const log = a.log || [];
+    const last = log.filter((l) => l.kind === 'action').slice(-1)[0];
+    let doing = null;
+    if (last) {
+      // The model's reason is written like a commit message ("Clicking the
+      // first result that isn't sponsored"). Strip the batch prefix, drop
+      // raw-JSON fallbacks, lowercase the verb so it continues "It's ...".
+      let r = String(last.text || '').replace(/^\[\d+\/\d+\]\s*/, '')
+        .split(/[.\n]/)[0].trim();
+      if (r.startsWith('{')) r = '';
+      if (r) r = r[0].toLowerCase() + r.slice(1);
+      const verb = PLAIN_ACTION[last.action];
+      doing = (/^\w+ing\b/.test(r) ? r
+        : verb ? (r ? `${verb} (${r})` : verb) : r || null);
+      if (doing) doing = doing.slice(0, 110);
+    }
+    // Its own words for what it finished, when it says it finished - in
+    // full, markdown stripped. Truncating this to 140 characters turned the
+    // agent's "here are three options, which one?" into unreadable garbage.
+    const doneEntry = log.filter((l) => l.kind === 'done').slice(-1)[0];
+    const summary = doneEntry
+      ? String(doneEntry.text || '').replace(/\*\*/g, '').replace(/(?:^|\s)\*\s/g, ' ')
+          .replace(/\s+/g, ' ').trim()
+      : null;
+    // When the agent's reply offers numbered quoted choices, they become
+    // buttons - the person answers by pressing, not by retyping a query.
+    let options = summary
+      ? [...summary.matchAll(/\d+\.\s*"([^"]+)"/g)].map((m) => m[1]).slice(0, 4)
+      : [];
+    if (!options.length && doneEntry) {
+      // Unquoted but bold-marked choices, parsed from the raw text before
+      // the markdown was stripped.
+      options = [...String(doneEntry.text || '').matchAll(/\*\*"?([^*"]{3,60}?)"?\*\*/g)]
+        .map((m) => m[1].trim()).slice(0, 4);
+    }
     AgentWatch.setAgent({
       status: a.status,
-      // The agent's own sentence for the step it is on, trimmed to something
-      // that fits beside the box rather than a paragraph of reasoning.
-      doing: last && last.text ? String(last.text).split(/[.\n]/)[0].slice(0, 90) : null,
+      step: last?.step || null,
+      doing,
+      // The verb alone, for the headline - short enough to never cut mid-word.
+      verb: (last && PLAIN_ACTION[last.action]) || null,
+      summary,
+      options,
     });
   };
   chrome.storage.local.get('bhAgent').then((r) => pushAgent(r.bhAgent));
