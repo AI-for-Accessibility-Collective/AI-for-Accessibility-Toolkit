@@ -76,24 +76,12 @@ export function livingPlan(steps, { compact = false, totalPhases = 6 } = {}) {
   // but it renamed a concept that already has a name and is used across the
   // project, the paper and the corpus — so the surface and the writing about
   // it stopped matching.
-  const failed = steps.filter((s) => s.state !== 'done').length;
-  const box = section('aw-plan',
-    failed ? `Living Plan · ${failed} I couldn't do` : 'Living Plan');
+  const box = section('aw-plan', 'Living Plan');
 
   // How far through, at a glance. Six phases are known in advance, so this is
   // a real fraction rather than a guess — and where a task has stalled is
   // exactly what a person who delegated it cannot otherwise see.
   const done = steps.filter((s) => s.state === 'done').length;
-  const bar = el('div', 'aw-plan-bar');
-  bar.setAttribute('role', 'progressbar');
-  bar.setAttribute('aria-valuenow', String(done));
-  bar.setAttribute('aria-valuemin', '0');
-  bar.setAttribute('aria-valuemax', String(totalPhases));
-  bar.setAttribute('aria-label', `${done} of ${totalPhases} steps done`);
-  const fill = el('div', 'aw-plan-fill');
-  fill.style.width = `${Math.round((done / Math.max(1, totalPhases)) * 100)}%`;
-  bar.appendChild(fill);
-  box.appendChild(bar);
   box.appendChild(el('p', 'aw-plan-count', `${done} of ${totalPhases} steps`));
 
   const list = el('ol', 'aw-plan-list');
@@ -197,7 +185,7 @@ export function rulebook(rules, { offer, onPromote, onToggle } = {}) {
   const n = (rules || []).length;
   // Opens itself only when there is something to answer.
   const box = section('aw-rules',
-    n ? `Rulebook · ${n} in force` : 'Rulebook · empty', !!offer);
+    'Rulebook', !!offer);
 
   if (!n) {
     box.appendChild(el('p', 'aw-rules-empty',
@@ -254,13 +242,15 @@ export function surfaceCss(id, base, muted, line, high) {
   text-transform: uppercase; letter-spacing: .5px; color: ${muted};
 }
 #${id} .aw-surf[open] > summary.aw-surf-head { margin-bottom: 6px; color: inherit; }
-#${id} .aw-surf > summary:focus-visible { outline: 3px solid #06c; outline-offset: 2px; }
+#${id} .aw-surf > summary:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
 
 /* the living plan */
 #${id} .aw-plan-list { list-style: none; margin: 0; padding: 0; }
 #${id} .aw-plan-step {
-  display: flex; flex-direction: column; padding: 3px 0 3px 17px;
-  position: relative; font-size: ${px(0.92)};
+  /* One line per step, like the prompt's rows: the step on the left, what
+     came of it on the right. A long outcome wraps under, still right-set. */
+  display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 9px;
+  padding: 3px 0 3px 17px; position: relative; font-size: ${px(0.86)};
 }
 #${id} .aw-plan-step::before { position: absolute; left: 0; font-weight: 700; }
 #${id} .aw-plan-done::before    { content: "✓"; }
@@ -269,15 +259,18 @@ export function surfaceCss(id, base, muted, line, high) {
    because by ear the alternative is silence. */
 #${id} .aw-plan-skipped::before { content: "—"; }
 #${id} .aw-plan-skipped .aw-plan-what { font-weight: 600; }
-#${id} .aw-plan-detail { color: ${muted}; font-size: ${px(0.84)}; }
+#${id} .aw-plan-detail {
+  color: ${muted}; font-size: ${px(0.78)};
+  margin-left: auto; text-align: right; flex: 0 1 auto;
+}
 #${id} .aw-plan-note {
-  margin: 6px 0 0; font-size: ${px(0.84)}; font-weight: 600;
+  margin: 6px 0 0; font-size: ${px(0.78)}; font-weight: 600;
 }
 
 /* the living prompt */
 #${id} .aw-prompt-list { margin: 0; }
 #${id} .aw-prompt-row {
-  display: flex; gap: 9px; padding: 2px 0; font-size: ${px(0.92)};
+  display: flex; gap: 9px; padding: 2px 0; font-size: ${px(0.86)};
 }
 #${id} .aw-prompt-row dt { flex: 0 0 32%; color: ${muted}; margin: 0; }
 #${id} .aw-prompt-row dd {
@@ -294,55 +287,52 @@ export function surfaceCss(id, base, muted, line, high) {
   outline: none; border-bottom: 1px solid currentColor; background: rgba(0,0,0,.03);
 }
 #${id} .aw-prompt-edit {
-  flex: 0 0 auto; font: inherit; font-size: ${px(0.8)}; background: none;
+  flex: 0 0 auto; font: inherit; font-size: ${px(0.78)}; background: none;
   border: 0; padding: 0; color: inherit; opacity: .55;
   text-decoration: underline; cursor: pointer;
 }
 #${id} .aw-prompt-edit:hover { opacity: 1; }
 #${id} .aw-prompt-stale {
-  margin: 7px 0 0; padding: 7px 9px; font-size: ${px(0.88)};
+  margin: 7px 0 0; padding: 7px 9px; font-size: ${px(0.86)};
   border: 1px solid currentColor; border-radius: 7px;
 }
 
-/* the living plan's progress */
-#${id} .aw-plan-bar {
-  height: 4px; border-radius: 2px; background: currentColor;
-  opacity: .18; margin: 2px 0 5px; overflow: hidden;
-}
-#${id} .aw-plan-fill { height: 100%; background: currentColor; opacity: 1; }
 #${id} .aw-plan-count {
-  margin: 0 0 7px; font-size: ${px(0.8)}; color: ${muted};
+  margin: 0 0 7px; font-size: ${px(0.78)}; color: ${muted};
 }
 
 /* the rulebook */
-#${id} .aw-rules-empty { margin: 0; font-size: ${px(0.88)}; color: ${muted}; }
+#${id} .aw-rules-empty { margin: 0; font-size: ${px(0.86)}; color: ${muted}; }
 #${id} .aw-rules-list { list-style: none; margin: 0; padding: 0; }
 #${id} .aw-rules-rule {
   display: flex; gap: 8px; align-items: baseline; padding: 3px 0;
-  font-size: ${px(0.92)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-rules-toggle {
   flex: 0 0 auto; width: ${px(1.9)}; height: ${px(1.05)}; padding: 1px;
-  border: 1px solid currentColor; border-radius: 999px;
-  background: none; cursor: pointer; position: relative;
+  border: 1px solid ${high ? 'currentColor' : '#1a73e8'}; border-radius: 999px;
+  background: ${high ? 'none' : '#1a73e8'}; cursor: pointer; position: relative;
 }
 #${id} .aw-rules-knob {
   display: block; width: ${px(0.72)}; height: ${px(0.72)}; border-radius: 50%;
-  background: currentColor; transform: translateX(${px(0.82)});
+  background: ${high ? 'currentColor' : '#fff'}; transform: translateX(${px(0.82)});
   ${'' /* off slides back, and the border stays so the track is still visible */}
 }
-#${id} .aw-rules-toggle[aria-checked="false"] { opacity: .55; }
+#${id} .aw-rules-toggle[aria-checked="false"] {
+  border-color: ${high ? 'currentColor' : '#9ca3af'}; background: none; opacity: ${high ? '.55' : '1'};
+}
+#${id} .aw-rules-toggle[aria-checked="false"] .aw-rules-knob { background: ${high ? 'currentColor' : '#9ca3af'}; }
 #${id} .aw-rules-toggle[aria-checked="false"] .aw-rules-knob { transform: translateX(0); }
-#${id} .aw-rules-toggle:focus-visible { outline: 3px solid #06c; outline-offset: 2px; }
+#${id} .aw-rules-toggle:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
 #${id} .aw-rules-off { opacity: .5; }
 #${id} .aw-rules-offer {
   margin: 9px 0 0; padding: 9px 11px; border-radius: 8px;
   border: ${high ? '2px' : '1px'} solid ${line};
 }
 #${id} .aw-rules-because {
-  margin: 0 0 3px; font-size: ${px(0.82)}; color: ${muted};
+  margin: 0 0 3px; font-size: ${px(0.78)}; color: ${muted};
 }
-#${id} .aw-rules-ask { margin: 0 0 8px; font-size: ${px(0.95)}; }
+#${id} .aw-rules-ask { margin: 0 0 8px; }
 #${id} .aw-rules-row { display: flex; gap: 8px; flex-wrap: wrap; }
 #${id} .aw-rules-row .aw-do { margin-top: 0; }
 `;

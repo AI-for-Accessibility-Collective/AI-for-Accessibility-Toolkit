@@ -423,7 +423,7 @@ function magnifier(f) {
   const foot = el('p', 'aw-mag-foot');
   foot.append(el('span', 'aw-mag-where', d.where || 'the live page'));
   // "live" and the time are the claim: this was read now, not remembered.
-  foot.append(el('span', 'aw-mag-when', d.when ? `live · ${d.when}` : 'live'));
+  foot.append(el('span', 'aw-mag-when', d.when ? `live, ${d.when}` : 'live'));
   box.appendChild(foot);
   return box;
 }
@@ -573,14 +573,14 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
    hover state. */
 #${id} .aw-act { cursor: pointer; border-radius: 5px; }
 #${id} .aw-act:hover { background: rgba(0,0,0,.05); }
-#${id} .aw-act:focus-visible { outline: 3px solid #06c; outline-offset: 1px; }
+#${id} .aw-act:focus-visible { outline: 3px solid #1a73e8; outline-offset: 1px; }
 #${id} .aw-act::after {
   content: "›"; margin-left: 5px; opacity: .5; font-weight: 700;
 }
 #${id} .aw-act-inline {
   display: inline-block; margin-top: 7px; font: inherit;
-  font-size: ${px(0.88)}; padding: 3px 10px; border: 1px solid ${line};
-  border-radius: 999px; background: none; color: inherit;
+  font-size: ${px(0.86)}; padding: 5px 12px; border: 1px solid ${line};
+  border-radius: 6px; background: none; color: inherit;
 }
 
 /* 1 — proportion and marked scale */
@@ -588,15 +588,15 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
   display: block; overflow: visible; margin-top: 6px;
 }
 #${id} .aw-scale-src {
-  margin: 2px 0 0; font-size: ${px(0.78)}; color: ${muted}; font-style: italic;
+  margin: 2px 0 0; font-size: ${px(0.78)}; color: ${muted};
 }
 
 /* 2 — triangulation */
-#${id} .aw-tri-claim { margin: 0 0 5px; font-style: italic; }
+#${id} .aw-tri-claim { margin: 0 0 5px; color: ${muted}; font-size: ${px(0.86)}; }
 #${id} .aw-tri-list { list-style: none; margin: 0; padding: 0; }
 #${id} .aw-tri-src {
   display: flex; gap: 7px; padding: 3px 0 3px 15px; position: relative;
-  font-size: ${px(0.92)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-tri-src::before { position: absolute; left: 0; font-weight: 700; }
 #${id} .aw-tri-src.aw-yes::before { content: "+"; }
@@ -606,13 +606,13 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 #${id} .aw-tri-said { flex: 1 1 auto; }
 #${id} .aw-tri-verdict {
   margin: 6px 0 0; padding-top: 5px; border-top: 1px solid ${line};
-  font-weight: 600; font-size: ${px(0.92)};
+  font-weight: 600; font-size: ${px(0.86)};
 }
 
 /* 3 — diff */
 #${id} .aw-diff-row {
   display: flex; gap: 8px; padding: 4px 0 4px 15px; position: relative;
-  font-size: ${px(0.92)}; border-top: 1px solid ${line};
+  font-size: ${px(0.86)}; border-top: 1px solid ${line};
 }
 #${id} .aw-diff-row > span { flex: 1 1 50%; min-width: 0; overflow-wrap: anywhere; }
 #${id} .aw-diff-head {
@@ -629,7 +629,7 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 /* 4 — coverage */
 #${id} .aw-cov-row {
   display: flex; align-items: center; gap: 8px; padding: 3px 0;
-  font-size: ${px(0.92)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-cov-what { flex: 0 0 30%; color: ${muted}; }
 #${id} .aw-cov-row svg { flex: 1 1 auto; }
@@ -643,11 +643,11 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
   border: ${high ? '2px' : '1px'} solid currentColor; border-radius: 8px;
   padding: 9px 11px;
 }
-#${id} .aw-lock-head { margin: 0 0 6px; font-weight: 600; font-size: ${px(0.92)}; }
+#${id} .aw-lock-head { margin: 0 0 6px; font-weight: 600; font-size: ${px(0.86)}; }
 #${id} .aw-lock-list { list-style: none; margin: 0; padding: 0; }
 #${id} .aw-lock-fact {
   display: flex; gap: 8px; padding: 2px 0 2px 15px; position: relative;
-  font-size: ${px(0.92)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-lock-fact::before { position: absolute; left: 0; font-weight: 700; }
 #${id} .aw-lock-fact.aw-yes::before { content: "✓"; }
@@ -658,7 +658,7 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 #${id} .aw-mag-quote {
   margin: 0; padding: 6px 0 6px 10px; border-left: 3px solid currentColor;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: ${px(0.88)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-mag-foot {
   display: flex; justify-content: space-between; gap: 8px;
@@ -669,15 +669,15 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 #${id} .aw-sw-list { list-style: none; margin: 0; padding: 0; }
 #${id} .aw-sw-rule {
   display: flex; gap: 8px; align-items: baseline; padding: 3px 0;
-  font-size: ${px(0.92)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-sw-toggle {
-  flex: 0 0 auto; font-size: ${px(0.7)}; text-transform: uppercase;
+  flex: 0 0 auto; font-size: ${px(0.78)}; text-transform: uppercase;
   letter-spacing: .5px; border: 1px solid currentColor; border-radius: 3px;
   padding: 0 4px;
 }
 #${id} .aw-sw-body { display: flex; flex-direction: column; min-width: 0; }
-#${id} .aw-sw-fired-note { color: ${muted}; font-size: ${px(0.84)}; }
+#${id} .aw-sw-fired-note { color: ${muted}; font-size: ${px(0.78)}; }
 #${id} .aw-sw-fired .aw-sw-name { font-weight: 600; }
 
 /* 9 — audit sheet */
@@ -691,7 +691,7 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 #${id} .aw-audit-list { list-style: none; margin: 0; padding: 0; }
 #${id} .aw-audit-line {
   display: flex; gap: 8px; padding: 3px 0 3px 15px; position: relative;
-  font-size: ${px(0.92)};
+  font-size: ${px(0.86)};
 }
 #${id} .aw-audit-line::before { position: absolute; left: 0; font-weight: 700; }
 #${id} .aw-audit-line.aw-yes::before { content: "✓"; }
@@ -701,11 +701,11 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 
 /* 10 — numbered path */
 #${id} .aw-path-list { list-style: none; margin: 0; padding: 0; counter-reset: p; }
-#${id} .aw-path-step { display: flex; gap: 9px; padding: 4px 0; font-size: ${px(0.92)}; }
+#${id} .aw-path-step { display: flex; gap: 9px; padding: 4px 0; font-size: ${px(0.86)}; }
 #${id} .aw-path-n {
   flex: 0 0 auto; width: ${px(1.35)}; height: ${px(1.35)}; line-height: ${px(1.35)};
   text-align: center; border-radius: 50%; border: 1px solid currentColor;
-  font-size: ${px(0.74)};
+  font-size: ${px(0.78)};
 }
 #${id} .aw-path-body { display: flex; flex-direction: column; min-width: 0; }
 #${id} .aw-path-who { font-size: ${px(0.78)}; color: ${muted}; }
@@ -717,7 +717,7 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 /* 11 — funnel */
 #${id} .aw-fun svg { display: block; }
 #${id} .aw-fun-said { margin: 4px 0 0; font-weight: 600; }
-#${id} .aw-fun-rest { margin: 3px 0 0; font-size: ${px(0.84)}; color: ${muted}; }
+#${id} .aw-fun-rest { margin: 3px 0 0; font-size: ${px(0.78)}; color: ${muted}; }
 
 /* 12 — fork */
 #${id} .aw-fork { display: flex; gap: 9px; }
@@ -727,10 +727,10 @@ export function shapeCss(id, base, muted, line, high, bg = '#fff') {
 }
 #${id} .aw-fork-picked { border-color: currentColor; }
 #${id} .aw-fork-tag {
-  display: block; font-size: ${px(0.74)}; text-transform: uppercase;
+  display: block; font-size: ${px(0.78)}; text-transform: uppercase;
   letter-spacing: .4px; color: ${muted}; margin-bottom: 3px;
 }
-#${id} .aw-fork-name { margin: 0 0 3px; font-weight: 600; font-size: ${px(0.92)}; }
-#${id} .aw-fork-fact { margin: 0; font-size: ${px(0.88)}; color: ${muted}; }
+#${id} .aw-fork-name { margin: 0 0 3px; font-weight: 600; font-size: ${px(0.86)}; }
+#${id} .aw-fork-fact { margin: 0; font-size: ${px(0.86)}; color: ${muted}; }
 `;
 }
