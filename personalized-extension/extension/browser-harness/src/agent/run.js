@@ -293,6 +293,11 @@ export async function bhAgentRun(task, opts = {}) {
 
   try {
     await H.attach(tabId);
+    // Anything queued for a run that already ended belongs to that run. This is
+  // module scope and nothing cleared it, so an interjection written after the
+  // loop died — "you are back, the person did the size themselves" from a hand
+  // back — was delivered to the NEXT task at step 1 as [You interrupted].
+  _bhPending.length = 0;
     const history = [];
     // Carries between iterations: when the previous turn produced a parse
     // error or a failing action, the next prompt echoes the raw output and

@@ -112,7 +112,13 @@ export function decide(f, state = {}) {
   // most people pick is the one that removes the protection. Asides and
   // ambients move freely; the contradiction gate does not.
   const shift = insistenceShift(state);
-  const locked = level === 'stop' && f.contradicts;
+  // Locked covers every reason a finding became a stop, not only contradiction.
+  // It used to be `contradicts` alone, so a money-moving stop — the general
+  // form of the irreversibility rule, and this file's own headline — could be
+  // softened to an aside by one preference, and an aside never enters the
+  // waiting list. "Asking for less is a request for less chatter, not less
+  // safety" has to apply to both reasons or it applies to neither.
+  const locked = level === 'stop';
   if (shift && !locked) {
     const moved = LEVELS[Math.max(0, Math.min(2, ORDER[level] + shift))];
     if (moved !== level) {
@@ -124,7 +130,12 @@ export function decide(f, state = {}) {
 
   // A stop the person cannot answer is a dead end. Drop it to an aside so they
   // hear it and keep moving, rather than being blocked with no way through.
-  if (level === 'stop' && f.answerable === false) {
+  // ...unless the stop is one of the locked kinds. This sat after the lock and
+  // had no exception, so `{contradicts: true, answerable: false}` came out as
+  // an aside — the lock stopped a preference softening it and this softened it
+  // anyway. Nothing emits that pair today, but `answerable` is exactly the
+  // field that moves onto the model next, the way `contradicts` just did.
+  if (level === 'stop' && f.answerable === false && !locked) {
     return { level: 'aside', why: `${why}, but there is nothing to decide here` };
   }
   return { level, why };

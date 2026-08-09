@@ -106,7 +106,14 @@ export function createRun(contract, opts = {}) {
       const r = render(f, level, channels);
       rendered.push({ ...r, why });
       if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
-      if (r.spoken?.holds) waiting.push({ widget: f.widget, ask: f.say, phase });
+      // Driven by the level, not by whether a spoken rendering exists.
+      // render() returns spoken:null when channels.speech is false, so
+      // `r.spoken?.holds` was undefined, nothing ever entered `waiting`, and
+      // run.gate() returned allowed forever — a display preference silently
+      // removing the gate, with no error anywhere. Holding is not a speech
+      // concern. `validationStart` forwards arbitrary opts from any surface,
+      // and `speech:false` is the obvious shape of a visual-only profile.
+      if (level === 'stop') waiting.push({ widget: f.widget, ask: f.say, phase });
     }
 
     // One entry per page, updated — not one per read.

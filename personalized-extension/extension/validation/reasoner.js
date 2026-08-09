@@ -106,8 +106,18 @@ export function flattenModel(model) {
   const questions = [];
   const nodeIds = [];
   const labels = {};
+  // Two nodes sharing an id both push a question under it, and byId is
+  // first-wins, so both questions receive the SAME answer row and both become
+  // findings — the answer to one question read back as the answer to another,
+  // with a genuine verified quote attached to the wrong claim. A hand-checked
+  // gold cannot have this; a generated model can.
+  const seenIds = new Set();
 
   const walk = (n, path) => {
+    if (seenIds.has(String(n.id))) {
+      throw new Error(`task model has two nodes with id ${n.id}`);
+    }
+    seenIds.add(String(n.id));
     nodeIds.push(n.id);
     labels[n.id] = n.label;
     const here = path.concat(n.label).filter(Boolean);
@@ -337,13 +347,22 @@ PAGE>>>`;
  * what a response cut off by the output cap looks like, and what the retry is
  * for.
  */
-export function parseJsonLoose(text) {
+export function parseJsonLoose(text, wants) {
   const raw = String(text ?? '');
   const stripped = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '');
   for (const candidate of [raw, stripped]) {
     try {
       const v = JSON.parse(candidate);
-      if (v && typeof v === 'object') return v;
+      // An array is an object, so `[]` used to parse as a success and then
+      // fail `Array.isArray(parsed.answers)` further down, and readPage
+      // returned every row null with ok:true — a schema violation reading as
+      // "checked, nothing to report", which is the one failure shape this
+      // module must never produce. `{}`, `[]` and `{"answers": null}` all did
+      // it. The caller says what it needs and a reply without it is a failed
+      // parse, which is what the retry is for.
+      if (!v || typeof v !== 'object') continue;
+      if (typeof wants === 'function' && !wants(v)) continue;
+      return v;
     } catch { /* try the next form */ }
   }
   return null;
@@ -543,13 +562,16 @@ export function verifyNoticed(items, pageText) {
  *
  * @returns {Promise<Object|null>} the parsed object, or null if none arrived
  */
-async function callJson(prompt, schema, opts, log) {
+async function callJson(prompt, schema, opts, log, wants) {
   const attempts = opts.attempts ?? MAX_ATTEMPTS;
   const deadline = Date.now() + (opts.budgetMs ?? BUDGET_MS);
   for (let i = 1; i <= attempts; i += 1) {
     // A retry that starts after the budget is spent only makes the person wait
     // longer for the same answer.
-    if (i > 1 && Date.now() > deadline) {
+    // Checked before every attempt including the first retry, and the
+    // remaining budget is passed down, so attempt 3 cannot start at t=60s and
+    // run to t=90s against a documented 75s.
+    if (i > 1 && Date.now() >= deadline) {
       log.push({ attempt: i, error: 'budget spent before the retry' });
       break;
     }
@@ -559,8 +581,12 @@ async function callJson(prompt, schema, opts, log) {
         mimeType: 'application/json',
         responseSchema: schema,
         maxOutputTokens: opts.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
+        // Copying characters exactly and judging contradictsAsk are not
+        // creative tasks. The shared caller defaults to 0.7, which raises the
+        // discard rate and the contradiction error rate for no benefit.
+        temperature: opts.temperature ?? 0,
       });
-      const p = parseJsonLoose(text);
+      const p = parseJsonLoose(text, wants);
       if (!p) {
         // What a response cut off by the output cap looks like from here.
         log.push({ attempt: i, ms: Date.now() - t0,
@@ -597,7 +623,8 @@ export async function readPage(flat, pageText, opts = {}) {
     return fail(flat, guard, log, 'no model caller is wired up', started);
   }
 
-  const parsed = await callJson(prompt, SCHEMA, opts, log);
+  const parsed = await callJson(prompt, SCHEMA, opts, log,
+    (v) => Array.isArray(v.answers));
 
   if (!parsed) {
     return fail(flat, guard, log, log[log.length - 1]?.error || 'the call failed', started);
@@ -610,6 +637,15 @@ export async function readPage(flat, pageText, opts = {}) {
   for (const r of Array.isArray(parsed.answers) ? parsed.answers : []) {
     if (r && r.id != null && !byId.has(String(r.id))) byId.set(String(r.id), r);
   }
+  // Rows whose id matches no question. Dropping these silently made an id
+  // mismatch read as `answered: 0, discarded: 0, ok: true` — identical to a
+  // page that genuinely said nothing. The live trigger: flattenModel emits
+  // `4.1#1` and `4.1#2` for a node with several questions, while the prompt
+  // tells the model to write ids WITHOUT the `#` suffix for alignedNodes, and
+  // a model that carries that over loses every suffixed answer. The flights
+  // gold's busiest node holds nine.
+  const askedIds = new Set(flat.questions.map((q) => q.id));
+  const unmatchedIds = [...byId.keys()].filter((k) => !askedIds.has(k));
   const rows = flat.questions.map((q) => {
     const r = byId.get(q.id) || { answer: null, quote: null, confidence: null };
     return {
@@ -640,6 +676,10 @@ export async function readPage(flat, pageText, opts = {}) {
     pageText: guard.text,
     meta: {
       asked: flat.questions.length,
+      // Rows the model returned under an id no question carries. Zero is the
+      // expected value; anything else means answers were thrown away.
+      unmatched: unmatchedIds.length,
+      unmatchedIds,
       answered: nonNull.filter((a) => isVerified(a.verify)).length,
       // Counted, never quietly dropped. An answer the page cannot back up is
       // the exact failure this layer exists to catch, so the number it happened
@@ -661,6 +701,7 @@ function fail(flat, guard, log, error, started) {
     ok: false, alignedPhase: 'none', alignedNodes: [], answers: [], noticed: [],
     pageText: guard.text,
     meta: { asked: flat.questions.length, answered: 0, discarded: 0,
+            unmatched: 0, unmatchedIds: [],
             noticedKept: 0, noticedDiscarded: 0, attempts: log.length,
             ms: Date.now() - started,
             guard: { truncated: guard.truncated, origChars: guard.origChars,
@@ -777,7 +818,10 @@ export async function askPage(question, pageText, opts = {}) {
   const parsed = await callJson(
     buildAskPrompt(q, guard.text, opts), ASK_SCHEMA,
     { ...opts, maxOutputTokens: opts.maxOutputTokens ?? ASK_MAX_OUTPUT_TOKENS },
-    log);
+    log,
+    // An answer field must be present, even as null. Without this a reply of
+    // `[]` parsed as a success and the person was told the page does not say.
+    (v) => 'answer' in v);
 
   if (!parsed) {
     const error = log[log.length - 1]?.error || 'the call failed';
@@ -790,9 +834,19 @@ export async function askPage(question, pageText, opts = {}) {
   // An honest absence. The majority answer for most questions about most
   // pages, and the one a layer like this most has to be willing to give.
   if (raw == null || NON_ANSWERS.has(String(raw).trim().toLowerCase())) {
+    // A truncated page is not a page that does not say it. The guard cuts at
+    // 40,000 characters, and on the 310k-character results page an answer can
+    // sit 60,000 characters past the cut — so "This page does not say" was a
+    // claim about the page, stated as fact, to someone who cannot check it.
+    const g = guard.truncated;
     return { ok: true, question: q, answer: null, quote: null, confidence,
-      verified: 'null', verifyLevel: null,
-      say: 'This page does not say.', meta: meta() };
+      verified: 'null', verifyLevel: null, truncated: g,
+      say: g
+        ? `I read the first ${guard.sentChars.toLocaleString()} characters of `
+          + `this page and they do not say. The page is `
+          + `${guard.origChars.toLocaleString()} characters long.`
+        : 'This page does not say.',
+      meta: meta() };
   }
 
   const { verify, level } = verifyQuoteAt(parsed.quote, guard.text);
