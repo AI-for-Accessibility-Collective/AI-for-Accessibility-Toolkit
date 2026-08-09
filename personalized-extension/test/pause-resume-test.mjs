@@ -60,6 +60,7 @@ globalThis.BrowserHarness = {
 
 const {
   bhAgentRun, bhAgentPause, bhAgentResume, bhAgentStop, bhAgentIsPaused,
+  bhAgentInterject,
 } = await import('../extension/browser-harness/src/agent/run.js');
 const S = await import('../extension/browser-harness/src/agent/state.js');
 
@@ -143,6 +144,27 @@ const state = async () => (await chrome.storage.local.get('bhAgent')).bhAgent ||
   const after = prompts[prompts.length - 1];
   ok(!/Previous attempt failed/.test(after),
     'across a pause it is not - a retry decided against the old page is dropped');
+}
+
+// ── what was said while it was held is heard before it acts ─────────────────
+{
+  // This is the order handing back depends on: the account of what changed
+  // while the agent was out has to reach it BEFORE its next action, or it acts
+  // on the old page and hears the news afterwards.
+  prompts.length = 0;
+  script = [() => { bhAgentPause({ reason: 'my turn' }); return WAIT; }];
+  const run = bhAgentRun('held and told', { tabId: 20, maxSteps: 40 });
+  await sleep(250);
+  ok(bhAgentIsPaused() === true, 'held');
+
+  bhAgentInterject('While you were out the person picked size 5.');
+  script = [DONE];
+  bhAgentResume({ rePerceive: true });
+  await run;
+
+  const next = prompts[prompts.length - 1];
+  ok(/the person picked size 5/.test(next),
+    'what was said while it was held is in the very next prompt, not the one after');
 }
 
 // ── the caller who does not want to be told ─────────────────────────────────

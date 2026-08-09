@@ -1270,6 +1270,35 @@ const Validation = {
 
 globalThis.Validation = Validation;
 
+// The three ways the person gets back in, under the names the design uses.
+// Everything here is already a method on Validation; these exist so the code
+// can be read against API.md without a translation step, and so a surface can
+// take one mode without taking the whole session object.
+//
+//   interrupt    holds or stops the agent
+//   interrogate  answers a question and does not touch the agent
+//   control      the agent stops acting, keeps watching, then resumes
+//
+// Interrogate not touching the agent is the one that matters. Most of the time
+// the person wants more information, not different behaviour, and every other
+// control in this extension steers.
+globalThis.ValidationInterrupt = {
+  pause: (o) => globalThis.BrowserAgent?.pause?.(o),
+  resume: (o) => globalThis.BrowserAgent?.resume?.(o),
+  stop: (reason) => globalThis.BrowserAgent?.stop?.(reason),
+  holdClock,
+};
+globalThis.ValidationInterrogate = {
+  ask: (q, o) => Validation.ask(q, o),
+  why: (ref) => Validation.why(ref),
+};
+globalThis.ValidationControl = {
+  handOver: (o) => Validation.handOver(o),
+  handBack: (o) => Validation.handBack(o),
+  status: () => Validation.status(),
+};
+globalThis.ValidationTrace = Validation.trace;
+
 // Exposed separately so the agent's start route can parse a sentence into a
 // contract before a run exists.
 globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery };

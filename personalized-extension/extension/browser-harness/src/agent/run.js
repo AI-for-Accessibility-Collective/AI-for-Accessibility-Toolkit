@@ -299,16 +299,22 @@ export async function bhAgentRun(task, opts = {}) {
     // the error so the model can correct itself instead of aborting the run.
     let pendingError = null;
     let pendingRaw = null;
+    // Anything the person said since the last action, as their own turn.
+    // Called twice per iteration: once before the pause check and once after
+    // it. The second call is not tidiness — being held is exactly when someone
+    // says something, and without it the news arrived one action too late.
+    const drainPending = async () => {
+      while (_bhPending.length) {
+        const said = _bhPending.shift();
+        history.push({ role: 'user', content: `[You interrupted] ${said}` });
+        await _bhAgentLog({ kind: 'info', text: `You: ${said}` });
+      }
+    };
     for (let step = 0; step < maxSteps; step++) {
       setStep(step + 1);
-        // Anything the person said since the last action goes in first, as
-        // their own turn. Ahead of the stop check, because "stop" is one of
-        // the things they may have just said.
-        while (_bhPending.length) {
-          const said = _bhPending.shift();
-          history.push({ role: 'user', content: `[You interrupted] ${said}` });
-          await _bhAgentLog({ kind: 'info', text: `You: ${said}` });
-        }
+      // Ahead of the stop check, because "stop" is one of the things they may
+      // have just said.
+      await drainPending();
       // Held. This is the point in an iteration where nothing is in flight —
       // nothing enumerated yet, no model call open, no action running — so the
       // loop can simply not go on, and no cancellation machinery is needed.
@@ -326,6 +332,10 @@ export async function bhAgentRun(task, opts = {}) {
           await _bhAgentPatch({ status: 'running' });
           await _bhAgentLog({ kind: 'info', step: step + 1, text: 'Resumed.' });
         }
+        // What was said while it was held goes in before it acts. Handing back
+        // states what changed while the agent was out, and that account is
+        // worth nothing if it lands after the next action.
+        await drainPending();
       }
       // What resume({rePerceive}) actually throws away.
       //
