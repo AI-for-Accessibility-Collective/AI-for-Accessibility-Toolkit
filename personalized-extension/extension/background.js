@@ -88,7 +88,13 @@ chrome.webNavigation?.onCompleted?.addListener(async (d) => {
   // ensureRunning, not isRunning: after a worker restart the sync check is
   // false forever and observation silently stops - the person keeps
   // browsing a task the panel still shows, and no page gets checked.
-  if (!(await globalThis.Validation?.ensureRunning?.())) return;
+  //
+  // A live watch is the other reason to read a settle. A watched value outlives
+  // the run that set it — the flights case is keeping the fare watch on after
+  // booking — so "no task is running" stopped being the whole answer to whether
+  // this page is worth looking at. Both checks are one storage read.
+  const running = await globalThis.Validation?.ensureRunning?.();
+  if (!running && !(await globalThis.ValidationWatch?.any?.())) return;
   // Let the page settle. Amazon renders prices and stock after first paint,
   // and reading too early reports absences that are really just lateness.
   setTimeout(() => {
@@ -1280,6 +1286,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
       return true;
     }
+    if (c.action === 'watch-value') {
+      // The same correction hand over got, for the same reason. With no entry
+      // in the map above the label became the instruction — "Watch it for me.
+      // Then tell me what changed." — which is one re-read of the page already
+      // in front of the person, and a watch is the opposite of that. It now
+      // registers a watched value that re-reads on later settles and outlives
+      // the run.
+      globalThis.Validation.watch({ nodeId: c.node, widget: c.widget })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
+    if (c.action === 'watch-stop') {
+      globalThis.Validation.unwatch({ id: c.watchId, nodeId: c.node, widget: c.widget })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
     if (c.action === 'probe-pick') {
       (async () => {
         await globalThis.Validation?.annotate?.({ probe: null });
@@ -1307,6 +1329,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'validationHandBack') {
     globalThis.Validation.handBack({ nodeId: msg.nodeId, tabId: msg.tabId })
       .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationWatch') {
+    globalThis.Validation.watch({ nodeId: msg.nodeId, widget: msg.widget, tabId: msg.tabId })
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationUnwatch') {
+    globalThis.Validation.unwatch({ id: msg.id, nodeId: msg.nodeId, widget: msg.widget })
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationWatches') {
+    globalThis.Validation.watches()
+      .then((w) => sendResponse({ watches: w })).catch((e) => sendResponse({ error: e.message }));
     return true;
   }
   if (msg.type === 'validationStatus') {

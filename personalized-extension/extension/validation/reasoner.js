@@ -797,14 +797,11 @@ const CLUSTER_CONTROLS = {
   receipts: { label: 'Read it back to me', action: 'receipts-readback', decline: 'Got it' },
   undo: { label: 'Undo it', action: 'undo-last', decline: 'Leave it' },
   'hand over': { label: 'Let me do this part', action: 'hand-over', decline: 'Carry on' },
-  // `watch` delegates attention across time rather than reading the page once,
-  // so pressing it should start a monitor and there is no monitor yet. The
-  // control is here because the card defines the pair and a type with no
-  // options renders as a finding you cannot answer. `watch-value` has no entry
-  // in the background action map, so it takes the label fallback there and
-  // reaches the agent as "Watch it for me. Then tell me what changed." That is
-  // a one-shot re-read, not a standing watch. Wiring the monitor loop is the
-  // real work and it is tracked separately.
+  // `watch` delegates attention across time rather than reading the page once.
+  // Pressing it registers a watched value in watch.js and does NOT send the
+  // agent a sentence — the same correction hand over got, and for the same
+  // reason: "Watch it for me. Then tell me what changed." is one re-read of the
+  // page you are already on, which is the one thing a watch is not.
   watch: { label: 'Watch it for me', action: 'watch-value', decline: 'Decide now' },
 };
 
@@ -871,11 +868,15 @@ export function toFindings(result, phase) {
       // falls back to the sentence rather than throwing.
       paradigm: Number.isInteger(a.paradigm) ? a.paradigm : null,
       checkedAgainst: null,
-      // The node travels ON the control, because the overlay hands the control
-      // object back and nothing else. A hand over is scoped by a node, so a
-      // control that arrives without one can only hand over "wherever we are",
-      // which is not what the person pressed.
-      control: control ? { ...control, node: a.node ?? null } : null,
+      // The node and the question travel ON the control, because the overlay
+      // hands the control object back and nothing else. A hand over is scoped
+      // by a node, so a control that arrives without one can only hand over
+      // "wherever we are", which is not what the person pressed — and an
+      // instruction built from the task model needs the question that produced
+      // the finding, which is what `widget` carries.
+      control: control
+        ? { ...control, node: a.node ?? null, widget: a.question ?? null }
+        : null,
       // Not announced unless the model says this is wanted now.
       quiet: a.moment !== ANNOUNCED,
       // Carried for the trace and for the steps that come after this one.

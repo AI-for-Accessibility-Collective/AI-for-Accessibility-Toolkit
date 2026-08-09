@@ -24,6 +24,7 @@ import { setParadigmMap, setCountZones } from '../../../tools/auditors/contract-
 import { setControls } from './render.js';
 import * as Reasoner from './reasoner.js';
 import * as Trace from './trace.js';
+import * as Watch from './watch.js';
 
 const KEY = 'aa.validation';
 
@@ -576,13 +577,10 @@ let watchTab = null;
 let lastSeen = null;
 let handOverTab = null;
 
-/** Cheap identity for a page read, so an unchanged page costs no model call. */
-function hashText(s) {
-  let h = 5381;
-  const t = String(s || '');
-  for (let i = 0; i < t.length; i += 1) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0;
-  return `${t.length}:${h}`;
-}
+/** Cheap identity for a page read, so an unchanged page costs no model call.
+ *  Shared with the watched-value registry, which asks the same question of the
+ *  same snapshots. */
+const hashText = Watch.hashText;
 
 async function activeTabId() {
   try {
@@ -632,6 +630,159 @@ function stopWatching() {
   watchTimer = null;
   watchTab = null;
   lastSeen = null;
+}
+
+// ── watched values ──────────────────────────────────────────────────────────
+//
+// The tenth interface type, and the only one whose move is spread over time.
+// watch.js holds the registry, the comparison and the two decisions that shape
+// it — that a watch outlives the run, and that it costs nothing while nobody is
+// browsing. This is the part that has to sit in the session, because it reads
+// pages through the harness and raises findings through the run.
+
+/** Everything a watch needs to answer its own question on a later page. */
+async function readWatch(w, pageText) {
+  return Reasoner.askPage(w.question, pageText, {
+    task: flatModel?.task || w.setDuringTask || null,
+    // Deliberately not the current contract. A watch set in one task and read
+    // during another must not have the second task's ask put in front of it.
+    ask: null,
+  });
+}
+
+/**
+ * One look at every live watch, on the page that has just settled.
+ *
+ * Called from observe() with the snapshot it already has, and from the
+ * navigation trigger when a watch is standing but no task is running. Both
+ * paths are settles: there is no timer here and there is deliberately never
+ * going to be one.
+ *
+ * @returns {Promise<{checked, read, moved, skipped}>}
+ */
+async function checkWatches(snap) {
+  const standing = await Watch.live();
+  if (!standing.length) return { checked: 0, read: 0, moved: 0 };
+
+  const now = Date.now();
+  const hash = hashText(snap.text);
+  let read = 0;
+  const moved = [];
+  const skipped = [];
+
+  for (const w of standing) {
+    const s = Watch.shouldRead(w, { url: snap.url, hash, now });
+    if (!s.read) { skipped.push({ id: w.id, why: s.why }); continue; }
+
+    const r = await readWatch(w, snap.text);
+    read += 1;
+    const patch = { seenHash: hash, lastReadAt: now, reads: (w.reads || 0) + 1 };
+
+    // A page that does not say is not a value that has not moved. It is a page
+    // that does not say, and nothing is claimed from it.
+    if (!r.ok || r.answer == null) { await Watch.update(w.id, patch); continue; }
+    const reading = { answer: r.answer, quote: r.quote, at: now, url: snap.url || null };
+
+    // The first reading a watch could take becomes what it is watching. This
+    // happens when the page the watch was set on could not answer its own
+    // question — the watch stands, and the first page that can read it sets the
+    // value rather than the watch reporting a move it never measured.
+    if (!w.baseline) {
+      await Watch.update(w.id, { ...patch, baseline: reading, last: reading });
+      continue;
+    }
+
+    await Watch.update(w.id, patch);
+    const cmp = Watch.compare(w.last || w.baseline, reading);
+    if (!cmp.moved) continue;
+
+    const move = { ...cmp, at: now, url: snap.url || null };
+    await Watch.noteMove(w.id, move, reading);
+    moved.push({ id: w.id, ...move });
+    await raiseMove({ ...w, last: reading }, move, snap);
+  }
+
+  return { checked: standing.length, read, moved: moved.length, moves: moved, skipped };
+}
+
+/**
+ * The value moved, so say so.
+ *
+ * With a task running this goes through the run exactly like any other finding:
+ * same levels, same gate, same two surfaces. A price that moved while the agent
+ * is mid-checkout is precisely something it should be held for.
+ *
+ * With no task running there is no agent to hold and no run to file it under,
+ * so it is spoken and recorded on the watch, and published as an alert rather
+ * than as a finding. A finding published now would sit unread in storage and
+ * hold the gate of whatever task starts next, which is a run stopped by news
+ * from a task that ended weeks ago.
+ */
+async function raiseMove(w, move, snap) {
+  const say = Watch.sayMove(w, move);
+  const finding = {
+    widget: w.widget || `Watching ${w.label || 'a value'}`,
+    phase: currentPhase,
+    say,
+    from: move.now && w.last?.quote ? w.last.quote : null,
+    answerable: true,
+    confirming: false,
+    contradicts: false,
+    paradigm: null,
+    checkedAgainst: null,
+    // What the person can do about it here: keep watching, or stop. Not the
+    // card's "Watch it for me / Decide now" — that pair is for setting one, and
+    // this is one that has already fired.
+    control: { label: 'Stop watching this', action: 'watch-stop',
+               decline: 'Keep watching', node: w.node ?? null,
+               widget: w.widget ?? null, watchId: w.id },
+    quiet: false,
+    node: w.node ?? null,
+    cluster: 'watch',
+    moment: 'Now',
+    moneyMoving: false,
+    confidence: null,
+    verified: w.last?.quote ? 'verified_exact' : null,
+    aligned: false,
+    source: 'watch',
+  };
+
+  await Trace.record({
+    nodeId: w.node, label: w.label, phase: currentPhase, holder,
+    action: `the watched value moved: ${move.was} → ${move.now}`,
+    url: snap.url || null,
+    findings: [{ widget: finding.widget, node: w.node ?? null, level: 'aside' }],
+  });
+
+  chrome.runtime.sendMessage({
+    type: 'validationSpeak', phase: 'watch',
+    lines: [{ say, level: 'aside', live: 'polite', widget: finding.widget }],
+  }).catch(() => {});
+
+  if (!run) {
+    const prev = await stored();
+    await publish({ watchAlerts: (prev.watchAlerts || []).concat({
+      id: w.id, say, was: move.was, now: move.now, at: move.at,
+      url: move.url, node: w.node ?? null, label: w.label ?? null,
+    }).slice(-20) });
+    return { raised: 'alert' };
+  }
+
+  let rendered;
+  try {
+    ({ findings: rendered } = run.observeFindings([finding], currentPhase, { read: 1, of: 1 }));
+  } catch {
+    return { raised: 'none' };
+  }
+  await publish({ append: rendered.map((f) => ({
+    widget: f.finding.widget, level: f.level, say: f.finding.say,
+    from: f.finding.from, confirming: false,
+    paradigm: null, shape: f.finding.shape || null, checkedAgainst: null,
+    control: f.visual?.control || null, phase: currentPhase,
+    node: f.finding.node || null, cluster: 'watch', moment: 'Now',
+    verified: f.finding.verified || null, source: 'watch',
+  })) });
+  return { raised: 'finding' };
 }
 
 const Validation = {
@@ -688,8 +839,15 @@ const Validation = {
 
   async stop() {
     run = null;
-    // A hand over does not outlive the task it was part of. Leaving the watch
-    // running would keep reading pages for a run that has ended.
+    // Watched values are NOT cleared here, and that is the decision rather than
+    // an oversight. The flights gold's own move is keeping the price watch on
+    // after booking, because a drop inside a cancellable fare class means
+    // cancel and rebook — a registry that died with the run could not express
+    // the one thing the type is for. See watch.js for what bounds it instead.
+    //
+    // A hand over is the opposite and does not outlive the task it was part of.
+    // Leaving that watcher running would keep reading pages for a run that has
+    // ended.
     stopWatching();
     holder = 'agent';
     handOverNode = null;
@@ -723,7 +881,13 @@ const Validation = {
    * person could not have reached themselves.
    */
   async observe(tabId, opts = {}) {
-    if (!run && !(await rehydrate())) return { skipped: 'no validation run in progress' };
+    const running = !!run || await rehydrate();
+    // A watch outlives the run that set it, so a settle is checked for watched
+    // values whether or not a task is being checked. With no watches standing
+    // and no run, this costs one storage read and nothing else.
+    if (!running && !(await Watch.any())) {
+      return { skipped: 'no validation run in progress' };
+    }
     const H = globalThis.BrowserHarness;
     if (!H?.axSnapshot) return { error: 'harness has no accessibility read' };
 
@@ -732,11 +896,25 @@ const Validation = {
     // second read of the same page.
     const snap = opts.snap || await H.axSnapshot(tabId);
 
+    // Watched values, on the page that has just settled. Deliberately after the
+    // read below when there is one, so a movement never jumps ahead of what
+    // this page itself says — but before every return, so no settle is missed.
+    const watchNow = () => (opts.watches === false
+      ? Promise.resolve(null) : checkWatches(snap));
+
+    if (!running) {
+      const watched = await watchNow();
+      return { skipped: 'no validation run in progress', watched };
+    }
+
     // A task model is loaded: the reasoner reads this snapshot against its
     // questions. No URL regex, no extractors — the page decides what it can
     // answer. With no model loaded this is skipped entirely and the Amazon
     // path below runs unchanged.
-    if (flatModel) return observeByModel(snap, opts);
+    if (flatModel) {
+      const r = await observeByModel(snap, opts);
+      return { ...r, watched: await watchNow() };
+    }
 
     const phase = opts.phase || phaseOf(snap.url);
     if (!phase) {
@@ -744,7 +922,8 @@ const Validation = {
       // last page's phase in place. Otherwise the surface keeps presenting a
       // sign-in wall as though it were the review page it was headed for.
       await publish({ phase: null });
-      return { skipped: `nothing to check on ${snap.url || 'this page'}` };
+      const watched = await watchNow();
+      return { skipped: `nothing to check on ${snap.url || 'this page'}`, watched };
     }
 
     // Named `rendered`, not `findings`: destructuring into `findings` would
@@ -758,7 +937,8 @@ const Validation = {
       await publish({ append: [{ widget: 'Checking failed', level: 'aside',
         say: `I could not finish checking this page. ${String(e.message || e).slice(0, 80)}`,
         from: snap.url || 'this page', confirming: false, phase }], phase });
-      return { phase, findings: 0, error: String(e.message || e) };
+      return { phase, findings: 0, error: String(e.message || e),
+               watched: await watchNow() };
     }
 
     // Only what is meant to be heard. Ambient findings stay reachable on
@@ -793,7 +973,8 @@ const Validation = {
       chrome.runtime.sendMessage({ type: 'validationSpeak', lines: speak, phase })
         .catch(() => {});   // nothing listening is fine — storage still has it
     }
-    return { phase, findings: rendered.length, speak, marks, url: snap.url };
+    return { phase, findings: rendered.length, speak, marks, url: snap.url,
+             watched: await watchNow() };
   },
 
   /**
@@ -1207,6 +1388,121 @@ const Validation = {
   },
 
   /**
+   * Watch a value instead of deciding about it now.
+   *
+   * The press carries the node and the question; the value it rests on is the
+   * finding's own quote, which becomes the anchor of the one question this
+   * watch will put to every later page. See watch.js for why that question is
+   * frozen here rather than rebuilt on each read.
+   *
+   * Nothing is sent to the agent. Pressing "Watch it for me" is not an
+   * instruction to do something differently now — it is the opposite, a way of
+   * not deciding — and the sentence it used to send was a re-read of the page
+   * already in front of the person.
+   */
+  async watch(o = {}) {
+    const prev = await stored();
+    const f = (prev.findings || []).find((x) =>
+      (o.widget && x.widget === o.widget)
+      || (o.nodeId != null && x.node === o.nodeId && x.cluster === 'watch'));
+
+    const node = o.nodeId ?? f?.node ?? currentNode ?? null;
+    const widget = o.widget ?? f?.widget ?? null;
+    const label = labelFor(node) || f?.phase || currentPhase || null;
+    const quote = o.quote ?? f?.from ?? null;
+
+    const H = globalThis.BrowserHarness;
+    const tabId = o.tabId ?? await activeTabId();
+    let snap = o.snap || null;
+    if (!snap && H?.axSnapshot && tabId != null) {
+      try { snap = await H.axSnapshot(tabId); } catch { snap = null; }
+    }
+    const url = o.url ?? snap?.url ?? null;
+    const question = Watch.questionFor({ quote, widget, label });
+
+    // The baseline is read with the SAME call every later reading uses, on the
+    // page the person is looking at. One model call, spent deliberately: a
+    // baseline taken from the finding instead would have been produced by a
+    // different prompt, and then the first re-read would report the model's
+    // change of wording as a change in the value.
+    //
+    // A page that cannot answer its own watch question still gets a watch. It
+    // stands with no baseline, and the first page that can read the value sets
+    // it — which is honest, where reporting a move against nothing would not be.
+    let baseline = null;
+    if (snap) {
+      const r = await Reasoner.askPage(question, snap.text,
+        { task: flatModel?.task || null, ask: null });
+      if (r.ok && r.answer != null) {
+        baseline = { answer: r.answer, quote: r.quote, at: Date.now(), url };
+      }
+    }
+
+    const added = await Watch.add({
+      node, label, widget, question, baseline, url,
+      origin: Watch.originOf(url),
+      // The page this watch has already seen. Without it the very next settle
+      // on the same page pays for a second call to be told nothing changed.
+      seenHash: snap ? hashText(snap.text) : null,
+      task: flatModel?.task || (contract ? describe(contract) : null),
+    });
+
+    if (!added.added) {
+      const say = `I am not watching that: ${added.why}.`;
+      chrome.runtime.sendMessage({ type: 'validationSpeak', phase: 'watch',
+        lines: [{ say, level: 'aside', live: 'polite', widget: 'watch' }] }).catch(() => {});
+      return { watching: false, why: added.why, say };
+    }
+
+    await Trace.record({ nodeId: node, label, phase: currentPhase, holder,
+      action: `started watching${label ? `: ${label}` : ''}`, url });
+
+    // What it costs and what it cannot do, said once, at the moment it is set.
+    const value = baseline ? ` It is ${baseline.answer} right now.` : '';
+    const say = `I am watching ${label || widget || 'that'}.${value} I will tell you `
+      + 'when it moves, each time you are on this site. I am not checking it in the '
+      + 'background, so I cannot tell you about a change you never open the page for.';
+    chrome.runtime.sendMessage({ type: 'validationSpeak', phase: 'watch',
+      lines: [{ say, level: 'aside', live: 'polite', widget: 'watch' }] }).catch(() => {});
+
+    const standing = await Watch.live();
+    await publish({ watching: standing.length });
+    return { watching: true, id: added.watch.id, node, label, question,
+             baseline, replaced: added.replaced, say };
+  },
+
+  /** Stop watching. By id, or by whatever was being watched at this node. */
+  async unwatch(o = {}) {
+    const arg = typeof o === 'string' ? { id: o } : (o || {});
+    let id = arg.id || arg.watchId || null;
+    const standing = await Watch.live();
+    if (!id) {
+      const m = standing.find((w) =>
+        (arg.widget && w.widget === arg.widget)
+        || (arg.nodeId != null && w.node === arg.nodeId));
+      id = m?.id || null;
+    }
+    if (!id) return { stopped: false, why: 'nothing was being watched here' };
+    const w = standing.find((x) => x.id === id) || null;
+    const r = await Watch.remove(id);
+    if (!r.stopped) return { stopped: false, why: 'that watch had already ended' };
+    await Trace.record({ nodeId: w?.node ?? null, label: w?.label ?? null,
+      phase: currentPhase, holder,
+      action: `stopped watching${w?.label ? `: ${w.label}` : ''}` });
+    const say = `I have stopped watching ${w?.label || w?.widget || 'that'}.`;
+    chrome.runtime.sendMessage({ type: 'validationSpeak', phase: 'watch',
+      lines: [{ say, level: 'aside', live: 'polite', widget: 'watch' }] }).catch(() => {});
+    await publish({ watching: (await Watch.live()).length });
+    return { stopped: true, id, say };
+  },
+
+  /** What is being watched, and what each one last read. */
+  watches: () => Watch.live(),
+
+  /** One look at every live watch, for the caller that drives the settle. */
+  checkWatches,
+
+  /**
    * Who is acting on the page.
    *
    * This matters more than it looks. Two things acting on one page with no
@@ -1298,6 +1594,18 @@ globalThis.ValidationControl = {
   status: () => Validation.status(),
 };
 globalThis.ValidationTrace = Validation.trace;
+
+// Watched values. `any()` is the cheap question the navigation trigger asks
+// before deciding whether a settle is worth reading at all — a watch outlives
+// its run, so "is a task running" is no longer the whole answer.
+globalThis.ValidationWatch = {
+  set: (o) => Validation.watch(o),
+  stop: (o) => Validation.unwatch(o),
+  list: () => Validation.watches(),
+  check: (snap) => checkWatches(snap),
+  any: () => Watch.any(),
+  setTiming: (o) => Watch.setWatchTiming(o),
+};
 
 // Exposed separately so the agent's start route can parse a sentence into a
 // contract before a run exists.
