@@ -160,7 +160,22 @@ const NEEDS = {
  *
  * @returns {Array<{field: string, ask: string, unchecked: string[]}>}
  */
-export function gaps(c) {
+/**
+ * What the person did not say, that the layer needs in order to check.
+ *
+ * `about` is what is known about the task, from the generated model. These four
+ * fields are a shopping shape — a size, a budget, a deadline — and asking them
+ * about a task that buys nothing is worse than asking nothing: a recorded
+ * Wikipedia lookup opened by asking "What size do you need?" and "What's the
+ * most you want to spend?" about the Eiffel Tower.
+ *
+ * Suppressed only when the model positively says this task commits nothing.
+ * With no model yet, or no model at all, the questions still get asked, because
+ * "not known" and "known not to apply" are different and only the second is a
+ * reason to stay quiet.
+ */
+export function gaps(c, about = {}) {
+  if (about.commits === false) return [];
   const out = [];
   if (!c.size) {
     out.push({ field: 'size', ask: 'What size do you need?', unchecked: NEEDS.size });
