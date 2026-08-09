@@ -601,6 +601,38 @@ if (globalThis.ValidationGenerate) {
   });
 }
 
+/**
+ * A run that the service worker took down with it, said out loud.
+ *
+ * The agent loop lives in module state, so a worker teardown ends it. The
+ * stored record does not know that: it still says `running`, or worse `paused`,
+ * and both surfaces go on showing an agent that no longer exists. A paused run
+ * is the bad case, because pausing is something the person did deliberately and
+ * they are waiting for it to go again.
+ *
+ * This runs once per worker start, when no loop can be running yet, so anything
+ * stored as live is stale by construction.
+ */
+(async () => {
+  try {
+    const st = (await chrome.storage.local.get('bhAgent')).bhAgent;
+    if (!st || (st.status !== 'running' && st.status !== 'paused')) return;
+    if (globalThis.BrowserAgent?.isRunning?.()) return;
+    const why = st.status === 'paused'
+      ? 'The browser put this to sleep while it was paused, so it never started again. '
+        + 'Nothing was left half-done — it stopped where you paused it.'
+      : 'The browser put this to sleep before it finished, so it stopped part way. '
+        + 'What it had already done is in the log.';
+    await chrome.storage.local.set({
+      bhAgent: { ...st,
+        status: 'stopped',
+        endedAt: Date.now(),
+        summary: why,
+        log: [...(st.log || []), { kind: 'info', t: Date.now(), text: why }] },
+    });
+  } catch { /* a missing record is not a stalled run */ }
+})();
+
 // One generation at a time. A second run supersedes the first rather than
 // racing it to load a model for a task nobody is doing any more.
 let modelRun = null;
