@@ -1258,10 +1258,53 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // These are what delegation took away, so they go to the agent as a fresh
     // instruction rather than being simulated here.
     const c = msg.control || {};
+
+    // The four actions that are NOT a sentence sent to the agent. Each one is a
+    // mechanism the layer runs itself, and each replaced a sentence that asked
+    // the agent to do something the agent cannot do.
+    if (c.action === 'hand-over') {
+      // This used to say "Stop and let me do this part myself" and hope, which
+      // left the agent free to keep acting while the person did — two things on
+      // one page. It now holds the agent and starts the layer watching.
+      globalThis.Validation.handOver({ nodeId: c.node, reason: c.reason })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
+    if (c.action === 'hand-back') {
+      globalThis.Validation.handBack({ nodeId: c.node })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
+    if (c.action === 'watch-value') {
+      // The same correction hand over got, for the same reason. With no entry
+      // in the map below the label became the instruction — "Watch it for me.
+      // Then tell me what changed." — which is one re-read of the page already
+      // in front of the person, and a watch is the opposite of that. It now
+      // registers a watched value that re-reads on later settles and outlives
+      // the run.
+      globalThis.Validation.watch({ nodeId: c.node, widget: c.widget })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
+    if (c.action === 'watch-stop') {
+      globalThis.Validation.unwatch({ id: c.watchId, nodeId: c.node, widget: c.widget })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
+
     // Keyed by the action ids the corpus actually emits - the first version
     // of this map used five ids of its own invention, none of which the
     // corpus produces, so every control on a live run was a dead button.
-    const say = {
+    //
+    // This map is now the FALLBACK, not the first answer. It is written in
+    // shopping vocabulary throughout — "Describe the product photos", "Undo it.
+    // If it was an order, cancel it." — because it was written against the
+    // Amazon corpus, and it is still exactly right there. On a passport form or
+    // a flight booking it names things that are not on the page. So a task
+    // model, which carries the question that produced the finding, is asked
+    // first; this answers when there is no model loaded (the corpus path, whose
+    // demo must not change) or when the model has nothing better to offer.
+    const fallbackSay = {
       'what-can-you-filter-by': 'Read me the filters this page offers, then wait for my pick.',
       'what-color-options': 'Read me the color options for this item, then wait for my pick.',
       'can-you-re-sort-them': 'Re-sort the results by rating and tell me the new first result.',
@@ -1293,40 +1336,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       // An action this map has never heard of must not be a dead button:
       // the label names the person's move, so it becomes the instruction.
       || (c.label ? `${c.label}. Then tell me what changed.` : null);
-    if (c.action === 'refine-narrow') {
-      runRefineProbe(say).then((n) => sendResponse({ probed: n }));
-      return true;
-    }
-    if (c.action === 'hand-over') {
-      // Not a sentence sent to the agent. This used to say "Stop and let me do
-      // this part myself" and hope, which left the agent free to keep acting
-      // while the person did — two things on one page. It now holds the agent
-      // and starts the layer watching.
-      globalThis.Validation.handOver({ nodeId: c.node, reason: c.reason })
-        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
-      return true;
-    }
-    if (c.action === 'hand-back') {
-      globalThis.Validation.handBack({ nodeId: c.node })
-        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
-      return true;
-    }
-    if (c.action === 'watch-value') {
-      // The same correction hand over got, for the same reason. With no entry
-      // in the map above the label became the instruction — "Watch it for me.
-      // Then tell me what changed." — which is one re-read of the page already
-      // in front of the person, and a watch is the opposite of that. It now
-      // registers a watched value that re-reads on later settles and outlives
-      // the run.
-      globalThis.Validation.watch({ nodeId: c.node, widget: c.widget })
-        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
-      return true;
-    }
-    if (c.action === 'watch-stop') {
-      globalThis.Validation.unwatch({ id: c.watchId, nodeId: c.node, widget: c.widget })
-        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
-      return true;
-    }
+
     if (c.action === 'probe-pick') {
       (async () => {
         await globalThis.Validation?.annotate?.({ probe: null });
@@ -1335,14 +1345,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       })();
       return true;
     }
-    if (!say) { sendResponse({ error: `no instruction for ${c.action}` }); return false; }
-    steerAgent(say).then((r) => {
+
+    (async () => {
+      // The task model's own question first. It knows what the thing is, which
+      // is the whole reason the instruction should come from it: "Read me the
+      // exact words on this page that answer it" carries the question with it,
+      // where "Describe the product photos" carries an Amazon page.
+      let say = null;
+      try { say = await globalThis.Validation?.instructionFor?.(c); } catch { /* fall back */ }
+      say = say || fallbackSay;
+
+      if (c.action === 'refine-narrow') {
+        sendResponse({ probed: await runRefineProbe(say) });
+        return;
+      }
+      if (!say) { sendResponse({ error: `no instruction for ${c.action}` }); return; }
+      const r = await steerAgent(say);
       chrome.runtime.sendMessage({
         type: 'validationSpeak', phase: 'control',
         lines: [{ say, level: 'aside', live: 'polite', widget: c.action }],
       }).catch(() => {});
       sendResponse({ sent: say, ...r });
-    });
+    })();
     return true;
   }
 

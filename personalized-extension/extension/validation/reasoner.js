@@ -805,6 +805,58 @@ const CLUSTER_CONTROLS = {
   watch: { label: 'Watch it for me', action: 'watch-value', decline: 'Decide now' },
 };
 
+// What a press should tell the agent, per interface type.
+//
+// The other half of the table above. The action ids resolve to English in a
+// ~27-entry map in background.js, which serves both the Amazon corpus path and
+// the generated path and is written in shopping vocabulary throughout —
+// "Describe the product photos", "Undo it. If it was an order, cancel it." On a
+// passport form those read wrong, and on a flights booking "the product photos"
+// names nothing on the page.
+//
+// The instruction should come from the task model's own question, because the
+// question knows what the thing is. These are the sentences with the question
+// put back into them. The background map stays as the fallback: it is what the
+// Amazon corpus path uses, where there is no task model and therefore no
+// question to build from, and it is what a generated model falls back to when
+// it carries no cluster.
+//
+// `hand over` and `watch` are absent on purpose. Both have their own mechanism
+// now, and turning either into a sentence sent to the agent is exactly the bug
+// that was fixed in each case.
+const CLUSTER_INSTRUCTIONS = {
+  facts: 'Read me the exact words on this page that answer it.',
+  refine: 'Suggest two or three narrower ways to cut this down, with roughly how '
+        + 'many would be left each way, then wait for my pick.',
+  compare: 'Read me the differences between the options here, one at a time.',
+  select: 'Read me the options here, then wait for me to choose.',
+  approve: 'Do not commit this step yet. Read me exactly what is about to happen, '
+         + 'then wait for my go-ahead.',
+  photos: 'Describe the images here, including anything the text does not say.',
+  receipts: 'Read back exactly what was done here, with the numbers.',
+  undo: 'Undo what was just done here. If the site has its own cancel or reverse '
+      + 'path for it, use that rather than working backwards by hand. Tell me '
+      + 'what actually happened.',
+};
+
+/**
+ * The instruction a press becomes, built from the question it was pressed on.
+ *
+ * Returns null when there is nothing better to offer than the global map —
+ * no cluster, no question, or a type that must not be turned into a sentence.
+ * The caller falls back, so a null here never produces a dead button.
+ *
+ * @param {{cluster?: string, question?: string, label?: string}} q
+ */
+export function instructionFrom(q = {}) {
+  const body = CLUSTER_INSTRUCTIONS[q.cluster];
+  if (!body) return null;
+  const question = String(q.question || '').trim();
+  if (!question) return null;
+  const where = q.label ? `, at "${String(q.label).trim()}"` : '';
+  return `The person asks about "${question}"${where}. ${body}`;
+}
+
 // The moment glossary, from the model itself: "Now" means pause the agent,
 // everything else means show it without pausing or after the run. Only "Now"
 // is announced and holds; the rest stay in the panel, reachable rather than

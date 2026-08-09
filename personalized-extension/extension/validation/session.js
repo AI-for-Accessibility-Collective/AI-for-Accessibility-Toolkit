@@ -1504,6 +1504,31 @@ const Validation = {
   checkWatches,
 
   /**
+   * What a widget press should tell the agent, built from the task model's own
+   * question rather than from a global table of shopping sentences.
+   *
+   * Null means "nothing better than the fallback", and the caller falls back to
+   * the map in background.js. Two ways to get null, both deliberate: no task
+   * model is loaded, which is the Amazon corpus path and must keep the shipped
+   * demo unchanged, or the finding carries no interface type to build from.
+   */
+  async instructionFor(control = {}) {
+    if (!flatModel) return null;
+    const node = control.node ?? null;
+    let cluster = control.cluster || null;
+    let question = control.widget || null;
+    if (!cluster || !question) {
+      const prev = await stored();
+      const f = (prev.findings || []).find((x) =>
+        (control.widget && x.widget === control.widget)
+        || (node != null && x.node === node && x.control?.action === control.action));
+      cluster = cluster || f?.cluster || null;
+      question = question || f?.widget || null;
+    }
+    return Reasoner.instructionFrom({ cluster, question, label: labelFor(node) });
+  },
+
+  /**
    * Who is acting on the page.
    *
    * This matters more than it looks. Two things acting on one page with no
