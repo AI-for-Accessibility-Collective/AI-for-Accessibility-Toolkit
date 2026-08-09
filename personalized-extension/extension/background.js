@@ -295,7 +295,8 @@ async function callGemini(prompt, apiKey, optsOrImages) {
   const opts = Array.isArray(optsOrImages)
     ? { images: optsOrImages }
     : (optsOrImages || {});
-  const { images, mimeType, model, audioParts, responseSchema, maxOutputTokens } = opts;
+  const { images, mimeType, model, audioParts, responseSchema, maxOutputTokens,
+          timeoutMs } = opts;
 
   const parts = [{ text: prompt }];
   if (images && images.length > 0) {
@@ -324,8 +325,19 @@ async function callGemini(prompt, apiKey, optsOrImages) {
   if (responseSchema) generationConfig.responseSchema = responseSchema;
   if (maxOutputTokens) generationConfig.maxOutputTokens = maxOutputTokens;
 
+  // 30 seconds was chosen for the agent's own calls: a screenshot and an
+  // element list in, one short action out. The reasoner's call is a different
+  // shape — every question in the task model, structured output — and it
+  // inherited this timeout by sharing the function. On a live Wikipedia
+  // article, 40,000 characters after the size guard and 59 questions, the call
+  // takes about 35 seconds. A legitimate slow call is indistinguishable from a
+  // hung one, so all three retries aborted and the page was never checked at
+  // all — and large, question-dense pages are exactly the ones with the most
+  // on them to check.
+  //
+  // Callers that know their call is long pass timeoutMs. Nothing else moves.
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs || 30_000);
   let resp;
   try {
     resp = await fetch(getApiUrl(apiKey, model), {

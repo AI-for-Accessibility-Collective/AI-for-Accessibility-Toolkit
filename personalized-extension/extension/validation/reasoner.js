@@ -60,6 +60,8 @@ export const MAX_OUTPUT_TOKENS = 32_768;
 export const MAX_ATTEMPTS = 3;
 /** Retries stop here even with attempts left. The agent is held meanwhile. */
 export const BUDGET_MS = 75_000;
+/** One call's own ceiling. Below BUDGET_MS so a retry can still happen. */
+export const CALL_TIMEOUT_MS = 55_000;
 /** The open pass is a few things worth raising, not a second report. */
 export const MAX_NOTICED = 3;
 
@@ -315,6 +317,14 @@ now, without the "#" suffix. A real page usually serves several at once. Judge \
 by what the page is for, not by which questions you happened to answer. Empty \
 list if the page serves none of them, for example a page from a completely \
 different task.
+
+IF THIS PAGE BELONGS TO A DIFFERENT SITE OR A DIFFERENT TASK, "alignedNodes" \
+MUST BE EMPTY AND "alignedPhase" MUST BE "none" - even when you can still \
+answer a question from it. Some questions, "is this the right site" above all, \
+can be answered from ANY page, and answering one is not evidence that the page \
+serves the subtask that question hangs under. Answer it, and align to nothing. \
+A news homepage reached during a shopping task serves no subtask of shopping, \
+however much of it you can read.
 
 3. "alignedPhase" - the single phase name from the list above that this page \
 belongs to, or "none" if it serves none of them.
@@ -581,6 +591,11 @@ async function callJson(prompt, schema, opts, log, wants) {
         mimeType: 'application/json',
         responseSchema: schema,
         maxOutputTokens: opts.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
+        // Long enough for a real article. The shared caller defaults to 30s,
+        // which is right for the agent's own short calls and aborts a genuine
+        // 35-second read of a live Wikipedia page three times over. BUDGET_MS
+        // is still the real ceiling, so this cannot run away.
+        timeoutMs: opts.timeoutMs ?? CALL_TIMEOUT_MS,
         // Copying characters exactly and judging contradictsAsk are not
         // creative tasks. The shared caller defaults to 0.7, which raises the
         // discard rate and the contradiction error rate for no benefit.
