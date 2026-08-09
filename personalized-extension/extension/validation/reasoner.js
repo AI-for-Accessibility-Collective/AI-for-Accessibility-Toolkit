@@ -121,6 +121,11 @@ export function flattenModel(model) {
         question: q.question,
         cluster: q.cluster || null,
         moment: q.moment || null,
+        // Which of the twelve shapes draws this. The corpus assigns it per
+        // widget; a generated model carries it on the question, and every
+        // question in the strong generator's models has one. Without it the
+        // finding renders as a sentence and renderShape() draws nothing.
+        paradigm: Number.isInteger(q.paradigm) ? q.paradigm : null,
         why: q.why || null,
         whatTheAgentLoses: q.whatTheAgentLoses || null,
         // Carried, not yet acted on. This is the field the design names as the
@@ -541,6 +546,7 @@ export async function readPage(flat, pageText, opts = {}) {
     return {
       id: q.id, node: q.node, question: q.question, subtask: q.subtask,
       cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
+      paradigm: q.paradigm,
       answer: r.answer ?? null,
       quote: typeof r.quote === 'string' ? r.quote : null,
       confidence: typeof r.confidence === 'number' ? r.confidence : null,
@@ -681,10 +687,12 @@ export function toFindings(result, phase) {
       answerable: true,
       confirming: false,
       contradicts: false,
-      // No paradigm: paradigms are assigned per corpus widget, and a task-model
-      // question is not one. renderShape() returns null for an unknown
-      // paradigm, which falls back to the sentence rather than throwing.
-      paradigm: null,
+      // Which of the twelve shapes draws this, straight off the question. The
+      // corpus assigns paradigms per widget and a generated model carries one
+      // per question, so both paths now reach the same twelve renderers. A
+      // model that does not carry one leaves this null, and renderShape()
+      // falls back to the sentence rather than throwing.
+      paradigm: Number.isInteger(a.paradigm) ? a.paradigm : null,
       checkedAgainst: null,
       control: control ? { ...control } : null,
       // Not announced unless the model says this is wanted now.
