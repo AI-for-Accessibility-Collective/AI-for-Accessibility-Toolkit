@@ -1330,7 +1330,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       'photos-describe': 'Describe the product photos, including anything the listing text does not say.',
       'receipts-readback': 'Read me back exactly what was done, with the numbers.',
       'undo-last': 'Undo it. If it was an order, cancel it. Tell me when it is done.',
-      'hand-over': 'Stop and let me do this part myself. Tell me where things stand.',
+      // No 'hand-over' row. It was "Stop and let me do this part myself. Tell me
+      // where things stand.", unreachable since the intercept above took it, and
+      // it read as though handing over were still a sentence the agent obeys.
       're-sort': `Re-sort the results by ${c.arg || 'rating'} and tell me the new first result.`,
       'pick-size': 'Read me the sizes on this page and wait for me to choose.',
       'coupon-tick': 'Tick the coupon checkbox under the price, then read me the new price.',
