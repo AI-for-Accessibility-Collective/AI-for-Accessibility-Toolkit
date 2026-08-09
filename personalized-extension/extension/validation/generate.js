@@ -47,6 +47,21 @@
 
 const NUMWORD = ['', 'one', 'two', 'three', 'four', 'five', 'six'];
 const LEAVES_PER_CALL = 12;
+
+// How many worked examples the question and coding stages carry.
+//
+// These two stages resend their examples on every batch, and the examples are
+// nearly the whole prompt: about 79k tokens for questions and 84k for coding,
+// against 13k for the tree. That is what made the model take minutes to arrive.
+//
+// Scored in the rig before being cut: with one example instead of three, mean
+// coverage across the four domains was 37.6% against 37.4%, a difference well
+// inside run-to-run variance (amazon -1.6, flights -2.5, govforms +9.1,
+// wikipedia -3.8). So the extra examples were not earning their cost here. The
+// tree stage still gets all of them, because it is small and it is the one the
+// agent waits for.
+const EXAMPLES_FOR_QUESTIONS = 1;
+const EXAMPLES_FOR_CODING = 1;
 const QUESTIONS_PER_CALL = 24;
 const GEN_TEMP = 0.3;
 
@@ -301,7 +316,8 @@ export async function generate(query, opts = {}) {
   hand(model);
 
   // ---- stage 3: the questions ----
-  const qBlock = block(exs.map((e) => stripQuestions(e, { codingsOnly: true })),
+  const qBlock = block(exs.slice(0, EXAMPLES_FOR_QUESTIONS)
+    .map((e) => stripQuestions(e, { codingsOnly: true })),
     'Here are <<N>> finished task models, from <<N>> different tasks. Study '
     + 'the style of their questions.');
   const treeJson = modelJson(model);
@@ -328,7 +344,7 @@ export async function generate(query, opts = {}) {
   if (!asked) return null;   // a tree with no questions checks nothing
 
   // ---- stage 5: the coding ----
-  const cBlock = block(exs,
+  const cBlock = block(exs.slice(0, EXAMPLES_FOR_CODING),
     'Here are <<N>> fully coded models, from <<N>> different tasks, with every '
     + 'question carrying its cluster and its moment:');
   const modelJsonStr = modelJson(model);
