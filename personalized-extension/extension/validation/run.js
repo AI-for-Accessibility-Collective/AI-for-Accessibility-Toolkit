@@ -66,8 +66,67 @@ export function createRun(contract, opts = {}) {
   const steps = [];            // the plan, with outcomes
   let firstPrice = null;       // the first buy-box price this run saw, and where
 
+  // Level, rendering, and the run's bookkeeping for one page's findings.
+  //
+  // Shared by the two ways findings arrive: the extractors reading a page
+  // against the hand-written checks, and the reasoner answering the task
+  // model's questions off the same snapshot. Both have to land in the same
+  // `seen`, `said`, `waiting` and `steps`, or the gate holds on one kind and
+  // not the other and the plan shows half the run.
+  //
+  // `read` and `of` are what the step line says the page gave up: for the
+  // extractors that is facts read of facts wanted, and for the reasoner it is
+  // questions answered of questions asked.
+  function apply(findings, phase, read, of) {
+    const rendered = [];
+    for (const f of findings) {
+      let { level, why } = decide(f, { seen, style });
+      // `quiet` is set only by the reasoner, off the task model's own `moment`
+      // field: the model says which answers are wanted at the moment and which
+      // are wanted on demand, and only the first kind is announced. Nothing in
+      // the hand-written checks sets it, so this is inert on that path.
+      if (f.quiet && level !== 'ambient') {
+        level = 'ambient';
+        why = 'the task model asks for this on demand, not now';
+      }
+      seen.add(`${f.widget}|${f.phase}`);
+      const r = render(f, level, channels);
+      rendered.push({ ...r, why });
+      if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
+      if (r.spoken?.holds) waiting.push({ widget: f.widget, ask: f.say, phase });
+    }
+
+    // One entry per page, updated — not one per read.
+    //
+    // A page is read more than once: the navigation trigger fires and an
+    // explicit observe follows. Pushing each time turned the plan into
+    // "Search / Search / Check item / Check item", which reads as though the
+    // agent went round in circles. The last read is the current truth.
+    const prior = steps.find((x) => x.phase === phase);
+    const entry = {
+      phase,
+      read,
+      of,
+      spoke: (prior?.spoke || 0) + rendered.filter((r) => r.level !== 'ambient').length,
+    };
+    if (prior) Object.assign(prior, entry);
+    else steps.push(entry);
+    return rendered;
+  }
+
   return {
     contract,
+
+    /**
+     * Findings that came from somewhere other than the extractors — today, the
+     * reasoner reading the page against a task model. Same bookkeeping, same
+     * gate, same plan; the difference is only in who produced them.
+     */
+    observeFindings(findings, phase, counts = {}) {
+      const of = counts.of ?? findings.length;
+      const read = counts.read ?? findings.length;
+      return { findings: apply(findings, phase, read, of) };
+    },
 
     /** Read a page, check it, and decide how loudly to say each thing. */
     observe(snapshot, phase) {
@@ -95,32 +154,10 @@ export function createRun(contract, opts = {}) {
         }
       }
 
-      const findings = checkPage(facts, phase, contract);
-      const rendered = [];
-      for (const f of findings) {
-        const { level, why } = decide(f, { seen, style });
-        seen.add(`${f.widget}|${f.phase}`);
-        const r = render(f, level, channels);
-        rendered.push({ ...r, why });
-        if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
-        if (r.spoken?.holds) waiting.push({ widget: f.widget, ask: f.say, phase });
-      }
-
-      // One entry per page, updated — not one per read.
-      //
-      // A page is read more than once: the navigation trigger fires and an
-      // explicit observe follows. Pushing each time turned the plan into
-      // "Search / Search / Check item / Check item", which reads as though the
-      // agent went round in circles. The last read is the current truth.
-      const prior = steps.find((x) => x.phase === phase);
-      const entry = {
-        phase,
-        read: Object.values(facts).filter((f) => !f.absent).length,
-        of: Object.keys(facts).length,
-        spoke: (prior?.spoke || 0) + rendered.filter((r) => r.level !== 'ambient').length,
-      };
-      if (prior) Object.assign(prior, entry);
-      else steps.push(entry);
+      const rendered = apply(
+        checkPage(facts, phase, contract), phase,
+        Object.values(facts).filter((f) => !f.absent).length,
+        Object.keys(facts).length);
       return { facts, findings: rendered };
     },
 
