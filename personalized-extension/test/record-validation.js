@@ -96,11 +96,32 @@ const RULES = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toISOString().slice(11, 19);
 
-/** The puppeteer page for whichever tab is frontmost, matched by URL. */
+/**
+ * The puppeteer page for the tab the agent is actually working in.
+ *
+ * `lastFocusedWindow` is the wrong question here: the panel is created focused
+ * and is itself a window, so the frontmost tab is a chrome-extension:// page
+ * and every lookup returned nothing. Falling back to the tab this script opened
+ * then captured the landing page for the whole run - 44 captures of Wikipedia's
+ * main page while the agent read the article in a tab of its own, and the same
+ * frame in every video.
+ *
+ * Asking only about normal windows skips the panel, and taking the most
+ * recently active real tab finds the one the agent opened for itself.
+ */
 async function activePage(browser, sw) {
-  const url = await sw(() => new Promise((r) => chrome.tabs.query(
-    { active: true, lastFocusedWindow: true }, (t) => r(t[0]?.url || null))));
-  if (!url || url.startsWith('chrome-extension://')) return null;
+  const url = await sw(() => new Promise((r) => {
+    chrome.windows.getAll({ windowTypes: ['normal'], populate: true }, (wins) => {
+      const tabs = [];
+      for (const w of wins || []) for (const t of w.tabs || []) tabs.push(t);
+      const real = tabs.filter((t) => t.url && /^https?:/.test(t.url));
+      const active = real.filter((t) => t.active);
+      const pick = (active.length ? active : real)
+        .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+      r(pick ? pick.url : null);
+    });
+  }));
+  if (!url) return null;
   for (const p of await browser.pages()) if (p.url() === url) return p;
   return null;
 }
@@ -341,14 +362,19 @@ async function runScenario(sc) {
         // question the layer missed from one the page never answered. Without
         // it every gold question the run did not surface looks like a miss,
         // including the ones whose answer was never on screen.
-        const text = await (live || page).evaluate(
-          () => document.body?.innerText || '').catch(() => '');
+        // Only from the tab the agent is really on. Falling back to the tab
+        // this script opened is what produced a whole run of landing-page
+        // captures, and a blank record is honest where a stale one is not.
+        const text = live
+          ? await live.evaluate(() => document.body?.innerText || '').catch(() => '')
+          : '';
         if (text) {
           fs.appendFileSync(path.join(out, 'pages.jsonl'), `${JSON.stringify({
             frame: id, at: stamp(), url: (live || page).url(), text })}\n`);
         }
         await (live || page).screenshot(
           { path: path.join(out, 'frames', `page-${id}.png`) }).catch(() => {});
+        if (!live) note('warn', { summary: 'could not find the agent\'s tab for this frame' });
         await panel.screenshot(
           { path: path.join(out, 'frames', `panel-${id}.png`) }).catch(() => {});
         frame += 1;

@@ -323,24 +323,35 @@ export async function generate(query, opts = {}) {
   const treeJson = modelJson(model);
   const chunks = leafChunks(model);
   let asked = 0;
-  for (let i = 0; i < chunks.length; i += 1) {
-    if (stop()) return null;
-    say({ stage: 'questions', of: 3, part: i + 1, parts: chunks.length });
-    const scope = chunks[i].map((n) =>
+  let landed = 0;
+  // The batches do not depend on each other, so running them one after another
+  // just multiplies the wait. Sequentially, generation never once finished
+  // inside a recorded run - all four ended part way through this stage and the
+  // coding stage never ran at all, so the layer spent every run checking
+  // against a partial model. Together they take about as long as the slowest
+  // one. Each is attached and handed over the moment it lands.
+  await Promise.all(chunks.map(async (chunk, i) => {
+    if (stop()) return;
+    const scope = chunk.map((n) =>
       `${n.id} ${n.label || ''}${n.note ? ` - ${n.note}` : ''}`).join('\n');
     try {
       const qlist = await call(fill(PROMPTS['strong-questions'], {
         EXEMPLAR: qBlock, TASK: model.task, ASK: model.ask || '',
         TREE: treeJson, SCOPE: scope,
       }), `gen-questions-${i}`);
+      if (stop()) return;
       asked += attachQuestions(model, qlist).attached;
+      landed += 1;
+      say({ stage: 'questions', of: 3, part: landed, parts: chunks.length });
       // Usable now, for the phases covered so far.
       hand(model);
     } catch (e) {
       // One chunk failing costs its questions, not the model.
-      say({ stage: 'questions', of: 3, part: i + 1, parts: chunks.length, failed: e.message });
+      landed += 1;
+      say({ stage: 'questions', of: 3, part: landed, parts: chunks.length, failed: e.message });
     }
-  }
+  }));
+  if (stop()) return null;
   if (!asked) return null;   // a tree with no questions checks nothing
 
   // ---- stage 5: the coding ----
@@ -349,29 +360,35 @@ export async function generate(query, opts = {}) {
     + 'question carrying its cluster and its moment:');
   const modelJsonStr = modelJson(model);
   const qs = flattenQuestions(model);
+  const codeChunks = [];
   for (let i = 0; i < qs.length; i += QUESTIONS_PER_CALL) {
-    if (stop()) return null;
-    say({ stage: 'coding', of: 3, part: Math.floor(i / QUESTIONS_PER_CALL) + 1,
-      parts: Math.ceil(qs.length / QUESTIONS_PER_CALL) });
+    codeChunks.push({ i, qs: qs.slice(i, i + QUESTIONS_PER_CALL) });
+  }
+  let coded = 0;
+  await Promise.all(codeChunks.map(async ({ i, qs: chunk }) => {
+    if (stop()) return;
     // The path, not just the id. Coding in chunks means the model is otherwise
     // asked "is continuing past this hard to undo?" about a bare sentence with
     // no idea it sits under "Check out and pay".
-    const scope = qs.slice(i, i + QUESTIONS_PER_CALL).map((q) =>
-      `${q.nodeId} | ${q.path} | "${q.question}"`).join('\n');
+    const scope = chunk.map((q) => `${q.nodeId} | ${q.path} | "${q.question}"`).join('\n');
     try {
       const out = await call(fill(PROMPTS['strong-coding'], {
         TYPE_CARDS: PROMPTS['type-cards'], PARADIGM_CARDS: PROMPTS['strong-paradigm-cards'],
         EXEMPLAR: cBlock, MODEL: modelJsonStr, SCOPE: scope,
         TASK: model.task || '', ASK: model.ask || '',
       }), `gen-coding-${i}`);
+      if (stop()) return;
       applyCodings(model, out);
+      coded += 1;
+      say({ stage: 'coding', of: 3, part: coded, parts: codeChunks.length });
       hand(model);
     } catch (e) {
       // Uncoded questions still get asked; they just carry no paradigm and
       // cannot raise a money-moving stop.
-      say({ stage: 'coding', of: 3, failed: e.message });
+      coded += 1;
+      say({ stage: 'coding', of: 3, part: coded, parts: codeChunks.length, failed: e.message });
     }
-  }
+  }));
 
   model.generatedFor = query;
   model.generatedAt = Date.now();
