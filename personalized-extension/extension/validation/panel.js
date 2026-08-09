@@ -201,8 +201,11 @@ export function mountValidationPanel(root, { onControl } = {}) {
     // The finding the gate is holding for renders in the gate block above,
     // with the gate's own answers - listing it again below gave the same
     // question two different button rows. One question, one place.
+    // Only the one the gate block is actually showing. Excluding everything the
+    // gate waits on hid every finding behind a single summary line.
     const heldNow = new Set(
-      (state.gate && state.gate.allowed === false && state.gate.waitingOn) || []);
+      (state.gate && state.gate.allowed === false && state.gate.leading)
+        ? [state.gate.leading] : []);
     const findings = (state.findings || [])
       .filter((f) => f.level !== 'ambient' || f.confirming)
       .filter((f) => !heldNow.has(f.widget));

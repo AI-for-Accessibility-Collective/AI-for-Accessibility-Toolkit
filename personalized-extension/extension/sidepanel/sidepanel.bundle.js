@@ -120,7 +120,7 @@
         root.append(box);
       }
       const heldNow = new Set(
-        state.gate && state.gate.allowed === false && state.gate.waitingOn || []
+        state.gate && state.gate.allowed === false && state.gate.leading ? [state.gate.leading] : []
       );
       const findings = (state.findings || []).filter((f) => f.level !== "ambient" || f.confirming).filter((f) => !heldNow.has(f.widget));
       if (!findings.length) {

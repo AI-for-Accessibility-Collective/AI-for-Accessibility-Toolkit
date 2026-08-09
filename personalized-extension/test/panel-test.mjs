@@ -83,6 +83,44 @@ const draw = async (state) => {
     'and nothing else - asking must never steer the agent');
 }
 
+// ── everything found is visible, not just the one being waited on ───────────
+//
+// The gate holds for every unread finding at once, and the panel used to hide
+// everything the gate was waiting on. So a run that found three things showed
+// one of them, said "And 2 more you haven't seen", and offered no way to see
+// them. A recorded Wikipedia run lost the completion date and the architect
+// that way — both found, both quoted, neither on screen.
+{
+  const findings = [
+    { widget: 'search box', phase: 'Find', level: 'aside', say: 'There is a search box.' },
+    { widget: 'completion date', phase: 'Read', level: 'aside',
+      say: 'It was finished in 1889.', from: '31 March 1889' },
+    { widget: 'architect', phase: 'Read', level: 'aside',
+      say: 'Stephen Sauvestre is listed.', from: 'Stephen Sauvestre' },
+  ];
+  const { root } = await draw({
+    ...BASE,
+    findings,
+    gate: { allowed: false, waitingOn: findings.map((f) => f.widget),
+      leading: 'search box', unread: 3,
+      say: 'Waiting for you: There is a search box. And 2 more you haven\'t seen.' },
+  });
+  const text = root.textContent;
+  ok(/It was finished in 1889/.test(text), 'the second finding is on screen');
+  ok(/Stephen Sauvestre is listed/.test(text), 'and so is the third');
+  ok(/31 March 1889/.test(text),
+    'each with the page\'s own words, which is the whole basis for believing it');
+
+  const rows = [...root.querySelectorAll('.va-do')]
+    .filter((b) => /Got it/.test(b.textContent));
+  ok(rows.length >= 2, 'and each one can be waved past, so the agent is not stuck');
+
+  const lead = [...root.querySelectorAll('li')]
+    .filter((li) => /There is a search box/.test(li.textContent));
+  ok(lead.length === 0,
+    'the one the gate is already showing is not listed twice with two button rows');
+}
+
 // ── holding a part of the task ───────────────────────────────────────────────
 {
   const { root, calls } = await draw({
