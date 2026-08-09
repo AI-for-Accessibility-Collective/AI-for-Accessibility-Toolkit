@@ -22,10 +22,17 @@
 //     once, so "the current subtask" is often not even one thing.
 //
 //   * Every non-null answer carries a verbatim quote from the page, verified by
-//     plain string containment — exact, then whitespace-collapsed. An answer
-//     whose quote is not literally in the text is DISCARDED and counted. No
-//     regex, no similarity score, no embeddings: a fuzzy match is a way for a
-//     sentence the page never said to reach a person who cannot check it.
+//     plain string containment. An answer whose quote is not literally in the
+//     text is DISCARDED and counted. No regex, no similarity score, no
+//     embeddings: a fuzzy match is a way for a sentence the page never said to
+//     reach a person who cannot check it. Containment is retried through a
+//     short list of normalization steps - whitespace, invisible characters,
+//     backslash escapes, quote marks, an ellipsis standing in for a character
+//     the model could not render - applied to the page and the quote alike,
+//     because the dump's own punctuation was throwing away correct answers.
+//     Each step only deletes or canonicalises characters, so none of them lets
+//     a quote skip over words the page does not have. See the comment above
+//     verifyQuoteAt.
 //
 //   * The open noticing pass — "anything here that none of the questions asked
 //     about?" — returns a quote too, so it is checkable the same way. A pass
@@ -312,23 +319,121 @@ export function parseJsonLoose(text) {
 
 // ── quote verification ───────────────────────────────────────────────────────
 //
-// Deliberately dumb, and it stays that way. The question a quote answers is
-// "are these words on the page", which string containment answers exactly.
-// Every softer test — a regex, an edit distance, a similarity threshold — turns
-// that into "are these words close enough to something on the page", and the
-// person on the other end has no way to check the difference.
+// String containment, and it stays that way. The question a quote answers is
+// "are these words on the page", which containment answers exactly. Every
+// softer test — a regex, an edit distance, a similarity threshold — turns that
+// into "are these words close enough to something on the page", and the person
+// on the other end has no way to check the difference. There is no threshold
+// here and there never will be.
+//
+// What is here instead is a short list of normalization levels. Each level
+// applies the SAME deterministic rewrite to the quote and to the page, then
+// asks for plain containment again. Every rewrite either deletes characters
+// from a fixed set or maps characters to a canonical form. None of them lets a
+// quote skip over words the page does not have: the quote still has to be one
+// contiguous run of page text once both sides have been rewritten. So a match
+// at any level still means the words are on the page, differing only in
+// characters that level deleted or canonicalised.
+//
+// The levels, in the order they are tried, and what each one is for:
+//
+//   exact       nothing at all.
+//   whitespace  runs of whitespace collapse to one space.
+//   unicode     NFKC, then every Unicode format character (category Cf) is
+//               deleted. Cf is invisible by definition — U+202B, U+200B,
+//               U+00AD — so a model copying the text cannot reproduce it.
+//   unescape    backslash escapes are resolved. An accessibility dump writes
+//               an inner double quote as \", and the model copies the quote
+//               mark it can see, not the backslash in front of it.
+//   quotes      quote marks are deleted. The dump wraps node labels in quotes
+//               of its own, and a model copying the label drops the wrapper.
+//               Curly and straight quotes also stop being different characters.
+//   ellipsis    an ellipsis is deleted. A model that meets a character it
+//               cannot render writes one in its place, which is how six
+//               correct answers about an order number were lost. Note DELETED,
+//               never expanded — "A...B" is evidence for "AB" and for nothing
+//               else, so an ellipsis still cannot stand in for missing words.
+//
+// Measured over the 4,200 stored answers of the reasoner benchmark: the eight
+// discards this rescues are all genuinely on the page, and 823 deliberately
+// fabricated quotes built out of the real ones were still rejected, every one.
+// See taskmodel/reasoner-bench/QUOTE-VERIFICATION.md.
+//
+// `verify` keeps its five old values and verified_exact keeps meaning
+// byte-for-byte exact. `verifyLevel` records which level matched.
 
-const collapse = (s) => String(s).replace(/\s+/g, ' ').trim();
+// Spelt out rather than left to \s, because Node and Python disagree about
+// U+0085, U+001C–U+001F and U+FEFF, and this rule has to mean the same thing
+// in the extension and in the benchmark that vouches for it.
+const WS = /[\s\u001c-\u001f\u0085\u180e\ufeff]+/g;
+const collapse = (s) => String(s).replace(WS, ' ').trim();
+
+const FORMAT_CHARS = /\p{Cf}/gu;
+const ELLIPSIS = /[\u2026\u2025\u22ef]|\.{3,}/g;
+const QUOTE_CHARS = /["'\u2018\u2019\u201a\u201b\u201c\u201d\u201e\u201f\u2039\u203a\u00ab\u00bb]/g;
+const ESCAPE = /\\(u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|[\s\S])/g;
+const ESCAPES = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f', v: '\v', 0: '\0' };
+
+/** Resolve backslash escapes. An unknown escape just loses its backslash,
+ *  which is a deletion like any other and stays symmetric across both sides. */
+const unescape = (s) => s.replace(ESCAPE, (_, tok) => {
+  if ((tok[0] === 'u' || tok[0] === 'x') && tok.length > 1) {
+    const cp = parseInt(tok.slice(1), 16);
+    return Number.isNaN(cp) ? tok : String.fromCodePoint(cp);
+  }
+  return tok in ESCAPES ? ESCAPES[tok] : tok;
+});
+
+function rewrite(s, o) {
+  let t = String(s);
+  if (o.ellipsis) t = t.replace(ELLIPSIS, '');
+  if (o.unescape) t = unescape(t);
+  if (o.unicode) t = t.normalize('NFKC').replace(FORMAT_CHARS, '');
+  if (o.quotes) t = t.replace(QUOTE_CHARS, '');
+  return collapse(t);
+}
+
+/** Tried in this order; the first level that contains the quote wins. */
+export const LEVELS = [
+  ['whitespace', {}],
+  ['unicode', { unicode: true }],
+  ['unescape', { unicode: true, unescape: true }],
+  ['quotes', { unicode: true, unescape: true, quotes: true }],
+  ['ellipsis', { unicode: true, unescape: true, quotes: true, ellipsis: true }],
+];
+
+/**
+ * Every rewritten form of the page, built once and reused across rows. The
+ * page is the expensive side — hundreds of thousands of characters — and one
+ * settle verifies dozens of quotes against it.
+ */
+export function pageForms(pageText) {
+  const forms = {};
+  for (const [name, opts] of LEVELS) forms[name] = rewrite(pageText, opts);
+  return forms;
+}
 
 const NON_ANSWERS = new Set(['', 'null', 'none', 'n/a', 'na', 'not stated',
                              'the page does not say']);
 
+/** { verify, level } — level names the step it matched at, null if none did. */
+export function verifyQuoteAt(quote, pageText, forms) {
+  if (!quote || typeof quote !== 'string' || !quote.trim()) {
+    return { verify: 'missing_quote', level: null };
+  }
+  if (pageText.includes(quote)) return { verify: 'verified_exact', level: 'exact' };
+  const f = forms ?? pageForms(pageText);
+  for (const [name, opts] of LEVELS) {
+    if (f[name].includes(rewrite(quote, opts))) {
+      return { verify: 'verified_normalized', level: name };
+    }
+  }
+  return { verify: 'hallucinated_quote', level: null };
+}
+
 /** verified_exact | verified_normalized | hallucinated_quote | missing_quote */
-export function verifyQuote(quote, pageText, pageNorm) {
-  if (!quote || typeof quote !== 'string' || !quote.trim()) return 'missing_quote';
-  if (pageText.includes(quote)) return 'verified_exact';
-  if ((pageNorm ?? collapse(pageText)).includes(collapse(quote))) return 'verified_normalized';
-  return 'hallucinated_quote';
+export function verifyQuote(quote, pageText, forms) {
+  return verifyQuoteAt(quote, pageText, forms).verify;
 }
 
 export const isVerified = (v) =>
@@ -339,27 +444,30 @@ export const isVerified = (v) =>
  * the correct majority — most questions are not answerable on most pages.
  */
 export function verifyQuotes(rows, pageText) {
-  const pageNorm = collapse(pageText);
+  const forms = pageForms(pageText);
   return (rows || []).map((r) => {
     const a = { ...r };
     const ans = a.answer;
     if (ans == null || (typeof ans === 'string' && NON_ANSWERS.has(ans.trim().toLowerCase()))) {
       a.answer = null;
       a.verify = 'null';
+      a.verifyLevel = null;
       return a;
     }
     a.answer = String(ans);
-    a.verify = verifyQuote(a.quote, pageText, pageNorm);
+    const { verify, level } = verifyQuoteAt(a.quote, pageText, forms);
+    a.verify = verify;
+    a.verifyLevel = level;
     return a;
   });
 }
 
 export function verifyNoticed(items, pageText) {
-  const pageNorm = collapse(pageText);
-  return (items || []).slice(0, MAX_NOTICED).map((n) => ({
-    ...n,
-    verify: verifyQuote(n.quote, pageText, pageNorm),
-  }));
+  const forms = pageForms(pageText);
+  return (items || []).slice(0, MAX_NOTICED).map((n) => {
+    const { verify, level } = verifyQuoteAt(n.quote, pageText, forms);
+    return { ...n, verify, verifyLevel: level };
+  });
 }
 
 // ── the call ─────────────────────────────────────────────────────────────────

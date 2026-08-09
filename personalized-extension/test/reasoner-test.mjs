@@ -154,6 +154,104 @@ await check('an honest absence is null, not a sentence saying it is absent', () 
   assert.strictEqual(a.verify, 'null');
   assert.strictEqual(b.verify, 'null');
   assert.strictEqual(b.answer, null);
+  assert.strictEqual(a.verifyLevel, null);
+});
+
+// ── the normalization levels ────────────────────────────────────────────────
+//
+// Plain containment threw away eight correct answers across the 90 benchmark
+// calls, every one of them a punctuation or invisible-character mismatch
+// between what the accessibility dump wrote and what the model could copy.
+// Each level below is one of those failures, taken off the page it happened on.
+// The level a quote matches at is recorded, so a quote that needed cleaning
+// never passes for one that was copied exactly.
+
+const SEARCH = readFileSync(join(RESEARCH, 'assets/task-mapping/_obs/sandals-step1.txt'), 'utf8');
+const GMAIL = readFileSync(join(RESEARCH, 'assets/task-mapping/_obs/email-confirm-gmail-aria.txt'), 'utf8');
+const ORDER = 'Arriving tomorrow David - MENLO PARK, CA Order # ';
+
+await check('exact still means exact, and says so', () => {
+  assert.deepStrictEqual(R.verifyQuoteAt(EXACT, PAGE),
+                         { verify: 'verified_exact', level: 'exact' });
+});
+
+await check('whitespace: the same words spaced differently', () => {
+  assert.deepStrictEqual(R.verifyQuoteAt(SPACED, PAGE),
+                         { verify: 'verified_normalized', level: 'whitespace' });
+});
+
+await check('unicode: an invisible character the model cannot copy', () => {
+  // The Gmail confirmation carries U+202B inside the order number. A model
+  // reading the page has nothing to copy there.
+  assert.ok(GMAIL.includes(`${ORDER}‫113-2116825-7916228`));
+  assert.deepStrictEqual(R.verifyQuoteAt(`${ORDER}113-2116825-7916228`, GMAIL),
+                         { verify: 'verified_normalized', level: 'unicode' });
+});
+
+await check('unescape: the dump writes an inner quote as backslash-quote', () => {
+  const dumped = '- link "Sponsored ad from DREAM PAIRS. \\"Dress sandals for girls.\\" Shop DREAM PAIRS.":';
+  const copied = 'Sponsored ad from DREAM PAIRS. "Dress sandals for girls." Shop DREAM PAIRS.';
+  assert.ok(SEARCH.includes(dumped));
+  assert.ok(!SEARCH.includes(copied));
+  assert.deepStrictEqual(R.verifyQuoteAt(copied, SEARCH),
+                         { verify: 'verified_normalized', level: 'unescape' });
+});
+
+await check('quotes: the dump wraps the label, the model copies the label', () => {
+  assert.ok(PAGE.includes('- \'link "Brand: WUROSO"\':'));
+  assert.deepStrictEqual(R.verifyQuoteAt('link "Brand: WUROSO":', PAGE),
+                         { verify: 'verified_normalized', level: 'quotes' });
+});
+
+await check('ellipsis: a placeholder for a character that would not render', () => {
+  // This one call lost six correct answers about the same order number.
+  assert.deepStrictEqual(R.verifyQuoteAt(`${ORDER}…113-2116825-7916228`, GMAIL),
+                         { verify: 'verified_normalized', level: 'ellipsis' });
+  assert.deepStrictEqual(R.verifyQuoteAt(`${ORDER}...113-2116825-7916228`, GMAIL),
+                         { verify: 'verified_normalized', level: 'ellipsis' });
+});
+
+await check('a fabricated quote is still rejected after every level', () => {
+  // One digit of the order number changed, wearing the ellipsis that rescues
+  // the real one.
+  assert.strictEqual(R.verifyQuote(`${ORDER}…113-2116825-7916229`, GMAIL),
+                     'hallucinated_quote');
+  // A made-up brand, wearing the quoting that rescues the real label.
+  assert.strictEqual(R.verifyQuote('link "Brand: NOTWUROSO":', PAGE),
+                     'hallucinated_quote');
+  // Same digits, different currency. Nothing deletes a currency symbol.
+  assert.strictEqual(R.verifyQuote('- text: €14.99', PAGE), 'hallucinated_quote');
+  // An extra clause bolted onto real page text.
+  assert.strictEqual(R.verifyQuote(`${EXACT} limited time offer`, PAGE),
+                     'hallucinated_quote');
+});
+
+await check('an ellipsis is deleted, never expanded — it cannot bridge a gap', () => {
+  // Both ends are real page text. The words between them are not being
+  // claimed, they are being skipped, and skipping is what a fuzzy match would
+  // allow and containment must not.
+  assert.ok(GMAIL.includes('Arriving tomorrow David'));
+  assert.ok(GMAIL.includes('7916228'));
+  assert.strictEqual(R.verifyQuote('Arriving tomorrow David …7916228', GMAIL),
+                     'hallucinated_quote');
+  assert.strictEqual(R.verifyQuote('Arriving tomorrow David ...7916228', GMAIL),
+                     'hallucinated_quote');
+});
+
+await check('the level is recorded on the row, next to the verdict', () => {
+  const rows = R.verifyQuotes([
+    { answer: '$14.99', quote: EXACT },
+    { answer: 'WUROSO', quote: 'link "Brand: WUROSO":' },
+    { answer: '$9.99', quote: FABRICATED },
+  ], PAGE);
+  assert.deepStrictEqual(rows.map((r) => r.verifyLevel), ['exact', 'quotes', null]);
+  assert.deepStrictEqual(rows.map((r) => R.isVerified(r.verify)), [true, true, false]);
+});
+
+await check('a noticed item carries its level too', () => {
+  const [n1] = R.verifyNoticed([{ what: 'brand', quote: 'link "Brand: WUROSO":' }], PAGE);
+  assert.strictEqual(n1.verify, 'verified_normalized');
+  assert.strictEqual(n1.verifyLevel, 'quotes');
 });
 
 // ── one whole read, with the call stubbed ───────────────────────────────────
