@@ -212,13 +212,25 @@ export function mountValidationPanel(root, { onControl } = {}) {
     if (!findings.length) {
       root.append(el('div', 'va-empty', 'Nothing to flag yet.'));
     } else {
+      // What has already been waved past. Without this a finding kept its live
+      // buttons after being dismissed, so pressing "Got it" changed nothing on
+      // screen and the same two items were dismissed over and over for the
+      // length of a recorded Amazon run. The finding stays visible — it is part
+      // of the record of what was checked — it just stops asking.
+      const seenAlready = new Set(state.acknowledged || []);
       const list = el('ul', 'va-list');
       for (const f of findings) {
-        const li = el('li', `va-item ${tone(f)}`);
+        const done = seenAlready.has(`${f.widget}|${f.phase}|${f.say}`);
+        const li = el('li', `va-item ${tone(f)}${done ? ' va-read' : ''}`);
         li.append(el('span', 'va-dot'));
         const body = el('div', 'va-body');
         body.append(el('p', 'va-text', f.say));
         if (f.from) body.append(el('p', 'va-where', f.from));
+        if (done) {
+          li.append(body);
+          list.append(li);
+          continue;
+        }
         const row = el('div', 'va-answers');
         if (f.control) {
           const b = el('button', 'va-do', f.control.label);

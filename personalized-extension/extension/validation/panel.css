@@ -234,3 +234,8 @@
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* Already waved past. Kept on screen because it is part of the record of what
+   was checked, but it stops asking. */
+.va-item.va-read { opacity: 0.55; }
+.va-item.va-read .va-dot { background: var(--va-muted, #9aa0a6); }

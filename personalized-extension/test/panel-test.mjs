@@ -115,6 +115,25 @@ const draw = async (state) => {
     .filter((b) => /Got it/.test(b.textContent));
   ok(rows.length >= 2, 'and each one can be waved past, so the agent is not stuck');
 
+  // Pressing it has to change something on screen. It did not, and a recorded
+  // Amazon run dismissed the same two findings every four seconds for the
+  // length of the run because nothing ever looked answered.
+  const after = await draw({
+    ...BASE,
+    findings,
+    acknowledged: ['completion date|Read|It was finished in 1889.'],
+    gate: { allowed: false, waitingOn: ['search box'], leading: 'search box', unread: 1,
+      say: 'Waiting for you: There is a search box.' },
+  });
+  const doneItem = [...after.root.querySelectorAll('li')]
+    .find((li) => /It was finished in 1889/.test(li.textContent));
+  ok(!!doneItem, 'an answered finding stays on screen, as part of what was checked');
+  ok(doneItem.className.includes('va-read'), 'but it is marked as read');
+  ok(!doneItem.querySelector('button'), 'and it stops asking');
+  const stillAsking = [...after.root.querySelectorAll('li')]
+    .find((li) => /Stephen Sauvestre/.test(li.textContent));
+  ok(!!stillAsking.querySelector('button'), 'while the one not yet answered still asks');
+
   const lead = [...root.querySelectorAll('li')]
     .filter((li) => /There is a search box/.test(li.textContent));
   ok(lead.length === 0,
