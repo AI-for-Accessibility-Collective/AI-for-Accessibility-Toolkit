@@ -24,16 +24,26 @@ import { render } from './render.js';
 // delegation removed — and are handed back rather than described.
 const READS = {
   Search: ['resultSet', 'resultCount', 'sponsoredCount', 'priceNow', 'priceTypical',
-           'firstOrganicIndex', 'activeFilters', 'sortOrder', 'badges'],
+           'firstOrganicIndex', 'activeFilters', 'sortOrder', 'badges',
+           'searchEcho', 'searchDepartment',
+           'tilePrices', 'tileRatings', 'tileRatingCounts', 'filterNames',
+           'sortOptions', 'tileHasPhoto'],
   'Check item': ['title', 'buyBoxPrice', 'rating', 'ratingCount', 'sizeOptions',
                  'selectedSize', 'stockLine', 'galleryCount', 'photoAltText',
-                 'deliveryDate', 'countdown', 'returnsBadge', 'specRows'],
-  'Add to cart': ['addConfirmation', 'cartCount', 'cartLines', 'cartLineSize'],
+                 'deliveryDate', 'countdown', 'returnsBadge', 'specRows',
+                 'variantPrices', 'couponLine',
+                 'colorSwatches', 'hiddenColorCount', 'galleryAlt',
+                 'reviewCount', 'reviewText', 'returnsPolicy', 'detailsTable'],
+  // buyBoxPrice again at the add: the recorded run's price moved from $12.93
+  // to $15.10 when the size was picked, and only a re-read at this step can
+  // catch that against what the run remembers.
+  'Add to cart': ['addConfirmation', 'cartCount', 'cartLines', 'cartLineSize',
+                  'buyBoxPrice', 'selectedSize', 'quantityPreset'],
   Checkout: ['shipAddress', 'deliveryOptions', 'selectedDelivery', 'formErrors'],
   'Review order': ['itemCount', 'itemsSubtotal', 'orderTotal', 'tax', 'arrivalDate',
                    'cardLabel', 'cardLastFour', 'orderLines'],
   Confirm: ['outcomeHeading', 'orderNumber', 'confirmationEmail', 'cancelControl',
-            'orderStatus'],
+            'orderStatus', 'adBlocks', 'orderTotal'],
 };
 
 // Plain names for the extractors, supplied with the rest of the analysis.
@@ -54,6 +64,7 @@ export function createRun(contract, opts = {}) {
   const gaps = [];             // extractors that could not read something
   const waiting = [];          // unresolved stops — the agent may not pass these
   const steps = [];            // the plan, with outcomes
+  let firstPrice = null;       // the first buy-box price this run saw, and where
 
   return {
     contract,
@@ -62,6 +73,19 @@ export function createRun(contract, opts = {}) {
     observe(snapshot, phase) {
       const want = READS[phase] || [];
       const facts = read(snapshot, want);
+
+      // The run remembers the first buy-box price it saw. The recorded run's
+      // own event: $12.93 on the first read, $15.10 once size 5 Big Kid was
+      // picked — no single page shows both numbers, so the check gets the
+      // remembered one handed to it as a fact with its provenance.
+      if (facts.buyBoxPrice && !facts.buyBoxPrice.absent) {
+        if (!firstPrice) {
+          firstPrice = { value: facts.buyBoxPrice.value, phase };
+        } else {
+          facts.priceFirstSeen = { value: firstPrice.value,
+                                   from: `remembered from ${firstPrice.phase}` };
+        }
+      }
 
       for (const [k, v] of Object.entries(facts)) {
         // Recorded once per extractor per phase. Re-reading a page does not

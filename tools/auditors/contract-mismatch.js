@@ -163,6 +163,72 @@ const manyProducts = (F, c) => {
   return out;
 };
 
+// ── the ask against the search box ───────────────────────────────────────────
+//
+// Three questions about the SEARCH itself rather than the results: did it
+// search my words, where did it search, and can it actually read everything it
+// claims to be weighing. None depends on the result set existing, so they live
+// apart from search(), which returns early without one.
+const searchAsk = (F, c) => {
+  const out = [];
+
+  // Did it search what you said? The page echoes the query it ran in the
+  // results heading. Ask-words missing from that echo mean the agent searched
+  // something else, and the summary would never say so.
+  const echo = F.searchEcho?.value;
+  if (echo) {
+    // ask.js owns what "the query" means; outside the extension (tests, the
+    // CLI host) the global is not loaded, so compose the same way it does.
+    const q = globalThis.ValidationAsk?.toQuery?.(c)
+      || [c.item, ...(c.mustHaves || [])].filter(Boolean).join(' ');
+    const said = new Set(echo.toLowerCase().split(/\W+/).filter(Boolean));
+    const absent = [...new Set(q.toLowerCase().split(/\W+/))]
+      .filter((w) => w && !said.has(w));
+    out.push(absent.length
+      ? { widget: 'What it searched',
+          say: `It searched ${echo}. Your ask also said ${listOf(absent)}.`,
+          from: F.searchEcho.from, answerable: true,
+          control: { label: 'Read me where it says that', action: 'facts-source',
+                     decline: 'Got it' } }
+      : { widget: 'What it searched', say: `It searched your words: ${echo}.`,
+          from: F.searchEcho.from, confirming: true, answerable: false });
+  }
+
+  // Which department is it searching? "All Departments" is the default nobody
+  // chose. Only worth a word when the count says the query is matching too
+  // much — judged against the analysis's own mark, the same one the count
+  // gauge draws, never a number invented here.
+  const dept = F.searchDepartment?.value;
+  const total = F.resultCount?.absent ? null : F.resultCount?.value;
+  const mark = COUNT_ZONES?.[1]?.to;
+  if (dept && /^all\b/i.test(dept) && total != null && mark && total > mark) {
+    out.push({
+      widget: 'Department scope',
+      say: `It searched all departments. ${total.toLocaleString()} results is `
+         + `every shelf in the shop.`,
+      from: F.searchDepartment.from, answerable: true,
+      control: { label: 'Scope it to a department', action: 'select-options',
+                 decline: 'You pick' },
+    });
+  }
+
+  // Can you scan them all? A sighted person sweeps a grid of 48 in a glance; a
+  // readback visits tiles one at a time, so the size of the set IS the cost of
+  // hearing it. Said once, as an aside, when the set is bigger than one
+  // readback holds — eight or more, from the analysis's accepted question.
+  const S = F.resultSet?.value;
+  if (S && S.count >= 8) {
+    out.push({
+      widget: 'Scan them all',
+      say: `${S.count} tiles here. I walk them one at a time.`,
+      from: F.resultSet.from, answerable: false,
+      control: { label: 'Read me the differences', action: 'compare-diff',
+                 decline: 'Fine as is' },
+    });
+  }
+  return out;
+};
+
 const search = (F, c) => {
   const S = F.resultSet?.value;
   if (!S) return [];
@@ -233,13 +299,13 @@ const search = (F, c) => {
         sources: [
           { who: 'the shop', said: `${badged.badge} label`, agrees: true },
           { who: 'buyers', said: `${S.bestRated.rating}★ from ` +
-              `${S.bestRated.ratingCount.toLocaleString()} goes to a different one`,
+              `${S.bestRated.ratingCount?.toLocaleString() ?? "an unread number of"} goes to a different one`,
             agrees: false },
         ],
       },
       say: `The one carrying the shop's ${badged.badge} label isn't the best rated. ` +
            `The best rated has ${S.bestRated.rating} stars from ` +
-           `${S.bestRated.ratingCount.toLocaleString()} ratings.`,
+           `${S.bestRated.ratingCount?.toLocaleString() ?? "an unread number of"} ratings.`,
       from: `${badged.badge} vs best-rated`, answerable: true,
     });
   }
@@ -359,6 +425,41 @@ const checkItem = (F, c) => {
     out.push({ widget: 'The stock line, spoken', say: `The buy box says: ${stock}.`,
                from: F.stockLine.from, answerable: false });
   }
+
+  // Does colour change the price? Each colour radio prices itself, so this is
+  // the page's own answer. All-the-same is said too — otherwise silence here
+  // is indistinguishable from never having looked.
+  const vp = F.variantPrices;
+  if (vp?.value?.length > 1) {
+    if (vp.distinct.length > 1) {
+      const each = [...vp.distinct].sort((a, b) => a - b).map((p) => {
+        const opts = vp.value.filter((x) => x.price === p).map((x) => x.option);
+        return `${listOf(opts)} at ${money(p)}`;
+      });
+      out.push({
+        widget: 'Colour price spread',
+        say: `The colours carry different prices: ${each.join('; ')}.`,
+        from: vp.from, answerable: true,
+        control: { label: 'Read me each colour with its price', action: 'compare-diff',
+                   decline: 'Fine as is' },
+      });
+    } else {
+      out.push({ widget: 'Colour price spread',
+                 say: `All ${vp.value.length} colours are the same ${money(vp.distinct[0])}.`,
+                 from: vp.from, confirming: true, answerable: false });
+    }
+  }
+
+  // Any coupon to tick? A saving that exists only as an untouched checkbox is
+  // a price the person is quietly not getting.
+  if (F.couponLine?.value) {
+    out.push({
+      widget: 'The coupon tick',
+      say: `There is a coupon: ${F.couponLine.value}.`,
+      from: F.couponLine.from, answerable: true,
+      control: { label: 'Tick the coupon', action: 'coupon-tick', decline: 'Got it' },
+    });
+  }
   return out;
 };
 
@@ -389,6 +490,35 @@ const addToCart = (F, c) => {
   if (n != null) {
     out.push({ widget: 'The Count, Out Loud', say: `Cart count: ${n}.`,
                from: F.cartCount.from, confirming: true, answerable: false });
+  }
+
+  // Does size change the price? The run's own recorded event: the buy box read
+  // $12.93 at first look and $15.10 once size 5 Big Kid was picked — the page
+  // re-priced on a click, and only a memory that spans pages can hear it. The
+  // run supplies that memory as F.priceFirstSeen; this check has no state.
+  const now = F.buyBoxPrice?.value, was = F.priceFirstSeen?.value;
+  if (now != null && was != null) {
+    out.push(now !== was
+      ? { widget: 'The Price Moved',
+          say: `The price moved from ${money(was)} to ${money(now)} when the size changed.`,
+          from: `${F.priceFirstSeen.from}; now ${F.buyBoxPrice.from}`,
+          answerable: true }
+      : { widget: 'The Price Moved', say: `The price held at ${money(now)}.`,
+          from: F.buyBoxPrice.from, confirming: true, answerable: false });
+  }
+
+  // How many is it set to buy? A preset quantity becomes the order without
+  // anyone saying a number out loud. Only checked when the person named one.
+  const qty = F.quantityPreset?.value, wantQty = c.quantity;
+  if (qty != null && wantQty != null) {
+    out.push(qty === Number(wantQty)
+      ? { widget: 'Quantity preset', say: `Quantity is ${qty}, as you asked.`,
+          from: F.quantityPreset.from, confirming: true, answerable: false }
+      : { widget: 'Quantity preset',
+          say: `It is set to buy ${qty}. You asked for ${wantQty}.`,
+          from: F.quantityPreset.from, contradicts: true, answerable: true,
+          control: { label: 'Change the quantity', action: 'select-options',
+                     decline: 'You pick' } });
   }
   return out;
 };
@@ -452,11 +582,31 @@ const confirm = (F) => {
                say: `I can't find a cancel control on this page.`,
                from: F.cancelControl.from, answerable: true });
   }
+
+  // What here is not yours? The confirmation page mixes the receipt with
+  // things being sold — Sponsored carousels, a store-card pitch — and by ear
+  // they arrive in the same voice as the order.
+  const ads = F.adBlocks?.value;
+  if (ads) {
+    const total = F.orderTotal?.value;
+    out.push({
+      widget: 'Not your order',
+      say: `The page mixes your order with adverts.` + (total != null
+        ? ` Your order is the ${money(total)} line.`
+        : (ads.offerPrices
+            ? ` ${ads.offerPrices} of the prices here are offers, not your order.`
+            : '')),
+      from: F.adBlocks.from, answerable: true,
+      control: { label: 'Read me just my order', action: 'facts-source',
+                 decline: 'Got it' },
+    });
+  }
   return out;
 };
 
 export const CHECKS = {
-  Search: (F, c) => search(F, c).concat(manyProducts(F, c)), 'Check item': checkItem, 'Add to cart': addToCart,
+  Search: (F, c) => search(F, c).concat(manyProducts(F, c), searchAsk(F, c)),
+  'Check item': checkItem, 'Add to cart': addToCart,
   'Review order': reviewOrder, Confirm: confirm,
 };
 

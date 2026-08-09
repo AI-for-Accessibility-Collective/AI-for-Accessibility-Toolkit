@@ -300,6 +300,51 @@ export const hiddenColorCount = (lines) => {
   return l ? got(count(capture([l], /(\d+)/)), l.name) : missing('no hidden-colour link');
 };
 
+export const searchEcho = (lines) => {
+  // The words the page says it searched, from the same heading resultCount
+  // parses: `1-48 of 944 results for "girls flat sandals back strap"`. This is
+  // the page's own account of the query, which is the only way to hear that
+  // the agent searched something other than the ask.
+  const i = lines.findIndex((l) => /results\s+for\b/i.test(l.name));
+  if (i < 0) return missing('no results-for heading in this tree');
+  // Captures write quotes inside a name as \" — undo that before reading.
+  const own = lines[i].name.replace(/\\"/g, '"');
+  let echo = (/results\s+for\s*[:]?\s*(.+)$/i.exec(own) || [])[1];
+  // The heading often ends at "results for" and carries the echoed query as
+  // its child text run.
+  if (!echo && lines[i + 1] && lines[i + 1].depth > lines[i].depth) {
+    echo = lines[i + 1].name.replace(/\\"/g, '"');
+  }
+  echo = echo && echo.replace(/^["“]+|["”]+$/g, '').trim();
+  return echo ? got(echo, lines[i].name)
+              : missing('the heading stops at "results for" — the echoed words are not in this tree');
+};
+
+export const searchDepartment = (lines) => {
+  // The department picker beside the search box. Its selected option is the
+  // scope the search actually ran in — "All Departments" until somebody
+  // chooses otherwise, and nobody chose it.
+  const i = lines.findIndex((l) => l.role === 'combobox' && /department|search in/i.test(l.name));
+  if (i >= 0) {
+    for (let j = i + 1; j < lines.length && lines[j].depth > lines[i].depth; j += 1) {
+      if (lines[j].role === 'option' && hasFlag(lines[j], 'selected')) {
+        return got(lines[j].name, `${lines[j].name} [selected]`);
+      }
+    }
+    return missing('the department combobox lists no selected option');
+  }
+  // Mobile pages flatten the picker to a bare "All" inside the search landmark.
+  const s = lines.findIndex((l) => l.role === 'search');
+  if (s >= 0) {
+    for (let j = s + 1; j < lines.length && lines[j].depth > lines[s].depth; j += 1) {
+      if (lines[j].role === 'text' && /^all(\s+departments)?$/i.test(lines[j].name.trim())) {
+        return got(lines[j].name.trim(), 'the "All" scope beside the search box');
+      }
+    }
+  }
+  return missing('no department picker in the tree');
+};
+
 // ─────────────────────────────────────────────────────────── the product page
 export const title = (lines) => {
   // "Product details" and landmark descriptions are also level-1 headings, and
@@ -389,6 +434,32 @@ export const selectedSize = (lines) => {
   const stated = find(lines, /^Size:\s*\S/i);
   if (stated) return got(cutAtNextLabel(stated.name.replace(/^Size:\s*/i, '')), stated.name);
   return missing('no size stated, and no size-shaped radio is checked');
+};
+
+export const variantPrices = (lines) => {
+  // Colour radios carry the whole buy-box blob as their accessible name —
+  // "Purple $14.99 $14.99 FREE Delivery Wednesday In Stock" — so each priced
+  // radio states what THAT variant costs. Size radios carry no money, which is
+  // what keeps this to the options that price themselves.
+  const priced = byRole(lines, 'radio')
+    .map((l) => ({ option: l.name.split(/\s+\$/)[0].trim(),
+                   price: money((l.name.match(/\$[\d,.]+/) || [])[0]) }))
+    .filter((x) => x.price != null && x.option);
+  if (!priced.length) return missing('no variant option carries a price');
+  const distinct = [...new Set(priced.map((x) => x.price))];
+  return { ...got(priced, `${priced.length} priced options, ${distinct.length} distinct price${
+             distinct.length === 1 ? '' : 's'}`),
+           distinct };
+};
+
+export const couponLine = (lines) => {
+  // A coupon offer near the price says more than the word: "Apply 20% coupon",
+  // a checkbox whose name carries the saving. The site nav also has a bare
+  // "Coupons" link on every page, which is not an offer on this item.
+  const l = lines.find((x) => /coupon/i.test(x.name)
+    && !(x.role === 'link' && /^coupons?$/i.test(x.name.trim()))
+    && /[$%]|\bapply\b|\bsave\b|\bclip\b/i.test(x.name));
+  return l ? got(l.name, l.name) : missing('no coupon offer near the price');
 };
 
 export const stockLine = (lines) => {
@@ -489,6 +560,25 @@ export const cartLines = (lines) => {
                       : missing('no product lines distinguishable from the totals');
 };
 
+export const quantityPreset = (lines) => {
+  // How many the page is set to buy: a quantity combobox by the add button, a
+  // "Quantity: 1" text, or the cart's "Quantity is 1" group. A preset of 2
+  // becomes an order of 2 without anyone saying a number out loud.
+  const i = lines.findIndex((l) => l.role === 'combobox' && /quantity/i.test(l.name));
+  if (i >= 0) {
+    const inName = count(capture([lines[i]], /quantity[:\s]*(\d+)/i));
+    if (inName != null) return got(inName, lines[i].name);
+    for (let j = i + 1; j < lines.length && lines[j].depth > lines[i].depth; j += 1) {
+      if (lines[j].role === 'option' && hasFlag(lines[j], 'selected')) {
+        return got(count(lines[j].name), `${lines[j].name} [selected]`);
+      }
+    }
+  }
+  const l = find(lines, /quantity(?:\s+is|:)?\s*\d+/i);
+  if (l) return got(count(capture([l], /quantity(?:\s+is|:)?\s*(\d+)/i)), l.name);
+  return missing('no quantity control near the add button');
+};
+
 export const cartLineSize = (lines) => {
   const l = find(lines, /size:/i);
   return l ? got(capture([l], /Size:\s*([^,]+)/i), l.name)
@@ -586,6 +676,26 @@ export const cancelControl = (lines) => {
   return l ? got(l.name, l.name) : missing('no cancel control on the page');
 };
 
+export const adBlocks = (lines) => {
+  // The confirmation page mixes the order with things being sold: Sponsored
+  // carousels, a store-card pitch, prices that belong to offers rather than to
+  // this order. By ear those arrive in the same voice as the receipt.
+  const sponsored = findAll(lines, /sponsored/i);
+  const upsell = findAll(lines,
+    /store card|get \$\d+ off|customers (also|frequently)|based on your|related products|recommended for you/i);
+  // Money that arrives as a LINK is a product being sold. This order's own
+  // lines and totals are text or listitems, never links.
+  const offerPrices = byRole(lines, 'link').filter((l) => /^\$[\d,.]+/.test(l.name.trim()));
+  if (!sponsored.length && !upsell.length && !offerPrices.length) {
+    return missing('nothing on this page reads as an advert');
+  }
+  const sample = (sponsored[0] || upsell[0] || offerPrices[0]).name.slice(0, 60);
+  return got({ sponsored: sponsored.length, upsell: upsell.length,
+               offerPrices: offerPrices.length, sample },
+             `${sponsored.length + upsell.length} advert markers, ${
+               offerPrices.length} offer prices`);
+};
+
 export const orderStatus = (lines) => {
   const l = find(lines, /cancelled|shipped|delivered|preparing|not yet shipped/i);
   return l ? got(l.name, l.name) : missing('no order status on the page');
@@ -596,15 +706,16 @@ export const EXTRACTORS = {
   resultSet,
   resultCount, sponsoredCount, firstOrganicIndex, tileHasPhoto, photoAltText,
   tilePrices, tileRatings, tileRatingCounts, filterNames, activeFilters,
-  priceNow, priceTypical, colorSwatches, hiddenColorCount, sortOrder,
-  sortOptions, badges, title, specRows, buyBoxPrice, rating, ratingCount,
-  sizeOptions, selectedSize, stockLine, galleryCount, galleryAlt, reviewCount,
+  priceNow, priceTypical, colorSwatches, hiddenColorCount, searchEcho,
+  searchDepartment, sortOrder, sortOptions, badges, title, specRows,
+  buyBoxPrice, rating, ratingCount, sizeOptions, selectedSize, variantPrices,
+  couponLine, stockLine, galleryCount, galleryAlt, reviewCount,
   reviewText, deliveryDate, countdown, returnsBadge, returnsPolicy,
-  detailsTable, addConfirmation, cartCount, cartLineSize, cartLines,
-  shipAddress, deliveryOptions, selectedDelivery, formErrors, itemCount,
-  orderTotal, itemsSubtotal, tax, arrivalDate, cardLabel, cardLastFour,
-  orderLines, outcomeHeading, orderNumber, confirmationEmail, cancelControl,
-  orderStatus,
+  detailsTable, addConfirmation, cartCount, quantityPreset, cartLineSize,
+  cartLines, shipAddress, deliveryOptions, selectedDelivery, formErrors,
+  itemCount, orderTotal, itemsSubtotal, tax, arrivalDate, cardLabel,
+  cardLastFour, orderLines, outcomeHeading, orderNumber, confirmationEmail,
+  cancelControl, orderStatus, adBlocks,
 };
 
 /**
