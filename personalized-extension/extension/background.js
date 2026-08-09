@@ -29,6 +29,21 @@ fetch(chrome.runtime.getURL('validation/corpus.json'))
   })
   .catch(() => {});   // no corpus file is a supported state, not an error
 
+// The task model, loaded the same way and for the same reason.
+//
+// Present, the validation layer reads each page with the reasoner against this
+// model's questions instead of with the Amazon URL regexes and extractors.
+// Absent, nothing changes: the shipped Amazon path runs exactly as before. So
+// this file is the switch between the two, and no file is a supported state.
+fetch(chrome.runtime.getURL('validation/taskmodel.json'))
+  .then((r) => (r.ok ? r.json() : null))
+  .then((m) => {
+    if (!m) return;
+    const n = globalThis.ValidationTaskModel?.load(m, 'validation/taskmodel.json');
+    console.log('[AI4A11y] task model loaded:', n);
+  })
+  .catch(() => {});
+
 // Toolkit datastore layer -- taxonomy (globalThis.AA_TAXONOMY) and the
 // generated built-in tools registry (globalThis.AA_TOOLS) must load before
 // datastore.js, which exposes both via Datastore.global.*.
@@ -251,11 +266,14 @@ ensureUserScriptWorld().then(syncCustomUserScripts);
 // runtime AI calls inside saved skills.
 // audioParts: array of {mimeType, data} for audio transcription (Increment 1
 // captions). Uses the same inlineData path as images.
+// responseSchema + maxOutputTokens: structured output, which the validation
+// reasoner needs. Its benchmark lost 3 of 40 calls to JSON cut off mid-response
+// against no declared cap, so the cap and the schema travel together.
 async function callGemini(prompt, apiKey, optsOrImages) {
   const opts = Array.isArray(optsOrImages)
     ? { images: optsOrImages }
     : (optsOrImages || {});
-  const { images, mimeType, model, audioParts } = opts;
+  const { images, mimeType, model, audioParts, responseSchema, maxOutputTokens } = opts;
 
   const parts = [{ text: prompt }];
   if (images && images.length > 0) {
@@ -281,6 +299,8 @@ async function callGemini(prompt, apiKey, optsOrImages) {
 
   const generationConfig = { temperature: 0.7 };
   if (mimeType) generationConfig.responseMimeType = mimeType;
+  if (responseSchema) generationConfig.responseSchema = responseSchema;
+  if (maxOutputTokens) generationConfig.maxOutputTokens = maxOutputTokens;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000);
@@ -521,6 +541,17 @@ if (globalThis.BrowserAgent) {
   globalThis.BrowserAgent.setGeminiCaller(async (prompt, apiKey, opts) => {
     const key = apiKey || await getApiKey();
     if (!key) throw new Error('No Gemini API key configured. Open extension settings.');
+    return await callGemini(prompt, key, opts);
+  });
+}
+
+// The validation reasoner uses the same one. Not a second provider and not a
+// second key store: the layer that checks the agent runs on the same key the
+// agent does, so there is nothing extra to configure before checking works.
+if (globalThis.ValidationReasoner) {
+  globalThis.ValidationReasoner.setGeminiCaller(async (prompt, opts) => {
+    const key = await getApiKey();
+    if (!key) throw new Error('No Gemini API key configured.');
     return await callGemini(prompt, key, opts);
   });
 }

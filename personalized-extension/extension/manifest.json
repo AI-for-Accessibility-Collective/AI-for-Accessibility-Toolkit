@@ -65,7 +65,8 @@
     },
     {
       "resources": [
-        "validation/corpus.json"
+        "validation/corpus.json",
+        "validation/taskmodel.json"
       ],
       "matches": [
         "<all_urls>"

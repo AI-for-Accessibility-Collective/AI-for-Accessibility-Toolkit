@@ -17,3 +17,8 @@ build/
 # The analysis, copied in from the research repository by its install script.
 # Mechanism lives here; the corpus text does not.
 personalized-extension/extension/validation/corpus.json
+
+# The task model the reasoner reads a page against. Same rule as the corpus:
+# it is a gold built from the recorded studies and belongs in the research
+# repository, which copies it here. Without it the layer runs the Amazon path.
+personalized-extension/extension/validation/taskmodel.json
