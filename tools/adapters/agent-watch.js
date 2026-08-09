@@ -163,11 +163,18 @@ export const AgentWatch = {
       return;                       // the gate is the only thing worth hearing now
     }
 
+    // Only this page's findings, and never ones already dealt with. The
+    // spoken set is per-page module state - the content script reloads on
+    // every navigation, so without these filters the whole task history was
+    // read aloud again on each new page.
+    const ack = new Set(s.acknowledged || []);
     for (const f of visible(s, m)) {
       // Ambient findings are never spoken. They stay reachable on request,
       // which is the difference between available and announced.
       if (f.level === 'ambient') continue;
-      const key = `${f.widget}|${f.say}`;
+      if (s.phase && f.phase && f.phase !== s.phase) continue;
+      const key = keyOf(f);
+      if (ack.has(key) || this.settled.has(key)) continue;
       if (this.spoken.has(key)) continue;
       this.spoken.add(key);
       announce(phrase(f, m));

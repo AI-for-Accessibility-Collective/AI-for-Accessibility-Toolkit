@@ -1086,3 +1086,14 @@ function wireAgentWatchHandlers() {
 
 init().then(wireAgentWatch);
 
+// A task can start while this page is already open - Validation.start flips
+// sync agentWatch, and without this listener the overlay only ever appeared
+// after a reload or a navigation.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync' || !changes.agentWatch) return;
+  if (changes.agentWatch.newValue && !AgentWatch.enabled) {
+    AgentWatch.enable({});
+    wireAgentWatch();
+  }
+});
+
