@@ -336,6 +336,17 @@ async function runScenario(sc) {
         // made about sit in the same frame.
         const id = String(frame).padStart(3, '0');
         const live = await activePage(browser, sw).catch(() => null);
+
+        // The page's own text at this moment, kept so the eval can tell a
+        // question the layer missed from one the page never answered. Without
+        // it every gold question the run did not surface looks like a miss,
+        // including the ones whose answer was never on screen.
+        const text = await (live || page).evaluate(
+          () => document.body?.innerText || '').catch(() => '');
+        if (text) {
+          fs.appendFileSync(path.join(out, 'pages.jsonl'), `${JSON.stringify({
+            frame: id, at: stamp(), url: (live || page).url(), text })}\n`);
+        }
         await (live || page).screenshot(
           { path: path.join(out, 'frames', `page-${id}.png`) }).catch(() => {});
         await panel.screenshot(

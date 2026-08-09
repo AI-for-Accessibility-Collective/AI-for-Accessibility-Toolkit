@@ -432,6 +432,19 @@ async function _publish(extra = {}) {
             + `And ${unread.length - 1} more you haven't seen.` };
     }
   }
+  // The decisions this run has passed through, in order, so a surface can
+  // offer them to go back to. Carried forward rather than recomputed, because
+  // deriving it would mean reading the trace on every publish, and every agent
+  // action publishes.
+  const decisions = (prev.decisions || []).slice();
+  if (currentNode != null
+      && decisions[decisions.length - 1]?.nodeId !== String(currentNode)) {
+    decisions.push({ nodeId: String(currentNode),
+                     label: currentNodeLabel || null,
+                     phase: currentPhase || null,
+                     at: Date.now() });
+  }
+
   const book = await rules();
 
   // A check that never ran because nobody said the size is not a check that
@@ -511,6 +524,12 @@ async function _publish(extra = {}) {
       acknowledged: Array.isArray(extra.acknowledged) ? extra.acknowledged
         : [...new Set([...(prev.acknowledged || []), ...acknowledged])],
       opts: run ? runOpts : (prev.opts || runOpts),
+      // Kept for the same reason as `acknowledged`: what was looked at is part
+      // of the record, and a surface that cannot list the decisions cannot
+      // offer to go back to one.
+      decisions: decisions.slice(-60),
+      lookedBack: extra.lookedBack !== undefined ? extra.lookedBack
+        : prev.lookedBack || null,
       ...s, steps, gate, rules: book,
       // Offered against everything on record: computing it against only this
       // call's appends meant any quiet page withdrew a standing offer.
@@ -1790,8 +1809,19 @@ const Validation = {
     why: Trace.why,
   },
 
-  /** What was happening at a node, or at a step. No model call. */
-  why: (ref) => Trace.why(ref),
+  /**
+   * What was happening at a node, or at a step. No model call.
+   *
+   * Publishes as well as returning. `Trace.why` shipped complete, with its own
+   * tests and a route, and nothing rendered it - the same shape of bug as
+   * `ask()`, where the capability was finished and unreachable. A lookup no
+   * surface can show is not a lookup.
+   */
+  async why(ref = {}) {
+    const answer = await Trace.why(ref);
+    try { await publish({ lookedBack: answer }); } catch { /* the answer still returns */ }
+    return answer;
+  },
 
   /** Where the run is, as the reasoner last read it off the page. */
   where: () => ({ node: currentNode, label: currentNodeLabel, phase: currentPhase }),

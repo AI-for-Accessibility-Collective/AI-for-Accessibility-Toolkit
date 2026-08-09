@@ -162,6 +162,49 @@ export function mountValidationPanel(root, { onControl } = {}) {
     //
     // It shipped with the route, the schema and the tests and no surface at
     // all, so the capability existed and could not be reached.
+    // ── going back to a decision ────────────────────────────────────────────
+    // `Trace.why()` shipped with a route, 39 assertions and no surface, so the
+    // record could be queried by nothing. Findings carry `node`, `cluster`,
+    // `moment` and `verified` for exactly this and nothing read them.
+    //
+    // This is a lookup. Pressing one of these re-opens a decision so it can be
+    // looked at again; it does not undo anything that has already happened on
+    // the site, and the answer says so.
+    const decisions = state.decisions || [];
+    if (decisions.length) {
+      const box = el('section', 'va-back');
+      box.append(el('h2', null, 'Go back to a decision'));
+      const list = el('ul', 'va-steps');
+      for (const d of decisions.slice(-8).reverse()) {
+        const li = el('li');
+        const b = el('button', 'va-do', d.label || `step ${d.nodeId}`);
+        b.dataset.vaKey = `why:${d.nodeId}`;
+        b.addEventListener('click', () => onControl?.({ action: 'why', nodeId: d.nodeId }));
+        li.append(b);
+        if (d.phase) li.append(el('span', 'va-where', d.phase));
+        list.append(li);
+      }
+      box.append(list);
+
+      const back = state.lookedBack;
+      if (back && back.found) {
+        const ans = el('div', 'va-looked');
+        ans.append(el('p', 'va-text',
+          `${back.label || back.nodeId}${back.phase ? ` - ${back.phase}` : ''}`));
+        for (const f of back.findings || []) {
+          ans.append(el('p', 'va-where', `checked: ${f.widget}`));
+        }
+        if ((back.actions || []).length) {
+          ans.append(el('p', 'va-where', `did: ${back.actions.join(', ')}`));
+        }
+        ans.append(el('p', 'va-note', back.note));
+        box.append(ans);
+      } else if (back) {
+        box.append(el('p', 'va-where', back.say || 'Nothing on the record for that.'));
+      }
+      root.append(box);
+    }
+
     {
       const box = el('section', 'va-ask-page');
       box.append(el('h2', null, 'Ask about this page'));

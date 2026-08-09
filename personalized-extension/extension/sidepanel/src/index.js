@@ -422,6 +422,13 @@ if (vaRoot) {
         chrome.runtime.sendMessage({ type: 'validationAck', key: c.key });
         return;
       }
+      if (c.action === 'why') {
+        // A lookup, like asking about the page: it reads the record and
+        // changes nothing. Going back to a decision re-opens it; it does not
+        // undo anything that already happened on the site.
+        chrome.runtime.sendMessage({ type: 'validationWhy', nodeId: c.nodeId });
+        return;
+      }
       if (c.action === 'edit-ask' || c.action === 'fill-gap') {
         // These fell through to validationControl, whose say-map knows
         // neither - so "Change something" and every gap "Answer" button

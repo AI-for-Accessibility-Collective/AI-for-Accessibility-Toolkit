@@ -163,5 +163,52 @@ const draw = async (state) => {
     'nothing about holding the wheel when the agent has it');
 }
 
+// ── going back to a decision ────────────────────────────────────────────────
+//
+// Trace.why() shipped with a route, 39 assertions and no surface, so nothing
+// could query the record. Findings carry node, cluster, moment and verified for
+// exactly this, and nothing read them.
+{
+  const { root, calls } = await draw({
+    ...BASE,
+    decisions: [
+      { nodeId: '1.1', label: 'Search for it', phase: 'Find' },
+      { nodeId: '2.3', label: 'Pick the size', phase: 'Check item' },
+    ],
+  });
+  const box = root.querySelector('.va-back');
+  ok(!!box, 'the decisions the run passed through can be reached');
+  ok(/Pick the size/.test(box.textContent), 'each one is named');
+
+  const b = [...box.querySelectorAll('button')].find((x) => /Pick the size/.test(x.textContent));
+  b.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  ok(calls.some((c) => c.action === 'why' && c.nodeId === '2.3'),
+    'pressing one looks it up');
+  ok(calls.every((c) => c.action === 'why'),
+    'and does nothing else - going back is a lookup, never an instruction');
+}
+
+{
+  const { root } = await draw({
+    ...BASE,
+    decisions: [{ nodeId: '2.3', label: 'Pick the size', phase: 'Check item' }],
+    lookedBack: { found: true, nodeId: '2.3', label: 'Pick the size', phase: 'Check item',
+      findings: [{ widget: 'size on the page' }], actions: ['click_index'],
+      note: 'This is what was on the record at that point. Going back to it re-opens '
+        + 'the decision; it does not undo anything that has already happened on the site.' },
+  });
+  const t = root.querySelector('.va-back').textContent;
+  ok(/size on the page/.test(t), 'the answer says what was checked there');
+  ok(/click_index/.test(t), 'and what was done there');
+  ok(/does not undo/.test(t),
+    'and says plainly that it re-opens the decision rather than undoing anything');
+}
+
+{
+  const { root } = await draw({ ...BASE });
+  ok(!root.querySelector('.va-back'),
+    'nothing to go back to before the run has passed through anything');
+}
+
 console.log(`\n${pass}/${pass + fail} - the panel shows what the layer published, and asking does not steer.`);
 if (fail) process.exit(1);

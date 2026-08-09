@@ -239,3 +239,8 @@
    was checked, but it stops asking. */
 .va-item.va-read { opacity: 0.55; }
 .va-item.va-read .va-dot { background: var(--va-muted, #9aa0a6); }
+
+/* Going back to a decision. A lookup, not an undo. */
+.va-back .va-steps { list-style: none; margin: 0; padding: 0; }
+.va-back .va-steps li { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.va-note { font-size: 12px; opacity: 0.7; margin-top: 6px; }
