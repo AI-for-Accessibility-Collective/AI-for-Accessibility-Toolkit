@@ -10,6 +10,7 @@
  * no model rather than a stale one.
  */
 import * as G from '../extension/validation/generate.js';
+import fs from 'node:fs';
 
 let pass = 0; let fail = 0;
 const ok = (cond, what) => {
@@ -224,6 +225,35 @@ const run = async (replies, opts = {}) => {
   let threw = false;
   try { G.parseJson('no json here'); } catch { threw = true; }
   ok(threw, 'and no JSON is an error rather than a silent null');
+}
+
+// ── the shipped prompts are the measured prompts ────────────────────────────
+//
+// The whole claim for the live generator is that it runs the thing the rig
+// scored against held-out gold. That claim rests on the two copies being the
+// same text, and nothing was checking it - they had already drifted once, so
+// the extension was generating with an older coding prompt than the one whose
+// numbers were being quoted.
+{
+  const RIG = '/Users/chuanenl/Stanford/Summer Project Ideation /Verification '
+    + 'Affordances/taskmodel/rig/prompts';
+  if (!fs.existsSync(RIG)) {
+    console.log('SKIP the rig is not on this machine, so drift cannot be checked');
+  } else {
+    const shipped = JSON.parse(
+      fs.readFileSync('extension/validation/genprompts.json', 'utf8'));
+    const pairs = [
+      ['strong-stage1', 'strong-stage1.txt'],
+      ['strong-questions', 'strong-questions.txt'],
+      ['strong-coding', 'strong-coding.txt'],
+      ['strong-paradigm-cards', 'strong-paradigm-cards.md'],
+    ];
+    for (const [key, file] of pairs) {
+      const onDisk = fs.readFileSync(`${RIG}/${file}`, 'utf8');
+      ok(shipped[key] === onDisk,
+        `the shipped ${key} is the one the rig measured`);
+    }
+  }
 }
 
 console.log(`\n${pass}/${pass + fail} - the model is written from the query, and a failure `
