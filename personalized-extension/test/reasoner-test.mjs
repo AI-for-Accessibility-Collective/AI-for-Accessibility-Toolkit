@@ -459,4 +459,27 @@ await check('quotes are checked against the text the model saw, not the file', a
                      'hallucinated_quote');
 });
 
+// A quote that empties out under a normalization step used to match EVERY
+// page, because `'anything'.includes('')` is true. Each of these passed against
+// an unrelated page, at whichever step emptied it. The bare ellipsis is the one
+// that mattered: the comment above ELLIPSIS records that the model demonstrably
+// writes one when it cannot render a character, so this was the likely shape of
+// a fabrication rather than an exotic one.
+await check('a quote with nothing but punctuation in it is not evidence', async () => {
+  const page = 'heading "Order placed"\n  text "Total $16.52"';
+  for (const q of ['\u180e', '\u200b', '\\n', '\u2026', '"', '  ', '...']) {
+    const v = R.verifyQuoteAt(q, page);
+    assert.ok(!String(v.verify).startsWith('verified'),
+      `${JSON.stringify(q)} verified against a page it is not in, at level ${v.level}`);
+  }
+});
+
+await check('the rescues it was loosened for still work', async () => {
+  const page = 'heading "Order placed"\n  text "Total $16.52"';
+  for (const q of ['Total $16.52', 'Total  $16.52', '"Total $16.52"']) {
+    assert.ok(String(R.verifyQuoteAt(q, page).verify).startsWith('verified'),
+      `${JSON.stringify(q)} should still verify`);
+  }
+});
+
 console.log(`\n${n}/${n} - a fabricated quote never reaches a person.`);

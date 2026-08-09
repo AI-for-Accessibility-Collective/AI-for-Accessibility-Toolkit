@@ -4,6 +4,9 @@
 // data, or update its tracked tabId.
 
 import { BH_AGENT_LOADED_SKILLS_MAX } from './constants.js';
+// What the harness indexed on this tab, so the gate can read the page's own
+// word for the element the agent is about to press.
+import { _BH_LAST_ITEMS } from '../harness/state.js';
 import {
   _bhAgentOwnedTabs,
   setTabId,
@@ -27,6 +30,40 @@ import { _bhAgentGroupTab } from './tabs.js';
 import { _bhAgentShowPageCursor } from './notify.js';
 
 /**
+ * What the agent is about to press, in the page's own words.
+ *
+ * The gate matches the standing rules and the committing test against the
+ * string this builds, and `action.label` — which this used to read — is not a
+ * field any action carries. There is no `label` anywhere in the action schema.
+ * So a real "Place your order" press arrived at the gate as the literal string
+ * `"click_index"`: COMMITTING did not match, `run.gate()` was never consulted,
+ * and the two rules that ship on by default and are never asked about —
+ * "never press place your order yourself" and "never press buy now" — could
+ * not fire, because they are regexes tested against that string.
+ *
+ * The harness already knows what index 42 is. `bhEnumerateInteractive` stores
+ * every item it indexed per tab in `_BH_LAST_ITEMS`, and stale-index recovery
+ * matches on the same `text` field. Reading the target's own text is what
+ * makes a rule about "place your order" mean what it says.
+ *
+ * Note this reads the PAGE's word for the element, not the agent's account of
+ * what it is doing — the same reason the layer reads the page rather than the
+ * agent everywhere else.
+ */
+function _bhDescribeTarget(tabId, action) {
+  if (action.index == null) return null;
+  try {
+    const items = _BH_LAST_ITEMS.get(tabId);
+    const it = Array.isArray(items) ? items[action.index] : null;
+    if (!it) return null;
+    // The element's own text, then its role, so a nameless button still says
+    // what kind of thing it is.
+    return [String(it.text || '').trim(), (it.attrs && it.attrs.role) || '']
+      .filter(Boolean).join(' ').slice(0, 160) || null;
+  } catch { return null; }
+}
+
+/**
  * Ask the validation layer whether this action may happen.
  *
  * The gate is checked HERE, in the executor, rather than in the model's
@@ -38,13 +75,18 @@ import { _bhAgentShowPageCursor } from './notify.js';
  * No validation run in progress means no gate — this is inert unless a task
  * has explicitly started one.
  */
-async function _bhAgentGate(action) {
+async function _bhAgentGate(tabId, action) {
   const V = globalThis.Validation;
   // ensureRunning rehydrates after a worker restart; the sync check would
   // silently switch the whole gate off mid-task.
   if (!V || !(await (V.ensureRunning?.() ?? V.isRunning()))) return { allowed: true };
-  const described = [action.action, action.text, action.label, action.selector,
-                     action.url].filter(Boolean).join(' ');
+  // `reason` and `key` are in here because leaving them out can only lose a
+  // match, never gain a wrong one: every term added widens what the rules can
+  // catch. `reason` is the model's own prose and is not trusted on its own —
+  // the target text above is what carries the weight.
+  const described = [action.action, _bhDescribeTarget(tabId, action), action.text,
+                     action.selector, action.url, action.key, action.reason]
+    .filter(Boolean).join(' ');
   try {
     // The step goes with it so the layer can file this action under the point
     // in the run it happened at. Without it the trace has actions in it and no
@@ -58,7 +100,7 @@ async function _bhAgentGate(action) {
 export async function _bhAgentExec(tabId, action, task) {
   const H = globalThis.BrowserHarness;
 
-  const gate = await _bhAgentGate(action);
+  const gate = await _bhAgentGate(tabId, action);
   if (!gate.allowed) {
     _bhAgentLog({ kind: 'action', action: 'blocked',
                   detail: `held: ${(gate.waitingOn || []).join(', ')}` });

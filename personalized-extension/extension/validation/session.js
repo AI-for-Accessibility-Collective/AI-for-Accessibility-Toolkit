@@ -412,6 +412,9 @@ async function _publish(extra = {}) {
       // acting rather than guessing.
       node: currentNode, nodeLabel: currentNodeLabel,
       holder, handOverNode, handOverAt, handOverTab,
+      // Both surfaces read this to name the part the person took. It was never
+      // written, so they announced a raw node id ("paused at 4.3").
+      handOverNodeLabel: labelFor(handOverNode),
       // A probe result stays up until something replaces or clears it - it
       // must survive the unrelated publishes that happen constantly.
       probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
@@ -426,7 +429,14 @@ async function _publish(extra = {}) {
       // Union, never replacement: a publish arriving before rehydrate has
       // run must not shrink the stored list back to whatever this worker
       // instance happens to have seen.
-      acknowledged: [...new Set([...(prev.acknowledged || []), ...acknowledged])],
+      // Union by default, so a publish arriving before rehydrate cannot shrink
+      // the list. An explicit array replaces it, which is how start() and
+      // stop() clear it: the stored list is keyed by widget|phase|say, which
+      // is stable across runs, so carrying it forward pre-acknowledged the
+      // same finding in a later task and the gate opened without the person
+      // ever seeing it.
+      acknowledged: Array.isArray(extra.acknowledged) ? extra.acknowledged
+        : [...new Set([...(prev.acknowledged || []), ...acknowledged])],
       opts: run ? runOpts : (prev.opts || runOpts),
       ...s, steps, gate, rules: book,
       // Offered against everything on record: computing it against only this
@@ -832,7 +842,8 @@ const Validation = {
     // predicts the run that will go wrong. Starting a task turns on the
     // surface that reports on it.
     try { await chrome.storage.sync.set({ agentWatch: true }); } catch { /* not fatal */ }
-    await publish({ findings: [], probe: null, unspecified: gaps(contract) });
+    await publish({ findings: [], probe: null, unspecified: gaps(contract),
+                    acknowledged: [] });
     return { started: true, contract, unspecified: gaps(contract) };
   },
 
@@ -864,7 +875,8 @@ const Validation = {
     // to actually end it.
     contract = null;
     acknowledged.clear();
-    await publish({ findings: [], contract: null, probe: null, steps: [], gate: { allowed: true } });
+    await publish({ findings: [], contract: null, probe: null, steps: [],
+                    gate: { allowed: true }, acknowledged: [] });
   },
 
   isRunning: () => !!run,
@@ -1340,6 +1352,12 @@ const Validation = {
    * act on the old page while the news is still in flight.
    */
   async handBack(o = {}) {
+    // Every other method that reads module state rehydrates first; this one
+    // did not. A worker torn down during a hand over — which is the normal
+    // case, since doing a step by hand navigates nothing — came back with
+    // holder defaulted to 'agent', so "Give it back" returned early and did
+    // nothing, forever, while both surfaces kept showing the button.
+    if (!run) await rehydrate();
     if (holder !== 'person') return { resumed: false, why: 'the agent already has it' };
     const since = handOverAt || 0;
     const node = o.nodeId ?? handOverNode;

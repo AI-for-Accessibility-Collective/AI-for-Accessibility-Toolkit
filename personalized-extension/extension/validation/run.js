@@ -56,7 +56,10 @@ export function setExtractorNames(map) {
 }
 
 export function createRun(contract, opts = {}) {
-  const style = opts.style || 'balanced';
+  // Undefined rather than 'balanced' when nobody passed one. insistenceShift
+  // short-circuits on any truthy style and never reaches state.model, so a
+  // default here made the whole persona chain inert.
+  const style = opts.style || undefined;
   // The person's AbilityModel, if the Librarian had one when the run began.
   // policy.js reads it to shift insistence a notch either way.
   const model = opts.model || null;
@@ -88,7 +91,14 @@ export function createRun(contract, opts = {}) {
       // field: the model says which answers are wanted at the moment and which
       // are wanted on demand, and only the first kind is announced. Nothing in
       // the hand-written checks sets it, so this is inert on that path.
-      if (f.quiet && level !== 'ambient') {
+      // Only ever silences an aside. `quiet` is a speech decision — the model
+      // said this answer is wanted on demand rather than at the moment — and a
+      // stop is a safety decision that policy.js already made. Flattening a
+      // stop here erased the contradiction lock, the moneyMoving escalation
+      // and the irreversible-phase fallback with one string comparison: 12 of
+      // the 62 money-moving gold questions carry a moment other than "Now",
+      // and every one of them was being silenced after being escalated.
+      if (f.quiet && level === 'aside') {
         level = 'ambient';
         why = 'the task model asks for this on demand, not now';
       }

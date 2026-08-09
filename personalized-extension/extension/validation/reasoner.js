@@ -438,14 +438,43 @@ const NON_ANSWERS = new Set(['', 'null', 'none', 'n/a', 'na', 'not stated',
                              'the page does not say']);
 
 /** { verify, level } — level names the step it matched at, null if none did. */
+/**
+ * Is there anything left that could serve as evidence?
+ *
+ * `'anything'.includes('')` is true, so a quote that empties out under a
+ * normalization step matched EVERY page, at whichever step emptied it. All of
+ * these passed against an unrelated page: a bare `…` (whitespace-adjacent
+ * levels aside, this is the one that matters — the comment above ELLIPSIS
+ * records that the model demonstrably writes a bare ellipsis when it cannot
+ * render a character), a zero-width space, a literal backslash-n, a mongolian
+ * vowel separator, and a lone quote mark, which matched at `exact`.
+ *
+ * The finding built on one of those carries the model's whole sentence with
+ * nothing behind it, and reads back a single invisible character when the
+ * person presses "read me where it says that". That is the one thing this
+ * module exists to make impossible.
+ *
+ * A letter or a digit is the bar: quote marks, ellipses, escapes and invisible
+ * characters are punctuation the page and the model disagree about, and none
+ * of them is evidence on its own.
+ */
+const carriesEvidence = (s) => /[\p{L}\p{N}]/u.test(s);
+
 export function verifyQuoteAt(quote, pageText, forms) {
   if (!quote || typeof quote !== 'string' || !quote.trim()) {
     return { verify: 'missing_quote', level: null };
   }
+  if (!carriesEvidence(quote)) return { verify: 'missing_quote', level: null };
   if (pageText.includes(quote)) return { verify: 'verified_exact', level: 'exact' };
   const f = forms ?? pageForms(pageText);
   for (const [name, opts] of LEVELS) {
-    if (f[name].includes(rewrite(quote, opts))) {
+    const q = rewrite(quote, opts);
+    // Re-checked per level, because which step empties a quote varies: the
+    // whitespace collapse eats a mongolian vowel separator, the Cf deletion
+    // eats a zero-width space, unescape turns a literal `\n` into a newline
+    // that then trims away.
+    if (!carriesEvidence(q)) continue;
+    if (f[name].includes(q)) {
       return { verify: 'verified_normalized', level: name };
     }
   }
