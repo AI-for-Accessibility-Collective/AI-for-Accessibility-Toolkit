@@ -107,6 +107,20 @@ const acknowledged = new Set();
 // can deserve the same offer again; within this task it stops nagging.
 const declinedOffers = new Set();
 
+
+// What to say first when several things are waiting.
+//
+// The list was in the order the findings arrived, so the sentence led with
+// whatever the page happened to answer first — on a live run, "Is this a direct
+// flight?" while three contradictions sat behind it, and at ten unread it
+// degraded to a bare count that named nothing at all. A person who has
+// delegated the task hears one sentence; it has to be the one that matters.
+function leadWith(unread) {
+  return unread.find((f) => f.level === 'stop' && f.contradicts)
+      || unread.find((f) => f.level === 'stop')
+      || unread[0];
+}
+
 /** What identifies one finding. Must match the overlay's key exactly. */
 const fkey = (f) => `${f.widget}|${f.phase}|${f.say}`;
 
@@ -378,9 +392,10 @@ async function _publish(extra = {}) {
     if (unread.length) {
       gate = { allowed: false, waitingOn: unread.map((f) => f.widget),
         unread: unread.length,
-        say: unread.length === 1 ? `Waiting for you: ${unread[0].say}`
-          : `Waiting for you. ${unread.length} things you haven't seen, `
-            + `starting with: ${unread[0].say}` };
+        say: unread.length === 1
+          ? `Waiting for you: ${leadWith(unread).say}`
+          : `Waiting for you: ${leadWith(unread).say} `
+            + `And ${unread.length - 1} more you haven't seen.` };
     }
   }
   const book = await rules();
@@ -1130,7 +1145,7 @@ const Validation = {
       .filter((f) => !acknowledged.has(fkey(f)));
 
     if (unread.length) {
-      const first = unread[0];
+      const first = leadWith(unread);
       await traceAction('held, unread');
       return {
         allowed: false,
@@ -1138,8 +1153,8 @@ const Validation = {
         unread: unread.length,
         say: unread.length === 1
           ? `Waiting for you: ${first.say}`
-          : `Waiting for you. ${unread.length} things I found that you haven't seen yet, `
-            + `starting with: ${first.say}`,
+          : `Waiting for you: ${first.say} `
+            + `And ${unread.length - 1} more you haven't seen.`,
       };
     }
 

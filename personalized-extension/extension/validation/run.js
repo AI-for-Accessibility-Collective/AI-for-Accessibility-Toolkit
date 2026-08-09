@@ -103,6 +103,9 @@ export function createRun(contract, opts = {}) {
         why = 'the task model asks for this on demand, not now';
       }
       seen.add(`${f.widget}|${f.phase}`);
+      // Also keyed by the answer, so policy.js can tell a contradiction that
+      // CHANGED from one that is simply still true on the next page.
+      seen.add(`${f.widget}|${f.phase}|${f.say}`);
       const r = render(f, level, channels);
       rendered.push({ ...r, why });
       if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
@@ -113,7 +116,25 @@ export function createRun(contract, opts = {}) {
       // removing the gate, with no error anywhere. Holding is not a speech
       // concern. `validationStart` forwards arbitrary opts from any surface,
       // and `speech:false` is the obvious shape of a visual-only profile.
-      if (level === 'stop') waiting.push({ widget: f.widget, ask: f.say, phase });
+      // Not twice for the same question with the same answer. The dedupe key
+      // in policy.js is question + phase, so a destination that is still wrong
+      // on the next page is a NEW key and a second hold — a live three-page run
+      // ended holding on eleven things, six of which were three questions
+      // asked twice. The finding is legitimate; asking the person again is not.
+      // A contradiction is deduped by the QUESTION alone. The model words the
+      // same finding differently on each page — "the destination is San Diego
+      // International Airport (SAN) instead of LAX" then "the destination shown
+      // is San Diego International Airport instead of LAX" — so a say-based
+      // key misses, and a live three-page run held on eleven things of which
+      // six were three questions asked twice. The same question still
+      // contradicting is one thing to answer, however it is phrased. Anything
+      // else still dedupes on the exact wording.
+      const dupe = f.contradicts
+        ? waiting.some((w) => w.widget === f.widget)
+        : waiting.some((w) => w.widget === f.widget && w.ask === f.say);
+      if (level === 'stop' && !dupe) {
+        waiting.push({ widget: f.widget, ask: f.say, phase });
+      }
     }
 
     // One entry per page, updated — not one per read.
@@ -214,7 +235,8 @@ export function createRun(contract, opts = {}) {
         waitingOn: waiting.map((w) => w.widget),
         say: waiting.length === 1
           ? `I'm waiting on one thing: ${waiting[0].ask}`
-          : `I'm waiting on ${waiting.length} things before I go further.`,
+          : `${waiting[0].ask || waiting[0].widget} `
+            + `And ${waiting.length - 1} more before I go further.`,
       };
     },
 

@@ -72,7 +72,13 @@ export function decide(f, state = {}) {
   // answer "LAX" the first time and "San Diego" the second, and the second
   // was silenced as already raised. A value that changed is the whole reason
   // to look twice.
-  if (seen.has(key) && !f.contradicts) {
+  // A contradiction escapes the guard only when the ANSWER changed. The key is
+  // question + phase, so letting every contradiction through meant the same
+  // wrong destination re-fired on each page and became a separate hold: a live
+  // three-page run ended with ten stops, three of them the same question. A
+  // value that CHANGED is the reason to look twice; a value that is still
+  // wrong is the same finding.
+  if (seen.has(key) && !(f.contradicts && !seen.has(`${key}|${f.say}`))) {
     return { level: 'ambient', why: 'already raised at this step' };
   }
 
