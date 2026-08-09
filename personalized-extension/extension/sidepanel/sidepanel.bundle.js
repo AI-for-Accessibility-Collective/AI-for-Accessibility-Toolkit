@@ -72,6 +72,23 @@
           requestAnimationFrame(() => gate.querySelector(".va-do")?.focus());
         }
       }
+      if (state.holder === "person") {
+        const wheel = el("section", "va-wheel");
+        wheel.setAttribute("role", "status");
+        const at = state.handOverNodeLabel || state.handOverNode;
+        wheel.append(el("h2", null, "You have this part"));
+        wheel.append(el("p", null, at ? `The agent is paused at ${at} and still reading the page.` : "The agent is paused and still reading the page."));
+        const row = el("div", "va-answers");
+        const back = el("button", "va-do primary", "Give it back");
+        back.dataset.vaKey = "hand-back";
+        back.addEventListener("click", () => onControl?.({
+          action: "hand-back",
+          node: state.handOverNode || null
+        }));
+        row.append(back);
+        wheel.append(row);
+        root.append(wheel);
+      }
       const heldNow = new Set(
         state.gate && state.gate.allowed === false && state.gate.waitingOn || []
       );
