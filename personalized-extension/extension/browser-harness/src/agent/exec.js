@@ -97,16 +97,54 @@ async function _bhAgentGate(tabId, action) {
   }
 }
 
+/** How long to sit on a hold before giving up, and how often to look. */
+const HELD_POLL_MS = 1_500;
+const HELD_GIVE_UP_MS = 300_000;
+
+/**
+ * Sit still while the person is being waited on.
+ *
+ * Telling the model "do not retry this step" and handing control back does not
+ * work: it is a request, and the model answers it by trying something else,
+ * which is blocked too. A recorded run held at step 26 and then spent 24 more
+ * steps and four minutes issuing actions that were all refused, one full model
+ * turn each, until the layer's own timeout ended the run. Waiting is the
+ * agent's job here, so the loop does it rather than asking the model to.
+ *
+ * The ceiling sits just past the layer's own hold timeout, which stops the run
+ * and is the thing that normally ends this wait.
+ */
+async function _bhWaitWhileHeld() {
+  const t0 = Date.now();
+  while (Date.now() - t0 < HELD_GIVE_UP_MS) {
+    await new Promise((r) => setTimeout(r, HELD_POLL_MS));
+    // The run being stopped underneath us — by the hold timing out, or by the
+    // person — ends the wait rather than outliving it.
+    if (globalThis.Validation && !globalThis.Validation.isRunning()) return false;
+    try {
+      const s = (await chrome.storage.local.get('aa.validation'))['aa.validation'];
+      if (!s || !s.gate || s.gate.allowed !== false) return true;
+    } catch { return true; }   // cannot read the gate: stop waiting, re-ask it
+  }
+  return false;
+}
+
 export async function _bhAgentExec(tabId, action, task) {
   const H = globalThis.BrowserHarness;
 
-  const gate = await _bhAgentGate(tabId, action);
+  let gate = await _bhAgentGate(tabId, action);
   if (!gate.allowed) {
     _bhAgentLog({ kind: 'action', action: 'blocked',
                   detail: `held: ${(gate.waitingOn || []).join(', ')}` });
-    return { keepGoing: true,
-             summary: `Held. ${gate.say || 'Waiting on the person.'} ` +
-                      `Do not retry this step; wait for their answer.` };
+    const cleared = await _bhWaitWhileHeld();
+    // Re-ask rather than trusting the published gate: answering one question
+    // can raise another, and the second one must hold too.
+    gate = cleared ? await _bhAgentGate(tabId, action) : { allowed: false };
+    if (!gate.allowed) {
+      return { keepGoing: false,
+               summary: `Stopped. ${gate.say || 'Waiting on the person, and nothing was answered.'}` };
+    }
+    _bhAgentLog({ kind: 'action', action: 'resumed', detail: 'the person answered' });
   }
 
   switch (action.action) {
