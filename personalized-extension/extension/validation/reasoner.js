@@ -495,19 +495,30 @@ function fail(flat, guard, log, error, started) {
 // The action the person gets back, per interface type. The ids are the nine
 // cluster defaults background.js already has instructions for — a control
 // naming an action that map has never heard of is a dead button.
+// Both options come from the type's card in exemplar/type-cards.md, which is
+// the spec for what each type offers. The decline is the opposite move, not an
+// acknowledgement: "Undo it / Got it" is not a pair, "Undo it / Leave it" is.
+// Only the three read-out types decline with "Got it", because for those the
+// opposite of being read something is being told nothing.
 const CLUSTER_CONTROLS = {
-  facts: { label: 'Read me the exact words', action: 'facts-source' },
-  refine: { label: 'Narrow it down', action: 'refine-narrow' },
-  compare: { label: 'Read me the differences', action: 'compare-diff' },
-  select: { label: 'Read me the options', action: 'select-options' },
-  approve: { label: 'Wait for my go-ahead', action: 'approve-change' },
-  photos: { label: 'Describe the photos', action: 'photos-describe' },
-  receipts: { label: 'Read it back to me', action: 'receipts-readback' },
-  undo: { label: 'Undo it', action: 'undo-last' },
-  'hand over': { label: 'Let me do this part', action: 'hand-over' },
-  // `watch` is the type with nothing to hand back: it asks to be told, and
-  // being told is what the finding already is.
-  watch: null,
+  facts: { label: 'Read me where it says that', action: 'facts-source', decline: 'Got it' },
+  refine: { label: 'Narrow it down', action: 'refine-narrow', decline: 'Keep them all' },
+  compare: { label: 'Read me the differences', action: 'compare-diff', decline: 'Fine as is' },
+  select: { label: 'Read me the options', action: 'select-options', decline: 'You pick' },
+  approve: { label: 'Hold on, check it with me', action: 'approve-change', decline: 'Go ahead' },
+  photos: { label: 'Describe the photos', action: 'photos-describe', decline: 'Got it' },
+  receipts: { label: 'Read it back to me', action: 'receipts-readback', decline: 'Got it' },
+  undo: { label: 'Undo it', action: 'undo-last', decline: 'Leave it' },
+  'hand over': { label: 'Let me do this part', action: 'hand-over', decline: 'Carry on' },
+  // `watch` delegates attention across time rather than reading the page once,
+  // so pressing it should start a monitor and there is no monitor yet. The
+  // control is here because the card defines the pair and a type with no
+  // options renders as a finding you cannot answer. `watch-value` has no entry
+  // in the background action map, so it takes the label fallback there and
+  // reaches the agent as "Watch it for me. Then tell me what changed." That is
+  // a one-shot re-read, not a standing watch. Wiring the monitor loop is the
+  // real work and it is tracked separately.
+  watch: { label: 'Watch it for me', action: 'watch-value', decline: 'Decide now' },
 };
 
 // The moment glossary, from the model itself: "Now" means pause the agent,
@@ -567,7 +578,7 @@ export function toFindings(result, phase) {
       // paradigm, which falls back to the sentence rather than throwing.
       paradigm: null,
       checkedAgainst: null,
-      control: control ? { ...control, decline: 'Got it' } : null,
+      control: control ? { ...control } : null,
       // Not announced unless the model says this is wanted now.
       quiet: a.moment !== ANNOUNCED,
       // Carried for the trace and for the steps that come after this one.
