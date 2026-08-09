@@ -107,6 +107,32 @@ AgentWatch.enable({ model: MODEL });
     'declining a hold does not mean "understood"');
 }
 
+// ── handing a part back ───────────────────────────────────────────────────────
+// handOver() and handBack() shipped with no surface at all, so the layer could
+// take a part of the task and had no way to give it back. This is here so that
+// cannot happen quietly again.
+{
+  const { calls, root } = drive({
+    ...BASE,
+    holder: 'person',
+    handOverNode: '2.2',
+    handOverNodeLabel: 'Pick the size',
+  });
+  const wheel = root.querySelector('.aw-wheel');
+  ok(!!wheel, 'the person holding a part of the task is shown that they do');
+  ok(wheel?.getAttribute('role') === 'status',
+    'holding the wheel is a state, announced politely, not an alert');
+  ok(/Pick the size/.test(wheel?.textContent || ''),
+    'it names the part they took, not just that they took one');
+
+  const back = [...wheel.querySelectorAll('button')]
+    .find((b) => /Give it back/.test(b.textContent));
+  ok(!!back, 'there is a way back');
+  back.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+  ok(calls.some((c) => c.kind === 'control' && c.action === 'hand-back'),
+    'pressing it hands the part back');
+}
+
 // ── every interface type gets the pair its card specifies ─────────────────────
 {
   // From exemplar/type-cards.md, which is the spec for what each type offers.

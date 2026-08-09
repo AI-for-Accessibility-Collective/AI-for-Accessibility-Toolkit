@@ -97,6 +97,20 @@
 .va-gap .va-where { font-family: inherit; white-space: normal; margin-top: 2px; }
 .va-gap .va-do { margin-top: 8px; }
 
+/* ── who has the wheel ──────────────────────────────────────────────────────
+   Green, not red. The person holding a part of the task is a working state,
+   not a warning, and the gate below is the only element allowed to be loud. */
+.va-wheel {
+  margin: 8px 14px 0;
+  padding: 8px 10px;
+  border: 1px solid #a7d3bb;
+  border-radius: 8px;
+  background: #e9f5ef;
+}
+.va-wheel h2 { font-size: 12px; font-weight: 600; margin: 0 0 2px; }
+.va-wheel p { margin: 0; color: #4a5b52; }
+.va-wheel .va-answers { margin-top: 8px; }
+
 /* ── findings ────────────────────────────────────────────────────────────── */
 .va-list { list-style: none; margin: 0; padding: 6px 0; }
 

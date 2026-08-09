@@ -406,6 +406,34 @@ export const AgentWatch = {
       return;
     }
 
+    // ── who has the wheel ───────────────────────────────────────────────────
+    //
+    // handOver() and handBack() shipped without a surface, so a part of the
+    // task could be taken and never given back. Polite rather than assertive:
+    // the person already knows they are driving, they only need the way out.
+    if (s.holder === 'person') {
+      const w = document.createElement('div');
+      w.className = 'aw-wheel';
+      w.setAttribute('role', 'status');
+      const at = s.handOverNodeLabel || s.handOverNode;
+      const p = document.createElement('p');
+      p.textContent = at
+        ? `You have this part: ${at}. The agent is paused and still reading the page.`
+        : 'You have this part. The agent is paused and still reading the page.';
+      w.appendChild(p);
+      const row = document.createElement('div');
+      row.className = 'aw-row';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'aw-do aw-primary';
+      b.textContent = 'Give it back';
+      b.addEventListener('click', () =>
+        this.onControl?.({ action: 'hand-back', node: s.handOverNode || null }));
+      row.appendChild(b);
+      w.appendChild(row);
+      this.root.appendChild(w);
+    }
+
     // ── the gate ────────────────────────────────────────────────────────────
     if (held) {
       const g = document.createElement('div');
@@ -760,6 +788,13 @@ function css(m) {
   cursor: pointer; border-radius: 10px 10px 0 0;
 }
 #${AgentWatch.containerId} .aw-head:focus-visible { outline: 3px solid #1a73e8; outline-offset: -3px; }
+
+#${AgentWatch.containerId} .aw-wheel {
+  margin: 0 0 10px; padding: 8px 10px;
+  border: 1px solid ${high}; border-radius: 6px;
+  background: ${bg};
+}
+#${AgentWatch.containerId} .aw-wheel p { margin: 0 0 8px; }
 
 #${AgentWatch.containerId} .aw-gate {
   margin: 12px 14px; padding: 12px;

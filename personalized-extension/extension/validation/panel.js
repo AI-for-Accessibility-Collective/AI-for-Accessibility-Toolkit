@@ -128,6 +128,31 @@ export function mountValidationPanel(root, { onControl } = {}) {
       }
     }
 
+    // ── who has the wheel, while the person has it ──────────────────────────
+    //
+    // handOver() and handBack() shipped without a surface, so the layer could
+    // be handed a part of the task and had no way to be given it back. Two
+    // things acting on one page with no shared record of which one is acting
+    // is how the agent once spent ten steps trying to dismiss its own overlay.
+    if (state.holder === 'person') {
+      const wheel = el('section', 'va-wheel');
+      wheel.setAttribute('role', 'status');
+      const at = state.handOverNodeLabel || state.handOverNode;
+      wheel.append(el('h2', null, 'You have this part'));
+      wheel.append(el('p', null, at
+        ? `The agent is paused at ${at} and still reading the page.`
+        : 'The agent is paused and still reading the page.'));
+      const row = el('div', 'va-answers');
+      const back = el('button', 'va-do primary', 'Give it back');
+      back.dataset.vaKey = 'hand-back';
+      back.addEventListener('click', () => onControl?.({
+        action: 'hand-back', node: state.handOverNode || null,
+      }));
+      row.append(back);
+      wheel.append(row);
+      root.append(wheel);
+    }
+
     // ── findings ────────────────────────────────────────────────────────────
     // The finding the gate is holding for renders in the gate block above,
     // with the gate's own answers - listing it again below gave the same
