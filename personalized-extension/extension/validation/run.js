@@ -57,6 +57,9 @@ export function setExtractorNames(map) {
 
 export function createRun(contract, opts = {}) {
   const style = opts.style || 'balanced';
+  // The person's AbilityModel, if the Librarian had one when the run began.
+  // policy.js reads it to shift insistence a notch either way.
+  const model = opts.model || null;
   const channels = { speech: opts.speech !== false, visual: opts.visual !== false };
 
   const seen = new Set();      // findings already raised, so they do not repeat
@@ -80,7 +83,7 @@ export function createRun(contract, opts = {}) {
   function apply(findings, phase, read, of) {
     const rendered = [];
     for (const f of findings) {
-      let { level, why } = decide(f, { seen, style });
+      let { level, why } = decide(f, { seen, style, model });
       // `quiet` is set only by the reasoner, off the task model's own `moment`
       // field: the model says which answers are wanted at the moment and which
       // are wanted on demand, and only the first kind is announced. Nothing in

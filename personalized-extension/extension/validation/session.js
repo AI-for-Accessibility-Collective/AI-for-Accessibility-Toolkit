@@ -389,6 +389,18 @@ const Validation = {
    */
   async start(c, opts = {}) {
     contract = typeof c === 'string' ? contractFromAsk(c) : c;
+    // The person's AbilityModel decides how hard a finding presses, through
+    // insistenceShift() in policy.js. That hook has always existed and has
+    // never been fed: run.js called decide() without a model, so a profile
+    // changed how a finding was worded and never whether it interrupted you.
+    // The Librarian owns the model and roams it across devices, so it is read
+    // here rather than kept as a second setting private to this layer.
+    // A stop caused by a contradiction cannot be softened by it - see the
+    // comment on the lock in policy.js.
+    try {
+      const m = await globalThis.Librarian?.getAbilityModel?.();
+      if (m) opts = { ...opts, model: m };
+    } catch { /* no Librarian, or it has nothing yet: insistence stays neutral */ }
     runOpts = opts;
     run = createRun(contract, opts);
     acknowledged.clear();

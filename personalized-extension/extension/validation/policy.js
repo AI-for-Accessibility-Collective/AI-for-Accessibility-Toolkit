@@ -74,7 +74,17 @@ export function decide(f, state = {}) {
   if (f.contradicts) {
     level = 'stop';
     why = 'contradicts something you said';
+  } else if (f.moneyMoving === true) {
+    // The general form of the rule below. A task model marks the questions
+    // whose step is hard to undo — 62 of the 242 gold questions across four
+    // domains carry it — so the model says which moments are irreversible
+    // instead of this file naming three Amazon phases. Checked first, so a
+    // model that carries the field never falls through to the phase names.
+    level = 'stop';
+    why = 'continuing from here is hard to undo';
   } else if (IRREVERSIBLE_AFTER.has(f.phase)) {
+    // The Amazon corpus path, which has no task model and therefore no
+    // moneyMoving field. Kept so the shipped demo behaves exactly as before.
     level = 'stop';
     why = 'continuing from here is hard to undo';
   } else {
