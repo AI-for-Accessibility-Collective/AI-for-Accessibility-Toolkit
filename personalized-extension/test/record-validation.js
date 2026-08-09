@@ -265,11 +265,24 @@ async function runScenario(sc) {
     let lastSaid = 0;
     let seenModel = false;
     let lastGen = '';
+    let lastRead = 0;
     const DEADLINE = 9 * 60 * 1000;
 
     while (Date.now() - t0 < DEADLINE) {
       const { agent, val, model, gen } = await read();
       const v = val || {};
+      // How much each page read yielded. This is what tells a page that could
+      // not answer from a model that would not.
+      const reads = v.reads || [];
+      for (const rd of reads.slice(lastRead)) {
+        note('read', { ...rd,
+          summary: `asked ${rd.asked}, page answered ${rd.answered}`
+            + (rd.discarded ? `, ${rd.discarded} discarded for no quote` : '')
+            + (rd.truncated ? ', page was truncated' : '')
+            + ` (${rd.ms}ms)` });
+      }
+      lastRead = reads.length;
+
       const genKey = gen ? JSON.stringify(gen) : '';
       if (genKey && genKey !== lastGen) {
         lastGen = genKey;

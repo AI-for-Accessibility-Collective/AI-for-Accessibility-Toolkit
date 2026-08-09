@@ -33,6 +33,9 @@ const KEY = 'aa.validation';
 // Kept apart from the session blob because it is written once per run and read
 // on every restart, while the blob is rewritten on every agent action.
 const MODEL_KEY = 'aa.validation.model';
+// Per-page-read counts. Capped like the others: storage is 10 MB and this blob
+// is rewritten on every agent action.
+const KEEP_READS = 200;
 export const GENERATED = 'generated';
 
 /** How many of the person's own questions the record keeps. */
@@ -528,6 +531,25 @@ async function _publish(extra = {}) {
       // of the record, and a surface that cannot list the decisions cannot
       // offer to go back to one.
       decisions: decisions.slice(-60),
+      // What each page read actually cost and yielded. `publish()` was already
+      // being handed this on every read and dropped it on the floor, so there
+      // was no way to tell a page that answered nothing from a model that
+      // returned nothing from answers that were all discarded for having no
+      // quote. Those are three different problems with the same appearance, and
+      // the counting already existed.
+      reads: (extra.reasoner
+        ? (prev.reads || []).concat({
+            at: Date.now(),
+            phase: extra.phase ?? currentPhase ?? null,
+            asked: extra.reasoner.asked ?? null,
+            answered: extra.reasoner.answered ?? null,
+            discarded: extra.reasoner.discarded ?? null,
+            unmatched: extra.reasoner.unmatched ?? null,
+            noticed: extra.reasoner.noticedKept ?? null,
+            ms: extra.reasoner.ms ?? null,
+            truncated: extra.reasoner.guard?.truncated ?? null,
+          })
+        : (prev.reads || [])).slice(-KEEP_READS),
       lookedBack: extra.lookedBack !== undefined ? extra.lookedBack
         : prev.lookedBack || null,
       ...s, steps, gate, rules: book,
