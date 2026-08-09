@@ -196,9 +196,17 @@ const NOTICED_ITEM = {
     what: { type: 'string' },
     quote: { type: 'string' },
     whyItMatters: { type: 'string' },
+    // A noticed thing can disagree with the ask as squarely as an answer can,
+    // and this was hardcoded false on the reasoning that a noticing item is
+    // not answering a question. That reasoning was wrong, and the replay eval
+    // showed the cost: the pass flagged "5 Toddler is a very small size,
+    // whereas they might have intended a Big Kid size 5" - the wrong-variant
+    // case policy.js names as the single most valuable thing to stop for -
+    // and it came out as an aside.
+    contradictsAsk: { type: 'boolean' },
   },
-  required: ['what', 'quote', 'whyItMatters'],
-  propertyOrdering: ['what', 'quote', 'whyItMatters'],
+  required: ['what', 'quote', 'whyItMatters', 'contradictsAsk'],
+  propertyOrdering: ['what', 'quote', 'whyItMatters', 'contradictsAsk'],
 };
 
 export const SCHEMA = {
@@ -304,6 +312,9 @@ belongs to, or "none" if it serves none of them.
 4. "noticed" - at most ${MAX_NOTICED} things on this page that a person doing \
 this task would want to know about and that NONE of the questions above asked \
 for. Each needs a "quote" copied character-for-character from the page text. \
+Set its "contradictsAsk" true when the thing you noticed disagrees with what \
+the person asked for - a different variant of the right-looking item, a total \
+over the stated limit, a date or a place they did not ask for. \
 Empty list if there is nothing worth raising. Do not restate an answer you \
 already gave above.
 
@@ -979,7 +990,8 @@ export function toFindings(result, phase) {
       from: n.quote,
       answerable: true,
       confirming: false,
-      contradicts: false,
+      // A noticed thing can disagree with the ask as squarely as an answer.
+      contradicts: n.contradictsAsk === true,
       paradigm: null,
       checkedAgainst: null,
       // No question asked for this, so there is no interface type to read a
