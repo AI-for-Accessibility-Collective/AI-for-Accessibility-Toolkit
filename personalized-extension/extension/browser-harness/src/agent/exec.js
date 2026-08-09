@@ -39,7 +39,9 @@ import { _bhAgentShowPageCursor } from './notify.js';
  */
 async function _bhAgentGate(action) {
   const V = globalThis.Validation;
-  if (!V || !V.isRunning()) return { allowed: true };
+  // ensureRunning rehydrates after a worker restart; the sync check would
+  // silently switch the whole gate off mid-task.
+  if (!V || !(await (V.ensureRunning?.() ?? V.isRunning()))) return { allowed: true };
   const described = [action.action, action.text, action.label, action.selector,
                      action.url].filter(Boolean).join(' ');
   try {

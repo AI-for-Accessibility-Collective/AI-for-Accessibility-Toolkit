@@ -112,6 +112,7 @@ export function bhAgentInterject(instruction) {
 }
 
 export async function bhAgentRun(task, opts = {}) {
+  let bounces = 0;
   if (isRunning()) throw new Error('agent already running');
   setRunning(true);
   setStop(false);
@@ -542,9 +543,17 @@ export async function bhAgentRun(task, opts = {}) {
         // away from an unanswered hold may not.
         try {
           const V = globalThis.Validation;
-          if (V?.isRunning?.()) {
+          if (V && await (V.ensureRunning?.() ?? V.isRunning?.())) {
             const g = await V.allow('finish the task');
             if (g && g.allowed === false) {
+              bounces = (bounces || 0) + 1;
+              if (bounces > 2) {
+                const paused = 'Paused, waiting on you. The task is not finished.';
+                await _bhAgentPatch({ status: 'stopped', endedAt: Date.now(), summary: paused });
+                await _bhAgentLog({ kind: 'info', text: paused });
+                _bhAgentNotify('stopped', task, paused);
+                return { summary: paused };
+              }
               await _bhAgentLog({ kind: 'info', step: step + 1,
                 text: `Tried to finish while the person is still being waited on; continuing. ${g.say || ''}` });
               bhAgentInterject(`You are not done. ${g.say || 'Something is waiting on the person.'} `

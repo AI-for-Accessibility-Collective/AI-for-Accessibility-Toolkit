@@ -53,11 +53,27 @@ self.importScripts(
 // measurement, not a page the task is on, and its findings would enter the
 // session as unread holds about pages the person never saw.
 const probeTabs = new Set();
+// The module set dies with the worker; storage.session survives it within
+// the browser session. On worker start, sweep tabs a dead worker left open -
+// they are background amazon tabs the person never asked for.
+chrome.storage.session?.get('probeTabIds').then(async (r) => {
+  for (const id of r.probeTabIds || []) {
+    probeTabs.add(id);
+    try { await chrome.tabs.remove(id); } catch { /* already gone */ }
+    probeTabs.delete(id);
+  }
+  chrome.storage.session?.set({ probeTabIds: [] });
+}).catch(() => {});
+const persistProbeTabs = () =>
+  chrome.storage.session?.set({ probeTabIds: [...probeTabs] }).catch(() => {});
 
-chrome.webNavigation?.onCompleted?.addListener((d) => {
+chrome.webNavigation?.onCompleted?.addListener(async (d) => {
   if (d.frameId !== 0) return;                       // top frame only
   if (probeTabs.has(d.tabId)) return;                // a measurement, not the task
-  if (!globalThis.Validation?.isRunning?.()) return;
+  // ensureRunning, not isRunning: after a worker restart the sync check is
+  // false forever and observation silently stops - the person keeps
+  // browsing a task the panel still shows, and no page gets checked.
+  if (!(await globalThis.Validation?.ensureRunning?.())) return;
   // Let the page settle. Amazon renders prices and stock after first paint,
   // and reading too early reports absences that are really just lateness.
   setTimeout(() => {
@@ -835,6 +851,7 @@ async function probeNarrower(tabUrl) {
     try {
       tab = await chrome.tabs.create({ url, active: false });
       probeTabs.add(tab.id);
+      persistProbeTabs();
       // Wait for the load, then the same settle the observe trigger uses.
       await new Promise((resolve) => {
         const done = (id, info) => {
@@ -861,6 +878,7 @@ async function probeNarrower(tabUrl) {
     } finally {
       if (tab) {
         probeTabs.delete(tab.id);
+        persistProbeTabs();
         chrome.tabs.remove(tab.id).catch?.(() => {});
       }
     }
@@ -1037,6 +1055,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         console.warn('validation did not start:', e);   // never block the agent
       }
     }
+    (async () => {
+      try {
+        const book = (await chrome.storage.sync.get('aa.rulebook'))['aa.rulebook'] || [];
+        const active = book.filter((r) => r.on !== false).map((r) => r.text);
+        if (active.length) {
+          globalThis.BrowserAgent.interject?.(
+            `Standing rules from the person, always in force: ${active.join('; ')}.`);
+        }
+      } catch { /* rules are also enforced at the gate */ }
+    })();
     globalThis.BrowserAgent.run(msg.task, {
       tabId: msg.tabId,
       tabMode: msg.tabMode,
@@ -1114,6 +1142,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // unblock.
     (async () => {
       try {
+        // Answering a hold that is no longer waiting must not steer the
+        // agent - the panel and the overlay both render answer rows off the
+        // same state, and the second press (possibly a DIFFERENT choice)
+        // would inject a second instruction.
+        const st0 = (await chrome.storage.local.get('aa.validation'))['aa.validation'] || {};
+        const stillWaiting = (st0.gate && st0.gate.allowed === false
+          && (st0.gate.waitingOn || []).includes(msg.widget));
+        if (!stillWaiting) { sendResponse({ resolved: false, stale: true }); return; }
         // A gate answer on a widget that probes goes through the probe, not
         // through a sentence - otherwise "Narrow it down" at the gate got
         // the model's invented counts while the same press on the finding
@@ -1178,6 +1214,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       'hand-over': 'Stop and let me do this part myself. Tell me where things stand.',
       're-sort': `Re-sort the results by ${c.arg || 'rating'} and tell me the new first result.`,
       'pick-size': 'Read me the sizes on this page and wait for me to choose.',
+      'coupon-tick': 'Tick the coupon checkbox under the price, then read me the new price.',
       'remove-extras': 'Remove everything from the cart that is not the item we picked today.',
       'open-other': 'Open the next best match instead and read me its title.',
       'halt': 'Stop what you are doing and wait.',
