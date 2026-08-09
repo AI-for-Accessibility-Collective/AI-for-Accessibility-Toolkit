@@ -1145,6 +1145,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     steerAgent(said).then(sendResponse);
     return true;
   }
+  if (msg.type === 'validationAsk') {
+    // Asking is not steering. This route deliberately does not go anywhere
+    // near steerAgent() — every other press in this file sends the agent an
+    // instruction, and that is exactly why the person cannot currently ask a
+    // question without changing what the agent does next.
+    globalThis.Validation.ask(msg.question, { tabId: msg.tabId })
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
   if (msg.type === 'validationAck') {
     globalThis.Validation.acknowledge(msg.key)
       .then(sendResponse).catch((e) => sendResponse({ error: e.message }));

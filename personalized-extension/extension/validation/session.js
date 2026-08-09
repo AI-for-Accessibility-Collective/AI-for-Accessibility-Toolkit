@@ -26,6 +26,9 @@ import * as Reasoner from './reasoner.js';
 
 const KEY = 'aa.validation';
 
+/** How many of the person's own questions the record keeps. */
+const ASKED_LIMIT = 50;
+
 // Which phase a URL belongs to. The agent does not announce its phase, and
 // asking it to would mean trusting its account of where it is.
 function phaseOf(url) {
@@ -815,6 +818,63 @@ const Validation = {
     if (!run) await rehydrate();
     await publish(extra || {});
     return { ok: true };
+  },
+
+  /**
+   * One question of the person's own, against the page in front of them.
+   *
+   * This is the only call in the layer that answers something nobody had
+   * already asked. `onRequest()` below replays findings that were computed on
+   * a schedule the page set; this reads the page again for the question the
+   * person actually has.
+   *
+   * It touches the agent in no way at all — no interject, no gate, no steer.
+   * That is the whole point of it. Today the only way to ask for more is to
+   * press a control, and every control sends the agent an instruction, so
+   * asking a question changes what the agent does next. Wanting to know is not
+   * wanting something different to happen.
+   *
+   * It is recorded, because a question asked and answered is part of the run,
+   * but it is recorded as a question and never as a finding: a finding is
+   * something the agent must wait for the person to see, and nothing the
+   * person asked for should hold the agent.
+   */
+  async ask(question, opts = {}) {
+    const q = String(question || '').trim();
+    if (!q) return { ok: false, error: 'no question was asked' };
+    const H = globalThis.BrowserHarness;
+    if (!H?.axSnapshot) return { ok: false, question: q, answer: null,
+      error: 'harness has no accessibility read',
+      say: 'I could not read the page.' };
+
+    let tabId = opts.tabId;
+    if (tabId == null) {
+      try {
+        const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        tabId = t?.id;
+      } catch { /* fall through */ }
+    }
+    if (tabId == null) return { ok: false, question: q, answer: null,
+      error: 'no page to read', say: 'I could not find a page to read.' };
+
+    const snap = await H.axSnapshot(tabId);
+    const r = await Reasoner.askPage(q, snap.text, {
+      task: flatModel?.task || null,
+      ask: contract ? describe(contract) : null,
+      ...(opts.reasoner || {}),
+    });
+
+    // Recorded next to the run rather than merged into it. `asked` is read by
+    // the panel; nothing in the gate looks at it.
+    if (run || contract) {
+      const prev = await stored();
+      await publish({ asked: (prev.asked || []).concat({
+        question: q, answer: r.answer, quote: r.quote, say: r.say,
+        confidence: r.confidence, verified: r.verified,
+        from: snap.url || null, at: Date.now(),
+      }).slice(-ASKED_LIMIT) });
+    }
+    return { ...r, url: snap.url || null, tabId };
   },
 
   /** Findings that were never announced, for when someone asks. */
