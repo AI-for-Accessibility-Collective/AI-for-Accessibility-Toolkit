@@ -178,9 +178,16 @@ const ANSWER_ITEM = {
     answer: { type: 'string', nullable: true },
     quote: { type: 'string', nullable: true },
     confidence: { type: 'number' },
+    // Whether the page disagrees with what the person asked for. This is the
+    // field that decides whether a finding interrupts: policy.js escalates a
+    // contradiction to `stop`, and everything else is an aside at most. It was
+    // hardcoded false here, so on a live flights page the layer read "arrives
+    // at San Diego International Airport" against an ask for LAX, said so, and
+    // let the booking carry on.
+    contradictsAsk: { type: 'boolean' },
   },
-  required: ['id', 'answer', 'quote', 'confidence'],
-  propertyOrdering: ['id', 'answer', 'quote', 'confidence'],
+  required: ['id', 'answer', 'quote', 'confidence', 'contradictsAsk'],
+  propertyOrdering: ['id', 'answer', 'quote', 'confidence', 'contradictsAsk'],
 };
 
 const NOTICED_ITEM = {
@@ -234,14 +241,23 @@ same order, with "id" set to that question's id, copied exactly. If the page \
 text does not say, BOTH "answer" and "quote" must be JSON null - do not write a \
 sentence explaining that the page does not say it, and do not lower the \
 confidence instead of using null. Every non-null answer MUST carry a "quote" \
-copied character-for-character from the page text.`;
+copied character-for-character from the page text. Set "contradictsAsk" true \
+when what the page says disagrees with what the person asked for - a different \
+destination, a different date, a price over the stated limit, a different item. \
+Judge it against the task and the ask at the top of this prompt, not against \
+what would be generally sensible. False when the page agrees, when the question \
+is not about something the person specified, or when the answer is null.`;
 
 const ANSWERED_ONLY = `1. "answers" - one entry ONLY for the questions this page \
 actually answers, in the same order as above. Omit a question entirely if the \
 page text does not say - do not emit a null row for it, and do not write a \
 sentence explaining that the page does not say it. Set "id" to that question's \
 id, copied exactly. Every answer MUST carry a "quote" copied \
-character-for-character from the page text.`;
+character-for-character from the page text. Set "contradictsAsk" true when what \
+the page says disagrees with what the person asked for - a different \
+destination, a different date, a price over the stated limit, a different item. \
+Judge it against the task and the ask at the top of this prompt, not against \
+what would be generally sensible.`;
 
 /**
  * @param {ReturnType<typeof flattenModel>} flat
@@ -547,6 +563,7 @@ export async function readPage(flat, pageText, opts = {}) {
       id: q.id, node: q.node, question: q.question, subtask: q.subtask,
       cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
       paradigm: q.paradigm,
+      contradictsAsk: r.contradictsAsk === true,
       answer: r.answer ?? null,
       quote: typeof r.quote === 'string' ? r.quote : null,
       confidence: typeof r.confidence === 'number' ? r.confidence : null,
@@ -686,7 +703,11 @@ export function toFindings(result, phase) {
       from: a.quote,
       answerable: true,
       confirming: false,
-      contradicts: false,
+      // What the page says disagrees with what the person asked for. policy.js
+      // turns this into a `stop`, which is the only thing that holds the agent
+      // on a task whose phases the three Amazon strings in IRREVERSIBLE_AFTER
+      // will never match.
+      contradicts: a.contradictsAsk === true,
       // Which of the twelve shapes draws this, straight off the question. The
       // corpus assigns paradigms per widget and a generated model carries one
       // per question, so both paths now reach the same twelve renderers. A
