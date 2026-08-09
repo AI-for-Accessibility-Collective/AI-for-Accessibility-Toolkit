@@ -244,7 +244,7 @@ async function runScenario(sc) {
     let lastSaid = 0;
     let seenModel = false;
     let lastGen = '';
-    const DEADLINE = 7 * 60 * 1000;
+    const DEADLINE = 9 * 60 * 1000;
 
     while (Date.now() - t0 < DEADLINE) {
       const { agent, val, model, gen } = await read();
@@ -370,12 +370,19 @@ async function runScenario(sc) {
         // The one the gate itself is showing, which has its own pair of
         // options. Anything that would let a commit through is never pressed:
         // a person deciding to pay is a person, and this is a recording.
+        //
+        // The first option in every pair the layer offers is the cautious one -
+        // "Check it with me", "Remove the extras", "Narrow it down", "Try
+        // again" - and the second is the permissive one, "Go ahead" or "Keep
+        // them all". So the first is pressed, with a list of words that must
+        // never be clicked whatever position they are in. Matching a fixed list
+        // of safe labels instead left the shopping run with nothing to press on
+        // every price stop, and it sat there for the whole run.
         const gateBtn = await panel.evaluateHandle(() => {
           const box = document.querySelector('.va-gate, .va-waiting') || document;
           const bs = [...box.querySelectorAll('button')];
-          const unsafe = /go ahead|place|buy|pay|order|confirm|submit|check ?out/i;
-          return bs.find((b) => !unsafe.test(b.textContent)
-            && /go on|got it|ok\b|continue|keep/i.test(b.textContent)) || null;
+          const unsafe = /go ahead|place|buy|pay\b|order|confirm|submit|check ?out|keep them all/i;
+          return bs.find((b) => !unsafe.test(b.textContent)) || null;
         });
         const el = gateBtn.asElement();
         if (el) {
