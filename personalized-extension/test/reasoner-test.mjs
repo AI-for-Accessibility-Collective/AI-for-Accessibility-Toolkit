@@ -99,6 +99,19 @@ await check("the person's own words reach the call", () => {
   assert.ok(prompt.includes('girls flat sandals, size 5.'));
 });
 
+await check('by default only answered questions need a row back', () => {
+  assert.ok(/one entry ONLY for the questions this page/.test(prompt));
+  const every = R.buildPrompt(flat, PAGE, { everyRow: true });
+  assert.ok(/exactly one entry per question above/.test(every));
+  // Either way the whole list goes in — the difference is what comes back.
+  for (const q of flat.questions) assert.ok(every.includes(`${q.id} | ${q.subtask} | ${q.question}`));
+});
+
+await check('a question with no row back is the same as the page not saying', () => {
+  const rows = R.verifyQuotes([], PAGE);
+  assert.strictEqual(rows.length, 0);
+});
+
 // ── parsing ─────────────────────────────────────────────────────────────────
 
 await check('plain and fenced JSON both parse', () => {
