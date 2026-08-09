@@ -119,10 +119,14 @@ const fkey = (f) => `${f.widget}|${f.phase}|${f.say}`;
 // findings — the panel goes blank and nothing in the logs says why. Reading
 // storage before appending survives the restart.
 /** Union by what the finding actually says, at the phase it says it. */
+/** How much of each unbounded list survives a publish. */
+const KEEP_FINDINGS = 300;
+const KEEP_RULE_CATCHES = 100;
+
 function mergeFindings(prev, next) {
   const key = (f) => `${f.widget}|${f.phase}|${f.say}`;
   const have = new Set(prev.map(key));
-  return prev.concat(next.filter((f) => !have.has(key(f))));
+  return prev.concat(next.filter((f) => !have.has(key(f)))).slice(-KEEP_FINDINGS);
 }
 
 // `run` and `contract` live in module scope, and the comment above about the
@@ -421,8 +425,14 @@ async function _publish(extra = {}) {
       // A probe result stays up until something replaces or clears it - it
       // must survive the unrelated publishes that happen constantly.
       probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
-      ruleCatches: extra.ruleCatches !== undefined ? extra.ruleCatches
-        : prev.ruleCatches || [],
+      // Capped. chrome.storage.local is 10 MB with no unlimitedStorage in the
+      // manifest, this blob is rewritten on every agent action, and both these
+      // lists grew for the life of the profile. When the quota does blow, the
+      // failure is silent and total: the set rejects inside _publish, observe()
+      // throws before publishing, and the layer stops checking pages while the
+      // panel keeps showing the last state it managed to write.
+      ruleCatches: (extra.ruleCatches !== undefined ? extra.ruleCatches
+        : prev.ruleCatches || []).slice(-KEEP_RULE_CATCHES),
       unspecified: extra.unspecified !== undefined ? extra.unspecified
         : prev.unspecified || [],
       phase: extra.phase !== undefined ? extra.phase : prev.phase ?? null,

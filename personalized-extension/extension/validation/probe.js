@@ -81,11 +81,18 @@ export function searchParamOf(url, askText) {
  * this produces exactly the URL the old code built by hand.
  */
 export function narrowerUrl(url, key, query) {
-  let u;
-  try { u = new URL(String(url)); } catch { return null; }
-  const out = new URL(u.origin + u.pathname);
-  out.searchParams.set(key, query);
-  return out.toString();
+  try {
+    const u = new URL(String(url));
+    // http and https only. A file: or chrome: URL has an opaque origin, so
+    // `u.origin` is the STRING "null" and `new URL('null/Users/...')` threw a
+    // TypeError from outside the old try — it escaped probeNarrower and left
+    // the panel on "Trying narrower searches" forever. There is also nothing
+    // to measure on those schemes.
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    const out = new URL(u.origin + u.pathname);
+    out.searchParams.set(key, query);
+    return out.toString();
+  } catch { return null; }
 }
 
 /**
@@ -114,11 +121,24 @@ const COUNT_PATTERNS = [
   /([\d,]+)\s+(?:results|items|matches)\b/i,
 ];
 
+// Phrases that carry a number and a countable noun and are NOT a result total.
+// A cart badge, a review count and a basket line all match "N items", and the
+// second pattern above takes the first one on the page — so on any site that
+// does not word its total as "of N results", a header like "4 items in your
+// cart" was reported as the size of the search, with `from: 'the page states
+// it'` and no quote. That is the free path, so it was the common case, and it
+// is exactly the off-Amazon situation this module was rewritten for.
+const NOT_A_TOTAL = /\b(cart|basket|bag|order|wish\s*list|saved|recently viewed|review|rating|comment)\b/i;
+
 export function countIn(text) {
   const s = String(text || '');
   for (const re of COUNT_PATTERNS) {
     const m = re.exec(s);
-    if (m) return m[1];
+    if (!m) continue;
+    // The words either side of the match decide whether this is a total.
+    const around = s.slice(Math.max(0, m.index - 60), m.index + m[0].length + 60);
+    if (NOT_A_TOTAL.test(around)) continue;
+    return m[1];
   }
   return null;
 }

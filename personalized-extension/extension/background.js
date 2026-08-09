@@ -943,7 +943,18 @@ async function probeNarrower(tabUrl) {
 // was nothing, because "I could not tell how a search is written on this site"
 // and "I measured nothing" look identical from the outside and are not the same
 // thing at all.
+let refineProbeRunning = false;
 async function runRefineProbe(fallbackSay) {
+  // One at a time. Two presses opened two probes, up to six background tabs
+  // each held about sixteen seconds, on a control a person can double-press
+  // precisely because the first press has no immediate effect.
+  if (refineProbeRunning) return 0;
+  refineProbeRunning = true;
+  try { return await _runRefineProbe(fallbackSay); }
+  finally { refineProbeRunning = false; }
+}
+
+async function _runRefineProbe(fallbackSay) {
   const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   await globalThis.Validation?.annotate?.({
     probe: { ask: 'Trying narrower searches…', options: [] } });
