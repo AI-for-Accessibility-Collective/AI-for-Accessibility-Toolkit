@@ -23,6 +23,7 @@ import { contractFromAsk, gaps, describe, toQuery } from './ask.js';
 import { setParadigmMap, setCountZones } from '../../../tools/auditors/contract-mismatch.js';
 import { setControls } from './render.js';
 import * as Reasoner from './reasoner.js';
+import * as Trace from './trace.js';
 
 const KEY = 'aa.validation';
 
@@ -72,6 +73,25 @@ let runOpts = {};
 let flatModel = null;
 let modelSource = null;
 
+// Where in the task model the run currently is, as the reasoner last read it
+// off the page rather than as the agent reports it. The trace files an action
+// under this, which is what makes a lookup by node possible at all — an action
+// on its own does not know which decision it belongs to.
+let currentNode = null;
+let currentNodeLabel = null;
+let currentPhase = null;
+
+// Who is acting on the page. Two things acting on one page with no shared
+// record of which one is acting is how the failure in the code comments
+// happened: in a recorded run the agent spent ten steps trying to dismiss its
+// own supervisor overlay, and pressed the person's "Got it" button.
+let holder = 'agent';
+let handOverNode = null;
+let handOverAt = null;
+
+/** The node's own name, for a lookup that has to be spoken. */
+const labelFor = (id) => (id != null && flatModel?.labels?.[id]) || null;
+
 // What the person has actually dealt with.
 //
 // This used to live only in the overlay, which meant the session had no idea
@@ -117,6 +137,16 @@ async function rehydrate() {
   runOpts = prev.opts || {};
   run = createRun(contract, runOpts);
   for (const k of prev.acknowledged || []) acknowledged.add(k);
+  // Where the run was and who was driving. Both are published on every write
+  // for exactly this: a worker restart during a hand over must not come back
+  // believing the agent has the wheel, which is how two things end up acting
+  // on one page.
+  currentNode = prev.node ?? null;
+  currentNodeLabel = prev.nodeLabel ?? null;
+  currentPhase = prev.phase ?? null;
+  holder = prev.holder === 'person' ? 'person' : 'agent';
+  handOverNode = prev.handOverNode ?? null;
+  handOverAt = prev.handOverAt ?? null;
   return true;
 }
 
@@ -365,6 +395,11 @@ async function _publish(extra = {}) {
     [KEY]: {
       findings: merged,
       hold,
+      // Where the run is and who is driving. Written on every publish so both
+      // survive a worker restart, and so a surface can say which of the two is
+      // acting rather than guessing.
+      node: currentNode, nodeLabel: currentNodeLabel,
+      holder, handOverNode, handOverAt,
       // A probe result stays up until something replaces or clears it - it
       // must survive the unrelated publishes that happen constantly.
       probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
@@ -418,10 +453,28 @@ async function observeByModel(snap, opts = {}) {
   const phase = opts.phase || Reasoner.phaseFor(result, flatModel);
   const findings = Reasoner.toFindings(result, phase);
 
+  // Where the run is, read off the page. The first node the page is serving,
+  // falling back to the first node a finding belongs to — a page that answered
+  // something about the size is at the size whether or not the model listed it
+  // among the nodes it thought it was serving.
+  const nodes = (result.alignedNodes || []).slice();
+  currentNode = nodes[0] || findings.find((f) => f.node)?.node || currentNode;
+  currentNodeLabel = labelFor(currentNode);
+  currentPhase = phase || null;
+
+  // Every read goes on the record, whether or not it produced anything. A page
+  // that answered nothing is still a moment the run passed through, and a
+  // trace with holes in it is one you cannot trust to go back through.
+  const traceRead = (rows) => Trace.record({
+    nodeId: currentNode, nodes, label: currentNodeLabel, phase,
+    action: 'read the page', url: snap.url || null, holder, findings: rows,
+  });
+
   if (!findings.length) {
     // Nothing this page could answer and nothing worth raising. Recorded
     // rather than silent: what the reasoner asked and what it discarded is
     // still the record of a page having been read.
+    await traceRead([]);
     await publish({ phase: phase || null, reasoner: result.meta });
     return { phase, findings: 0, url: snap.url, reasoner: result.meta };
   }
@@ -452,6 +505,11 @@ async function observeByModel(snap, opts = {}) {
   const marks = rendered
     .filter((f) => f.visual && f.level !== 'ambient')
     .map((f) => ({ ...f.visual, level: f.level, widget: f.finding.widget }));
+
+  // With the levels on, because whether a finding stopped the run is part of
+  // what happened at that node.
+  await traceRead(rendered.map((f) => ({
+    widget: f.finding.widget, node: f.finding.node || null, level: f.level })));
 
   await publish({ append: rendered.map((f) => ({
     widget: f.finding.widget, level: f.level, say: f.finding.say,
@@ -502,6 +560,16 @@ const Validation = {
     run = createRun(contract, opts);
     acknowledged.clear();
     declinedOffers.clear();
+    // A new task is a new trace. The old one is a record of a different run,
+    // and a lookup that reaches into it would answer a question about this
+    // task with something from the last one.
+    await Trace.clear();
+    currentNode = null;
+    currentNodeLabel = null;
+    currentPhase = null;
+    holder = 'agent';
+    handOverNode = null;
+    handOverAt = null;
     // Checking is not a setting to remember to switch on. A layer that has to
     // be enabled separately is off exactly when it matters, because nobody
     // predicts the run that will go wrong. Starting a task turns on the
@@ -629,6 +697,15 @@ const Validation = {
     // or not the action in hand was one the gate would have stopped.
     await tickHold();
 
+    // Filed under wherever the run is. An action on its own does not know
+    // which decision it belongs to, which is why "go back to where the size
+    // was chosen" was a scan of a click list before this.
+    const traceAction = (verdict) => Trace.record({
+      nodeId: currentNode, label: currentNodeLabel, phase: currentPhase,
+      step: ctx.step ?? null, holder,
+      action: `${actionDescription || 'something'}${verdict ? ` — ${verdict}` : ''}`,
+    });
+
     // Anything the person has not dealt with holds the agent — but only from
     // CHANGING anything, never from looking.
     //
@@ -656,6 +733,7 @@ const Validation = {
 
     if (unread.length) {
       const first = unread[0];
+      await traceAction('held, unread');
       return {
         allowed: false,
         waitingOn: unread.map((f) => f.widget),
@@ -681,6 +759,7 @@ const Validation = {
         await publish({ ruleCatches: (prev2.ruleCatches || []).concat({
           rule: r.id, action: String(actionDescription || '').slice(0, 120),
           at: Date.now() }) });
+        await traceAction(`stopped by the rule ${r.id}`);
         return { allowed: false, rule: r.id,
           say: `A standing rule stops this: ${r.text}.` };
       }
@@ -695,6 +774,7 @@ const Validation = {
       }).catch(() => {});
       await publish();
     }
+    await traceAction(g.allowed ? 'went ahead' : 'held at the gate');
     return g;
   },
 
@@ -702,6 +782,15 @@ const Validation = {
   async answer(widget, response) {
     if (!run && !(await rehydrate())) return { resolved: false };
     const r = run.answer(widget, response);
+    // Answering belongs to the node the question came from, not to wherever
+    // the run has drifted to by the time it is answered.
+    const at = (await stored()).findings?.find((f) => f.widget === widget);
+    await Trace.record({
+      nodeId: at?.node ?? currentNode, label: labelFor(at?.node ?? currentNode),
+      phase: at?.phase ?? currentPhase, holder,
+      action: `answered: ${String(response || '').slice(0, 80)}`,
+      answered: [widget],
+    });
     // Answering a widget's question deals with that widget's findings too.
     // Without this the same widget kept holding the agent through the
     // unread-findings check after its question was already answered - the
@@ -876,6 +965,30 @@ const Validation = {
     }
     return { ...r, url: snap.url || null, tabId };
   },
+
+  /**
+   * The trace, keyed to task model nodes.
+   *
+   * `at(nodeId)` is what makes "go back to where the size was chosen" a lookup.
+   * `why(ref)` reads it and calls no model at all.
+   *
+   * Reading only. Going back through this re-opens a decision; it does not
+   * undo anything that has already happened on the site — see trace.js and
+   * API.md section 5 on why those two must not look the same.
+   */
+  trace: {
+    all: Trace.all,
+    at: Trace.at,
+    since: Trace.since,
+    last: Trace.last,
+    why: Trace.why,
+  },
+
+  /** What was happening at a node, or at a step. No model call. */
+  why: (ref) => Trace.why(ref),
+
+  /** Where the run is, as the reasoner last read it off the page. */
+  where: () => ({ node: currentNode, label: currentNodeLabel, phase: currentPhase }),
 
   /** Findings that were never announced, for when someone asks. */
   onRequest: () => (run ? run.onRequest() : []),

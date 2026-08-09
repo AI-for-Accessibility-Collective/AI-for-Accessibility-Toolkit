@@ -1285,6 +1285,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === 'validationTrace') {
+    // Reading the record. `nodeId` is the whole point of it: a lookup by the
+    // decision rather than a scan of a click list.
+    (async () => {
+      try {
+        const T = globalThis.Validation.trace;
+        const entries = msg.nodeId != null ? await T.at(msg.nodeId)
+          : msg.since != null ? await T.since(msg.since)
+          : await T.all();
+        sendResponse({ entries, where: globalThis.Validation.where() });
+      } catch (e) { sendResponse({ error: e.message }); }
+    })();
+    return true;
+  }
+  if (msg.type === 'validationWhy') {
+    // Reads the trace and calls no model. Note what it does NOT do: going back
+    // to a decision does not undo anything that already happened on the site.
+    globalThis.Validation.why({ nodeId: msg.nodeId, step: msg.step })
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+
   if (msg.type === 'validationOnRequest') {
     sendResponse({ items: globalThis.Validation.onRequest() });
     return false;

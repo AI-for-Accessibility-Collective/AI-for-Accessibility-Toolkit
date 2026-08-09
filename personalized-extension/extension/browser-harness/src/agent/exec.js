@@ -11,6 +11,7 @@ import {
   getGroupId,
   setCreatingTab,
   getImageScale,
+  getStep,
   pushLoadedSkill,
   shiftLoadedSkill,
   getLoadedSkills,
@@ -45,7 +46,10 @@ async function _bhAgentGate(action) {
   const described = [action.action, action.text, action.label, action.selector,
                      action.url].filter(Boolean).join(' ');
   try {
-    return await V.allow(described);
+    // The step goes with it so the layer can file this action under the point
+    // in the run it happened at. Without it the trace has actions in it and no
+    // way to line them up against the steps the agent reports.
+    return await V.allow(described, { step: getStep(), action: action.action });
   } catch {
     return { allowed: true };   // never let the guard itself break a run
   }
