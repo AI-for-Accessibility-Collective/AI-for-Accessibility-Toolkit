@@ -682,7 +682,11 @@ async function checkWatches(snap) {
     // A page that does not say is not a value that has not moved. It is a page
     // that does not say, and nothing is claimed from it.
     if (!r.ok || r.answer == null) { await Watch.update(w.id, patch); continue; }
-    const reading = { answer: r.answer, quote: r.quote, at: now, url: snap.url || null };
+    // `verified` travels with the reading rather than being asserted later. It
+    // is the level askPage actually matched the quote at, and a finding built
+    // from this must not claim a stricter one than happened.
+    const reading = { answer: r.answer, quote: r.quote, verified: r.verified,
+                      at: now, url: snap.url || null };
 
     // The first reading a watch could take becomes what it is watching. This
     // happens when the page the watch was set on could not answer its own
@@ -743,7 +747,7 @@ async function raiseMove(w, move, snap) {
     moment: 'Now',
     moneyMoving: false,
     confidence: null,
-    verified: w.last?.quote ? 'verified_exact' : null,
+    verified: w.last?.verified || null,
     aligned: false,
     source: 'watch',
   };

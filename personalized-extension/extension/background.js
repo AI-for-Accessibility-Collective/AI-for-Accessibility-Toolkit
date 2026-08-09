@@ -1282,7 +1282,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       // in front of the person, and a watch is the opposite of that. It now
       // registers a watched value that re-reads on later settles and outlives
       // the run.
-      globalThis.Validation.watch({ nodeId: c.node, widget: c.widget })
+      // The tab the press came from, not the active one. The overlay is drawn
+      // on the page the agent is working, and the agent usually works in a
+      // background tab, so "the active tab" is wherever the person happens to
+      // be reading — which is not the page the value is on.
+      globalThis.Validation.watch({ nodeId: c.node, widget: c.widget,
+        tabId: msg.tabId ?? sender?.tab?.id })
         .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
       return true;
     }
