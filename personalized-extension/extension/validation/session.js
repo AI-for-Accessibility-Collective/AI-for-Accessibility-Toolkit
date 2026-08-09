@@ -45,14 +45,14 @@ function phaseOf(url) {
 
 // Steps that commit something. The gate is checked before these, and only
 // these — stopping the agent from scrolling would be theatre.
-const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now|finish the task/i;
+const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now|finish the task|dialog|\bjs\b/i;
 
 // Actions that change the world rather than look at it.
 //
 // The distinction is the difference between a paced run and a deadlocked one:
 // scroll, wait, screenshot and read leave the page as they found it, so
 // holding them buys nothing and costs the agent its eyes.
-const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|close|switch|go[_ ]?(back|forward)|refresh|upload|drag|add|remove|place|buy|checkout|finish the task/i;
+const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|close|switch|go[_ ]?(back|forward)|refresh|upload|drag|add|remove|place|buy|checkout|finish the task|fill|dialog|\bjs\b/i;
 
 let run = null;
 let contract = null;
@@ -67,6 +67,9 @@ let runOpts = {};
 // persona, and the cause is that nothing connected being unread to being
 // allowed to continue.
 const acknowledged = new Set();
+// Offers waved past with "Just this once" - not stored, because a later task
+// can deserve the same offer again; within this task it stops nagging.
+const declinedOffers = new Set();
 
 /** What identifies one finding. Must match the overlay's key exactly. */
 const fkey = (f) => `${f.widget}|${f.phase}|${f.say}`;
@@ -136,7 +139,12 @@ async function rules() {
   try {
     const r = await chrome.storage.sync.get(RULES_KEY);
     const saved = r[RULES_KEY];
-    return Array.isArray(saved) && saved.length ? saved : DEFAULT_RULES.slice();
+    if (!Array.isArray(saved) || !saved.length) return DEFAULT_RULES.slice();
+    // Saved copies predate the blocks field; the pattern always comes from
+    // the analysis, never from what a task stored.
+    const byId = Object.fromEntries(DEFAULT_RULES.map((d) => [d.id, d]));
+    return saved.map((x) => (byId[x.id]?.blocks && !x.blocks)
+      ? { ...x, blocks: byId[x.id].blocks } : x);
   } catch {
     return DEFAULT_RULES.slice();   // sync unavailable is not a reason to lose the default
   }
@@ -176,6 +184,7 @@ function offerFrom(findings, have) {
   const fired = new Set(findings.map((f) => f.widget));
   for (const p of PROMOTABLE) {
     if (ids.has(p.id)) continue;      // already in force — never offered twice
+    if (declinedOffers.has(p.id)) continue;   // waved past this task
     if (fired.has(p.widget)) return p;
   }
   return null;
@@ -202,7 +211,29 @@ async function _publish(extra = {}) {
   const s = run ? run.summary()
     : { steps: prev.steps || [], said: prev.said || [],
         spokenWords: prev.spokenWords || 0, waiting: prev.waiting || 0 };
-  const gate = run ? run.gate() : (prev.gate || { allowed: true });
+  // A rehydrated run has empty bookkeeping; the stored record is the truth.
+  if (run && !(s.steps || []).length && (prev.steps || []).length) {
+    s.steps = prev.steps; s.said = prev.said || [];
+    s.spokenWords = prev.spokenWords || 0;
+  }
+  let gate = run ? run.gate() : (prev.gate || { allowed: true });
+  // The unread-findings hold was invisible: allow() enforced it but nothing
+  // published it, so no surface had anything to answer and a side-panel-only
+  // user deadlocked the agent. Derived from stored state, it also survives
+  // worker restarts.
+  if (gate.allowed !== false) {
+    const merged0 = extra.findings || mergeFindings(prev.findings || [], extra.append || []);
+    const ack = new Set([...(prev.acknowledged || []), ...acknowledged]);
+    const unread = merged0.filter((f) => f.level !== 'ambient' && !f.confirming)
+      .filter((f) => !ack.has(fkey(f)));
+    if (unread.length) {
+      gate = { allowed: false, waitingOn: unread.map((f) => f.widget),
+        unread: unread.length,
+        say: unread.length === 1 ? `Waiting for you: ${unread[0].say}`
+          : `Waiting for you. ${unread.length} things you haven't seen, `
+            + `starting with: ${unread[0].say}` };
+    }
+  }
   const book = await rules();
 
   // A check that never ran because nobody said the size is not a check that
@@ -229,6 +260,13 @@ async function _publish(extra = {}) {
       // A probe result stays up until something replaces or clears it - it
       // must survive the unrelated publishes that happen constantly.
       probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
+      ruleCatches: extra.ruleCatches !== undefined ? extra.ruleCatches
+        : prev.ruleCatches || [],
+      unspecified: extra.unspecified !== undefined ? extra.unspecified
+        : prev.unspecified || [],
+      phase: extra.phase !== undefined ? extra.phase : prev.phase ?? null,
+      invalidated: extra.invalidated !== undefined ? extra.invalidated
+        : prev.invalidated || [],
       contract: contract || prev.contract || null,
       // Union, never replacement: a publish arriving before rehydrate has
       // run must not shrink the stored list back to whatever this worker
@@ -259,6 +297,7 @@ const Validation = {
     runOpts = opts;
     run = createRun(contract, opts);
     acknowledged.clear();
+    declinedOffers.clear();
     // Checking is not a setting to remember to switch on. A layer that has to
     // be enabled separately is off exactly when it matters, because nobody
     // predicts the run that will go wrong. Starting a task turns on the
@@ -320,7 +359,17 @@ const Validation = {
 
     // Named `rendered`, not `findings`: destructuring into `findings` would
     // shadow the module-level accumulator this function is meant to append to.
-    const { findings: rendered } = run.observe(snap.text, phase);
+    let rendered;
+    try {
+      ({ findings: rendered } = run.observe(snap.text, phase));
+    } catch (e) {
+      // A crash inside a check must not read as checked-and-fine - that is
+      // the exact failure the layer exists to prevent.
+      await publish({ append: [{ widget: 'Checking failed', level: 'aside',
+        say: `I could not finish checking this page. ${String(e.message || e).slice(0, 80)}`,
+        from: snap.url || 'this page', confirming: false, phase }], phase });
+      return { phase, findings: 0, error: String(e.message || e) };
+    }
 
     // Only what is meant to be heard. Ambient findings stay reachable on
     // request rather than being announced.
@@ -402,6 +451,25 @@ const Validation = {
       };
     }
 
+    // The rulebook is not a display. An active rule with a pattern is a
+    // hard stop, whatever else is or is not waiting - and each catch is
+    // recorded, so "what it has caught" stops being fiction.
+    const book = await rules();
+    for (const r of book) {
+      if (r.on === false || !r.blocks) continue;
+      let hit = false;
+      try { hit = new RegExp(r.blocks, 'i').test(String(actionDescription || '')); }
+      catch { /* a bad pattern must never break the gate open */ }
+      if (hit) {
+        const prev2 = await stored();
+        await publish({ ruleCatches: (prev2.ruleCatches || []).concat({
+          rule: r.id, action: String(actionDescription || '').slice(0, 120),
+          at: Date.now() }) });
+        return { allowed: false, rule: r.id,
+          say: `A standing rule stops this: ${r.text}.` };
+      }
+    }
+
     if (!COMMITTING.test(String(actionDescription || ''))) return { allowed: true };
     const g = run.gate();
     if (!g.allowed) {
@@ -442,7 +510,11 @@ const Validation = {
   async promote(offer, always) {
     if (!offer) return { saved: false };
     if (!run) await rehydrate();
-    if (!always) return { saved: false, why: 'just this once' };
+    if (!always) {
+      declinedOffers.add(offer.id);
+      await publish();
+      return { saved: false, why: 'just this once' };
+    }
     const book = await rules();
     if (book.some((r) => r.id === offer.id)) return { saved: false, why: 'already in force' };
     book.push({ id: offer.id, text: offer.text, on: true });
@@ -499,6 +571,7 @@ const Validation = {
     run = createRun(contract, runOpts);
     await publish({
       findings: kept,
+      unspecified: gaps(contract),
       invalidated: stale.map((f) => f.say),
     });
     return { changed: true, field: key, was: before, now: value,
