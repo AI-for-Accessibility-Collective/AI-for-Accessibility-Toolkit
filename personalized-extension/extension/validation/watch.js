@@ -231,6 +231,24 @@ export async function live(now = Date.now()) {
 }
 
 /** Anything at all to check, answered from one storage read. */
+/**
+ * Watches whose horizon has run out and that nobody has been told about.
+ *
+ * `live()` filters expired watches out, so without this a watch simply stops
+ * looking and never says so. Someone who asked to have a price watched keeps
+ * believing it is being watched, and an unflagged absence is the exact failure
+ * this layer exists to surface — reporting it is not optional bookkeeping.
+ */
+export async function lapsed(now = Date.now()) {
+  const t = await load();
+  return t.watches.filter((w) => w.until && now > w.until && !w.lapsedTold);
+}
+
+/** Said once. Marked so the next sweep does not say it again. */
+export async function markLapsed(id) {
+  return update(id, { lapsedTold: true });
+}
+
 export async function any(now = Date.now()) {
   return (await live(now)).length > 0;
 }

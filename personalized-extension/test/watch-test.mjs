@@ -312,5 +312,36 @@ let watchId = null;
 await Validation.stop();
 await Watch.clear();
 
+
+// ── a watch that runs out says so ───────────────────────────────────────────
+//
+// live() filters expired watches out, so before this a watch simply stopped
+// looking and never mentioned it. Someone who asked for a price to be watched
+// went on believing it was being watched. An unflagged absence is the failure
+// this layer exists to surface, so it cannot be the layer's own behaviour.
+{
+  await Watch.clear();
+  Watch.setWatchTiming({ horizonMs: 50 });
+  const added = await Watch.add({ label: 'the price', widget: 'Watching the price',
+    question: 'what is the price?', baseline: { answer: '$40.00', quote: '$40.00' } });
+  const id = added.watch.id;
+
+  ok((await Watch.lapsed()).length === 0, 'a fresh watch has not lapsed');
+  ok((await Watch.live()).length === 1, 'and it is live');
+
+  await new Promise((r) => setTimeout(r, 80));
+
+  const out = await Watch.lapsed();
+  ok(out.length === 1 && out[0].id === id, 'once the horizon passes it is reported as lapsed');
+  ok((await Watch.live()).length === 0, 'and it has dropped out of the live set');
+
+  await Watch.markLapsed(id);
+  ok((await Watch.lapsed()).length === 0,
+    'told once and not again - a watch that ran out is news exactly one time');
+  ok((await Watch.all()).some((w) => w.id === id),
+    'the record of it stays, so what was watched can still be looked up');
+  Watch.setWatchTiming({ horizonMs: 30 * 24 * 60 * 60 * 1000 });
+}
+
 console.log(`\n${pass}/${pass + fail} - a value can be watched across time, it outlives the run, and it costs nothing while nobody is looking.`);
 if (fail) process.exit(1);

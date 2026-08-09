@@ -807,8 +807,17 @@ async function checkWatches(snap) {
 }
 
 async function _checkWatches(snap) {
+  // A watch that has run out is reported before anything else, and exactly
+  // once. It is checked ahead of the early return below because a sweep with no
+  // live watches left is precisely when the last one has just lapsed.
+  const lapsed = await Watch.lapsed();
+  for (const w of lapsed) {
+    await Watch.markLapsed(w.id);
+    await raiseLapsed(w, snap);
+  }
+
   const standing = await Watch.live();
-  if (!standing.length) return { checked: 0, read: 0, moved: 0 };
+  if (!standing.length) return { checked: 0, read: 0, moved: 0, lapsed: lapsed.length };
 
   const now = Date.now();
   const hash = hashText(snap.text);
@@ -852,7 +861,35 @@ async function _checkWatches(snap) {
     await raiseMove({ ...w, last: reading }, move, snap);
   }
 
-  return { checked: standing.length, read, moved: moved.length, moves: moved, skipped };
+  return { checked: standing.length, read, moved: moved.length, moves: moved,
+           skipped, lapsed: lapsed.length };
+}
+
+/**
+ * The watch ran out, so say so.
+ *
+ * Goes out at the same level as any other finding rather than as a quiet log
+ * line. "I am no longer watching this" is news to the person who asked for it,
+ * and they have no other way to discover it.
+ */
+async function raiseLapsed(w, snap) {
+  const what = w.label || w.widget || 'a value';
+  const last = w.last?.answer ?? w.baseline?.answer ?? null;
+  const finding = {
+    widget: w.widget || `Watching ${what}`,
+    phase: currentPhase,
+    say: `I have stopped watching ${what}. The watch ran out`
+      + (last != null ? `, and the last reading I took was ${last}.` : '.'),
+    from: w.last?.quote || w.baseline?.quote || null,
+    answerable: true,
+    confirming: false,
+    contradicts: false,
+    source: 'watch',
+  };
+  try {
+    await publish({ append: [{ ...finding, level: 'aside' }], phase: currentPhase });
+  } catch { /* a run that has gone is not a reason to lose the record */ }
+  return finding;
 }
 
 /**
