@@ -590,6 +590,97 @@ if (globalThis.ValidationReasoner) {
   });
 }
 
+// Writing the task model uses the same key, for the same reason. It needs a
+// longer ceiling than a page read: the prompt carries every worked example, so
+// the first call is dominated by reading them rather than by answering.
+if (globalThis.ValidationGenerate) {
+  globalThis.ValidationGenerate.setCaller(async (prompt, opts) => {
+    const key = await getApiKey();
+    if (!key) throw new Error('No Gemini API key configured.');
+    return await callGemini(prompt, key, { ...opts, timeoutMs: 180_000 });
+  });
+}
+
+// One generation at a time. A second run supersedes the first rather than
+// racing it to load a model for a task nobody is doing any more.
+let modelRun = null;
+// How long the agent waits for the first piece of the model. The tree is one
+// call against about thirteen thousand tokens of examples, so this is generous
+// rather than tight; it exists so a stalled generation cannot become an agent
+// that never starts.
+const MODEL_FIRST_PIECE_MS = 90_000;
+
+/**
+ * Write the task model for what the person just asked, and use it when it lands.
+ *
+ * The shipped `taskmodel.json` is dropped first. It was built for whatever task
+ * happened to be current when the extension was packaged, and checking one
+ * task's pages against another task's questions does not degrade gracefully —
+ * it produces confident, correct-sounding contradictions ("the agent is
+ * researching the Boeing 737 MAX", on a run about the Eiffel Tower) and holds
+ * the agent on them. No model at all is quiet, and quiet is the honest state
+ * while there is nothing trustworthy to check against.
+ */
+function startModelFor(task) {
+  const G = globalThis.ValidationGenerate;
+  if (!G?.hasCaller?.() || !task) return Promise.resolve();
+  if (modelRun) modelRun.aborted = true;
+  const mine = { aborted: false };
+  modelRun = mine;
+
+  try { globalThis.ValidationTaskModel?.unload?.(); } catch { /* nothing loaded */ }
+
+  // Resolves on the first piece, so the caller can hold the agent for it. The
+  // ceiling matters more than the wait: a generation that stalls must not
+  // become an agent that never starts.
+  let firstPiece;
+  const ready = new Promise((r) => { firstPiece = r; });
+  const ceiling = setTimeout(() => firstPiece('timed out'), MODEL_FIRST_PIECE_MS);
+  const arrived = (why) => { clearTimeout(ceiling); firstPiece(why); };
+
+  // Each piece is used as it is written. Waiting for the whole model loses
+  // short runs entirely: a recorded Wikipedia lookup was over in ninety
+  // seconds, well before a complete model could exist, and a model that
+  // arrives after the agent has stopped has checked nothing.
+  const use = async (model) => {
+    if (mine.aborted) return;
+    try {
+      globalThis.ValidationTaskModel?.load(model, 'generated');
+      // Kept so a service-worker restart mid-run reloads it instead of falling
+      // back to checking nothing. It has no URL to refetch.
+      await chrome.storage.local.set({ 'aa.validation.model': model });
+      arrived('ready');
+    } catch (e) {
+      console.warn('[validation] could not use the model:', e.message);
+    }
+  };
+
+  G.generate(task, {
+    signal: mine,
+    onPartial: use,
+    // Published, not just logged. A generation that fails inside the service
+    // worker is otherwise invisible to everything outside it — including the
+    // panel, which has to tell the person why nothing is being checked yet.
+    onStage: (st) => {
+      console.log('[validation] model', JSON.stringify(st));
+      chrome.storage.local.set({ 'aa.validation.gen': { ...st, at: Date.now() } })
+        .catch(() => {});
+    },
+  }).then(async (model) => {
+    if (mine.aborted || !model) return;
+    await use(model);
+    console.log('[validation] model complete for:', task);
+  }).catch((e) => {
+    console.warn('[validation] no model written:', e.message);
+    chrome.storage.local.set({
+      'aa.validation.gen': { stage: 'failed', error: e.message, at: Date.now() },
+    }).catch(() => {});
+    arrived('failed');   // never leave the agent waiting on a generation that died
+  });
+
+  return ready;
+}
+
 // The Librarian's slow lane (extraction, reflection, playbooks) uses the
 // same key-resolving caller.
 if (globalThis.Librarian) {
@@ -1148,10 +1239,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // does, after asking about the gaps); otherwise the task sentence is
     // parsed, and whatever could not be read from it becomes a question rather
     // than a guess.
+    let modelReady = Promise.resolve();
     if (globalThis.Validation && !globalThis.Validation.isRunning()) {
       try {
         const contract = msg.contract || globalThis.ValidationAsk.contractFromAsk(msg.task);
         globalThis.Validation.start(contract, { style: msg.style || 'balanced' });
+        modelReady = startModelFor(msg.task);
       } catch (e) {
         console.warn('validation did not start:', e);   // never block the agent
       }
@@ -1166,14 +1259,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
       } catch { /* rules are also enforced at the gate */ }
     })();
-    globalThis.BrowserAgent.run(msg.task, {
-      tabId: msg.tabId,
-      tabMode: msg.tabMode,
-      maxSteps: msg.maxSteps,
-    }).catch((e) => {
-      // Agent already wrote the error to storage; nothing more to do here.
-      console.warn('[BrowserAgent] run failed:', e.message);
-    });
+    // Hold the agent until there is something to check it against.
+    //
+    // Only for the tree, which is one small call, and under a ceiling. Without
+    // this the layer loses short runs outright: a recorded Wikipedia lookup was
+    // answered and done in thirty-three seconds, and every check arrived after
+    // the run had ended. Delegating and being able to check what was delegated
+    // are one action; a check that lands afterwards is not a check.
+    (async () => {
+      try { await modelReady; } catch { /* no model is a supported state */ }
+      globalThis.BrowserAgent.run(msg.task, {
+        tabId: msg.tabId,
+        tabMode: msg.tabMode,
+        maxSteps: msg.maxSteps,
+      }).catch((e) => {
+        // Agent already wrote the error to storage; nothing more to do here.
+        console.warn('[BrowserAgent] run failed:', e.message);
+      });
+    })();
     sendResponse({ started: true });
     return false;
   }

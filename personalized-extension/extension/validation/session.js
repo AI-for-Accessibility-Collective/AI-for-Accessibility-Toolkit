@@ -26,8 +26,14 @@ import * as Reasoner from './reasoner.js';
 import * as Trace from './trace.js';
 import * as Watch from './watch.js';
 import * as Probe from './probe.js';
+import * as Generate from './generate.js';
 
 const KEY = 'aa.validation';
+// A task model written from the person's query, and the name that marks one.
+// Kept apart from the session blob because it is written once per run and read
+// on every restart, while the blob is rewritten on every agent action.
+const MODEL_KEY = 'aa.validation.model';
+export const GENERATED = 'generated';
 
 /** How many of the person's own questions the record keeps. */
 const ASKED_LIMIT = 50;
@@ -74,6 +80,18 @@ let runOpts = {};
 // two paths do not mix, and the switch is the presence of a file.
 let flatModel = null;
 let modelSource = null;
+
+/**
+ * What is known about the task, for callers that behave differently on a task
+ * that buys something than on one that reads something.
+ *
+ * `commits` is undefined while there is no model — not knowing is not the same
+ * as knowing it does not.
+ */
+function aboutTask() {
+  if (!flatModel) return {};
+  return { commits: (flatModel.questions || []).some((q) => q.moneyMoving === true) };
+}
 
 // Where in the task model the run currently is, as the reasoner last read it
 // off the page rather than as the agent reports it. The trace files an action
@@ -167,8 +185,17 @@ async function rehydrate() {
   // checked and nothing recorded that it wasn't. Reload it here instead.
   if (!flatModel && prev.modelSource) {
     try {
-      const r = await fetch(chrome.runtime.getURL(prev.modelSource));
-      if (r.ok) globalThis.ValidationTaskModel?.load(await r.json(), prev.modelSource);
+      if (prev.modelSource === GENERATED) {
+        // A model written from the person's query has no URL to refetch, so it
+        // is kept in storage. Losing it to a worker restart would silently drop
+        // the run back to checking nothing, which is the failure this whole
+        // reload exists to prevent.
+        const saved = (await chrome.storage.local.get(MODEL_KEY))[MODEL_KEY];
+        if (saved) globalThis.ValidationTaskModel?.load(saved, GENERATED);
+      } else {
+        const r = await fetch(chrome.runtime.getURL(prev.modelSource));
+        if (r.ok) globalThis.ValidationTaskModel?.load(await r.json(), prev.modelSource);
+      }
     } catch { /* absent is a supported state: the Amazon path runs */ }
   }
   // Where the run was and who was driving. Both are published on every write
@@ -392,6 +419,13 @@ async function _publish(extra = {}) {
     if (unread.length) {
       gate = { allowed: false, waitingOn: unread.map((f) => f.widget),
         unread: unread.length,
+        // Which one the gate block is showing. The surfaces exclude it from
+        // their own list so a question does not appear twice with two button
+        // rows -- but they were excluding everything the gate waits on, which
+        // is every unread finding. So the person saw one finding, read "And 2
+        // more you haven't seen", and had no way to see them. Naming the lead
+        // makes the exclusion cover the one that is genuinely duplicated.
+        leading: leadWith(unread).widget,
         say: unread.length === 1
           ? `Waiting for you: ${leadWith(unread).say}`
           : `Waiting for you: ${leadWith(unread).say} `
@@ -404,7 +438,7 @@ async function _publish(extra = {}) {
   // passed. It belongs in the plan, marked skipped, next to what did happen —
   // an unflagged absence is the failure the whole layer exists to surface, and
   // the plan is the last place that should reproduce it.
-  const blanks = contract ? gaps(contract) : [];
+  const blanks = contract ? gaps(contract, aboutTask()) : [];
   // Stored steps already carry their blanks; re-adding them would double
   // every skipped line after a restart.
   const steps = run ? (s.steps || []).concat(blanks.map((g) => ({
@@ -943,16 +977,16 @@ const Validation = {
     // predicts the run that will go wrong. Starting a task turns on the
     // surface that reports on it.
     try { await chrome.storage.sync.set({ agentWatch: true }); } catch { /* not fatal */ }
-    await publish({ findings: [], probe: null, unspecified: gaps(contract),
+    await publish({ findings: [], probe: null, unspecified: gaps(contract, aboutTask()),
                     acknowledged: [] });
-    return { started: true, contract, unspecified: gaps(contract) };
+    return { started: true, contract, unspecified: gaps(contract, aboutTask()) };
   },
 
   /**
    * What the person did not say, and what stays unchecked because of it.
    * The panel turns these into questions; nothing is guessed to fill them.
    */
-  unspecified: () => (contract ? gaps(contract) : []),
+  unspecified: () => (contract ? gaps(contract, aboutTask()) : []),
 
   async stop() {
     run = null;
@@ -1320,7 +1354,7 @@ const Validation = {
     run = createRun(contract, runOpts);
     await publish({
       findings: kept,
-      unspecified: gaps(contract),
+      unspecified: gaps(contract, aboutTask()),
       invalidated: stale.map((f) => f.say),
     });
     return { changed: true, field: key, was: before, now: value,
@@ -1788,6 +1822,9 @@ globalThis.ValidationWatch = {
 // one. background.js owns the tabs; this owns the two things that used to be
 // Amazon-shaped — how a search is written in a URL, and how a total is stated.
 globalThis.ValidationProbe = Probe;
+// Writes the task model from the person's query at run start. Without it the
+// layer checks whatever task the shipped file happened to be built for.
+globalThis.ValidationGenerate = Generate;
 
 // Exposed separately so the agent's start route can parse a sentence into a
 // contract before a run exists.
