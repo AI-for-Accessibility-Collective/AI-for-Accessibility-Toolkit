@@ -142,6 +142,12 @@ ok(Validation.where().node === qSize.node, 'the run is at the size node');
 }
 
 // ── the agent stops acting, the layer keeps perceiving ──────────────────────
+
+// The 60-second floor between hand-over reads is production behaviour; a page
+// that re-renders would otherwise cost a model call every four seconds. Drop it
+// here so the change-detection this file is testing can be driven back to back.
+Validation.setHandOverFloor(0);
+
 {
   const before = reads;
   const modelBefore = modelCalls;

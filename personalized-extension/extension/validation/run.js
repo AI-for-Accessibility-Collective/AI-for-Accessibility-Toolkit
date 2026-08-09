@@ -135,6 +135,24 @@ export function createRun(contract, opts = {}) {
      * reasoner reading the page against a task model. Same bookkeeping, same
      * gate, same plan; the difference is only in who produced them.
      */
+    /**
+     * Put back the holds a torn-down worker was carrying.
+     *
+     * `waiting` is the only thing run.gate() reads, and a rebuilt run has
+     * none, so after any rehydrate the gate answered "allowed" for the rest of
+     * the task. The unread-findings check covers most of it, but not a stop
+     * the person acknowledged without answering: that clears unread and leaves
+     * the hold, so before a restart the gate was shut and after it was open,
+     * with nothing recording the change.
+     */
+    restoreWaiting(list) {
+      if (!Array.isArray(list)) return { restored: 0 };
+      for (const w of list) {
+        if (w && w.widget && !waiting.some((x) => x.widget === w.widget)) waiting.push(w);
+      }
+      return { restored: waiting.length };
+    },
+
     observeFindings(findings, phase, counts = {}) {
       const of = counts.of ?? findings.length;
       const read = counts.read ?? findings.length;

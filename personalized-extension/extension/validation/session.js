@@ -138,6 +138,9 @@ async function rehydrate() {
   contract = prev.contract;
   runOpts = prev.opts || {};
   run = createRun(contract, runOpts);
+  // The holds the dead worker was carrying. Without this the rebuilt run has
+  // an empty waiting list and run.gate() opens for the rest of the task.
+  run.restoreWaiting?.(prev.waiting);
   for (const k of prev.acknowledged || []) acknowledged.add(k);
   // Where the run was and who was driving. Both are published on every write
   // for exactly this: a worker restart during a hand over must not come back
@@ -608,23 +611,53 @@ async function activeTabId() {
  * A page that has not changed is not read again, so the cost is one model call
  * per thing the person actually does.
  */
+let lastHandOverRead = 0;
+/**
+ * The same floor the watch registry uses, for the same reason.
+ *
+ * Settable so a test can drive watchOnce back to back and check the
+ * change-detection it is actually testing. Production never changes it: a page
+ * that re-renders would otherwise cost a full model call every four seconds.
+ */
+let handOverMinReadMs = 60_000;
+export function setHandOverFloor(ms) {
+  handOverMinReadMs = Number.isFinite(ms) ? ms : 60_000;
+}
+
 async function watchOnce() {
   if (holder !== 'person') return { skipped: 'the agent has the wheel' };
   const H = globalThis.BrowserHarness;
   if (!H?.axSnapshot) return { skipped: 'harness has no accessibility read' };
-  const tabId = watchTab ?? await activeTabId();
+  // Only ever the tab the hand over was for. This used to fall back to
+  // whatever tab was focused, which meant a hand over whose tab id did not
+  // resolve read the person's bank or their email and sent it to the model.
+  // No tab is a reason to stop watching, not a reason to watch something else.
+  const tabId = watchTab;
+  if (tabId == null) return { skipped: 'no page was handed over' };
   if (tabId == null) return { skipped: 'no page to read' };
+  // A page that re-renders — a checkout countdown, results re-sorting — changes
+  // its text every poll, and without a floor every one of those was a full
+  // model call: about 150 in ten minutes of someone filling in an address.
+  if (Date.now() - lastHandOverRead < handOverMinReadMs) {
+    return { skipped: 'read too recently' };
+  }
   let snap;
   try { snap = await H.axSnapshot(tabId); } catch { return { skipped: 'could not read the page' }; }
   const h = hashText(snap.text);
   if (h === lastSeen) return { skipped: 'nothing settled' };
   lastSeen = h;
+  lastHandOverRead = Date.now();
+  // The snapshot is awaited, so the person may have handed back while it was
+  // in flight. Re-check rather than publish findings into a run they now own.
+  if (holder !== 'person') return { skipped: 'handed back while reading' };
   return Validation.observe(tabId, { snap });
 }
 
 function startWatching(tabId) {
   stopWatching();
-  watchTab = tabId ?? null;
+  // Without a tab there is nothing safe to watch, so do not start.
+  if (tabId == null) return;
+  watchTab = tabId;
   lastSeen = null;
   try {
     // A service worker is torn down after about thirty seconds of idle and
@@ -878,6 +911,9 @@ const Validation = {
     await publish({ findings: [], contract: null, probe: null, steps: [],
                     gate: { allowed: true }, acknowledged: [] });
   },
+
+  /** Test seam for the hand-over read floor. Production leaves it at 60s. */
+  setHandOverFloor,
 
   isRunning: () => !!run,
 

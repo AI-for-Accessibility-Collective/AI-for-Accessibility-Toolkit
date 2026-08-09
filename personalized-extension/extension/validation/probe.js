@@ -148,7 +148,20 @@ export async function countOn(pageText, askPage) {
   try {
     const r = await askPage(COUNT_QUESTION, pageText);
     if (r && r.ok && r.answer) {
-      return { count: String(r.answer).trim(), from: 'read off the page', quote: r.quote };
+      // The quote is checked for containment; the ANSWER is not. Without this,
+      // a model could answer "about 2,000" against a quote reading
+      // `Results for "girls flat sandals"` and the layer would speak it as the
+      // count — which is the invented number this module was written to
+      // replace, arriving back through the path built to prevent it.
+      const answer = String(r.answer).trim();
+      const digits = answer.replace(/[^\d]/g, '');
+      const inQuote = digits
+        && String(r.quote || '').replace(/[^\d]/g, '').includes(digits);
+      if (inQuote) {
+        return { count: answer, from: 'read off the page', quote: r.quote };
+      }
+      return { count: null, quote: r.quote,
+               from: 'the page does not state a total I could point at' };
     }
     return { count: null, from: 'the page does not state a total', quote: null };
   } catch {

@@ -66,7 +66,13 @@ export function decide(f, state = {}) {
   // being able to ask for; it is not worth interrupting anyone with.
   if (f.confirming) return { level: 'ambient', why: 'a check that passed' };
 
-  if (seen.has(key)) {
+  // A contradiction escapes the repetition guard. The key is question + phase
+  // and does not include the answer, so a page read twice — which is normal,
+  // the navigation trigger fires and an explicit observe follows — could
+  // answer "LAX" the first time and "San Diego" the second, and the second
+  // was silenced as already raised. A value that changed is the whole reason
+  // to look twice.
+  if (seen.has(key) && !f.contradicts) {
     return { level: 'ambient', why: 'already raised at this step' };
   }
 
