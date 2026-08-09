@@ -147,6 +147,11 @@ async function rehydrate() {
   holder = prev.holder === 'person' ? 'person' : 'agent';
   handOverNode = prev.handOverNode ?? null;
   handOverAt = prev.handOverAt ?? null;
+  handOverTab = prev.handOverTab ?? null;
+  // The watch died with the worker. Coming back mid-hand-over without it would
+  // leave the agent held and nothing reading the page, so the person would be
+  // driving unobserved and handing back would report that nothing changed.
+  if (holder === 'person' && !watchTimer) startWatching(handOverTab);
   return true;
 }
 
@@ -283,6 +288,11 @@ export function holdClock(hold, now = Date.now(), o = {}) {
  * setTimeout would go with it.
  */
 async function tickHold() {
+  // Not while the person is driving. The clock exists to catch someone who
+  // walked away, and someone doing the step themselves is the opposite of
+  // that — ending their run four minutes in and calling it "nobody answered"
+  // would be the layer misreading the one case it can see most clearly.
+  if (holder === 'person') return { next: 'nothing', waitedMs: 0 };
   const prev = await stored();
   const h = prev.hold;
   const { next, waitedMs } = holdClock(h);
@@ -399,7 +409,7 @@ async function _publish(extra = {}) {
       // survive a worker restart, and so a surface can say which of the two is
       // acting rather than guessing.
       node: currentNode, nodeLabel: currentNodeLabel,
-      holder, handOverNode, handOverAt,
+      holder, handOverNode, handOverAt, handOverTab,
       // A probe result stays up until something replaces or clears it - it
       // must survive the unrelated publishes that happen constantly.
       probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
@@ -533,6 +543,97 @@ async function observeByModel(snap, opts = {}) {
            reasoner: result.meta };
 }
 
+// ── hand over ───────────────────────────────────────────────────────────────
+//
+// The mode with no implementation until now, and the gold says it matters:
+// hand over is 39 of the 242 gold questions, second only to facts at 84. Those
+// are the moments where the person does not want a better explanation, they
+// want to do that part themselves.
+//
+// Handing over is more than stopping, because the agent has to come back to a
+// state it did not create. Four things have to be true and each one is a
+// separate mechanism below:
+//
+//   1. It is scoped by a task model node, not by a stretch of time. "Let me
+//      pick the size myself" hands over the node that selects a variant.
+//   2. The agent stops ACTING and something keeps PERCEIVING. It has to know
+//      what the person did, and the only honest way to know is to look at the
+//      page rather than ask. So the agent's loop is held — it burns no steps
+//      and touches nothing — and the layer's own reasoner keeps reading the
+//      page on each settle while the person drives.
+//   3. Handing back re-perceives, and what changed is stated from the TRACE
+//      rather than from the agent's memory. The agent was not there; its
+//      memory of this stretch is of a page it never saw.
+//   4. The gate stays live throughout. Findings publish exactly as before —
+//      this is the case where the layer is checking the person rather than the
+//      agent, and the same machinery works unchanged.
+
+/** How often the layer looks at the page while the person is driving. */
+export let HANDOVER_WATCH_MS = 4_000;
+
+let watchTimer = null;
+let watchTab = null;
+let lastSeen = null;
+let handOverTab = null;
+
+/** Cheap identity for a page read, so an unchanged page costs no model call. */
+function hashText(s) {
+  let h = 5381;
+  const t = String(s || '');
+  for (let i = 0; i < t.length; i += 1) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0;
+  return `${t.length}:${h}`;
+}
+
+async function activeTabId() {
+  try {
+    const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return t?.id ?? null;
+  } catch { return null; }
+}
+
+/**
+ * One look at the page while the person has the wheel.
+ *
+ * The snapshot is free — it is a local accessibility read, no model involved —
+ * and comparing it to the last one is what turns a poll into "on each settle".
+ * A page that has not changed is not read again, so the cost is one model call
+ * per thing the person actually does.
+ */
+async function watchOnce() {
+  if (holder !== 'person') return { skipped: 'the agent has the wheel' };
+  const H = globalThis.BrowserHarness;
+  if (!H?.axSnapshot) return { skipped: 'harness has no accessibility read' };
+  const tabId = watchTab ?? await activeTabId();
+  if (tabId == null) return { skipped: 'no page to read' };
+  let snap;
+  try { snap = await H.axSnapshot(tabId); } catch { return { skipped: 'could not read the page' }; }
+  const h = hashText(snap.text);
+  if (h === lastSeen) return { skipped: 'nothing settled' };
+  lastSeen = h;
+  return Validation.observe(tabId, { snap });
+}
+
+function startWatching(tabId) {
+  stopWatching();
+  watchTab = tabId ?? null;
+  lastSeen = null;
+  try {
+    // A service worker is torn down after about thirty seconds of idle and
+    // this interval goes with it. That is survivable rather than fixed: the
+    // navigation trigger in background.js still fires an observe on every page
+    // load, and rehydrate() starts this again on the next event. What is lost
+    // in the meantime is the in-page settle, on a page that never navigates.
+    watchTimer = setInterval(() => { watchOnce().catch(() => {}); }, HANDOVER_WATCH_MS);
+  } catch { /* no timers here means the navigation trigger is the only watch */ }
+}
+
+function stopWatching() {
+  if (watchTimer) { try { clearInterval(watchTimer); } catch {} }
+  watchTimer = null;
+  watchTab = null;
+  lastSeen = null;
+}
+
 const Validation = {
   /**
    * Begin a task. `c` is what the person asked for — either a contract object
@@ -587,6 +688,13 @@ const Validation = {
 
   async stop() {
     run = null;
+    // A hand over does not outlive the task it was part of. Leaving the watch
+    // running would keep reading pages for a run that has ended.
+    stopWatching();
+    holder = 'agent';
+    handOverNode = null;
+    handOverAt = null;
+    handOverTab = null;
     // The contract goes too. Leaving it set kept the surface showing a task
     // that had ended — findings gone, the ask still on screen — so there was
     // no way back to starting a new one without reloading. Ending a task has
@@ -619,7 +727,10 @@ const Validation = {
     const H = globalThis.BrowserHarness;
     if (!H?.axSnapshot) return { error: 'harness has no accessibility read' };
 
-    const snap = await H.axSnapshot(tabId);
+    // The hand-over watcher has already read the page to decide whether
+    // anything settled, so it hands the snapshot in rather than paying for a
+    // second read of the same page.
+    const snap = opts.snap || await H.axSnapshot(tabId);
 
     // A task model is loaded: the reasoner reads this snapshot against its
     // questions. No URL regex, no extractors — the page decides what it can
@@ -705,6 +816,25 @@ const Validation = {
       step: ctx.step ?? null, holder,
       action: `${actionDescription || 'something'}${verdict ? ` — ${verdict}` : ''}`,
     });
+
+    // The person has the wheel. The agent may look all it likes and may not
+    // move the page under their hands.
+    //
+    // The pause in handOver() is what stops it burning steps; this is what
+    // stops it acting, and the two are deliberately separate. A pause is a flag
+    // in the agent's own process and a worker restart or a second run would
+    // clear it; the gate is checked at the point of action and does not care
+    // how the action got there.
+    if (holder === 'person' && CHANGES_SOMETHING.test(String(actionDescription || ''))) {
+      await traceAction('held, the person has the wheel');
+      return {
+        allowed: false,
+        holder: 'person',
+        waitingOn: [],
+        say: `You have this part${labelFor(handOverNode) ? `: ${labelFor(handOverNode)}` : ''}. `
+           + 'I am not touching anything until you hand it back.',
+      };
+    }
 
     // Anything the person has not dealt with holds the agent — but only from
     // CHANGING anything, never from looking.
@@ -965,6 +1095,138 @@ const Validation = {
     }
     return { ...r, url: snap.url || null, tabId };
   },
+
+  /**
+   * The person takes this part themselves.
+   *
+   * The agent is PAUSED, not stopped: this is a part of the task the person is
+   * doing, not the end of the task, and it has to be able to come back. Pausing
+   * also means it burns no steps while it waits, which stopping at the gate
+   * would not — a gate-held agent keeps looping and re-perceiving.
+   */
+  async handOver(o = {}) {
+    if (!run && !(await rehydrate())) {
+      return { handedOver: false, why: 'no task is being checked' };
+    }
+    if (holder === 'person') {
+      return { handedOver: true, watching: !!watchTimer, nodeId: handOverNode,
+               why: 'you already have it' };
+    }
+    const node = o.nodeId ?? currentNode ?? null;
+    const label = labelFor(node);
+    holder = 'person';
+    handOverNode = node;
+    handOverAt = Date.now();
+    handOverTab = o.tabId ?? await activeTabId();
+
+    let paused = null;
+    try {
+      paused = globalThis.BrowserAgent?.pause?.({
+        reason: o.reason || `handed over${label ? `: ${label}` : ''}`,
+        byNode: node,
+      });
+    } catch { /* no agent loaded: the gate below is still the real stop */ }
+
+    await Trace.record({ nodeId: node, label, phase: currentPhase, holder: 'person',
+      action: `handed over${o.reason ? `: ${o.reason}` : ''}` });
+    await publish();
+    startWatching(handOverTab);
+
+    chrome.runtime.sendMessage({ type: 'validationSpeak', phase: 'control',
+      lines: [{ say: `You have this part${label ? `: ${label}` : ''}. `
+        + 'I am watching the page and I will not touch anything until you hand it back.',
+        level: 'aside', live: 'polite', widget: 'hand over' }] }).catch(() => {});
+
+    return { handedOver: true, watching: true, nodeId: node, label,
+             atStep: paused?.atStep ?? null, paused: paused?.paused === true };
+  },
+
+  /**
+   * The person gives it back.
+   *
+   * What changed while the agent was out is built from the trace, not from the
+   * agent's own memory. The agent was not there — its memory of this stretch is
+   * of a page it never saw — so the only honest account is the record of what
+   * the layer read while the person was driving.
+   *
+   * The account reaches the agent BEFORE the pause is released, which is the
+   * same order every other answer in this layer uses: releasing first lets it
+   * act on the old page while the news is still in flight.
+   */
+  async handBack(o = {}) {
+    if (holder !== 'person') return { resumed: false, why: 'the agent already has it' };
+    const since = handOverAt || 0;
+    const node = o.nodeId ?? handOverNode;
+    const label = labelFor(node);
+    stopWatching();
+
+    // One more read, of the page as the person is leaving it. Handing back
+    // re-perceives; this is that, on the layer's side.
+    const tabId = o.tabId ?? handOverTab ?? await activeTabId();
+    if (tabId != null) {
+      try { await Validation.observe(tabId); } catch { /* the read is best effort */ }
+    }
+
+    const seen = new Set();
+    const changedWhileOut = [];
+    for (const e of await Trace.since(since)) {
+      for (const f of e.findings || []) {
+        if (seen.has(f.widget)) continue;
+        seen.add(f.widget);
+        changedWhileOut.push(f.widget);
+      }
+    }
+
+    holder = 'agent';
+    handOverNode = null;
+    handOverAt = null;
+    handOverTab = null;
+    await Trace.record({ nodeId: node, label, phase: currentPhase, holder: 'agent',
+      action: `handed back${changedWhileOut.length
+        ? `, ${changedWhileOut.length} thing${changedWhileOut.length === 1 ? '' : 's'} read while out`
+        : ', nothing read while out'}` });
+    // The wait starts now. Whatever was unread when they took the wheel, they
+    // were not ignoring it while they were driving, so the clock measures the
+    // silence that begins here rather than the time they spent working.
+    const prevHold = (await stored()).hold;
+    await publish(prevHold
+      ? { hold: { ...prevHold, since: Date.now(), reminded: null, stopped: null } }
+      : {});
+
+    const say = changedWhileOut.length
+      ? `You are back. The person did ${label || 'that part'} themselves. `
+        + `What the page said while you were out: ${changedWhileOut.join('; ')}. `
+        + 'Read the page again before you act, and do not redo what they just did.'
+      : `You are back. The person did ${label || 'that part'} themselves and nothing `
+        + 'new was read off the page while you were out. Read the page again before '
+        + 'you act, and do not redo what they just did.';
+    try { globalThis.BrowserAgent?.interject?.(say); } catch {}
+    try { globalThis.BrowserAgent?.resume?.({ rePerceive: true }); } catch {}
+
+    return { resumed: true, nodeId: node, label, changedWhileOut, since, said: say };
+  },
+
+  /**
+   * Who is acting on the page.
+   *
+   * This matters more than it looks. Two things acting on one page with no
+   * shared record of which one is acting is how the failure already in the code
+   * comments happened: in a recorded run the agent spent ten steps trying to
+   * dismiss its own supervisor overlay, and pressed the person's "Got it"
+   * button. Marking the overlay `data-bh-ignore` fixed that one case; this is
+   * the general answer to the same question.
+   */
+  status: () => ({
+    holder,
+    nodeId: handOverNode ?? currentNode ?? null,
+    label: labelFor(handOverNode ?? currentNode),
+    phase: currentPhase,
+    since: handOverAt,
+    watching: !!watchTimer,
+  }),
+
+  /** One look at the page, for the caller that drives the watch itself. */
+  watchOnce,
 
   /**
    * The trace, keyed to task model nodes.

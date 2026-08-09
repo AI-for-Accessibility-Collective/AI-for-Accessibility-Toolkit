@@ -8,7 +8,7 @@
   "scripts": {
     "build": "node build.js",
     "watch": "node build.js --watch",
-    "test": "node test/verifier-test.mjs && node test/reasoner-test.mjs && node test/widget-press-test.mjs && node test/hold-timeout-test.mjs && node test/pause-resume-test.mjs && node test/interrogate-ask-test.mjs && node test/trace-test.mjs"
+    "test": "node test/verifier-test.mjs && node test/reasoner-test.mjs && node test/widget-press-test.mjs && node test/hold-timeout-test.mjs && node test/pause-resume-test.mjs && node test/interrogate-ask-test.mjs && node test/trace-test.mjs && node test/hand-over-test.mjs"
   },
   "devDependencies": {
     "aria-query": "^5.3.2",

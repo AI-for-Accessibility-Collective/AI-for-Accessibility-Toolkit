@@ -871,7 +871,11 @@ export function toFindings(result, phase) {
       // falls back to the sentence rather than throwing.
       paradigm: Number.isInteger(a.paradigm) ? a.paradigm : null,
       checkedAgainst: null,
-      control: control ? { ...control } : null,
+      // The node travels ON the control, because the overlay hands the control
+      // object back and nothing else. A hand over is scoped by a node, so a
+      // control that arrives without one can only hand over "wherever we are",
+      // which is not what the person pressed.
+      control: control ? { ...control, node: a.node ?? null } : null,
       // Not announced unless the model says this is wanted now.
       quiet: a.moment !== ANNOUNCED,
       // Carried for the trace and for the steps that come after this one.

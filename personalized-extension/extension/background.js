@@ -1266,6 +1266,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       runRefineProbe(say).then((n) => sendResponse({ probed: n }));
       return true;
     }
+    if (c.action === 'hand-over') {
+      // Not a sentence sent to the agent. This used to say "Stop and let me do
+      // this part myself" and hope, which left the agent free to keep acting
+      // while the person did — two things on one page. It now holds the agent
+      // and starts the layer watching.
+      globalThis.Validation.handOver({ nodeId: c.node, reason: c.reason })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
+    if (c.action === 'hand-back') {
+      globalThis.Validation.handBack({ nodeId: c.node })
+        .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+      return true;
+    }
     if (c.action === 'probe-pick') {
       (async () => {
         await globalThis.Validation?.annotate?.({ probe: null });
@@ -1283,6 +1297,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ sent: say, ...r });
     });
     return true;
+  }
+
+  if (msg.type === 'validationHandOver') {
+    globalThis.Validation.handOver({ nodeId: msg.nodeId, reason: msg.reason, tabId: msg.tabId })
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationHandBack') {
+    globalThis.Validation.handBack({ nodeId: msg.nodeId, tabId: msg.tabId })
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'validationStatus') {
+    // Who holds the wheel. Anything drawing on the page should ask before it
+    // acts, and so should the agent.
+    sendResponse(globalThis.Validation.status());
+    return false;
   }
 
   if (msg.type === 'validationTrace') {
