@@ -7,7 +7,8 @@
   },
   "scripts": {
     "build": "node build.js",
-    "watch": "node build.js --watch"
+    "watch": "node build.js --watch",
+    "test": "node test/verifier-test.mjs && node test/reasoner-test.mjs"
   },
   "devDependencies": {
     "aria-query": "^5.3.2",
