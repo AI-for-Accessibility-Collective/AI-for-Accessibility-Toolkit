@@ -22,6 +22,7 @@ import { createRun, setExtractorNames } from './run.js';
 import { contractFromAsk, gaps, describe, toQuery } from './ask.js';
 import { setParadigmMap, setCountZones } from '../../../tools/auditors/contract-mismatch.js';
 import { setControls } from './render.js';
+import * as Reasoner from './reasoner.js';
 
 const KEY = 'aa.validation';
 
@@ -57,6 +58,16 @@ const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|cl
 let run = null;
 let contract = null;
 let runOpts = {};
+
+// The task model, when one has been loaded.
+//
+// With no model this stays null and everything below behaves exactly as it did
+// before it existed: `phaseOf` classifies the URL, the extractors read the
+// page, and the hand-written Amazon checks fire. With a model loaded, the
+// reasoner reads the same snapshot against the model's questions instead. The
+// two paths do not mix, and the switch is the presence of a file.
+let flatModel = null;
+let modelSource = null;
 
 // What the person has actually dealt with.
 //
@@ -283,6 +294,90 @@ async function _publish(extra = {}) {
   });
 }
 
+// ── the task-model path ─────────────────────────────────────────────────────
+//
+// One structured model call per page settle, against the whole question list.
+// Everything after the call is the same machinery the extractor path uses: the
+// same run, the same insistence levels, the same gate, the same two surfaces.
+// Only where the findings came from is different.
+async function observeByModel(snap, opts = {}) {
+  const result = await Reasoner.readPage(flatModel, snap.text, {
+    ask: contract ? describe(contract) : null,
+    ...(opts.reasoner || {}),
+  });
+
+  if (!result.ok) {
+    // A call that failed must not read as a page that checked out clean —
+    // that is the exact failure the layer exists to prevent. Same wording the
+    // extractor path uses when a check throws.
+    await publish({
+      append: [{ widget: 'Checking failed', level: 'aside',
+        say: `I could not finish checking this page. ${String(result.meta.error || '').slice(0, 80)}`,
+        from: snap.url || 'this page', confirming: false, phase: null }],
+      phase: null, reasoner: result.meta });
+    return { phase: null, findings: 0, error: result.meta.error };
+  }
+
+  const phase = opts.phase || Reasoner.phaseFor(result, flatModel);
+  const findings = Reasoner.toFindings(result, phase);
+
+  if (!findings.length) {
+    // Nothing this page could answer and nothing worth raising. Recorded
+    // rather than silent: what the reasoner asked and what it discarded is
+    // still the record of a page having been read.
+    await publish({ phase: phase || null, reasoner: result.meta });
+    return { phase, findings: 0, url: snap.url, reasoner: result.meta };
+  }
+
+  // Answered counts as read; an answer thrown away for an unverifiable quote
+  // counts as something on this page the layer could not read. That is what
+  // the plan's "couldn't read" line is for, and it is the honest number —
+  // a question this page simply does not answer is not a failure to read.
+  const read = result.meta.answered + result.meta.noticedKept;
+  const of = read + result.meta.discarded + result.meta.noticedDiscarded;
+
+  let rendered;
+  try {
+    ({ findings: rendered } = run.observeFindings(findings, phase, { read, of }));
+  } catch (e) {
+    await publish({ append: [{ widget: 'Checking failed', level: 'aside',
+      say: `I could not finish checking this page. ${String(e.message || e).slice(0, 80)}`,
+      from: snap.url || 'this page', confirming: false, phase }], phase,
+      reasoner: result.meta });
+    return { phase, findings: 0, error: String(e.message || e) };
+  }
+
+  const speak = rendered
+    .filter((f) => f.spoken?.speak)
+    .map((f) => ({ say: f.spoken.speak, level: f.level, live: f.spoken.live,
+                   widget: f.finding.widget }));
+
+  const marks = rendered
+    .filter((f) => f.visual && f.level !== 'ambient')
+    .map((f) => ({ ...f.visual, level: f.level, widget: f.finding.widget }));
+
+  await publish({ append: rendered.map((f) => ({
+    widget: f.finding.widget, level: f.level, say: f.finding.say,
+    from: f.finding.from, confirming: !!f.finding.confirming,
+    paradigm: f.finding.paradigm || null, shape: f.finding.shape || null,
+    checkedAgainst: f.finding.checkedAgainst || null,
+    control: f.visual?.control || null, phase,
+    // What the reasoner knows and the extractors do not: which node of the
+    // task model this belongs to, and how the quote was verified. Carried so
+    // the trace can be keyed to nodes rather than step indices.
+    node: f.finding.node || null, cluster: f.finding.cluster || null,
+    moment: f.finding.moment || null, verified: f.finding.verified || null,
+    source: f.finding.source || 'reasoner',
+  })), phase, reasoner: result.meta });
+
+  if (speak.length) {
+    chrome.runtime.sendMessage({ type: 'validationSpeak', lines: speak, phase })
+      .catch(() => {});
+  }
+  return { phase, findings: rendered.length, speak, marks, url: snap.url,
+           reasoner: result.meta };
+}
+
 const Validation = {
   /**
    * Begin a task. `c` is what the person asked for — either a contract object
@@ -348,6 +443,13 @@ const Validation = {
     if (!H?.axSnapshot) return { error: 'harness has no accessibility read' };
 
     const snap = await H.axSnapshot(tabId);
+
+    // A task model is loaded: the reasoner reads this snapshot against its
+    // questions. No URL regex, no extractors — the page decides what it can
+    // answer. With no model loaded this is skipped entirely and the Amazon
+    // path below runs unchanged.
+    if (flatModel) return observeByModel(snap, opts);
+
     const phase = opts.phase || phaseOf(snap.url);
     if (!phase) {
       // Record that this page has nothing to check, rather than leaving the
@@ -622,6 +724,39 @@ globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery };
 
 // The analysis, injected by the host that has it. The toolkit ships the
 // mechanism; the corpus stays in the research repository.
+// The task model, injected by the host that has one, exactly like the corpus
+// above and for the same reason: the extension ships the mechanism, and the
+// model is research content that lives in the research repository.
+//
+// Loading one switches `observe()` from the Amazon extractors to the reasoner.
+// Loading nothing leaves the shipped demo exactly as it was, which is why this
+// is a separate entry point rather than a field on the corpus.
+globalThis.ValidationTaskModel = {
+  load(model, source = null) {
+    if (!model) { flatModel = null; modelSource = null; return { loaded: false }; }
+    flatModel = Reasoner.flattenModel(model);
+    modelSource = source;
+    return {
+      loaded: true, source,
+      task: flatModel.task.slice(0, 80),
+      nodes: flatModel.nodeIds.length,
+      questions: flatModel.questions.length,
+      phases: flatModel.phases.length,
+    };
+  },
+  /** Back to the extractor path. Loading is reversible at runtime. */
+  unload() { flatModel = null; modelSource = null; return { loaded: false }; },
+  loaded: () => !!flatModel,
+  describe: () => (flatModel
+    ? { source: modelSource, task: flatModel.task,
+        nodes: flatModel.nodeIds.length, questions: flatModel.questions.length }
+    : null),
+};
+
+// The reasoner's model caller, injected by the host — same shape as
+// BrowserAgent.setGeminiCaller, so there is one provider and one key store.
+globalThis.ValidationReasoner = Reasoner;
+
 globalThis.ValidationCorpus = {
   load(corpus) {
     setPromotable(corpus?.promotable || []);
