@@ -201,6 +201,81 @@ function offerFrom(findings, have) {
   return null;
 }
 
+// ── the hold clock ──────────────────────────────────────────────────────────
+//
+// A hold lasts until it is answered, and until now that meant forever. If the
+// person walked away, the agent kept looping against `maxSteps` and the run
+// ended as "reached max steps (50)" — which names the symptom and hides the
+// cause. Nothing in the record said that a question had gone unanswered.
+//
+// Two intervals, and neither of them releases anything. An unanswered question
+// is not consent, so the clock can only ever say the finding again and then end
+// the run honestly; the gate stays shut the whole time and stays shut after.
+export let HOLD_REMIND_MS = 45_000;
+export let HOLD_STOP_MS = 240_000;
+
+/** What the run says when it ends because nobody answered. */
+export const WAITING_ON_YOU = 'Waiting on you. Nothing was answered, so I stopped rather than carrying on.';
+
+/** Test hook. The two intervals are wall-clock, so a test cannot wait them out. */
+function setHoldTimeouts({ remindMs, stopMs } = {}) {
+  if (Number.isFinite(remindMs)) HOLD_REMIND_MS = remindMs;
+  if (Number.isFinite(stopMs)) HOLD_STOP_MS = stopMs;
+  return { remindMs: HOLD_REMIND_MS, stopMs: HOLD_STOP_MS };
+}
+
+/**
+ * What is owed to a hold that has been waiting. Pure, so what it decides can be
+ * checked without a clock.
+ *
+ * @param {{on: string, since: number, reminded?: number, stopped?: number}} hold
+ * @returns {{next: 'nothing'|'remind'|'stop', waitedMs: number}}
+ */
+export function holdClock(hold, now = Date.now(), o = {}) {
+  const remindMs = o.remindMs ?? HOLD_REMIND_MS;
+  const stopMs = o.stopMs ?? HOLD_STOP_MS;
+  if (!hold || !hold.since) return { next: 'nothing', waitedMs: 0 };
+  const waitedMs = Math.max(0, now - hold.since);
+  if (waitedMs >= stopMs) return { next: hold.stopped ? 'nothing' : 'stop', waitedMs };
+  if (waitedMs >= remindMs && !hold.reminded) return { next: 'remind', waitedMs };
+  return { next: 'nothing', waitedMs };
+}
+
+/**
+ * One tick of the clock, taken from the agent's own polling.
+ *
+ * `allow()` is called before every action, so a held agent asks this question
+ * roughly once a step. That is the tick — no timer, which matters because a
+ * service worker is torn down after about thirty seconds of idle and a
+ * setTimeout would go with it.
+ */
+async function tickHold() {
+  const prev = await stored();
+  const h = prev.hold;
+  const { next, waitedMs } = holdClock(h);
+  if (next === 'nothing') return { next, waitedMs };
+  const secs = Math.max(1, Math.round(waitedMs / 1000));
+  if (next === 'remind') {
+    // Said again, once. Not louder and not different — the same finding, in
+    // case it was missed rather than ignored.
+    chrome.runtime.sendMessage({
+      type: 'validationSpeak', phase: 'gate',
+      lines: [{ say: `Still waiting on you after ${secs} seconds. ${h.say || ''}`.trim(),
+                level: 'stop', live: 'assertive', widget: 'gate' }],
+    }).catch(() => {});
+    await publish({ hold: { ...h, reminded: Date.now() } });
+    return { next, waitedMs };
+  }
+  // Long enough that nobody is coming. End the run saying so — and leave the
+  // gate exactly as it was, because the question is still unanswered.
+  try { globalThis.BrowserAgent?.stop?.(WAITING_ON_YOU); } catch { /* no agent loaded */ }
+  await publish({
+    hold: { ...h, stopped: Date.now() },
+    endedBecause: { reason: WAITING_ON_YOU, waitedMs, waitingOn: h.on, at: Date.now() },
+  });
+  return { next, waitedMs };
+}
+
 // Writes to storage are serialised through this. Two observes can overlap --
 // the navigation trigger and an explicit call race on the same page -- and
 // each is a read-then-write on one key. Interleaved, the second read happens
@@ -265,9 +340,28 @@ async function _publish(extra = {}) {
   // on the same page -- and without this the panel shows every finding
   // twice, which reads as two separate problems.
   const merged = extra.findings || mergeFindings(prev.findings || [], extra.append || []);
+
+  // When this hold started, and on what. Kept across publishes so the clock
+  // measures the wait rather than the time since the last unrelated write, and
+  // restarted when the thing being waited on changes — answering one question
+  // and being asked another is not four minutes of silence.
+  const effGate = extra.gate !== undefined ? extra.gate : gate;
+  const heldOn = effGate && effGate.allowed === false
+    ? String((effGate.waitingOn || [])[0] || effGate.rule || 'the gate')
+    : null;
+  let hold = prev.hold || null;
+  if (!heldOn) hold = null;
+  else if (!hold || hold.on !== heldOn) {
+    hold = { on: heldOn, since: Date.now(), say: effGate.say || null,
+             reminded: null, stopped: null };
+  } else {
+    hold = { ...hold, say: effGate.say || hold.say };
+  }
+
   await chrome.storage.local.set({
     [KEY]: {
       findings: merged,
+      hold,
       // A probe result stays up until something replaces or clears it - it
       // must survive the unrelated publishes that happen constantly.
       probe: extra.probe !== undefined ? extra.probe : prev.probe || null,
@@ -524,8 +618,13 @@ const Validation = {
    * May the agent take this step? Called by the harness agent before acting.
    * A held gate is not advice — the action does not happen.
    */
-  async allow(actionDescription) {
+  async allow(actionDescription, ctx = {}) {
     if (!run && !(await rehydrate())) return { allowed: true };
+
+    // The clock ticks here, before the early return below, because a held
+    // agent still scrolls and a hold nobody answers has to end the run whether
+    // or not the action in hand was one the gate would have stopped.
+    await tickHold();
 
     // Anything the person has not dealt with holds the agent — but only from
     // CHANGING anything, never from looking.
@@ -726,6 +825,12 @@ const Validation = {
 
   summary: () => (run ? run.summary() : null),
   phaseOf,
+
+  // The hold clock. Exposed so a surface can show how long it has been waiting,
+  // and so a test can shorten the two intervals rather than sleeping them out.
+  holdClock,
+  setHoldTimeouts,
+  tickHold,
 };
 
 globalThis.Validation = Validation;

@@ -14,6 +14,7 @@ import {
   setCreatingTab,
   setStop,
   shouldStop,
+  stopReason,
   setRunning,
   isRunning,
   setSystemPrompt,
@@ -250,10 +251,14 @@ export async function bhAgentRun(task, opts = {}) {
           await _bhAgentLog({ kind: 'info', text: `You: ${said}` });
         }
       if (shouldStop()) {
-        await _bhAgentPatch({ status: 'stopped', endedAt: Date.now() });
-        await _bhAgentLog({ kind: 'info', text: 'Stopped by user' });
-        _bhAgentNotify('stopped', task, 'Stopped by user');
-        return { stopped: true };
+        // The reason is the record. A run the layer ended because nobody
+        // answered it must not be filed under the same words as a run the
+        // person ended on purpose.
+        const why = stopReason() || 'Stopped by user';
+        await _bhAgentPatch({ status: 'stopped', endedAt: Date.now(), summary: why });
+        await _bhAgentLog({ kind: 'info', text: why });
+        _bhAgentNotify('stopped', task, why);
+        return { stopped: true, reason: why };
       }
       // Always read the live current tab -- open_tab/switch_tab/close_tab
       // may have moved focus during the previous iteration. If every owned
@@ -622,7 +627,7 @@ function _bhAgentObserveOutcome(task, summary, success) {
   })().catch(() => {});
 }
 
-export function bhAgentStop() { setStop(true); }
+export function bhAgentStop(reason) { setStop(true, reason); }
 export function bhAgentIsRunning() { return isRunning(); }
 
 export async function bhAgentClear() {

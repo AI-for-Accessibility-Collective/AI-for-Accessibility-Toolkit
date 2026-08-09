@@ -37,8 +37,19 @@ export function getGeminiCaller() { return _bhGeminiCall; }
 
 // Run-lifecycle flags + tab tracking.
 export let _bhAgentStop = false;
-export function setStop(v) { _bhAgentStop = !!v; }
+// Why the run was stopped, in the person's terms.
+//
+// Without it every stop is recorded as "Stopped by user", including the ones
+// nobody asked for. The case that made this necessary: a hold nobody answered
+// used to burn the remaining steps and end as "reached max steps", so the
+// record named the symptom and not the cause.
+export let _bhAgentStopReason = null;
+export function setStop(v, reason = null) {
+  _bhAgentStop = !!v;
+  _bhAgentStopReason = v ? (reason || null) : null;
+}
 export function shouldStop() { return _bhAgentStop; }
+export function stopReason() { return _bhAgentStopReason; }
 
 export let _bhAgentRunning = false;
 export function setRunning(v) { _bhAgentRunning = !!v; }
@@ -149,6 +160,7 @@ export async function _bhAgentTabsContext() {
 // Reset all per-run state. Called from run.js's finally block.
 export function resetRunState() {
   _bhAgentRunning = false;
+  _bhAgentStopReason = null;
   _bhAgentTabId = null;
   _bhAgentOwnedTabs.clear();
   _bhAgentGroupId = null;
