@@ -194,7 +194,7 @@ export function shouldRead(w, { url, hash, now = Date.now() } = {}) {
   if (w.origin && originOf(url) !== w.origin) {
     return { read: false, why: 'a different site' };
   }
-  if (w.lastReadAt && now - w.lastReadAt < MIN_REREAD_MS) {
+  if (w.lastReadAt && Math.abs(now - w.lastReadAt) < MIN_REREAD_MS) {
     return { read: false, why: 'read too recently' };
   }
   if (w.seenHash && hash && w.seenHash === hash) {

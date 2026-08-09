@@ -1103,6 +1103,11 @@ const Validation = {
    * A held gate is not advice — the action does not happen.
    */
   async allow(actionDescription, ctx = {}) {
+    // Captured before anything is awaited. traceAction reads currentNode at
+    // call time, and an observe finishing in that window moves it — so a held
+    // action was filed under whatever page arrived next, which is exactly the
+    // lookup the trace exists for.
+    const atNode = currentNode;
     if (!run && !(await rehydrate())) return { allowed: true };
 
     // The clock ticks here, before the early return below, because a held
@@ -1113,8 +1118,10 @@ const Validation = {
     // Filed under wherever the run is. An action on its own does not know
     // which decision it belongs to, which is why "go back to where the size
     // was chosen" was a scan of a click list before this.
-    const traceAction = (verdict) => Trace.record({
-      nodeId: currentNode, label: currentNodeLabel, phase: currentPhase,
+    // `at` defaults to where the run was when allow() was ENTERED, not where a
+    // concurrent observe has since moved it.
+    const traceAction = (verdict, at = atNode) => Trace.record({
+      nodeId: at, label: labelFor(at) || currentNodeLabel, phase: currentPhase,
       step: ctx.step ?? null, holder,
       action: `${actionDescription || 'something'}${verdict ? ` — ${verdict}` : ''}`,
     });
@@ -1165,7 +1172,7 @@ const Validation = {
 
     if (unread.length) {
       const first = leadWith(unread);
-      await traceAction('held, unread');
+      await traceAction('held, unread', atNode);
       return {
         allowed: false,
         waitingOn: unread.map((f) => f.widget),
