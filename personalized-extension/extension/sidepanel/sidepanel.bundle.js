@@ -86,12 +86,21 @@
           const body = el("div", "va-body");
           body.append(el("p", "va-text", f.say));
           if (f.from) body.append(el("p", "va-where", f.from));
+          const row = el("div", "va-answers");
           if (f.control) {
             const b = el("button", "va-do", f.control.label);
             b.dataset.vaKey = `do:${f.widget}`;
-            b.addEventListener("click", () => onControl?.(f.control));
-            body.append(b);
+            b.addEventListener("click", () => {
+              onControl?.(f.control);
+              onControl?.({ action: "ack", key: `${f.widget}|${f.phase}|${f.say}` });
+            });
+            row.append(b);
           }
+          const skip = el("button", "va-do", f.control?.decline || "Got it");
+          skip.dataset.vaKey = `ack:${f.widget}`;
+          skip.addEventListener("click", () => onControl?.({ action: "ack", key: `${f.widget}|${f.phase}|${f.say}` }));
+          row.append(skip);
+          body.append(row);
           li.append(body);
           list.append(li);
         }
@@ -836,6 +845,20 @@
           chrome.runtime.sendMessage({ type: "validationOnRequest" }, (r) => {
             for (const i of r?.items || []) console.log("[also checked]", i.say);
           });
+          return;
+        }
+        if (c.action === "ack") {
+          chrome.runtime.sendMessage({ type: "validationAck", key: c.key });
+          return;
+        }
+        if (c.action === "edit-ask" || c.action === "fill-gap") {
+          const field = c.field || window.prompt(
+            "Which part? (buying, must have, size, budget, how many, needed by)"
+          );
+          if (!field) return;
+          const value = window.prompt(`New value for ${field}:`);
+          if (value == null || !value.trim()) return;
+          chrome.runtime.sendMessage({ type: "validationEdit", field, value: value.trim() });
           return;
         }
         chrome.runtime.sendMessage({ type: "validationControl", control: c });

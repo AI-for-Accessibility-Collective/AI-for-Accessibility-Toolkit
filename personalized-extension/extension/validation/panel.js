@@ -147,12 +147,25 @@ export function mountValidationPanel(root, { onControl } = {}) {
         const body = el('div', 'va-body');
         body.append(el('p', 'va-text', f.say));
         if (f.from) body.append(el('p', 'va-where', f.from));
+        const row = el('div', 'va-answers');
         if (f.control) {
           const b = el('button', 'va-do', f.control.label);
           b.dataset.vaKey = `do:${f.widget}`;
-          b.addEventListener('click', () => onControl?.(f.control));
-          body.append(b);
+          b.addEventListener('click', () => {
+            onControl?.(f.control);
+            onControl?.({ action: 'ack', key: `${f.widget}|${f.phase}|${f.say}` });
+          });
+          row.append(b);
         }
+        // Without a way to wave a finding past, this surface could only act -
+        // and the agent stayed held on findings a panel-only user had no
+        // rendered way to dismiss.
+        const skip = el('button', 'va-do', f.control?.decline || 'Got it');
+        skip.dataset.vaKey = `ack:${f.widget}`;
+        skip.addEventListener('click', () =>
+          onControl?.({ action: 'ack', key: `${f.widget}|${f.phase}|${f.say}` }));
+        row.append(skip);
+        body.append(row);
         li.append(body);
         list.append(li);
       }

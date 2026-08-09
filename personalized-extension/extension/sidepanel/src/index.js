@@ -411,6 +411,22 @@ if (vaRoot) {
       }
       // Everything else is a control delegation removed -- re-sort, open
       // another, change the size. These go to the agent as an instruction.
+      if (c.action === 'ack') {
+        chrome.runtime.sendMessage({ type: 'validationAck', key: c.key });
+        return;
+      }
+      if (c.action === 'edit-ask' || c.action === 'fill-gap') {
+        // These fell through to validationControl, whose say-map knows
+        // neither - so "Change something" and every gap "Answer" button
+        // did nothing at all.
+        const field = c.field || window.prompt(
+          'Which part? (buying, must have, size, budget, how many, needed by)');
+        if (!field) return;
+        const value = window.prompt(`New value for ${field}:`);
+        if (value == null || !value.trim()) return;
+        chrome.runtime.sendMessage({ type: 'validationEdit', field, value: value.trim() });
+        return;
+      }
       chrome.runtime.sendMessage({ type: 'validationControl', control: c });
     },
   });
