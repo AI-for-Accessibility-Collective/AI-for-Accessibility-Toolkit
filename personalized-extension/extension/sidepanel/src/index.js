@@ -411,6 +411,13 @@ if (vaRoot) {
       }
       // Everything else is a control delegation removed -- re-sort, open
       // another, change the size. These go to the agent as an instruction.
+      if (c.action === 'ask') {
+        // Straight to the layer. Deliberately not validationControl, which
+        // ends at steerAgent — asking a question must not change what the
+        // agent does next, which is the whole point of the mode.
+        chrome.runtime.sendMessage({ type: 'validationAsk', question: c.question });
+        return;
+      }
       if (c.action === 'ack') {
         chrome.runtime.sendMessage({ type: 'validationAck', key: c.key });
         return;

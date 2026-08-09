@@ -153,6 +153,50 @@ export function mountValidationPanel(root, { onControl } = {}) {
       root.append(wheel);
     }
 
+    // ── ask about this page ─────────────────────────────────────────────────
+    //
+    // The one control here that does NOT touch the agent. Every other press in
+    // this panel becomes an instruction, which is why asking a question used to
+    // mean changing what the agent does next. Validation.ask() reads the page
+    // and answers; nothing is steered and nothing is held.
+    //
+    // It shipped with the route, the schema and the tests and no surface at
+    // all, so the capability existed and could not be reached.
+    {
+      const box = el('section', 'va-ask-page');
+      box.append(el('h2', null, 'Ask about this page'));
+
+      const form = document.createElement('form');
+      form.className = 'va-answers';
+      const input = el('input', 'va-ask-input');
+      input.type = 'text';
+      input.placeholder = 'does it say anything about returns?';
+      input.setAttribute('aria-label', 'Ask a question about this page');
+      input.dataset.vaKey = 'ask-input';
+      const go = el('button', 'va-do primary', 'Ask');
+      go.type = 'submit';
+      form.append(input, go);
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = input.value.trim();
+        if (!q) return;
+        input.value = '';
+        onControl?.({ action: 'ask', question: q });
+      });
+      box.append(form);
+
+      // Newest first, and each answer carries the page's own words underneath,
+      // the same as every other claim this layer makes.
+      for (const a of (state.asked || []).slice(-3).reverse()) {
+        const item = el('div', 'va-asked');
+        item.append(el('p', 'va-text', a.question));
+        item.append(el('p', null, a.say || a.answer || 'This page does not say.'));
+        if (a.quote) item.append(el('p', 'va-where', a.quote));
+        box.append(item);
+      }
+      root.append(box);
+    }
+
     // ── findings ────────────────────────────────────────────────────────────
     // The finding the gate is holding for renders in the gate block above,
     // with the gate's own answers - listing it again below gave the same

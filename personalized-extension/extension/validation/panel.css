@@ -111,6 +111,20 @@
 .va-wheel p { margin: 0; color: #4a5b52; }
 .va-wheel .va-answers { margin-top: 8px; }
 
+/* ── ask about this page ────────────────────────────────────────────────────
+   The one control that does not touch the agent, so it is quiet: no tone, no
+   dot, no border colour that reads as a state. */
+.va-ask-page { margin: 8px 14px 0; }
+.va-ask-page h2 { font-size: 12px; font-weight: 600; margin: 0 0 6px; }
+.va-ask-page .va-answers { display: flex; gap: 6px; }
+.va-ask-input {
+  flex: 1; min-width: 0; font: inherit; font-size: 13px;
+  padding: 5px 8px; border: 1px solid #e5e5e7; border-radius: 6px;
+}
+.va-ask-input:focus { outline: 2px solid #1a73e8; outline-offset: 1px; }
+.va-asked { margin-top: 8px; padding-left: 8px; border-left: 2px solid #f0f0f2; }
+.va-asked .va-text { font-weight: 500; }
+
 /* ── findings ────────────────────────────────────────────────────────────── */
 .va-list { list-style: none; margin: 0; padding: 6px 0; }
 

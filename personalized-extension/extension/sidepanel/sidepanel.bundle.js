@@ -89,6 +89,36 @@
         wheel.append(row);
         root.append(wheel);
       }
+      {
+        const box = el("section", "va-ask-page");
+        box.append(el("h2", null, "Ask about this page"));
+        const form = document.createElement("form");
+        form.className = "va-answers";
+        const input = el("input", "va-ask-input");
+        input.type = "text";
+        input.placeholder = "does it say anything about returns?";
+        input.setAttribute("aria-label", "Ask a question about this page");
+        input.dataset.vaKey = "ask-input";
+        const go = el("button", "va-do primary", "Ask");
+        go.type = "submit";
+        form.append(input, go);
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const q = input.value.trim();
+          if (!q) return;
+          input.value = "";
+          onControl?.({ action: "ask", question: q });
+        });
+        box.append(form);
+        for (const a of (state.asked || []).slice(-3).reverse()) {
+          const item = el("div", "va-asked");
+          item.append(el("p", "va-text", a.question));
+          item.append(el("p", null, a.say || a.answer || "This page does not say."));
+          if (a.quote) item.append(el("p", "va-where", a.quote));
+          box.append(item);
+        }
+        root.append(box);
+      }
       const heldNow = new Set(
         state.gate && state.gate.allowed === false && state.gate.waitingOn || []
       );
@@ -862,6 +892,10 @@
           chrome.runtime.sendMessage({ type: "validationOnRequest" }, (r) => {
             for (const i of r?.items || []) console.log("[also checked]", i.say);
           });
+          return;
+        }
+        if (c.action === "ask") {
+          chrome.runtime.sendMessage({ type: "validationAsk", question: c.question });
           return;
         }
         if (c.action === "ack") {
