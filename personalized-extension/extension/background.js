@@ -858,32 +858,46 @@ async function _doTranscribeMedia(url, apiKey, MAX_MEDIA_BYTES, CHUNK_CONCURRENT
 // The alternative shipped first: the model was asked to guess, and answered
 // with invented numbers ("Estimated results: ~2,000"). A count the page never
 // said is exactly the kind of claim this layer exists to replace.
+//
+// Generalised off Amazon by reading both hardcoded halves rather than assuming
+// them. `${origin}/s?k=` became: find the parameter of the URL we are already
+// on whose value carries the words the person searched for, and rewrite that
+// one. `/([\d,]+) results/i` became: that pattern first because it is free,
+// then one reasoner call scoped to the count when it misses. See probe.js —
+// neither half guesses, and a site where the search is not in the URL is
+// reported as such instead of opening a page that does not exist.
 async function probeNarrower(tabUrl) {
+  const P = globalThis.ValidationProbe;
   const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'] || {};
   const c = st.contract || {};
-  let base = '';
-  let origin = 'https://www.amazon.com';
-  try {
-    const u = new URL(tabUrl);
-    origin = u.origin;
-    base = (u.searchParams.get('k') || '').trim();
-  } catch { /* fall through to the contract's own query */ }
-  if (!base) base = globalThis.ValidationAsk?.toQuery?.(c) || String(c.item || '');
-  if (!base) return null;
+  const ask = globalThis.ValidationAsk?.toQuery?.(c) || String(c.item || '');
+  if (!P) return { options: [], why: 'the probe is not loaded' };
+  if (!ask) {
+    return { options: [],
+      why: 'you have not told me what you are looking for, so I have nothing to '
+         + 'narrow the search with.' };
+  }
 
-  // Narrower means: a term of the ask that the query does not carry yet.
-  const have = new Set(base.toLowerCase().split(/\s+/));
-  const terms = [
-    ...(Array.isArray(c.mustHaves) ? c.mustHaves : []),
-    c.size ? `size ${c.size}` : null,
-  ].filter(Boolean)
-   .filter((t) => !String(t).toLowerCase().split(/\s+/).every((w) => have.has(w)));
-  const candidates = terms.slice(0, 3).map((t) => `${base} ${t}`);
-  if (!candidates.length) return null;
+  // How a search is written on this site, read off the address bar. No match
+  // means the search is not in the URL here — a POST, an app that keeps it in
+  // state — and there is nothing to rewrite.
+  const param = P.searchParamOf(tabUrl, ask);
+  if (!param) return { options: [], why: P.NO_SEARCH_GRAMMAR };
+
+  const candidates = P.narrowerQueries(param.value, c);
+  if (!candidates.length) {
+    return { options: [],
+      why: 'everything you told me is already in the search, so there is nothing '
+         + 'left of the ask to narrow it with.' };
+  }
+
+  const askPage = globalThis.ValidationReasoner?.hasCaller?.()
+    ? (q, text) => globalThis.ValidationReasoner.askPage(q, text)
+    : null;
 
   const options = [];
   for (const q of candidates) {
-    const url = `${origin}/s?k=${encodeURIComponent(q)}`;
+    const url = P.narrowerUrl(tabUrl, param.key, q);
     let tab = null;
     try {
       tab = await chrome.tabs.create({ url, active: false });
@@ -907,11 +921,11 @@ async function probeNarrower(tabUrl) {
         chrome.tabs.onUpdated.addListener(done);
       });
       const snap = await globalThis.BrowserHarness.axSnapshot(tab.id);
-      const m = /of\s+(?:over\s+|about\s+)?([\d,]+)\s+results/i.exec(snap.text)
-             || /([\d,]+)\s+results/i.exec(snap.text);
-      options.push({ query: q, count: m ? m[1] : null });
+      const measured = await P.countOn(snap.text, askPage);
+      options.push({ query: q, url, ...measured });
     } catch (e) {
-      options.push({ query: q, count: null });
+      options.push({ query: q, url, count: null,
+                     from: `I could not open it: ${String(e.message || e).slice(0, 60)}` });
     } finally {
       if (tab) {
         probeTabs.delete(tab.id);
@@ -920,18 +934,22 @@ async function probeNarrower(tabUrl) {
       }
     }
   }
-  return options;
+  return { options, why: null, param: param.key };
 }
 
 // Probe, don't guess. The card goes up immediately so the press is seen to
 // have done something; the real counts replace it when read. Falls back to
-// asking the agent when the ask has no unused terms left to add.
+// asking the agent when there was nothing to measure — and now says WHY there
+// was nothing, because "I could not tell how a search is written on this site"
+// and "I measured nothing" look identical from the outside and are not the same
+// thing at all.
 async function runRefineProbe(fallbackSay) {
   const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   await globalThis.Validation?.annotate?.({
     probe: { ask: 'Trying narrower searches…', options: [] } });
-  const options = await probeNarrower(tabs[0]?.url || '');
-  if (options && options.length) {
+  const r = await probeNarrower(tabs[0]?.url || '') || { options: [], why: null };
+  const options = r.options || [];
+  if (options.length) {
     await globalThis.Validation?.annotate?.({
       probe: { ask: 'I tried these. Pick one, or keep the current search.', options } });
     const best = options.filter((o) => o.count)[0];
@@ -942,10 +960,17 @@ async function runRefineProbe(fallbackSay) {
         level: 'aside', live: 'polite', widget: 'probe' }],
     }).catch(() => {});
   } else {
-    await globalThis.Validation?.annotate?.({ probe: null });
+    await globalThis.Validation?.annotate?.({
+      probe: r.why ? { ask: r.why, options: [] } : null });
+    if (r.why) {
+      chrome.runtime.sendMessage({
+        type: 'validationSpeak', phase: 'probe',
+        lines: [{ say: r.why, level: 'aside', live: 'polite', widget: 'probe' }],
+      }).catch(() => {});
+    }
     if (fallbackSay) await steerAgent(fallbackSay);
   }
-  return (options || []).length;
+  return options.length;
 }
 
 // One steering path for everything the person sends the agent - the tell

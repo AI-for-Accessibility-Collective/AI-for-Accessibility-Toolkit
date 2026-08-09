@@ -25,6 +25,7 @@ import { setControls } from './render.js';
 import * as Reasoner from './reasoner.js';
 import * as Trace from './trace.js';
 import * as Watch from './watch.js';
+import * as Probe from './probe.js';
 
 const KEY = 'aa.validation';
 
@@ -1606,6 +1607,11 @@ globalThis.ValidationWatch = {
   any: () => Watch.any(),
   setTiming: (o) => Watch.setWatchTiming(o),
 };
+
+// Reading a real count off a real page instead of asking the model to guess
+// one. background.js owns the tabs; this owns the two things that used to be
+// Amazon-shaped — how a search is written in a URL, and how a total is stated.
+globalThis.ValidationProbe = Probe;
 
 // Exposed separately so the agent's start route can parse a sentence into a
 // contract before a run exists.
