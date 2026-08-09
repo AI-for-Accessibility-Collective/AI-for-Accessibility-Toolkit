@@ -725,7 +725,20 @@ async function readWatch(w, pageText) {
  *
  * @returns {Promise<{checked, read, moved, skipped}>}
  */
+// One sweep at a time. The decision of whether a watch is due reads
+// `lastReadAt` and then acts on it, outside any lock — so two top-frame
+// navigations landing in the same window both saw the old value and both
+// called the model, and the 60-second floor bought nothing. N simultaneous
+// settles on a watched origin was N x 8 calls.
+let sweeping = null;
 async function checkWatches(snap) {
+  if (sweeping) return sweeping.then(() => ({ checked: 0, read: 0, moved: 0,
+    skipped: 'a sweep was already running' }));
+  sweeping = _checkWatches(snap).finally(() => { sweeping = null; });
+  return sweeping;
+}
+
+async function _checkWatches(snap) {
   const standing = await Watch.live();
   if (!standing.length) return { checked: 0, read: 0, moved: 0 };
 
@@ -1241,6 +1254,11 @@ const Validation = {
    * would leave a claim on screen that is no longer being made.
    */
   async editAsk(field, value) {
+    // Every other method that reads module state rehydrates first. Without it
+    // "Change something" silently did nothing after a worker restart, which is
+    // most of the time — the worker is torn down after about thirty seconds
+    // idle, and reading the panel is idle.
+    if (!contract) await rehydrate();
     if (!contract || !field) return { changed: false };
     const key = { buying: 'item', 'must have': 'mustHaves', size: 'size',
                   budget: 'budget', 'how many': 'quantity',
