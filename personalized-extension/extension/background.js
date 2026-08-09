@@ -1282,8 +1282,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 
   if (msg.type === 'bhAgentStop') {
-    globalThis.BrowserAgent?.stop();
+    // The reason travels with the stop so the run's own record says what
+    // ended it. Absent one, the agent falls back to "Stopped by user", which
+    // is what a press of the stop button is.
+    globalThis.BrowserAgent?.stop(msg.reason);
     sendResponse({ success: true });
+    return false;
+  }
+
+  // Held, not ended. Sits next to stop because it is the same question asked
+  // less finally, and because a surface offering one should offer the other.
+  if (msg.type === 'bhAgentPause') {
+    sendResponse(globalThis.BrowserAgent?.pause?.({
+      reason: msg.reason, byNode: msg.nodeId,
+    }) || { paused: false, why: 'agent not loaded' });
+    return false;
+  }
+
+  if (msg.type === 'bhAgentResume') {
+    sendResponse(globalThis.BrowserAgent?.resume?.({
+      rePerceive: msg.rePerceive !== false,
+    }) || { resumed: false, why: 'agent not loaded' });
+    return false;
+  }
+
+  if (msg.type === 'bhAgentPauseState') {
+    sendResponse(globalThis.BrowserAgent?.pauseState?.() || { paused: false });
     return false;
   }
 

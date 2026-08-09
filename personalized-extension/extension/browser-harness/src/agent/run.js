@@ -15,6 +15,13 @@ import {
   setStop,
   shouldStop,
   stopReason,
+  setPause,
+  isPaused,
+  pauseInfo,
+  setRePerceive,
+  takeRePerceive,
+  setStep,
+  getStep,
   setRunning,
   isRunning,
   setSystemPrompt,
@@ -112,11 +119,62 @@ export function bhAgentInterject(instruction) {
   return { queued: _bhPending.length };
 }
 
+/** How often a paused loop looks to see whether it may go again. */
+export const BH_AGENT_PAUSE_POLL_MS = 300;
+
+/**
+ * Hold the agent still, without ending its run.
+ *
+ * The flag is read at the top of an iteration, so what is paused is the step
+ * that has not started yet. An action already in flight finishes — see API.md
+ * section 2 on why mid-step cancellation is last and probably never: the gate
+ * already stops anything committing, so a click that is halfway through is not
+ * worth making every action cancellable for.
+ *
+ * @param {{reason?: string, byNode?: string}} opts
+ */
+export function bhAgentPause(opts = {}) {
+  if (!isRunning()) return { paused: false, why: 'no run in progress' };
+  setPause(true, { reason: opts.reason || null,
+                   byNode: opts.byNode ?? null, at: Date.now() });
+  return { paused: true, atStep: getStep() };
+}
+
+/**
+ * Let it go again.
+ *
+ * `rePerceive` is on unless it is explicitly switched off, because the page can
+ * have changed while the person was reading it and that is exactly where a
+ * stale action would land.
+ */
+export function bhAgentResume(opts = {}) {
+  // Resuming nothing must not arm anything. Without this the flag outlived the
+  // run that never read it and the NEXT run opened by announcing a pause that
+  // had happened to somebody else.
+  if (!isRunning()) return { resumed: false, why: 'no run in progress' };
+  const was = isPaused();
+  const rePerceive = opts.rePerceive !== false;
+  if (rePerceive) setRePerceive(true);
+  setPause(false);
+  return { resumed: was, rePerceive };
+}
+
+export function bhAgentIsPaused() { return isPaused(); }
+export function bhAgentPauseState() {
+  return { paused: isPaused(), atStep: getStep(), info: pauseInfo() };
+}
+
 export async function bhAgentRun(task, opts = {}) {
   let bounces = 0;
   if (isRunning()) throw new Error('agent already running');
   setRunning(true);
   setStop(false);
+  // A new run starts unheld, whatever the last one left behind. resetRunState
+  // already does this at the end of a run, but a run that threw on its way in
+  // never reaches it.
+  setPause(false);
+  setRePerceive(false);
+  setStep(0);
   setLoadedSkills([]);
   setNavSurface(null);
   setCurrentMemory('');
@@ -242,6 +300,7 @@ export async function bhAgentRun(task, opts = {}) {
     let pendingError = null;
     let pendingRaw = null;
     for (let step = 0; step < maxSteps; step++) {
+      setStep(step + 1);
         // Anything the person said since the last action goes in first, as
         // their own turn. Ahead of the stop check, because "stop" is one of
         // the things they may have just said.
@@ -250,6 +309,41 @@ export async function bhAgentRun(task, opts = {}) {
           history.push({ role: 'user', content: `[You interrupted] ${said}` });
           await _bhAgentLog({ kind: 'info', text: `You: ${said}` });
         }
+      // Held. This is the point in an iteration where nothing is in flight —
+      // nothing enumerated yet, no model call open, no action running — so the
+      // loop can simply not go on, and no cancellation machinery is needed.
+      // Waiting here also costs no steps: the step it is standing at has not
+      // begun, so a long pause does not eat the run's budget.
+      if (isPaused()) {
+        const info = pauseInfo() || {};
+        await _bhAgentPatch({ status: 'paused' });
+        await _bhAgentLog({ kind: 'info', step: step + 1,
+          text: `Paused${info.reason ? `: ${info.reason}` : ''}${info.byNode ? ` (${info.byNode})` : ''}.` });
+        while (isPaused() && !shouldStop()) {
+          await new Promise((r) => setTimeout(r, BH_AGENT_PAUSE_POLL_MS));
+        }
+        if (!shouldStop()) {
+          await _bhAgentPatch({ status: 'running' });
+          await _bhAgentLog({ kind: 'info', step: step + 1, text: 'Resumed.' });
+        }
+      }
+      // What resume({rePerceive}) actually throws away.
+      //
+      // The enumerate and the screenshot below happen every iteration anyway,
+      // so the model always sees the page as it is now. What would otherwise
+      // survive the pause is a decision made against the page as it WAS: a
+      // failed action staged for retry, and the model's own account of what it
+      // was looking at. Both go.
+      if (takeRePerceive()) {
+        pendingError = null;
+        pendingRaw = null;
+        history.push({ role: 'user', content:
+          '[The page was read again after a pause] What follows is a fresh look at the page. '
+          + 'It may have changed while you were held. Work from the element list below, '
+          + 'not from what you saw before the pause.' });
+        await _bhAgentLog({ kind: 'info', step: step + 1,
+          text: 'Read the page again before acting.' });
+      }
       if (shouldStop()) {
         // The reason is the record. A run the layer ended because nobody
         // answered it must not be filed under the same words as a run the
