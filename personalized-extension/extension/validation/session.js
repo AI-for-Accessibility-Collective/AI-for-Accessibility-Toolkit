@@ -146,6 +146,17 @@ async function rehydrate() {
   // an empty waiting list and run.gate() opens for the rest of the task.
   run.restoreWaiting?.(prev.waiting);
   for (const k of prev.acknowledged || []) acknowledged.add(k);
+  // The task model dies with the worker and is only reloaded by a top-level
+  // fetch in background.js, which resolves AFTER the queued event that woke
+  // the worker. So one settle ran with flatModel null, fell into the Amazon
+  // path, and `phaseOf` returned null on a flights page — that page was never
+  // checked and nothing recorded that it wasn't. Reload it here instead.
+  if (!flatModel && prev.modelSource) {
+    try {
+      const r = await fetch(chrome.runtime.getURL(prev.modelSource));
+      if (r.ok) globalThis.ValidationTaskModel?.load(await r.json(), prev.modelSource);
+    } catch { /* absent is a supported state: the Amazon path runs */ }
+  }
   // Where the run was and who was driving. Both are published on every write
   // for exactly this: a worker restart during a hand over must not come back
   // believing the agent has the wheel, which is how two things end up acting
@@ -418,7 +429,7 @@ async function _publish(extra = {}) {
       // survive a worker restart, and so a surface can say which of the two is
       // acting rather than guessing.
       node: currentNode, nodeLabel: currentNodeLabel,
-      holder, handOverNode, handOverAt, handOverTab,
+      holder, handOverNode, handOverAt, handOverTab, modelSource,
       // Both surfaces read this to name the part the person took. It was never
       // written, so they announced a raw node id ("paused at 4.3").
       handOverNodeLabel: labelFor(handOverNode),
@@ -1382,7 +1393,9 @@ const Validation = {
         level: 'aside', live: 'polite', widget: 'hand over' }] }).catch(() => {});
 
     return { handedOver: true, watching: true, nodeId: node, label,
-             atStep: paused?.atStep ?? null, paused: paused?.paused === true };
+             atStep: paused?.atStep ?? null, paused: paused?.paused === true,
+             why: paused?.paused === true ? undefined
+               : 'the agent was not running, so there was nothing to pause' };
   },
 
   /**
@@ -1451,9 +1464,17 @@ const Validation = {
         + 'new was read off the page while you were out. Read the page again before '
         + 'you act, and do not redo what they just did.';
     try { globalThis.BrowserAgent?.interject?.(say); } catch {}
-    try { globalThis.BrowserAgent?.resume?.({ rePerceive: true }); } catch {}
+    // Checked, not fired and forgotten. resume() returns {resumed:false} when
+    // no run is in progress — which is what a loop that died with the service
+    // worker looks like — and the discarded result meant the person was told
+    // the agent was back while it never moved again.
+    let back = null;
+    try { back = globalThis.BrowserAgent?.resume?.({ rePerceive: true }); } catch {}
+    const resumed = back?.resumed !== false;
 
-    return { resumed: true, nodeId: node, label, changedWhileOut, since, said: say };
+    return { resumed, nodeId: node, label, changedWhileOut, since, said: say,
+      why: resumed ? undefined
+        : 'the agent is not running any more, so there was nothing to hand back to' };
   },
 
   /**
@@ -1608,6 +1629,8 @@ const Validation = {
    */
   status: () => ({
     holder,
+    // Which tab the hand over is for, so a closed tab can end it.
+    tabId: handOverTab,
     nodeId: handOverNode ?? currentNode ?? null,
     label: labelFor(handOverNode ?? currentNode),
     phase: currentPhase,

@@ -82,6 +82,22 @@ chrome.storage.session?.get('probeTabIds').then(async (r) => {
 const persistProbeTabs = () =>
   chrome.storage.session?.set({ probeTabIds: [...probeTabs] }).catch(() => {});
 
+// A handed-over tab that closes ends the hand over.
+//
+// Without this the 4-second poll kept firing on a tab that no longer exists,
+// axSnapshot threw every time, and `holder` stayed 'person' — so the agent
+// remained gated with no give-up clock, because the hold timeout is
+// deliberately disabled while the person has the wheel. The person had closed
+// the page and nothing anywhere noticed.
+chrome.tabs?.onRemoved?.addListener(async (tabId) => {
+  try {
+    const st = globalThis.Validation?.status?.();
+    if (st?.holder === 'person' && st.tabId === tabId) {
+      await globalThis.Validation?.handBack?.({ tabId });
+    }
+  } catch { /* nothing to hand back to */ }
+});
+
 chrome.webNavigation?.onCompleted?.addListener(async (d) => {
   if (d.frameId !== 0) return;                       // top frame only
   if (probeTabs.has(d.tabId)) return;                // a measurement, not the task
