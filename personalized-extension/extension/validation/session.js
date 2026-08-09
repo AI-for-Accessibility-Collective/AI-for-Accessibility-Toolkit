@@ -494,8 +494,27 @@ async function _publish(extra = {}) {
 // same run, the same insistence levels, the same gate, the same two surfaces.
 // Only where the findings came from is different.
 async function observeByModel(snap, opts = {}) {
+  // Everything the layer already knows, handed to the reasoner so it can judge
+  // which questions are live rather than reading each page cold. The agent's
+  // own log says what it just DID; it is never used as evidence about what the
+  // page SAYS, which is the separation the whole design rests on.
+  let agentDoing = [];
+  try {
+    const a = (await chrome.storage.local.get('bhAgent')).bhAgent || {};
+    agentDoing = (a.log || []).filter((e) => e.kind === 'action' || e.kind === 'info')
+      .slice(-5).map((e) => e.text || `${e.action || ''} ${e.detail || ''}`.trim())
+      .filter(Boolean);
+  } catch { /* no agent running: the person is browsing and we still check */ }
+  const prevState = await stored();
+  const alreadyAnswered = (prevState.findings || [])
+    .filter((f) => f.source === 'reasoner' && f.say)
+    .slice(-12).map((f) => ({ question: f.widget, answer: String(f.say).slice(0, 120) }));
+
   const result = await Reasoner.readPage(flatModel, snap.text, {
     ask: contract ? describe(contract) : null,
+    url: snap.url || null,
+    agentDoing,
+    alreadyAnswered,
     ...(opts.reasoner || {}),
   });
 
@@ -1368,6 +1387,7 @@ const Validation = {
     const r = await Reasoner.askPage(q, snap.text, {
       task: flatModel?.task || null,
       ask: contract ? describe(contract) : null,
+      url: snap.url || null,
       ...(opts.reasoner || {}),
     });
 

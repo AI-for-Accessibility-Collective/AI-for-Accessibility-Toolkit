@@ -294,6 +294,30 @@ export function buildPrompt(flat, pageText, opts = {}) {
     : '';
   const ask = opts.ask ? `\nThe person asked for: ${opts.ask}\n` : '';
 
+  // What the reasoner knows besides the page.
+  //
+  // It used to get the task, the ask, the page and the questions, and nothing
+  // else — so it read every page cold, with no idea the agent had just pressed
+  // Add to cart or that it had answered this same question two pages earlier.
+  // All of it is already on hand: the URL from the snapshot, the agent's own
+  // log, and the findings already published. None of it is the agent's account
+  // of what the PAGE says, which is the thing that must stay independent; it is
+  // context for deciding which questions are live.
+  const where = opts.url ? `\nThe page is ${opts.url}\n` : '';
+  const doing = opts.agentDoing?.length
+    ? `\nWhat the agent has just done, most recent last:\n`
+      + opts.agentDoing.slice(-5).map((d) => `  - ${d}`).join('\n')
+      + `\nUse this to judge which questions are live now. Do NOT use it as \
+evidence about what the page says - the agent's account of its own work is the \
+one thing this layer cannot check the agent with.\n`
+    : '';
+  const already = opts.alreadyAnswered?.length
+    ? `\nAnswered earlier in this run, with the answer that was given:\n`
+      + opts.alreadyAnswered.slice(-12).map((a2) => `  - ${a2.question} -> ${a2.answer}`).join('\n')
+      + `\nAnswer one of these again ONLY if this page says something different. \
+A value that changed is worth raising; a value that is the same is not.\n`
+    : '';
+
   return `You are a verification layer watching a browser agent work on this task:
 "${flat.task}"
 ${ask}
@@ -307,7 +331,7 @@ That is expected and correct - do not stretch to answer a question the page \
 does not answer.
 
 ${qlist}
-${phases}
+${phases}${where}${doing}${already}
 Produce four things.
 
 ${opts.everyRow ? EVERY_ROW : ANSWERED_ONLY}
@@ -763,9 +787,10 @@ export const ASK_SCHEMA = {
 export function buildAskPrompt(question, pageText, opts = {}) {
   const task = opts.task ? `\nThe agent is working on this task: "${opts.task}"\n` : '';
   const ask = opts.ask ? `The person asked for: ${opts.ask}\n` : '';
+  const where = opts.url ? `The page is ${opts.url}\n` : '';
   return `You are a verification layer watching a browser agent work. The person \
 has stopped to ask ONE question about the page in front of them.
-${task}${ask}
+${task}${ask}${where}
 Their question: "${question}"
 
 Below is the accessibility-tree text of that page (the same text a screen \
