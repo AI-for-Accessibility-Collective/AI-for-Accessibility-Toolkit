@@ -674,6 +674,19 @@ function startModelFor(task) {
   // short runs entirely: a recorded Wikipedia lookup was over in ninety
   // seconds, well before a complete model could exist, and a model that
   // arrives after the agent has stopped has checked nothing.
+  // How many questions the layer has had so far, so a batch that adds some can
+  // be told from one that adds none.
+  let had = 0;
+  const countQuestions = (m) => {
+    let n = 0;
+    const walk = (x) => {
+      n += (x.questions || []).length;
+      for (const c of x.children || []) walk(c);
+    };
+    if (m?.tree) walk(m.tree);
+    return n;
+  };
+
   const use = async (model) => {
     if (mine.aborted) return;
     try {
@@ -682,6 +695,26 @@ function startModelFor(task) {
       // back to checking nothing. It has no URL to refetch.
       await chrome.storage.local.set({ 'aa.validation.model': model });
       arrived('ready');
+
+      // Read the page again now that there is something to ask it.
+      //
+      // Page reads are driven by the agent settling on a page, and the agent
+      // gets through its pages faster than the questions arrive: in a recorded
+      // Wikipedia run all three reads happened inside the first 75 seconds and
+      // every one of them asked zero questions, because only the tree had
+      // landed. The layer was reading pages it had nothing to ask about, and
+      // the few findings that appeared came from the open noticing pass rather
+      // than from the model. Re-reading when questions arrive is what makes
+      // delivering the model in pieces worth anything.
+      const now = countQuestions(model);
+      if (now > had) {
+        had = now;
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        if (tab?.id && /^https?:/.test(tab.url || '')) {
+          globalThis.Validation?.observe?.(tab.id)
+            .catch((e) => console.warn('[validation] re-read failed:', e.message));
+        }
+      }
     } catch (e) {
       console.warn('[validation] could not use the model:', e.message);
     }
