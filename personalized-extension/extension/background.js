@@ -636,11 +636,21 @@ if (globalThis.ValidationGenerate) {
 // One generation at a time. A second run supersedes the first rather than
 // racing it to load a model for a task nobody is doing any more.
 let modelRun = null;
-// How long the agent waits for the first piece of the model. The tree is one
-// call against about thirteen thousand tokens of examples, so this is generous
-// rather than tight; it exists so a stalled generation cannot become an agent
-// that never starts.
-const MODEL_FIRST_PIECE_MS = 90_000;
+// How long the agent waits before it starts, for a model with something in it
+// to ask.
+//
+// It used to wait only for the tree. The tree says which phase a page belongs
+// to and carries no questions, so a run that finished before the first batch of
+// questions arrived was checked against nothing: a recorded Wikipedia lookup
+// was answered and done in nineteen seconds, and every page read that run
+// reported asking zero questions. Waiting for the tree alone bought the layer
+// nothing on exactly the runs it could most easily have kept up with.
+//
+// So the wait is for questions, and the ceiling is raised to cover them. This
+// is the deliberate trade: about a minute and a half before the agent moves, in
+// exchange for a layer that is actually checking when it does. A stalled
+// generation still cannot become an agent that never starts.
+const MODEL_FIRST_PIECE_MS = 150_000;
 
 /**
  * Write the task model for what the person just asked, and use it when it lands.
@@ -694,7 +704,6 @@ function startModelFor(task) {
       // Kept so a service-worker restart mid-run reloads it instead of falling
       // back to checking nothing. It has no URL to refetch.
       await chrome.storage.local.set({ 'aa.validation.model': model });
-      arrived('ready');
 
       // Read the page again now that there is something to ask it.
       //
@@ -708,6 +717,9 @@ function startModelFor(task) {
       // delivering the model in pieces worth anything.
       const now = countQuestions(model);
       if (now > had) {
+        // Only now is there anything to ask a page. The tree on its own is not
+        // a reason to let the agent go.
+        arrived('ready');
         had = now;
         // Normal windows only. `lastFocusedWindow` is the panel whenever the
         // panel is open, and its URL is a chrome-extension:// one, so the
