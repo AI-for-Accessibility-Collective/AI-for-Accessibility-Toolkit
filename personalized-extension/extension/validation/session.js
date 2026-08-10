@@ -82,7 +82,12 @@ let runOpts = {};
 // reasoner reads the same snapshot against the model's questions instead. The
 // two paths do not mix, and the switch is the presence of a file.
 let flatModel = null;
+let srcModel = null;
 let modelSource = null;
+// A cap on questions the layer wrote for itself off the pages it saw. Without
+// one a long run keeps adding to what every later page read has to ask.
+const MAX_DISCOVERED = 20;
+let discovered = 0;
 
 /**
  * What is known about the task, for callers that behave differently on a task
@@ -634,6 +639,17 @@ async function observeByModel(snap, opts = {}) {
     return { phase, findings: 0, url: snap.url, reasoner: result.meta };
   }
 
+  // What the page revealed that no question asked for becomes a question.
+  //
+  // The open pass has always found these and always dropped them: it produced a
+  // finding for this page and nothing carried it forward, so a pre-ticked
+  // insurance box noticed on the add-ons page was not looked for again at
+  // checkout or on the confirmation - which is exactly where an unnoticed
+  // pre-tick survives to. Measured offline first: on a recorded flights run,
+  // twelve questions written this way raised coverage against held-out gold by
+  // 5.1 points with one spurious.
+  await adopt(result.noticed, phase);
+
   // Answered counts as read; an answer thrown away for an unverifiable quote
   // counts as something on this page the layer could not read. That is what
   // the plan's "couldn't read" line is for, and it is the honest number —
@@ -845,6 +861,55 @@ async function checkWatches(snap) {
     skipped: 'a sweep was already running' }));
   sweeping = _checkWatches(snap).finally(() => { sweeping = null; });
   return sweeping;
+}
+
+/**
+ * Take what the page revealed and make it a standing question.
+ *
+ * Only things that carry a verified quote get in, which the reasoner has
+ * already enforced - a question written off a sentence the page does not
+ * contain would be worse than no question at all.
+ */
+async function adopt(noticed, phase) {
+  if (!srcModel || !Array.isArray(noticed) || !noticed.length) return 0;
+  if (discovered >= MAX_DISCOVERED) return 0;
+  const find = (n, id) => {
+    if (String(n.id) === String(id)) return n;
+    for (const c of n.children || []) {
+      const hit = find(c, id);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const node = currentNode ? find(srcModel.tree, currentNode) : null;
+  // Hung on the node the page is serving, so it is asked in the right place;
+  // the root is the fallback, which asks it everywhere rather than nowhere.
+  const host = node || srcModel.tree;
+  if (!host) return 0;
+  const have = new Set((flatModel?.questions || []).map((q) => String(q.question).toLowerCase()));
+  let added = 0;
+  for (const n of noticed) {
+    const text = String(n.say || n.question || '').trim();
+    if (!text || have.has(text.toLowerCase())) continue;
+    if (discovered + added >= MAX_DISCOVERED) break;
+    host.questions = host.questions || [];
+    host.questions.push({
+      question: text,
+      why: 'found by looking at the page, not written in advance',
+      whatTheAgentLoses: '',
+      moment: 'Now',
+      foundOnPage: true,
+      firstSeenPhase: phase || null,
+    });
+    added += 1;
+  }
+  if (!added) return 0;
+  discovered += added;
+  try {
+    globalThis.ValidationTaskModel?.load(srcModel, modelSource);
+    await chrome.storage.local.set({ [MODEL_KEY]: srcModel });
+  } catch { /* the questions are still on the in-memory model */ }
+  return added;
 }
 
 async function _checkWatches(snap) {
@@ -1930,8 +1995,12 @@ globalThis.ValidationAsk = { contractFromAsk, gaps, describe, toQuery };
 // is a separate entry point rather than a field on the corpus.
 globalThis.ValidationTaskModel = {
   load(model, source = null) {
-    if (!model) { flatModel = null; modelSource = null; return { loaded: false }; }
+    if (!model) { flatModel = null; srcModel = null; modelSource = null; return { loaded: false }; }
     flatModel = Reasoner.flattenModel(model);
+    // Kept, not just flattened. A question found by looking at a page has to go
+    // back onto the model itself or it is asked once and forgotten, which is
+    // what the open noticing pass has always done.
+    srcModel = model;
     modelSource = source;
     return {
       loaded: true, source,
@@ -1942,7 +2011,7 @@ globalThis.ValidationTaskModel = {
     };
   },
   /** Back to the extractor path. Loading is reversible at runtime. */
-  unload() { flatModel = null; modelSource = null; return { loaded: false }; },
+  unload() { flatModel = null; srcModel = null; modelSource = null; return { loaded: false }; },
   loaded: () => !!flatModel,
   describe: () => (flatModel
     ? { source: modelSource, task: flatModel.task,

@@ -376,6 +376,20 @@ belongs to, or "none" if it serves none of them.
 4. "noticed" - at most ${MAX_NOTICED} things on this page that a person doing \
 this task would want to know about and that NONE of the questions above asked \
 for. Each needs a "quote" copied character-for-character from the page text. \
+\
+The questions above were written before anyone had seen this site, so what is \
+worth raising here is what only the page itself reveals: something already \
+ticked, selected or turned on that the person never chose; a fee, rule or \
+condition that appears only at this step; a row marked as an ad or promoted; a \
+warning or rating the site itself puts on this content; the cheapest or most \
+relevant option placed somewhere it would be missed; a currency, region or \
+account that is not the one assumed. Prefer the things a person would be \
+annoyed to discover afterwards. \
+\
+Do NOT raise that the agent is on the right or wrong page - the alignment \
+fields above already say that, and it is the single most common thing this \
+list gets wasted on. \
+\
 Set its "contradictsAsk" true when the thing you noticed disagrees with what \
 the person asked for - a different variant of the right-looking item, a total \
 over the stated limit, a date or a place they did not ask for. \
