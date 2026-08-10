@@ -111,5 +111,25 @@ ok(saved && questionsIn(saved).length === 3,
 await Validation.observe(1);
 ok(questionsIn(model).length === 3, 'reading the same page again adds nothing new');
 
+// ── the gate names the one it is showing ────────────────────────────────────
+//
+// The panel hides exactly one finding from its list: the one the gate block is
+// already displaying, so a question does not appear twice with two button rows.
+// It knows which one from `gate.leading`. The panel test hands that field in by
+// hand, so nothing checked that the layer actually publishes it - removing the
+// line that computes it broke nothing and no test failed.
+{
+  const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'] || {};
+  const gate = st.gate || {};
+  if (gate.allowed === false) {
+    ok(typeof gate.leading === 'string' && gate.leading.length > 0,
+      'a held gate names which finding it is showing');
+    ok((gate.waitingOn || []).includes(gate.leading),
+      'and it is one of the ones being waited on, not something else');
+  } else {
+    ok(false, 'expected the run to be held after findings arrived');
+  }
+}
+
 console.log(`\n${pass}/${pass + fail} - what a page reveals becomes something the layer keeps asking.`);
 if (fail) process.exit(1);
