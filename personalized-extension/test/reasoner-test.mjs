@@ -75,8 +75,27 @@ await check('a page over the limit is cut and says so', () => {
   const g = R.guardPage(PAGE, 500);
   assert.strictEqual(g.truncated, true);
   assert.strictEqual(g.origChars, PAGE.length);
-  assert.ok(g.text.endsWith(R.TRUNCATION_MARKER));
-  assert.strictEqual(g.sentChars, 500 + R.TRUNCATION_MARKER.length);
+  assert.ok(g.text.includes(R.TRUNCATION_MARKER));
+  // Exactly the budget now. The head-only version appended the marker AFTER
+  // taking its full quota, so it went over the limit it was enforcing.
+  assert.strictEqual(g.sentChars, 500);
+});
+
+await check('the end of the page survives, because that is where the checking lives', () => {
+  // What a person verifies against sits at the bottom: references and the
+  // protection notice on an article, the return policy on a product page, the
+  // fare rules on a booking, the fee footnotes on a form. Keeping only the head
+  // threw all of it away - a recorded Wikipedia run cut 78% of the article and
+  // then asked whether the source could be trusted.
+  const head = 'HEADLINE at the very top. ';
+  const middle = 'x'.repeat(5000);
+  const tail = ' the return policy is thirty days, at the very bottom.';
+  const g = R.guardPage(head + middle + tail, 400);
+  assert.strictEqual(g.truncated, true);
+  assert.ok(g.text.includes('HEADLINE'), 'the top is kept');
+  assert.ok(g.text.includes('at the very bottom'), 'and so is the bottom');
+  assert.ok(!g.text.includes('x'.repeat(400)), 'the middle is what goes');
+  assert.ok(g.sentChars <= 400, 'and the budget is respected');
 });
 
 // ── the prompt ──────────────────────────────────────────────────────────────

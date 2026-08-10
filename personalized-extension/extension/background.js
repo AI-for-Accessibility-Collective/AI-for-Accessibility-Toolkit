@@ -709,8 +709,16 @@ function startModelFor(task) {
       const now = countQuestions(model);
       if (now > had) {
         had = now;
-        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-        if (tab?.id && /^https?:/.test(tab.url || '')) {
+        // Normal windows only. `lastFocusedWindow` is the panel whenever the
+        // panel is open, and its URL is a chrome-extension:// one, so the
+        // re-read was skipped every single time on the surface that needs it
+        // most.
+        const wins = await chrome.windows.getAll({ windowTypes: ['normal'], populate: true });
+        const tabs = [];
+        for (const w of wins || []) for (const t of w.tabs || []) tabs.push(t);
+        const real = tabs.filter((t) => /^https?:/.test(t.url || ''));
+        const tab = real.find((t) => t.active) || real[0];
+        if (tab?.id) {
           globalThis.Validation?.observe?.(tab.id)
             .catch((e) => console.warn('[validation] re-read failed:', e.message));
         }

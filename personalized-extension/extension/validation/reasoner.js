@@ -166,18 +166,38 @@ export function flattenModel(model) {
 // ── the page-size guard ──────────────────────────────────────────────────────
 
 /**
- * Head truncation. Returns the text the model will see and what was cut.
+ * Both ends of the page. Returns the text the model will see and what was cut.
  *
- * Head rather than a window because the accessibility tree is in document
- * order: the heading, the result count and the buy box are near the top, and
- * the tail of a large commercial page is footer navigation.
+ * It used to keep only the head, on the reasoning that the accessibility tree
+ * is in document order and the heading, the result count and the buy box are
+ * near the top while the tail is footer navigation. That is right about where
+ * the task content is and wrong about where the checking content is, and this
+ * layer exists for the second one.
+ *
+ * What a person verifies against sits at the bottom of a page: the references
+ * and the protection notice on a Wikipedia article, the return policy and the
+ * seller on a product page, the fare rules and the baggage terms on a booking,
+ * the fee and eligibility footnotes on a government form. A recorded Wikipedia
+ * run truncated 78% of the article away and every read afterwards reported the
+ * page as truncated, so the questions about whether the source could be trusted
+ * were being asked of text that no longer contained the answer.
+ *
+ * So the middle goes instead, and both ends are kept. The split is weighted to
+ * the head because that is still where most of the task content is.
  */
+export const TAIL_SHARE = 0.35;
+
 export function guardPage(text, maxChars = MAX_PAGE_CHARS) {
   const s = String(text || '');
   if (s.length <= maxChars) {
     return { text: s, truncated: false, origChars: s.length, sentChars: s.length };
   }
-  const cut = s.slice(0, maxChars) + TRUNCATION_MARKER;
+  const room = Math.max(0, maxChars - TRUNCATION_MARKER.length);
+  const tail = Math.floor(room * TAIL_SHARE);
+  const head = room - tail;
+  const cut = tail > 0
+    ? s.slice(0, head) + TRUNCATION_MARKER + s.slice(s.length - tail)
+    : s.slice(0, head) + TRUNCATION_MARKER;
   return { text: cut, truncated: true, origChars: s.length, sentChars: cut.length };
 }
 
