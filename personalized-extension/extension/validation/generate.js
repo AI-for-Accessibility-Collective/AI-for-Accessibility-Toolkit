@@ -285,9 +285,9 @@ export async function generate(query, opts = {}) {
   const say = opts.onStage || (() => {});
   // Hand over whatever is written so far. Copied, because the caller loads it
   // while later stages keep mutating this one.
-  const hand = (m) => {
+  const hand = (m, st = {}) => {
     if (!opts.onPartial) return;
-    try { opts.onPartial(JSON.parse(JSON.stringify(m))); } catch { /* never fatal */ }
+    try { opts.onPartial(JSON.parse(JSON.stringify(m)), st); } catch { /* never fatal */ }
   };
   const stop = () => opts.signal?.aborted === true;
   if (!hasCaller()) return null;

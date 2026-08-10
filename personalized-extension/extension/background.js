@@ -697,7 +697,7 @@ function startModelFor(task) {
     return n;
   };
 
-  const use = async (model) => {
+  const use = async (model, st = {}) => {
     if (mine.aborted) return;
     try {
       globalThis.ValidationTaskModel?.load(model, 'generated');
@@ -716,11 +716,19 @@ function startModelFor(task) {
       // than from the model. Re-reading when questions arrive is what makes
       // delivering the model in pieces worth anything.
       const now = countQuestions(model);
+      const first = had === 0 && now > 0;
+      const complete = st.stage === 'done';
       if (now > had) {
         // Only now is there anything to ask a page. The tree on its own is not
         // a reason to let the agent go.
         arrived('ready');
         had = now;
+      }
+      // Re-read at most twice: when there are first questions to ask, and once
+      // the model is finished. Re-reading on every batch costs a call each time
+      // and asks the same question again - one recorded run answered "does the
+      // address bar show wikipedia.org" six times, reworded, on the same page.
+      if (first || complete) {
         // Normal windows only. `lastFocusedWindow` is the panel whenever the
         // panel is open, and its URL is a chrome-extension:// one, so the
         // re-read was skipped every single time on the surface that needs it
@@ -742,7 +750,7 @@ function startModelFor(task) {
 
   G.generate(task, {
     signal: mine,
-    onPartial: use,
+    onPartial: (m, st) => use(m, st),
     // Published, not just logged. A generation that fails inside the service
     // worker is otherwise invisible to everything outside it — including the
     // panel, which has to tell the person why nothing is being checked yet.
@@ -753,7 +761,7 @@ function startModelFor(task) {
     },
   }).then(async (model) => {
     if (mine.aborted || !model) return;
-    await use(model);
+    await use(model, { stage: 'done' });
     console.log('[validation] model complete for:', task);
   }).catch((e) => {
     console.warn('[validation] no model written:', e.message);
