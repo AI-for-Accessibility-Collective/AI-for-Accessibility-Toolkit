@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-for-accessibility.toolkit/protocol/transport-envelope.schema.json",
+  "title": "AA Shared-Transport Envelope",
+  "description": "The local shared-store transport (toolkit/sync/transport.js#createSharedTransport) — same device, multiple apps, zero accounts. Both directions share ENVELOPE_VERSION=1 but carry different payloads, distinguished by which fields are present: the EXPORT envelope (toolkit stores at key EXPORT_PREFIX+appId='aa.shared.export.'+appId, read via readExport(appId)) carries appId+abilityModel; the INBOX-ENTRY envelope (appended to the array at INBOX_KEY='aa.shared.inbox', posted via postInsight) carries sourceAppId+sentAt+insight. This schema's validator subset has no oneOf, so it validates the union shape — see protocol/README.md for exactly which fields belong to which flavor.",
+  "type": "object",
+  "required": ["v"],
+  "additionalProperties": false,
+  "properties": {
+    "v": {
+      "const": 1,
+      "description": "toolkit/sync/transport.js ENVELOPE_VERSION"
+    },
+    "appId": {
+      "type": "string",
+      "description": "EXPORT flavor only. The granted app this exported slice belongs to."
+    },
+    "exportedAt": {
+      "type": "number",
+      "description": "EXPORT flavor only."
+    },
+    "abilityModel": {
+      "type": "object",
+      "description": "EXPORT flavor only. The AbilityModel already filtered to the grant's scopes (filterAbilityModelByScopes) — never the full model, never freeText/confidence.",
+      "additionalProperties": true,
+      "properties": {
+        "schemaVersion": { "type": "number" },
+        "supportAreas": { "type": "array", "items": { "type": "string" } },
+        "readingLevel": { "type": ["string", "number", "null"] },
+        "language": { "type": "string", "enum": ["standard", "plain"] },
+        "needs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "dimension": { "type": "string" },
+              "value": {},
+              "strength": { "type": "string", "enum": ["floor", "preference", "hint"] }
+            }
+          }
+        }
+      }
+    },
+    "sourceAppId": {
+      "type": "string",
+      "description": "INBOX-ENTRY flavor only. The posting app — must hold an active grant or drainInbox refuses the entry with reason 'no-grant'."
+    },
+    "sentAt": {
+      "type": "number",
+      "description": "INBOX-ENTRY flavor only."
+    },
+    "insight": {
+      "type": "object",
+      "description": "INBOX-ENTRY flavor only. Same insight shape as one entry of insight-outbox.schema.json#/properties/insights/items.",
+      "required": ["kind"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": { "type": "string" },
+        "confidence": { "type": "number" },
+        "label": { "type": "string" },
+        "rationale": { "type": "string" },
+        "change": {
+          "type": "object",
+          "required": ["op"],
+          "additionalProperties": true,
+          "properties": {
+            "op": { "type": "string", "enum": ["profile-set", "add-memory"] },
+            "path": { "type": ["string", "null"] },
+            "value": {},
+            "record": { "type": ["object", "null"] }
+          }
+        }
+      }
+    }
+  }
+}

@@ -58,21 +58,18 @@ const BUILTINS = readdirSync(BUILTIN_DIR).filter(f => f.endsWith('.md'))
   .map(f => parseSkill(readFileSync(join(BUILTIN_DIR, f), 'utf8')));
 
 function makeSystem() {
+  // In-memory KVStore, shaped like the chain's KVStore port (get/set/getAll
+  // per area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
   const mem = { local: {}, sync: {} };
-  const area = (n) => ({
-    get: async (k, d) => (mem[n][k] === undefined ? d : structuredClone(mem[n][k])),
-    set: async (k, v) => { mem[n][k] = structuredClone(v); },
-  });
-  const datastore = createDatastore({
-    areas: { local: area('local'), sync: area('sync') },
-    globalTier: { tools: () => TOOLS, taxonomy: () => TAXONOMY, skills: () => BUILTINS },
-  });
+  const kv = {
+    async get(area, key) { return mem[area][key] === undefined ? undefined : structuredClone(mem[area][key]); },
+    async set(area, key, value) { mem[area][key] = structuredClone(value); },
+    async getAll(area) { return structuredClone(mem[area]); },
+  };
   let t = 1_700_000_000_000;
   const clock = { now: () => t };
-  const librarian = createLibrarian({
-    datastore: () => datastore, taxonomy: () => TAXONOMY, clock,
-    kv: { getAll: async () => structuredClone(mem.local), set: async (i) => { Object.assign(mem.local, structuredClone(i)); } },
-  });
+  const datastore = createDatastore({ kv, clock, taxonomy: TAXONOMY, toolsRegistry: TOOLS, builtinSkills: BUILTINS });
+  const librarian = createLibrarian({ datastore, taxonomy: TAXONOMY, clock });
   return { mem, datastore, librarian, clock };
 }
 
@@ -92,7 +89,7 @@ const CONTENT_NEEDS = [
   { s: 'low-vision: fix contrast', who: 'Ronise', id: 'fix-contrast', settings: {} },
   { s: 'light sensitivity: dark mode', who: 'Yvette', id: 'dark-mode', settings: { darkMode: true } },
   { s: 'brain fog: reduce motion', who: 'Yvette', id: 'motion-reducer', settings: { motionReducer: true } },
-  { s: 'deaf/HoH: captions', who: 'Betsy, Yvette', id: 'auto-captions', settings: { autoCaptions: true } },
+  { s: 'deaf/HoH: captions', who: 'Betsy, Yvette', id: 'captions', settings: { autoCaptions: true } },
   { s: 'blind: fix labels & WCAG', who: 'Made, Daniel', id: 'generate-labels', settings: { autoFixLabels: true } },
   { s: 'motor: keyboard navigation', who: 'Clive, Taylor', id: 'keyboard-nav', settings: { keyboardNav: true } },
 ];

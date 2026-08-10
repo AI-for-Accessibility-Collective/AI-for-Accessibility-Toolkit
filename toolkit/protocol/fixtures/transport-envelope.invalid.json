@@ -1,0 +1,22 @@
+[
+  {
+    "name": "missing v",
+    "doc": { "appId": "artinsight", "exportedAt": 1, "abilityModel": { "needs": [] } }
+  },
+  {
+    "name": "wrong version",
+    "doc": { "v": 2, "appId": "artinsight", "exportedAt": 1, "abilityModel": { "needs": [] } }
+  },
+  {
+    "name": "unexpected top-level property",
+    "doc": { "v": 1, "appId": "artinsight", "exportedAt": 1, "abilityModel": { "needs": [] }, "freeText": "leaked!" }
+  },
+  {
+    "name": "abilityModel is not an object",
+    "doc": { "v": 1, "appId": "artinsight", "exportedAt": 1, "abilityModel": "none" }
+  },
+  {
+    "name": "inbox-entry insight missing its required kind",
+    "doc": { "v": 1, "sourceAppId": "xr-headset", "sentAt": 1, "insight": { "confidence": 0.5, "change": { "op": "add-memory", "record": {} } } }
+  }
+]

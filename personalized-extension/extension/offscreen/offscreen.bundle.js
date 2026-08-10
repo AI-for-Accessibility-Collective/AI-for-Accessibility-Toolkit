@@ -1,5 +1,5 @@
 (() => {
-  // skills/registry.js
+  // personalized-extension/skills/registry.js
   var settingsMeta = {
     agentWatch: { type: "boolean", description: "Check what the assistant does against what you asked for" },
     darkMode: { type: "boolean", description: "Dark theme" },
@@ -79,7 +79,7 @@
     return lines;
   }
 
-  // extension/offscreen/src/storage.js
+  // personalized-extension/extension/offscreen/src/storage.js
   var HAS_STORAGE = !!(globalThis.chrome && chrome.storage);
   if (!HAS_STORAGE) {
     console.info("[voice] chrome.storage not exposed to offscreen; using SW-proxy fallback (this is expected on some Chrome builds).");
@@ -167,7 +167,7 @@
     return () => _changeListeners.delete(fn);
   }
 
-  // extension/offscreen/src/live/tools.js
+  // personalized-extension/extension/offscreen/src/live/tools.js
   var SEND_TIMEOUT_MS = 3e4;
   var PAGE_ZOOM = { range: [25, 500], description: "Whole-page zoom percent (magnifies everything; remembered per site). 100 = normal." };
   function changesSchema() {
@@ -553,7 +553,7 @@
     return Promise.race([call, timeout]).finally(() => clearTimeout(timer));
   }
 
-  // extension/offscreen/src/live/prompt.js
+  // personalized-extension/extension/offscreen/src/live/prompt.js
   var BASE_INSTRUCTION = `You are the voice assistant built into an accessibility browser extension. The user speaks (or types) to you; you speak back briefly and use tools to act. Many users are not technical and rely on this extension to make the web usable. Be warm, concrete, and short.
 
 VOICE STYLE
@@ -630,7 +630,7 @@ ${lines.join("\n")}`;
   }
   var SYSTEM_INSTRUCTION = BASE_INSTRUCTION;
 
-  // extension/offscreen/src/live/session.js
+  // personalized-extension/extension/offscreen/src/live/session.js
   var STORAGE_KEY = "voiceResumeHandle";
   var WRITE_DEBOUNCE_MS = 1e3;
   var _handle = null;
@@ -670,7 +670,7 @@ ${lines.join("\n")}`;
     }, WRITE_DEBOUNCE_MS);
   }
 
-  // extension/offscreen/src/live/client.js
+  // personalized-extension/extension/offscreen/src/live/client.js
   var LIVE_WS_BASE = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
   var DEFAULT_MODEL = "gemini-3.1-flash-live-preview";
   function createLiveClient({
@@ -913,7 +913,7 @@ ${lines.join("\n")}`;
     return btoa(s);
   }
 
-  // extension/offscreen/src/live/audio-input.js
+  // personalized-extension/extension/offscreen/src/live/audio-input.js
   var SILENCE_RMS_THRESHOLD = 0.012;
   var SILENT_FRAMES_TO_END = 10;
   function createMicCapture({ onAudio, onSpeechStart, onSpeechEnd }) {
@@ -1008,7 +1008,7 @@ ${lines.join("\n")}`;
     };
   }
 
-  // extension/offscreen/src/live/audio-output.js
+  // personalized-extension/extension/offscreen/src/live/audio-output.js
   function createAudioPlayer({ sampleRate = 24e3 } = {}) {
     let ctx = null;
     let nextPlayTime = 0;
@@ -1095,7 +1095,7 @@ ${lines.join("\n")}`;
     };
   }
 
-  // extension/offscreen/src/bridge/agent-bridge.js
+  // personalized-extension/extension/offscreen/src/bridge/agent-bridge.js
   var NOTABLE_LOG_KINDS = /* @__PURE__ */ new Set(["action"]);
   var NOISY_ACTIONS = /* @__PURE__ */ new Set([
     "wait",
@@ -1236,7 +1236,7 @@ ${lines.join("\n")}`;
     return { start, stop };
   }
 
-  // extension/offscreen/src/bridge/event-router.js
+  // personalized-extension/extension/offscreen/src/bridge/event-router.js
   var SILENT_WAIT_MS = 400;
   var MINOR_FLUSH_MS = 7e3;
   var MAX_DEFER_MS = 12e3;
@@ -1463,7 +1463,7 @@ ${lines.join("\n")}`;
     return rows;
   }
 
-  // extension/offscreen/src/state.js
+  // personalized-extension/extension/offscreen/src/state.js
   var STATE_KEY = "voiceState";
   var TRANSCRIPT_LIMIT = 200;
   var _state = {
@@ -1643,7 +1643,7 @@ ${lines.join("\n")}`;
     _persist();
   }
 
-  // extension/offscreen/src/index.js
+  // personalized-extension/extension/offscreen/src/index.js
   var SETUP_TIMEOUT_MS = 15e3;
   var live = null;
   var setupTimer = null;

@@ -30,11 +30,17 @@ const tools = {
 };
 const builtins = readdirSync(BUILTIN).filter(f => f.endsWith('.md')).map(f => parseSkill(readFileSync(join(BUILTIN, f), 'utf8')));
 
-// In-memory ports.
+// In-memory ports, shaped like the chain's KVStore port (get/set/getAll per
+// area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
 const mem = { local: {}, sync: {} };
-const area = (n) => ({ get: async (k, d) => mem[n][k] === undefined ? d : structuredClone(mem[n][k]), set: async (k, v) => { mem[n][k] = structuredClone(v); } });
-const datastore = createDatastore({ areas: { local: area('local'), sync: area('sync') }, globalTier: { tools: () => tools, taxonomy: () => TAXONOMY, skills: () => builtins } });
-const librarian = createLibrarian({ datastore: () => datastore, taxonomy: () => TAXONOMY, kv: { getAll: async () => structuredClone(mem.local), set: async (i) => Object.assign(mem.local, structuredClone(i)) } });
+const kv = {
+  async get(area, key) { return mem[area][key] === undefined ? undefined : structuredClone(mem[area][key]); },
+  async set(area, key, value) { mem[area][key] = structuredClone(value); },
+  async getAll(area) { return structuredClone(mem[area]); },
+};
+const clock = { now: () => Date.now() };
+const datastore = createDatastore({ kv, clock, taxonomy: TAXONOMY, toolsRegistry: tools, builtinSkills: builtins });
+const librarian = createLibrarian({ datastore, taxonomy: TAXONOMY, clock });
 
 (async () => {
   await librarian.setProfileField('supportAreas', ['vision', 'reading']);

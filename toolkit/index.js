@@ -24,6 +24,7 @@ import { systemClock, noopScheduler, noopConsent, noopDemo } from './ports/index
  * @param {import('./ports/index.js').DemoHook} [ports.demo]          Defaults to a no-op.
  * @param {Object} [ports.taxonomy]                                   Defaults to the bundled web taxonomy.
  * @param {Object|null} [ports.toolsRegistry]                         The settings/tools registry (AA_TOOLS shape), or null.
+ * @param {Array} [ports.builtinSkills]                               Built-in SKILL.md playbooks (parsed Skill objects), or [].
  * @returns {{ datastore: object, librarian: object }}
  */
 export function createToolkit({
@@ -34,9 +35,10 @@ export function createToolkit({
   demo = noopDemo,
   taxonomy = defaultTaxonomy,
   toolsRegistry = null,
+  builtinSkills = [],
 } = {}) {
   if (!kv) throw new Error('createToolkit: a kv port is required');
-  const datastore = createDatastore({ kv, clock, taxonomy, toolsRegistry });
+  const datastore = createDatastore({ kv, clock, taxonomy, toolsRegistry, builtinSkills });
   const librarian = createLibrarian({ datastore, taxonomy, clock, scheduler, consent, demo });
   return { datastore, librarian };
 }
@@ -49,7 +51,8 @@ export { UNIT, SETTING_UNITS, unitOf, coerceSetting, coerceSettings, clampSettin
 export { toAbilityModel, normalizeNeed } from './core/ability.js';
 export { STRENGTH_RANK, rankOf } from './core/strength.js';
 export { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes,
-  buildProfileBlob, validateProfileBlob, createSharedTransport } from './sync/index.js';
+  buildProfileBlob, validateProfileBlob, BLOB_KIND, BLOB_VERSION,
+  createSharedTransport, EXPORT_PREFIX, INBOX_KEY, ENVELOPE_VERSION } from './sync/index.js';
 export * from './ports/index.js';
 
 export default createToolkit;

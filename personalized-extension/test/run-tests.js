@@ -282,6 +282,10 @@ server.listen(PORT, async () => {
   const voiceToolsCode = fs.readFileSync(path.join(ROOT, 'extension/offscreen/src/live/tools.js'), 'utf8');
   const voicePromptCode = fs.readFileSync(path.join(ROOT, 'extension/offscreen/src/live/prompt.js'), 'utf8');
   const voiceRoutesCode = fs.readFileSync(path.join(ROOT, 'extension/voice-routes.js'), 'utf8');
+  // The chrome.tabs/chrome.scripting/chrome.storage actuation logic (undo
+  // journal, VisualAssist live-apply merge, ...) lives behind the
+  // ActuationPort in chrome-actuation.js; voice-routes.js only routes to it.
+  const chromeActuationCode = fs.readFileSync(path.join(ROOT, 'extension/chrome-actuation.js'), 'utf8');
   const offscreenIndexCode = fs.readFileSync(path.join(ROOT, 'extension/offscreen/src/index.js'), 'utf8');
   const sidepanelHtml = fs.readFileSync(path.join(ROOT, 'extension/sidepanel/sidepanel.html'), 'utf8');
   const sidepanelStore = fs.readFileSync(path.join(ROOT, 'extension/sidepanel/src/store.js'), 'utf8');
@@ -315,8 +319,9 @@ server.listen(PORT, async () => {
     else console.log(`FAIL: SW missing voice route '${r}'`);
   }
   // Undo journal is SW-owned (survives a lost response) and uses the Librarian
-  // delete primitive so a created record is removed, not shadowed.
-  if (voiceRoutesCode.includes('UNDO_STACK_KEY') && voiceRoutesCode.includes('removeScopedSetting')) {
+  // delete primitive so a created record is removed, not shadowed. Lives in
+  // the Chrome ActuationPort implementation now, not voice-routes.js itself.
+  if (chromeActuationCode.includes('UNDO_STACK_KEY') && chromeActuationCode.includes('removeScopedSetting')) {
     console.log('PASS: SW owns the undo journal + deletes created records on undo');
   } else {
     console.log('FAIL: undo journal must be SW-owned and use removeScopedSetting');
@@ -332,10 +337,14 @@ server.listen(PORT, async () => {
   } else {
     console.log('FAIL: prompt missing the not-applied-live honesty rule');
   }
-  if (bgCode.includes("importScripts('voice-routes.js')")) {
-    console.log('PASS: background imports voice-routes.js');
+  // chrome-actuation.js (the ActuationPort implementation) must load before
+  // voice-routes.js, which reads globalThis.ChromeActuation at import time.
+  const bgActuationIdx = bgCode.indexOf("'chrome-actuation.js'");
+  const bgVoiceRoutesIdx = bgCode.indexOf("'voice-routes.js'");
+  if (bgActuationIdx !== -1 && bgVoiceRoutesIdx !== -1 && bgActuationIdx < bgVoiceRoutesIdx) {
+    console.log('PASS: background imports chrome-actuation.js before voice-routes.js');
   } else {
-    console.log('FAIL: background must importScripts voice-routes.js');
+    console.log('FAIL: background must importScripts chrome-actuation.js before voice-routes.js');
   }
   for (const t of ['voiceTextTurn', 'voiceUndoLast', 'voiceDebugToolCall']) {
     if (offscreenIndexCode.includes(`'${t}'`)) console.log(`PASS: offscreen handles '${t}'`);
@@ -352,8 +361,9 @@ server.listen(PORT, async () => {
     console.log('FAIL: side panel action-chip pipeline incomplete');
   }
   // VisualAssist live-apply must always send the full merged group (a
-  // partial patch clobbers the other visual settings).
-  if (/VisualAssist/.test(voiceRoutesCode) && /readingGuide: merged\('readingGuide'\)/.test(voiceRoutesCode)) {
+  // partial patch clobbers the other visual settings). Lives in the Chrome
+  // ActuationPort implementation now (liveApply()), not voice-routes.js.
+  if (/VisualAssist/.test(chromeActuationCode) && /readingGuide: merged\('readingGuide'\)/.test(chromeActuationCode)) {
     console.log('PASS: voice route sends the full merged VisualAssist group');
   } else {
     console.log('FAIL: voice route must merge the full VisualAssist options object');

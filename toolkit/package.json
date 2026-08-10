@@ -14,8 +14,6 @@
     "./core/ability": "./core/ability.js",
     "./core/strength": "./core/strength.js",
     "./core/memory-class": "./core/memory-class.js",
-    "./core/ability-model": "./core/ability-model.js",
-    "./core/broker": "./core/broker.js",
     "./core/skill": "./core/skill.js",
     "./core/skill-builder": "./core/skill-builder.js",
     "./adapters/chrome/web-surface": "./adapters/chrome/web-surface.js",
@@ -31,11 +29,13 @@
     "sync/",
     "surfaces/",
     "adapters/",
+    "protocol/",
     "README.md"
   ],
   "scripts": {
-    "test": "node test/ability-model-test.js && node test/broker-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js",
+    "test": "node test/ability-model-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js && node test/codesign-scenarios-test.js && node test/scenario-test.js && node test/grants-audience-test.js && node test/phase1.test.mjs && node test/phase3.test.mjs && node test/phase3-crossapp.test.mjs && node test/package-boundary-test.js && node test/protocol-conformance-test.js",
     "demo:xr": "node hosts/xr-demo/demo.js",
-    "demo:skill": "node hosts/skill-demo/demo.js"
+    "demo:skill": "node hosts/skill-demo/demo.js",
+    "demo:node": "node adapters/node/host.js"
   }
 }

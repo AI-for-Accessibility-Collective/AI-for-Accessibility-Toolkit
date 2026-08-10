@@ -1,5 +1,5 @@
 (() => {
-  // extension/validation/panel.js
+  // personalized-extension/extension/validation/panel.js
   var KEY = "aa.validation";
   function mountValidationPanel(root, { onControl } = {}) {
     root.classList.add("va");
@@ -213,7 +213,7 @@
     } };
   }
 
-  // extension/sidepanel/src/store.js
+  // personalized-extension/extension/sidepanel/src/store.js
   var STATE_KEY = "voiceState";
   var RESUME_HANDLE_KEY = "voiceResumeHandle";
   var _store = {
@@ -341,7 +341,7 @@
     }
   }
 
-  // extension/sidepanel/src/ui/transcript.js
+  // personalized-extension/extension/sidepanel/src/ui/transcript.js
   var _openDetails = /* @__PURE__ */ new Set();
   function mountTranscript(rootEl, emptyEl, { onUndo } = {}) {
     function render(snap) {
@@ -484,7 +484,7 @@
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   }
 
-  // extension/sidepanel/src/ui/status.js
+  // personalized-extension/extension/sidepanel/src/ui/status.js
   function mountStatus(statusEl, errorEl) {
     function render(snap) {
       statusEl.className = `vp-status ${snap.connection || "disconnected"}`;
@@ -500,7 +500,7 @@
     return { render };
   }
 
-  // extension/sidepanel/src/ui/controls.js
+  // personalized-extension/extension/sidepanel/src/ui/controls.js
   function mountControls({
     startBtn,
     micBtn,
@@ -550,7 +550,7 @@
     return { render };
   }
 
-  // extension/sidepanel/src/index.js
+  // personalized-extension/extension/sidepanel/src/index.js
   var $ = (id) => document.getElementById(id);
   async function main() {
     chrome.runtime.connect({ name: "voice-ui" });

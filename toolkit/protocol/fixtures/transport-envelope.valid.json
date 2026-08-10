@@ -1,0 +1,34 @@
+[
+  {
+    "name": "export flavor (readExport / publishExports)",
+    "doc": {
+      "v": 1,
+      "appId": "artinsight",
+      "exportedAt": 5000000,
+      "abilityModel": {
+        "schemaVersion": 1,
+        "needs": [{ "dimension": "textSize", "value": 1.6, "strength": "preference" }],
+        "language": "standard"
+      }
+    }
+  },
+  {
+    "name": "inbox-entry flavor (postInsight / drainInbox)",
+    "doc": {
+      "v": 1,
+      "sourceAppId": "xr-headset",
+      "sentAt": 5000000,
+      "insight": {
+        "kind": "visual.textSize",
+        "confidence": 0.9,
+        "label": "Larger text (measured in headset)",
+        "rationale": "Your headset measured the text size you read comfortably.",
+        "change": {
+          "op": "profile-set",
+          "path": "fields.needs",
+          "value": [{ "dimension": "textSize", "value": 1.6, "strength": "preference" }]
+        }
+      }
+    }
+  }
+]

@@ -13,6 +13,8 @@
 import { announce } from '../utils/ai.js';
 import { transformTextNodes, injectStyle, mainRoot } from './_primitives.js';
 
+const logFix = globalThis.ai4a11yLogFix || (() => {});
+
 const MAX_TEXT_NODES = 2000; // cap work on pathological pages
 const STYLE_ID = 'ai4a11y-abbr-styles';
 
@@ -133,6 +135,7 @@ export const AbbreviationExpand = {
         if (typeof expansion !== 'string' || !expansion) continue;
         abbr.setAttribute('title', expansion);
         this.titled.push(abbr);
+        logFix('abbr-title', abbr, '(none)', expansion);
       } catch { /* leave this abbr untouched */ }
     }
   },
@@ -162,6 +165,7 @@ export const AbbreviationExpand = {
       abbr.setAttribute('title', dict[m[0]]);
       abbr.textContent = m[0];
       wrap.appendChild(abbr);
+      logFix('abbr-expand', abbr, m[0], dict[m[0]]);
       last = end;
     }
     if (!wrap) return null;

@@ -1,23 +1,24 @@
-// The shipped validation pipeline, tested against the recorded July run: the
+// The shipped validation pipeline, tested against a recorded run: the
 // agent's own step stream and the recorded results-page facts. These are the
 // eight assertions that once lived in a (retired) parallel prototype - now
 // they exercise the layer the extension actually ships:
 // tools/validators reader + count-first, through the extension's re-exports.
 //
+// The recording lives in test/fixtures/ (a "girls flat sandals" search run,
+// reconstructed to the same shape as the original capture) so the test is
+// self-contained and runnable outside the developer's machine.
+//
 // Run: node test/verifier-test.mjs
 import { readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import assert from 'node:assert';
 import { parseAria } from '../../tools/validators/aria-parse.js';
 import { CountFirst } from '../../tools/validators/count-first.js';
 
-const OBS = join(homedir(),
-  'Stanford/Summer Project Ideation /Verification Affordances/assets/task-mapping/_obs');
+const fixture = (name) => new URL(`./fixtures/${name}`, import.meta.url);
 
-const steps = readFileSync(join(OBS, 'agent-observed-steps.jsonl'), 'utf8')
+const steps = readFileSync(fixture('agent-observed-steps.jsonl'), 'utf8')
   .split('\n').filter(Boolean).map((l) => JSON.parse(l));
-const obs = JSON.parse(readFileSync(join(OBS, 'sandals-observation.json'), 'utf8'));
+const obs = JSON.parse(readFileSync(fixture('sandals-observation.json'), 'utf8'));
 const facts = obs.steps[0].facts;
 const heading = `- heading "${facts.result_count_text}" [level=1]`;
 

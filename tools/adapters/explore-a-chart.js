@@ -11,6 +11,9 @@
 import { extractChartData, announce } from '../utils/ai.js';
 import { imageToDataUrl } from '../utils/image.js';
 import { injectStyle } from './_primitives.js';
+import { registerSweep } from '../utils/observe.js';
+
+const logFix = globalThis.ai4a11yLogFix || (() => {});
 
 const CHART_HINT = /chart|graph|plot|diagram/i;
 const HTML_NS = 'http://www.w3.org/1999/xhtml';
@@ -28,6 +31,7 @@ export const ExploreAChart = {
   _reqSeq: 0,
   _keyHandler: null,
   _moveHandler: null,
+  unregisterSweep: null,
 
   enable() {
     if (this.enabled) return;
@@ -62,8 +66,9 @@ export const ExploreAChart = {
     this.live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
     (document.body || document.documentElement).appendChild(this.live);
 
-    this.charts = this.findCharts();
-    for (const chart of this.charts) this.attachButton(chart);
+    this.charts = [];
+    this.buttons = [];
+    this.sweep();
 
     // Alt+T extracts the focused (or last-hovered) chart — the keyboard path.
     this._keyHandler = (e) => {
@@ -81,6 +86,30 @@ export const ExploreAChart = {
     document.addEventListener('mouseover', this._moveHandler, true);
 
     announce(`Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? '' : 's'} found. Tab to a View data table button, or press Alt plus T on a chart.`);
+
+    // Late-rendered charts (dashboards that lazy-load panels, infinite-scroll
+    // feeds) never get picked up by the one-shot scan above — catch them
+    // incrementally. this.charts.includes() dedupes so an already-buttoned
+    // chart is never re-processed.
+    this.unregisterSweep = registerSweep('explore-a-chart', () => {
+      if (!this.enabled) return;
+      this.sweep();
+    }, { debounceMs: 600 });
+  },
+
+  // Find new chart candidates and button them, skipping charts already
+  // tracked from a prior sweep. Safe to call repeatedly. Returns how many
+  // new charts were buttoned.
+  sweep() {
+    let added = 0;
+    for (const chart of this.findCharts()) {
+      if (this.charts.includes(chart)) continue;
+      if (this.charts.length >= MAX_CHARTS) break;
+      this.charts.push(chart);
+      this.attachButton(chart);
+      added++;
+    }
+    return added;
   },
 
   // Chart candidates: anything that renders data visually but exposes no text.
@@ -96,7 +125,7 @@ export const ExploreAChart = {
       if (CHART_HINT.test(`${img.getAttribute('alt') || ''} ${img.getAttribute('src') || ''}`)) push(img);
     });
     document.querySelectorAll('[role="img"]').forEach(push);
-    return out.slice(0, MAX_CHARTS);
+    return out;
   },
 
   attachButton(chart) {
@@ -113,6 +142,7 @@ export const ExploreAChart = {
     btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.open(chart); });
     chart.insertAdjacentElement('afterend', btn);
     this.buttons.push(btn);
+    logFix('chart-button', chart, '(none)', 'View data table button');
   },
 
   target() {
@@ -256,6 +286,7 @@ export const ExploreAChart = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+    if (this.unregisterSweep) { this.unregisterSweep(); this.unregisterSweep = null; }
     if (this._keyHandler) document.removeEventListener('keydown', this._keyHandler, true);
     if (this._moveHandler) document.removeEventListener('mouseover', this._moveHandler, true);
     this._keyHandler = this._moveHandler = null;

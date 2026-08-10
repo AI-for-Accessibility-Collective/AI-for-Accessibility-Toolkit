@@ -15,6 +15,9 @@
 // alttext is never clobbered — already-named elements are skipped up front.
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
+import { registerSweep } from '../utils/observe.js';
+
+const logFix = globalThis.ai4a11yLogFix || (() => {});
 
 const MAX_ELEMENTS = 100; // cap work on pathological pages
 const MATH_HINT_RE = /math|equation|latex|tex|formula/i;
@@ -110,22 +113,53 @@ export const MathA11y = {
   enabled: false,
   records: [],       // { el, attrs: [{ name, old }] } — old === null means "was absent"
   styleHandle: null, // injectStyle handle for the focus outline
+  cap: MAX_ELEMENTS,
+  unregisterSweep: null,
 
   // Record the attribute's prior state, then write it — the unit of reversibility.
   setTracked(el, name, value, attrs) {
-    attrs.push({ name, old: el.hasAttribute(name) ? el.getAttribute(name) : null });
+    const old = el.hasAttribute(name) ? el.getAttribute(name) : null;
+    attrs.push({ name, old });
     el.setAttribute(name, value);
+    logFix('math-a11y', el, old === null ? '(none)' : old, value);
   },
 
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
-    const cap = options.cap ?? MAX_ELEMENTS;
+    this.cap = options.cap ?? MAX_ELEMENTS;
+
+    this.sweep();
+
+    // Subtle focus outline so labeled math is visually findable when focused
+    // (e.g. by a screen reader's virtual cursor or a browse-mode highlight).
+    this.styleHandle = injectStyle(this.styleId,
+      '[role="math"]:focus { outline: 2px solid #1a5fb4; outline-offset: 2px; }');
+
+    console.log(`[AI4A11y] Math A11y enabled (${this.records.length} labeled)`);
+    announce(this.records.length ? 'Math labels on' : 'Math labels: no unlabeled math found');
+
+    // Late-rendered math (SPA nav, lazy-loaded equations/plots) never gets
+    // swept by the one-shot pass above — catch it incrementally. Every
+    // per-element gate below (hasAccessibleName / non-empty alt) already
+    // makes re-running this loop safe on already-labeled elements, so no
+    // extra idempotency marking is needed.
+    this.unregisterSweep = registerSweep('math-a11y', () => {
+      if (!this.enabled) return;
+      this.sweep();
+    }, { debounceMs: 600 });
+  },
+
+  // One pass over the document for unlabeled math/equation-image candidates.
+  // Safe to call repeatedly — already-labeled elements are skipped by their
+  // own gates (hasAccessibleName / non-empty alt), and `records` accumulates
+  // across calls so the cap is enforced over the adapter's whole lifetime.
+  sweep() {
     let mathCount = 0, imgCount = 0;
 
-    // MathML islands without an accessible name → role="math" + aria-label.
+    // MathML islands without an accessible name -> role="math" + aria-label.
     for (const math of document.querySelectorAll('math')) {
-      if (this.records.length >= cap) break;
+      if (this.records.length >= this.cap) break;
       if (math.getAttribute('aria-hidden') === 'true') continue;
       if (hasAccessibleName(math)) continue;
       const attrs = [];
@@ -135,9 +169,9 @@ export const MathA11y = {
       mathCount++;
     }
 
-    // Equation images with an empty/missing alt → decoded TeX or an honest generic.
+    // Equation images with an empty/missing alt -> decoded TeX or an honest generic.
     for (const img of document.querySelectorAll('img')) {
-      if (this.records.length >= cap) break;
+      if (this.records.length >= this.cap) break;
       if (img.getAttribute('aria-hidden') === 'true') continue;
       const alt = img.getAttribute('alt');
       if (alt && alt.trim()) continue;
@@ -151,18 +185,16 @@ export const MathA11y = {
       imgCount++;
     }
 
-    // Subtle focus outline so labeled math is visually findable when focused
-    // (e.g. by a screen reader's virtual cursor or a browse-mode highlight).
-    this.styleHandle = injectStyle(this.styleId,
-      '[role="math"]:focus { outline: 2px solid #1a5fb4; outline-offset: 2px; }');
-
-    console.log(`[AI4A11y] Math A11y enabled (${mathCount} MathML, ${imgCount} images labeled)`);
-    announce(this.records.length ? 'Math labels on' : 'Math labels: no unlabeled math found');
+    if (mathCount || imgCount) {
+      console.log(`[AI4A11y] Math A11y: ${mathCount} MathML, ${imgCount} images labeled`);
+    }
+    return mathCount + imgCount;
   },
 
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+    if (this.unregisterSweep) { this.unregisterSweep(); this.unregisterSweep = null; }
     for (const { el, attrs } of this.records) {
       for (const { name, old } of attrs) {
         try {

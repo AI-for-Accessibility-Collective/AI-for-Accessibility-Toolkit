@@ -1,0 +1,27 @@
+{
+  "kind": "aa-profile-blob",
+  "v": 1,
+  "exportedAt": 5000000,
+  "abilityModel": {
+    "schemaVersion": 1,
+    "supportAreas": ["vision"],
+    "freeText": "",
+    "language": "standard",
+    "readingLevel": null,
+    "confidence": null,
+    "needs": [
+      { "dimension": "textSize", "value": 1.6, "strength": "preference", "source": "xr-headset" }
+    ]
+  },
+  "profile": {
+    "supportAreas": ["vision"],
+    "freeText": "",
+    "fields": {
+      "needs": [
+        { "dimension": "textSize", "value": 1.6, "strength": "preference", "source": "xr-headset" }
+      ]
+    },
+    "metaPreferences": { "language": "standard" },
+    "updatedAt": 5000000
+  }
+}

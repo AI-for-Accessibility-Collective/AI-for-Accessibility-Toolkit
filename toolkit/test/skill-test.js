@@ -20,7 +20,7 @@ function check(name, cond) {
 }
 
 // A stand-in for the AA_TOOLS registry, matching the real adapter ids.
-const REGISTRY_IDS = ['auto-alt-text', 'auto-captions', 'color-filter', 'dark-mode',
+const REGISTRY_IDS = ['auto-alt-text', 'captions', 'color-filter', 'dark-mode',
   'dyslexia-font', 'fix-contrast', 'focus-mode', 'generate-captions', 'generate-labels',
   'keyboard-nav', 'large-cursor', 'motion-reducer', 'read-aloud', 'reader-mode',
   'simplify-text', 'visual-assist', 'voice-commands', 'wcag-fixes'];
@@ -128,19 +128,17 @@ check('Engineer parses valid LLM output', built.valid && built.skill.name === 'n
 check('Engineer strips outer markdown fence, keeps recipe', resolveSkill(built.skill).settings.fontScale === 120);
 
 // ---- Librarian skill API (in-memory ports, builtin skills injected) --------
+// In-memory KVStore, shaped like the chain's KVStore port (get/set/getAll per
+// area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
 const mem = { local: {}, sync: {} };
-const area = (n) => ({
-  get: async (k, d) => (mem[n][k] === undefined ? d : structuredClone(mem[n][k])),
-  set: async (k, v) => { mem[n][k] = structuredClone(v); },
-});
-const datastore = createDatastore({
-  areas: { local: area('local'), sync: area('sync') },
-  globalTier: { tools: () => tools, taxonomy: () => TAXONOMY, skills: () => builtins },
-});
-const librarian = createLibrarian({
-  datastore: () => datastore, taxonomy: () => TAXONOMY,
-  kv: { getAll: async () => structuredClone(mem.local), set: async (i) => { Object.assign(mem.local, structuredClone(i)); } },
-});
+const kv = {
+  async get(area, key) { return mem[area][key] === undefined ? undefined : structuredClone(mem[area][key]); },
+  async set(area, key, value) { mem[area][key] = structuredClone(value); },
+  async getAll(area) { return structuredClone(mem[area]); },
+};
+const clock = { now: () => Date.now() };
+const datastore = createDatastore({ kv, clock, taxonomy: TAXONOMY, toolsRegistry: tools, builtinSkills: builtins });
+const librarian = createLibrarian({ datastore, taxonomy: TAXONOMY, clock });
 
 (async () => {
   await librarian.setProfileField('supportAreas', ['vision', 'reading']);

@@ -249,6 +249,10 @@ globalThis.callGemini = async () => JSON.stringify({
   settings: { fontScale: 150 }, reasons: { fontScale: 'x'.repeat(300) }, newSkills: [],
 });
 
+// chrome-actuation.js (the Chrome ActuationPort implementation) must load
+// before voice-routes.js, which reads globalThis.ChromeActuation at import
+// time — same order background.js's importScripts uses.
+await import('../extension/chrome-actuation.js');
 await import('../extension/voice-routes.js');
 const routeListener = onMessageListeners[onMessageListeners.length - 1];
 function callRoute(msg) {

@@ -11,6 +11,9 @@
 // disable — a pre-existing lang is never touched).
 import { announce } from '../utils/ai.js';
 import { transformTextNodes, mainRoot } from './_primitives.js';
+import { registerSweep } from '../utils/observe.js';
+
+const logFix = globalThis.ai4a11yLogFix || (() => {});
 
 const MAX_TEXT_NODES = 2000; // cap work on pathological pages
 const SAMPLE_CHAR_BUDGET = 4000; // chars sampled to determine the page's main script
@@ -84,13 +87,15 @@ function detectMainLang(root) {
 export const LanguageTag = {
   markerClass: 'ai4a11y-lang',
   enabled: false,
-  handle: null, // transformTextNodes handle (owns the exact-restore)
+  handles: [], // transformTextNodes handles (initial enable + each sweep), each owns exact-restore
   mainLang: null, // page's dominant language while enabled
   htmlLangAdded: false, // we added <html lang>; remove it on disable
+  unregisterSweep: null,
 
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
+    this.handles = [];
 
     const root = mainRoot();
     if (!root) { announce('Language tags: no readable text found'); return; }
@@ -104,17 +109,39 @@ export const LanguageTag = {
     if (html && !html.hasAttribute('lang')) {
       html.setAttribute('lang', this.mainLang);
       this.htmlLangAdded = true;
+      logFix('lang', html, '(none)', this.mainLang);
     }
 
-    // Skip our own wrappers on re-scan; the primitive skips code/pre/etc. by default.
-    this.handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
+    const count = this.sweepRoot(root);
+    console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
+    announce(count ? 'Language tags on' : 'Language tags: no foreign-language text found');
+
+    // Late-rendered content (SPA navigation, infinite scroll, lazy-loaded
+    // sections) never gets swept by the one-shot enable() pass above — catch
+    // it incrementally. transformTextNodes' skipClass already makes re-runs
+    // over the same root idempotent (already-wrapped spans are skipped), so
+    // this just needs to re-walk mainRoot() on each debounced tick.
+    this.unregisterSweep = registerSweep('language-tag', ({ reason }) => {
+      if (!this.enabled) return;
+      const freshRoot = mainRoot();
+      if (freshRoot) this.sweepRoot(freshRoot, reason);
+    }, { debounceMs: 600 });
+  },
+
+  // Run one transformTextNodes pass over `root`, recording the handle for
+  // disable()'s restore and logging each newly-tagged run. Returns the count
+  // of text nodes tagged in THIS pass (0 on a re-sweep with nothing new).
+  sweepRoot(root, reason = 'enable') {
+    const handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
       skipClass: this.markerClass,
       cap: MAX_TEXT_NODES,
     });
-    const count = this.handle.records.length;
-    if (this.handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES} text nodes`);
-    console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
-    announce(count ? 'Language tags on' : 'Language tags: no foreign-language text found');
+    this.handles.push(handle);
+    if (handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES} text nodes`);
+    for (const { replacement } of handle.records) {
+      logFix('language-tag', replacement, '(untagged)', `lang spans (${reason})`);
+    }
+    return handle.records.length;
   },
 
   // Rebuild one mixed-script text node as a marker <span>: runs of a foreign
@@ -161,7 +188,9 @@ export const LanguageTag = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
-    if (this.handle) { this.handle.restore(); this.handle = null; }
+    if (this.unregisterSweep) { this.unregisterSweep(); this.unregisterSweep = null; }
+    for (const handle of this.handles) handle.restore();
+    this.handles = [];
     if (this.htmlLangAdded) {
       try { document.documentElement.removeAttribute('lang'); } catch { /* doc gone */ }
       this.htmlLangAdded = false;

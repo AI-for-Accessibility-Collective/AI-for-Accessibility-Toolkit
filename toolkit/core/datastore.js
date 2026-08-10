@@ -28,11 +28,14 @@
  * @param {import('../ports/index.js').Clock} deps.clock
  * @param {Object} deps.taxonomy       The site taxonomy object (../core/taxonomy).
  * @param {Object|null} [deps.toolsRegistry]  The built-in tools registry (AA_TOOLS), or null.
+ * @param {Array} [deps.builtinSkills] Built-in SKILL.md playbooks shipped with the host
+ *   (parsed Skill objects, e.g. globalThis.AA_SKILLS), or []. Read-only global tier,
+ *   exposed via global.skills() — see ./skill.js for the Skill shape.
  * @returns the Datastore facade.
  */
 import { coerceSettings } from './units.js';
 
-export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
+export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null, builtinSkills = [] }) {
   if (!kv) throw new Error('createDatastore: kv port is required');
   if (!clock) throw new Error('createDatastore: clock port is required');
 
@@ -77,6 +80,20 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     // `storeVersions` auto-picks-up the new entry, exactly like every other
     // reserved store.
     'mine.grants':       { area: 'sync',  key: 'aa.mine.grants',       version: 1, def: [],   reserved: true },
+    // Share-audit log for cross-app sharing (Phase 3): a local, append-only
+    // record of what was actually shared with which app and when. Declared
+    // here so the catalog/version machinery covers it from day one; written
+    // by ../sync/grants.js#recordShareAudit, called from core/librarian.js
+    // (requestGrant's accept path, revokeGrant, exportAbilityModel, the
+    // cross-app-insight accept path).
+    'mine.shareAudit':   { area: 'local', key: 'aa.mine.shareAudit',   version: 1, def: [],   reserved: true },
+    // The user's own skills — SKILL.md playbooks the Engineer built and the
+    // person validated (parsed Skill objects; see ../core/skill.js). Distinct
+    // from `mine.skills` above (legacy customSkills = user-built adapter
+    // *code*). Local, not sync: unlike the small profile/suppressions
+    // records, saved skills can carry an arbitrary-length body and are not
+    // performance-sensitive to roam eagerly.
+    'mine.skillDocs':    { area: 'local', key: 'aa.mine.skillDocs',    version: 1, def: [] },
   };
 
   // Memory fact shards are dynamic (one key per scope) and share this
@@ -395,6 +412,9 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null }) {
     global: {
       tools() { return toolsRegistry || null; },
       taxonomy() { return taxonomy || null; },
+      // Built-in skills (SKILL.md playbooks) shipped with the host. Returns
+      // an array of parsed Skill objects, or [] if the host ships none.
+      skills() { return builtinSkills || []; },
     },
 
     runMigrations,

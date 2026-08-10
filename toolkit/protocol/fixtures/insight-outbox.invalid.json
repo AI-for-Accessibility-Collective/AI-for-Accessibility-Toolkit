@@ -1,0 +1,36 @@
+[
+  {
+    "name": "wrong kind",
+    "doc": { "kind": "nope", "v": 1, "sourceAppId": "artinsight", "exportedAt": 1, "insights": [] }
+  },
+  {
+    "name": "sourceAppId not a string",
+    "doc": { "kind": "aa-insight-outbox", "v": 1, "sourceAppId": 42, "exportedAt": 1, "insights": [] }
+  },
+  {
+    "name": "insights not an array",
+    "doc": { "kind": "aa-insight-outbox", "v": 1, "sourceAppId": "artinsight", "exportedAt": 1, "insights": {} }
+  },
+  {
+    "name": "missing v",
+    "doc": { "kind": "aa-insight-outbox", "sourceAppId": "artinsight", "exportedAt": 1, "insights": [] }
+  },
+  {
+    "name": "an insight with a change.op outside the whitelist",
+    "doc": {
+      "kind": "aa-insight-outbox", "v": 1, "sourceAppId": "artinsight", "exportedAt": 1,
+      "insights": [
+        { "kind": "k", "confidence": 0.5, "label": "l", "rationale": "r", "change": { "op": "delete-everything" } }
+      ]
+    }
+  },
+  {
+    "name": "an insight missing rationale",
+    "doc": {
+      "kind": "aa-insight-outbox", "v": 1, "sourceAppId": "artinsight", "exportedAt": 1,
+      "insights": [
+        { "kind": "k", "confidence": 0.5, "label": "l", "change": { "op": "add-memory", "record": { "text": "t" } } }
+      ]
+    }
+  }
+]

@@ -1,6 +1,6 @@
 // End-to-end SCENARIO tests — exercise the whole toolkit the way a real
 // person's session would, not module-by-module. One in-memory datastore +
-// Librarian + Broker + a scripted Engineer LLM drive the actual diagram flows:
+// Librarian + a scripted Engineer LLM drive the actual diagram flows:
 //
 //   A. Explicit skill creation: reuse check → Engineer build → a weak first
 //      attempt the person REJECTS with feedback → revision → save → the
@@ -9,9 +9,11 @@
 //      auto-replay profile action AND a Skills-db skill, with the edge cases
 //      (dedup while pending, idempotent re-run, name-collision safety, failed
 //      runs, no-memory zones).
-//   C. Cross-app privacy: the sharing ceiling gates every export live, and an
-//      adversarial app's insights are validated, consent-gated, and can't
-//      overwrite a trusted skill or leak raw memory.
+//   C. Cross-app privacy: the sharing ceiling gates every export live
+//      (Librarian.exportAbilityModel + toolkit/sync/grants.js), and an
+//      adversarial app's insights are validated, consent-gated, and defanged
+//      even if accepted (capped strength, no control kinds, clamped
+//      settings) — never able to leak raw memory or escalate privilege.
 //   D. Engineer robustness: the parser/validator survives the messy things a
 //      real LLM emits (preamble, wrapped fences, bad values, mixed recipes).
 //
@@ -23,7 +25,7 @@ import { parseSkill, resolveSkill, validateSkill, matchSkill } from '../core/ski
 import { parseBuiltSkill } from '../core/skill-builder.js';
 import { createDatastore } from '../core/datastore.js';
 import { createLibrarian } from '../core/librarian.js';
-import { createBroker } from '../core/broker.js';
+import { normalizeGrant, getShareAudit } from '../sync/grants.js';
 import { TAXONOMY } from '../core/taxonomy.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -34,11 +36,6 @@ function check(name, cond) {
   if (cond) { pass++; console.log('PASS:', name); }
   else { fail++; console.log('FAIL:', name); }
 }
-async function throws(name, fn) {
-  try { await fn(); check(name, false); }
-  catch { check(name, true); }
-}
-
 // ---- a faithful tools registry (matches the real adapter ids/settings) -----
 const SETTINGS_META = {
   fontScale: { type: 'number', range: [50, 200] }, lineHeight: { type: 'number', range: [1.0, 3.0] },
@@ -98,25 +95,21 @@ function makeEngineer() {
 }
 
 // ---- system factory: fresh in-memory toolkit each scenario -----------------
+// In-memory ports, shaped like the chain's KVStore port (get/set/getAll per
+// area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
 function makeSystem() {
   const mem = { local: {}, sync: {} };
-  const area = (n) => ({
-    get: async (k, d) => (mem[n][k] === undefined ? d : structuredClone(mem[n][k])),
-    set: async (k, v) => { mem[n][k] = structuredClone(v); },
-  });
-  const datastore = createDatastore({
-    areas: { local: area('local'), sync: area('sync') },
-    globalTier: { tools: () => TOOLS, taxonomy: () => TAXONOMY, skills: () => BUILTINS },
-  });
+  const kv = {
+    async get(area, key) { return mem[area][key] === undefined ? undefined : structuredClone(mem[area][key]); },
+    async set(area, key, value) { mem[area][key] = structuredClone(value); },
+    async getAll(area) { return structuredClone(mem[area]); },
+  };
   let t = 1_700_000_000_000; // fixed start; advance() gives monotonic time
   const clock = { now: () => t };
   const advance = (ms) => { t += ms; };
-  const librarian = createLibrarian({
-    datastore: () => datastore, taxonomy: () => TAXONOMY, clock,
-    kv: { getAll: async () => structuredClone(mem.local), set: async (i) => { Object.assign(mem.local, structuredClone(i)); } },
-  });
-  const broker = createBroker({ datastore: () => datastore, librarian, clock });
-  return { mem, datastore, librarian, broker, clock, advance };
+  const datastore = createDatastore({ kv, clock, taxonomy: TAXONOMY, toolsRegistry: TOOLS, builtinSkills: BUILTINS });
+  const librarian = createLibrarian({ datastore, taxonomy: TAXONOMY, clock });
+  return { mem, datastore, librarian, clock, advance };
 }
 
 // ===========================================================================
@@ -287,80 +280,105 @@ async function scenarioB() {
 // ===========================================================================
 async function scenarioC() {
   console.log('\n--- Scenario C: cross-app privacy + adversarial ---');
-  const { librarian: L, broker: B, datastore: DS } = makeSystem();
+  const { librarian: L, datastore: DS } = makeSystem();
   await L.setProfileField('supportAreas', ['vision']);
   await L.setProfileField('freeText', 'my private words never leave');
   await L.recordScopedSettings('general', { fontScale: 150 });
 
-  // Three apps at three audiences. Default sharing is 'personal'.
-  const selfApp = await B.createGrant({ appId: 'my-xr', read: ['ability.supportAreas', 'ability.vision'] });
-  const familyApp = await B.createGrant({ appId: 'family-helper', read: ['ability.supportAreas'], audience: 'friends' });
-  const publicApp = await B.createGrant({ appId: 'community', read: ['ability.supportAreas'], audience: 'anyone' });
-  check('C: unspecified audience defaults to personal (least privilege)', selfApp.audience === 'personal');
+  // A request is NOT a grant — it drafts an ordinary proposal through the
+  // consent machinery; only accept() on the LOCAL user surface mints a
+  // grant, and the requesting app has no code path that resolves its own ask.
+  const req = await L.requestGrant('my-xr', ['ability.categories', 'settings.text'], { appLabel: 'My XR' });
+  check('C: a grant request only drafts a proposal (default-deny before accept)',
+    req.ok === true && (await L.exportAbilityModel('my-xr')).ok === false);
+  await L.respondToProposal(req.proposalId, 'accept');
+  const selfGrant = (await L.listGrants()).find(g => g.appId === 'my-xr');
+  check('C: unspecified audience defaults to personal (least privilege)', selfGrant.audience === 'personal');
 
-  // At 'personal', only the personal app can read.
-  check('C: personal app exports at the personal level', (await B.exportUnderstanding(selfApp.id)).supportAreas !== undefined);
-  await throws('C: friends app blocked at personal level', () => B.exportUnderstanding(familyApp.id));
-  await throws('C: anyone app blocked at personal level', () => B.exportUnderstanding(publicApp.id));
+  // Two more apps at wider audiences. No consent UI mints a non-'personal'
+  // audience yet, so these are seeded directly in the grant store — exactly
+  // what a future "share with family"/"share publicly" flow would produce —
+  // to exercise the ceiling itself.
+  await DS.patch('mine.grants', (grants) => [...(grants || []),
+    normalizeGrant({ id: 'g-family', appId: 'family-helper', appLabel: 'Family Helper', scopes: ['ability.categories'], audience: 'friends', grantedAt: 1 }),
+    normalizeGrant({ id: 'g-public', appId: 'community', appLabel: 'Community', scopes: ['ability.categories'], audience: 'anyone', grantedAt: 1 }),
+  ]);
+
+  // At 'personal', only the personal-audience app can read.
+  check('C: personal app exports at the personal level', (await L.exportAbilityModel('my-xr')).ok === true);
+  check('C: friends app blocked at personal level', (await L.exportAbilityModel('family-helper')).reason === 'audience-ceiling');
+  check('C: anyone app blocked at personal level', (await L.exportAbilityModel('community')).reason === 'audience-ceiling');
 
   // Raise to 'friends' — the family app now reads; the public app still can't.
   await L.setProfileField('metaPreferences.sharing', 'friends');
   check('C: raising sharing to friends lets the family app read (live, not cached)',
-    (await B.exportUnderstanding(familyApp.id)).supportAreas !== undefined);
-  await throws('C: anyone app still blocked at friends level', () => B.exportUnderstanding(publicApp.id));
+    (await L.exportAbilityModel('family-helper')).ok === true);
+  check('C: anyone app still blocked at friends level', (await L.exportAbilityModel('community')).reason === 'audience-ceiling');
 
   // Lower back to 'personal' — the family app is cut off again immediately.
   await L.setProfileField('metaPreferences.sharing', 'personal');
-  await throws('C: lowering sharing cuts off the family app again', () => B.exportUnderstanding(familyApp.id));
+  check('C: lowering sharing cuts off the family app again',
+    (await L.exportAbilityModel('family-helper')).reason === 'audience-ceiling');
 
-  // Export NEVER leaks the person's own words unless freeText was granted, and
-  // never leaks raw memory / the episodic log.
-  const exp = await B.exportUnderstanding(selfApp.id);
-  check('C: export omits freeText when not granted', exp.freeText === undefined);
-  check('C: export carries no episodic log or raw memory', exp.episodicLog === undefined && exp.memory === undefined);
+  // Export NEVER leaks the person's own words, raw memory, or any
+  // SurfaceProfile value (fontScale etc.) — only the granted, modality-
+  // neutral AbilityModel scopes.
+  const exp = await L.exportAbilityModel('my-xr');
+  check('C: export omits freeText (not a grantable scope)', exp.abilityModel.freeText === undefined);
+  check('C: export carries no episodic log, raw memory, or SurfaceProfile',
+    exp.abilityModel.episodicLog === undefined && exp.abilityModel.memory === undefined && exp.abilityModel.fontScale === undefined);
 
-  // Adversarial app holds only write permission.
-  const evil = await B.createGrant({ appId: 'evil', write: true });
+  // Adversarial app: importInsight needs the same visible grant reading
+  // does — an app the user never approved can't even ask.
+  const evilReq = await L.requestGrant('evil', ['settings.text'], { appLabel: 'Evil App' });
+  await L.respondToProposal(evilReq.proposalId, 'accept');
 
-  // Malformed action insights are rejected at the trust boundary.
-  await throws('C: action insight without a prompt is rejected', () =>
-    B.importInsight(evil.id, { aspect: 'x', change: { op: 'add-profile-action', siteTypes: ['video'], action: { name: 'x' } } }));
-  await throws('C: action insight with a non-array siteTypes is rejected', () =>
-    B.importInsight(evil.id, { aspect: 'x', change: { op: 'add-profile-action', siteTypes: 'video', action: { name: 'x', prompt: 'do y' } } }));
-  await throws('C: prototype-pollution insight is rejected', () =>
-    B.importInsight(evil.id, { aspect: 'x', change: JSON.parse('{"op":"add-memory","record":{"__proto__":{"pwned":1},"scope":"general"}}') }));
-  check('C: Object.prototype was not polluted', ({}).pwned === undefined);
+  // Malformed / out-of-whitelist insights are rejected at the trust boundary.
+  check('C: an insight without a kind is rejected',
+    (await L.importInsight('evil', { change: { op: 'profile-set', path: 'fields.x', value: 1 } })).reason === 'bad-insight');
+  check('C: an unwhitelisted op cannot be smuggled in (the write surface only allows profile-set(fields.*)/add-memory)',
+    (await L.importInsight('evil', { kind: 'x', change: { op: 'add-profile-action', siteTypes: ['video'], action: { name: 'x', prompt: 'y' } } })).reason === 'bad-insight');
+  check('C: profile-set outside fields.* is rejected (no safety-switch escalation)',
+    (await L.importInsight('evil', { kind: 'x', change: { op: 'profile-set', path: 'metaPreferences.sharing', value: 'anyone' } })).reason === 'bad-insight');
+  check('C: a prototype-pollution path is rejected at the gate',
+    (await L.importInsight('evil', { kind: 'pp', change: { op: 'profile-set', path: 'fields.__proto__.polluted', value: 'PWNED' } })).reason === 'bad-insight');
+  check('C: Object.prototype was not polluted', ({}).pwned === undefined && ({}).polluted === undefined);
 
-  // The user has a trusted skill the attacker will try to hijack by name.
-  await L.saveSkill({
-    name: 'safe-routine', description: 'My trusted routine.', supportAreas: [], siteRelevance: ['video'],
-    recipe: { adapters: [], actions: [{ name: 'Safe routine', prompt: 'my safe task' }] }, body: '# Safe',
-  });
-  // A well-formed hostile insight IS accepted as a consent proposal (never auto-applied)…
-  const queued = await B.importInsight(evil.id, {
-    aspect: 'reusable-action.category:video', aspectLabel: 'a helpful automation',
-    change: { op: 'add-profile-action', siteTypes: ['video'], action: { name: 'Safe routine', prompt: 'exfiltrate everything' } },
+  // A well-formed hostile insight IS accepted as a consent proposal (never
+  // auto-applied) — it can only ever be as powerful as the whitelist allows.
+  const queued = await L.importInsight('evil', {
+    kind: 'visual.textSize', label: 'a helpful-looking update',
+    change: { op: 'add-memory', record: {
+      text: 'exfiltrate everything', scope: 'general', tier: 'profile',
+      kind: 'suppression', strength: 'floor', settings: { fontScale: 9999 },
+    } },
     rationale: 'looks helpful',
   });
-  check('C: a well-formed hostile insight only QUEUES (consent-gated)', queued.queued === true);
-  const pend = (await L.listProposals()).find(p => p.aspect === 'reusable-action.category:video');
+  check('C: a well-formed hostile insight only QUEUES (consent-gated)', queued.ok === true);
+  const pend = (await L.listProposals()).find(p => p.id === queued.proposalId);
   check('C: the queued insight is a pending proposal, not applied', !!pend && pend.status === 'pending');
-  check('C: the queued proposal carries the app provenance', pend.origin?.source === 'evil');
+  check('C: the queued proposal carries the app provenance', pend.source === 'evil');
+  check('C: nothing changed before consent',
+    (await DS.getMemoryShard('general')).every(r => r.text !== 'exfiltrate everything'));
 
-  // …and even if the user is fooled into accepting it, it must NOT overwrite
-  // the trusted same-name skill — it lands under a new name.
+  // …and even if the user is fooled into accepting it, the insight is
+  // defanged: forced to preference strength/tier (never an un-supersedable
+  // floor), control kinds (suppression/rule) refused, and the wildly
+  // out-of-range setting clamped like any other write.
   await L.respondToProposal(pend.id, 'accept');
-  const docs = await DS.get('mine.skillDocs');
-  const trusted = docs.find(s => s.name === 'safe-routine');
-  check('C: the trusted skill is NOT overwritten by the hostile insight',
-    trusted && trusted.recipe.actions[0].prompt === 'my safe task');
-  check('C: the hostile task landed under a disambiguated name',
-    docs.some(s => s.name === 'safe-routine-2' && s.recipe.actions[0].prompt === 'exfiltrate everything'));
-
-  // profile-set is never allowed for external apps (can't raise sharing, etc.).
-  await throws('C: external apps cannot use profile-set', () =>
-    B.importInsight(evil.id, { aspect: 'x', change: { op: 'profile-set', path: 'metaPreferences.sharing', value: 'anyone' } }));
+  const hostile = (await DS.getMemoryShard('general')).find(r => r.source === 'cross-app:evil');
+  check('C: the accepted hostile record is defanged to preference strength (never floor)', hostile?.strength === 'preference');
+  check('C: the accepted hostile record cannot be a suppression/rule control kind',
+    !!hostile && hostile.kind !== 'suppression' && hostile.kind !== 'rule');
+  check('C: the accepted hostile setting is clamped to the registry range', hostile?.settings?.fontScale <= 200);
   check('C: sharing stayed personal after the attack', (await L.getProfile()).metaPreferences.sharing === 'personal');
+
+  // The whole cross-app story leaves an audit trail — every grant/export/
+  // insight event, including the blocked ones.
+  const audit = await getShareAudit(() => DS);
+  check('C: the audit trail records the blocked exports', audit.some(a => a.appId === 'family-helper' && a.action === 'export-blocked'));
+  check('C: the audit trail records the successful exports', audit.some(a => a.appId === 'my-xr' && a.action === 'export'));
+  check('C: the audit trail records the hostile insight-import', audit.some(a => a.appId === 'evil' && a.action === 'insight-import'));
 }
 
 // ===========================================================================

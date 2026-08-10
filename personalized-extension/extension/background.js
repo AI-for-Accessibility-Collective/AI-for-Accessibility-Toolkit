@@ -66,10 +66,14 @@ chrome.webNavigation?.onCompleted?.addListener((d) => {
   }, 1200);
 });
 
-// Voice-mode data routes (offscreen tool calls that need chrome.tabs /
-// chrome.scripting / Librarian). Own onMessage listener, voice* data types
-// only. Loaded after lib/ so the toolkit globals it reads exist.
-self.importScripts('voice-routes.js');
+// Voice-mode actuation port (Chrome implementation of the host-agnostic
+// ActuationPort — toolkit/ports/actuation.js) followed by the voice-mode data
+// routes (offscreen tool calls that need chrome.tabs / chrome.scripting /
+// Librarian). voice-routes.js's own onMessage listener answers voice* data
+// types only. Loaded after lib/ so the toolkit globals both files read exist;
+// chrome-actuation.js must load first since voice-routes.js reads
+// globalThis.ChromeActuation at import time.
+self.importScripts('chrome-actuation.js', 'voice-routes.js');
 
 // Lazy, idempotent store migrations. Safe to fire-and-forget: stores are
 // readable before this resolves (migration 1 is a stamp).
@@ -1794,9 +1798,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // --- Librarian (personal memory/profile agent) ---
   // Fast lane: deterministic queries + mechanical writes. The slow lane
   // (extract/reflect) runs on alarms; the *Now variants exist for debugging.
-  if (msg.type && (msg.type.startsWith('librarian') || msg.type.startsWith('broker'))) {
+  if (msg.type && msg.type.startsWith('librarian')) {
     const L = globalThis.Librarian;
     if (!L) { sendResponse({ error: 'librarian not loaded' }); return false; }
+    // Cross-app sharing (Phase 3): audience-ceiling enforcement + the audit
+    // trail (toolkit/sync/grants.js) now live IN core/librarian.js itself
+    // (requestGrant's accept path, revokeGrant, exportAbilityModel, the
+    // cross-app-insight accept path) — every host gets them for free, not
+    // just Chrome. The routes below are thin pass-throughs. `Grants` is kept
+    // only for the read-only audit route below (no UI writes through it
+    // anymore); optional-chained in case the bundle didn't wire it.
+    const Grants = globalThis.Grants || null;
+    const dsGetter = () => globalThis.Datastore;
     (async () => {
       try {
         switch (msg.type) {
@@ -1806,16 +1819,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse({ model: await L.getAbilityModel() }); break;
           case 'librarianListProcedural':
             sendResponse({ procedural: await L.listProcedural(msg.category || null) }); break;
-          case 'brokerListGrants':
-            sendResponse({ grants: await globalThis.Broker.listGrants() }); break;
-          case 'brokerCreateGrant':
-            sendResponse({ grant: await globalThis.Broker.createGrant(msg.grant || {}) }); break;
-          case 'brokerRevokeGrant':
-            sendResponse({ revoked: await globalThis.Broker.revokeGrant(msg.grantId) }); break;
-          case 'brokerExportUnderstanding':
-            sendResponse({ understanding: await globalThis.Broker.exportUnderstanding(msg.grantId) }); break;
-          case 'brokerAuditLog':
-            sendResponse({ audit: await globalThis.Broker.getAuditLog() }); break;
           case 'librarianSetProfileField':
             sendResponse({ profile: await L.setProfileField(msg.path, msg.value) }); break;
           case 'librarianRecordScopedSettings':
@@ -1850,6 +1853,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           case 'librarianLogObservation':
             sendResponse(await L.logObservation(msg.observation || {})); break;
           case 'librarianRespondToProposal':
+            // Cross-app grants/insights only become real HERE, on accept —
+            // and the 'grant-created' / 'insight-import' audit entries are
+            // now recorded by respondToProposal itself (core/librarian.js),
+            // at the moment each actually takes effect.
             sendResponse(await L.respondToProposal(msg.id, msg.response)); break;
           case 'librarianDeleteMemory':
             sendResponse({ success: await L.deleteMemory(msg.id) }); break;
@@ -1868,6 +1875,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           case 'librarianListGrants':
             sendResponse({ grants: await L.listGrants() }); break;
           case 'librarianRevokeGrant':
+            // revokeGrant() audits ('grant-revoked') itself, before the delete.
             sendResponse(await L.revokeGrant(msg.appId)); break;
           case 'librarianSetSharingPaused':
             await L.setSharingPaused(msg.paused);
@@ -1877,7 +1885,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           case 'librarianImportInsight':
             sendResponse(await L.importInsight(msg.appId, msg.insight || {})); break;
           case 'librarianExportAbilityModel':
+            // Audience ceiling + the 'export' / 'export-blocked' audit are
+            // enforced/recorded inside exportAbilityModel itself now (core/
+            // librarian.js) — portable to every host, not just this route.
             sendResponse(await L.exportAbilityModel(msg.appId)); break;
+          case 'librarianShareAudit':
+            // No UI reads this yet (the Phase 3 grant panel shows live grants
+            // only — see popup.js's librarianListGrants). Wired for when one
+            // does; graceful-empty rather than throwing if the Grants bridge
+            // somehow isn't loaded.
+            sendResponse({ audit: (await Grants?.getShareAudit?.(dsGetter)) || [] }); break;
           case 'librarianGetActingUser':
             sendResponse({ actingUser: L.getActingUser() }); break;
           case 'librarianSetActingUser':

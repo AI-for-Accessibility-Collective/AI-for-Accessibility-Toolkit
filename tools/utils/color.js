@@ -66,6 +66,48 @@ export function rgbToHex(r, g, b) {
   return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 }
 
+// Nearest accessible color — dependency-free RGB lightness stepping.
+// Steps the foreground color's RGB channels toward black or toward white
+// (whichever needs fewer steps) until the WCAG contrast ratio against
+// `background` reaches `target`, then returns whichever endpoint direction
+// got there in fewer steps (closer to the original color). Not as
+// perceptually uniform as an OKLCH-based stepper, but needs no additional
+// color-math dependency to bundle for either the extension or the CLI.
+// Returns null if `foreground` can't be parsed.
+export function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
+  const fg = parseColor(foreground);
+  if (!fg) return null;
+  if (getLuminance(background) === null) return null;
+
+  const STEPS = 50;
+  function stepToward(endpoint) {
+    for (let i = 1; i <= STEPS; i++) {
+      const t = i / STEPS;
+      const r = Math.round(fg.r + (endpoint.r - fg.r) * t);
+      const g = Math.round(fg.g + (endpoint.g - fg.g) * t);
+      const b = Math.round(fg.b + (endpoint.b - fg.b) * t);
+      const candidate = `rgb(${r}, ${g}, ${b})`;
+      const ratio = getContrastRatio(candidate, background);
+      if (ratio !== null && ratio >= target) return { color: candidate, steps: i };
+    }
+    return null;
+  }
+
+  const dark = stepToward({ r: 0, g: 0, b: 0 });
+  const light = stepToward({ r: 255, g: 255, b: 255 });
+
+  if (!dark && !light) {
+    // Neither direction reached target within STEPS — use whichever pure
+    // endpoint has higher contrast against this background.
+    const blackRatio = getContrastRatio('rgb(0, 0, 0)', background) ?? 0;
+    const whiteRatio = getContrastRatio('rgb(255, 255, 255)', background) ?? 0;
+    return blackRatio >= whiteRatio ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
+  }
+  if (!dark) return light.color;
+  if (!light) return dark.color;
+  return dark.steps <= light.steps ? dark.color : light.color;
+}
+
 // Parse a color to { r, g, b, a } (alpha 0–1), including rgba()/hex. Returns
 // null for unparseable or fully-transparent colors.
 function parseRgba(color) {

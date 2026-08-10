@@ -1,13 +1,45 @@
 import { inferLabel } from '../utils/ai.js';
-import { markProcessed, getAccessibleName } from '../utils/dom.js';
+import { markProcessed, hasAccessibleName, isVisible } from '../utils/dom.js';
 import { IFRAME_PATTERNS } from '../constants.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 
+// ---------------------------------------------------------------------------
+// Junk-name guard — skip name-derived labels for names like q, s, utf8,
+// csrf*, token, id (common hidden/CSRF field names that produce bad labels
+// if used verbatim as an accessible name).
+// ---------------------------------------------------------------------------
+const JUNK_NAME_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i;
+
+export function isJunkName(name) {
+  return !name || JUNK_NAME_RE.test(name.trim());
+}
+
+// ---------------------------------------------------------------------------
+// AI confidence gate for inferLabel output — 1-60 chars, no newlines, not a
+// refusal. Mirrors the trust tiering used for AI-generated alt text: an
+// unfiltered "I cannot determine this" written as aria-label is worse than
+// leaving the element unlabeled.
+// ---------------------------------------------------------------------------
+const REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
+
+export function isValidLabel(label) {
+  if (!label || typeof label !== 'string') return false;
+  const trimmed = label.trim();
+  if (trimmed.length < 1 || trimmed.length > 60) return false;
+  if (/\n/.test(trimmed)) return false;
+  if (REFUSAL_RE.test(trimmed)) return false;
+  return true;
+}
+
 // Generate label for empty or ambiguous link
 export async function generateLinkLabel(link) {
   if (link.dataset.ai4a11yProcessed) return null;
+  // AI-gated: only spend a call on elements that actually lack a name, and
+  // skip ones that became invisible since axe's snapshot was taken.
+  if (!isVisible(link)) return null;
+  if (hasAccessibleName(link)) return null;
   markProcessed(link, 'pending');
 
   const href = link.href || '';
@@ -33,13 +65,14 @@ export async function generateLinkLabel(link) {
     return null;
   }
 
-  if (label) {
-    link.setAttribute('aria-label', label);
+  if (isValidLabel(label)) {
+    const trimmed = label.trim();
+    link.setAttribute('aria-label', trimmed);
     markProcessed(link, 'done');
     incrementStat('labels');
-    logFix('link label', link, existingText || '(empty)', label);
-    console.log('[AI4A11y] Generated link label:', label);
-    return label;
+    logFix('link label', link, existingText || '(empty)', trimmed);
+    console.log('[AI4A11y] Generated link label:', trimmed);
+    return trimmed;
   }
 
   markProcessed(link, 'failed');
@@ -49,6 +82,8 @@ export async function generateLinkLabel(link) {
 // Generate label for empty button
 export async function generateButtonLabel(button) {
   if (button.dataset.ai4a11yProcessed) return null;
+  if (!isVisible(button)) return null;
+  if (hasAccessibleName(button)) return null;
   markProcessed(button, 'pending');
 
   // First, try to infer from common patterns
@@ -77,12 +112,13 @@ export async function generateButtonLabel(button) {
     return null;
   }
 
-  if (label) {
-    button.setAttribute('aria-label', label);
+  if (isValidLabel(label)) {
+    const trimmed = label.trim();
+    button.setAttribute('aria-label', trimmed);
     markProcessed(button, 'done');
     incrementStat('labels');
-    logFix('button label', button, '(empty)', label);
-    return label;
+    logFix('button label', button, '(empty)', trimmed);
+    return trimmed;
   }
 
   markProcessed(button, 'failed');
@@ -92,6 +128,10 @@ export async function generateButtonLabel(button) {
 // Generate title for iframe
 export async function generateIframeTitle(iframe) {
   if (iframe.dataset.ai4a11yProcessed) return null;
+  if (!isVisible(iframe)) return null;
+  // hasAccessibleName() covers title/aria-label/aria-labelledby — title IS
+  // the accessible name for an iframe, so this is the right gate.
+  if (hasAccessibleName(iframe)) return null;
   markProcessed(iframe, 'pending');
 
   const src = iframe.src || '';
@@ -127,23 +167,13 @@ export async function generateIframeTitle(iframe) {
 // Generate label for form input
 export async function generateFormLabel(input) {
   if (input.dataset.ai4a11yProcessed) return null;
+  if (!isVisible(input)) return null;
+  if (hasAccessibleName(input)) return null;
   markProcessed(input, 'pending');
 
-  // Try placeholder
-  if (input.placeholder) {
-    input.setAttribute('aria-label', input.placeholder);
-    markProcessed(input, 'done');
-    incrementStat('labels');
-    logFix('form label', input, '(empty)', input.placeholder);
-    return input.placeholder;
-  }
-
-  // Try name attribute
-  if (input.name) {
-    const label = input.name
-      .replace(/[-_]/g, ' ')
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .toLowerCase();
+  // Try placeholder (junk-guarded: CSRF/token-style values make bad labels)
+  if (input.placeholder && !isJunkName(input.placeholder)) {
+    const label = input.placeholder.trim();
     input.setAttribute('aria-label', label);
     markProcessed(input, 'done');
     incrementStat('labels');
@@ -151,9 +181,25 @@ export async function generateFormLabel(input) {
     return label;
   }
 
+  // Try name attribute (junk-guarded)
+  if (input.name && !isJunkName(input.name)) {
+    const label = input.name
+      .replace(/[-_]/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .toLowerCase()
+      .trim();
+    if (label) {
+      input.setAttribute('aria-label', label);
+      markProcessed(input, 'done');
+      incrementStat('labels');
+      logFix('form label', input, '(empty)', label);
+      return label;
+    }
+  }
+
   // Try nearby text
   const nearbyText = getNearbyText(input);
-  if (nearbyText) {
+  if (nearbyText && !isJunkName(nearbyText)) {
     input.setAttribute('aria-label', nearbyText);
     markProcessed(input, 'done');
     incrementStat('labels');

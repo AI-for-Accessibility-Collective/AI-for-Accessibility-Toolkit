@@ -244,12 +244,22 @@ export const MotionReducer = {
 
     // Try same-origin fast path
     let drawn = false;
+    // True when drawImage painted a frame but the canvas is cross-origin-
+    // tainted (no CORS headers): the paint itself never throws — only
+    // reading pixels back does — so this is a valid display-only fallback
+    // if the cleaner paths below (ImageDecoder, crossOrigin re-fetch) fail.
+    let taintedDraw = false;
     try {
       ctx.drawImage(img, 0, 0, w, h);
-      ctx.getImageData(0, 0, 1, 1); // throws SecurityError if tainted
-      drawn = true;
+      try {
+        ctx.getImageData(0, 0, 1, 1); // throws SecurityError if tainted
+        drawn = true;
+      } catch (taintErr) {
+        taintedDraw = true;
+      }
     } catch (e) {
-      // cross-origin — need to fetch bytes
+      // drawImage itself failed (not decodable yet, 0-size, etc.) — need to
+      // fetch bytes via the paths below.
     }
 
     if (!drawn) {
@@ -304,8 +314,19 @@ export const MotionReducer = {
         });
         drawn = true;
       } catch (e) {
-        img.dataset.ai4a11yMrFrozen = 'failed';
-        return;
+        if (taintedDraw) {
+          // Every clean path failed (no ImageDecoder/background support, and
+          // the anonymous-CORS re-fetch was rejected by a server without CORS
+          // headers — the "missing cross-site gif" case). The fast-path canvas
+          // already has a valid painted frame from the tainted draw above;
+          // it just can't be read back as pixel data, which we never need
+          // for display-only freezing. Use it instead of leaving the
+          // original GIF animating.
+          drawn = true;
+        } else {
+          img.dataset.ai4a11yMrFrozen = 'failed';
+          return;
+        }
       }
     }
 

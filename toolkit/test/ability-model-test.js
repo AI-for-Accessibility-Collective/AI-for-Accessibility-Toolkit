@@ -1,11 +1,12 @@
-// AbilityModel + surfaces unit test (Phase 1 exit gate).
+// Needs-model surfaces unit test (Phase 1 exit gate).
+// Covers the LIVE needs AbilityModel (toolkit/core/ability.js#toAbilityModel)
+// rendered through the web and XR SurfaceAdapters — the dead dimension model
+// this file used to test is gone; this validates its replacement.
 // Run: node toolkit/test/ability-model-test.js
-import { emptyAbilityModel, deriveAbilityModel } from '../core/ability-model.js';
+import { toAbilityModel } from '../core/ability.js';
 import { renderWebSettings } from '../surfaces/web.js';
 import { renderXRSettings } from '../surfaces/xr.js';
-import { createLibrarian } from '../core/librarian.js';
-import { createDatastore } from '../core/datastore.js';
-import { TAXONOMY } from '../core/taxonomy.js';
+import { createToolkit } from '../index.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -13,123 +14,81 @@ function check(name, cond) {
   else { fail++; console.log('FAIL:', name); }
 }
 
-// ---- derivation --------------------------------------------------------
-const webSettings = {
-  fontScale: 150, lineHeight: 2.0, letterSpacing: 0.12,
-  darkMode: true, motionReducer: true, autoCaptions: true,
-  largeCursor: true, keyboardNav: true, autoSimplify: true,
-  colorFilter: 'deuteranopia', speechRate: 1.5, showProgress: false,
+// ---- toAbilityModel projection --------------------------------------------
+const neutralModel = toAbilityModel(null);
+check('neutral/absent profile -> empty needs', neutralModel.needs.length === 0);
+
+const lowVisionProfile = {
+  supportAreas: ['vision', 'motor'],
+  freeText: 'small text is hard to read',
+  fields: {
+    needs: [
+      { dimension: 'textSize', value: 1.6, strength: 'floor', source: 'onboarding' },
+      { dimension: 'contrast', value: 'light', strength: 'preference', source: 'onboarding' },
+      { dimension: 'darkTheme', value: true, strength: 'preference', source: 'onboarding' },
+      { dimension: 'reduceMotion', value: true, strength: 'preference', source: 'onboarding' },
+      { dimension: 'captions', value: true, strength: 'preference', source: 'onboarding' },
+    ],
+  },
+  metaPreferences: {},
 };
-const profile = { supportAreas: ['vision', 'hearing'], freeText: 'small text is hard', metaPreferences: { language: 'plain' } };
-const model = deriveAbilityModel(profile, webSettings, { now: 1000 });
+const lowVisionModel = toAbilityModel(lowVisionProfile);
+check('low-vision profile -> all 5 needs carried', lowVisionModel.needs.length === 5);
+check('supportAreas carried', lowVisionModel.supportAreas.join(',') === 'vision,motor');
 
-check('text.size 150% → 1.5', model.text.size === 1.5);
-check('lineHeight 2.0 → lineSpacing ~1.33', Math.abs(model.text.lineSpacing - 2.0 / 1.5) < 1e-9);
-check('letterSpacing 0.12em → 1.5x', Math.abs(model.text.letterSpacing - 1.5) < 1e-9);
-check('darkMode → lightPreference dark', model.vision.lightPreference === 'dark');
-check('colorFilter → colorVision', model.vision.colorVision === 'deuteranopia');
-check('motionReducer → motion reduced', model.motion === 'reduced');
-check('autoCaptions → audio.captions', model.audio.captions === true);
-check('largeCursor → pointer large-target', model.input.pointer === 'large-target');
-check('keyboardNav → input.keyboard', model.input.keyboard === true);
-check('autoSimplify → cognition plain language', model.cognition.simplify === true && model.cognition.language === 'plain');
-check('speechRate carried', model.audio.speechRate === 1.5);
-check('showProgress false → progressCues false (sensory)', model.cognition.progressCues === false);
-check('supportAreas carried', model.supportAreas.join(',') === 'vision,hearing');
-check('confidence recorded for text.size', model.confidence['text.size'] === 0.9);
-check('sources include settings + profile', model.sources.includes('settings') && model.sources.includes('profile'));
+// ---- web surface -----------------------------------------------------------
+const neutralWeb = renderWebSettings(neutralModel);
+check('neutral model renders empty web settings', Object.keys(neutralWeb).length === 0);
 
-// ---- web round-trip ------------------------------------------------------
-const rendered = renderWebSettings(model);
-check('round-trip fontScale', rendered.fontScale === 150);
-check('round-trip lineHeight', rendered.lineHeight === 2.0);
-check('round-trip letterSpacing', rendered.letterSpacing === 0.12);
-check('round-trip darkMode', rendered.darkMode === true);
-check('round-trip colorFilter', rendered.colorFilter === 'deuteranopia');
-check('round-trip motionReducer', rendered.motionReducer === true);
-check('round-trip autoCaptions', rendered.autoCaptions === true);
-check('round-trip speechRate', rendered.speechRate === 1.5);
-check('round-trip showProgress false', rendered.showProgress === false);
-check('neutral model renders empty settings', Object.keys(renderWebSettings(emptyAbilityModel())).length === 0);
+const web = renderWebSettings(lowVisionModel);
+check('web fontScale derives from textSize need (1.6 -> 160)', web.fontScale === 160);
+check('web contrastMode derives from contrast need', web.contrastMode === 'light');
+check('web darkMode derives from darkTheme need', web.darkMode === true);
+check('web motionReducer derives from reduceMotion need', web.motionReducer === true);
+check('web autoCaptions derives from captions need', web.autoCaptions === true);
 
-// Boundary round-trips: every legal web value must survive derive→render at
-// the edges of its real range (registry.js settingsMeta), not just the middle.
-function roundTrips(setting, value) {
-  const m = deriveAbilityModel({}, { [setting]: value });
-  const back = renderWebSettings(m)[setting];
-  // A value equal to the neutral default is intentionally omitted on render.
-  const neutral = { fontScale: 100, lineHeight: 1.5, letterSpacing: 0 }[setting];
-  return value === neutral ? back === undefined : back === value;
-}
-check('round-trip lineHeight min 1.0', roundTrips('lineHeight', 1.0));
-check('round-trip lineHeight max 3.0', roundTrips('lineHeight', 3.0));
-check('round-trip lineHeight 1.1 (was collapsing to 1.13)', roundTrips('lineHeight', 1.1));
-check('round-trip letterSpacing max 0.5', roundTrips('letterSpacing', 0.5));
-check('round-trip letterSpacing 0.3', roundTrips('letterSpacing', 0.3));
-check('round-trip fontScale min 50', roundTrips('fontScale', 50));
-check('round-trip fontScale max 200', roundTrips('fontScale', 200));
+// ---- XR surface --------------------------------------------------------------
+const xrNeutral = renderXRSettings(neutralModel, { fovDegrees: 90, viewingDistanceM: 1.5 });
+check('XR neutral: base angular size 0.35°', Math.abs(xrNeutral.text.angularSizeDeg - 0.35) < 1e-9);
+check('XR neutral: captions off, motion standard', !xrNeutral.captions.enabled && !xrNeutral.motion.reduced);
+check('XR neutral: no high contrast / dark env', !xrNeutral.ui.highContrast && !xrNeutral.ui.darkEnvironmentPreferred);
 
-// ---- XR surface -----------------------------------------------------------
-const xr = renderXRSettings(model, { fovDegrees: 90, viewingDistanceM: 1.5 });
-check('XR text angular size scales with model (0.35*1.5)', Math.abs(xr.text.angularSizeDeg - 0.525) < 1e-9);
+const xr = renderXRSettings(lowVisionModel, { fovDegrees: 90, viewingDistanceM: 1.5 });
+check('XR text angular size scales with textSize need (0.35*1.6)', Math.abs(xr.text.angularSizeDeg - 0.56) < 1e-9);
+check('XR angular size larger than the neutral model', xr.text.angularSizeDeg > xrNeutral.text.angularSizeDeg);
 check('XR world height positive and plausible (<5cm at 1.5m)', xr.text.worldHeightM > 0 && xr.text.worldHeightM < 0.05);
 check('XR captions enabled + world-locked', xr.captions.enabled === true && xr.captions.placement === 'world-locked');
 check('XR motion comfort measures on', xr.motion.reduced && xr.motion.comfortVignette && xr.motion.snapTurning);
+check('XR high contrast on from contrast need', xr.ui.highContrast === true);
+check('XR dark environment preferred from darkTheme need', xr.ui.darkEnvironmentPreferred === true);
 check('XR large-text pulls UI toward center (20°)', xr.ui.maxEccentricityDeg === 20);
-check('XR plain language flag', xr.simplifyLanguage === true);
-const xrNeutral = renderXRSettings(emptyAbilityModel());
-check('XR neutral: base angular size 0.35°', Math.abs(xrNeutral.text.angularSizeDeg - 0.35) < 1e-9);
-check('XR neutral: captions off, motion standard', !xrNeutral.captions.enabled && !xrNeutral.motion.reduced);
+check('XR large targets from motor support area', xr.ui.largeTargets === true);
 
-// ---- Librarian integration (in-memory ports) --------------------------------
-const mem = { local: {}, sync: {} };
-function memArea(name) {
+// A model with no needs at all but a 'motor' support area still gets large
+// targets in XR (the support-area heuristic is independent of needs[]).
+const motorOnly = toAbilityModel({ supportAreas: ['motor'] });
+check('XR large targets from motor support area alone', renderXRSettings(motorOnly).ui.largeTargets === true);
+
+// ---- Librarian integration (in-memory ports, via the public SDK entry) -----
+function memKV() {
+  const areas = { local: {}, sync: {} };
   return {
-    get: async (key, def) => (mem[name][key] === undefined ? def : structuredClone(mem[name][key])),
-    set: async (key, value) => { mem[name][key] = structuredClone(value); },
+    async get(area, key) { return areas[area][key]; },
+    async set(area, key, value) { areas[area][key] = JSON.parse(JSON.stringify(value)); },
+    async getAll(area) { return { ...areas[area] }; },
   };
 }
-const datastore = createDatastore({
-  areas: { local: memArea('local'), sync: memArea('sync') },
-  globalTier: {
-    tools: () => ({
-      settingsMeta: { fontScale: { type: 'number', range: [50, 200] } },
-      settingsVocabularyLines: () => [],
-      forPrompt: () => [],
-    }),
-    taxonomy: () => TAXONOMY,
-  },
-});
-const librarian = createLibrarian({
-  datastore: () => datastore,
-  taxonomy: () => TAXONOMY,
-  kv: {
-    getAll: async () => structuredClone(mem.local),
-    set: async (items) => { Object.assign(mem.local, structuredClone(items)); },
-  },
-});
+const toolsRegistry = { settingsMeta: { fontScale: { type: 'number', range: [50, 200] } } };
+const { librarian } = createToolkit({ kv: memKV(), toolsRegistry });
 
 (async () => {
   await librarian.setProfileField('supportAreas', ['vision']);
-  await librarian.recordScopedSettings('general', { fontScale: 150, darkMode: true });
+  await librarian.setProfileField('fields.needs', [{ dimension: 'textSize', value: 1.5, strength: 'floor' }]);
   const m = await librarian.getAbilityModel();
-  check('librarian.getAbilityModel derives text.size from explicit settings', m.text.size === 1.5);
-  check('librarian.getAbilityModel derives dark preference', m.vision.lightPreference === 'dark');
   check('librarian.getAbilityModel carries supportAreas', m.supportAreas.includes('vision'));
-  check('model renders back to the same web settings', renderWebSettings(m).fontScale === 150);
-
-  // Contrast polarity must survive the model round-trip — a chosen high-contrast
-  // variant (e.g. yellow-on-black for photosensitivity) must not silently flip
-  // to white-on-black when the model is re-rendered for the web.
-  for (const cm of ['light', 'yellow-black']) {
-    const cmModel = deriveAbilityModel({}, { contrastMode: cm });
-    check(`contrastMode "${cm}" derives high contrast`, cmModel.vision.contrast === 'high');
-    check(`contrastMode "${cm}" round-trips to web without flipping`, renderWebSettings(cmModel).contrastMode === cm);
-  }
-  // A model arriving from another surface (no web variant) still renders sanely.
-  const xrModel = deriveAbilityModel({}, { contrastMode: 'yellow-black' });
-  delete xrModel.vision.contrastStyle;
-  check('high-contrast model without a variant falls back to light on web', renderWebSettings(xrModel).contrastMode === 'light');
+  check('librarian.getAbilityModel carries the structured need', m.needs.some((n) => n.dimension === 'textSize' && n.value === 1.5));
+  check('model renders to web fontScale 150', renderWebSettings(m).fontScale === 150);
+  check('model renders to XR angular size 0.525', Math.abs(renderXRSettings(m).text.angularSizeDeg - 0.525) < 1e-9);
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

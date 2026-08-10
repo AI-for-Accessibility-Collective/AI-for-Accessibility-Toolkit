@@ -42,7 +42,7 @@ globalThis.AA_SKILLS = [
   },
   {
     "name": "quiet-video",
-    "description": "Makes video watchable without sound and without motion stress — auto-captions plus reduced motion. Use for deaf/hard-of-hearing users, or anyone in a sound-off setting, on video sites.",
+    "description": "Makes video watchable without sound and without motion stress — captions plus reduced motion. Use for deaf/hard-of-hearing users, or anyone in a sound-off setting, on video sites.",
     "supportAreas": [
       "hearing",
       "sensory"
@@ -53,7 +53,7 @@ globalThis.AA_SKILLS = [
     "recipe": {
       "adapters": [
         {
-          "id": "auto-captions",
+          "id": "captions",
           "settings": {
             "autoCaptions": true
           }
@@ -67,7 +67,7 @@ globalThis.AA_SKILLS = [
       ],
       "actions": []
     },
-    "body": "# Quiet Video\n\nAdds a visual track to video and calms the surrounding page.\n\n## What it does\n1. **auto-captions** — generates captions for videos that lack them, so speech is readable.\n2. **motion-reducer** — stops autoplay and background animation on the page around the player, so nothing competes with the captions.\n\n## When to use\nVideo and streaming pages. Also useful for anyone watching with sound off (public spaces, shared rooms), not only deaf/HoH users.\n\n## Notes\n- Caption generation calls the AI provider on the video's audio; it may take a few seconds on first play.\n\n## Recipe\n```json\n{\n  \"adapters\": [\n    { \"id\": \"auto-captions\", \"settings\": { \"autoCaptions\": true } },\n    { \"id\": \"motion-reducer\", \"settings\": { \"motionReducer\": true } }\n  ]\n}\n```"
+    "body": "# Quiet Video\n\nAdds a visual track to video and calms the surrounding page.\n\n## What it does\n1. **captions** — generates captions for videos that lack them, so speech is readable.\n2. **motion-reducer** — stops autoplay and background animation on the page around the player, so nothing competes with the captions.\n\n## When to use\nVideo and streaming pages. Also useful for anyone watching with sound off (public spaces, shared rooms), not only deaf/HoH users.\n\n## Notes\n- Caption generation calls the AI provider on the video's audio; it may take a few seconds on first play.\n\n## Recipe\n```json\n{\n  \"adapters\": [\n    { \"id\": \"captions\", \"settings\": { \"autoCaptions\": true } },\n    { \"id\": \"motion-reducer\", \"settings\": { \"motionReducer\": true } }\n  ]\n}\n```"
   },
   {
     "name": "reading-aid",

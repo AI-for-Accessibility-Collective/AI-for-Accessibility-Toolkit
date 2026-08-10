@@ -373,6 +373,18 @@
     const rect = el.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
   }
+  function hasAccessibleName(el) {
+    var _a, _b;
+    if (el.getAttribute("aria-label")) return true;
+    if (el.getAttribute("title")) return true;
+    if ((_a = el.textContent) == null ? void 0 : _a.trim()) return true;
+    const labelledBy = el.getAttribute("aria-labelledby");
+    if (labelledBy) {
+      const target = document.getElementById(labelledBy);
+      if ((_b = target == null ? void 0 : target.textContent) == null ? void 0 : _b.trim()) return true;
+    }
+    return false;
+  }
   function looksLikeNavClass(el) {
     return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
   }
@@ -552,6 +564,22 @@
   });
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var REFUSAL_PREFIXES = ["I cannot", "I'm unable", "I am unable", "Sorry", "I cannot describe", "Unfortunately"];
+  var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
+  var GENERIC_JUNK = /* @__PURE__ */ new Set(["image", "picture", "photo", "photograph", "graphic", "icon", "logo", "img"]);
+  function isConfidentDescription(text) {
+    if (typeof text !== "string") return false;
+    const t = text.trim();
+    if (t.length < 3 || t.length > 300) return false;
+    if (GENERIC_JUNK.has(t.toLowerCase())) return false;
+    for (const prefix of REFUSAL_PREFIXES) {
+      if (t.startsWith(prefix)) return false;
+    }
+    for (const term of UNCERTAINTY_TERMS) {
+      if (t.includes(term)) return false;
+    }
+    return true;
+  }
   async function generateImageAlt(img) {
     if (img.dataset.ai4a11yProcessed) return null;
     markProcessed(img, "pending");
@@ -562,8 +590,8 @@
         return null;
       }
       const result = await describeImage(dataUrl);
-      if (result) {
-        const altText = result;
+      if (isConfidentDescription(result)) {
+        const altText = result.trim();
         img.setAttribute("alt", altText);
         markProcessed(img, "done");
         incrementStat("images");
@@ -584,8 +612,9 @@
     markProcessed(canvas, "pending");
     try {
       const dataUrl = canvas.toDataURL("image/png");
-      const description = await describeImage(dataUrl);
-      if (description) {
+      const result = await describeImage(dataUrl);
+      if (isConfidentDescription(result)) {
+        const description = result.trim();
         canvas.setAttribute("aria-label", description);
         canvas.setAttribute("role", "img");
         markProcessed(canvas, "done");
@@ -608,8 +637,9 @@
       const serializer = new XMLSerializer();
       const svgString = serializer.serializeToString(svg);
       const dataUrl = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgString)));
-      const description = await describeImage(dataUrl);
-      if (description) {
+      const result = await describeImage(dataUrl);
+      if (isConfidentDescription(result)) {
+        const description = result.trim();
         let title = svg.querySelector("title");
         if (!title) {
           title = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -635,8 +665,9 @@
     video.dataset.ai4a11yDescribed = "pending";
     try {
       const frames = await captureVideoFrames(video, 6);
-      const description = await describeVideo(frames);
-      if (description) {
+      const result = await describeVideo(frames);
+      if (isConfidentDescription(result)) {
+        const description = result.trim();
         video.setAttribute("aria-label", description);
         video.dataset.ai4a11yDescribed = "done";
         incrementStat("images");
@@ -657,69 +688,9 @@
   };
 
   // tools/constants.js
-  var ARIA_REQUIRED_ATTRS = {
-    checkbox: { "aria-checked": "false" },
-    combobox: { "aria-expanded": "false" },
-    heading: { "aria-level": "2" },
-    listbox: {},
-    meter: { "aria-valuenow": "0" },
-    option: { "aria-selected": "false" },
-    progressbar: {},
-    radio: { "aria-checked": "false" },
-    scrollbar: { "aria-controls": "", "aria-valuenow": "0" },
-    separator: { "aria-valuenow": "0" },
-    slider: { "aria-valuenow": "0" },
-    spinbutton: {},
-    switch: { "aria-checked": "false" },
-    tab: { "aria-selected": "false" },
-    tabpanel: {},
-    tree: {},
-    treeitem: {}
-  };
   var DEPRECATED_ROLES = {
     directory: "list"
   };
-  var VALID_LANGS = /* @__PURE__ */ new Set([
-    "en",
-    "es",
-    "fr",
-    "de",
-    "it",
-    "pt",
-    "nl",
-    "ru",
-    "zh",
-    "ja",
-    "ko",
-    "ar",
-    "hi",
-    "bn",
-    "pa",
-    "te",
-    "mr",
-    "ta",
-    "ur",
-    "gu",
-    "kn",
-    "ml",
-    "th",
-    "vi",
-    "id",
-    "ms",
-    "tl",
-    "pl",
-    "uk",
-    "ro",
-    "el",
-    "cs",
-    "hu",
-    "sv",
-    "da",
-    "fi",
-    "no",
-    "he",
-    "tr"
-  ]);
   var VALID_ARIA_ATTRS = /* @__PURE__ */ new Set([
     "aria-activedescendant",
     "aria-atomic",
@@ -898,9 +869,24 @@
   });
   var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var JUNK_NAME_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i;
+  function isJunkName(name) {
+    return !name || JUNK_NAME_RE.test(name.trim());
+  }
+  var REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
+  function isValidLabel(label) {
+    if (!label || typeof label !== "string") return false;
+    const trimmed = label.trim();
+    if (trimmed.length < 1 || trimmed.length > 60) return false;
+    if (/\n/.test(trimmed)) return false;
+    if (REFUSAL_RE.test(trimmed)) return false;
+    return true;
+  }
   async function generateLinkLabel(link) {
     var _a, _b;
     if (link.dataset.ai4a11yProcessed) return null;
+    if (!isVisible(link)) return null;
+    if (hasAccessibleName(link)) return null;
     markProcessed(link, "pending");
     const href = link.href || "";
     const existingText = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
@@ -917,13 +903,14 @@
       markProcessed(link, "failed");
       return null;
     }
-    if (label) {
-      link.setAttribute("aria-label", label);
+    if (isValidLabel(label)) {
+      const trimmed = label.trim();
+      link.setAttribute("aria-label", trimmed);
       markProcessed(link, "done");
       incrementStat2("labels");
-      logFix2("link label", link, existingText || "(empty)", label);
-      console.log("[AI4A11y] Generated link label:", label);
-      return label;
+      logFix2("link label", link, existingText || "(empty)", trimmed);
+      console.log("[AI4A11y] Generated link label:", trimmed);
+      return trimmed;
     }
     markProcessed(link, "failed");
     return null;
@@ -931,6 +918,8 @@
   async function generateButtonLabel(button) {
     var _a;
     if (button.dataset.ai4a11yProcessed) return null;
+    if (!isVisible(button)) return null;
+    if (hasAccessibleName(button)) return null;
     markProcessed(button, "pending");
     const inferred = inferButtonLabel(button);
     if (inferred) {
@@ -953,18 +942,21 @@
       markProcessed(button, "failed");
       return null;
     }
-    if (label) {
-      button.setAttribute("aria-label", label);
+    if (isValidLabel(label)) {
+      const trimmed = label.trim();
+      button.setAttribute("aria-label", trimmed);
       markProcessed(button, "done");
       incrementStat2("labels");
-      logFix2("button label", button, "(empty)", label);
-      return label;
+      logFix2("button label", button, "(empty)", trimmed);
+      return trimmed;
     }
     markProcessed(button, "failed");
     return null;
   }
   async function generateIframeTitle(iframe) {
     if (iframe.dataset.ai4a11yProcessed) return null;
+    if (!isVisible(iframe)) return null;
+    if (hasAccessibleName(iframe)) return null;
     markProcessed(iframe, "pending");
     const src = iframe.src || "";
     for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
@@ -993,24 +985,29 @@
   }
   async function generateFormLabel(input) {
     if (input.dataset.ai4a11yProcessed) return null;
+    if (!isVisible(input)) return null;
+    if (hasAccessibleName(input)) return null;
     markProcessed(input, "pending");
-    if (input.placeholder) {
-      input.setAttribute("aria-label", input.placeholder);
-      markProcessed(input, "done");
-      incrementStat2("labels");
-      logFix2("form label", input, "(empty)", input.placeholder);
-      return input.placeholder;
-    }
-    if (input.name) {
-      const label = input.name.replace(/[-_]/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+    if (input.placeholder && !isJunkName(input.placeholder)) {
+      const label = input.placeholder.trim();
       input.setAttribute("aria-label", label);
       markProcessed(input, "done");
       incrementStat2("labels");
       logFix2("form label", input, "(empty)", label);
       return label;
     }
+    if (input.name && !isJunkName(input.name)) {
+      const label = input.name.replace(/[-_]/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().trim();
+      if (label) {
+        input.setAttribute("aria-label", label);
+        markProcessed(input, "done");
+        incrementStat2("labels");
+        logFix2("form label", input, "(empty)", label);
+        return label;
+      }
+    }
     const nearbyText = getNearbyText(input);
-    if (nearbyText) {
+    if (nearbyText && !isJunkName(nearbyText)) {
       input.setAttribute("aria-label", nearbyText);
       markProcessed(input, "done");
       incrementStat2("labels");
@@ -1351,6 +1348,47 @@ ${chunk}
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
+  function getContrastRatio(color1, color2) {
+    const l1 = getLuminance(color1);
+    const l2 = getLuminance(color2);
+    if (l1 === null || l2 === null) return null;
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+  function meetsContrastAA(foreground, background, isLarge = false) {
+    const ratio = getContrastRatio(foreground, background);
+    if (ratio === null) return false;
+    return ratio >= (isLarge ? 3 : 4.5);
+  }
+  function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
+    const fg = parseColor(foreground);
+    if (!fg) return null;
+    if (getLuminance(background) === null) return null;
+    const STEPS = 50;
+    function stepToward(endpoint) {
+      for (let i = 1; i <= STEPS; i++) {
+        const t = i / STEPS;
+        const r = Math.round(fg.r + (endpoint.r - fg.r) * t);
+        const g = Math.round(fg.g + (endpoint.g - fg.g) * t);
+        const b = Math.round(fg.b + (endpoint.b - fg.b) * t);
+        const candidate = `rgb(${r}, ${g}, ${b})`;
+        const ratio = getContrastRatio(candidate, background);
+        if (ratio !== null && ratio >= target) return { color: candidate, steps: i };
+      }
+      return null;
+    }
+    const dark = stepToward({ r: 0, g: 0, b: 0 });
+    const light = stepToward({ r: 255, g: 255, b: 255 });
+    if (!dark && !light) {
+      const blackRatio = getContrastRatio("rgb(0, 0, 0)", background) ?? 0;
+      const whiteRatio = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
+      return blackRatio >= whiteRatio ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)";
+    }
+    if (!dark) return light.color;
+    if (!light) return dark.color;
+    return dark.steps <= light.steps ? dark.color : light.color;
+  }
   function parseRgba(color) {
     if (!color) return null;
     const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
@@ -1387,21 +1425,42 @@ ${chunk}
   });
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  function isLargeText(element) {
+    const style = getComputedStyle(element);
+    const fontSize = parseFloat(style.fontSize) || 16;
+    const fontWeight = parseInt(style.fontWeight, 10) || 400;
+    const bold = fontWeight >= 700;
+    return fontSize >= 24 || bold && fontSize >= 18.67;
+  }
+  function hasBackgroundImage(element) {
+    const bgImg = getComputedStyle(element).backgroundImage;
+    return !!bgImg && bgImg !== "none";
+  }
   async function fixLowContrast(element, color, background) {
-    if (element.dataset.ai4a11yProcessed) return null;
+    if (wasProcessed(element)) return null;
     markProcessed(element, "pending");
+    if (hasBackgroundImage(element)) {
+      markProcessed(element, "done");
+      return null;
+    }
     if (!background || background === "transparent") {
       background = getEffectiveBackground(element);
     }
+    const large = isLargeText(element);
+    if (color && meetsContrastAA(color, background, large)) {
+      markProcessed(element, "done");
+      return null;
+    }
     let fixedColor;
+    const target = large ? 3 : 4.5;
     try {
       fixedColor = await fixContrast(color, background);
       if (!fixedColor) {
-        fixedColor = getLuminance(background) > 0.5 ? "#000000" : "#ffffff";
+        fixedColor = nearestAccessibleColor(color, background, { target }) || (getLuminance(background) > 0.5 ? "#000000" : "#ffffff");
       }
     } catch (e) {
       console.warn("[AI4A11y] Contrast fix failed, using fallback:", e);
-      fixedColor = getLuminance(background) > 0.5 ? "#000000" : "#ffffff";
+      fixedColor = nearestAccessibleColor(color, background, { target }) || (getLuminance(background) > 0.5 ? "#000000" : "#ffffff");
     }
     if (color) {
       element.dataset.ai4a11yOriginalColor = color;
@@ -1415,7 +1474,7 @@ ${chunk}
     return fixedColor;
   }
   function fixIndistinguishableLink(link) {
-    if (link.dataset.ai4a11yProcessed) return;
+    if (wasProcessed(link)) return;
     markProcessed(link, "done");
     link.style.textDecoration = "underline";
     incrementStat5("wcag");
@@ -1433,31 +1492,47 @@ ${chunk}
   });
   var incrementStat6 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  function isValidBcp47(tag) {
+    if (!tag || typeof tag !== "string") return false;
+    const t = tag.trim();
+    if (!t) return false;
+    const parts = t.split("-");
+    if (!/^[a-zA-Z]{2,3}$/.test(parts[0])) return false;
+    for (let i = 1; i < parts.length; i++) {
+      if (!/^[a-zA-Z0-9]{1,8}$/.test(parts[i])) return false;
+    }
+    return true;
+  }
+  function normaliseLang(raw) {
+    if (!raw) return null;
+    const attempt = raw.replace(/_/g, "-");
+    return isValidBcp47(attempt) ? attempt : null;
+  }
   function fixInvalidLang(element) {
     const currentLang = element.getAttribute("lang");
     if (!currentLang) return;
-    const baseLang = currentLang.split("-")[0].toLowerCase();
-    const newLang = VALID_LANGS.has(baseLang) ? baseLang : "en";
-    element.setAttribute("lang", newLang);
+    if (isValidBcp47(currentLang)) return;
+    const fixed = normaliseLang(currentLang);
+    if (!fixed) {
+      console.warn("[AI4A11y] Could not normalise lang attribute:", currentLang);
+      return;
+    }
+    element.setAttribute("lang", fixed);
     incrementStat6("wcag");
-    logFix6("lang", element, currentLang, newLang);
-    console.log("[AI4A11y] Fixed lang attribute");
+    logFix6("lang", element, currentLang, fixed);
+    console.log("[AI4A11y] Normalised lang attribute:", currentLang, "->", fixed);
   }
-  function fixMissingLang(element) {
-    element.setAttribute("lang", detectLanguage());
-    incrementStat6("wcag");
-    logFix6("lang", element, "(missing)", element.getAttribute("lang"));
-    console.log("[AI4A11y] Added lang attribute");
+  function fixMissingLang(_element) {
+    console.info("[AI4A11y] fixMissingLang: no-op (no reliable language signal to guess from)");
   }
   function fixDuplicateId(element) {
     const originalId = element.id;
     const newId = `${originalId}_${randomSuffix()}`;
-    updateIdReferences(originalId, newId);
     element.id = newId;
     markProcessed(element, "done");
     incrementStat6("wcag");
     logFix6("duplicate-id", element, originalId, newId);
-    console.log("[AI4A11y] Fixed duplicate ID:", originalId);
+    console.log("[AI4A11y] Renamed duplicate ID:", originalId, "->", newId);
   }
   function fixHeadingOrder(element) {
     const match = element.tagName.match(/^H([1-6])$/);
@@ -1503,13 +1578,15 @@ ${chunk}
     console.log('[AI4A11y] Added rel="noopener noreferrer"');
   }
   function fixInvalidAriaAttr(element) {
+    let fixed = false;
     for (const attr of Array.from(element.attributes)) {
       if (attr.name.startsWith("aria-") && !VALID_ARIA_ATTRS.has(attr.name)) {
         element.removeAttribute(attr.name);
+        fixed = true;
         console.log("[AI4A11y] Removed invalid ARIA attr:", attr.name);
       }
     }
-    incrementStat6("wcag");
+    if (fixed) incrementStat6("wcag");
   }
   function fixInvalidAriaRole(element) {
     const role = element.getAttribute("role");
@@ -1529,17 +1606,8 @@ ${chunk}
       console.log("[AI4A11y] Replaced deprecated role:", role);
     }
   }
-  function fixMissingAriaAttrs(element) {
-    const role = element.getAttribute("role");
-    if (role && ARIA_REQUIRED_ATTRS[role]) {
-      for (const [attr, value] of Object.entries(ARIA_REQUIRED_ATTRS[role])) {
-        if (!element.hasAttribute(attr) && value !== "") {
-          element.setAttribute(attr, value);
-          console.log("[AI4A11y] Added required ARIA attr:", attr);
-        }
-      }
-      incrementStat6("wcag");
-    }
+  function fixMissingAriaAttrs(_element) {
+    console.info("[AI4A11y] fixMissingAriaAttrs: no-op (backfilling ARIA state would lie to screen readers)");
   }
   function fixNestedInteractive(element) {
     const parent = element.closest("a, button");
@@ -1583,18 +1651,15 @@ ${chunk}
     const oldContent = element.getAttribute("content") || "";
     let content = oldContent;
     content = content.replace(/maximum-scale\s*=\s*[\d.]+/gi, "maximum-scale=5");
-    content = content.replace(/user-scalable\s*=\s*no/gi, "user-scalable=yes");
+    content = content.replace(/user-scalable\s*=\s*(no|0)/gi, "user-scalable=yes");
+    if (content === oldContent) return;
     element.setAttribute("content", content);
     incrementStat6("wcag");
     logFix6("viewport", element, oldContent, content);
     console.log("[AI4A11y] Fixed viewport meta");
   }
-  function removeMetaRefresh(element) {
-    const oldContent = element.getAttribute("content") || "";
-    element.remove();
-    incrementStat6("wcag");
-    logFix6("meta-refresh", element, oldContent, "(removed)");
-    console.log("[AI4A11y] Removed meta refresh");
+  function removeMetaRefresh(_element) {
+    console.info("[AI4A11y] removeMetaRefresh: no-op (the refresh timer is already armed by document_idle; removing the tag cannot cancel it)");
   }
   function replaceObsoleteElement(element) {
     const tag = element.tagName.toLowerCase();
@@ -1608,39 +1673,8 @@ ${chunk}
     logFix6("obsolete", newEl, `<${tag}>`, `<${replacement}>`);
     console.log(`[AI4A11y] Replaced <${tag}> with <${replacement}>`);
   }
-  function detectLanguage() {
-    const meta = document.querySelector('meta[http-equiv="content-language"]');
-    if (meta == null ? void 0 : meta.content) return meta.content.split("-")[0];
-    const patterns = {
-      "/es/": "es",
-      "/fr/": "fr",
-      "/de/": "de",
-      "/zh/": "zh",
-      "/ja/": "ja",
-      "/ko/": "ko"
-    };
-    for (const [pattern, lang] of Object.entries(patterns)) {
-      if (location.href.includes(pattern)) return lang;
-    }
-    return "en";
-  }
   function randomSuffix() {
     return Math.random().toString(36).substring(2, 7);
-  }
-  function updateIdReferences(oldId, newId) {
-    const attrs = ["for", "aria-labelledby", "aria-describedby", "aria-controls", "aria-owns", "headers", "list"];
-    for (const attr of attrs) {
-      document.querySelectorAll(`[${attr}]`).forEach((el) => {
-        const val = el.getAttribute(attr);
-        if (val) {
-          const ids = val.split(/\s+/);
-          const updated = ids.map((id) => id === oldId ? newId : id);
-          if (updated.join(" ") !== val) {
-            el.setAttribute(attr, updated.join(" "));
-          }
-        }
-      });
-    }
   }
   var axeHandlers5 = {
     "html-has-lang": fixMissingLang,
@@ -1861,7 +1895,91 @@ ${chunk}
     "landmark-one-main": () => ensureMainLandmark()
   };
 
+  // tools/utils/observe.js
+  var _sweeps = /* @__PURE__ */ new Map();
+  var _observer = null;
+  var _debounceTimers = /* @__PURE__ */ new Map();
+  var _lastHref = typeof location !== "undefined" ? location.href : "";
+  function _flush(reason) {
+    _lastHref = typeof location !== "undefined" ? location.href : _lastHref;
+    for (const [name, { callback }] of _sweeps) {
+      try {
+        callback({ reason });
+      } catch (e) {
+        console.warn(`[AI4A11y] observe: sweep "${name}" error:`, e);
+      }
+    }
+  }
+  function _scheduleSweep(reason) {
+    for (const [name, { callback, debounceMs }] of _sweeps) {
+      if (_debounceTimers.has(name)) clearTimeout(_debounceTimers.get(name));
+      _debounceTimers.set(name, setTimeout(() => {
+        _debounceTimers.delete(name);
+        const currentHref = typeof location !== "undefined" ? location.href : _lastHref;
+        const effectiveReason = currentHref !== _lastHref ? "urlchange" : reason;
+        _lastHref = currentHref;
+        try {
+          callback({ reason: effectiveReason });
+        } catch (e) {
+          console.warn(`[AI4A11y] observe: sweep "${name}" error:`, e);
+        }
+      }, debounceMs));
+    }
+  }
+  function _startObserver() {
+    if (_observer || typeof MutationObserver === "undefined") return;
+    if (typeof document === "undefined" || !document.body) return;
+    _observer = new MutationObserver(() => _scheduleSweep("mutation"));
+    _observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function _stopObserver() {
+    if (!_observer) return;
+    _observer.disconnect();
+    _observer = null;
+    for (const t of _debounceTimers.values()) clearTimeout(t);
+    _debounceTimers.clear();
+  }
+  if (typeof window !== "undefined") {
+    window.addEventListener("popstate", () => {
+      const currentHref = typeof location !== "undefined" ? location.href : _lastHref;
+      if (_sweeps.size > 0 && currentHref !== _lastHref) {
+        _lastHref = currentHref;
+        _flush("urlchange");
+      }
+    });
+  }
+  function registerSweep(name, callback, { debounceMs = 500 } = {}) {
+    _sweeps.set(name, { callback, debounceMs });
+    if (_sweeps.size === 1) _startObserver();
+    return function unregister() {
+      _sweeps.delete(name);
+      if (_debounceTimers.has(name)) {
+        clearTimeout(_debounceTimers.get(name));
+        _debounceTimers.delete(name);
+      }
+      if (_sweeps.size === 0) _stopObserver();
+    };
+  }
+
   // tools/adapters/visual-assist.js
+  var _fontScaleOriginals = /* @__PURE__ */ new WeakMap();
+  var TEXT_ELEMENT_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, input, textarea, label, blockquote, pre, figcaption, caption, dt, dd, summary, article, section, header, footer, nav, main, aside";
+  function _shouldSkipScale(el) {
+    if (!el || !el.tagName) return true;
+    const tag = el.tagName.toUpperCase();
+    if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "SVG" || tag === "MATH") return true;
+    const id = el.id || "";
+    if (id.startsWith("ai4a11y-")) return true;
+    try {
+      if (el.closest && el.closest("#ai4a11y-announcer, #ai4a11y-reader-mode")) return true;
+    } catch (_) {
+    }
+    if (el.shadowRoot) return true;
+    const cls = typeof el.className === "string" ? el.className : "";
+    if (cls.includes("material-icons") || cls.includes("material-symbols") || cls.includes("icon") || cls.includes("fa-") || tag === "I") return true;
+    if (el.getAttribute && el.getAttribute("aria-hidden") === "true") return true;
+    return false;
+  }
   var VisualAssist = {
     styleId: "ai4a11y-visual-assist",
     enabled: false,
@@ -1875,6 +1993,13 @@ ${chunk}
       dyslexiaFont: false,
       readingGuide: false
     },
+    // Track the scale currently committed to the DOM.
+    appliedScale: null,
+    unregisterSweep: null,
+    // Generation counter: incremented on every apply/restore cycle so in-flight
+    // requestIdleCallback traversals that started before a re-apply or restore
+    // detect the change and abort, preventing compounding.
+    scaleGen: 0,
     enable(options = {}) {
       this.settings = { ...this.settings, ...options };
       this.enabled = true;
@@ -1888,6 +2013,12 @@ ${chunk}
     disable() {
       this.enabled = false;
       this.remove();
+      this.restoreFontScale();
+      if (this.unregisterSweep) {
+        this.unregisterSweep();
+        this.unregisterSweep = null;
+      }
+      this.appliedScale = null;
       this.disableReadingGuide();
     },
     apply() {
@@ -1897,11 +2028,111 @@ ${chunk}
       style.id = this.styleId;
       style.textContent = css;
       document.head.appendChild(style);
+      const s = this.settings;
+      let scale = s.fontScale > 10 ? s.fontScale / 100 : s.fontScale;
+      scale = scale && scale > 0 ? Math.max(0.5, Math.min(2, scale)) : 1;
+      if (scale !== 1) {
+        if (this.appliedScale !== null && this.appliedScale !== scale) {
+          this.restoreFontScale();
+        }
+        if (this.appliedScale !== scale) {
+          this.applyFontScale(scale);
+        }
+        if (!this.unregisterSweep) {
+          this.unregisterSweep = registerSweep("visual-assist-font", () => {
+            if (!this.enabled || this.appliedScale === null) return;
+            this.applyFontScale(this.appliedScale);
+          }, { debounceMs: 500 });
+        }
+      } else {
+        if (this.appliedScale !== null) {
+          this.restoreFontScale();
+        }
+        if (this.unregisterSweep) {
+          this.unregisterSweep();
+          this.unregisterSweep = null;
+        }
+      }
+      if (s.contrastMode && s.contrastMode !== "none") {
+        if (typeof document !== "undefined" && document.getElementById("ai4a11y-dark-mode")) {
+          const msg = "High contrast replaces dark mode while active";
+          console.log("[AI4A11y] Visual Assist:", msg);
+          announce(msg);
+        }
+      }
     },
     remove() {
       var _a;
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (typeof document !== "undefined") (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
     },
+    // ── Font-scale DOM traversal ──────────────────────────────────────────────
+    applyFontScale(scale) {
+      this.appliedScale = scale;
+      const gen = ++this.scaleGen;
+      const candidates = typeof document !== "undefined" ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR)) : [];
+      const scalePlan = [];
+      for (const el of candidates) {
+        if (_shouldSkipScale(el)) continue;
+        if (el.dataset && el.dataset.ai4a11yFontScale === String(scale)) continue;
+        if (!_fontScaleOriginals.has(el)) {
+          _fontScaleOriginals.set(el, el.style.fontSize);
+        }
+        try {
+          let baselinePx = parseFloat(getComputedStyle(el).fontSize);
+          if (!baselinePx || baselinePx <= 0) continue;
+          if (!el.dataset.ai4a11yFontScale) {
+            try {
+              const scaledAncestor = el.closest && el.closest("[data-ai4a11y-font-scale]");
+              if (scaledAncestor) {
+                const ancestorScale = parseFloat(scaledAncestor.dataset.ai4a11yFontScale);
+                if (ancestorScale && ancestorScale > 0) {
+                  baselinePx = baselinePx / ancestorScale;
+                }
+              }
+            } catch (_) {
+            }
+          }
+          scalePlan.push({ el, baselinePx });
+        } catch (_) {
+        }
+      }
+      let i = 0;
+      const processChunk = (deadline) => {
+        if (gen !== this.scaleGen) return;
+        const hasTime = !deadline || deadline.timeRemaining() > 0;
+        while (i < scalePlan.length) {
+          if (hasTime && deadline && deadline.timeRemaining() <= 0) {
+            if (typeof requestIdleCallback !== "undefined") {
+              requestIdleCallback(processChunk, { timeout: 500 });
+            } else {
+              setTimeout(() => processChunk(null), 0);
+            }
+            return;
+          }
+          if (gen !== this.scaleGen) return;
+          const { el, baselinePx } = scalePlan[i++];
+          el.style.fontSize = `${baselinePx * scale}px`;
+          if (el.dataset) el.dataset.ai4a11yFontScale = String(scale);
+        }
+      };
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(processChunk, { timeout: 500 });
+      } else {
+        setTimeout(() => processChunk(null), 0);
+      }
+    },
+    restoreFontScale() {
+      if (typeof document === "undefined") return;
+      this.scaleGen++;
+      document.querySelectorAll("[data-ai4a11y-font-scale]").forEach((el) => {
+        const orig = _fontScaleOriginals.get(el);
+        el.style.fontSize = orig === void 0 || orig === null ? "" : orig;
+        _fontScaleOriginals.delete(el);
+        if (el.dataset) delete el.dataset.ai4a11yFontScale;
+      });
+      this.appliedScale = null;
+    },
+    // ── CSS generation ────────────────────────────────────────────────────────
     generateCSS() {
       var _a;
       const s = this.settings;
@@ -1909,9 +2140,17 @@ ${chunk}
       if (s.contrastMode === "light") {
         css += `
         html { background: #fff !important; }
-        body, p, div, span, li, td, th, h1, h2, h3, h4, h5, h6, a {
+        body, main, article, section, p,
+        h1, h2, h3, h4, h5, h6,
+        li, td, th {
+          background-color: #fff !important;
+        }
+        body, p, li, td, th,
+        h1, h2, h3, h4, h5, h6,
+        a, button, input, label,
+        span:not([aria-hidden="true"]),
+        div:not([aria-hidden="true"]) {
           color: #000 !important;
-          background: #fff !important;
         }
         a { text-decoration: underline !important; }
         img, video { filter: contrast(1.2) !important; }
@@ -1919,40 +2158,43 @@ ${chunk}
       } else if (s.contrastMode === "yellow-black") {
         css += `
         html { background: #000 !important; }
-        body, p, div, span, li, td, th, h1, h2, h3, h4, h5, h6 {
+        body, main, article, section, p,
+        h1, h2, h3, h4, h5, h6,
+        li, td, th {
+          background-color: #000 !important;
+        }
+        body, p, li, td, th,
+        h1, h2, h3, h4, h5, h6,
+        button, input, label,
+        span:not([aria-hidden="true"]),
+        div:not([aria-hidden="true"]) {
           color: #ff0 !important;
-          background: #000 !important;
         }
         a { color: #0ff !important; text-decoration: underline !important; }
         img, video { filter: contrast(1.2) brightness(0.9) !important; }
       `;
       }
-      let scale = s.fontScale > 10 ? s.fontScale / 100 : s.fontScale;
-      if (scale && scale > 0 && scale !== 1) {
-        scale = Math.max(0.5, Math.min(3, scale));
-        css += `html { zoom: ${scale} !important; }
-`;
-      }
       if (s.lineHeight && s.lineHeight !== 1.5) {
-        css += `body, p, li, td, th { line-height: ${s.lineHeight} !important; }
+        css += `body, p, li, td, th, div, span, a, label { line-height: ${s.lineHeight} !important; }
 `;
       }
       if (s.letterSpacing && s.letterSpacing !== 0) {
-        css += `body { letter-spacing: ${s.letterSpacing}em !important; }
+        css += `body, p, li, td, th, div, span, a, label { letter-spacing: ${s.letterSpacing}em !important; }
 `;
       }
       if (s.largeCursor) {
-        css += `* { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="black"/><circle cx="16" cy="16" r="10" fill="white"/></svg>'), auto !important; }
+        css += `* { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="%230066ff" opacity="0.5"/><circle cx="16" cy="16" r="4" fill="%23000"/></svg>'), auto !important; }
 `;
       }
       if (s.enhanceFocus) {
         css += `
-        *:focus, *:focus-visible {
+        *:focus-visible {
           outline: 4px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
         }
-        a:focus, button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus {
+        a:focus-visible, button:focus-visible, input:focus-visible,
+        select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
           outline: 4px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
@@ -1963,8 +2205,15 @@ ${chunk}
         const fontUrl = typeof chrome !== "undefined" && ((_a = chrome.runtime) == null ? void 0 : _a.getURL) ? chrome.runtime.getURL("lib/OpenDyslexic-Regular.woff2") : "https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff2";
         css += `@font-face { font-family: 'OpenDyslexic'; src: url('${fontUrl}'); }
 `;
-        css += `body, p, li, td, th, span, div { font-family: 'OpenDyslexic', sans-serif !important; }
-`;
+        css += `
+        body, p, li, td, th,
+        h1, h2, h3, h4, h5, h6,
+        a, button, input, textarea, label,
+        span:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]),
+        div:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]) {
+          font-family: 'OpenDyslexic', sans-serif !important;
+        }
+      `;
       }
       if (s.readingGuide) {
         css += `.ai4a11y-reading-guide { position: fixed; left: 0; right: 0; height: 40px; background: rgba(255, 255, 0, 0.2); pointer-events: none; z-index: 999999; transition: top 0.05s ease-out; }
@@ -1976,41 +2225,49 @@ ${chunk}
       if (this.enabled) this.disable();
       else this.enable();
     },
-    // Reading guide element and handler
+    // ── Reading guide ─────────────────────────────────────────────────────────
     readingGuideEl: null,
-    readingGuideHandler: null,
+    readingGuideMouseHandler: null,
+    readingGuideFocusHandler: null,
     enableReadingGuide() {
       if (this.readingGuideEl) return;
       this.readingGuideEl = document.createElement("div");
       this.readingGuideEl.className = "ai4a11y-reading-guide";
       document.body.appendChild(this.readingGuideEl);
-      this.readingGuideRafPending = false;
-      this.lastMouseY = 0;
-      this.readingGuideHandler = (e) => {
-        this.lastMouseY = e.clientY;
-        if (this.readingGuideRafPending) return;
-        this.readingGuideRafPending = true;
-        requestAnimationFrame(() => {
-          this.readingGuideRafPending = false;
-          if (this.readingGuideEl) {
-            this.readingGuideEl.style.top = `${this.lastMouseY - 20}px`;
-          }
-        });
+      this.readingGuideMouseHandler = (e) => {
+        if (this.readingGuideEl) {
+          this.readingGuideEl.style.top = `${e.clientY - 20}px`;
+        }
       };
-      document.addEventListener("mousemove", this.readingGuideHandler, { passive: true });
+      document.addEventListener("mousemove", this.readingGuideMouseHandler, { passive: true });
+      this.readingGuideFocusHandler = (e) => {
+        const target = e.target;
+        if (!target || !this.readingGuideEl) return;
+        try {
+          const rect = target.getBoundingClientRect();
+          const centerY = rect.top + rect.height / 2;
+          this.readingGuideEl.style.top = `${centerY - 20}px`;
+        } catch (_) {
+        }
+      };
+      document.addEventListener("focusin", this.readingGuideFocusHandler, { passive: true });
     },
     disableReadingGuide() {
       if (this.readingGuideEl) {
         this.readingGuideEl.remove();
         this.readingGuideEl = null;
       }
-      if (this.readingGuideHandler) {
-        document.removeEventListener("mousemove", this.readingGuideHandler);
-        this.readingGuideHandler = null;
+      if (this.readingGuideMouseHandler) {
+        document.removeEventListener("mousemove", this.readingGuideMouseHandler);
+        this.readingGuideMouseHandler = null;
+      }
+      if (this.readingGuideFocusHandler) {
+        document.removeEventListener("focusin", this.readingGuideFocusHandler);
+        this.readingGuideFocusHandler = null;
       }
     }
   };
-  window.__ai4a11yVisualAssist = VisualAssist;
+  if (typeof window !== "undefined") window.__ai4a11yVisualAssist = VisualAssist;
 
   // tools/adapters/dark-mode.js
   var DarkMode = {
@@ -2100,7 +2357,15 @@ ${chunk}
   var MotionReducer = {
     styleId: "ai4a11y-motion-reducer-styles",
     enabled: false,
-    gifOriginals: null,
+    unregisterSweep: null,
+    pausedWaapiRefs: [],
+    pausedPlayState: /* @__PURE__ */ new Set(),
+    frozenImages: /* @__PURE__ */ new Map(),
+    pausedIframes: /* @__PURE__ */ new Set(),
+    // Generation counter: incremented on every disable() call so in-flight
+    // async freezeSingleImage continuations can detect they've been overtaken
+    // and abort before mutating the DOM or repopulating frozenImages.
+    freezeGen: 0,
     currentSettings: {
       stopAnimations: true,
       pauseVideos: true,
@@ -2111,26 +2376,19 @@ ${chunk}
       if (this.enabled) return;
       this.currentSettings = { ...this.currentSettings, ...options };
       this.enabled = true;
-      this.gifOriginals = /* @__PURE__ */ new Map();
       const s = this.currentSettings;
       let css = "";
       if (s.stopAnimations) {
         css += `
-        *, *::before, *::after {
+        *:not([id^="ai4a11y-"]):not([class^="ai4a11y-"]),
+        *:not([id^="ai4a11y-"]):not([class^="ai4a11y-"])::before,
+        *:not([id^="ai4a11y-"]):not([class^="ai4a11y-"])::after {
           animation-duration: 0.001ms !important;
           animation-iteration-count: 1 !important;
           transition-duration: 0.001ms !important;
           scroll-behavior: auto !important;
         }
         html { scroll-behavior: auto !important; }
-        [class*="scroll"], [class*="slide"], [class*="marquee"],
-        [class*="carousel"], [class*="ticker"] {
-          animation: none !important;
-          transform: none !important;
-        }
-        [class*="animate"], [class*="motion"], [class*="move"] {
-          transform: none !important;
-        }
       `;
       }
       if (s.disableParallax) {
@@ -2145,17 +2403,23 @@ ${chunk}
       style.textContent = css;
       document.head.appendChild(style);
       if (s.pauseVideos) this.pauseAllVideos();
-      if (s.stopGifs) this.stopGifs();
+      if (s.stopGifs) this.freezeImages();
+      this.pauseWaapiAnimations();
       const pauseAnimations = (deadline) => {
         const elements = document.querySelectorAll("*");
         let i = 0;
         const processChunk = () => {
           while (i < elements.length && (typeof deadline === "undefined" || deadline.timeRemaining() > 0)) {
             const el = elements[i];
+            if (el.id && el.id.startsWith("ai4a11y-") || el.className && typeof el.className === "string" && el.className.startsWith("ai4a11y-")) {
+              i++;
+              continue;
+            }
             try {
-              const style2 = getComputedStyle(el);
-              if (style2.animationName !== "none") {
+              const computedStyle = getComputedStyle(el);
+              if (computedStyle.animationName !== "none") {
                 el.style.animationPlayState = "paused";
+                this.pausedPlayState.add(el);
               }
             } catch (e) {
             }
@@ -2172,88 +2436,190 @@ ${chunk}
       } else {
         pauseAnimations();
       }
+      this.unregisterSweep = registerSweep("motion-reducer", () => {
+        if (!this.enabled) return;
+        this.pauseWaapiAnimations();
+        if (s.stopGifs) this.freezeImages();
+        if (s.pauseVideos) this.pauseAllVideos();
+      }, { debounceMs: 600 });
       console.log("[AI4A11y] Motion Reducer enabled");
       announce("Motion reduced");
     },
     disable() {
-      var _a, _b;
+      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
+      this.freezeGen++;
+      if (this.unregisterSweep) {
+        this.unregisterSweep();
+        this.unregisterSweep = null;
+      }
       (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
-      document.querySelectorAll("[data-ai4a11y-gif-src]").forEach((canvas) => {
-        var _a2;
-        const original = (_a2 = this.gifOriginals) == null ? void 0 : _a2.get(canvas);
-        if (original) {
-          canvas.replaceWith(original);
-        } else {
-          const img = document.createElement("img");
-          img.src = canvas.dataset.ai4a11yGifSrc;
-          img.setAttribute("alt", canvas.getAttribute("aria-label") || "");
-          img.className = canvas.className;
-          canvas.replaceWith(img);
+      for (const [canvas, img] of this.frozenImages) {
+        if (canvas.parentNode) {
+          canvas.parentNode.insertBefore(img, canvas);
+          canvas.remove();
         }
-      });
-      (_b = this.gifOriginals) == null ? void 0 : _b.clear();
-      document.querySelectorAll('[style*="animation-play-state"]').forEach((el) => {
+        delete img.dataset.ai4a11yMrFrozen;
+      }
+      this.frozenImages.clear();
+      for (const ref of this.pausedWaapiRefs) {
+        const anim = ref.deref ? ref.deref() : ref;
+        if (anim && anim.playState === "paused") {
+          try {
+            anim.play();
+          } catch (e) {
+          }
+        }
+      }
+      this.pausedWaapiRefs = [];
+      for (const el of this.pausedPlayState) {
         el.style.animationPlayState = "";
-      });
-      document.querySelectorAll('video[data-ai4a11y-was-playing="true"]').forEach((video) => {
+      }
+      this.pausedPlayState.clear();
+      for (const iframe of this.pausedIframes) {
+        const src = iframe.src || "";
+        try {
+          if (src.includes("youtube.com")) {
+            (_b = iframe.contentWindow) == null ? void 0 : _b.postMessage('{"event":"command","func":"playVideo","args":""}', "*");
+          } else if (src.includes("vimeo.com")) {
+            (_c = iframe.contentWindow) == null ? void 0 : _c.postMessage('{"method":"play"}', "*");
+          }
+        } catch (e) {
+        }
+      }
+      this.pausedIframes.clear();
+      document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach((video) => {
         video.play().catch(() => {
         });
-        delete video.dataset.ai4a11yWasPlaying;
+        delete video.dataset.ai4a11yWasPaused;
       });
       console.log("[AI4A11y] Motion Reducer disabled");
       announce("Motion restored");
+    },
+    pauseWaapiAnimations() {
+      try {
+        document.getAnimations().forEach((a) => {
+          if (a.playState === "running") {
+            a.pause();
+            this.pausedWaapiRefs.push(typeof WeakRef !== "undefined" ? new WeakRef(a) : a);
+          }
+        });
+      } catch (e) {
+      }
+    },
+    // Freeze every animatable image (gif/webp/apng) to its first frame.
+    freezeImages() {
+      document.querySelectorAll("img").forEach((img) => {
+        if (img.dataset.ai4a11yMrFrozen) return;
+        const url = img.src || "";
+        const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url) || url.startsWith("data:image/gif") || url.startsWith("data:image/webp");
+        if (mightAnimate) {
+          this.freezeSingleImage(img).catch(() => {
+          });
+        } else {
+          img.dataset.ai4a11yMrFrozen = "skip";
+        }
+      });
+    },
+    async freezeSingleImage(img) {
+      if (!img.src || img.dataset.ai4a11yMrFrozen) return;
+      img.dataset.ai4a11yMrFrozen = "pending";
+      const capturedGen = this.freezeGen;
+      const w = img.naturalWidth || img.width || 100;
+      const h = img.naturalHeight || img.height || 100;
+      const altText = img.getAttribute("alt") || "";
+      const origId = img.id;
+      const origClass = img.className;
+      const srcAriaHidden = img.getAttribute("aria-hidden");
+      const srcRole = img.getAttribute("role") || "";
+      const decorative = altText === "" || srcAriaHidden === "true" || srcRole === "presentation" || srcRole === "none";
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      if (origId) canvas.id = origId;
+      if (origClass) canvas.className = origClass;
+      if (decorative) {
+        canvas.setAttribute("aria-hidden", "true");
+      } else {
+        canvas.setAttribute("role", "img");
+        canvas.setAttribute("aria-label", altText);
+        if (srcAriaHidden !== null) canvas.setAttribute("aria-hidden", srcAriaHidden);
+      }
+      canvas.setAttribute("width", w);
+      canvas.setAttribute("height", h);
+      const ctx = canvas.getContext("2d");
+      let drawn = false;
+      let taintedDraw = false;
+      try {
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          ctx.getImageData(0, 0, 1, 1);
+          drawn = true;
+        } catch (taintErr) {
+          taintedDraw = true;
+        }
+      } catch (e) {
+      }
+      if (!drawn) {
+        try {
+          await new Promise((resolve, reject) => {
+            const tmp = new Image();
+            tmp.crossOrigin = "anonymous";
+            tmp.onload = () => {
+              try {
+                ctx.drawImage(tmp, 0, 0, w, h);
+                resolve();
+              } catch (e) {
+                reject(e);
+              }
+            };
+            tmp.onerror = reject;
+            tmp.src = img.src;
+          });
+          drawn = true;
+        } catch (e) {
+          if (taintedDraw) {
+            drawn = true;
+          } else {
+            img.dataset.ai4a11yMrFrozen = "failed";
+            return;
+          }
+        }
+      }
+      if (this.freezeGen !== capturedGen) {
+        delete img.dataset.ai4a11yMrFrozen;
+        return;
+      }
+      this.frozenImages.set(canvas, img);
+      if (img.parentNode) {
+        img.parentNode.insertBefore(canvas, img);
+        img.remove();
+      }
+      img.dataset.ai4a11yMrFrozen = "frozen";
     },
     pauseAllVideos() {
       document.querySelectorAll("video").forEach((video) => {
         if (!video.paused) {
           video.pause();
-          video.dataset.ai4a11yWasPlaying = "true";
+          video.dataset.ai4a11yWasPaused = "false";
         }
       });
       document.querySelectorAll("iframe").forEach((iframe) => {
         var _a, _b;
         const src = iframe.src || "";
-        if (src.includes("youtube.com")) {
+        if (src.includes("youtube.com") && src.includes("enablejsapi=1")) {
           (_a = iframe.contentWindow) == null ? void 0 : _a.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*");
+          this.pausedIframes.add(iframe);
         } else if (src.includes("vimeo.com")) {
           (_b = iframe.contentWindow) == null ? void 0 : _b.postMessage('{"method":"pause"}', "*");
+          this.pausedIframes.add(iframe);
         }
       });
     },
-    stopGifs() {
-      document.querySelectorAll('img[src$=".gif"], img[src*=".gif?"]').forEach((img) => {
-        if (img.dataset.ai4a11yGifStopped) return;
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || img.width || 100;
-        canvas.height = img.naturalHeight || img.height || 100;
-        canvas.className = img.className;
-        canvas.setAttribute("aria-label", img.alt || "");
-        canvas.setAttribute("role", "img");
-        canvas.dataset.ai4a11yGifSrc = img.src;
-        const ctx = canvas.getContext("2d");
-        const tempImg = new Image();
-        tempImg.onload = () => {
-          var _a;
-          ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
-          (_a = this.gifOriginals) == null ? void 0 : _a.set(canvas, img);
-          img.replaceWith(canvas);
-          canvas.dataset.ai4a11yGifStopped = "true";
-        };
-        tempImg.onerror = () => {
-          img.style.visibility = "visible";
-          img.dataset.ai4a11yGifStopped = "true";
-        };
-        tempImg.src = img.src;
-      });
-    },
     toggle() {
-      if (this.enabled) {
-        this.disable();
-      } else {
-        this.enable();
-      }
+      if (this.enabled) this.disable();
+      else this.enable();
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yMotionReducer = MotionReducer;
@@ -2585,19 +2951,33 @@ ${chunk}
       textColor: "#333"
     },
     enable(options = {}) {
-      if (this.enabled) return;
+      if (this.enabled) return true;
       if (typeof Readability === "undefined") {
         console.warn("[AI4A11y] Readability library not loaded");
         announce("Reader mode not available");
-        return;
+        return false;
       }
       this.settings = { ...this.settings, ...options };
       const docClone = document.cloneNode(true);
+      const PLACEHOLDER_PATTERNS = /^(data:image\/gif|about:blank|javascript:|$)/i;
+      docClone.querySelectorAll("img, source").forEach((el) => {
+        const dataSrc = el.getAttribute("data-src");
+        const dataSrcset = el.getAttribute("data-srcset");
+        if (dataSrc) {
+          const currentSrc = el.getAttribute("src") || "";
+          if (PLACEHOLDER_PATTERNS.test(currentSrc.trim())) {
+            el.setAttribute("src", dataSrc);
+          }
+        }
+        if (dataSrcset && !el.getAttribute("srcset")) {
+          el.setAttribute("srcset", dataSrcset);
+        }
+      });
       const reader = new Readability(docClone);
       const article = reader.parse();
-      if (!article) {
-        announce("Could not extract article content");
-        return;
+      if (!article || !article.content || article.content.length < 200) {
+        announce("Reader mode could not extract the article \u2014 the page may be behind a login or is too short.");
+        return false;
       }
       this.originalContent = document.body.innerHTML;
       this.readerOverlay = document.createElement("div");
@@ -2613,7 +2993,7 @@ ${chunk}
       container.appendChild(closeBtn);
       const title = document.createElement("h1");
       title.className = "ai4a11y-reader-title";
-      title.textContent = article.title || "Article";
+      title.textContent = article.title || document.title || "Article";
       container.appendChild(title);
       if (article.byline) {
         const byline = document.createElement("p");
@@ -2623,26 +3003,7 @@ ${chunk}
       }
       const contentDiv = document.createElement("div");
       contentDiv.className = "ai4a11y-reader-content";
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = article.content || "";
-      tempDiv.querySelectorAll("script, iframe, object, embed, form, input, svg, style, link, meta, base, noscript, template, math").forEach((el) => el.remove());
-      const dangerousUrlAttrs = ["href", "src", "action", "formaction", "srcdoc", "poster", "xlink:href"];
-      tempDiv.querySelectorAll("*").forEach((el) => {
-        [...el.attributes].forEach((attr) => {
-          const name = attr.name.toLowerCase();
-          const value = (attr.value || "").replace(/[\s\x00-\x1f]/g, "").toLowerCase();
-          if (name.startsWith("on")) {
-            el.removeAttribute(attr.name);
-            return;
-          }
-          if (dangerousUrlAttrs.includes(name)) {
-            if (value.startsWith("javascript:") || value.startsWith("vbscript:") || value.startsWith("data:text/html") || value.startsWith("data:application")) {
-              el.removeAttribute(attr.name);
-            }
-          }
-        });
-      });
-      contentDiv.innerHTML = tempDiv.innerHTML;
+      contentDiv.innerHTML = this.sanitize(article.content || "");
       container.appendChild(contentDiv);
       this.readerOverlay.appendChild(container);
       this.applyStyles();
@@ -2656,6 +3017,36 @@ ${chunk}
         if (e.key === "Escape") this.disable();
       };
       document.addEventListener("keydown", this.escapeHandler);
+      return true;
+    },
+    // Strip Readability output down to safe HTML before injecting it with
+    // innerHTML. No DOMPurify dependency is vendored for tools/ (only the
+    // extension's popup.html loads it as a devDependency of
+    // personalized-extension), so this replicates DOMPurify's HTML-profile
+    // sanitize with a hand-rolled allowlist-of-dangers pass: strip
+    // script-capable elements, all `on*` handlers, and URL-bearing attributes
+    // that carry an executable scheme (javascript:/vbscript:/data:text/html
+    // /data:application/data:image+svg — SVG can carry its own <script>).
+    sanitize(html) {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = html || "";
+      tempDiv.querySelectorAll("script, iframe, object, embed, form, input, svg, style, link, meta, base, noscript, template, math").forEach((el) => el.remove());
+      const dangerousUrlAttrs = ["href", "src", "srcset", "action", "formaction", "srcdoc", "poster", "xlink:href"];
+      const dangerousPrefixes = ["javascript:", "vbscript:", "data:text/html", "data:application", "data:image/svg+xml"];
+      tempDiv.querySelectorAll("*").forEach((el) => {
+        [...el.attributes].forEach((attr) => {
+          const name = attr.name.toLowerCase();
+          const value = (attr.value || "").replace(/[\s\x00-\x1f]/g, "").toLowerCase();
+          if (name.startsWith("on")) {
+            el.removeAttribute(attr.name);
+            return;
+          }
+          if (dangerousUrlAttrs.includes(name) && dangerousPrefixes.some((p) => value.startsWith(p))) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+      return tempDiv.innerHTML;
     },
     applyStyles() {
       const s = this.settings;
@@ -2703,6 +3094,7 @@ ${chunk}
       }
     },
     disable() {
+      if (!this.enabled && !this.readerOverlay) return;
       if (this.readerOverlay) {
         this.readerOverlay.remove();
         this.readerOverlay = null;
@@ -2935,6 +3327,14 @@ ${chunk}
   if (typeof window !== "undefined") window.__ai4a11yVoiceCommands = VoiceCommands;
 
   // tools/adapters/keyboard-nav.js
+  function getFocusable(root) {
+    return Array.from(root.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter((el) => {
+      const style = getComputedStyle(el);
+      return style.display !== "none" && style.visibility !== "hidden" && el.offsetParent !== null;
+    });
+  }
   var KeyboardNavigator = {
     enabled: false,
     styleId: "ai4a11y-keyboard-nav-styles",
@@ -2942,6 +3342,14 @@ ${chunk}
     tabSequenceOverlay: false,
     shortcutHandler: null,
     modifiedElements: [],
+    // {el, prior} tabindex changes — restored (not stripped) on disable
+    injectedIdEls: [],
+    // {el, syntheticId} ids we stamped — removed on disable only if unchanged
+    badgeContainer: null,
+    resizeObserver: null,
+    resizeTimer: null,
+    lastHeading: null,
+    unregisterSweep: null,
     settings: {
       showSkipLinks: true,
       enhanceFocusVisible: true,
@@ -2955,11 +3363,15 @@ ${chunk}
       if (this.settings.showSkipLinks) this.createSkipLinks();
       if (this.settings.showTabSequence) this.showTabSequence();
       this.setupKeyboardShortcuts();
+      this.unregisterSweep = registerSweep("keyboard-nav", ({ reason }) => {
+        if (reason === "mutation" && this.tabSequenceOverlay) this.repositionBadges();
+      }, { debounceMs: 300 });
       console.log("[AI4A11y] Keyboard Navigator enabled");
       announce("Keyboard navigation enhanced");
     },
     disable() {
-      var _a, _b;
+      var _a, _b, _c;
+      if (!this.enabled) return;
       this.enabled = false;
       (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
       (_b = this.skipLinkElement) == null ? void 0 : _b.remove();
@@ -2969,14 +3381,30 @@ ${chunk}
         document.removeEventListener("keydown", this.shortcutHandler);
         this.shortcutHandler = null;
       }
-      this.modifiedElements.forEach((el) => {
-        el.removeAttribute("tabindex");
-        if (el.id === "ai4a11y-main-content") el.removeAttribute("id");
-        if (el.id === "ai4a11y-nav") el.removeAttribute("id");
+      (_c = this.unregisterSweep) == null ? void 0 : _c.call(this);
+      this.unregisterSweep = null;
+      this.modifiedElements.forEach(({ el, prior }) => {
+        if (prior === null) el.removeAttribute("tabindex");
+        else el.setAttribute("tabindex", prior);
       });
       this.modifiedElements = [];
+      this.injectedIdEls.forEach(({ el, syntheticId }) => {
+        if (el.id === syntheticId) el.removeAttribute("id");
+      });
+      this.injectedIdEls = [];
+      this.lastHeading = null;
       console.log("[AI4A11y] Keyboard Navigator disabled");
       announce("Keyboard navigation restored");
+    },
+    // Tabindex write helper — records the prior value only once per element so
+    // repeated shortcuts on the same element don't clobber the real original.
+    setTabindex(el, val) {
+      if (!el) return;
+      if (!this.modifiedElements.some((r) => r.el === el)) {
+        const prior = el.hasAttribute("tabindex") ? el.getAttribute("tabindex") : null;
+        this.modifiedElements.push({ el, prior });
+      }
+      el.setAttribute("tabindex", val);
     },
     injectStyles() {
       var _a;
@@ -3029,20 +3457,27 @@ ${chunk}
     },
     createSkipLinks() {
       if (this.skipLinkElement) return;
+      const hasExistingSkip = Array.from(document.querySelectorAll('a[href^="#"]')).some((el) => {
+        if (!/skip/i.test(el.textContent || "")) return false;
+        const rect = el.getBoundingClientRect();
+        return rect.top < 300;
+      });
+      if (hasExistingSkip) return;
       const container = document.createElement("div");
       container.id = "ai4a11y-skip-links";
       const main = document.querySelector('main, [role="main"], #main, #content, article');
       if (main) {
-        if (!main.id) main.id = "ai4a11y-main-content";
-        if (main.id === "ai4a11y-main-content" && !this.modifiedElements.includes(main)) this.modifiedElements.push(main);
+        if (!main.id) {
+          main.id = "ai4a11y-main-content";
+          this.injectedIdEls.push({ el: main, syntheticId: "ai4a11y-main-content" });
+        }
         const skipToMain = document.createElement("a");
         skipToMain.href = "#" + main.id;
         skipToMain.className = "ai4a11y-skip-link";
         skipToMain.textContent = "Skip to main content";
         skipToMain.addEventListener("click", (e) => {
           e.preventDefault();
-          main.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(main)) this.modifiedElements.push(main);
+          this.setTabindex(main, "-1");
           main.focus();
           main.scrollIntoView({ behavior: "smooth" });
         });
@@ -3050,8 +3485,10 @@ ${chunk}
       }
       const nav = document.querySelector('nav, [role="navigation"]');
       if (nav) {
-        if (!nav.id) nav.id = "ai4a11y-nav";
-        if (nav.id === "ai4a11y-nav" && !this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
+        if (!nav.id) {
+          nav.id = "ai4a11y-nav";
+          this.injectedIdEls.push({ el: nav, syntheticId: "ai4a11y-nav" });
+        }
         const skipToNav = document.createElement("a");
         skipToNav.href = "#" + nav.id;
         skipToNav.className = "ai4a11y-skip-link";
@@ -3059,8 +3496,7 @@ ${chunk}
         skipToNav.style.left = "200px";
         skipToNav.addEventListener("click", (e) => {
           e.preventDefault();
-          nav.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(nav)) this.modifiedElements.push(nav);
+          this.setTabindex(nav, "-1");
           nav.focus();
         });
         container.appendChild(skipToNav);
@@ -3070,50 +3506,98 @@ ${chunk}
     },
     showTabSequence() {
       this.hideTabSequence();
-      const focusables = Array.from(document.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )).filter((el) => {
-        const style = getComputedStyle(el);
-        return style.display !== "none" && style.visibility !== "hidden" && el.offsetParent !== null;
-      });
+      const focusables = getFocusable(document.body);
+      const container = document.createElement("div");
+      container.setAttribute("aria-hidden", "true");
+      this.badgeContainer = container;
       focusables.forEach((el, idx) => {
         const rect = el.getBoundingClientRect();
         const badge = document.createElement("span");
         badge.className = "ai4a11y-tab-badge";
+        badge.setAttribute("aria-hidden", "true");
         badge.textContent = String(idx + 1);
         badge.style.top = rect.top + window.scrollY - 10 + "px";
         badge.style.left = rect.left + window.scrollX - 10 + "px";
-        document.body.appendChild(badge);
+        container.appendChild(badge);
       });
+      document.body.appendChild(container);
       this.tabSequenceOverlay = true;
+      if (typeof ResizeObserver !== "undefined") {
+        this.resizeObserver = new ResizeObserver(() => {
+          if (!this.tabSequenceOverlay) return;
+          if (this.resizeTimer) clearTimeout(this.resizeTimer);
+          this.resizeTimer = setTimeout(() => {
+            this.resizeTimer = null;
+            if (this.tabSequenceOverlay) this.repositionBadges();
+          }, 100);
+        });
+        this.resizeObserver.observe(document.body);
+      }
+    },
+    repositionBadges() {
+      if (!this.badgeContainer) return;
+      const focusables = getFocusable(document.body);
+      const badges = Array.from(this.badgeContainer.querySelectorAll(".ai4a11y-tab-badge"));
+      focusables.forEach((el, i) => {
+        if (!badges[i]) return;
+        const rect = el.getBoundingClientRect();
+        badges[i].style.top = rect.top + window.scrollY - 10 + "px";
+        badges[i].style.left = rect.left + window.scrollX - 10 + "px";
+      });
     },
     hideTabSequence() {
-      document.querySelectorAll(".ai4a11y-tab-badge").forEach((el) => el.remove());
+      if (this.badgeContainer) {
+        this.badgeContainer.remove();
+        this.badgeContainer = null;
+      }
       this.tabSequenceOverlay = false;
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+        this.resizeObserver = null;
+      }
+      if (this.resizeTimer) {
+        clearTimeout(this.resizeTimer);
+        this.resizeTimer = null;
+      }
     },
     setupKeyboardShortcuts() {
       this.shortcutHandler = (e) => {
-        const focusTracked = (el) => {
-          if (!el) return;
-          el.setAttribute("tabindex", "-1");
-          if (!this.modifiedElements.includes(el)) this.modifiedElements.push(el);
-          el.focus();
-          return el;
-        };
-        if (e.altKey && e.key === "1") {
+        var _a, _b;
+        if (!e.altKey) return;
+        if (e.ctrlKey || e.metaKey) return;
+        const tag = (_a = e.target) == null ? void 0 : _a.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        if ((_b = e.target) == null ? void 0 : _b.isContentEditable) return;
+        const key = (e.key || "").toLowerCase();
+        if (key === "1") {
           e.preventDefault();
-          focusTracked(document.querySelector('main, [role="main"], #main, #content'));
+          const main = document.querySelector('main, [role="main"], #main, #content');
+          if (main) {
+            this.setTabindex(main, "-1");
+            main.focus();
+          }
         }
-        if (e.altKey && e.key === "2") {
+        if (key === "2") {
           e.preventDefault();
-          focusTracked(document.querySelector('nav, [role="navigation"]'));
+          const nav = document.querySelector('nav, [role="navigation"]');
+          if (nav) {
+            this.setTabindex(nav, "-1");
+            nav.focus();
+          }
         }
-        if (e.altKey && e.key === "h") {
+        if (key === "h") {
           e.preventDefault();
-          const h = focusTracked(document.querySelector("h1, h2, h3"));
-          if (h) h.scrollIntoView({ behavior: "smooth", block: "center" });
+          const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+          if (!headings.length) return;
+          const currentIdx = this.lastHeading ? headings.indexOf(this.lastHeading) : -1;
+          const idx = e.shiftKey ? currentIdx <= 0 ? headings.length - 1 : currentIdx - 1 : (currentIdx + 1) % headings.length;
+          const h = headings[idx];
+          this.lastHeading = h;
+          this.setTabindex(h, "-1");
+          h.focus();
+          h.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-        if (e.altKey && e.key === "f") {
+        if (key === "f") {
           e.preventDefault();
           if (this.tabSequenceOverlay) this.hideTabSequence();
           else this.showTabSequence();
@@ -5844,6 +6328,8 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yReadingSpot = ReadingSpot;
 
   // tools/adapters/abbreviation-expand.js
+  var logFix10 = globalThis.ai4a11yLogFix || (() => {
+  });
   var MAX_TEXT_NODES2 = 2e3;
   var STYLE_ID2 = "ai4a11y-abbr-styles";
   var SKIP_TAGS2 = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION", "ABBR"]);
@@ -5949,6 +6435,7 @@ ${scope} table {
           if (typeof expansion !== "string" || !expansion) continue;
           abbr.setAttribute("title", expansion);
           this.titled.push(abbr);
+          logFix10("abbr-title", abbr, "(none)", expansion);
         } catch {
         }
       }
@@ -5978,6 +6465,7 @@ ${scope} table {
         abbr.setAttribute("title", dict[m[0]]);
         abbr.textContent = m[0];
         wrap.appendChild(abbr);
+        logFix10("abbr-expand", abbr, m[0], dict[m[0]]);
         last = end;
       }
       if (!wrap) return null;
@@ -6015,6 +6503,8 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yAbbreviationExpand = AbbreviationExpand;
 
   // tools/adapters/language-tag.js
+  var logFix11 = globalThis.ai4a11yLogFix || (() => {
+  });
   var MAX_TEXT_NODES3 = 2e3;
   var SAMPLE_CHAR_BUDGET = 4e3;
   var SCRIPT_RANGES = [
@@ -6085,15 +6575,17 @@ ${scope} table {
   var LanguageTag = {
     markerClass: "ai4a11y-lang",
     enabled: false,
-    handle: null,
-    // transformTextNodes handle (owns the exact-restore)
+    handles: [],
+    // transformTextNodes handles (initial enable + each sweep), each owns exact-restore
     mainLang: null,
     // page's dominant language while enabled
     htmlLangAdded: false,
     // we added <html lang>; remove it on disable
+    unregisterSweep: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
+      this.handles = [];
       const root = mainRoot();
       if (!root) {
         announce("Language tags: no readable text found");
@@ -6104,15 +6596,31 @@ ${scope} table {
       if (html && !html.hasAttribute("lang")) {
         html.setAttribute("lang", this.mainLang);
         this.htmlLangAdded = true;
+        logFix11("lang", html, "(none)", this.mainLang);
       }
-      this.handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
+      const count = this.sweepRoot(root);
+      console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
+      announce(count ? "Language tags on" : "Language tags: no foreign-language text found");
+      this.unregisterSweep = registerSweep("language-tag", ({ reason }) => {
+        if (!this.enabled) return;
+        const freshRoot = mainRoot();
+        if (freshRoot) this.sweepRoot(freshRoot, reason);
+      }, { debounceMs: 600 });
+    },
+    // Run one transformTextNodes pass over `root`, recording the handle for
+    // disable()'s restore and logging each newly-tagged run. Returns the count
+    // of text nodes tagged in THIS pass (0 on a re-sweep with nothing new).
+    sweepRoot(root, reason = "enable") {
+      const handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
         skipClass: this.markerClass,
         cap: MAX_TEXT_NODES3
       });
-      const count = this.handle.records.length;
-      if (this.handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES3} text nodes`);
-      console.log(`[AI4A11y] Language Tag enabled (${count} text nodes tagged, main language "${this.mainLang}")`);
-      announce(count ? "Language tags on" : "Language tags: no foreign-language text found");
+      this.handles.push(handle);
+      if (handle.capped) console.log(`[AI4A11y] Language Tag: capped at ${MAX_TEXT_NODES3} text nodes`);
+      for (const { replacement } of handle.records) {
+        logFix11("language-tag", replacement, "(untagged)", `lang spans (${reason})`);
+      }
+      return handle.records.length;
     },
     // Rebuild one mixed-script text node as a marker <span>: runs of a foreign
     // script become <span lang="xx"> children, everything else stays plain text
@@ -6154,10 +6662,12 @@ ${scope} table {
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
-      if (this.handle) {
-        this.handle.restore();
-        this.handle = null;
+      if (this.unregisterSweep) {
+        this.unregisterSweep();
+        this.unregisterSweep = null;
       }
+      for (const handle of this.handles) handle.restore();
+      this.handles = [];
       if (this.htmlLangAdded) {
         try {
           document.documentElement.removeAttribute("lang");
@@ -6177,6 +6687,8 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yLanguageTag = LanguageTag;
 
   // tools/adapters/explore-a-chart.js
+  var logFix12 = globalThis.ai4a11yLogFix || (() => {
+  });
   var CHART_HINT = /chart|graph|plot|diagram/i;
   var HTML_NS2 = "http://www.w3.org/1999/xhtml";
   var MAX_CHARTS = 20;
@@ -6192,6 +6704,7 @@ ${scope} table {
     _reqSeq: 0,
     _keyHandler: null,
     _moveHandler: null,
+    unregisterSweep: null,
     enable() {
       if (this.enabled) return;
       this.enabled = true;
@@ -6221,8 +6734,9 @@ ${scope} table {
       this.live.setAttribute("aria-atomic", "true");
       this.live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
       (document.body || document.documentElement).appendChild(this.live);
-      this.charts = this.findCharts();
-      for (const chart of this.charts) this.attachButton(chart);
+      this.charts = [];
+      this.buttons = [];
+      this.sweep();
       this._keyHandler = (e) => {
         if (e.altKey && e.code === "KeyT") {
           e.preventDefault();
@@ -6236,6 +6750,24 @@ ${scope} table {
       };
       document.addEventListener("mouseover", this._moveHandler, true);
       announce(`Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? "" : "s"} found. Tab to a View data table button, or press Alt plus T on a chart.`);
+      this.unregisterSweep = registerSweep("explore-a-chart", () => {
+        if (!this.enabled) return;
+        this.sweep();
+      }, { debounceMs: 600 });
+    },
+    // Find new chart candidates and button them, skipping charts already
+    // tracked from a prior sweep. Safe to call repeatedly. Returns how many
+    // new charts were buttoned.
+    sweep() {
+      let added = 0;
+      for (const chart of this.findCharts()) {
+        if (this.charts.includes(chart)) continue;
+        if (this.charts.length >= MAX_CHARTS) break;
+        this.charts.push(chart);
+        this.attachButton(chart);
+        added++;
+      }
+      return added;
     },
     // Chart candidates: anything that renders data visually but exposes no text.
     findCharts() {
@@ -6256,7 +6788,7 @@ ${scope} table {
         if (CHART_HINT.test(`${img.getAttribute("alt") || ""} ${img.getAttribute("src") || ""}`)) push(img);
       });
       document.querySelectorAll('[role="img"]').forEach(push);
-      return out.slice(0, MAX_CHARTS);
+      return out;
     },
     attachButton(chart) {
       const parent = chart.parentElement;
@@ -6274,6 +6806,7 @@ ${scope} table {
       });
       chart.insertAdjacentElement("afterend", btn);
       this.buttons.push(btn);
+      logFix12("chart-button", chart, "(none)", "View data table button");
     },
     target() {
       return this.chartFor(document.activeElement) || this.chartFor(this.lastHover);
@@ -6413,6 +6946,10 @@ ${scope} table {
       var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
+      if (this.unregisterSweep) {
+        this.unregisterSweep();
+        this.unregisterSweep = null;
+      }
       if (this._keyHandler) document.removeEventListener("keydown", this._keyHandler, true);
       if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
       this._keyHandler = this._moveHandler = null;
@@ -6443,6 +6980,8 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yExploreAChart = ExploreAChart;
 
   // tools/adapters/spa-focus.js
+  var logFix13 = globalThis.ai4a11yLogFix || (() => {
+  });
   var REGION_ID2 = "ai4a11y-spa-focus-region";
   var SETTLE_DELAY_MS = 150;
   var SpaFocus = {
@@ -6512,6 +7051,7 @@ ${scope} table {
         if (!target.hasAttribute("tabindex")) {
           target.setAttribute("tabindex", "-1");
           this.tabindexAdded.add(target);
+          logFix13("spa-focus-tabindex", target, "(none)", "-1");
         }
         target.focus({ preventScroll: false });
       }
@@ -6568,6 +7108,8 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11ySpaFocus = SpaFocus;
 
   // tools/adapters/skip-links.js
+  var logFix14 = globalThis.ai4a11yLogFix || (() => {
+  });
   var MAIN_SELECTOR = 'main, [role="main"], #main, #content, .content';
   var NAV_SELECTOR = 'nav, [role="navigation"]';
   var SkipLinks = {
@@ -6588,6 +7130,7 @@ ${scope} table {
       for (let n = 2; document.getElementById(id); n++) id = `${base}-${n}`;
       el.id = id;
       this.addedIdTargets.push(el);
+      logFix14("skip-link-id", el, "(none)", id);
       return id;
     },
     // A real <a href="#…"> so the link works even with no JS; the click handler
@@ -6602,6 +7145,7 @@ ${scope} table {
         if (!target.hasAttribute("tabindex")) {
           target.setAttribute("tabindex", "-1");
           this.addedTabindexTargets.push(target);
+          logFix14("skip-link-tabindex", target, "(none)", "-1");
         }
         try {
           target.focus();
@@ -6654,6 +7198,7 @@ ${scope} table {
         const parent = document.body || document.documentElement;
         parent.insertBefore(container, parent.firstChild);
         this.container = container;
+        logFix14("skip-links", container, "(none)", `${container.querySelectorAll("a").length} links injected`);
       }
       console.log("[AI4A11y] Skip Links enabled");
       announce(main || nav ? "Skip links added at the top of the page" : "No main content or navigation region found to skip to");
@@ -6694,6 +7239,8 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
 
   // tools/adapters/math-a11y.js
+  var logFix15 = globalThis.ai4a11yLogFix || (() => {
+  });
   var MAX_ELEMENTS = 100;
   var MATH_HINT_RE = /math|equation|latex|tex|formula/i;
   var TEX_PARAM_RE = /^(tex|latex|formula|eq|chl)$/i;
@@ -6779,18 +7326,39 @@ ${scope} table {
     // { el, attrs: [{ name, old }] } — old === null means "was absent"
     styleHandle: null,
     // injectStyle handle for the focus outline
+    cap: MAX_ELEMENTS,
+    unregisterSweep: null,
     // Record the attribute's prior state, then write it — the unit of reversibility.
     setTracked(el, name, value, attrs) {
-      attrs.push({ name, old: el.hasAttribute(name) ? el.getAttribute(name) : null });
+      const old = el.hasAttribute(name) ? el.getAttribute(name) : null;
+      attrs.push({ name, old });
       el.setAttribute(name, value);
+      logFix15("math-a11y", el, old === null ? "(none)" : old, value);
     },
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      const cap = options.cap ?? MAX_ELEMENTS;
+      this.cap = options.cap ?? MAX_ELEMENTS;
+      this.sweep();
+      this.styleHandle = injectStyle(
+        this.styleId,
+        '[role="math"]:focus { outline: 2px solid #1a5fb4; outline-offset: 2px; }'
+      );
+      console.log(`[AI4A11y] Math A11y enabled (${this.records.length} labeled)`);
+      announce(this.records.length ? "Math labels on" : "Math labels: no unlabeled math found");
+      this.unregisterSweep = registerSweep("math-a11y", () => {
+        if (!this.enabled) return;
+        this.sweep();
+      }, { debounceMs: 600 });
+    },
+    // One pass over the document for unlabeled math/equation-image candidates.
+    // Safe to call repeatedly — already-labeled elements are skipped by their
+    // own gates (hasAccessibleName / non-empty alt), and `records` accumulates
+    // across calls so the cap is enforced over the adapter's whole lifetime.
+    sweep() {
       let mathCount = 0, imgCount = 0;
       for (const math of document.querySelectorAll("math")) {
-        if (this.records.length >= cap) break;
+        if (this.records.length >= this.cap) break;
         if (math.getAttribute("aria-hidden") === "true") continue;
         if (hasAccessibleName2(math)) continue;
         const attrs = [];
@@ -6800,7 +7368,7 @@ ${scope} table {
         mathCount++;
       }
       for (const img of document.querySelectorAll("img")) {
-        if (this.records.length >= cap) break;
+        if (this.records.length >= this.cap) break;
         if (img.getAttribute("aria-hidden") === "true") continue;
         const alt = img.getAttribute("alt");
         if (alt && alt.trim()) continue;
@@ -6817,16 +7385,18 @@ ${scope} table {
         this.records.push({ el: img, attrs });
         imgCount++;
       }
-      this.styleHandle = injectStyle(
-        this.styleId,
-        '[role="math"]:focus { outline: 2px solid #1a5fb4; outline-offset: 2px; }'
-      );
-      console.log(`[AI4A11y] Math A11y enabled (${mathCount} MathML, ${imgCount} images labeled)`);
-      announce(this.records.length ? "Math labels on" : "Math labels: no unlabeled math found");
+      if (mathCount || imgCount) {
+        console.log(`[AI4A11y] Math A11y: ${mathCount} MathML, ${imgCount} images labeled`);
+      }
+      return mathCount + imgCount;
     },
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      if (this.unregisterSweep) {
+        this.unregisterSweep();
+        this.unregisterSweep = null;
+      }
       for (const { el, attrs } of this.records) {
         for (const { name, old } of attrs) {
           try {
@@ -6874,7 +7444,7 @@ ${scope} table {
     captions: 0
   };
   var fixLog = [];
-  function logFix10(type, element, oldValue, newValue) {
+  function logFix16(type, element, oldValue, newValue) {
     var _a;
     const selector = ((_a = element == null ? void 0 : element.tagName) == null ? void 0 : _a.toLowerCase()) || "element";
     const id = (element == null ? void 0 : element.id) ? `#${element.id}` : "";
@@ -6982,7 +7552,7 @@ ${scope} table {
     inferColumnHeader: (sampleData) => sendMessage({ type: "inferColumnHeader", sampleData }).then(unwrap),
     announce: (msg) => announce2(msg)
   });
-  globalThis.ai4a11yLogFix = logFix10;
+  globalThis.ai4a11yLogFix = logFix16;
   globalThis.ai4a11yIncrementStat = incrementStat10;
   var isRunning = false;
   var initPromise = null;

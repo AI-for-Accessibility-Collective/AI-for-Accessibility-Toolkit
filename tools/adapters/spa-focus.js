@@ -15,6 +15,8 @@
 // tabindex this adapter added is taken back off on disable().
 import { announce } from '../utils/ai.js';
 
+const logFix = globalThis.ai4a11yLogFix || (() => {});
+
 const REGION_ID = 'ai4a11y-spa-focus-region';
 // Debounce so a burst of history calls (SPAs often push/replace several times
 // per navigation) settles into one announcement — and gives the framework a
@@ -101,6 +103,7 @@ export const SpaFocus = {
       if (!target.hasAttribute('tabindex')) {
         target.setAttribute('tabindex', '-1');
         this.tabindexAdded.add(target);
+        logFix('spa-focus-tabindex', target, '(none)', '-1');
       }
       target.focus({ preventScroll: false });
     }

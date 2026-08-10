@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-for-accessibility.toolkit/protocol/insight-outbox.schema.json",
+  "title": "AA Insight Outbox",
+  "description": "A batch of insights a consumer app (e.g. ArtInsight) exports for the user to carry back to their home toolkit surface, consumed whole by librarian.importInsightOutbox (toolkit/core/librarian.js). Each insight still passes through the SAME grant-gated, never-silent importInsight path as a live cross-app insight — the outbox is only a transport, it grants nothing and applies nothing on its own. kind='aa-insight-outbox'; version 1 (documented here; importInsightOutbox does not yet reject a mismatched v — see protocol/README.md).",
+  "type": "object",
+  "required": ["kind", "v", "sourceAppId", "exportedAt", "insights"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "aa-insight-outbox"
+    },
+    "v": {
+      "const": 1
+    },
+    "sourceAppId": {
+      "type": "string",
+      "description": "The exporting app's id — MUST match an active grant's appId on the importing side, or every insight in the batch is refused with reason 'no-grant'."
+    },
+    "exportedAt": {
+      "type": "number"
+    },
+    "insights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "confidence", "label", "rationale", "change"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "type": "string" },
+          "confidence": { "type": "number" },
+          "label": { "type": "string" },
+          "rationale": { "type": "string" },
+          "change": {
+            "type": "object",
+            "description": "Whitelisted inner change. op='profile-set' may only target a fields.* path (enforced by the engine's isSafeFieldsPath, not expressible in this shape-only schema); op='add-memory' carries a free-form record.",
+            "required": ["op"],
+            "additionalProperties": false,
+            "properties": {
+              "op": { "type": "string", "enum": ["profile-set", "add-memory"] },
+              "path": { "type": ["string", "null"] },
+              "value": {},
+              "record": { "type": ["object", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

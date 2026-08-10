@@ -11,23 +11,22 @@ today and an iOS or XR host tomorrow.
 toolkit/
 ├── index.js               createToolkit({ kv, clock, scheduler, consent, ... })
 ├── core/
-│   ├── ports.js           Port contracts a host must provide (JSDoc)
 │   ├── taxonomy.js        Site-category vocabulary + host classification
-│   ├── datastore.js       createDatastore({ areas, globalTier, clock })
-│   ├── librarian.js       createLibrarian({ datastore, taxonomy, kv, ... })
+│   ├── datastore.js       createDatastore({ kv, clock, taxonomy, toolsRegistry, builtinSkills })
+│   ├── librarian.js       createLibrarian({ datastore, taxonomy, clock, ... })
 │   ├── units.js           Typed units for ability magnitudes
 │   ├── strength.js        Requirement strength (how hard a need presses)
-│   ├── ability.js         Ability dimensions, device-independent
+│   ├── ability.js         toAbilityModel(profile): the modality-neutral AbilityModel (needs[])
 │   ├── surface.js         SurfaceProfile — ability rendered for one device
 │   ├── memory-class.js    Memory taxonomy labels
-│   ├── ability-model.js   AbilityModel: the device-independent understanding
-│   ├── broker.js          Cross-app permission broker (grants, export, insights)
 │   ├── skill.js           SKILL.md parse / validate / resolve / match
 │   └── skill-builder.js   The Engineer: builds a SKILL.md from a plain need
 ├── skills/builtin/        Starter SKILL.md playbooks
-├── surfaces/              AbilityModel → per-device rendering (web.js, xr.js)
-├── sync/                  Cross-app sharing: grants.js, blob.js, transport.js
-├── ports/                 Port index
+├── surfaces/              AbilityModel → per-device rendering (web.js, xr.js) — both
+│                          read the SAME live needs[] librarian.getAbilityModel() returns
+├── sync/                  Cross-app sharing: grants.js (scopes, audience ceiling,
+│                          share-audit trail), blob.js, transport.js
+├── ports/                 Port contracts a host must provide (JSDoc) + index
 ├── adapters/chrome/       Chrome host adapter. build.js bundles these entries
 │                          into personalized-extension/extension/lib/*.js
 ├── hosts/                 Runnable consumers, no browser needed
@@ -47,11 +46,13 @@ a skill **deterministically**: no model runs at apply time.
 ## Ability, surfaces, and strength
 
 `librarian.getAbilityModel()` returns what we understand about the person in
-device-independent terms — relative magnitudes in typed units, need-named enums,
-requirement strength, and per-dimension confidence. A **surface** renders that
-into one device's settings: `surfaces/web.js` produces web settings (font scale,
-dark mode), `surfaces/xr.js` produces XR parameters (angular text size,
-world-locked captions).
+device-independent terms: `{ schemaVersion, supportAreas, freeText, language,
+readingLevel, confidence, needs[] }`, where each `needs[]` entry is a
+modality-neutral `{ dimension, value, strength, unit?, confidence?, source? }`.
+A **surface** renders that SAME model into one device's settings:
+`surfaces/web.js` produces web settings (font scale, dark mode),
+`surfaces/xr.js` produces XR parameters (angular text size, world-locked
+captions) — one needs vocabulary, two renderings.
 
 ## Memory scoping and the privacy floor
 
@@ -63,13 +64,21 @@ without an explicit opt-in.
 
 ## Cross-app sharing
 
-`sync/` and `core/broker.js` implement sharing between apps as a **visible,
-scoped, default-deny grant**. Reads require a grant; writes arrive as proposals
-the local user resolves. A consuming app can never approve its own request.
+`sync/grants.js` implements sharing between apps as a **visible, scoped,
+default-deny grant**. Reads require a grant; writes arrive as proposals the
+local user resolves. A consuming app can never approve its own request. Every
+grant also carries an **audience** (`'personal' | 'friends' | 'anyone'`) — a
+ceiling the profile's sharing level must clear, re-checked on every export so
+lowering the level cuts off access immediately without revoking the grant —
+and every grant/export/insight event is recorded to a **share-audit trail**
+(`mine.shareAudit`, via `grants.js#recordShareAudit`). Both the ceiling check
+and the audit writes live IN `core/librarian.js` itself (`requestGrant`'s
+accept path, `revokeGrant`, `exportAbilityModel`, the cross-app-insight accept
+path), so every host gets them for free — not just Chrome.
 
 ## Running the tests
 
 ```bash
-cd toolkit && npm test          # ability model, broker, skill layer
-node --test test/phase1.test.mjs test/phase3.test.mjs test/phase3-crossapp.test.mjs
+cd toolkit && npm test          # ability model, skill layer, scenarios, cross-app
+                                 # grants/audience/audit, plus the phase*.test.mjs suite
 ```

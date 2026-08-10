@@ -35,8 +35,11 @@ import { coerceSettings, clampSettings } from './units.js';
 import { STRENGTH_RANK, rankOf } from './strength.js';
 import { toAbilityModel } from './ability.js';
 import { memoryClassOf } from './memory-class.js';
-import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes } from '../sync/grants.js';
+import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes,
+  audienceAllowed, recordShareAudit } from '../sync/grants.js';
 import { buildProfileBlob, validateProfileBlob } from '../sync/blob.js';
+import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill } from './skill.js';
+import { buildSkill } from './skill-builder.js';
 
 /**
  * @param {Object} deps
@@ -573,7 +576,16 @@ export function createLibrarian({
       const playbook = category && views.playbooks && views.playbooks[category];
       if (playbook) lines.push(`### Playbook: ${category} sites`, playbook);
 
-      return { block: lines.join('\n'), facts: top, profile, category, origin };
+      // Procedural memory (Phase 2): saved automations applicable here, so
+      // an agent knows what it already knows how to do for this person.
+      const procedural = await this.listProcedural(category);
+      const actions = procedural.filter(p => p.kind === 'saved-action');
+      if (actions.length) {
+        lines.push('### Learned automations for sites like this');
+        for (const a of actions.slice(0, 5)) lines.push(`- ${a.name}`);
+      }
+
+      return { block: lines.join('\n'), facts: top, profile, category, origin, procedural };
     },
 
     async listMemories(filter = {}) {
@@ -601,15 +613,148 @@ export function createLibrarian({
           return true;
         }
       }
-      // Suppressions are deletable too (un-suppress).
-      const removed = await DS().patch('mine.suppressions', (s) =>
-        s.filter(x => x.id !== id));
-      return Array.isArray(removed);
+      // Suppressions are deletable too (un-suppress). Report whether a record
+      // actually went away — filter() always returns an array, so length is
+      // the only honest signal.
+      let found = false;
+      await DS().patch('mine.suppressions', (s) => {
+        const next = (s || []).filter(x => x.id !== id);
+        found = next.length !== (s || []).length;
+        return next;
+      });
+      return found;
     },
 
     async listProposals(status = 'pending') {
       const props = await DS().get('mine.proposals');
       return status ? props.filter(p => p.status === status) : props;
+    },
+
+    // Procedural memory (Phase 2): what the person's assistant KNOWS HOW TO
+    // DO for them — custom adapters (mine.skills) and saved reusable actions
+    // (mine.profiles[].actions). Storage stays where it is (no migration;
+    // the catalog maps it); this is the unified read surface.
+    async listProcedural(category = null) {
+      const out = [];
+      for (const s of (await DS().get('mine.skills')) || []) {
+        if (s.enabled === false) continue;
+        const scope = s.scope || 'general';
+        if (category && scope.startsWith('category:') && scope.slice(9) !== category) continue;
+        out.push({
+          kind: 'custom-adapter', id: s.id, name: s.name,
+          description: s.description || '', scope,
+        });
+      }
+      for (const p of (await DS().get('mine.profiles')) || []) {
+        if (!p.autoApply) continue;
+        if (category && !(p.siteTypes || []).includes(category)) continue;
+        for (const a of (p.actions || [])) {
+          out.push({
+            kind: 'saved-action', id: a.id, name: a.name,
+            prompt: a.prompt, siteTypes: p.siteTypes || [], profileId: p.id,
+          });
+        }
+      }
+      return out;
+    },
+
+    // ====================== SKILLS (the Engineer + Skills db) ======================
+
+    // All skills available to this person: built-in (global tier) + their own
+    // (mine.skillDocs). Each is a parsed Skill object. This is the read side
+    // of the diagrams' "Skills db".
+    async listSkills() {
+      const builtin = (DS().global.skills() || []).map(s => ({ ...s, source: 'builtin' }));
+      const mine = (await DS().get('mine.skillDocs') || []).map(s => ({ ...s, source: 'mine' }));
+      return [...builtin, ...mine];
+    },
+
+    // Retrieve the best-fitting skill for a page + this person (diagram:
+    // "Librarian retrieves the skill for use"). Deterministic scoring over
+    // the ability profile's support areas and the page category. Returns the
+    // top match (or null), so the caller can apply it.
+    async retrieveSkill(url, contexts = []) {
+      const profile = await getOrInitProfile();
+      const origin = originOf(url);
+      const category = origin ? await this.getSiteCategory(origin) : null;
+      const ctx = { supportAreas: profile.supportAreas || [], category };
+      const scored = (await this.listSkills())
+        .map(s => ({ skill: s, score: matchSkill(s, ctx) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score);
+      return scored.length ? scored[0].skill : null;
+    },
+
+    // The skill-creation flow's first diamond: "does the skill exist in the
+    // db?" — checked BEFORE the Engineer builds anything. Built-in and the
+    // person's own skills both count. Deterministic keyword match (no LLM),
+    // so the reuse offer works without an API key. Returns the best fit or
+    // null when nothing plausibly covers the need.
+    async findSkillForNeed(need) {
+      const scored = (await this.listSkills())
+        .map(s => ({ skill: s, score: matchSkillToNeed(s, need) }))
+        .filter(x => x.score >= 4)
+        .sort((a, b) => b.score - a.score);
+      return scored.length ? scored[0].skill : null;
+    },
+
+    // Compile a skill to the deterministic apply-plan (settings + adapter ids)
+    // the host's adapter layer consumes. No LLM at apply-time.
+    resolveSkill(skill) {
+      return resolveSkill(skill);
+    },
+
+    // The Engineer: build a new skill from a plain-language need, grounded in
+    // the real adapter catalog. Does NOT save — returns the skill for the
+    // user to validate first (the adaptive evaluation interface). Consent
+    // before persistence is the toolkit's rule. When validation fails, pass
+    // the rejected attempt back as { previous, feedback } and the Engineer
+    // revises it — the evaluation loop's "fail → back to the builder" arrow.
+    async buildSkill(need, opts = {}) {
+      const profile = await getOrInitProfile();
+      return await buildSkill(need, {
+        llm: _gemini,
+        tools: DS().global.tools(),
+        taxonomy: TAX(),
+        profile,
+        previous: opts.previous || null,
+        feedback: opts.feedback || '',
+      });
+    },
+
+    // Persist a user-validated skill to their Skills db (mine.skillDocs).
+    // Re-validates against the registry so a malformed skill can't be stored.
+    async saveSkill(skill) {
+      const { valid, errors } = validateSkill(skill, { tools: DS().global.tools() });
+      if (!valid) return { saved: false, errors };
+      await DS().patch('mine.skillDocs', (skills) => {
+        const idx = skills.findIndex(s => s.name === skill.name);
+        const entry = { ...skill, savedAt: clock.now() };
+        if (idx >= 0) skills[idx] = entry; else skills.push(entry);
+        return skills;
+      });
+      // A saved skill is a strong signal about what helps this person. Record
+      // the ability context (supportAreas) and the triggers (siteRelevance)
+      // alongside it — the flow's final step, where the profile/memory db
+      // learns e.g. "low vision + anxiety" and "news sites + videos" from the
+      // skill the person just validated. Extraction folds it into the profile.
+      await this.logObservation({
+        type: 'saved-action',
+        text: `Saved skill "${skill.name}" — helps with ${(skill.supportAreas || []).join(', ') || 'unspecified areas'};`
+          + ` applies on ${(skill.siteRelevance || []).join(', ') || 'all'} sites`,
+        data: { skill: skill.name, supportAreas: skill.supportAreas || [], triggers: skill.siteRelevance || [] },
+      }).catch(() => {});
+      return { saved: true, errors: [] };
+    },
+
+    async deleteSkill(name) {
+      let removed = false;
+      await DS().patch('mine.skillDocs', (skills) => {
+        const next = skills.filter(s => s.name !== name);
+        removed = next.length !== skills.length;
+        return next;
+      });
+      return removed;
     },
 
     // ====================== CROSS-APP GRANTS (Phase 3) ======================
@@ -672,16 +817,33 @@ export function createLibrarian({
     },
 
     // Revoke = LOCAL DELETE (no tombstone, no propagation). Idempotent.
+    // Audited (best-effort) BEFORE the delete — that's the last point the
+    // scopes/audience are still visible to record against.
     async revokeGrant(appId) {
       appId = String(appId || '').trim();
+      const before = ((await DS().get('mine.grants')) || []).find(g => g.appId === appId);
       await DS().patch('mine.grants', (grants) => (grants || []).filter(g => g.appId !== appId));
+      if (before) {
+        await recordShareAudit(DS, {
+          appId, action: 'grant-revoked', scopes: before.scopes, audience: before.audience || 'personal', result: 'ok',
+        }).catch(() => {});
+      }
       return { ok: true };
     },
 
     // Read-only, default-deny export of the granted AbilityModel slice. No
-    // active grant for `appId` → no data. Never writes; never includes a
-    // SurfaceProfile (web fontScale etc.) — only the modality-neutral,
-    // categories-only AbilityModel, filtered to the grant's scopes.
+    // active grant for `appId` → no data. Never writes (beyond the audit
+    // trail); never includes a SurfaceProfile (web fontScale etc.) — only the
+    // modality-neutral, categories-only AbilityModel, filtered to the grant's
+    // scopes.
+    //
+    // Audience ceiling (Phase 3, folded in from the now-deleted broker): a
+    // grant whose audience sits above the profile's CURRENT sharing level
+    // (metaPreferences.sharing) exports nothing — re-checked on every call, so
+    // lowering the level cuts off an out-of-level app immediately without
+    // needing to revoke its grant. This is the portable enforcement point:
+    // every host (not just Chrome) gets it for free. Both the refusal and the
+    // success are recorded to the audit trail.
     async exportAbilityModel(appId) {
       appId = String(appId || '').trim();
       const partitionAt = DS().getActingUser().id;
@@ -690,11 +852,22 @@ export function createLibrarian({
       const grants = (await DS().get('mine.grants')) || [];
       const grant = grants.find(g => g.appId === appId && isActive(g));
       if (!grant) return { ok: false, reason: 'no-grant' };
+      const sharing = (profile && profile.metaPreferences && profile.metaPreferences.sharing) || 'personal';
+      if (!audienceAllowed(grant.audience, sharing)) {
+        await recordShareAudit(DS, {
+          appId, action: 'export-blocked', scopes: grant.scopes, audience: grant.audience, result: 'blocked',
+        }).catch(() => {});
+        return { ok: false, reason: 'audience-ceiling' };
+      }
       const abilityModel = await this.getAbilityModel();
       // Fail safe if the acting user switched mid-read: never hand one
       // partition's data out under another partition's grant.
       if (DS().getActingUser().id !== partitionAt) return { ok: false, reason: 'partition-switched' };
-      return { ok: true, abilityModel: filterAbilityModelByScopes(abilityModel, grant.scopes) };
+      const filtered = filterAbilityModelByScopes(abilityModel, grant.scopes);
+      await recordShareAudit(DS, {
+        appId, action: 'export', scopes: grant.scopes, audience: grant.audience, result: 'ok',
+      }).catch(() => {});
+      return { ok: true, abilityModel: filtered };
     },
 
     // ====================== CROSS-APP INSIGHT WRITE (Phase 3) ======================
@@ -1020,6 +1193,16 @@ Return ONLY valid JSON with:
       const now = clock.now();
 
       if (response === 'accept') {
+        // A profile-set proposal may only write ability fields (`fields.*`) —
+        // the contract the extraction prompt promises. Refuse control-plane
+        // paths (metaPreferences, memoryPaused, sharingPaused, schemaVersion,
+        // …): an inferred proposal the user only ever sees as friendly prose
+        // must never silently rewrite consent or rate-limit settings. Reuses
+        // the same prototype-safe path validator the cross-app insight path
+        // enforces (isSafeFieldsPath, above).
+        if (prop.change?.op === 'profile-set' && !isSafeFieldsPath(prop.change.path)) {
+          return { ok: false, reason: 'profile-path-not-allowed' };
+        }
         prop.status = 'accepted';
         if (prop.change?.op === 'profile-set') {
           await this.setProfileField(prop.change.path, prop.change.value);
@@ -1051,6 +1234,48 @@ Return ONLY valid JSON with:
             });
             return profiles;
           });
+          // The implicit flow's last box: the accepted reusable task also
+          // becomes a real SKILL.md in the Skills db (an action-step recipe),
+          // so the person can see it, apply it, and share it like any other
+          // skill. The profile action above stays — auto-replay reads it.
+          const slug = String(prop.change.action.name || 'saved-task').toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'saved-task';
+          const cats = siteTypes.length ? siteTypes : ['all'];
+          // Best-effort: the accept itself must still persist (line below the
+          // branch) even if the skill-doc write fails — otherwise the proposal
+          // stays pending on disk with the profile action already saved, and
+          // a second accept would duplicate it.
+          try {
+            const prompt = prop.change.action.prompt;
+            const skills = await this.listSkills();
+            const sameCats = (s) =>
+              JSON.stringify([...(s.siteRelevance || [])].sort()) === JSON.stringify([...cats].sort());
+            // Idempotent: an action skill for this exact task already exists.
+            const already = skills.some(s => sameCats(s)
+              && (s.recipe?.adapters || []).length === 0
+              && (s.recipe?.actions || []).length === 1
+              && s.recipe.actions[0].prompt === prompt);
+            if (!already) {
+              // A proposal-sourced save must only ADD — never overwrite a
+              // skill (the person's own or a built-in) that shares the name.
+              // Proposal fields can be app-supplied through the broker, so a
+              // name collision here could otherwise swap a trusted skill's
+              // recipe for an attacker-chosen task.
+              const names = new Set(skills.map(s => s.name));
+              let name = slug;
+              for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
+              await this.saveSkill({
+                name,
+                description: `Runs "${prompt}" for you. Use it on ${cats.join(', ')} sites.`,
+                supportAreas: [],
+                siteRelevance: cats,
+                recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt }] },
+                body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
+              });
+            }
+          } catch (e) {
+            console.warn('[Librarian] could not save accepted task as a skill:', e.message);
+          }
           demo.trace('skill', 'skillsdb', 'saved as skill.md');
           demo.trace('skill', 'autoenable', 'skill stored');
           demo.trace('skill', 'profiledb_skill', 'trigger registered');
@@ -1067,11 +1292,18 @@ Return ONLY valid JSON with:
           // requesting app's requestGrant. One grant per app (a re-grant with
           // wider scopes replaces the prior entry).
           const { appId, appLabel, scopes } = prop.change;
+          let mintedAudience = 'personal';
           await DS().patch('mine.grants', (grants) => {
             grants = (grants || []).filter(g => g.appId !== appId);
-            grants.push(normalizeGrant({ id: newId('grant'), appId, appLabel, scopes, grantedAt: now }));
+            const grant = normalizeGrant({ id: newId('grant'), appId, appLabel, scopes, grantedAt: now });
+            mintedAudience = grant.audience;
+            grants.push(grant);
             return grants;
           });
+          // The grant becomes real HERE, on accept — never in requestGrant,
+          // which only drafts. This is the one place a 'grant-created' audit
+          // entry can be recorded at the moment it actually takes effect.
+          await recordShareAudit(DS, { appId, action: 'grant-created', scopes, audience: mintedAudience, result: 'ok' }).catch(() => {});
         } else if (prop.change?.op === 'cross-app-insight' && prop.change.change) {
           // Cross-app insight (Phase 3): applying the inner change happens ONLY
           // here, on the local user surface. The inner op is re-validated at
@@ -1097,6 +1329,14 @@ Return ONLY valid JSON with:
             shard.push(rec);
             await DS().setMemoryShard(rec.scope, shard);
           }
+          // The insight becomes real HERE, on accept — never in importInsight,
+          // which only drafts. Mirrors the grant-request audit above.
+          const grantForAudit = ((await DS().get('mine.grants')) || []).find(g => g.appId === prop.change.appId);
+          await recordShareAudit(DS, {
+            appId: prop.change.appId, action: 'insight-import',
+            scopes: [prop.change.kind].filter(Boolean),
+            audience: grantForAudit?.audience || 'personal', result: 'ok',
+          }).catch(() => {});
         }
         // Validated inference → boost the evidence memories' confidence.
         for (const evId of (prop.evidence || [])) {

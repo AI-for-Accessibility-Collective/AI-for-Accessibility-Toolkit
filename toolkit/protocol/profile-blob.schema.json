@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-for-accessibility.toolkit/protocol/profile-blob.schema.json",
+  "title": "AA Profile Blob",
+  "description": "The user-mediated, portable ability-profile document exported by toolkit/sync/blob.js#buildProfileBlob and consumed by a toolkit device's importProfileBlob, or read directly by a reader app (e.g. ArtInsight) that only needs abilityModel. kind/v are the compatibility handshake: BLOB_KIND='aa-profile-blob', BLOB_VERSION=1.",
+  "type": "object",
+  "required": ["kind", "v", "exportedAt", "profile"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "aa-profile-blob",
+      "description": "toolkit/sync/blob.js BLOB_KIND"
+    },
+    "v": {
+      "const": 1,
+      "description": "toolkit/sync/blob.js BLOB_VERSION"
+    },
+    "exportedAt": {
+      "type": "number",
+      "description": "Epoch ms. MUST be finite and > 0 (validateProfileBlob rejects NaN/Infinity — a non-finite value would defeat last-write-wins merge)."
+    },
+    "abilityModel": {
+      "type": ["object", "null"],
+      "description": "The full modality-neutral AbilityModel (toolkit/core/ability.js#toAbilityModel), unfiltered by any grant scope — for reader apps that only consume understanding, never write it back.",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": { "type": "number", "const": 1 },
+        "supportAreas": { "type": "array", "items": { "type": "string" } },
+        "freeText": { "type": "string" },
+        "language": { "type": "string", "enum": ["standard", "plain"] },
+        "readingLevel": { "type": ["string", "number", "null"] },
+        "confidence": { "type": ["number", "null"] },
+        "needs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dimension", "strength"],
+            "additionalProperties": true,
+            "properties": {
+              "dimension": { "type": "string" },
+              "value": {},
+              "strength": { "type": "string", "enum": ["floor", "preference", "hint"] },
+              "unit": { "type": "string", "enum": ["ratio", "em", "percent", "boolean", "enum"] },
+              "confidence": { "type": "number" },
+              "source": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "description": "The ability-model SOURCE fields only — deliberately excludes memories, proposals, grants, and every device-local SurfaceProfile (e.g. web fontScale).",
+      "required": ["supportAreas", "freeText", "fields", "metaPreferences", "updatedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "supportAreas": { "type": "array", "items": { "type": "string" } },
+        "freeText": { "type": "string" },
+        "fields": {
+          "type": "object",
+          "description": "Only the ability-model source keys toAbilityModel reads: needs, readingLevel, confidence. Present only if they existed on the source profile.",
+          "additionalProperties": true,
+          "properties": {
+            "needs": { "type": "array", "items": { "type": "object" } },
+            "readingLevel": {},
+            "confidence": {}
+          }
+        },
+        "metaPreferences": {
+          "type": "object",
+          "required": ["language"],
+          "additionalProperties": false,
+          "properties": {
+            "language": { "type": "string", "enum": ["standard", "plain"] }
+          }
+        },
+        "updatedAt": { "type": ["number", "null"] }
+      }
+    }
+  }
+}

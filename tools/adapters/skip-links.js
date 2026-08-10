@@ -12,6 +12,8 @@
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
 
+const logFix = globalThis.ai4a11yLogFix || (() => {});
+
 const MAIN_SELECTOR = 'main, [role="main"], #main, #content, .content';
 const NAV_SELECTOR = 'nav, [role="navigation"]';
 
@@ -32,6 +34,7 @@ export const SkipLinks = {
     for (let n = 2; document.getElementById(id); n++) id = `${base}-${n}`;
     el.id = id;
     this.addedIdTargets.push(el);
+    logFix('skip-link-id', el, '(none)', id);
     return id;
   },
 
@@ -49,6 +52,7 @@ export const SkipLinks = {
       if (!target.hasAttribute('tabindex')) {
         target.setAttribute('tabindex', '-1');
         this.addedTabindexTargets.push(target);
+        logFix('skip-link-tabindex', target, '(none)', '-1');
       }
       try { target.focus(); } catch { /* hostile focus() override */ }
       try {
@@ -105,6 +109,7 @@ export const SkipLinks = {
       const parent = document.body || document.documentElement;
       parent.insertBefore(container, parent.firstChild);
       this.container = container;
+      logFix('skip-links', container, '(none)', `${container.querySelectorAll('a').length} links injected`);
     }
 
     console.log('[AI4A11y] Skip Links enabled');

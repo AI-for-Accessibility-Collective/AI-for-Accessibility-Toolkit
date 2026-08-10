@@ -1,0 +1,29 @@
+{
+  "kind": "aa-insight-outbox",
+  "v": 1,
+  "sourceAppId": "artinsight",
+  "exportedAt": 5000000,
+  "insights": [
+    {
+      "kind": "verbosity.preference",
+      "confidence": 0.7,
+      "label": "Prefers detailed descriptions",
+      "rationale": "You often ask ArtInsight for more detail.",
+      "change": {
+        "op": "add-memory",
+        "record": { "text": "Prefers detailed image descriptions" }
+      }
+    },
+    {
+      "kind": "visual.textSize",
+      "confidence": 0.8,
+      "label": "Larger text",
+      "rationale": "You zoomed in repeatedly while reading descriptions.",
+      "change": {
+        "op": "profile-set",
+        "path": "fields.needs",
+        "value": [{ "dimension": "textSize", "value": 1.6, "strength": "preference" }]
+      }
+    }
+  ]
+}

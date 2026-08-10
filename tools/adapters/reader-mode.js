@@ -19,22 +19,46 @@ export const ReaderMode = {
     // Idempotent: a second enable() without an intervening disable() would
     // orphan the first overlay + Escape listener (disable() only knows the
     // latest references), leaving a stuck full-screen div and a leaked handler.
-    if (this.enabled) return;
+    if (this.enabled) return true;
     if (typeof Readability === 'undefined') {
       console.warn('[AI4A11y] Readability library not loaded');
       announce('Reader mode not available');
-      return;
+      return false;
     }
 
     this.settings = { ...this.settings, ...options };
 
+    // Clone the document BEFORE parsing (Readability mutates the tree).
     const docClone = document.cloneNode(true);
+
+    // Fix lazy-loaded images: copy data-src/data-srcset -> src/srcset on the
+    // clone BEFORE Readability runs. The page's IntersectionObserver never
+    // fires inside the overlay, so images would otherwise stay blank.
+    const PLACEHOLDER_PATTERNS = /^(data:image\/gif|about:blank|javascript:|$)/i;
+    docClone.querySelectorAll('img, source').forEach(el => {
+      const dataSrc = el.getAttribute('data-src');
+      const dataSrcset = el.getAttribute('data-srcset');
+      if (dataSrc) {
+        const currentSrc = el.getAttribute('src') || '';
+        if (PLACEHOLDER_PATTERNS.test(currentSrc.trim())) {
+          el.setAttribute('src', dataSrc);
+        }
+      }
+      if (dataSrcset && !el.getAttribute('srcset')) {
+        el.setAttribute('srcset', dataSrcset);
+      }
+    });
+
     const reader = new Readability(docClone);
     const article = reader.parse();
 
-    if (!article) {
-      announce('Could not extract article content');
-      return;
+    // Readability gate: reject a null parse AND a near-empty one (e.g. a
+    // paywall stub or a page that isn't really an article) — rendering that
+    // as "reader mode" would show the user an almost-blank overlay instead of
+    // the real page, which is worse than not offering it at all.
+    if (!article || !article.content || article.content.length < 200) {
+      announce('Reader mode could not extract the article — the page may be behind a login or is too short.');
+      return false;
     }
 
     this.originalContent = document.body.innerHTML;
@@ -55,7 +79,7 @@ export const ReaderMode = {
 
     const title = document.createElement('h1');
     title.className = 'ai4a11y-reader-title';
-    title.textContent = article.title || 'Article';
+    title.textContent = article.title || document.title || 'Article';
     container.appendChild(title);
 
     if (article.byline) {
@@ -67,32 +91,7 @@ export const ReaderMode = {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'ai4a11y-reader-content';
-    // Sanitize content for XSS safety
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = article.content || '';
-    tempDiv.querySelectorAll('script, iframe, object, embed, form, input, svg, style, link, meta, base, noscript, template, math').forEach(el => el.remove());
-    const dangerousUrlAttrs = ['href', 'src', 'action', 'formaction', 'srcdoc', 'poster', 'xlink:href'];
-    tempDiv.querySelectorAll('*').forEach(el => {
-      [...el.attributes].forEach(attr => {
-        const name = attr.name.toLowerCase();
-        const value = (attr.value || '').replace(/[\s\x00-\x1f]/g, '').toLowerCase();
-        // Remove all event handlers
-        if (name.startsWith('on')) {
-          el.removeAttribute(attr.name);
-          return;
-        }
-        // Check URL-containing attributes for dangerous schemes
-        if (dangerousUrlAttrs.includes(name)) {
-          if (value.startsWith('javascript:') ||
-              value.startsWith('vbscript:') ||
-              value.startsWith('data:text/html') ||
-              value.startsWith('data:application')) {
-            el.removeAttribute(attr.name);
-          }
-        }
-      });
-    });
-    contentDiv.innerHTML = tempDiv.innerHTML;
+    contentDiv.innerHTML = this.sanitize(article.content || '');
     container.appendChild(contentDiv);
 
     this.readerOverlay.appendChild(container);
@@ -111,6 +110,40 @@ export const ReaderMode = {
       if (e.key === 'Escape') this.disable();
     };
     document.addEventListener('keydown', this.escapeHandler);
+
+    return true;
+  },
+
+  // Strip Readability output down to safe HTML before injecting it with
+  // innerHTML. No DOMPurify dependency is vendored for tools/ (only the
+  // extension's popup.html loads it as a devDependency of
+  // personalized-extension), so this replicates DOMPurify's HTML-profile
+  // sanitize with a hand-rolled allowlist-of-dangers pass: strip
+  // script-capable elements, all `on*` handlers, and URL-bearing attributes
+  // that carry an executable scheme (javascript:/vbscript:/data:text/html
+  // /data:application/data:image+svg — SVG can carry its own <script>).
+  sanitize(html) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html || '';
+    tempDiv.querySelectorAll('script, iframe, object, embed, form, input, svg, style, link, meta, base, noscript, template, math').forEach(el => el.remove());
+    const dangerousUrlAttrs = ['href', 'src', 'srcset', 'action', 'formaction', 'srcdoc', 'poster', 'xlink:href'];
+    const dangerousPrefixes = ['javascript:', 'vbscript:', 'data:text/html', 'data:application', 'data:image/svg+xml'];
+    tempDiv.querySelectorAll('*').forEach(el => {
+      [...el.attributes].forEach(attr => {
+        const name = attr.name.toLowerCase();
+        const value = (attr.value || '').replace(/[\s\x00-\x1f]/g, '').toLowerCase();
+        // Remove all event handlers
+        if (name.startsWith('on')) {
+          el.removeAttribute(attr.name);
+          return;
+        }
+        // Check URL-containing attributes for dangerous schemes
+        if (dangerousUrlAttrs.includes(name) && dangerousPrefixes.some(p => value.startsWith(p))) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+    return tempDiv.innerHTML;
   },
 
   applyStyles() {
@@ -163,6 +196,7 @@ export const ReaderMode = {
   },
 
   disable() {
+    if (!this.enabled && !this.readerOverlay) return;
     if (this.readerOverlay) {
       this.readerOverlay.remove();
       this.readerOverlay = null;

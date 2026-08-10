@@ -50,7 +50,7 @@ export const ReadAloud = {
   },
 
   getVoices() {
-    return speechSynthesis.getVoices();
+    return (typeof speechSynthesis !== 'undefined') ? speechSynthesis.getVoices() : [];
   },
 
   setVoice(voiceName) {
@@ -99,6 +99,10 @@ export const ReadAloud = {
   speak(text) {
     this.stop();
     if (!text) return;
+    if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') {
+      announce('Text-to-speech is not available in this browser');
+      return false;
+    }
 
     this._stopByUser = false;
     this._chunks = sentenceChunks(text);
@@ -140,7 +144,7 @@ export const ReadAloud = {
   },
 
   pause() {
-    if (this.speaking && !this.paused) {
+    if (this.speaking && !this.paused && typeof speechSynthesis !== 'undefined') {
       speechSynthesis.pause();
       this.paused = true;
       announce('Reading paused');
@@ -148,7 +152,7 @@ export const ReadAloud = {
   },
 
   resume() {
-    if (this.paused) {
+    if (this.paused && typeof speechSynthesis !== 'undefined') {
       speechSynthesis.resume();
       this.paused = false;
       announce('Reading resumed');
@@ -156,7 +160,7 @@ export const ReadAloud = {
   },
 
   stop() {
-    speechSynthesis.cancel();
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     this.speaking = false;
     this.paused = false;
     this._chunks = [];

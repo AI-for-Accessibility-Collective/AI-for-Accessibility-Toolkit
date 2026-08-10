@@ -1,0 +1,34 @@
+[
+  {
+    "name": "wrong kind",
+    "doc": { "kind": "nope", "v": 1, "exportedAt": 1, "profile": { "supportAreas": [], "freeText": "", "fields": {}, "metaPreferences": { "language": "standard" }, "updatedAt": null } }
+  },
+  {
+    "name": "wrong version",
+    "doc": { "kind": "aa-profile-blob", "v": 2, "exportedAt": 1, "profile": { "supportAreas": [], "freeText": "", "fields": {}, "metaPreferences": { "language": "standard" }, "updatedAt": null } }
+  },
+  {
+    "name": "exportedAt not a number (poisons last-write-wins)",
+    "doc": { "kind": "aa-profile-blob", "v": 1, "exportedAt": "yesterday", "profile": { "supportAreas": [], "freeText": "", "fields": {}, "metaPreferences": { "language": "standard" }, "updatedAt": null } }
+  },
+  {
+    "name": "missing profile",
+    "doc": { "kind": "aa-profile-blob", "v": 1, "exportedAt": 1 }
+  },
+  {
+    "name": "profile.supportAreas is not an array",
+    "doc": { "kind": "aa-profile-blob", "v": 1, "exportedAt": 1, "profile": { "supportAreas": "vision", "freeText": "", "fields": {}, "metaPreferences": { "language": "standard" }, "updatedAt": null } }
+  },
+  {
+    "name": "metaPreferences.language outside the enum",
+    "doc": { "kind": "aa-profile-blob", "v": 1, "exportedAt": 1, "profile": { "supportAreas": [], "freeText": "", "fields": {}, "metaPreferences": { "language": "french" }, "updatedAt": null } }
+  },
+  {
+    "name": "unexpected top-level property (memories must never ride the blob)",
+    "doc": { "kind": "aa-profile-blob", "v": 1, "exportedAt": 1, "profile": { "supportAreas": [], "freeText": "", "fields": {}, "metaPreferences": { "language": "standard" }, "updatedAt": null }, "memories": [] }
+  },
+  {
+    "name": "a need missing its required strength",
+    "doc": { "kind": "aa-profile-blob", "v": 1, "exportedAt": 1, "abilityModel": { "schemaVersion": 1, "supportAreas": [], "freeText": "", "language": "standard", "readingLevel": null, "confidence": null, "needs": [{ "dimension": "textSize", "value": 1.2 }] }, "profile": { "supportAreas": [], "freeText": "", "fields": {}, "metaPreferences": { "language": "standard" }, "updatedAt": null } }
+  }
+]
