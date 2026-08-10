@@ -316,6 +316,40 @@ export async function generate(query, opts = {}) {
   hand(model);
 
   // ---- stage 3: the questions ----
+  // Coding, built once and used twice: behind each batch of questions as it
+  // lands, and again at the end for anything those missed.
+  const cBlock = block(exs.slice(0, EXAMPLES_FOR_CODING),
+    'Here are <<N>> fully coded models, from <<N>> different tasks, with every '
+    + 'question carrying its cluster and its moment:');
+  const codedAlready = new Set();
+  let codedCalls = 0;
+
+  const codeThese = async (m, questions, tag) => {
+    if (!questions.length || stop()) return;
+    // The path, not just the id. Coding in chunks means the model is otherwise
+    // asked "is continuing past this hard to undo?" about a bare sentence with
+    // no idea it sits under "Check out and pay".
+    const scope = questions.map((q) => `${q.nodeId} | ${q.path} | "${q.question}"`).join('\n');
+    try {
+      const out = await call(fill(PROMPTS['strong-coding'], {
+        TYPE_CARDS: PROMPTS['type-cards'], PARADIGM_CARDS: PROMPTS['strong-paradigm-cards'],
+        EXEMPLAR: cBlock, MODEL: modelJson(m), SCOPE: scope,
+        TASK: m.task || '', ASK: m.ask || '',
+      }), tag);
+      if (stop()) return;
+      applyCodings(m, out);
+      for (const q of questions) codedAlready.add(q.question);
+      codedCalls += 1;
+      say({ stage: 'coding', of: 3, part: codedCalls });
+      hand(m);
+    } catch (e) {
+      // Uncoded questions still get asked; they just carry no paradigm and
+      // cannot raise a money-moving stop.
+      codedCalls += 1;
+      say({ stage: 'coding', of: 3, part: codedCalls, failed: e.message });
+    }
+  };
+
   const qBlock = block(exs.slice(0, EXAMPLES_FOR_QUESTIONS)
     .map((e) => stripQuestions(e, { codingsOnly: true })),
     'Here are <<N>> finished task models, from <<N>> different tasks. Study '
@@ -345,6 +379,18 @@ export async function generate(query, opts = {}) {
       say({ stage: 'questions', of: 3, part: landed, parts: chunks.length });
       // Usable now, for the phases covered so far.
       hand(model);
+
+      // Code these questions now rather than after every other batch lands.
+      // Coding sets `moneyMoving`, and `moneyMoving` is what stops the agent
+      // before something that cannot be undone. As its own stage at the end it
+      // finished at 125 to 171 seconds in the recorded runs and in one run not
+      // at all, so for most of every run the rule the design turns on was not
+      // armed. A phase's own questions are all that is needed to code it.
+      const ids = chunk.map((n) => String(n.id));
+      await codeThese(model,
+        flattenQuestions(model).filter((q) => ids.includes(String(q.nodeId))
+          && !codedAlready.has(q.question)),
+        `gen-coding-q${i}`);
     } catch (e) {
       // One chunk failing costs its questions, not the model.
       landed += 1;
@@ -354,41 +400,13 @@ export async function generate(query, opts = {}) {
   if (stop()) return null;
   if (!asked) return null;   // a tree with no questions checks nothing
 
-  // ---- stage 5: the coding ----
-  const cBlock = block(exs.slice(0, EXAMPLES_FOR_CODING),
-    'Here are <<N>> fully coded models, from <<N>> different tasks, with every '
-    + 'question carrying its cluster and its moment:');
-  const modelJsonStr = modelJson(model);
-  const qs = flattenQuestions(model);
-  const codeChunks = [];
-  for (let i = 0; i < qs.length; i += QUESTIONS_PER_CALL) {
-    codeChunks.push({ i, qs: qs.slice(i, i + QUESTIONS_PER_CALL) });
+  // ---- whatever the per-batch coding did not reach ----
+  const left = flattenQuestions(model).filter((q) => !codedAlready.has(q.question));
+  const sweeps = [];
+  for (let i = 0; i < left.length; i += QUESTIONS_PER_CALL) {
+    sweeps.push(left.slice(i, i + QUESTIONS_PER_CALL));
   }
-  let coded = 0;
-  await Promise.all(codeChunks.map(async ({ i, qs: chunk }) => {
-    if (stop()) return;
-    // The path, not just the id. Coding in chunks means the model is otherwise
-    // asked "is continuing past this hard to undo?" about a bare sentence with
-    // no idea it sits under "Check out and pay".
-    const scope = chunk.map((q) => `${q.nodeId} | ${q.path} | "${q.question}"`).join('\n');
-    try {
-      const out = await call(fill(PROMPTS['strong-coding'], {
-        TYPE_CARDS: PROMPTS['type-cards'], PARADIGM_CARDS: PROMPTS['strong-paradigm-cards'],
-        EXEMPLAR: cBlock, MODEL: modelJsonStr, SCOPE: scope,
-        TASK: model.task || '', ASK: model.ask || '',
-      }), `gen-coding-${i}`);
-      if (stop()) return;
-      applyCodings(model, out);
-      coded += 1;
-      say({ stage: 'coding', of: 3, part: coded, parts: codeChunks.length });
-      hand(model);
-    } catch (e) {
-      // Uncoded questions still get asked; they just carry no paradigm and
-      // cannot raise a money-moving stop.
-      coded += 1;
-      say({ stage: 'coding', of: 3, part: coded, parts: codeChunks.length, failed: e.message });
-    }
-  }));
+  await Promise.all(sweeps.map((c, i) => codeThese(model, c, `gen-coding-rest-${i}`)));
 
   model.generatedFor = query;
   model.generatedAt = Date.now();
