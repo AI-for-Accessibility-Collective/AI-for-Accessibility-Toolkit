@@ -18,7 +18,7 @@ analyses that are not necessarily current.
   - [../toolkit/API.md](../toolkit/API.md) — the toolkit core (Librarian/Datastore methods, ports, surfaces, protocol); `npm run docs` in `toolkit/`.
   - [../server/API.md](../server/API.md) — the hosted service's HTTP routes; also served live at `GET /v1/meta`.
   - [../.claude/skills/ai4a11y-toolkit/SKILL.md](../.claude/skills/ai4a11y-toolkit/SKILL.md) — the Claude Code skill (same generated model).
-- Hosted service (hand-maintained, in [../server/](../server/)): [CONTRACT.md](../server/CONTRACT.md) (wire contract) · [DEPLOYMENT.md](../server/DEPLOYMENT.md) (runbook) · [INTERNAL-USE.md](../server/INTERNAL-USE.md) (team guidelines).
+- Hosted service (hand-maintained, in [../server/](../server/)): [CONTRACT.md](../server/CONTRACT.md) (wire contract) · [DEPLOYMENT.md](../server/DEPLOYMENT.md) (runbook) (runbook, placeholders only — team-internal notes with the real instance details are deliberately not in the repo).
 
 ## Feature docs (shipped behavior)
 
