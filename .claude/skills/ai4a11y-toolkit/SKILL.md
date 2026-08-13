@@ -1,6 +1,6 @@
 ---
 name: ai4a11y-toolkit
-description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), or talking to the hosted toolkit HTTP service.
+description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), talking to the hosted toolkit HTTP service, or running/deploying your own toolkit service instance.
 ---
 
 # AI for Accessibility Toolkit
@@ -315,6 +315,41 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
   `removeScopedSetting`, `recordExplicitSetting` — 41 routes total.
+
+## Running or deploying your own toolkit service
+
+The reference service in `server/` is a zero-dependency `node:http` app that embeds the toolkit through its public barrel — it is both the hosted deployment and the template for running your own instance.
+
+**Run locally** (file-backed storage, no cloud account needed):
+
+```bash
+DATA_DIR=./data ADMIN_TOKEN=dev PORT=8080 node server/index.js
+# mint a token:  curl -X POST localhost:8080/admin/tokens \
+#   -H 'Authorization: Bearer dev' -H 'content-type: application/json' \
+#   -d '{"uid":"me","label":"dev"}'
+```
+
+**Environment variables** (parsed from the server source at doc-generation time): `ADMIN_TOKEN`, `DATA_DIR`, `GEMINI_API_KEY`, `NODE_ENV`, `PORT`, `TOOLKIT_BUCKET`. `TOOLKIT_BUCKET` switches storage from the `DATA_DIR` file backend to GCS; `GEMINI_API_KEY` enables the server-side LLM lane (`extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt`) so clients never need a key; `ADMIN_TOKEN` guards `/admin` (token management UI + CRUD).
+
+**npm scripts** (`server/package.json`):
+- `npm run start` — `node index.js`
+- `npm run test` — `node test/server-test.mjs`
+- `npm run docs` — `node scripts/generate-docs.mjs`
+
+**Deploying**: `server/Dockerfile` builds from the repo root (it copies `toolkit/` + `server/`); `cloudbuild.yaml` + `server/DEPLOYMENT.md` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). `server/API.md` is generated from the route table (`npm run docs` in `server/`) and the live service serves the same data at `GET /v1/meta`. Liveness: use `/v1/healthz` (bare `/healthz` is intercepted at the run.app edge).
+
+**Extending the wire surface**: add a route entry in `server/src/routes.js` (plain `{route, target, kind}`, or a custom `invoke` for arg-shape dispatch — see `setPause`), then regenerate docs and update the oracle list in `server/test/server-test.mjs`. The extension-side facade lives in `personalized-extension/extension/remote-librarian.js`.
+
+## Adding this skill to your project
+
+This skill ships **inside the toolkit repo** at `.claude/skills/ai4a11y-toolkit/SKILL.md`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
+
+```bash
+mkdir -p .claude/skills
+cp -r <path-to-toolkit-repo>/.claude/skills/ai4a11y-toolkit .claude/skills/
+```
+
+Claude Code discovers project skills in `.claude/skills/` on the next session. If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).
 
 ---
 

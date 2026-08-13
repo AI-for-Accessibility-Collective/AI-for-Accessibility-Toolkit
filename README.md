@@ -114,8 +114,17 @@ The common contributions:
 - **Detect an issue** → add an auditor in `tools/auditors/`
 - **Combine adapters for a need** → add a skill (`SKILL.md`) in `toolkit/skills/builtin/`
 - **Add a profile** → edit `tools/profiles/settings.json`
+- **Build on the personalization toolkit** → generated API reference in [toolkit/API.md](toolkit/API.md), hosted-service contract in [server/CONTRACT.md](server/CONTRACT.md)
 
 Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide and [docs/API.md](docs/API.md) for the API. The full list of interfaces and teams is in [docs/](docs/README.md).
+
+Working with Claude Code? This repo ships a generated skill at
+[.claude/skills/ai4a11y-toolkit/](.claude/skills/ai4a11y-toolkit/SKILL.md) —
+auto-discovered when you open this repo, and copyable into your own project
+(`cp -r .claude/skills/ai4a11y-toolkit <your-repo>/.claude/skills/`) so Claude
+can embed the toolkit, implement ports, call the hosted service, or stand up
+your own server instance. Regenerate after toolkit changes with `npm run docs`
+in `toolkit/`.
 
 ## Roadmap
 

@@ -10,7 +10,7 @@
 //
 //   node toolkit/scripts/generate-skill.mjs
 
-import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdirSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -79,11 +79,62 @@ function buildServiceMappingSection() {
   ].filter(Boolean).join('\n\n');
 }
 
+/** "Run your own service" section — every fact is read live from server/
+ *  sources (env vars from actual process.env.* references, scripts from
+ *  server/package.json) so the section can't drift from the code. */
+function buildServerDevSection() {
+  const serverDir = path.join(REPO_ROOT, 'server');
+  let envVars = [];
+  let scripts = {};
+  try {
+    const srcFiles = ['index.js', ...readdirSync(path.join(serverDir, 'src')).map((f) => `src/${f}`)];
+    const seen = new Set();
+    for (const f of srcFiles) {
+      const src = readFileSync(path.join(serverDir, f), 'utf8');
+      for (const m of src.matchAll(/process\.env\.([A-Z_]+)/g)) seen.add(m[1]);
+    }
+    envVars = [...seen].sort();
+    scripts = JSON.parse(readFileSync(path.join(serverDir, 'package.json'), 'utf8')).scripts || {};
+  } catch {
+    return '_(server/ not found at generation time — regenerate from a full checkout.)_';
+  }
+  const scriptLines = Object.entries(scripts).map(([k, v]) => `- \`npm run ${k}\` — \`${v}\``).join('\n');
+  return `The reference service in \`server/\` is a zero-dependency \`node:http\` app that embeds the toolkit through its public barrel — it is both the hosted deployment and the template for running your own instance.
+
+**Run locally** (file-backed storage, no cloud account needed):
+
+\`\`\`bash
+DATA_DIR=./data ADMIN_TOKEN=dev PORT=8080 node server/index.js
+# mint a token:  curl -X POST localhost:8080/admin/tokens \\
+#   -H 'Authorization: Bearer dev' -H 'content-type: application/json' \\
+#   -d '{"uid":"me","label":"dev"}'
+\`\`\`
+
+**Environment variables** (parsed from the server source at doc-generation time): ${envVars.map((v) => `\`${v}\``).join(', ')}. \`TOOLKIT_BUCKET\` switches storage from the \`DATA_DIR\` file backend to GCS; \`GEMINI_API_KEY\` enables the server-side LLM lane (\`extract\`/\`reflect\`/\`buildSkill\`/\`interpretNeedsPrompt\`) so clients never need a key; \`ADMIN_TOKEN\` guards \`/admin\` (token management UI + CRUD).
+
+**npm scripts** (\`server/package.json\`):
+${scriptLines}
+
+**Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
+
+**Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. The extension-side facade lives in \`personalized-extension/extension/remote-librarian.js\`.`;
+}
+
+const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
+
+\`\`\`bash
+mkdir -p .claude/skills
+cp -r <path-to-toolkit-repo>/.claude/skills/ai4a11y-toolkit .claude/skills/
+\`\`\`
+
+Claude Code discovers project skills in \`.claude/skills/\` on the next session. If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).`;
+
 export function renderSkillMd(model) {
   const serviceMapping = buildServiceMappingSection();
+  const serverDev = buildServerDevSection();
   return `---
 name: ai4a11y-toolkit
-description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), or talking to the hosted toolkit HTTP service.
+description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), talking to the hosted toolkit HTTP service, or running/deploying your own toolkit service instance.
 ---
 
 # AI for Accessibility Toolkit
@@ -116,6 +167,14 @@ ${renderPorts(model.ports)}
 Instead of embedding the toolkit in-process, a client can call a hosted instance over HTTP — same Librarian methods, one call per method, behind a bearer token. Full wire contract: \`server/CONTRACT.md\`.
 
 ${serviceMapping}
+
+## Running or deploying your own toolkit service
+
+${serverDev}
+
+## Adding this skill to your project
+
+${ADD_SKILL_SECTION}
 
 ---
 
