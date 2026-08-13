@@ -168,6 +168,35 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 
 ${serviceMapping}
 
+## Connecting to a hosted instance (URL + token)
+
+The repo intentionally contains **no live instance URL and no tokens** (client
+config never belongs in version control). For scripts/agents, configuration
+lives in the project's untracked \`.env\` at the repo root:
+
+\`\`\`bash
+TOOLKIT_SERVER_URL=https://<your-instance>     # ask a maintainer, or your own deployment
+TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted on the instance's /admin page
+\`\`\`
+
+**When a task needs the hosted service, do this first:**
+
+1. Check \`.env\` for \`TOOLKIT_SERVER_URL\` / \`TOOLKIT_SERVER_TOKEN\`.
+2. If either is missing, **ask the user** for it (the URL comes from a
+   maintainer or their own deployment; a token is minted on the instance's
+   \`/admin\` page — browser login popup) and **offer to write both into
+   \`.env\`** — create the file if needed, and confirm \`.env\` is gitignored
+   *before* writing (\`git check-ignore .env\`).
+3. Read the values from \`.env\` at run time — never hardcode them in code,
+   commits, or generated files, and never echo the token back into output.
+4. Verify the connection: \`GET $TOOLKIT_SERVER_URL/v1/whoami\` with
+   \`Authorization: Bearer $TOOLKIT_SERVER_TOKEN\` returns the token's
+   \`{uid, label}\`.
+
+The browser extension does **not** use \`.env\` — its equivalent config is the
+extension's Options page (stored in \`chrome.storage.sync\` as
+\`toolkitServerUrl\` / \`toolkitServerToken\`).
+
 ## Running or deploying your own toolkit service
 
 ${serverDev}
