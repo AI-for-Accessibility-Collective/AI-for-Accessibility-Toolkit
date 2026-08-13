@@ -1,0 +1,12 @@
+# Upload only what the toolkit-service image needs (build context stays small).
+# The Dockerfile copies toolkit/ and server/ exclusively.
+*
+!cloudbuild.yaml
+!server/
+!server/**
+!toolkit/
+!toolkit/**
+toolkit/node_modules/
+toolkit/node_modules/**
+server/data/
+server/data/**

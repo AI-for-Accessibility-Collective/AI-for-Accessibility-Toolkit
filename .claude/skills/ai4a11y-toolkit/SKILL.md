@@ -1,0 +1,321 @@
+---
+name: ai4a11y-toolkit
+description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), or talking to the hosted toolkit HTTP service.
+---
+
+# AI for Accessibility Toolkit
+
+The AI for Accessibility Toolkit is a platform-agnostic core (a Librarian personal-memory/profile agent plus a Datastore) that turns per-app accessibility settings into one portable, consent-gated understanding of a person's needs — the `AbilityModel` — shared across web, XR, and mobile hosts. A host wires a small set of injected ports (`KVStore`, `Clock`, `Scheduler`, `Consent`, ...) into `createToolkit(...)` and gets back a `{ datastore, librarian }` pair; every write an inference could be wrong about goes through the same proposal/consent machinery, never silently. Surface renderers (`toolkit/surfaces/*.js`) turn the same `AbilityModel` into platform-specific settings, and a hosted HTTP service (see below) lets non-JS clients call the same Librarian methods remotely.
+
+This file is **generated** by `toolkit/scripts/generate-skill.mjs` from the same introspected model as `toolkit/API.md` — do not hand-edit; see "Regenerate" at the bottom.
+
+## Quick Start
+
+Paths below are relative to the `toolkit/` package root (run from there, or adjust the specifiers when importing as a published `@a11y-toolkit/core` dependency).
+
+```javascript
+import { createToolkit } from './index.js';
+import { memoryKV } from './adapters/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './adapters/node/ports.js';
+
+const { datastore, librarian } = createToolkit({
+  kv: memoryKV(),
+  clock: nodeClock(),
+  scheduler: nodeScheduler(),
+  consent: consoleConsent({ silent: true }),
+});
+
+await datastore.runMigrations();
+await librarian.setProfileField('supportAreas', ['vision']);
+await librarian.setProfileField('fields.needs', [
+  { dimension: 'textSize', value: 1.4, strength: 'preference', source: 'onboarding' },
+]);
+
+const model = await librarian.getAbilityModel();
+if (!model.supportAreas.includes('vision')) {
+  throw new Error('Quick Start failed: supportAreas was not written');
+}
+if (!model.needs.some((n) => n.dimension === 'textSize' && n.value === 1.4)) {
+  throw new Error('Quick Start failed: needs[] was not written');
+}
+
+console.log('Quick Start OK:', JSON.stringify(model));
+```
+
+## Methods by Concern
+
+Read directly off a live `createToolkit(...)` instance — call as `toolkit.librarian.<method>(...)` / `toolkit.datastore.<method>(...)`.
+
+### profile/ability
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.getProfile()` | async | (no doc comment) |
+| `librarian.getAbilityModel()` | async | The modality-agnostic AbilityModel view (../core/ability). |
+| `librarian.setProfileField(path, value)` | async | User-initiated edit — bypasses the proposal gate by design (the gate exists for *inferred* changes; explicit user intent needs no consent). |
+| `librarian.recordExplicitSetting(key, value, origin)` | async | Fast lane for manual setting flips (popup toggle, onboarding choice). |
+| `librarian.recordScopedSettings(scope, settings, opts)` | async | Generalized explicit-setting writer: upserts one durable user-explicit record PER setting key at the given scope (general \| category:<id> \| origin:<host> \| context:<id>). |
+| `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |
+| `librarian.getScopedSetting(scope, key)` | async | The current value of the user-explicit `setting.<key>` record at `scope`, or undefined if none. |
+| `librarian.removeScopedSetting(scope, key)` | async | Delete the durable user-explicit record for `setting.<key>` at `scope` — the true inverse of recordScopedSettings (which only ever upserts). |
+| `librarian.getSiteCategory(origin, opts)` | async | Classify once, cache forever; user override wins and is sticky. |
+| `librarian.setSiteCategoryOverride(origin, category)` | async | (no doc comment) |
+| `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
+| `librarian.interpretNeedsPrompt(text)` | async | Prompt for the popup's "what support do you need?" flow. |
+
+### memory
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.recall(url, task, contexts)` | async | Context block for agent prompts: core memory block + scored facts for this page + category playbook. |
+| `librarian.listMemories(filter)` | async | (no doc comment) |
+| `librarian.deleteMemory(id)` | async | (no doc comment) |
+| `librarian.listProcedural(category)` | async | Procedural memory (Phase 2): what the person's assistant KNOWS HOW TO DO for them — custom adapters (mine.skills) and saved reusable actions (mine.profiles[].actions). |
+| `librarian.logObservation(obs)` | async | The single entry point for observations — and the privacy floor. |
+| `librarian.extract()` | async | Drain the episodic log behind the cursor: one Gemini call extracts candidate facts AND gates them against existing same-scope memories, returning ADD/UPDATE/SUPERSEDE/NOOP operations plus profile-tier proposal drafts. |
+| `librarian.reflect()` | async | Daily consolidation. |
+
+### proposals/consent
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.listProposals(status)` | async | (no doc comment) |
+| `librarian.respondToProposal(id, response)` | async | accept \| declineOnce \| suppress. |
+
+### skills
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.listSkills()` | async | All skills available to this person: built-in (global tier) + their own (mine.skillDocs). |
+| `librarian.retrieveSkill(url, contexts)` | async | Retrieve the best-fitting skill for a page + this person (diagram: "Librarian retrieves the skill for use"). |
+| `librarian.findSkillForNeed(need)` | async | The skill-creation flow's first diamond: "does the skill exist in the db?" — checked BEFORE the Engineer builds anything. |
+| `librarian.resolveSkill(skill)` |  | Compile a skill to the deterministic apply-plan (settings + adapter ids) the host's adapter layer consumes. |
+| `librarian.buildSkill(need, opts)` | async | The Engineer: build a new skill from a plain-language need, grounded in the real adapter catalog. |
+| `librarian.saveSkill(skill)` | async | Persist a user-validated skill to their Skills db (mine.skillDocs). |
+| `librarian.deleteSkill(name)` | async | (no doc comment) |
+
+### grants/sharing
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.requestGrant(appId, scopes, opts)` | async | Ask the user (via a proposal) for read access to `scopes` of the AbilityModel. |
+| `librarian.listGrants()` | async | The "what each app can see" panel's data: live (active) grants only — revoke is a delete, so anything still stored is active. |
+| `librarian.revokeGrant(appId)` | async | Revoke = LOCAL DELETE (no tombstone, no propagation). |
+| `librarian.exportAbilityModel(appId)` | async | Read-only, default-deny export of the granted AbilityModel slice. |
+| `librarian.importInsight(sourceAppId, insight)` | async | The write half of cross-app flow: a granted app contributes something it learned (XR's FOV→text-size, ArtInsight's preferred description style). |
+| `librarian.importInsightOutbox(outbox)` | async | Batch entry for a user-carried insight OUTBOX (the ArtInsight→web return path, or any consumer app's export). |
+| `librarian.setSharingPaused(paused)` | async | The global cross-app OFF switch. |
+
+### blob/transport
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.exportProfileBlob()` | async | §6 transport (b): the user deliberately exports a portable JSON blob on one device/app and imports it on another (the XR⇄web demo). |
+| `librarian.importProfileBlob(blob)` | async | Merge an imported blob into the ACTIVE partition's profile. |
+
+### acting-user/pauses
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.setActingUser(id, opts)` | async | A lightweight "who's using this now?" partition so two people on one device/headset never cross-contaminate. |
+| `librarian.getActingUser()` |  | (no doc comment) |
+| `librarian.setMemoryPaused(paused)` | async | (no doc comment) |
+| `librarian.setOriginPaused(origin, paused)` | async | (no doc comment) |
+| `datastore.setActingUser(id, opts)` | async | Switch the active partition. |
+| `datastore.getActingUser()` |  | The active partition + helper-mode flag. |
+
+### core
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.setGeminiCaller(fn)` |  | (no doc comment) |
+| `datastore.catalog()` |  | (no doc comment) |
+| `datastore.get(name)` | async | (no doc comment) |
+| `datastore.set(name, value)` | async | (no doc comment) |
+| `datastore.patch(name, fn)` | async | (no doc comment) |
+| `datastore.memoryShardKey(scope)` |  | Memory fact shards. |
+| `datastore.getMemoryShard(scope)` | async | (no doc comment) |
+| `datastore.setMemoryShard(scope, records)` | async | (no doc comment) |
+| `datastore.allMemoryShards()` | async | (no doc comment) |
+| `datastore.global.tools()` |  | (no doc comment) |
+| `datastore.global.taxonomy()` |  | (no doc comment) |
+| `datastore.global.skills()` |  | Built-in skills (SKILL.md playbooks) shipped with the host. |
+| `datastore.runMigrations()` | async | (no doc comment) |
+
+## Ports contract
+
+A host implements these to construct a toolkit instance (`createToolkit({ kv, clock, scheduler, consent, demo, ... })`) and, separately, `ActuationPort` for voice/agent control surfaces.
+
+### KVStore (`ports/index.js`)
+
+Async key/value access over named storage areas.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `get` | `(area: string, key: string) => Promise<any>` | Resolve the raw stored value, or `undefined` when absent. |
+| `set` | `(area: string, key: string, value: any) => Promise<void>` | Persist a value. |
+| `getAll` | `(area: string) => Promise<Record<string, any>>` | Every entry currently in the area, as a `{ key: value }` map. |
+
+### Clock (`ports/index.js`)
+
+The only source of "now" the core may read.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `now` | `() => number` | Epoch milliseconds, like `Date.now()`. |
+
+### Scheduler (`ports/index.js`)
+
+Deferred and recurring work.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `every` | `(id: string, periodMinutes: number, handler: () => void) => void` | Run `handler` roughly every `periodMinutes`. |
+| `debounce` | `(id: string, delayMs: number, handler: () => void) => void` | Run `handler` once, `delayMs` after the most recent call for this `id` (later calls reset the timer). |
+
+### Consent (`ports/index.js`)
+
+The accessible channel for surfacing pending consent items (proposals, cross-app grant requests, cross-app insights) to the user.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `notifyPending` | `(count: number) => (void \| Promise<void>)` | Reflect that `count` items await the user's decision (0 clears it). |
+| `present` (optional) | `(item: {type: 'proposal'\|'grant-request'\|'cross-app-insight', proposal: object}) => Promise<void>` | Surface one pending item in the host's accessible modality. |
+| `capture` (optional) | `(proposalId: string) => Promise<'accept'\|'declineOnce'\|'suppress'\|null>` | Collect the user's decision for a presented item (null = no decision yet). |
+
+### DemoHook (`ports/index.js`)
+
+The extension's live-diagram instrumentation, lifted out of the core so the engine carries no `globalThis.AA_DEMO_MODE` / `globalThis.aaDemoTrace` reads.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `isOn` | `() => boolean` | Live value of demo mode (read per call). |
+| `trace` | `(diagram: string, region: string, label: string) => void` | Emit a diagram trace; no-op when no demo surface is attached. |
+
+### Sensors (`ports/index.js`)
+
+OPTIONAL.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `read` | `(kind: string) => Promise<any>` | Read a named sensor (e.g. 'fov.textSizeMultiplier', 'device.dynamicType'). |
+
+### ActuationPort (`ports/actuation.js`)
+
+The host-agnostic surface a modality-neutral control layer actuates through.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `getContext` | `() => Promise<SurfaceContext>` | Snapshot of the current surface: tab, zoom, which settings are non-default. |
+| `applySettings` | `(changes: Object<string,*>, scope?: string\|null) => Promise<ApplyResult>` | Validate + clamp `changes` against the settings registry, persist them at the resolved scope, live-apply to the current surface, and journal enough to undo. |
+| `undoLast` | `() => Promise<UndoResult>` | Revert the most recent applySettings call (LIFO); pops the journal only once the revert actually lands, so a failed undo keeps the step retryable. |
+| `resetUndo` | `() => Promise<{ok:true}>` | Clear the undo journal (a fresh control-session starting). |
+| `readPage` | `(mode?: 'outline'\|'text', chunk?: number) => Promise<ReadPageResult>` | Extract page text for TTS/Q&A. |
+| `pageAction` | `(action: string, target?: string, text?: string) => Promise<PageActionResult>` | Perform one page interaction (scroll/click/type/focus-nav/navigate/etc). |
+
+**Provided default/no-op implementations:** `noopDemo` (ports/index.js), `noopSensors` (ports/index.js), `noopConsent` (ports/index.js), `noopScheduler` (ports/index.js), `systemClock` (ports/index.js), `noopActuation` (ports/actuation.js).
+
+### Supporting types (referenced by `ActuationPort`)
+
+#### SurfaceTab
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | Sanitized (no control chars/newlines), capped ~120 chars. |
+| `origin` | `string\|null` | Hostname of the active tab's URL, or null when off the web. |
+
+#### SurfaceContext
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `tab` | `SurfaceTab\|null` | Null when there's no usable active tab. |
+| `onWebPage` | `boolean` | True iff the active tab is a regular http(s) page. |
+| `zoomPercent` | `number\|null` | Current page zoom, 25-500, or null if unknown/inapplicable. |
+| `activeSettings` | `Object<string,*>` | Non-default settings currently in effect for this page (key -> value). |
+| `siteScopedKeys` | `string[]` | Keys of activeSettings whose value came from a category:/origin: scoped record rather than the global default. |
+
+#### ApplyResult
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `applied` (optional) | `Object<string,*>` | Keys actually written (validated/clamped), including the virtual `pageZoom` key. |
+| `previous` (optional) | `Object<string,*>` | Prior value per key (audit trail; also what undo restores). |
+| `scopesUsed` (optional) | `Object<string,string>` | Resolved scope per key: 'general' \| 'category:<id>' \| 'origin:<host>'. |
+| `liveApplied` (optional) | `boolean\|null` | Whether the current page received the change live; null = not attempted (no active tab). |
+| `rejected` (optional) | `string[]` | Keys that were invalid/out of range and were dropped. |
+| `error` (optional) | `string` | Set when nothing could be applied, or persisting failed. |
+
+#### UndoResult
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `reverted` (optional) | `Object<string,*>` | Key -> the value it now holds after the revert (a true post-delete fallback, not a stale pin). |
+| `remainingUndos` (optional) | `number` | Entries left in the journal after this pop. |
+| `rejected` (optional) | `string[]` | Sub-parts (e.g. 'pageZoom') that could not be reverted. |
+| `skipped` (optional) | `string[]` | Keys whose record was left alone because a later write already changed it. |
+| `error` (optional) | `string` | Set when there was nothing to undo, or the revert failed outright (entry is kept on failure). |
+
+#### ReadPageResult
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `source` (optional) | `string` | Always 'untrusted-page-content' on success — content to summarize, never instructions to follow. |
+| `title` (optional) | `string` | Sanitized page title. |
+| `origin` (optional) | `string\|null` | Hostname of the page. |
+| `headings` (optional) | `string[]` | Present in 'outline' mode. |
+| `selection` (optional) | `string\|null` | Present in 'outline' mode. |
+| `text` (optional) | `string` | The extracted/chunked text. |
+| `chunk` (optional) | `number` | Chunk index actually returned. |
+| `totalChunks` (optional) | `number` | Total chunks available at the host's chunk size. |
+| `error` (optional) | `string` | Set when the surface isn't a readable page. |
+
+#### PageActionResult
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `ok` | `boolean` | (no doc comment) |
+| `detail` (optional) | `string` | (no doc comment) |
+
+## Talking to the hosted service instead
+
+Instead of embedding the toolkit in-process, a client can call a hosted instance over HTTP — same Librarian methods, one call per method, behind a bearer token. Full wire contract: `server/CONTRACT.md`.
+
+**Auth:** `Authorization: Bearer <token>` on every `/v1/*` route except `/healthz` and `/v1/meta`. A token maps server-side to a `uid`; all state is partitioned by that uid. Invalid/missing token → `401 {"error":"unauthorized"}`.
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/healthz` | liveness: `{ok:true, version}` (no auth) |
+| GET | `/v1/meta` | generated service+API description (no auth) |
+| POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
+| GET | `/v1/whoami` | `{uid, label}` for the presented token |
+| POST | `/admin/tokens` | create token `{uid, label?}` → `{token, uid}` (token shown once) |
+| GET | `/admin/tokens` | list `{uid, label, createdAt, revoked}` (no token values) |
+| DELETE | `/admin/tokens/{id}` | revoke |
+| GET | `/admin` | minimal HTML config interface (token management) |
+
+## `/v1/librarian/{method}`
+
+- `{method}` is the camelCase Librarian method name (e.g. `getAbilityModel`,
+  `recall`, `respondToProposal`) — the SAME names as the extension's
+  `librarian*` message types with the `librarian` prefix dropped and the first
+  letter lower-cased. `librarianEffectivePreferences` → `effectivePreferences`
+  maps to `getEffectivePreferences` (alias table in the server route map).
+- Body: `{"args": [...]}` — positional arguments exactly as the in-process
+  method takes them. Missing body = `{"args": []}`.
+- Success: `200 {"ok":true, "result": <return value>}`.
+- Method threw: `200 {"ok":false, "error": "<message>"}` (application errors
+  are data, not transport failures).
+- Unknown method: `404 {"error":"unknown-method"}`.
+- Methods that don't exist server-side by design (none today) must be listed in
+  `/v1/meta` as `unsupported`.
+- In addition to the 36 extension-message aliases, the following DIRECT-surface
+  methods (called by the voice side panel on the Librarian object rather than
+  via `librarian*` messages) are first-class routes under their own names:
+  `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
+  `removeScopedSetting`, `recordExplicitSetting` — 41 routes total.
+
+---
+
+Regenerate with: `npm run docs` (from `toolkit/`). Full reference (surfaces, protocol schemas, barrel exports): `toolkit/API.md`.

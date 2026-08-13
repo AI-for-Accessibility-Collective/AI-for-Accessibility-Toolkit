@@ -24,6 +24,14 @@
 //   voiceGetMemory           {topic?}              -> profile + memories + pending proposals
 
 (function () {
+
+  // Resolve the Librarian through background.js's local/remote switch when
+  // available (remote server mode); fall back to the local instance so this
+  // file keeps working standalone (tests, early SW startup).
+  async function LIB() {
+    try { if (globalThis.__resolveLibrarian) return await globalThis.__resolveLibrarian(); } catch {}
+    return globalThis.Librarian;
+  }
   const VOICE_DATA_ROUTES = new Set([
     'voiceGetContext',
     'voiceApplySettings',
@@ -62,7 +70,7 @@
   async function getContext() {
     const ctx = await actuation.getContext();
     let memoryPaused = false;
-    try { memoryPaused = !!(await globalThis.Librarian.getProfile()).memoryPaused; } catch {}
+    try { memoryPaused = !!(await (await LIB()).getProfile()).memoryPaused; } catch {}
     return { ...ctx, memoryPaused };
   }
 
@@ -75,7 +83,7 @@
 
     let parsed;
     try {
-      const prompt = await globalThis.Librarian.interpretNeedsPrompt(String(need).trim());
+      const prompt = await (await LIB()).interpretNeedsPrompt(String(need).trim());
       const raw = await callGemini(prompt, apiKey, { mimeType: 'application/json' });
       parsed = JSON.parse(String(raw).replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, ''));
     } catch (e) {

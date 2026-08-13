@@ -73,7 +73,51 @@ chrome.webNavigation?.onCompleted?.addListener((d) => {
 // types only. Loaded after lib/ so the toolkit globals both files read exist;
 // chrome-actuation.js must load first since voice-routes.js reads
 // globalThis.ChromeActuation at import time.
-self.importScripts('chrome-actuation.js', 'voice-routes.js');
+self.importScripts('chrome-actuation.js', 'voice-routes.js', 'remote-librarian.js');
+
+// ----- Remote toolkit server mode -------------------------------------------
+// See server/CONTRACT.md ("Extension remote mode") + remote-librarian.js.
+// When chrome.storage.sync holds both `toolkitServerUrl` and
+// `toolkitServerToken` (set via options.html), every `librarian*` message
+// dispatched below routes through RemoteLibrarian.asLibrarian() instead of
+// the local globalThis.Librarian. Cached because remoteIfConfigured() runs on
+// EVERY librarian* message (the hot path); invalidated by
+// chrome.storage.onChanged so flipping the options UI takes effect on the
+// very next message, no service-worker restart required.
+let _remoteLibrarianCache; // undefined = unread, null = local mode, object = remote facade
+chrome.storage.onChanged?.addListener((changes, area) => {
+  if (area !== 'sync') return;
+  if ('toolkitServerUrl' in changes || 'toolkitServerToken' in changes) {
+    _remoteLibrarianCache = undefined;
+  }
+});
+
+async function remoteIfConfigured() {
+  if (_remoteLibrarianCache !== undefined) return _remoteLibrarianCache;
+  let cfg = {};
+  try {
+    cfg = await chrome.storage.sync.get(['toolkitServerUrl', 'toolkitServerToken']);
+  } catch (e) {
+    console.warn('[AgenticA11y] toolkit server config read failed:', e.message);
+  }
+  const url = (cfg.toolkitServerUrl || '').trim();
+  const token = (cfg.toolkitServerToken || '').trim();
+  if (!url || !token) {
+    globalThis.RemoteLibrarian?.configure?.({});
+    _remoteLibrarianCache = null;
+    return _remoteLibrarianCache;
+  }
+  globalThis.RemoteLibrarian.configure({ url, token });
+  _remoteLibrarianCache = globalThis.RemoteLibrarian.asLibrarian();
+  return _remoteLibrarianCache;
+}
+
+// Shared resolver for SW modules that call the Librarian DIRECTLY rather than
+// via librarian* messages (voice-routes.js, chrome-actuation.js). Keeps voice
+// memory on the same local/remote source as everything else — without this,
+// remote mode would split-brain: popup remote, voice local.
+globalThis.__resolveLibrarian = async () =>
+  (await remoteIfConfigured()) || globalThis.Librarian;
 
 // Lazy, idempotent store migrations. Safe to fire-and-forget: stores are
 // readable before this resolves (migration 1 is a stamp).
@@ -1799,8 +1843,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Fast lane: deterministic queries + mechanical writes. The slow lane
   // (extract/reflect) runs on alarms; the *Now variants exist for debugging.
   if (msg.type && msg.type.startsWith('librarian')) {
-    const L = globalThis.Librarian;
-    if (!L) { sendResponse({ error: 'librarian not loaded' }); return false; }
     // Cross-app sharing (Phase 3): audience-ceiling enforcement + the audit
     // trail (toolkit/sync/grants.js) now live IN core/librarian.js itself
     // (requestGrant's accept path, revokeGrant, exportAbilityModel, the
@@ -1812,6 +1854,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const dsGetter = () => globalThis.Datastore;
     (async () => {
       try {
+        // Remote toolkit server mode (server/CONTRACT.md): when configured,
+        // every arm below runs against RemoteLibrarian.asLibrarian() instead
+        // of the local Librarian — same 36 arms, same `L.<method>` calls,
+        // switchable source. See remoteIfConfigured() above.
+        const L = (await remoteIfConfigured()) || globalThis.Librarian;
+        if (!L) { sendResponse({ error: 'librarian not loaded' }); return; }
         switch (msg.type) {
           case 'librarianGetProfile':
             sendResponse({ profile: await L.getProfile() }); break;
@@ -1893,10 +1941,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             // No UI reads this yet (the Phase 3 grant panel shows live grants
             // only — see popup.js's librarianListGrants). Wired for when one
             // does; graceful-empty rather than throwing if the Grants bridge
-            // somehow isn't loaded.
-            sendResponse({ audit: (await Grants?.getShareAudit?.(dsGetter)) || [] }); break;
+            // somehow isn't loaded. Local mode has no L.getShareAudit (the
+            // audit trail lives in the Grants bridge, not on Librarian
+            // itself) so it falls through to Grants; remote mode's facade
+            // DOES expose getShareAudit (CONTRACT.md: shareAudit route), so
+            // it answers first and Grants is never consulted.
+            sendResponse({ audit: (await L.getShareAudit?.(dsGetter)) || (await Grants?.getShareAudit?.(dsGetter)) || [] }); break;
           case 'librarianGetActingUser':
-            sendResponse({ actingUser: L.getActingUser() }); break;
+            sendResponse({ actingUser: await L.getActingUser() }); break;
           case 'librarianSetActingUser':
             sendResponse(await L.setActingUser(msg.id ?? null, msg.opts || {})); break;
           case 'librarianExportProfileBlob':
@@ -1915,7 +1967,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           case 'librarianBuildSkill':
             sendResponse(await L.buildSkill(msg.need, { previous: msg.previous || null, feedback: msg.feedback || '' })); break;
           case 'librarianResolveSkill':
-            sendResponse({ plan: L.resolveSkill(msg.skill) }); break;
+            sendResponse({ plan: await L.resolveSkill(msg.skill) }); break;
           case 'librarianSaveSkill':
             sendResponse(await L.saveSkill(msg.skill)); break;
           case 'librarianDeleteSkill':

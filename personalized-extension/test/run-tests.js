@@ -109,7 +109,9 @@ server.listen(PORT, async () => {
 
   // Test 5: Check registry has all 13 skills (W3 merge: 16→15; Phase 3 retirement: 15→13)
   // Retired: large-cursor, dyslexia-font (entries removed; settingsMeta keys kept).
-  const registryPath = path.join(ROOT, 'skills/registry.js');
+  // Canonical registry moved into the toolkit (skills/registry.js is a
+  // re-export shim) — static source checks read the canonical file.
+  const registryPath = path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js');
   const registryContent = fs.readFileSync(registryPath, 'utf8');
   for (const skill of expectedSkills) {
     if (registryContent.includes(`id: '${skill}'`)) {
@@ -1038,7 +1040,9 @@ server.listen(PORT, async () => {
     }
 
     // (d) wcagRiskyFixes key in registry settingsMeta
-    const registryPath = path.join(ROOT, 'skills/registry.js');
+    // Canonical registry moved into the toolkit (skills/registry.js is a
+  // re-export shim) — static source checks read the canonical file.
+  const registryPath = path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js');
     const registryCode = fs.readFileSync(registryPath, 'utf8');
     if (registryCode.includes('wcagRiskyFixes')) {
       console.log('PASS: registry.js contains wcagRiskyFixes setting key');
@@ -1213,7 +1217,7 @@ server.listen(PORT, async () => {
     }
 
     // (d) quickStart: false in registry for voice-commands
-    const registryCode = fs.readFileSync(path.join(ROOT, 'skills/registry.js'), 'utf8');
+    const registryCode = fs.readFileSync(path.join(ROOT, '..', 'toolkit', 'registry', 'tools.js'), 'utf8');
     // Find the voice-commands entry and check quickStart
     const vcEntryMatch = registryCode.match(/id:\s*'voice-commands'[\s\S]*?(?=\},\s*\{|\}\s*\])/);
     if (vcEntryMatch && /quickStart:\s*false/.test(vcEntryMatch[0])) {

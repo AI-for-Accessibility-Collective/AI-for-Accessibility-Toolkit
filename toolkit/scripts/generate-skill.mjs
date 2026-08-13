@@ -1,0 +1,133 @@
+#!/usr/bin/env node
+// toolkit/scripts/generate-skill.mjs — renders the SAME introspect.mjs model
+// (plus server/CONTRACT.md's route table) to
+// .claude/skills/ai4a11y-toolkit/SKILL.md, so an agent working in this repo
+// (or a consumer repo that vendors the skill) knows how to embed the
+// toolkit, call its API, implement a host port, or talk to the hosted
+// service — without re-deriving any of it from source. Deterministic, same
+// as generate-api-docs.mjs: no timestamps, same model in, byte-identical
+// Markdown out.
+//
+//   node toolkit/scripts/generate-skill.mjs
+
+import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { buildModel } from './introspect.mjs';
+import { QUICK_START_CODE } from './generate-api-docs.mjs';
+import { renderMethodGroups, renderPorts } from './render-lib.mjs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TOOLKIT_ROOT = path.join(__dirname, '..');       // toolkit/
+const REPO_ROOT = path.join(TOOLKIT_ROOT, '..');        // repo root
+const SKILL_DIR = path.join(REPO_ROOT, '.claude', 'skills', 'ai4a11y-toolkit');
+const SKILL_PATH = path.join(SKILL_DIR, 'SKILL.md');
+const CONTRACT_PATH = path.join(REPO_ROOT, 'server', 'CONTRACT.md');
+
+// A fixed, hand-authored 3-sentence identity blurb (per the mission: "from a
+// template" — this is editorial prose about what the toolkit IS, not a
+// method description, so it is not extracted from source like the tables
+// below are).
+const WHAT_IS_IT = `The AI for Accessibility Toolkit is a platform-agnostic core (a Librarian personal-memory/profile agent plus a Datastore) that turns per-app accessibility settings into one portable, consent-gated understanding of a person's needs — the \`AbilityModel\` — shared across web, XR, and mobile hosts. A host wires a small set of injected ports (\`KVStore\`, \`Clock\`, \`Scheduler\`, \`Consent\`, ...) into \`createToolkit(...)\` and gets back a \`{ datastore, librarian }\` pair; every write an inference could be wrong about goes through the same proposal/consent machinery, never silently. Surface renderers (\`toolkit/surfaces/*.js\`) turn the same \`AbilityModel\` into platform-specific settings, and a hosted HTTP service (see below) lets non-JS clients call the same Librarian methods remotely.`;
+
+/** Pull the section starting at a heading line matched by `headingPred`
+ *  through (but not including) the next `##` heading. Returns null if not
+ *  found — the caller decides how to degrade (this generator never invents
+ *  contract text it couldn't read). */
+function extractSection(md, headingPred) {
+  const lines = md.split('\n');
+  let start = -1, end = lines.length;
+  for (let i = 0; i < lines.length; i++) {
+    if (start === -1 && /^##\s/.test(lines[i]) && headingPred(lines[i])) { start = i; continue; }
+    if (start !== -1 && i > start && /^##\s/.test(lines[i])) { end = i; break; }
+  }
+  if (start === -1) return null;
+  return lines.slice(start, end).join('\n').trim();
+}
+
+/** The `- Auth: ...` bullet under `## Base`, including its indented
+ *  continuation lines (CONTRACT.md wraps it across 3 lines) — stops at the
+ *  next bullet or a blank line. */
+function extractAuthLine(contractMd) {
+  const lines = contractMd.split('\n');
+  const idx = lines.findIndex((l) => /^- Auth:/.test(l));
+  if (idx === -1) return null;
+  const collected = [lines[idx].replace(/^- Auth:\s*/, '')];
+  let i = idx + 1;
+  while (i < lines.length && lines[i].trim() && !/^- /.test(lines[i])) {
+    collected.push(lines[i].trim());
+    i++;
+  }
+  return collected.join(' ');
+}
+
+function buildServiceMappingSection() {
+  let contractMd;
+  try {
+    contractMd = readFileSync(CONTRACT_PATH, 'utf8');
+  } catch {
+    return '_(server/CONTRACT.md not found at generation time — regenerate once it exists.)_';
+  }
+  const authLine = extractAuthLine(contractMd);
+  const endpoints = extractSection(contractMd, (l) => l.trim() === '## Endpoints');
+  const methodMapping = extractSection(contractMd, (l) => l.includes('/v1/librarian/{method}'));
+  return [
+    authLine ? `**Auth:** ${authLine}` : '',
+    endpoints || '_(no `## Endpoints` section found in server/CONTRACT.md)_',
+    methodMapping || '_(no `/v1/librarian/{method}` section found in server/CONTRACT.md)_',
+  ].filter(Boolean).join('\n\n');
+}
+
+export function renderSkillMd(model) {
+  const serviceMapping = buildServiceMappingSection();
+  return `---
+name: ai4a11y-toolkit
+description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), or talking to the hosted toolkit HTTP service.
+---
+
+# AI for Accessibility Toolkit
+
+${WHAT_IS_IT}
+
+This file is **generated** by \`toolkit/scripts/generate-skill.mjs\` from the same introspected model as \`toolkit/API.md\` — do not hand-edit; see "Regenerate" at the bottom.
+
+## Quick Start
+
+Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing as a published \`@a11y-toolkit/core\` dependency).
+
+\`\`\`javascript
+${QUICK_START_CODE}\`\`\`
+
+## Methods by Concern
+
+Read directly off a live \`createToolkit(...)\` instance — call as \`toolkit.librarian.<method>(...)\` / \`toolkit.datastore.<method>(...)\`.
+
+${renderMethodGroups(model.methodGroups)}
+
+## Ports contract
+
+A host implements these to construct a toolkit instance (\`createToolkit({ kv, clock, scheduler, consent, demo, ... })\`) and, separately, \`ActuationPort\` for voice/agent control surfaces.
+
+${renderPorts(model.ports)}
+
+## Talking to the hosted service instead
+
+Instead of embedding the toolkit in-process, a client can call a hosted instance over HTTP — same Librarian methods, one call per method, behind a bearer token. Full wire contract: \`server/CONTRACT.md\`.
+
+${serviceMapping}
+
+---
+
+Regenerate with: \`npm run docs\` (from \`toolkit/\`). Full reference (surfaces, protocol schemas, barrel exports): \`toolkit/API.md\`.
+`;
+}
+
+const isMain = import.meta.url === `file://${process.argv[1]}`;
+if (isMain) {
+  const model = await buildModel();
+  const md = renderSkillMd(model);
+  mkdirSync(SKILL_DIR, { recursive: true });
+  writeFileSync(SKILL_PATH, md, 'utf8');
+  process.stdout.write(`Wrote ${SKILL_PATH} (${md.length} bytes)\n`);
+}

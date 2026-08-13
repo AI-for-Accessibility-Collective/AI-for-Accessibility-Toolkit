@@ -1,0 +1,701 @@
+// Canonical built-in tools registry — the single source of truth for the
+// "global Tools db" tier of the toolkit datastore. LIVES IN THE TOOLKIT so
+// every host (Chrome extension, server, XR, mobile) shares one settings
+// vocabulary; personalized-extension/skills/registry.js is a re-export shim.
+//
+// Consumed three ways:
+//   1. Directly as ESM by node-side code (toolkit hosts, the service in
+//      server/, personalized-extension/utils/recommender.js, tests).
+//   2. Generated into extension/lib/tools-registry.js (a classic script
+//      assigning globalThis.AA_TOOLS) by personalized-extension/build.js.
+//   3. As a live AA_TOOLS-shaped object via asAATools() below (what
+//      createToolkit's `toolsRegistry` port expects).
+//
+// Per-entry fields:
+//   settings   — chrome.storage.sync keys this tool sets when enabled
+//   emoji      — onboarding card icon. `icon` is the Material Symbols name
+//   quickStart — shown on the onboarding quick-start grid. AI
+
+export const skillRegistry = [
+  {
+    id: 'dark-mode',
+    name: 'Dark Mode',
+    description: 'Inverts page colors to a dark theme via CSS filter (invert + hue-rotate). Respects prefers-color-scheme:dark automatically. Conflicts with color-filter — color-filter takes precedence.',
+    supportAreas: ['vision', 'sensory'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'dark_mode',
+    emoji: '\u{1F319}',
+    quickStart: true,
+    settings: { darkMode: true },
+  },
+  {
+    id: 'focus-mode',
+    name: 'Focus Mode',
+    description: 'Dims distracting elements like ads and popups when hideDistractions is on, and shows a scroll progress bar. Progress bar re-attaches on SPA navigation.',
+    supportAreas: ['cognitive', 'reading', 'sensory'],
+    siteRelevance: ['news', 'education', 'social'],
+    requiresAI: false,
+    icon: 'center_focus_strong',
+    emoji: '\u{1F3AF}',
+    quickStart: true,
+    settings: { focusMode: true, hideDistractions: true, showProgress: true },
+  },
+  {
+    id: 'visual-assist',
+    name: 'Visual Assist',
+    description: 'Adjustable font size, line height, letter spacing, large cursor, reading guide, enhanced focus indicators, dyslexia font, and high-contrast modes.',
+    supportAreas: ['vision', 'reading'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'visibility',
+    emoji: '\u{1F441}️',
+    quickStart: true,
+    settings: { fontScale: 130, lineHeight: 1.8, enhanceFocus: true, readingGuide: true },
+  },
+  {
+    id: 'motion-reducer',
+    name: 'Reduce Motion',
+    description: 'Stops animations, GIFs, auto-playing videos (including YouTube/Vimeo iframes), and parallax scrolling to reduce visual stimulation.',
+    supportAreas: ['sensory', 'cognitive', 'vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'motion_photos_pause',
+    emoji: '⏸️',
+    quickStart: true,
+    settings: { motionReducer: true },
+  },
+  {
+    id: 'reader-mode',
+    name: 'Reader Mode',
+    description: 'Extracts the main article content and displays it in a clean, distraction-free overlay with XSS sanitization and byline extraction.',
+    supportAreas: ['cognitive', 'reading', 'sensory'],
+    siteRelevance: ['news', 'education'],
+    requiresAI: false,
+    icon: 'article',
+    emoji: '\u{1F4C4}',
+    quickStart: true,
+    settings: { readerMode: true },
+  },
+  {
+    id: 'dismiss-overlays',
+    name: 'Dismiss Popups',
+    description: 'Hides cookie/consent banners, newsletter modals, sticky promo bars, and blocking interstitials, restores locked scrolling, and keeps watching for popups injected after load.',
+    supportAreas: ['cognitive', 'sensory', 'motor', 'vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'block',
+    emoji: '\u{1F6AB}',
+    quickStart: true,
+    settings: { dismissOverlays: true },
+  },
+  {
+    id: 'big-targets',
+    name: 'Bigger Click Targets',
+    description: 'Enlarges and spaces out small links, buttons, and inputs to a comfortable 44px click/touch size (WCAG 2.5.8) so they are easy to hit with a shaky hand, a single finger, or eye-gaze input.',
+    supportAreas: ['motor', 'vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'ads_click',
+    emoji: '\u{1F446}',
+    quickStart: true,
+    settings: { bigTargets: true },
+  },
+  {
+    id: 'link-highlighter',
+    name: 'Highlight Links',
+    description: 'Underlines and strengthens links with a distinct color and a strong focus ring, and reveals each link\'s destination host so you can tell where a link leads before clicking it.',
+    supportAreas: ['vision', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'link',
+    emoji: '\u{1F517}',
+    quickStart: false,
+    settings: { highlightLinks: true },
+  },
+  {
+    id: 'page-outline',
+    name: 'Page Outline',
+    description: 'Builds an on-page navigator listing the page\'s headings as links, so you can jump straight to any section instead of scrolling or crawling through it line by line.',
+    supportAreas: ['vision', 'motor', 'cognitive'],
+    siteRelevance: ['news', 'education', 'reference'],
+    requiresAI: false,
+    icon: 'toc',
+    emoji: '\u{1F5FA}\u{FE0F}',
+    quickStart: false,
+    settings: { pageOutline: true },
+  },
+  {
+    id: 'bionic-reading',
+    name: 'Bionic Reading',
+    description: 'Bolds the first part of each word to give the eye fixation points, a reading aid many dyslexic and ADHD readers find helps them move through text with less effort.',
+    supportAreas: ['reading', 'cognitive'],
+    siteRelevance: ['news', 'education', 'reference'],
+    requiresAI: false,
+    icon: 'format_bold',
+    emoji: '\u{1F4D6}',
+    quickStart: false,
+    settings: { bionicReading: true },
+  },
+  {
+    id: 'unpin-sticky',
+    name: 'Unpin Sticky Bars',
+    description: 'Un-fixes sticky and fixed headers, footers, and floating bars so they stop covering the page when you zoom in (WCAG 1.4.10 reflow) or force extra scrolling.',
+    supportAreas: ['vision', 'motor'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'push_pin',
+    emoji: '\u{1F4CC}',
+    quickStart: false,
+    settings: { unpinSticky: true },
+  },
+  {
+    id: 'translate-page',
+    name: 'Translate Page',
+    description: 'Translates the page\'s text into another language with AI (e.g. for readers whose first language is not the page\'s), keeping the original so it can be restored.',
+    supportAreas: ['cognitive', 'reading'],
+    siteRelevance: ['all'],
+    requiresAI: true,
+    icon: 'translate',
+    emoji: '\u{1F310}',
+    quickStart: false,
+    settings: { translatePage: true },
+  },
+  {
+    id: 'mute-sounds',
+    name: 'Mute Sounds',
+    description: 'Mutes all audio and video and blocks autoplay sound, for a quiet page — helpful for sensory-overload, anxiety, and concentration needs. Restores your own manual mutes untouched.',
+    supportAreas: ['sensory', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'volume_off',
+    emoji: '\u{1F507}',
+    quickStart: false,
+    settings: { muteSounds: true },
+  },
+  {
+    id: 'define-words',
+    name: 'Define Words',
+    description: 'Makes long or hard words in the text interactive — hover or focus a word to get a short plain-language definition, without changing the original text. An AI cognitive-access aid.',
+    supportAreas: ['cognitive', 'reading'],
+    siteRelevance: ['news', 'education', 'reference'],
+    requiresAI: true,
+    icon: 'dictionary',
+    emoji: '\u{1F4D6}',
+    quickStart: false,
+    settings: { defineWords: true },
+  },
+  {
+    id: 'stop-auto-advance',
+    name: 'Stop Auto-Advance',
+    description: 'Pauses content that moves on its own — auto-rotating carousels, marquees, auto-refreshing pages, and autoplaying media — so it does not advance before you are ready (WCAG 2.2.1 and 2.2.2).',
+    supportAreas: ['motor', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'pause_circle',
+    emoji: '\u{23F8}\u{FE0F}',
+    quickStart: false,
+    settings: { stopAutoAdvance: true },
+  },
+  {
+    id: 'reduce-brightness',
+    name: 'Reduce Brightness',
+    description: 'Dims and desaturates the whole page for a calmer, low-stimulation view — for light sensitivity, migraine, and sensory-overload needs (distinct from dark mode).',
+    supportAreas: ['sensory', 'vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'brightness_low',
+    emoji: '\u{1F506}',
+    quickStart: false,
+    settings: { reduceBrightness: true },
+  },
+  {
+    id: 'sound-visualizer',
+    name: 'Sound Visualizer',
+    description: 'Flashes an on-screen indicator whenever the page plays sound, so Deaf and hard-of-hearing users notice non-speech audio cues like beeps, alerts, and notifications.',
+    supportAreas: ['hearing'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'graphic_eq',
+    emoji: '\u{1F4A1}',
+    quickStart: false,
+    settings: { soundVisualizer: true },
+  },
+  {
+    id: 'live-region-announcer',
+    name: 'Announce Updates',
+    description: 'Mirrors dynamic page changes (new results, toasts, status messages) into a polite ARIA live region so screen readers announce updates that would otherwise be silent.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'campaign',
+    emoji: '\u{1F4E2}',
+    quickStart: false,
+    settings: { announceUpdates: true },
+  },
+  {
+    id: 'magnifier',
+    name: 'Magnifier',
+    description: 'A lens that follows the cursor and shows the text under the pointer enlarged, so low-vision readers can magnify any part of the page without zooming the whole layout.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'zoom_in',
+    emoji: '\u{1F50D}',
+    quickStart: false,
+    settings: { magnifier: true },
+  },
+  {
+    id: 'flash-guard',
+    name: 'Flash Guard',
+    description: 'Seizure safety for photosensitive users: blocks autoplay on video and dims video, canvas, and animated GIFs so unexpected flashing is prevented or reduced (WCAG 2.3.1).',
+    supportAreas: ['sensory', 'vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'flash_off',
+    emoji: '\u{26A1}',
+    quickStart: false,
+    settings: { flashGuard: true },
+  },
+  {
+    id: 'describe-on-demand',
+    name: 'Describe on Demand',
+    description: 'Point at any element and get an AI description on request — press Alt+D to describe the focused element, or Alt-click one. Reads out images, charts, and complex widgets that lack good alt text.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: true,
+    icon: 'search_insights',
+    emoji: '\u{1F50E}',
+    quickStart: false,
+    settings: { describeOnDemand: true },
+  },
+  {
+    id: 'reflow-column',
+    name: 'Reflow to Column',
+    description: 'Forces page content into a single readable column so zooming in does not cause horizontal scrolling or overlapping content (WCAG 1.4.10 Reflow).',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'view_agenda',
+    emoji: '\u{1F4F0}',
+    quickStart: false,
+    settings: { reflowColumn: true },
+  },
+  {
+    id: 'focus-locator',
+    name: 'Focus Locator',
+    description: 'Draws a strong, always-visible ring around whatever has keyboard focus and reinforces every focus outline, so low-vision and motor users never lose track of where they are.',
+    supportAreas: ['vision', 'motor'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'center_focus_weak',
+    emoji: '\u{1F3AF}',
+    quickStart: false,
+    settings: { focusLocator: true },
+  },
+  {
+    id: 'persistent-hover',
+    name: 'Persistent Hover',
+    description: 'Keeps hover-revealed tooltips visible and lets you move onto them or dismiss them with Escape, instead of vanishing the instant the pointer moves (WCAG 1.4.13).',
+    supportAreas: ['vision', 'motor'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'tooltip',
+    emoji: '\u{1F4AC}',
+    quickStart: false,
+    settings: { persistentHover: true },
+  },
+  {
+    id: 'reading-ruler',
+    name: 'Reading Ruler',
+    description: 'A soft highlight band that follows your cursor down the page to keep your eyes on the current line, dimming the rest — a focus aid for dyslexic and ADHD readers.',
+    supportAreas: ['reading', 'cognitive'],
+    siteRelevance: ['news', 'education', 'reference'],
+    requiresAI: false,
+    icon: 'horizontal_rule',
+    emoji: '\u{1F4CF}',
+    quickStart: false,
+    settings: { readingRuler: true },
+  },
+  {
+    id: 'confirm-actions',
+    name: 'Confirm Actions',
+    description: 'Asks for a second click before risky or final actions (delete, submit, pay, send), preventing accidental activation for motor and cognitive users. From the co-design study: "please confirm and do not execute".',
+    supportAreas: ['motor', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'verified_user',
+    emoji: '\u{2714}\u{FE0F}',
+    quickStart: false,
+    settings: { confirmActions: true },
+  },
+  {
+    id: 'reading-spot',
+    name: 'Save Reading Spot',
+    description: 'Remembers how far down a page you had read and offers a one-click "jump back to where you were" when you return, a memory aid for cognitive and older-adult users.',
+    supportAreas: ['cognitive'],
+    siteRelevance: ['news', 'education', 'reference'],
+    requiresAI: false,
+    icon: 'bookmark',
+    emoji: '\u{1F516}',
+    quickStart: false,
+    settings: { rememberSpot: true },
+  },
+  {
+    id: 'abbreviation-expand',
+    name: 'Expand Abbreviations',
+    description: 'Marks acronyms and abbreviations with their full form so screen readers and readers get the whole phrase, and fills in <abbr> tags missing a title \u2014 a comprehension aid for cognitive and BLV users.',
+    supportAreas: ['cognitive'],
+    siteRelevance: ['news', 'education', 'reference', 'government'],
+    requiresAI: false,
+    icon: 'title',
+    emoji: '\u{1F524}',
+    quickStart: false,
+    settings: { expandAbbreviations: true },
+  },
+  {
+    id: 'language-tag',
+    name: 'Language Tags',
+    description: 'Detects text written in a different script from the page (e.g. a Chinese, Arabic, or Russian phrase in an English page) and marks it with a lang attribute so a screen reader switches to the right pronunciation instead of mangling it.',
+    supportAreas: ['vision'],
+    siteRelevance: ['news', 'education', 'reference'],
+    requiresAI: false,
+    icon: 'language',
+    emoji: '\u{1F1FA}\u{1F1F3}',
+    quickStart: false,
+    settings: { languageTag: true },
+  },
+  {
+    id: 'explore-a-chart',
+    name: 'Explore Charts',
+    description: 'A chart, graph, or diagram is invisible to a screen reader. This reads the chart with AI and presents its data as a real, navigable HTML table (headers + rows) that a screen reader can read cell by cell \u2014 the biggest blind/low-vision gap on data-heavy pages.',
+    supportAreas: ['vision'],
+    siteRelevance: ['news', 'reference', 'finance', 'education'],
+    requiresAI: true,
+    icon: 'table_chart',
+    emoji: '\u{1F4CA}',
+    quickStart: false,
+    settings: { exploreChart: true },
+  },
+  {
+    id: 'spa-focus',
+    name: 'Announce Page Changes',
+    description: 'Single-page apps swap content without a real page load, leaving screen readers silent and keyboard focus stranded. Moves focus to the new main region and announces the new page on every in-app navigation.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'sync_alt',
+    emoji: '\u{1F501}',
+    quickStart: false,
+    settings: { spaFocus: true },
+  },
+  {
+    id: 'skip-links',
+    name: 'Skip Links',
+    description: 'Adds "Skip to main content" and "Skip to navigation" links as the first thing keyboard and screen-reader users reach, so they can jump past the header instead of tabbing through it on every page.',
+    supportAreas: ['vision', 'motor'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'keyboard_tab',
+    emoji: '\u{23ED}\u{FE0F}',
+    quickStart: false,
+    settings: { skipLinks: true },
+  },
+  {
+    id: 'math-a11y',
+    name: 'Accessible Math',
+    description: 'Gives math an accessible name: MathML gets a spoken label from its structure or LaTeX, and equation images get useful alt text, so a screen reader can read the math instead of skipping it.',
+    supportAreas: ['vision'],
+    siteRelevance: ['education', 'reference'],
+    requiresAI: false,
+    icon: 'functions',
+    emoji: '\u{1F522}',
+    quickStart: false,
+    settings: { mathAccessible: true },
+  },
+  {
+    id: 'keyboard-nav',
+    name: 'Keyboard Navigation',
+    description: 'Adds skip links (main content and navigation), enhanced focus indicators, tab sequence overlay, and keyboard shortcuts (Alt+1/2/H/F).',
+    supportAreas: ['motor', 'vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'keyboard',
+    emoji: '⌨️',
+    quickStart: true,
+    settings: { keyboardNav: true },
+  },
+  {
+    id: 'auto-alt-text',
+    name: 'Auto Alt Text',
+    description: 'Generates descriptive alt text for images, SVGs, canvas elements, and video frames using AI vision.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: true,
+    icon: 'image',
+    emoji: '\u{1F5BC}️',
+    quickStart: true,
+    settings: { autoDescribe: true },
+  },
+  {
+    id: 'fix-contrast',
+    name: 'Fix Contrast',
+    description: 'Detects text with poor color contrast and fixes it using AI color suggestions or black/white fallback to meet WCAG AA.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'contrast',
+    emoji: '\u{1F3A8}',
+    quickStart: true,
+    settings: { fixContrast: true },
+  },
+  {
+    id: 'simplify-text',
+    name: 'Simplify Text',
+    description: 'Rewrites complex text to a simpler reading level with a toggle to show the original, and adds summaries to long content.',
+    supportAreas: ['cognitive', 'reading'],
+    siteRelevance: ['news', 'education'],
+    requiresAI: true,
+    icon: 'edit_note',
+    emoji: '✏️',
+    quickStart: true,
+    settings: { autoSimplify: true },
+  },
+  {
+    id: 'voice-commands',
+    name: 'Voice Commands',
+    description: 'Web Speech API fallback for hands-free browsing when voice mode is not available. Voice mode (Gemini Live) provides better speech understanding including for non-standard speech. Fixes: word-boundary command matching, mic-denied loop prevention, mutual exclusion with voice mode.',
+    supportAreas: ['motor'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'mic',
+    emoji: '\u{1F399}️',
+    quickStart: false,
+    settings: { voiceCommands: true },
+  },
+  {
+    id: 'captions',
+    name: 'Captions',
+    description: 'Auto-enables native CC on YouTube pages and iframes. For reachable http(s) media, transcribes audio in ~15s chunks via cloud AI and attaches an AI-generated caption track or expandable transcript (requires Gemini API key). blob:/DRM/MSE media shows a notice to try Chrome Live Caption instead. Not live captioning.',
+    supportAreas: ['hearing'],
+    siteRelevance: ['video', 'social', 'education'],
+    requiresAI: true,
+    icon: 'closed_caption',
+    emoji: '\u{1F4AC}',
+    quickStart: true,
+    settings: { autoCaptions: true },
+  },
+  {
+    id: 'color-filter',
+    name: 'Color Blind Filter',
+    description: 'Applies LMS-daltonization correction (error-redistribution) for protanopia, deuteranopia, or tritanopia — redistributes the invisible color signal into channels the user can see. Not simulation.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'palette',
+    emoji: '\u{1F3A8}',
+    quickStart: true,
+    settings: { colorBlindMode: 'protanopia' },
+  },
+  // large-cursor retired in Phase 3: use your OS pointer settings for a
+  // system-wide larger cursor (System Preferences / Settings → Accessibility
+  // → Display → Cursor size). The largeCursor VA sub-setting remains active
+  // for existing users via visual-assist; settingsMeta and PROMPT_GROUPS intact.
+  // dyslexia-font retired in Phase 3: letter spacing and line height are
+  // available under Visual Assist. The dyslexiaFont VA sub-setting remains
+  // active for existing users; settingsMeta and PROMPT_GROUPS intact.
+  {
+    id: 'read-aloud',
+    name: 'Read Aloud',
+    description: 'Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. No further investment: for richer reading support use your OS/browser built-in read-aloud tools or voice mode\'s read-page command.',
+    supportAreas: ['vision', 'reading', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'volume_up',
+    emoji: '\u{1F50A}',
+    quickStart: false,
+    settings: {},
+  },
+  {
+    id: 'generate-labels',
+    name: 'Generate Labels',
+    description: 'AI-powered label generation for unlabeled links, buttons, iframes, and form inputs using context inference and pattern matching.',
+    supportAreas: ['vision', 'motor'],
+    siteRelevance: ['all'],
+    requiresAI: true,
+    icon: 'label',
+    emoji: '\u{1F3F7}️',
+    quickStart: false,
+    settings: { autoFixLabels: true },
+  },
+  {
+    id: 'wcag-fixes',
+    name: 'WCAG Auto-Fix',
+    description: 'Automatic fixes for common WCAG violations: lang attributes, duplicate IDs, heading order, tabindex, ARIA validation, touch targets, and more.',
+    supportAreas: ['vision', 'motor', 'cognitive'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'verified',
+    emoji: '✅',
+    quickStart: false,
+    settings: { autoWcagFix: true },
+  },
+  {
+    id: 'agent-watch',
+    name: 'Watch the Assistant',
+    description: "Shows what the assistant is doing on your behalf and where the page stopped matching what you asked for — wrong size, over budget, a feature the item does not have. Reads the page through the accessibility tree rather than trusting the assistant's summary, cites the page's own words for every finding, and holds the assistant before anything hard to undo until you answer.",
+    supportAreas: ['vision', 'cognitive', 'motor'],
+    siteRelevance: ['shopping', 'all'],
+    requiresAI: false,
+    icon: 'fact_check',
+    emoji: '🔎',
+    quickStart: false,
+    settings: { agentWatch: true },
+  },
+];
+
+// Typed vocabulary for every chrome.storage.sync setting the tools control.
+// Single source for prompts that let the LLM set values directly (e.g. the
+// popup's "what support do you need?" interpretNeeds call) — this replaces
+// the hand-maintained list that used to live inline in background.js.
+export const settingsMeta = {
+  agentWatch:      { type: 'boolean', description: 'Check what the assistant does against what you asked for' },
+  darkMode:        { type: 'boolean', description: 'Dark theme' },
+  fontScale:       { type: 'number', range: [50, 200], description: 'Font size percentage' },
+  lineHeight:      { type: 'number', range: [1.0, 3.0], description: 'Line spacing' },
+  letterSpacing:   { type: 'number', range: [0, 0.5], description: 'Letter spacing in em' },
+  dyslexiaFont:    { type: 'boolean', description: 'OpenDyslexic font' },
+  largeCursor:     { type: 'boolean', description: 'Larger mouse cursor' },
+  enhanceFocus:    { type: 'boolean', description: 'Stronger focus indicators' },
+  readingGuide:    { type: 'boolean', description: 'Horizontal reading guide' },
+  focusMode:       { type: 'boolean', description: 'Highlight current paragraph' },
+  hideDistractions:{ type: 'boolean', description: 'Dim ads and popups' },
+  showProgress:    { type: 'boolean', description: 'Scroll progress bar' },
+  motionReducer:   { type: 'boolean', description: 'Stop animations' },
+  readerMode:      { type: 'boolean', description: 'Clean reading view' },
+  dismissOverlays: { type: 'boolean', description: 'Hide cookie banners, newsletter popups, and blocking modals' },
+  bigTargets:      { type: 'boolean', description: 'Enlarge and space out small clickable controls' },
+  highlightLinks:  { type: 'boolean', description: 'Underline links and show where each one leads' },
+  pageOutline:     { type: 'boolean', description: 'On-page heading navigator for jumping between sections' },
+  bionicReading:   { type: 'boolean', description: 'Bold the start of each word to guide the eye' },
+  unpinSticky:     { type: 'boolean', description: 'Un-fix sticky headers and bars so they stop covering the page' },
+  translatePage:   { type: 'boolean', description: 'Translate the page text into another language' },
+  translateTo:     { type: 'string', description: 'Target language for translation (e.g. "Spanish")' },
+  muteSounds:      { type: 'boolean', description: 'Mute all audio and video and block autoplay sound' },
+  defineWords:     { type: 'boolean', description: 'Show plain-language definitions of hard words on hover' },
+  stopAutoAdvance: { type: 'boolean', description: 'Pause auto-carousels, auto-refresh, and autoplay media' },
+  reduceBrightness:{ type: 'boolean', description: 'Dim and desaturate the page for a low-stimulation view' },
+  soundVisualizer: { type: 'boolean', description: 'Flash a visual indicator when the page plays sound' },
+  announceUpdates: { type: 'boolean', description: 'Announce dynamic content changes to screen readers' },
+  magnifier:       { type: 'boolean', description: 'A cursor-following lens that magnifies text' },
+  flashGuard:      { type: 'boolean', description: 'Block autoplay and dim video/animation for seizure safety' },
+  describeOnDemand:{ type: 'boolean', description: 'Get an AI description of any element on request' },
+  reflowColumn:    { type: 'boolean', description: 'Force page content into one readable column' },
+  focusLocator:    { type: 'boolean', description: 'Show a strong always-visible keyboard focus indicator' },
+  persistentHover: { type: 'boolean', description: 'Keep hover tooltips visible and dismissible' },
+  readingRuler:    { type: 'boolean', description: 'A highlight band that follows your reading line' },
+  confirmActions:  { type: 'boolean', description: 'Ask for confirmation before risky or final actions' },
+  rememberSpot:    { type: 'boolean', description: 'Remember and restore your reading position on a page' },
+  expandAbbreviations: { type: 'boolean', description: 'Expand acronyms and abbreviations to their full form' },
+  languageTag:     { type: 'boolean', description: 'Mark foreign-language text with a lang attribute for screen readers' },
+  exploreChart:    { type: 'boolean', description: 'Read a chart or graph as a navigable data table (AI)' },
+  spaFocus:        { type: 'boolean', description: 'Announce and move focus on single-page-app navigations' },
+  skipLinks:       { type: 'boolean', description: 'Add skip-to-content and skip-to-navigation links' },
+  mathAccessible:  { type: 'boolean', description: 'Give math and equations an accessible name for screen readers' },
+  keyboardNav:     { type: 'boolean', description: 'Enhanced keyboard navigation' },
+  voiceCommands:   { type: 'boolean', description: 'Voice-controlled browsing' },
+  contrastMode:    { type: 'enum', options: ['none', 'light', 'yellow-black'], description: 'Contrast level' },
+  colorBlindMode:  { type: 'enum', options: ['none', 'protanopia', 'deuteranopia', 'tritanopia'], description: 'Color filter' },
+  speechRate:      { type: 'number', range: [0.5, 2.0], description: 'Text-to-speech rate' },
+  fixContrast:     { type: 'boolean', description: 'Fix low-contrast text' },
+  autoWcagFix:     { type: 'boolean', description: 'Auto-fix accessibility issues' },
+  wcagRiskyFixes:  { type: 'boolean', description: 'Enable risky WCAG fixes (heading re-tag, ARIA strip, target size) — default off' },
+  autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
+  autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
+  autoCaptions:    { type: 'boolean', description: 'Auto captions on video' },
+  autoSimplify:    { type: 'boolean', description: 'Simplify complex text' },
+  autoSummarize:   { type: 'boolean', description: 'Add summaries to long content' },
+};
+
+// Grouped, prompt-ready rendering of settingsMeta for LLM system prompts
+// (voice mode's capability vocabulary). One line per setting so registry
+// edits flow into every prompt automatically.
+const PROMPT_GROUPS = [
+  ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor', 'fixContrast', 'autoWcagFix', 'wcagRiskyFixes']],
+  ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'dyslexiaFont', 'readingGuide', 'readerMode', 'speechRate']],
+  ['Focus & motion', ['focusMode', 'hideDistractions', 'showProgress', 'motionReducer', 'enhanceFocus']],
+  ['Motor & input', ['keyboardNav', 'voiceCommands']],
+  ["AI-powered (need the user's API key)", ['autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify', 'autoSummarize']],
+];
+
+export function settingsPromptLines() {
+  const lines = [];
+  for (const [header, keys] of PROMPT_GROUPS) {
+    lines.push(`${header}:`);
+    for (const key of keys) {
+      const m = settingsMeta[key];
+      if (!m) continue;
+      const kind = m.type === 'enum'
+        ? `one of ${m.options.map(o => `"${o}"`).join(', ')}`
+        : m.range ? `${m.type} ${m.range[0]}-${m.range[1]}` : m.type;
+      lines.push(`- ${key} (${kind}): ${m.description}`);
+    }
+  }
+  return lines;
+}
+
+export function getSkillById(id) {
+  return skillRegistry.find(s => s.id === id);
+}
+
+export function getSkillsByArea(area) {
+  return skillRegistry.filter(s => s.supportAreas.includes(area));
+}
+
+export function getRegistryForPrompt() {
+  return skillRegistry.map(s => ({
+    id: s.id,
+    name: s.name,
+    description: s.description,
+    supportAreas: s.supportAreas,
+    siteRelevance: s.siteRelevance,
+  }));
+}
+
+
+// ---------------------------------------------------------------------------
+// AA_TOOLS-shaped live registry — the exact object personalized-extension's
+// build.js bakes into extension/lib/tools-registry.js, exported here so any
+// host can hand it to createToolkit({ toolsRegistry: asAATools() }).
+export function asAATools() {
+  return {
+    version: 1,
+    list: skillRegistry,
+    settingsMeta,
+    // One prompt-ready line per setting: "key (type...): description".
+    settingsVocabularyLines() {
+      return Object.entries(this.settingsMeta).map(([k, m]) => {
+        let t = m.type;
+        if (m.type === 'number' && m.range) t = `number ${m.range[0]}-${m.range[1]}`;
+        if (m.type === 'enum' && m.options) t = 'string: ' + m.options.map(o => '"' + o + '"').join(', ');
+        return `- ${k} (${t}): ${m.description}`;
+      });
+    },
+    byId(id) { return this.list.find(s => s.id === id) || null; },
+    byArea(area) { return this.list.filter(s => s.supportAreas.includes(area)); },
+    settingsFor(ids) {
+      const merged = {};
+      for (const id of ids || []) {
+        const t = this.byId(id);
+        if (t && t.settings) Object.assign(merged, t.settings);
+      }
+      return merged;
+    },
+    forPrompt() {
+      return this.list.map(s => ({
+        id: s.id, name: s.name, description: s.description,
+        supportAreas: s.supportAreas, siteRelevance: s.siteRelevance,
+      }));
+    },
+  };
+}

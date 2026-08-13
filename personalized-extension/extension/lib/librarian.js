@@ -1537,7 +1537,19 @@ Saved from a task the assistant completed for you. Applying this skill runs the 
           } else if (prop.change?.op === "cross-app-insight" && prop.change.change) {
             const inner = prop.change.change;
             if (inner.op === "profile-set" && isSafeFieldsPath(inner.path)) {
-              await this.setProfileField(inner.path, inner.value);
+              const capStrength = (v) => {
+                if (Array.isArray(v)) return v.map(capStrength);
+                if (v && typeof v === "object") {
+                  const out = { ...v };
+                  if ("strength" in out && rankOf(out.strength) > STRENGTH_RANK.preference) {
+                    out.strength = "preference";
+                  }
+                  if ("dimension" in out && !out.source) out.source = `cross-app:${prop.change.appId}`;
+                  return out;
+                }
+                return v;
+              };
+              await this.setProfileField(inner.path, capStrength(inner.value));
             } else if (inner.op === "add-memory" && inner.record && typeof inner.record === "object") {
               const insrec = { ...inner.record };
               insrec.source = `cross-app:${prop.change.appId}`;

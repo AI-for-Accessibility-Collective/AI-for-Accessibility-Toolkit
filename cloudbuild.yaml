@@ -1,0 +1,16 @@
+# Build the toolkit-service image (context = repo root, Dockerfile in server/).
+# Used by: gcloud builds submit --config cloudbuild.yaml
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - server/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/toolkit-service:$SHORT_SHA
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/toolkit-service:latest
+      - .
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/toolkit-service:$SHORT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/toolkit-service:latest

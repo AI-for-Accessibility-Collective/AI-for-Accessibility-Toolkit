@@ -1,0 +1,17 @@
+{
+  "name": "toolkit-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HTTP wire service over the AI for Accessibility Toolkit core — see CONTRACT.md.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test/server-test.mjs",
+    "docs": "node scripts/generate-docs.mjs"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {}
+}

@@ -24,6 +24,14 @@
 // abstract port with a memory-route-only method.
 
 (function () {
+
+  // Resolve the Librarian through background.js's local/remote switch when
+  // available (remote server mode); fall back to the local instance so this
+  // file keeps working standalone (tests, early SW startup).
+  async function LIB() {
+    try { if (globalThis.__resolveLibrarian) return await globalThis.__resolveLibrarian(); } catch {}
+    return globalThis.Librarian;
+  }
   // Baseline value per setting when nothing is stored. Mirrors content.js
   // init() / popup defaults; used both to report "what's non-default" and as
   // the previous-value fallback for undo.
@@ -211,7 +219,7 @@
     if (scope.startsWith('origin:')) return scope.slice('origin:'.length) === origin;
     if (scope.startsWith('category:')) {
       try {
-        const cat = await globalThis.Librarian.getSiteCategory(origin);
+        const cat = await (await LIB()).getSiteCategory(origin);
         return `category:${cat}` === scope;
       } catch { return false; }
     }
@@ -289,7 +297,7 @@
       const target = scopesUsed[key];
       if (target === 'general') createdMap[key] = stored[key] === undefined;
       else {
-        try { createdMap[key] = !(await globalThis.Librarian.hasScopedSetting(target, key)); }
+        try { createdMap[key] = !(await (await LIB()).hasScopedSetting(target, key)); }
         catch { createdMap[key] = false; }
       }
     }
@@ -363,7 +371,7 @@
     }
     try {
       for (const [s, settings] of Object.entries(scopedWrites)) {
-        await globalThis.Librarian.recordScopedSettings(s, settings, origin ? { origin } : {});
+        await (await LIB()).recordScopedSettings(s, settings, origin ? { origin } : {});
       }
       if (Object.keys(globalWrites).length) await chrome.storage.sync.set(globalWrites);
       return null;
@@ -407,14 +415,14 @@
           try {
             const cur = target === 'general'
               ? (await chrome.storage.sync.get(w.key))[w.key]
-              : await globalThis.Librarian.getScopedSetting(target, w.key);
+              : await (await LIB()).getScopedSetting(target, w.key);
             stillOurs = cur === undefined || cur === w.setValue;
           } catch {}
         }
         if (!stillOurs) { skipped.push(w.key); continue; }
         try {
-          if (target === 'general') { await removeSync(w.key); await globalThis.Librarian.removeScopedSetting('general', w.key); }
-          else await globalThis.Librarian.removeScopedSetting(target, w.key);
+          if (target === 'general') { await removeSync(w.key); await (await LIB()).removeScopedSetting('general', w.key); }
+          else await (await LIB()).removeScopedSetting(target, w.key);
         } catch (e) { hadError = `could not undo: ${e.message}`; }
       } else {
         restoreClean[w.key] = w.value;

@@ -114,5 +114,23 @@ audit = await getShareAudit(() => ds);
 check('insight-import audit recorded by respondToProposal (core), not a host route',
   audit.some(a => a.action === 'insight-import' && a.appId === 'xr-navigator'));
 
+// Strength cap on profile-set insights: a granted app may SUGGEST a need but
+// never impose a hard floor. A hostile/buggy insight carrying strength:'floor'
+// must land as 'preference' with cross-app provenance stamped.
+const hostile = await lib.importInsight('xr-navigator', {
+  kind: 'visual.darkTheme', confidence: 0.9,
+  change: { op: 'profile-set', path: 'fields.needs', value: [
+    { dimension: 'darkTheme', value: true, strength: 'floor' },
+    { dimension: 'textSize', value: 2.0, strength: 'floor', source: 'spoofed-user' },
+  ] },
+});
+check('hostile floor insight still drafts (consent-gated, not silently dropped)', hostile.ok === true);
+await lib.respondToProposal(hostile.proposalId, 'accept');
+const cappedModel = await lib.getAbilityModel();
+const dark = (cappedModel.needs || []).find(n => n.dimension === 'darkTheme');
+const txt = (cappedModel.needs || []).find(n => n.dimension === 'textSize');
+check('profile-set floor strength capped to preference on accept', dark?.strength === 'preference' && txt?.strength === 'preference');
+check('cross-app provenance stamped on capped entries', dark?.source === 'cross-app:xr-navigator');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

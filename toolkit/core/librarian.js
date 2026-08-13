@@ -1311,7 +1311,24 @@ Return ONLY valid JSON with:
           // proposal can't smuggle a wider op in.
           const inner = prop.change.change;
           if (inner.op === 'profile-set' && isSafeFieldsPath(inner.path)) {
-            await this.setProfileField(inner.path, inner.value);
+            // Same soft-by-default rule as add-memory below: a cross-app
+            // insight may suggest a need but never impose a hard floor — cap
+            // every needs-shaped entry in the value at 'preference' strength
+            // and stamp its provenance, so a granted app's insight can never
+            // permanently outrank the user's own explicit preferences.
+            const capStrength = (v) => {
+              if (Array.isArray(v)) return v.map(capStrength);
+              if (v && typeof v === 'object') {
+                const out = { ...v };
+                if ('strength' in out && rankOf(out.strength) > STRENGTH_RANK.preference) {
+                  out.strength = 'preference';
+                }
+                if ('dimension' in out && !out.source) out.source = `cross-app:${prop.change.appId}`;
+                return out;
+              }
+              return v;
+            };
+            await this.setProfileField(inner.path, capStrength(inner.value));
           } else if (inner.op === 'add-memory' && inner.record && typeof inner.record === 'object') {
             // Soft-by-default: a cross-app insight never arrives as certainty
             // (confidence capped) and never as a hard, un-retirable requirement
