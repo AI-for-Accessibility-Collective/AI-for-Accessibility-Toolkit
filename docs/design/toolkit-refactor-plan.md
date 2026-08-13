@@ -46,9 +46,9 @@ So this is not just a code move. It is three things:
 
 The good news from the audit: two of the three hard seams are **already in the
 code**. The LLM is injected (`Librarian.setGeminiCaller(fn)`,
-[background.js:381](../personalized-extension/extension/background.js#L381)) and
+[background.js:381](../../personalized-extension/extension/background.js#L381)) and
 storage already routes through a catalog facade
-([datastore.js](../personalized-extension/extension/lib/datastore.js)) whose
+([datastore.js](../../personalized-extension/extension/lib/datastore.js)) whose
 entire design goal is "a store can be moved … with one catalog edit." We are
 widening seams that already exist, not cutting new ones from scratch.
 
@@ -57,7 +57,7 @@ widening seams that already exist, not cutting new ones from scratch.
 ## 2. What exists today (audit summary)
 
 The engine is the **Librarian**
-([librarian.js](../personalized-extension/extension/lib/librarian.js), ~48 KB),
+([librarian.js](../../personalized-extension/extension/lib/librarian.js), ~48 KB),
 sole writer of its stores, with two lanes:
 
 - **Fast lane (deterministic, ms, every page load):** `getProfile`,
@@ -313,13 +313,13 @@ the settled "adapter/skill" vocabulary.
 ## 8. Phased migration (each phase ships; the extension keeps working throughout)
 
 ### Phase 0 — Carve the seam, zero behavior change ✅ **IMPLEMENTED (2026‑06‑26)**
-- Created top‑level [`toolkit/`](../toolkit/) as the **source of truth**: pure
-  ES‑module cores ([core/taxonomy.js](../toolkit/core/taxonomy.js),
-  [core/datastore.js](../toolkit/core/datastore.js) `createDatastore(...)`,
-  [core/librarian.js](../toolkit/core/librarian.js) `createLibrarian(...)`), a
-  [ports contract](../toolkit/ports/index.js), a
-  [`createToolkit`](../toolkit/index.js) DI entry, and a Chrome adapter
-  ([adapters/chrome/](../toolkit/adapters/chrome/)).
+- Created top‑level [`toolkit/`](../../toolkit/) as the **source of truth**: pure
+  ES‑module cores ([core/taxonomy.js](../../toolkit/core/taxonomy.js),
+  [core/datastore.js](../../toolkit/core/datastore.js) `createDatastore(...)`,
+  [core/librarian.js](../../toolkit/core/librarian.js) `createLibrarian(...)`), a
+  [ports contract](../../toolkit/ports/index.js), a
+  [`createToolkit`](../../toolkit/index.js) DI entry, and a Chrome adapter
+  ([adapters/chrome/](../../toolkit/adapters/chrome/)).
 - Core converted from `globalThis`/`importScripts` to ES modules. The three
   classic scripts the SW/popup/test load —
   `extension/lib/{taxonomy,datastore,librarian}.js` — are now **generated**
@@ -333,27 +333,27 @@ the settled "adapter/skill" vocabulary.
   constructor port; (b) `SecretStore` is host‑owned (the API‑key wiring stays in
   `background.js`) and unused by the core in Phase 0; (c) **`tools-registry.js`
   is *generated* from
-  [`skills/registry.js`](../personalized-extension/skills/registry.js) — it is
+  [`skills/registry.js`](../../personalized-extension/skills/registry.js) — it is
   NOT moved as a source of truth, it keeps being generated**; (d) implemented in
   **ES‑module JS, not TS** — TS‑ification is a mechanical follow‑up that doesn't
   move the seam, deferred to keep behavior risk near zero. One latent bug
   surfaced + fixed: `logObservation` declared `const origin` but the demo path
   reassigns it (now `let`).
 - **Exit check (met):**
-  [librarian-test.js](../personalized-extension/test/librarian-test.js) (69
+  [librarian-test.js](../../personalized-extension/test/librarian-test.js) (69
   asserts) + new
-  [toolkit-ports-test.js](../personalized-extension/test/toolkit-ports-test.js)
+  [toolkit-ports-test.js](../../personalized-extension/test/toolkit-ports-test.js)
   (14 asserts — covers the refactored slow‑lane / shard‑scan paths the gate
-  missed) + [run-tests.js](../personalized-extension/test/run-tests.js) (116
+  missed) + [run-tests.js](../../personalized-extension/test/run-tests.js) (116
   structural) all green from a clean `npm run build`; both unit suites load the
   **built** bundles, so they also prove the ESM source survives esbuild + `eval`
   under the chrome mock. An independent adversarial diff review found no
   Chrome‑host behavior change. **Both puppeteer e2e suites also ran green in
   real Chrome for Testing:**
-  [demo-beats-e2e.js](../personalized-extension/test/demo-beats-e2e.js) **26/26**
+  [demo-beats-e2e.js](../../personalized-extension/test/demo-beats-e2e.js) **26/26**
   (onboarding → Librarian profile → observation → proposal → popup "Yes, apply"
   → saved profile → vimeo auto‑replay) and
-  [ai-features-e2e.js](../personalized-extension/test/ai-features-e2e.js)
+  [ai-features-e2e.js](../../personalized-extension/test/ai-features-e2e.js)
   **20/20** (live Gemini interpretNeeds, a real agent run turning on YouTube
   captions, accept, and real Vimeo auto‑replay) — confirming the extension loads
   the generated bundles and the whole `background.js` → `globalThis.Librarian/
@@ -376,10 +376,10 @@ the settled "adapter/skill" vocabulary.
   **(increment 1 ✅)**
 
 > **Increment 1 landed (2026‑06‑26), behavior‑identical for web** — new pure
-> toolkit modules [core/units.js](../toolkit/core/units.js) (typed units +
-> coercion), [core/surface.js](../toolkit/core/surface.js) (`createSurfaceAdapter`
+> toolkit modules [core/units.js](../../toolkit/core/units.js) (typed units +
+> coercion), [core/surface.js](../../toolkit/core/surface.js) (`createSurfaceAdapter`
 > → `{applied, unmet, degradedTo, satisfied}`), and
-> [adapters/chrome/web-surface.js](../toolkit/adapters/chrome/web-surface.js).
+> [adapters/chrome/web-surface.js](../../toolkit/adapters/chrome/web-surface.js).
 > `strength` added to every record (defaults to `preference`) and the
 > `getEffectivePreferences` merge now strength‑gates overwrites: **floor > preference
 > > hint**, regardless of scope specificity, equal strength keeps the old
@@ -388,7 +388,7 @@ the settled "adapter/skill" vocabulary.
 
 > **Tail landed (2026‑06‑26): the `>10` read‑side heuristic is deleted.** Coercion
 > (the %‑vs‑multiplier guess) is now confined to the **write/ingest boundary** —
-> [units.js](../toolkit/core/units.js) `coerceSettings` (ingest) vs new
+> [units.js](../../toolkit/core/units.js) `coerceSettings` (ingest) vs new
 > `clampSettings` (read); the two un‑coerced writers the review found (the extract
 > `UPDATE` op, the `recordScopedSettings` existing‑record update) now coerce. The
 > read/merge path is **clamp‑only** (`clampForRead`) — it trusts the unit tags
@@ -404,12 +404,12 @@ the settled "adapter/skill" vocabulary.
 > AbilityModel/SurfaceProfile split, designed via a 3‑approach panel + adversarial
 > review. **The core merge is left byte‑for‑byte untouched**; the new ability
 > derivation composes *outside* the core at the chrome boundary.
-> [core/ability.js](../toolkit/core/ability.js) `toAbilityModel(profile)` projects
+> [core/ability.js](../../toolkit/core/ability.js) `toAbilityModel(profile)` projects
 > the profile into a modality‑neutral `needs[]` view (reads only the fresh
 > `fields.needs/.readingLevel/.confidence` sub‑keys → empty `needs[]` for every
 > current user); `Librarian.getAbilityModel()` exposes it. The **web SurfaceProfile
 > is a pure derivation, not a store**:
-> [web-surface.js](../toolkit/adapters/chrome/web-surface.js) `deriveWebSettings`
+> [web-surface.js](../../toolkit/adapters/chrome/web-surface.js) `deriveWebSettings`
 > maps neutral dimensions (`textSize`, `reduceMotion`, …) → web settings, and
 > `resolveWebPreferences` composes the derived baseline **under** the authoritative
 > merge (a real record at any strength beats it — the identity‑safe rule). It is
@@ -419,13 +419,13 @@ the settled "adapter/skill" vocabulary.
 > every current user. `background.js` routes `librarianEffectivePreferences`
 > through it (fail‑open to the raw merge); `content.js` applies the same settings
 > and additionally logs `surface.unmet`. `STRENGTH_RANK`/`rankOf` extracted to
-> [core/strength.js](../toolkit/core/strength.js) and shared; `getAbilityModel()`
+> [core/strength.js](../../toolkit/core/strength.js) and shared; `getAbilityModel()`
 > is a **read‑only** projection (must not materialize the profile on the hot path).
 > Designed via a 3‑approach panel and hardened by a 3‑lens adversarial review,
 > which caught three real identity gaps (a hot‑path profile write, and the surface
 > dropping off‑vocabulary / string‑numeric keys) — all fixed so identity holds by
 > construction, not by consumer‑whitelist luck. Gate:
-> [phase1.test.mjs](../toolkit/test/phase1.test.mjs) **46/46** (pure core, in‑memory
+> [phase1.test.mjs](../../toolkit/test/phase1.test.mjs) **46/46** (pure core, in‑memory
 > KV — incl. a deep‑equal identity check, off‑vocab/string‑numeric preservation,
 > and a read‑only‑projection check), Phase 0 gate still 69+14+116, demo‑beats‑e2e
 > **26/26** in real Chrome. The `abilityModel→webSettings` derivation is **inert**
@@ -450,7 +450,7 @@ the settled "adapter/skill" vocabulary.
 > value is preset‑union sugar in `popup.js` that never writes to memory; downward
 > correction is already delivered by the explicit‑final‑say merge (proven by a new
 > deterministic test: an explicit *lower* `fontScale` beats a higher inferred one).
-> The three real fixes, all in [librarian.js](../toolkit/core/librarian.js): (1)
+> The three real fixes, all in [librarian.js](../../toolkit/core/librarian.js): (1)
 > **decay now ages from `lastConfirmedAt`, not `lastAccessed`** (`recall` bumped
 > the latter every navigation, so a never‑reconfirmed belief stayed "fresh"
 > forever) — new field, bumped only on genuine reconfirmation, with **migration
@@ -465,8 +465,8 @@ the settled "adapter/skill" vocabulary.
 
 > **Increments 2–4 landed (2026‑06‑26): taxonomy label + reflection grounding +
 > behavior‑summary/evidence‑discard**, all in
-> [librarian.js](../toolkit/core/librarian.js) plus a new pure module
-> [memory‑class.js](../toolkit/core/memory-class.js). 3‑lens adversarial review
+> [librarian.js](../../toolkit/core/librarian.js) plus a new pure module
+> [memory‑class.js](../../toolkit/core/memory-class.js). 3‑lens adversarial review
 > came back **CLEAN** (0 mustFix; it independently re‑derived every safety
 > property). **(inc 2 — taxonomy label)** `memoryClassOf(record)` maps `kind` →
 > CoALA class (`observation`→episodic, `procedural`→procedural, else semantic);
@@ -518,10 +518,10 @@ the settled "adapter/skill" vocabulary.
 
 > **Increment 1 landed (2026‑06‑26): the cross‑app GRANT model**, on the
 > EXISTING proposal/consent machinery — only one net‑new store (`mine.grants`).
-> New pure module [toolkit/sync/grants.js](../toolkit/sync/grants.js)
+> New pure module [toolkit/sync/grants.js](../../toolkit/sync/grants.js)
 > (`GRANT_SCOPES` whitelist, `validateScopes`, `normalizeGrant`, `isActive`,
-> `filterAbilityModelByScopes`) + a [sync barrel](../toolkit/sync/index.js).
-> [librarian.js](../toolkit/core/librarian.js) gains `requestGrant` (drafts a
+> `filterAbilityModelByScopes`) + a [sync barrel](../../toolkit/sync/index.js).
+> [librarian.js](../../toolkit/core/librarian.js) gains `requestGrant` (drafts a
 > `grant-request` proposal via `_draftProposals` — suppression/cooldown/cap
 > apply for free; never mints a grant itself), `listGrants`, `revokeGrant`
 > (= local delete), and `exportAbilityModel` (default‑deny: no active grant →
@@ -540,7 +540,7 @@ the settled "adapter/skill" vocabulary.
 > **Increment 2 landed (2026‑06‑26): the acting‑user partition** — a "who's
 > using this now?" selector so two people on one device/headset never
 > cross‑contaminate. Implemented at the datastore's physical key‑derivation
-> layer ([datastore.js](../toolkit/core/datastore.js)): `partitionKey(physKey)`
+> layer ([datastore.js](../../toolkit/core/datastore.js)): `partitionKey(physKey)`
 > returns the key **byte‑identical** for the null (default single‑user) partition
 > — so existing data needs **no migration** — and prefixes `aa.u.<id>::` for a
 > named partition. `get`/`set`/`getMemoryShard`/`setMemoryShard`/`allMemoryShards`
@@ -551,7 +551,7 @@ the settled "adapter/skill" vocabulary.
 > `runMigrations`) / `getActingUser()`; `Librarian` delegates + refreshes the
 > per‑partition badge. A 3‑lens adversarial review (**MINOR‑ONLY**, 0 mustFix)
 > verified total isolation / back‑compat / key‑injection safety / persistence.
-> **Known limitation (documented in [CLAUDE.md](../CLAUDE.md)):** background
+> **Known limitation (documented in [CLAUDE.md](../../CLAUDE.md)):** background
 > jobs (debounced `extract`/`reflect`, grant export) run against the partition
 > active at fire‑time, not enqueue‑time — bounded by single‑user‑default + rare
 > switching; **inc 3 must anchor jobs to a captured partition** before cross‑app
@@ -579,15 +579,15 @@ the settled "adapter/skill" vocabulary.
 > the accessible **"What each app can see"** grants panel (one‑tap revoke), the
 > sharing switch, the acting‑user selector, and export/import — and cross‑app
 > grant/insight proposals render through the **same** consent cards as everything
-> else. **(inc 5)** [`sync/transport.js`](../toolkit/sync/transport.js) — a local
+> else. **(inc 5)** [`sync/transport.js`](../../toolkit/sync/transport.js) — a local
 > shared‑store transport (`publishExports` with index‑driven retraction on
 > revoke/pause; `drainInbox` routing each insight through `importInsight`, with
-> transient‑failure retry). **(inc 6)** [`sync/blob.js`](../toolkit/sync/blob.js)
+> transient‑failure retry). **(inc 6)** [`sync/blob.js`](../../toolkit/sync/blob.js)
 > + `exportProfileBlob`/`importProfileBlob` — the user‑mediated profile blob,
 > plain last‑write‑wins (finite‑timestamp guarded; a fresh device yields to an
 > import; a real local edit is never reverted), carrying **only** the
 > modality‑neutral ability profile. **(inc 7)**
-> [`test/phase3-crossapp.test.mjs`](../toolkit/test/phase3-crossapp.test.mjs)
+> [`test/phase3-crossapp.test.mjs`](../../toolkit/test/phase3-crossapp.test.mjs)
 > drives the flagship **XR→insight→approve→ArtInsight‑reads** loop + both
 > transports + the off switch + the ArtInsight→web insight outbox end‑to‑end
 > against the real core. A second 3‑lens review of the transport/blob/UI layer
@@ -619,7 +619,7 @@ the settled "adapter/skill" vocabulary.
 > **insight outbox** the user carries back, where `Librarian.importInsightOutbox`
 > drains each entry through the **same** grant‑gated, never‑silent `importInsight`
 > (added the `Sensors` port + `noopSensors` for the XR measurement analogue).
-> Full wiring in [docs/artinsight-integration.md](./artinsight-integration.md).
+> Full wiring in [docs/artinsight-integration.md](../artinsight-integration.md).
 > (The Swift compiles against the app's existing SwiftUI/Codable idioms; no Xcode
 > toolchain here to build it, so it is verified by the JS‑side cross‑consumer
 > stub `phase3-crossapp.test.mjs`, which stands in for the XR + ArtInsight

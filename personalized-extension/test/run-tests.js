@@ -1874,7 +1874,7 @@ server.listen(PORT, async () => {
   // injected into every page; fail if the gzipped size creeps past 125 KB.
   // (Was 90 KB pre-integration; the merged adapter set sits at ~112 KB.)
   // Next lever if this trips: split reader-mode's readability+dompurify into
-  // an on-demand chrome.scripting chunk (see docs/adapter-robustness-plan.md).
+  // an on-demand chrome.scripting chunk (see docs/design/adapter-robustness-plan.md).
   // ---------------------------------------------------------------
   {
     const zlib = require('zlib');

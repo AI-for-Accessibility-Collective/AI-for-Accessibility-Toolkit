@@ -176,9 +176,9 @@ adapter to read its signal on load and react to `change`:
 
 | Observable signal | Adapter to auto-activate | Status today |
 |---|---|---|
-| `prefers-reduced-motion: reduce` | [`motion-reducer`](../personalized-extension/skills/builtin/motion-reducer.js) | Force-suppresses, but does **not** key off the OS signal — should auto-enable when `reduce` is set. |
-| `prefers-color-scheme: dark` | [`dark-mode`](../personalized-extension/skills/builtin/dark-mode.js) | No auto-activation from the OS signal. |
-| `prefers-contrast: more` / `forced-colors: active` | [`fix-contrast`](../personalized-extension/skills/builtin/fix-contrast.js) / `visual-assist` high-contrast | No auto-activation. |
+| `prefers-reduced-motion: reduce` | [`motion-reducer`](../../personalized-extension/skills/builtin/motion-reducer.js) | Force-suppresses, but does **not** key off the OS signal — should auto-enable when `reduce` is set. |
+| `prefers-color-scheme: dark` | [`dark-mode`](../../personalized-extension/skills/builtin/dark-mode.js) | No auto-activation from the OS signal. |
+| `prefers-contrast: more` / `forced-colors: active` | [`fix-contrast`](../../personalized-extension/skills/builtin/fix-contrast.js) / `visual-assist` high-contrast | No auto-activation. |
 | `prefers-reduced-transparency: reduce` | *(no adapter yet — candidate)* | — |
 | `chrome.fontSettings.getMinimumFontSize()` (extension-only) | `visual-assist` font scaling | Not seeded from the user's real browser pref. |
 

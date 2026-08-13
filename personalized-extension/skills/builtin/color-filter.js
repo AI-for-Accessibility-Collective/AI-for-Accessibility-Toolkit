@@ -9,7 +9,7 @@ import { registerSweep } from '../../utils/observe.js';
 //
 // Simulation matrices from Viénot et al. 1999 (complete dichromacy, LMS space).
 // Error redistribution: [[0,0,0],[0.7,1,0],[0.7,0,1]] per type (joergdietrich/daltonize).
-// Computed offline; see docs/adapter-robustness-plan.md Phase 3 for derivation.
+// Computed offline; see docs/design/adapter-robustness-plan.md Phase 3 for derivation.
 //
 // feColorMatrix row format: [R_from_R, R_from_G, R_from_B, 0, 0, ...]
 // Values outside [0,1] are clamped by the SVG renderer — expected for

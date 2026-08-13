@@ -1,6 +1,6 @@
 // utils/system-prefs.js — observable OS preference signals.
 //
-// Implements the watchSystemPrefs() sketch from observable-settings.md.
+// Implements the watchSystemPrefs() sketch from docs/design/observable-settings.md.
 // Five media queries, change listeners, initial read.
 //
 // Wire ONE consumer per wave:

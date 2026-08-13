@@ -13,7 +13,7 @@ exists" claims as accurate-as-of-this-date, not permanent.
 
 **Method.** Each adapter's *actual implementation* (in
 `personalized-extension/skills/builtin/`, manifest in
-[`skills/registry.js`](../personalized-extension/skills/registry.js)) was read
+[`skills/registry.js`](../../personalized-extension/skills/registry.js)) was read
 to ground capabilities in code, then researched against current tools. The five
 adapters flagged as genuinely differentiated were additionally put through an
 **adversarial verification pass**: an independent skeptic tried to *refute* each
@@ -24,7 +24,7 @@ those corrections are called out explicitly. Confidence on the negative
 across all of GitHub / the extension stores.
 
 This audit substantiates the thesis already stated in
-[`docs/architecture.md`](architecture.md): *"Existing accessibility tools
+[`docs/architecture.md`](../architecture.md): *"Existing accessibility tools
 (axe-core, Pa11y) give you a report. This toolkit adapts the page."* The
 evidence below shows that **detect-vs-adapt is the real moat** — the
 remediation/adaptation tier is where almost nothing free or native competes.
