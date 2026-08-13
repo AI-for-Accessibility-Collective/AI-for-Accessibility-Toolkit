@@ -77,10 +77,10 @@ export async function verifyToken(store, presented) {
 }
 
 /** Constant-time comparison of the presented Authorization bearer value
- *  against the configured ADMIN_TOKEN. */
-export function verifyAdminToken(adminToken, presented) {
-  if (!adminToken || typeof presented !== 'string' || !presented) return false;
-  const a = Buffer.from(adminToken, 'utf8');
+ *  against the configured ADMIN_PASSWORD (a generated 16-char password). */
+export function verifyAdminPassword(adminPassword, presented) {
+  if (!adminPassword || typeof presented !== 'string' || !presented) return false;
+  const a = Buffer.from(adminPassword, 'utf8');
   const b = Buffer.from(presented, 'utf8');
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);

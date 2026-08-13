@@ -40,7 +40,7 @@ modules.
 cd server
 npm test                        # in-process app tests, no network
 npm run docs                     # regenerate API.md from the live route table
-DATA_DIR=./data ADMIN_TOKEN=dev PORT=8080 npm start
+DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 npm start
 ```
 
 ## Env
@@ -48,7 +48,7 @@ DATA_DIR=./data ADMIN_TOKEN=dev PORT=8080 npm start
 | Var | Required | Default | Notes |
 |---|---|---|---|
 | `PORT` | no | `8080` | |
-| `ADMIN_TOKEN` | **yes** in `NODE_ENV=production` | insecure dev default otherwise (logged loudly) | Bearer token for `/admin/*` |
+| `ADMIN_PASSWORD` | **yes** in `NODE_ENV=production` | insecure dev default otherwise (logged loudly) | Bearer token for `/admin/*` |
 | `GEMINI_API_KEY` | no | unset | Without it, `extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt` throw `no-server-key` when actually invoked; every other route is unaffected |
 | `TOOLKIT_BUCKET` | no | unset | Set -> GCS backend; unset -> file backend |
 | `DATA_DIR` | no | `./data` | Only used when `TOOLKIT_BUCKET` is unset |
@@ -66,7 +66,7 @@ Build context is the **repo root** (the image needs both `toolkit/` and
 
 ```bash
 docker build -f server/Dockerfile -t toolkit-service .
-docker run -p 8080:8080 -e ADMIN_TOKEN=... -e GEMINI_API_KEY=... toolkit-service
+docker run -p 8080:8080 -e ADMIN_PASSWORD=... -e GEMINI_API_KEY=... toolkit-service
 ```
 
 `server/.dockerignore` only applies automatically if you either build with

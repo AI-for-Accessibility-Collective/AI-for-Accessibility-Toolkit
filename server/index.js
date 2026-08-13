@@ -2,7 +2,7 @@
 // Boot: read env, build the store + gemini caller + toolkit host, start the
 // HTTP server. Env:
 //   PORT            default 8080
-//   ADMIN_TOKEN     required in production (NODE_ENV=production); a dev
+//   ADMIN_PASSWORD  required in production (NODE_ENV=production); a dev
 //                   default is used otherwise so `node server/index.js` works
 //                   out of the box for local iteration, with a loud warning.
 //   GEMINI_API_KEY  optional — without it the slow lane (extract/reflect/
@@ -28,16 +28,16 @@ function boot() {
   const isProd = process.env.NODE_ENV === 'production';
   const port = Number(process.env.PORT) || 8080;
 
-  let adminToken = process.env.ADMIN_TOKEN;
-  if (!adminToken) {
+  let adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
     if (isProd) {
-      console.error('ADMIN_TOKEN is required when NODE_ENV=production. Exiting.');
+      console.error('ADMIN_PASSWORD is required when NODE_ENV=production. Exiting.');
       process.exit(1);
     }
-    adminToken = 'dev-admin-token';
+    adminPassword = 'dev-admin-password';
     console.warn(
-      `[toolkit-service] ADMIN_TOKEN not set — using an insecure dev default ` +
-        `(${adminToken}). Set ADMIN_TOKEN for anything beyond local iteration.`
+      `[toolkit-service] ADMIN_PASSWORD not set — using an insecure dev default ` +
+        `(${adminPassword}). Set ADMIN_PASSWORD for anything beyond local iteration.`
     );
   }
 
@@ -52,7 +52,7 @@ function boot() {
 
   const toolkitHost = createToolkitHost({ store, geminiCaller });
 
-  const listener = createApp({ store, adminToken, toolkitHost, version: pkg.version });
+  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version });
   const server = http.createServer(listener);
   server.listen(port, () => {
     console.log(`[toolkit-service] listening on :${port} (version ${pkg.version})`);

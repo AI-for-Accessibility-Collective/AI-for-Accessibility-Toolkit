@@ -104,13 +104,13 @@ function buildServerDevSection() {
 **Run locally** (file-backed storage, no cloud account needed):
 
 \`\`\`bash
-DATA_DIR=./data ADMIN_TOKEN=dev PORT=8080 node server/index.js
+DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 node server/index.js
 # mint a token:  curl -X POST localhost:8080/admin/tokens \\
 #   -H 'Authorization: Bearer dev' -H 'content-type: application/json' \\
 #   -d '{"uid":"me","label":"dev"}'
 \`\`\`
 
-**Environment variables** (parsed from the server source at doc-generation time): ${envVars.map((v) => `\`${v}\``).join(', ')}. \`TOOLKIT_BUCKET\` switches storage from the \`DATA_DIR\` file backend to GCS; \`GEMINI_API_KEY\` enables the server-side LLM lane (\`extract\`/\`reflect\`/\`buildSkill\`/\`interpretNeedsPrompt\`) so clients never need a key; \`ADMIN_TOKEN\` guards \`/admin\` (token management UI + CRUD).
+**Environment variables** (parsed from the server source at doc-generation time): ${envVars.map((v) => `\`${v}\``).join(', ')}. \`TOOLKIT_BUCKET\` switches storage from the \`DATA_DIR\` file backend to GCS; \`GEMINI_API_KEY\` enables the server-side LLM lane (\`extract\`/\`reflect\`/\`buildSkill\`/\`interpretNeedsPrompt\`) so clients never need a key; \`ADMIN_PASSWORD\` (a generated 16-character password) guards \`/admin\` (token management UI + CRUD).
 
 **npm scripts** (\`server/package.json\`):
 ${scriptLines}

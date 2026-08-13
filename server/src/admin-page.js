@@ -34,8 +34,8 @@ export function renderAdminPage() {
 <p>The admin token below is kept only in this page's memory (a JS variable) — it is never
    persisted. Re-entering it is required after every reload.</p>
 
-<label for="adminToken">Admin token</label>
-<input id="adminToken" type="password" placeholder="paste ADMIN_TOKEN here" autocomplete="off">
+<label for="adminPassword">Admin password</label>
+<input id="adminPassword" type="password" placeholder="enter the admin password" autocomplete="off">
 <div id="status"></div>
 
 <h2>Create token</h2>
@@ -55,12 +55,12 @@ export function renderAdminPage() {
 
 <script>
 (function () {
-  var tokenEl = document.getElementById('adminToken');
+  var tokenEl = document.getElementById('adminPassword');
   var statusEl = document.getElementById('status');
   var tbody = document.querySelector('#tokensTable tbody');
   var newTokenEl = document.getElementById('newToken');
 
-  function adminToken() { return tokenEl.value.trim(); }
+  function adminPassword() { return tokenEl.value.trim(); }
 
   function setStatus(msg, isError) {
     statusEl.textContent = msg || '';
@@ -68,7 +68,7 @@ export function renderAdminPage() {
   }
 
   function authHeaders() {
-    return { 'Authorization': 'Bearer ' + adminToken(), 'Content-Type': 'application/json' };
+    return { 'Authorization': 'Bearer ' + adminPassword(), 'Content-Type': 'application/json' };
   }
 
   async function api(path, opts) {
@@ -104,7 +104,7 @@ export function renderAdminPage() {
   }
 
   async function refresh() {
-    if (!adminToken()) { setStatus('Enter the admin token first.', true); return; }
+    if (!adminPassword()) { setStatus('Enter the admin password first.', true); return; }
     try {
       var tokens = await api('/admin/tokens');
       renderRows(tokens);
@@ -118,7 +118,7 @@ export function renderAdminPage() {
     var uid = document.getElementById('uid').value.trim();
     var label = document.getElementById('label').value.trim();
     if (!uid) { setStatus('uid is required.', true); return; }
-    if (!adminToken()) { setStatus('Enter the admin token first.', true); return; }
+    if (!adminPassword()) { setStatus('Enter the admin password first.', true); return; }
     try {
       var result = await api('/admin/tokens', { method: 'POST', body: JSON.stringify({ uid: uid, label: label }) });
       newTokenEl.style.display = 'block';
@@ -131,7 +131,7 @@ export function renderAdminPage() {
   }
 
   async function revoke(id) {
-    if (!adminToken()) { setStatus('Enter the admin token first.', true); return; }
+    if (!adminPassword()) { setStatus('Enter the admin password first.', true); return; }
     try {
       await api('/admin/tokens/' + encodeURIComponent(id), { method: 'DELETE' });
       setStatus('Token revoked.');

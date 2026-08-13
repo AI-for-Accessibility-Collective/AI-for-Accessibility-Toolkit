@@ -12,7 +12,7 @@
 - Auth: `Authorization: Bearer <token>` on every `/v1/*` route except `/healthz`
   and `/v1/meta`. A token maps server-side to a `uid`; all state is partitioned
   by that uid. Invalid/missing token → `401 {"error":"unauthorized"}`.
-- Admin auth: `Authorization: Bearer <ADMIN_TOKEN>` (env/secret) on `/admin/*`.
+- Admin auth: `Authorization: Bearer <ADMIN_PASSWORD>` on `/admin/*` — a generated 16-character password (env `ADMIN_PASSWORD`, Secret Manager `toolkit-admin-password`). The `/admin` page is a password-protected config interface; there is no separate admin token.
 
 ## Endpoints
 

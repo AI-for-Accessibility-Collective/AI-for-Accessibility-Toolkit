@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Boots the app in-process (fileStore under a temp dir, a test ADMIN_TOKEN,
+// Boots the app in-process (fileStore under a temp dir, a test ADMIN_PASSWORD,
 // NO Gemini key) and drives it over real HTTP against an ephemeral port —
 // exercising createApp() exactly the way index.js does, minus env plumbing.
 // Run: node server/test/server-test.mjs
@@ -58,12 +58,12 @@ async function test(name, fn) {
 
 async function main() {
   const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'toolkit-service-test-'));
-  const ADMIN_TOKEN = 'test-admin-token';
+  const ADMIN_PASSWORD = 'test-admin-pass16';
 
   const store = fileStore(dataDir);
   const geminiCaller = createGeminiCaller({ apiKey: null }); // NO gemini key for this run
   const toolkitHost = createToolkitHost({ store, geminiCaller });
-  const listener = createApp({ store, adminToken: ADMIN_TOKEN, toolkitHost, version: 'test' });
+  const listener = createApp({ store, adminPassword: ADMIN_PASSWORD, toolkitHost, version: 'test' });
   const server = http.createServer(listener);
   await new Promise((resolve) => server.listen(0, resolve));
   const { port } = server.address();
@@ -120,7 +120,7 @@ async function main() {
     // ---- every one of the 36 routes actually dispatches ----------------------
     let sweepToken;
     await test('admin: create token for the dispatch sweep', async () => {
-      const r = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'sweep-user', label: 'sweep' } });
+      const r = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'sweep-user', label: 'sweep' } });
       assert.equal(r.status, 200);
       assert.equal(r.body.uid, 'sweep-user');
       assert.ok(r.body.token.startsWith('aat_'));
@@ -175,19 +175,19 @@ async function main() {
     });
 
     await test('admin: create tokens for user-a and user-b', async () => {
-      const ra = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-a', label: 'A' } });
+      const ra = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-a', label: 'A' } });
       assert.equal(ra.status, 200);
       assert.equal(ra.body.uid, 'user-a');
       assert.ok(ra.body.token.startsWith('aat_'));
       tokenA = ra.body.token;
 
-      const rb = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-b', label: 'B' } });
+      const rb = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-b', label: 'B' } });
       assert.equal(rb.status, 200);
       tokenB = rb.body.token;
     });
 
     await test('admin: list tokens (no token values)', async () => {
-      const r = await call('GET', '/admin/tokens', { adminToken: ADMIN_TOKEN });
+      const r = await call('GET', '/admin/tokens', { adminToken: ADMIN_PASSWORD });
       assert.equal(r.status, 200);
       assert.ok(Array.isArray(r.body));
       const rec = r.body.find((t) => t.uid === 'user-a');
@@ -220,7 +220,7 @@ async function main() {
     });
 
     await test('admin: revoke token A', async () => {
-      const r = await call('DELETE', `/admin/tokens/${tokenAId}`, { adminToken: ADMIN_TOKEN });
+      const r = await call('DELETE', `/admin/tokens/${tokenAId}`, { adminToken: ADMIN_PASSWORD });
       assert.equal(r.status, 200);
       assert.equal(r.body.ok, true);
     });
@@ -232,14 +232,14 @@ async function main() {
     });
 
     await test('admin: revoking an unknown id -> 404', async () => {
-      const r = await call('DELETE', '/admin/tokens/does-not-exist', { adminToken: ADMIN_TOKEN });
+      const r = await call('DELETE', '/admin/tokens/does-not-exist', { adminToken: ADMIN_PASSWORD });
       assert.equal(r.status, 404);
     });
 
     // ---- per-uid isolation ----------------------------------------------------
     await test('per-uid isolation: two uids write distinct profiles, no cross-read', async () => {
-      const rc = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-c' } });
-      const rd = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-d' } });
+      const rc = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-c' } });
+      const rd = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-d' } });
       const tokenC = rc.body.token;
       const tokenD = rd.body.token;
 
@@ -259,7 +259,7 @@ async function main() {
 
     // ---- real flow over HTTP ---------------------------------------------------
     await test('real flow: setProfileField -> getAbilityModel -> recordScopedSettings -> getEffectivePreferences -> exportProfileBlob', async () => {
-      const rt = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-flow' } });
+      const rt = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-flow' } });
       const token = rt.body.token;
 
       const set1 = await call('POST', '/v1/librarian/setProfileField', {
@@ -294,7 +294,7 @@ async function main() {
 
     // ---- librarian error surfaces as {ok:false,error} --------------------------
     await test('a thrown librarian error surfaces as {ok:false, error}, HTTP 200', async () => {
-      const rt = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-err' } });
+      const rt = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-err' } });
       const token = rt.body.token;
       // getSiteCategory(origin, opts = {}) — passing `null` explicitly bypasses
       // the default parameter (only `undefined` triggers it), so `opts.allowLlm`
@@ -308,7 +308,7 @@ async function main() {
 
     // ---- unknown method -> 404 --------------------------------------------------
     await test('unknown method -> 404 {error:"unknown-method"}', async () => {
-      const rt = await call('POST', '/admin/tokens', { adminToken: ADMIN_TOKEN, body: { uid: 'user-404' } });
+      const rt = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-404' } });
       const token = rt.body.token;
       const r = await call('POST', '/v1/librarian/definitelyNotAMethod', { token, body: { args: [] } });
       assert.equal(r.status, 404);
@@ -320,7 +320,7 @@ async function main() {
       const resp = await fetch(base + '/admin');
       assert.equal(resp.status, 200);
       const text = await resp.text();
-      assert.ok(text.includes('Toolkit Service') && text.includes('adminToken'));
+      assert.ok(text.includes('Toolkit Service') && text.includes('adminPassword'));
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));

@@ -8,7 +8,7 @@
 // `invokeLibrarianRoute` (server/src/routes.js) — this file never imports
 // anything under toolkit/ directly.
 
-import { verifyToken, verifyAdminToken, issueToken, listTokens, revokeToken } from './auth.js';
+import { verifyToken, verifyAdminPassword, issueToken, listTokens, revokeToken } from './auth.js';
 import { LIBRARIAN_ROUTES_BY_NAME, invokeLibrarianRoute } from './routes.js';
 import { buildMeta } from './meta.js';
 import { renderAdminPage } from './admin-page.js';
@@ -18,14 +18,14 @@ const LIBRARIAN_PREFIX = '/v1/librarian/';
 
 /** @param {Object} config
  *  @param {import('./store.js').fileStore} config.store
- *  @param {string} config.adminToken
+ *  @param {string} config.adminPassword
  *  @param {import('./toolkit-host.js').createToolkitHost extends (...a:any)=>infer R ? R : never} config.toolkitHost
  *  @param {string} [config.version]
  *  @returns {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void}
  */
-export function createApp({ store, adminToken, toolkitHost, version = '0.0.0' }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0' }) {
   if (!store) throw new Error('createApp: store is required');
-  if (!adminToken) throw new Error('createApp: adminToken is required');
+  if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
 
   // Built once at app-creation time (still "at runtime", per the boot
@@ -88,7 +88,7 @@ export function createApp({ store, adminToken, toolkitHost, version = '0.0.0' })
 
   async function handleAdminTokens(req, res, method, pathname) {
     const presented = bearerFrom(req);
-    if (!verifyAdminToken(adminToken, presented)) {
+    if (!verifyAdminPassword(adminPassword, presented)) {
       return sendJSON(res, 401, { error: 'unauthorized' });
     }
 

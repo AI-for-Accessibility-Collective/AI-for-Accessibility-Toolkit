@@ -23,7 +23,7 @@ import { createToolkitHost } from '../../server/src/toolkit-host.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXT_DIR = path.join(__dirname, '..', 'extension');
-const ADMIN_TOKEN = 'integration-admin-token';
+const ADMIN_PASSWORD = 'integration-admin-pw';
 const RUN = `itest-${Date.now().toString(36)}`;
 const UID_A = `${RUN}-a`;
 const UID_B = `${RUN}-b`;
@@ -48,12 +48,12 @@ function loadFacade(baseUrl, token) {
 // assertions, live wire. Remote runs use throwaway uids; revoke their tokens
 // in the finally block so nothing lingers.
 const REMOTE_BASE = process.env.REMOTE_BASE || null;
-const REMOTE_ADMIN = process.env.REMOTE_ADMIN_TOKEN || null;
+const REMOTE_ADMIN = process.env.REMOTE_ADMIN_PASSWORD || process.env.REMOTE_ADMIN_TOKEN || null;
 
 let server = null, dataDir = null, base;
-const ADMIN = REMOTE_BASE ? REMOTE_ADMIN : ADMIN_TOKEN;
+const ADMIN = REMOTE_BASE ? REMOTE_ADMIN : ADMIN_PASSWORD;
 if (REMOTE_BASE) {
-  if (!REMOTE_ADMIN) { console.error('REMOTE_BASE set but REMOTE_ADMIN_TOKEN missing'); process.exit(2); }
+  if (!REMOTE_ADMIN) { console.error('REMOTE_BASE set but REMOTE_ADMIN_PASSWORD missing'); process.exit(2); }
   base = REMOTE_BASE.replace(/\/$/, '');
   console.log(`[remote mode] targeting ${base}`);
 } else {
@@ -61,7 +61,7 @@ if (REMOTE_BASE) {
   const store = fileStore(dataDir);
   const app = createApp({
     store,
-    adminToken: ADMIN_TOKEN,
+    adminPassword: ADMIN_PASSWORD,
     toolkitHost: createToolkitHost({ store, geminiCaller: createGeminiCaller({ apiKey: null }) }),
     version: 'integration-test',
   });
