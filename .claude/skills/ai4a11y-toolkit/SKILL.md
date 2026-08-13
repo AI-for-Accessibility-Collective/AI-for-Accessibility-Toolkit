@@ -293,7 +293,7 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | POST | `/admin/tokens` | create token `{uid, label?}` → `{token, uid}` (token shown once) |
 | GET | `/admin/tokens` | list `{uid, label, createdAt, revoked}` (no token values) |
 | DELETE | `/admin/tokens/{id}` | revoke |
-| GET | `/admin` | minimal HTML config interface (token management) |
+| GET | `/admin` | config interface (token management) — browser login popup |
 
 ## `/v1/librarian/{method}`
 

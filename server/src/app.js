@@ -8,7 +8,7 @@
 // `invokeLibrarianRoute` (server/src/routes.js) — this file never imports
 // anything under toolkit/ directly.
 
-import { verifyToken, verifyAdminPassword, issueToken, listTokens, revokeToken } from './auth.js';
+import { verifyToken, verifyAdminHeader, issueToken, listTokens, revokeToken } from './auth.js';
 import { LIBRARIAN_ROUTES_BY_NAME, invokeLibrarianRoute } from './routes.js';
 import { buildMeta } from './meta.js';
 import { renderAdminPage } from './admin-page.js';
@@ -64,7 +64,15 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       return sendJSON(res, 200, metaPayload);
     }
 
+    // The admin page itself is behind the browser's native auth popup (HTTP
+    // Basic): an unauthenticated GET gets 401 + WWW-Authenticate, the browser
+    // prompts, caches the credential for the session (remembered by default,
+    // and offered to the password manager), and every same-origin fetch the
+    // page makes then carries it automatically.
     if (method === 'GET' && pathname === '/admin') {
+      if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
+        return sendAdminChallenge(res);
+      }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(adminPageHtml);
     }
@@ -87,8 +95,9 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   }
 
   async function handleAdminTokens(req, res, method, pathname) {
-    const presented = bearerFrom(req);
-    if (!verifyAdminPassword(adminPassword, presented)) {
+    // Basic (browser popup credential, auto-attached to the page's fetches)
+    // or Bearer (curl/scripts) — see verifyAdminHeader.
+    if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
       return sendJSON(res, 401, { error: 'unauthorized' });
     }
 
@@ -162,6 +171,15 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     }
     return rec;
   }
+}
+
+function sendAdminChallenge(res) {
+  res.writeHead(401, {
+    'content-type': 'text/html; charset=utf-8',
+    'www-authenticate': 'Basic realm="Toolkit Service Admin", charset="UTF-8"',
+  });
+  res.end('<!doctype html><meta charset="utf-8"><title>Authentication required</title>'
+    + '<p>Authentication required — enter the admin password (any username).</p>');
 }
 
 function bearerFrom(req) {

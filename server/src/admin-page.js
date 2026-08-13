@@ -1,10 +1,10 @@
-// GET /admin — a minimal, dependency-free HTML config page. The page shell
-// itself needs no auth (there is nothing secret in it); every data call
-// (list/create/revoke tokens) is a fetch() from the inline vanilla JS below
-// carrying `Authorization: Bearer <admin token>`, where the admin token is
-// whatever the operator typed into the page's own input field a moment
-// earlier — held in a plain JS variable, never written to localStorage,
-// cookies, or the DOM outside that input, so it evaporates on reload.
+// GET /admin — a minimal, dependency-free HTML config page. The page itself
+// sits behind the browser's native HTTP Basic login popup (app.js answers an
+// unauthenticated GET with 401 + WWW-Authenticate, so the browser prompts,
+// caches the credential for the session — remembered by default — and offers
+// to save it in the password manager). Every data call below is a plain
+// same-origin fetch(): the browser attaches the cached Basic credential
+// automatically, so the page holds no password of its own.
 export function renderAdminPage() {
   return `<!doctype html>
 <html lang="en">
@@ -17,7 +17,7 @@ export function renderAdminPage() {
   h1 { font-size: 1.25rem; }
   h2 { font-size: 1rem; margin-top: 2rem; }
   input, button { font: inherit; padding: .4rem .5rem; }
-  input[type=text], input[type=password] { width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
+  input[type=text] { width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
   button { cursor: pointer; }
   table { border-collapse: collapse; width: 100%; margin-top: .5rem; }
   th, td { text-align: left; border-bottom: 1px solid #ddd; padding: .35rem .5rem; font-size: .85rem; }
@@ -31,11 +31,9 @@ export function renderAdminPage() {
 </head>
 <body>
 <h1>Toolkit Service — Admin</h1>
-<p>The admin token below is kept only in this page's memory (a JS variable) — it is never
-   persisted. Re-entering it is required after every reload.</p>
-
-<label for="adminPassword">Admin password</label>
-<input id="adminPassword" type="password" placeholder="enter the admin password" autocomplete="off">
+<p>You are signed in via the browser's login prompt; your session is remembered
+   by the browser. To sign out, close the browser (or clear its HTTP auth
+   session for this site).</p>
 <div id="status"></div>
 
 <h2>Create token</h2>
@@ -55,27 +53,23 @@ export function renderAdminPage() {
 
 <script>
 (function () {
-  var tokenEl = document.getElementById('adminPassword');
   var statusEl = document.getElementById('status');
   var tbody = document.querySelector('#tokensTable tbody');
   var newTokenEl = document.getElementById('newToken');
-
-  function adminPassword() { return tokenEl.value.trim(); }
 
   function setStatus(msg, isError) {
     statusEl.textContent = msg || '';
     statusEl.style.color = isError ? '#b00020' : '#555';
   }
 
-  function authHeaders() {
-    return { 'Authorization': 'Bearer ' + adminPassword(), 'Content-Type': 'application/json' };
-  }
-
   async function api(path, opts) {
-    var resp = await fetch(path, Object.assign({ headers: authHeaders() }, opts || {}));
+    // Same-origin: the browser attaches the Basic credential from its auth
+    // cache (the login popup) — no Authorization header handling here.
+    var resp = await fetch(path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts || {}));
     var body = null;
     try { body = await resp.json(); } catch (e) {}
     if (!resp.ok) {
+      if (resp.status === 401) throw new Error('session expired — reload the page to sign in again');
       throw new Error((body && body.error) || ('HTTP ' + resp.status));
     }
     return body;
@@ -104,7 +98,6 @@ export function renderAdminPage() {
   }
 
   async function refresh() {
-    if (!adminPassword()) { setStatus('Enter the admin password first.', true); return; }
     try {
       var tokens = await api('/admin/tokens');
       renderRows(tokens);
@@ -118,7 +111,6 @@ export function renderAdminPage() {
     var uid = document.getElementById('uid').value.trim();
     var label = document.getElementById('label').value.trim();
     if (!uid) { setStatus('uid is required.', true); return; }
-    if (!adminPassword()) { setStatus('Enter the admin password first.', true); return; }
     try {
       var result = await api('/admin/tokens', { method: 'POST', body: JSON.stringify({ uid: uid, label: label }) });
       newTokenEl.style.display = 'block';
@@ -131,7 +123,6 @@ export function renderAdminPage() {
   }
 
   async function revoke(id) {
-    if (!adminPassword()) { setStatus('Enter the admin password first.', true); return; }
     try {
       await api('/admin/tokens/' + encodeURIComponent(id), { method: 'DELETE' });
       setStatus('Token revoked.');
@@ -143,6 +134,7 @@ export function renderAdminPage() {
 
   document.getElementById('refreshBtn').addEventListener('click', refresh);
   document.getElementById('createBtn').addEventListener('click', create);
+  refresh(); // signed in already (the page only renders past the popup)
 })();
 </script>
 </body>

@@ -85,3 +85,26 @@ export function verifyAdminPassword(adminPassword, presented) {
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }
+
+/** Admin auth from a raw Authorization header, accepting BOTH schemes:
+ *  - `Basic base64(user:password)` — the browser's native login popup for
+ *    /admin (any username; only the password is checked). The browser caches
+ *    the credential for the session and offers password-manager saving, so
+ *    the login is remembered by default.
+ *  - `Bearer <password>` — for curl/scripts/tests.
+ */
+export function verifyAdminHeader(adminPassword, header) {
+  if (typeof header !== 'string' || !header.trim()) return false;
+  const m = /^(Basic|Bearer)\s+(.+)$/i.exec(header.trim());
+  if (!m) return false;
+  if (/^bearer$/i.test(m[1])) return verifyAdminPassword(adminPassword, m[2].trim());
+  let decoded;
+  try {
+    decoded = Buffer.from(m[2].trim(), 'base64').toString('utf8');
+  } catch {
+    return false;
+  }
+  const colon = decoded.indexOf(':');
+  if (colon === -1) return false;
+  return verifyAdminPassword(adminPassword, decoded.slice(colon + 1));
+}

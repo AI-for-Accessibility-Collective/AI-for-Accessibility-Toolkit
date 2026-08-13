@@ -315,12 +315,30 @@ async function main() {
       assert.equal(r.body.error, 'unknown-method');
     });
 
-    // ---- admin page shell needs no auth to load ---------------------------------
-    await test('GET /admin serves the HTML shell without auth', async () => {
+    // ---- admin page: browser-popup (Basic) auth, remembered by the browser ------
+    await test('GET /admin without auth -> 401 + WWW-Authenticate (browser popup)', async () => {
       const resp = await fetch(base + '/admin');
+      assert.equal(resp.status, 401);
+      assert.match(resp.headers.get('www-authenticate') || '', /^Basic /);
+    });
+
+    await test('GET /admin with Basic credential serves the page (no in-page password field)', async () => {
+      const basic = Buffer.from(`admin:${ADMIN_PASSWORD}`).toString('base64');
+      const resp = await fetch(base + '/admin', { headers: { authorization: `Basic ${basic}` } });
       assert.equal(resp.status, 200);
       const text = await resp.text();
-      assert.ok(text.includes('Toolkit Service') && text.includes('adminPassword'));
+      assert.ok(text.includes('Toolkit Service'));
+      assert.ok(!text.includes('type="password"'), 'page must not ask for the password itself');
+    });
+
+    await test('admin token CRUD accepts Basic too (page fetches ride the popup credential)', async () => {
+      const basic = Buffer.from(`x:${ADMIN_PASSWORD}`).toString('base64'); // any username
+      const resp = await fetch(base + '/admin/tokens', { headers: { authorization: `Basic ${basic}` } });
+      assert.equal(resp.status, 200);
+      assert.ok(Array.isArray(await resp.json()));
+      const bad = Buffer.from('x:wrong-password!').toString('base64');
+      const r2 = await fetch(base + '/admin/tokens', { headers: { authorization: `Basic ${bad}` } });
+      assert.equal(r2.status, 401);
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));
