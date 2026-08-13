@@ -329,6 +329,8 @@ async function main() {
       const text = await resp.text();
       assert.ok(text.includes('Toolkit Service'));
       assert.ok(!text.includes('type="password"'), 'page must not ask for the password itself');
+      assert.ok(text.includes('Sign out') && text.includes('signOutBtn'), 'page must offer a Sign out button');
+      assert.ok(!text.includes('signed in via'), 'the explanatory sentence under the heading is gone');
     });
 
     await test('admin token CRUD accepts Basic too (page fetches ride the popup credential)', async () => {

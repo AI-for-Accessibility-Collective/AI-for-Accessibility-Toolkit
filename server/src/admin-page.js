@@ -30,10 +30,10 @@ export function renderAdminPage() {
 </style>
 </head>
 <body>
-<h1>Toolkit Service — Admin</h1>
-<p>You are signed in via the browser's login prompt; your session is remembered
-   by the browser. To sign out, close the browser (or clear its HTTP auth
-   session for this site).</p>
+<div class="row" style="align-items:baseline">
+  <h1 style="flex:1">Toolkit Service — Admin</h1>
+  <button id="signOutBtn">Sign out</button>
+</div>
 <div id="status"></div>
 
 <h2>Create token</h2>
@@ -132,8 +132,19 @@ export function renderAdminPage() {
     }
   }
 
+  async function signOut() {
+    // HTTP Basic has no logout API; overwrite the browser's cached credential
+    // for this realm with a bogus one, then reload — the reload sends the
+    // bogus credential, gets 401, and the login popup reappears.
+    try {
+      await fetch('/admin/tokens', { headers: { 'Authorization': 'Basic ' + btoa('signout:' + Date.now()) } });
+    } catch (e) {}
+    location.reload();
+  }
+
   document.getElementById('refreshBtn').addEventListener('click', refresh);
   document.getElementById('createBtn').addEventListener('click', create);
+  document.getElementById('signOutBtn').addEventListener('click', signOut);
   refresh(); // signed in already (the page only renders past the popup)
 })();
 </script>
