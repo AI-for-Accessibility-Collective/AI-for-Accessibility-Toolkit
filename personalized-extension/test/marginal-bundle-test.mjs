@@ -26,12 +26,16 @@ const ok = (c, w) => {
 const U = await import('../extension/validation/utility.js');
 const RunMod = await import('../extension/validation/run.js');
 
-// A mid-tier finding: verified, wanted now, no money at stake. For a
-// screen-reader user, speaking costs enough that this is kept rather than
-// said - unless it can ride a pause that is happening anyway.
+// A genuinely mid-tier finding: wanted on demand, quote NOT verified, no
+// money at stake. Alone it is kept for when the person asks - the answer is
+// weak evidence and nobody asked for it now - but when its node is already
+// pausing, saying it costs one sentence inside a paid-for interruption, and
+// that flips it to spoken. (A verified wanted-now finding is simply spoken
+// for every persona since the measurement pass fixed the weights, so the
+// keep-alone case needs a weaker finding than it used to.)
 const nearMiss = {
   widget: 'What does the room cost per night?', phase: 'Pick a room',
-  moment: 'Now', moneyMoving: false, confidence: 0.8, verified: 'verified_exact',
+  moment: 'On demand', moneyMoving: false, confidence: 0.8, verified: null,
   contradicts: false, confirming: false, node: '2',
   say: 'What does the room cost per night? $175.',
 };
@@ -42,7 +46,7 @@ const BLV = { vision: { descriptions: true } };
   const alone = U.route(nearMiss, { model: BLV });
   const riding = U.route(nearMiss, { model: BLV, joiningPause: true });
   ok(alone.route !== 'now',
-    'alone, a screen-reader user keeps this rather than hearing it');
+    'alone, this is kept for when the person asks');
   ok(riding.route === 'now', 'on a pausing node it rides the pause and is spoken');
   ok(riding.eu.log === alone.eu.log && riding.eu.after === alone.eu.after,
     'only the now route is repriced - the others are untouched');
@@ -68,10 +72,12 @@ const BLV = { vision: { descriptions: true } };
       answerable: true, confirming: false, contradicts: true, node: '2',
       moment: 'Now', moneyMoving: false, confidence: 0.9, verified: 'verified_exact' },
     { ...nearMiss },
+    // Same mid-tier shape as the near-miss, but on a node that is NOT
+    // pausing - so it stays kept while its twin on node 2 gets spoken.
     { widget: 'How many photos?', phase: 'Pick a room',
       say: 'How many photos? Twelve.', from: '12', answerable: true,
       confirming: false, contradicts: false, node: '3',
-      moment: 'Now', moneyMoving: false, confidence: 0.8, verified: 'verified_exact' },
+      moment: 'On demand', moneyMoving: false, confidence: 0.8, verified: null },
   ];
   const { findings } = run.observeFindings(page, 'Pick a room');
   const byWidget = Object.fromEntries(findings.map((f) => [f.finding.widget, f]));

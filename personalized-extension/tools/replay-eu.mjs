@@ -13,7 +13,7 @@
 //      policy.js, which applies the locked-stop ladder before the EU argmax —
 //      tracking a running spoken count exactly the way run.js does: the count
 //      of prior non-ambient outcomes, computed before each decision.
-//   3. Sweeps a grid over intBase.now × fatiguePerSaid.now. decide() does not
+//   3. Sweeps a grid over intBase.now × intBase.after. decide() does not
 //      take weights, so the sweep uses a line-for-line replica of its ladder
 //      (replicaDecide below) that forwards weights into route(); at the
 //      shipped weights the replica is asserted equal to decide() on every
@@ -45,7 +45,7 @@ const AS_JSON = args.includes('--json');
 // The sweep grid. The shipped v1 values (0.12, 0.01) are one of the cells, so
 // the shipped router is compared on the same footing as every candidate.
 const INT_NOW = [0.08, 0.12, 0.16, 0.22];
-const FAT_NOW = [0.005, 0.01, 0.02, 0.04];
+const FAT_NOW = [0.01, 0.02, 0.05, 0.08];
 
 // ── loading ─────────────────────────────────────────────────────────────────
 
@@ -261,7 +261,7 @@ for (const intNow of INT_NOW) {
   for (const fatNow of FAT_NOW) {
     const weights = JSON.parse(JSON.stringify(WEIGHTS));
     weights.intBase.now = intNow;
-    weights.fatiguePerSaid.now = fatNow;
+    weights.intBase.after = fatNow;
     const cell = { intNow, fatNow, runs: {}, errs: [], dedupedLocked: 0 };
     for (const r of runs) {
       const decisions = replay(r.findings, { weights });
@@ -282,7 +282,7 @@ for (const intNow of INT_NOW) {
 
 const failed = cells.filter((c) => c.errs.length);
 for (const c of failed) {
-  console.error(`\nINVARIANT FAILURES at intBase.now=${c.intNow} fatiguePerSaid.now=${c.fatNow}:`);
+  console.error(`\nINVARIANT FAILURES at intBase.now=${c.intNow} intBase.after=${c.fatNow}:`);
   for (const e of c.errs) console.error(`  ${e}`);
 }
 
@@ -290,7 +290,7 @@ for (const c of failed) {
 const names = runs.map((r) => r.name);
 console.log(`\nstops per run, locked before the EU model, identical in every cell: `
   + names.map((n) => `${n}=${cells[0].runs[n].stops}`).join('  '));
-console.log('\n| intBase.now | fatiguePerSaid.now | '
+console.log('\n| intBase.now | intBase.after | '
   + names.map((n) => `${n} spoken/kept`).join(' | ')
   + ' | first migration at fatigue |');
 console.log(`|---|---|${names.map(() => '---').join('|')}|---|`);
@@ -301,7 +301,7 @@ for (const c of cells) {
     const v = c.runs[n].firstMigrationFatigue;
     return `${n[0]}:${v === null ? '—' : v}`;
   }).join(' ');
-  const shipped = c.intNow === WEIGHTS.intBase.now && c.fatNow === WEIGHTS.fatiguePerSaid.now;
+  const shipped = c.intNow === WEIGHTS.intBase.now && c.fatNow === WEIGHTS.intBase.after;
   console.log(`| ${c.intNow}${shipped ? ' (v1)' : ''} | ${c.fatNow} | `
     + names.map((n) => `${c.runs[n].spoken}/${c.runs[n].kept}`).join(' | ')
     + ` | ${migStr} |`);

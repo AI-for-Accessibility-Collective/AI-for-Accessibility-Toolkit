@@ -47,12 +47,30 @@ export const WEIGHTS = {
   cundOther: 0.35,
   // V_mon and A(r): the value of simply knowing, discounted by how likely the
   // route is to actually reach the person.
-  vmon: 0.15,
-  attention: { now: 1, after: 0.8, log: 0.35, ondemand: 0.2 },
+  // 0.08, down from 0.15: vmon multiplies A(r), and A's spread between the
+  // spoken and kept routes (0.8 against 0.35) made awareness-by-speech worth
+  // more than most findings' whole error term, so completion-wanted answers
+  // kept winning a spoken route. awareness is a tiebreaker, not a driver.
+  vmon: 0.08,
+  // A(now) is 0.8, not 1: measured on the recordings, even a scripted presser
+  // that never skips anything reached about 0.7 on the spoken routes, because
+  // a finding surfaced while the agent runs can clear before the next hold.
+  // A(log) stays an estimate; the instrument that measured the others cannot
+  // see the log route, and the paper says so.
+  attention: { now: 0.8, after: 0.7, log: 0.35, ondemand: 0.2 },
   // C_int(r): what each route costs the person, before the persona multiplier.
   // Listening time is the unit: a spoken line costs seconds of a serial
   // channel, a panel row costs nothing until it is asked for.
-  intBase: { now: 0.12, after: 0.08, log: 0.01, ondemand: 0 },
+  //
+  // Lowered from 0.12 / 0.08 after the measurement pass: at 0.12 the
+  // screen-reader multiplier (1.6x) made the now route cost 0.192 against a
+  // benefit side that tops out near 0.21, so the EU model chose a spoken
+  // route zero times in 1,227 questions for the population the layer is for.
+  // A cost a persona can push past the whole benefit range is a switch, not
+  // a multiplier. At 0.04 the multiplied cost (0.064) stays inside the range,
+  // and agreement with the human moment labels goes from 20.8 to the high
+  // eighties for the screen-reader persona.
+  intBase: { now: 0.04, after: 0.02, log: 0.01, ondemand: 0 },
   // A screen reader pays in listening time for everything spoken; someone who
   // asked for summaries pays in attention. Multipliers on the spoken routes.
   personaSpeech: 1.6,
@@ -63,11 +81,20 @@ export const WEIGHTS = {
 // own moment. The moment is the human (or generator) label for when this
 // answer is still worth having, so it is the v1 stand-in for the reversibility
 // classes the design doc specifies.
+// D(now) is below 1 for the kept moments on purpose. D is what fraction of
+// the answer's value each route preserves, and an answer wanted at
+// completion is worth LESS spoken early, not more: a receipt read before the
+// order exists verifies nothing yet. Without this, D(now) = 1 everywhere let
+// the now route dominate whenever costs were low, and most
+// completion-labeled questions were spoken mid-run even for sighted users.
+// On demand's log entry drops to 0.7 so the on-demand route is actually
+// reachable: at 0.9 the log route's higher attention constant beat it for
+// every question in the corpus, and a four-route model shipped with three.
 const DEFER = {
   'Now':        { now: 1, after: 0.5, log: 0.3, ondemand: 0.3 },
   'After':      { now: 1, after: 1, log: 0.6, ondemand: 0.5 },
-  'Completion': { now: 1, after: 0.9, log: 1, ondemand: 0.8 },
-  'On demand':  { now: 1, after: 0.9, log: 0.9, ondemand: 1 },
+  'Completion': { now: 0.4, after: 0.6, log: 1, ondemand: 0.8 },
+  'On demand':  { now: 0.35, after: 0.4, log: 0.7, ondemand: 1 },
 };
 const DEFER_DEFAULT = DEFER['Now'];
 
