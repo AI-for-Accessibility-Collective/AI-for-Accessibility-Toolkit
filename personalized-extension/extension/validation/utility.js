@@ -41,10 +41,21 @@ export const WEIGHTS = {
   // is weaker.
   uncoverVerified: 0.95,
   uncoverOther: 0.6,
-  // C_und: what an undetected error costs. One bit today (moneyMoving), so two
-  // levels. The six-dimension coding replaces this.
+  // C_und: what an undetected error costs. Two forms. A question that carries
+  // the six-dimension coding (costDims) gets a graded value from cundOf();
+  // one that does not falls back to the moneyMoving bit and these two levels,
+  // byte-identical to the pre-coding behavior.
   cundMoney: 0.9,
   cundOther: 0.35,
+  // The graded scale. Severity in [0,1] maps to cundFloor..cundFloor+cundSpan,
+  // anchored so the corpus lands in the same band as the two-level fallback:
+  // an all-zeros coding sits below cundOther, an all-high coding just above
+  // cundMoney. Severity blends worst-dimension with the mean (cundMaxBlend
+  // toward the max) because an error that is catastrophic on one axis is not
+  // averaged away by being harmless on five others.
+  cundFloor: 0.15,
+  cundSpan: 0.8,
+  cundMaxBlend: 0.7,
   // V_mon and A(r): the value of simply knowing, discounted by how likely the
   // route is to actually reach the person.
   // 0.08, down from 0.15: vmon multiplies A(r), and A's spread between the
@@ -107,6 +118,49 @@ const DEFER_DEFAULT = DEFER['Now'];
 // sentence.
 export const MARGINAL_NOW_FACTOR = 0.25;
 
+// The six cost dimensions, in the design doc's three groups. Each is coded
+// 0-3 on the question at generation time (0 none .. 3 high):
+//   economic     money       — money magnitude at stake if this goes wrong
+//   exposure     privacy     — privacy or identity exposure
+//                thirdParty  — messages or money reaching a real person in
+//                              the user's name
+//                safety      — safety or legal consequence
+//   undoability  reversibility — how hard the consequence is to reverse
+//                recovery      — effort to notice and redo (task-redo folded in)
+export const COST_DIMS = ['money', 'privacy', 'thirdParty', 'safety',
+                          'reversibility', 'recovery'];
+
+/**
+ * C_und for one finding: graded when the question carries the six-dimension
+ * coding, the two-level moneyMoving fallback when it does not.
+ *
+ * Combination rule (hand-set; the human-label study fits the real exchange
+ * rates per design decision 8, and nothing here was tuned against the
+ * worth-it labels): each dimension normalizes to [0,1]; severity is
+ * cundMaxBlend x the worst dimension + the rest x the mean; the scalar is
+ * cundFloor + cundSpan x severity. Monotone in every dimension. A costDims
+ * object with no finite entries falls back, so a malformed coding degrades
+ * to the old behavior instead of poisoning the score.
+ */
+export function cundOf(f, w = WEIGHTS) {
+  const d = f?.costDims;
+  if (d && typeof d === 'object') {
+    let max = 0; let sum = 0; let n = 0;
+    for (const k of COST_DIMS) {
+      const v = Number(d[k]);
+      if (!Number.isFinite(v)) continue;
+      const x = Math.max(0, Math.min(3, v)) / 3;
+      if (x > max) max = x;
+      sum += x; n += 1;
+    }
+    if (n > 0) {
+      const sev = w.cundMaxBlend * max + (1 - w.cundMaxBlend) * (sum / n);
+      return w.cundFloor + w.cundSpan * sev;
+    }
+  }
+  return f?.moneyMoving === true ? w.cundMoney : w.cundOther;
+}
+
 /**
  * The expected utility of each route for one finding, and the best route.
  *
@@ -139,7 +193,7 @@ export function route(f, ctx = {}) {
     + (sig.ambiguity ? w.peAmbiguity : 0)
     + (sig.traceAnomaly ? w.peAnomaly : 0));
   const uncover = f.verified ? w.uncoverVerified : w.uncoverOther;
-  const cund = f.moneyMoving === true ? w.cundMoney : w.cundOther;
+  const cund = cundOf(f, w);
   const defer = DEFER[f.moment] || DEFER_DEFAULT;
 
   // The spoken routes cost more for someone whose only channel is speech, and
