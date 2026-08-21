@@ -1723,7 +1723,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       // where "Describe the product photos" carries an Amazon page.
       let say = null;
       try { say = await globalThis.Validation?.instructionFor?.(c); } catch { /* fall back */ }
-      say = say || fallbackSay;
+      // The injection window: an answer for a phase behind the run does not
+      // steer the agent. The layer says so and keeps it for the review.
+      if (say && typeof say === 'object' && say.stale) {
+        chrome.runtime.sendMessage({ type: 'validationSpeak', phase: 'control',
+          lines: [{ say: say.say, level: 'aside', live: 'polite', widget: c.action }],
+        }).catch(() => {});
+        sendResponse({ stale: true, say: say.say });
+        return;
+      }
+      say = (typeof say === 'string' ? say : null) || fallbackSay;
 
       if (c.action === 'refine-narrow') {
         sendResponse({ probed: await runRefineProbe(say) });

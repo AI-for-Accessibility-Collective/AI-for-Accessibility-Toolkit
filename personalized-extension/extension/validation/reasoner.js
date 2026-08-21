@@ -230,6 +230,11 @@ const ANSWER_ITEM = {
     // at San Diego International Airport" against an ask for LAX, said so, and
     // let the booking carry on.
     contradictsAsk: { type: 'boolean' },
+    // The page's own values for a choice this question is about, verbatim.
+    // This is what makes a widget's options real: "aisle $12" from the page
+    // rather than a generic "read me the options". Optional, and each value
+    // is quote-verified against the page like everything else.
+    options: { type: 'array', items: { type: 'string' }, nullable: true },
   },
   required: ['id', 'answer', 'quote', 'confidence', 'contradictsAsk'],
   propertyOrdering: ['id', 'answer', 'quote', 'confidence', 'contradictsAsk'],
@@ -324,6 +329,12 @@ the page says disagrees with what the person asked for - a different \
 destination, a different date, a price over the stated limit, a different item. \
 Judge it against the task and the ask at the top of this prompt, not against \
 what would be generally sensible. \
+When the question is about a CHOICE and this page shows the actual choices - \
+sizes, seats, delivery options, rates, filters - also set "options" to at most \
+four of the page's own values for that choice, each copied \
+character-for-character from the page text, the likeliest pick first. Options \
+are for choices the person could make; never list page links or navigation. \
+Omit the field everywhere else. \
 Write the entries in this order: FIRST every answer whose "contradictsAsk" is \
 true, THEN answers to questions whose step moves money or is hard to undo, \
 THEN everything else. The first entries are read while the rest are still \
@@ -899,6 +910,9 @@ export async function readPage(flat, pageText, opts = {}) {
       answer: r.answer ?? null,
       quote: typeof r.quote === 'string' ? r.quote : null,
       confidence: typeof r.confidence === 'number' ? r.confidence : null,
+      options: Array.isArray(r.options)
+        ? r.options.filter((o) => typeof o === 'string' && o.trim()).slice(0, 4)
+        : null,
     };
   });
 
@@ -907,6 +921,17 @@ export async function readPage(flat, pageText, opts = {}) {
   // Danger signals keep the same discipline as everything else: an ambiguity
   // claim whose quote is not on the page is discarded, not trusted.
   const forms2 = pageForms(guard.text);
+  // Options keep it too: a choice the page does not actually offer is not an
+  // option, however plausible. Verified per value, and a row keeps only the
+  // values the page backs.
+  for (const a of answers) {
+    if (Array.isArray(a.options)) {
+      a.options = a.options
+        .filter((o) => isVerified(verifyQuoteAt(o, guard.text, forms2).verify))
+        .slice(0, 4);
+      if (!a.options.length) a.options = null;
+    }
+  }
   const ambiguity = (Array.isArray(parsed.ambiguity) ? parsed.ambiguity : [])
     .filter((a) => a && typeof a.fact === 'string' && (a.count ?? 0) > 1
       && isVerified(verifyQuoteAt(a.quote, guard.text, forms2).verify))
@@ -1304,8 +1329,13 @@ export function toFindings(result, phase) {
       // instruction built from the task model needs the question that produced
       // the finding, which is what `widget` carries.
       control: control
-        ? { ...control, node: a.node ?? null, widget: a.question ?? null }
+        ? { ...control, node: a.node ?? null, widget: a.question ?? null,
+            options: a.options || null }
         : null,
+      // The page's own values for the choice, verified. The panel renders one
+      // button per value, which is what turns a generic "read me the options"
+      // into "aisle $12 / window $15 / skip".
+      options: a.options || null,
       // Not announced unless the model says this is wanted now.
       quiet: a.moment !== ANNOUNCED,
       // Carried for the trace and for the steps that come after this one.

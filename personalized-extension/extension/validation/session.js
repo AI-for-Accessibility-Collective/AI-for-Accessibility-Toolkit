@@ -883,6 +883,10 @@ async function observeByModel(snap, opts = {}) {
     // review orders by these.
     route: f.finding.route ?? null,
     eu: f.finding.eu ?? null,
+    // The node's own name and the page's own choice values, so the panel can
+    // group findings by the step they belong to and offer real options.
+    nodeLabel: labelFor(f.finding.node) || null,
+    options: f.finding.options || null,
     source: f.finding.source || 'reasoner',
   })), phase, reasoner: result.meta });
 
@@ -2264,6 +2268,14 @@ const Validation = {
         || (node != null && x.node === node && x.control?.action === control.action));
       cluster = cluster || f?.cluster || null;
       question = question || f?.widget || null;
+    }
+    // A chosen page value beats any generic sentence: the person pressed a
+    // real option the page offers, so the instruction carries that value and
+    // asks for the read-back that confirms it landed.
+    if (typeof control.option === 'string' && control.option.trim()) {
+      const what = question || labelFor(node) || 'this step';
+      return `Choose "${control.option.trim()}" for ${what} `
+        + 'Then read me what the page shows after.';
     }
     return Reasoner.instructionFrom({ cluster, question, label: labelFor(node) });
   },
