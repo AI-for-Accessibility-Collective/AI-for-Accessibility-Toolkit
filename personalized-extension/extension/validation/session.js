@@ -1471,7 +1471,9 @@ const Validation = {
     // stops were answered, so neither is news at the end.
     const unheard = (prev.findings || [])
       .filter((f) => f.level === 'ambient' && !f.confirming && !ack.has(fkey(f)));
-    const outcome = unheard.filter((f) => f.moment === 'Completion');
+    // Capped: a wrap-up is a summary, and ten outcome sentences stop being
+    // one. Whatever does not fit is still counted into the panel line below.
+    const outcome = unheard.filter((f) => f.moment === 'Completion').slice(0, 4);
     const strength = (f) => f.eu
       ? Math.max(...Object.values(f.eu).filter((x) => typeof x === 'number'))
       : (f.confidence ?? 0);

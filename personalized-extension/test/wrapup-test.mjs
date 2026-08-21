@@ -97,6 +97,25 @@ const st = store['aa.validation'];
 ok(st.wrapUp && st.wrapUp.spoke === speak.lines.length,
   'the wrap-up is on the record for the panel');
 
+// ── the outcome cap ─────────────────────────────────────────────────────────
+//
+// A wrap-up with ten outcome sentences stops being a summary. Only the first
+// four are spoken; the rest are counted, not lost.
+{
+  const many = Array.from({ length: 7 }, (_, i) => ({
+    widget: `Outcome ${i}?`, phase: 'Confirm', level: 'ambient',
+    say: `Outcome ${i}? Yes.`, moment: 'Completion', confirming: false,
+    eu: { now: 0.01, after: 0.01, log: 0.02, ondemand: 0.01 } }));
+  const p = store['aa.validation'] || {};
+  store['aa.validation'] = { ...p, findings: many, acknowledged: [] };
+  sent.length = 0;
+  const r2 = await Validation.wrapUp('done');
+  ok(r2.outcome === 4, 'no more than four outcome sentences are spoken');
+  const s2 = sent.find((m) => m.type === 'validationSpeak' && m.phase === 'wrap up');
+  ok(/3 more things are in the panel/.test(s2.lines[s2.lines.length - 1].say),
+    'the ones that did not fit are counted, not lost');
+}
+
 console.log(`\n${pass}/${pass + fail} - the run ends with the outcome spoken and the review `
   + 'counted, never with silence.');
 if (fail) process.exit(1);

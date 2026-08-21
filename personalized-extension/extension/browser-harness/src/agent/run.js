@@ -688,6 +688,10 @@ export async function bhAgentRun(task, opts = {}) {
       }
     }
     const summary = `reached max steps (${maxSteps})`;
+    // A run that ran out of steps is still a run that ended, and the kept
+    // findings matter MORE here: nobody declared the task done, so the review
+    // is the only account of how far it got.
+    try { await globalThis.Validation?.wrapUp?.(summary); } catch { /* never fatal */ }
     await _bhAgentPatch({ status: 'done', endedAt: Date.now(), summary });
     await _bhAgentLog({ kind: 'info', text: summary });
     _bhAgentNotify('done', task, summary);
