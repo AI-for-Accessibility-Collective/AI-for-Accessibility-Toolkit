@@ -183,8 +183,10 @@ Validation.setSpeechCooldown(300);
   // spoken politely, appended - and it still holds.
   R.setGeminiCaller(async () => JSON.stringify({
     alignedPhase: 'Search', alignedNodes: ['1'],
-    answers: [contradiction('1#1', 'still Menlo Park, and now a fee',
-      'near 94025 Menlo Park')],
+    // A changed value produces a changed quote - identical evidence would be
+    // the reworded-repeat case, which the evidence guard now keeps silent.
+    answers: [contradiction('1#1', 'still wrong, and the traveler count moved too',
+      'Travelers 2')],
     noticed: [],
   }));
   sent.length = 0;
@@ -202,7 +204,7 @@ Validation.setSpeechCooldown(300);
   await new Promise((r) => setTimeout(r, 350));
   R.setGeminiCaller(async () => JSON.stringify({
     alignedPhase: 'Search', alignedNodes: ['1'],
-    answers: [contradiction('1#2', 'dates changed again', 'Mon Aug 31')],
+    answers: [contradiction('1#2', 'dates changed again', 'Dates Mon Aug 31')],
     noticed: [],
   }));
   sent.length = 0;
