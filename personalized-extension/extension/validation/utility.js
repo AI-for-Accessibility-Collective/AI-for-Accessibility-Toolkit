@@ -87,6 +87,24 @@ export const WEIGHTS = {
   // asked for summaries pays in attention. Multipliers on the spoken routes.
   personaSpeech: 1.6,
   personaSummarize: 1.3,
+  // The care-rate prior (v8 lab, EXPERIMENT - nothing live passes the option).
+  // care_rate is mined from the video corpus: the fraction of observed
+  // opportunities where real people actually performed this check
+  // (labeling/behavioral-labels.json). Two readings of what that frequency is
+  // evidence for, measured separately and shipped as neither:
+  //   peCare    joins P(e)'s additive signal family (offPlan 0.2, ambiguity
+  //             0.1): people check where errors happen or matter, so care is
+  //             a measured per-question relevance prior. Additive and clamped
+  //             like the other signals; 0.3 sits at the top of that family's
+  //             range because care is a graded measured rate, not a binary
+  //             flag. Deliberately NOT normalized by any corpus statistic
+  //             (median, max) - that would smuggle dataset state into the
+  //             equation - and never fitted to any label.
+  //   vmonCare  the other reading: people check because knowing has value
+  //             even when nothing is wrong, which is V_mon's meaning. At
+  //             care 1 it doubles the shipped V_mon; bounded, monotone.
+  peCare: 0.3,
+  vmonCare: 0.08,
 };
 
 // How much of the answer's value survives each route, read off the question's
@@ -229,6 +247,39 @@ export const SURFACE = {
 };
 
 /**
+ * A SURFACE config with the v8 lab's knobs applied. Every knob omitted leaves
+ * its shipped value, so surfaceVariant({}) is the shipped config cell by cell
+ * and routeSurface scores it bit-identically (the variant test proves this).
+ * The knobs, each an explored design question rather than a tuning dial:
+ *
+ *   severityImpliedPause: false  turns the implicit continue-or-stop ramp off
+ *       (the 36-question class where sheer error cost pauses with no named
+ *       input need - the open design call). Implemented as floor 1: graded
+ *       severity never exceeds 1, so the ramp cannot fire.
+ *   approve: number  the consent cluster's input-need weight (shipped 0.6).
+ *   select: number   the select AND refine weight together (shipped 0.5) -
+ *       the two are one class in the design record ("a choice the agent can
+ *       default and narrate"), so the lab moves them together.
+ *
+ * The care-rate prior is a routeSurface ctx option (carePrior), not a config
+ * knob: it changes which terms read f.careRate, not the surface tables.
+ */
+export function surfaceVariant(opts = {}) {
+  const s = { ...SURFACE, I: { ...SURFACE.I }, attention: { ...SURFACE.attention },
+              intBase: { ...SURFACE.intBase }, inputNeed: { ...SURFACE.inputNeed } };
+  if (opts.severityImpliedPause === false) s.needSeverityFloor = 1;
+  if (Number.isFinite(opts.approve)) {
+    s.inputNeed.approve = Math.max(0, Math.min(1, opts.approve));
+  }
+  if (Number.isFinite(opts.select)) {
+    const v = Math.max(0, Math.min(1, opts.select));
+    s.inputNeed.select = v;
+    s.inputNeed.refine = v;
+  }
+  return s;
+}
+
+/**
  * The three-surface expected utility for one finding, and the best surface.
  *
  *   EU(r) = P(e) x P(uncover) x D(r) x I(r) x C_und + V_mon x A(r) - C_int(r)
@@ -240,7 +291,11 @@ export const SURFACE = {
  * @param {Object} f the finding (moment, moneyMoving, costDims, confidence,
  *                   verified ...)
  * @param {{model?: object, weights?: object, surface?: object,
- *          joiningPause?: boolean, signals?: object}} ctx
+ *          joiningPause?: boolean, signals?: object,
+ *          carePrior?: 'pe'|'vmon'|null}} ctx
+ *   carePrior — v8 lab experiment: blend the finding's mined care-rate
+ *   (f.careRate, [0,1]) into P(e) or into V_mon. Absent or with no finite
+ *   careRate on the finding, scoring is bit-identical to shipped v6.
  * @returns {{surface: string, eu: Object<string,number>}}
  */
 export function routeSurface(f, ctx = {}) {
@@ -251,10 +306,15 @@ export function routeSurface(f, ctx = {}) {
   const conf = Number.isFinite(f.confidence)
     ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
   const sig = ctx.signals || {};
+  const care = Number.isFinite(f?.careRate)
+    ? Math.max(0, Math.min(1, f.careRate)) : null;
   const pe = Math.min(1, w.peBase + w.peDoubt * (1 - conf)
     + (sig.offPlan ? w.peOffPlan : 0)
     + (sig.ambiguity ? w.peAmbiguity : 0)
-    + (sig.traceAnomaly ? w.peAnomaly : 0));
+    + (sig.traceAnomaly ? w.peAnomaly : 0)
+    + (ctx.carePrior === 'pe' && care !== null ? w.peCare * care : 0));
+  const vmon = ctx.carePrior === 'vmon' && care !== null
+    ? w.vmon + w.vmonCare * care : w.vmon;
   const uncover = uncoverOf(f, w);
   const cund = cundOf(f, w);
   const defer = s.defer[f.moment] || s.defer['Now'];
@@ -308,7 +368,7 @@ export function routeSurface(f, ctx = {}) {
     }
     const I = r === 'widget' ? iWidget : s.I[r];
     eu[r] = pe * uncover * defer[r] * I * cund
-      + w.vmon * s.attention[r]
+      + vmon * s.attention[r]
       - burden;
   }
 
@@ -471,10 +531,18 @@ export function route(f, ctx = {}) {
   const conf = Number.isFinite(f.confidence)
     ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
   const sig = ctx.signals || {};
+  // The care-rate prior, same option and same two placements as
+  // routeSurface() (see WEIGHTS.peCare / vmonCare). Experiment only: nothing
+  // live passes carePrior, and without it this line adds exactly zero.
+  const care = Number.isFinite(f?.careRate)
+    ? Math.max(0, Math.min(1, f.careRate)) : null;
   const pe = Math.min(1, w.peBase + w.peDoubt * (1 - conf)
     + (sig.offPlan ? w.peOffPlan : 0)
     + (sig.ambiguity ? w.peAmbiguity : 0)
-    + (sig.traceAnomaly ? w.peAnomaly : 0));
+    + (sig.traceAnomaly ? w.peAnomaly : 0)
+    + (ctx.carePrior === 'pe' && care !== null ? w.peCare * care : 0));
+  const vmon = ctx.carePrior === 'vmon' && care !== null
+    ? w.vmon + w.vmonCare * care : w.vmon;
   const uncover = uncoverOf(f, w);
   const cund = cundOf(f, w);
   const defer = DEFER[f.moment] || DEFER_DEFAULT;
@@ -494,7 +562,7 @@ export function route(f, ctx = {}) {
       ? w.intBase.now * MARGINAL_NOW_FACTOR : w.intBase[r];
     const burden = base * (spokenRoute ? persona : 1);
     eu[r] = pe * uncover * defer[r] * cund
-      + w.vmon * w.attention[r]
+      + vmon * w.attention[r]
       - burden;
   }
 
