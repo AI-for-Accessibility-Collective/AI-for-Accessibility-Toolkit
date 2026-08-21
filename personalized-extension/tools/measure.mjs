@@ -30,7 +30,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { decide } from '../extension/validation/policy.js';
-import { route, cundOf, uncoverOf, severityOf, DEFER, WEIGHTS, MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
+import { route, routeSurface, cundOf, uncoverOf, severityOf, DEFER, SURFACES, WEIGHTS,
+         MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -1025,6 +1026,223 @@ function cmdAuroc() {
   if (AS_JSON) console.log('\n' + JSON.stringify(rows, null, 2));
 }
 
+// ── surfaces: the three-way shadow score against the surface labels ────────
+//
+// David's 2026-08-21 direction: the strong score decides widget / checkpoint /
+// log per finding. routeSurface() is the shadow form of that decision;
+// notes/utility-model/labeling/surface-labels.json carries the three-way
+// label for every labeled question, derived from the pipeline's own coding
+// (mapping B: hand-over cluster or moneyMoving during the run -> widget;
+// Completion / On demand -> log; else checkpoint). The mapping is NOT yet
+// blessed by David, and this instrument says so on every table. It also
+// reports the same tables under the one open variant (B+approve: non-money
+// approve-cluster questions counted widget) so that sub-question is answered
+// with numbers instead of taste.
+
+const SURFACE_LABELS = '/Users/chuanenl/Stanford/Summer Project Ideation '
+  + '/Verification Affordances/notes/utility-model/labeling/surface-labels.json';
+
+// Join every labeled corpus question to its surface label. The corpus rows
+// carry what the label file does not (costDims, phase), and the file
+// carries the derived surface. Shared by `surfaces` and `iterations`.
+function loadSurfaceRows() {
+  const corpora = loadCorpora();
+  const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const labels = JSON.parse(readFileSync(SURFACE_LABELS, 'utf8'));
+  const byKey = new Map();
+  for (const r of labels.rows) byKey.set(`${r.domain}|${norm(r.question)}`, r);
+  const rows = [];
+  let missed = 0;
+  for (const c of corpora) {
+    const domain = c.name.replace(/^(bank|gold):/, '');
+    for (const q of c.rows) {
+      if (q.moment == null) continue;
+      const lab = byKey.get(`${domain}|${norm(q.question)}`);
+      if (!lab) { missed += 1; continue; }
+      rows.push({ q, label: lab.surface, cluster: lab.cluster, moment: q.moment });
+    }
+  }
+  return { rows, missed };
+}
+
+function cmdSurfaces() {
+  const { rows, missed } = loadSurfaceRows();
+
+  console.log('# the three-surface shadow score vs the derived surface labels\n');
+  console.log('**MAPPING B, NOT YET BLESSED.** The labels are a projection of the pipeline\'s');
+  console.log('own coding (surface-labels.json, blessed_by_david: false), not new human');
+  console.log('judgment. Per-surface numbers below inherit that status. routeSurface() is a');
+  console.log('measured shadow: nothing live routes with it.\n');
+  console.log(`${rows.length} labeled questions joined to a surface label`
+    + (missed ? `, ${missed} missed the join` : '') + '.\n');
+
+  const variants = {
+    'B (hand over or money -> widget)': (r) => r.label,
+    'B+approve (non-money approve also -> widget)': (r) =>
+      (r.label === 'checkpoint' && r.cluster === 'approve' ? 'widget' : r.label),
+  };
+
+  for (const [vname, labelOf] of Object.entries(variants)) {
+    console.log(`\n## mapping ${vname}\n`);
+    for (const persona of Object.keys(PERSONAS)) {
+      const model = PERSONAS[persona];
+      const cm = {};
+      for (const a of SURFACES) { cm[a] = {}; for (const b of SURFACES) cm[a][b] = 0; }
+      for (const r of rows) {
+        const pred = routeSurface(canonical(r.q), { model, seen: new Set() }).surface;
+        cm[labelOf(r)][pred] += 1;
+      }
+      const n = rows.length;
+      let hit = 0;
+      for (const s of SURFACES) hit += cm[s][s];
+      console.log(`### persona: ${persona} — agreement ${hit}/${n} = ${pct(hit, n)}\n`);
+      console.log(`| label \\ predicted |${SURFACES.map((s) => s.padStart(11)).join(' |')} `
+        + '| recall |');
+      console.log(`|---|${SURFACES.map(() => '---').join('|')}|---|`);
+      for (const a of SURFACES) {
+        const rowN = SURFACES.reduce((s, b) => s + cm[a][b], 0);
+        const cells = SURFACES.map((b) =>
+          (a === b ? `**${cm[a][b]}**` : `${cm[a][b]}`).padStart(11)).join(' |');
+        console.log(`| ${a.padEnd(10)} |${cells} | ${rowN ? pct(cm[a][a], rowN) : '—'} |`);
+      }
+      const precLine = SURFACES.map((b) => {
+        const colN = SURFACES.reduce((s, a) => s + cm[a][b], 0);
+        return `${b} ${colN ? pct(cm[b][b], colN) : '—'}`;
+      }).join(' · ');
+      console.log(`\nprecision: ${precLine}\n`);
+    }
+  }
+  console.log('Reading precision and recall. Recall of widget answers "of the questions that');
+  console.log('needed the person\'s input, how many did the score pause for"; precision of');
+  console.log('widget answers "of the pauses, how many were needed". The pair per surface is');
+  console.log('the accuracy the strong-score goal is phrased in (STRONG-SCORE.md section 4).');
+}
+
+// ── iterations: the ablation grid over the equation's design history ────────
+//
+// David's ask: report the accuracy of the equation's variants against the
+// same labels, oldest design first, so the finalized form's number is earned
+// through visible iteration rather than asserted. Nothing in v2..v5 is tuned
+// against the labels (shipped constants throughout); v1's cutoffs are
+// calibrated to the LABEL CLASS PROPORTIONS, which hands v1 an advantage a
+// fielded system would not have, and that is disclosed wherever v1 appears.
+
+function cmdIterations() {
+  const { rows, missed } = loadSurfaceRows();
+  console.log('# the equation, variant by variant, against the surface labels\n');
+  console.log('**MAPPING B, NOT YET BLESSED** (blessed_by_david: false); every number');
+  console.log('inherits that status. Macro-F1 is the headline: plain accuracy rewards');
+  console.log(`predicting the majority class (checkpoint, ${rows.filter((r) => r.label === 'checkpoint').length} of ${rows.length}).\n`);
+  if (missed) console.log(`${missed} questions missed the label join and are excluded.\n`);
+
+  const during = (m) => m !== 'Completion' && m !== 'On demand';
+
+  // v0: the input flags read directly, no arithmetic. Precedence mirrors the
+  // label mapping itself (moment first), so this is the strongest flags-only
+  // baseline, not a strawman.
+  const v0 = (r) => (!during(r.moment) ? 'log'
+    : r.q.moneyMoving === true ? 'widget' : 'checkpoint');
+
+  // v1: one route-free urgency score, two cutoffs. Hari's starting point:
+  // score the question once, thresholds decide how loudly to surface it.
+  const urgency = (q, graded) => {
+    const f = canonical(q);
+    if (!graded) f.costDims = null;
+    const pe = WEIGHTS.peBase + WEIGHTS.peDoubt * (1 - 0.8);
+    return pe * uncoverOf(f, WEIGHTS) * cundOf(f, WEIGHTS);
+  };
+  // Cutoffs from the label proportions: the top |widget| scores are called
+  // widget, the bottom |log| are called log. Ties are broken toward the
+  // larger remaining class, and the tie mass is reported, because with these
+  // inputs the score collapses to a handful of values.
+  const v1For = (graded) => {
+    const scored = rows.map((r) => ({ r, s: urgency(r.q, graded) }));
+    scored.sort((a, b) => b.s - a.s);
+    const nW = rows.filter((r) => r.label === 'widget').length;
+    const nL = rows.filter((r) => r.label === 'log').length;
+    const pred = new Map();
+    scored.forEach(({ r }, i) => {
+      pred.set(r, i < nW ? 'widget' : i >= scored.length - nL ? 'log' : 'checkpoint');
+    });
+    const distinct = new Set(scored.map((x) => x.s.toFixed(9))).size;
+    return { fn: (r) => pred.get(r), distinct };
+  };
+
+  // v2..v4: the shipped four-route design projected onto the surfaces - the
+  // locked money stop is the pause, the EU routes are spoken (checkpoint) or
+  // kept (log). v2 strips the graded inputs back to the one-bit forms; v3
+  // adds costDims; v4 adds graded P(uncover), which on this corpus is
+  // identical to v3 because the canonical finding carries byte-exact
+  // evidence (the grading separates only normalized and unverified quotes,
+  // which arise at runtime, not here) - reported anyway so the ladder is
+  // complete and the reason is on the record.
+  const shipped = (strip) => (r, model) => {
+    if (r.q.moneyMoving === true) return 'widget';
+    const f = canonical(r.q);
+    if (strip) f.costDims = null;
+    const d = route(f, { model });
+    return d.route === 'now' || d.route === 'after' ? 'checkpoint' : 'log';
+  };
+
+  // v5: the finalized three-surface function. v5np: the same with the
+  // persona multiplier off, to check the persona term is not what carries
+  // (or destroys) the accuracy.
+  const v5 = (r, model) => routeSurface(canonical(r.q), { model }).surface;
+  const v5np = (r) => routeSurface(canonical(r.q), { model: null }).surface;
+
+  const v1 = v1For(false);
+  const v1g = v1For(true);
+  const VARIANTS = [
+    ['v0 flags only, no arithmetic', (r) => v0(r), 'per-question flags read directly; the baseline the math must beat'],
+    [`v1 one score + cutoffs (label-proportion calibrated; ${v1.distinct} distinct scores)`, (r) => v1.fn(r), 'route-free urgency product, thresholds pick the surface; moment-blind by construction'],
+    [`v1+codes same, graded C_und (${v1g.distinct} distinct scores)`, (r) => v1g.fn(r), 'best inputs under the route-free form; isolates what route-dependence adds'],
+    ['v2 route-dependent EU, one-bit inputs', shipped(true), 'computed WHEN (D, A, V_mon, C_int per route) + the money lock'],
+    ['v3 = v2 + graded C_und', shipped(false), 'the six-dimension cost coding'],
+    ['v4 = v3 + graded P(uncover)', shipped(false), 'identical here: canonical evidence is byte-exact, grading separates runtime cases'],
+    ['v5 = the finalized three-surface function', v5, 'adds I(r) captured resolution; no rule in front of the score'],
+    ['v5 minus persona', v5np, 'v5 with the speech multiplier off, both personas'],
+  ];
+
+  const mappings = {
+    'B': (r) => r.label,
+    'B+approve': (r) => (r.label === 'checkpoint' && r.cluster === 'approve'
+      ? 'widget' : r.label),
+  };
+
+  const score = (predict, labelOf, model) => {
+    const cm = {};
+    for (const a of SURFACES) { cm[a] = {}; for (const b of SURFACES) cm[a][b] = 0; }
+    for (const r of rows) cm[labelOf(r)][predict(r, model)] += 1;
+    let hit = 0;
+    const f1s = [];
+    for (const s of SURFACES) {
+      hit += cm[s][s];
+      const rowN = SURFACES.reduce((t, b) => t + cm[s][b], 0);
+      const colN = SURFACES.reduce((t, a) => t + cm[a][s], 0);
+      const rec = rowN ? cm[s][s] / rowN : 0;
+      const prec = colN ? cm[s][s] / colN : 0;
+      f1s.push(prec + rec ? 2 * prec * rec / (prec + rec) : 0);
+    }
+    return { acc: hit / rows.length, macroF1: f1s.reduce((a, b) => a + b) / f1s.length, cm };
+  };
+
+  for (const [mname, labelOf] of Object.entries(mappings)) {
+    console.log(`\n## mapping ${mname}\n`);
+    console.log('| variant | acc sighted | F1 sighted | acc screen reader | F1 screen reader |');
+    console.log('|---|---|---|---|---|');
+    for (const [name, fn] of VARIANTS) {
+      const s = score(fn, labelOf, PERSONAS.sighted);
+      const sr = score(fn, labelOf, PERSONAS['screen reader']);
+      console.log(`| ${name} | ${pct(Math.round(s.acc * rows.length), rows.length)} `
+        + `| ${s.macroF1.toFixed(3)} | ${pct(Math.round(sr.acc * rows.length), rows.length)} `
+        + `| ${sr.macroF1.toFixed(3)} |`);
+    }
+  }
+  console.log('\nnothing in v2..v5 touched the labels; v1\'s cutoffs did (class proportions');
+  console.log('only) and are flagged. reasoning per rung:\n');
+  for (const [name, , why] of VARIANTS) console.log(`- ${name}: ${why}`);
+}
+
 // ── worst-case dominance over the money questions ───────────────────────────
 //
 // The design question this measures: can a STRONG utility score carry the
@@ -1074,7 +1292,8 @@ function cmdDominance() {
   const deficits = [];
 
   for (const { corpus, q } of qs) {
-    let nowWins = 0, spokenWins = 0, cells = 0;
+    let nowWins = 0, spokenWins = 0, widgetWins = 0, cells = 0;
+    let worstWidgetDeficit = 0;
     const flips = [];
     for (const conf of CONFS) {
       for (const v of VERIFIED) {
@@ -1082,9 +1301,17 @@ function cmdDominance() {
           for (const [personaName, model] of personas) {
             for (const jp of PAUSE) {
               const f = { ...canonical(q), confidence: conf, verified: v };
-              const r = route(f, { model, joiningPause: jp,
-                                   signals: amb ? { ambiguity: true } : null });
+              const sig = amb ? { ambiguity: true } : null;
+              const r = route(f, { model, joiningPause: jp, signals: sig });
+              // The same cell under the three-surface shadow form: does the
+              // widget route win with no rule in front of it?
+              const s = routeSurface(f, { model, joiningPause: jp, signals: sig });
               cells += 1; totalCells += 1;
+              if (s.surface === 'widget') widgetWins += 1;
+              else {
+                const wd = s.eu[s.surface] - s.eu.widget;
+                if (wd > worstWidgetDeficit) worstWidgetDeficit = wd;
+              }
               if (r.route === 'now') { nowWins += 1; spokenWins += 1; continue; }
               if (r.route === 'after') spokenWins += 1;
               const deficit = r.eu[r.route] - r.eu.now;
@@ -1107,8 +1334,8 @@ function cmdDominance() {
       failByMoment[q.moment ?? 'unlabelled'] =
         (failByMoment[q.moment ?? 'unlabelled'] || 0) + 1;
     }
-    perQ.push({ corpus, q, cells, nowWins, spokenWins,
-                sev: severityOf(canonical(q)), flips });
+    perQ.push({ corpus, q, cells, nowWins, spokenWins, widgetWins,
+                worstWidgetDeficit, sev: severityOf(canonical(q)), flips });
   }
 
   L.push(`${qs.length} money-moving questions, ${totalCells} cells swept.`);
@@ -1161,6 +1388,49 @@ function cmdDominance() {
     L.push('');
   }
 
+  // ── the same sweep under the three-surface shadow form ─────────────────
+  const domWidget = perQ.filter((x) => x.widgetWins === x.cells).length;
+  const widgetFails = perQ.filter((x) => x.widgetWins < x.cells);
+  const widgetFailsNow = widgetFails.filter((x) => x.q.moment === 'Now');
+  L.push('## the same cells under the three-surface shadow score (routeSurface)');
+  L.push('');
+  L.push('The strong-score form (STRONG-SCORE.md): widget / checkpoint / log, with');
+  L.push('I(widget) = 1 because a widget captures the resolution before the agent');
+  L.push('proceeds. The question is whether that term closes the dominance gap the');
+  L.push('four-route form shows above.');
+  L.push('');
+  L.push('| property | four-route form (now) | three-surface form (widget) |');
+  L.push('|---|---|---|');
+  L.push(`| wins EVERY cell | ${dominantNow}/${qs.length} (${pct(dominantNow, qs.length)}) `
+    + `| ${domWidget}/${qs.length} (${pct(domWidget, qs.length)}) |`);
+  L.push(`| questions with a losing cell | ${qs.length - dominantNow} `
+    + `| ${widgetFails.length} |`);
+  L.push(`| ...of which Now-labelled (the real gap) | `
+    + `${perQ.filter((x) => x.nowWins < x.cells && x.q.moment === 'Now').length} `
+    + `| ${widgetFailsNow.length} |`);
+  L.push('');
+  if (widgetFailsNow.length) {
+    L.push('Now-labelled money questions where some cell still beats the widget:');
+    L.push('');
+    L.push('| widget wins | worst deficit | corpus | question |');
+    L.push('|---|---|---|---|');
+    for (const x of widgetFailsNow.slice(0, 15)) {
+      L.push(`| ${x.widgetWins}/${x.cells} | ${x.worstWidgetDeficit.toFixed(4)} `
+        + `| ${x.corpus.replace('bank:', '').replace('gold:', '')} `
+        + `| ${String(x.q.question).replace(/\|/g, '/').slice(0, 100)} |`);
+    }
+    L.push('');
+  } else {
+    L.push('No Now-labelled money question has a losing cell under the three-surface');
+    L.push('form: for every moment the human said interrupt, with money moving, the');
+    L.push('widget wins the argmax in every input combination swept. The remaining');
+    L.push(`${widgetFails.length} questions with losing cells are Completion / On demand`);
+    L.push('labelled, where a kept surface winning is the designed timing, not a');
+    L.push('safety gap.');
+    L.push('');
+  }
+  L.push('');
+
   const nowLabelledFails = perQ.filter((x) => x.nowWins < x.cells
     && x.q.moment === 'Now').length;
   L.push('Reading it. The moment table above separates two different things. A');
@@ -1186,9 +1456,11 @@ function cmdDominance() {
 
 const COMMANDS = { agreement: cmdAgreement, label: cmdLabel, precision: cmdPrecision,
                    attention: cmdAttention, auroc: cmdAuroc,
-                   dominance: cmdDominance };
+                   dominance: cmdDominance, surfaces: cmdSurfaces,
+                   iterations: cmdIterations };
 if (!COMMANDS[CMD]) {
-  console.error('usage: node tools/measure.mjs <agreement|label|precision|attention|auroc|dominance> '
+  console.error('usage: node tools/measure.mjs '
+    + '<agreement|label|precision|attention|auroc|dominance|surfaces|iterations> '
     + '[--dir <recordings>] [--golds <gold-v2 dir>] [--json]');
   process.exit(1);
 }

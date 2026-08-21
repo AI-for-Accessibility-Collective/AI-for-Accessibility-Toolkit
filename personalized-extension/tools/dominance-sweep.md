@@ -45,6 +45,40 @@ the 10 questions the arithmetic protects least (fewest now-wins):
 | 0/80 | uncoded | flights | Completion | Did it go through - what's the reference? |
 | 0/80 | uncoded | flights | Completion | Did the money move, and does a booking exist? |
 
+## the same cells under the three-surface shadow score (routeSurface)
+
+The strong-score form (STRONG-SCORE.md): widget / checkpoint / log, with
+I(widget) = 1 because a widget captures the resolution before the agent
+proceeds. The question is whether that term closes the dominance gap the
+four-route form shows above.
+
+| property | four-route form (now) | three-surface form (widget) |
+|---|---|---|
+| wins EVERY cell | 176/283 (62.2%) | 0/283 (0.0%) |
+| questions with a losing cell | 107 | 283 |
+| ...of which Now-labelled (the real gap) | 19 | 195 |
+
+Now-labelled money questions where some cell still beats the widget:
+
+| widget wins | worst deficit | corpus | question |
+|---|---|---|---|
+| 65/80 | 0.0715 | amazon | What are the rules in this part of the store? |
+| 65/80 | 0.0715 | amazon | Where does this session think I am, and is that where the order is going? |
+| 65/80 | 0.0715 | amazon | Which size or colour, and does it change the price? |
+| 65/80 | 0.0715 | amazon | Does this one ship to me, and what does that add to the price? |
+| 65/80 | 0.0715 | amazon | How many am I buying, and is it cheaper to take more? |
+| 65/80 | 0.0715 | amazon | Which of these offers do I actually get, paying the way I'm paying? |
+| 65/80 | 0.0715 | amazon | Is this the real brand, or something wearing its name? |
+| 65/80 | 0.0715 | amazon | Is this a one-time purchase, or am I signing up for a delivery every month? |
+| 65/80 | 0.0715 | amazon | Is something extra going in with it? |
+| 65/80 | 0.0715 | amazon | What does this subtotal leave out? |
+| 65/80 | 0.0715 | amazon | What does it actually cost to get this to me, and is customs on top of that? |
+| 65/80 | 0.0715 | amazon | Which of the things in my cart am I actually buying right now? |
+| 65/80 | 0.0715 | amazon | Is any of this still the price I put it in at? |
+| 65/80 | 0.0715 | amazon | Is this a gift, and is the price going to be in the box? |
+| 65/80 | 0.0715 | amazon | Is this also the billing address? |
+
+
 Reading it. The moment table above separates two different things. A
 Completion-labelled money question losing now-cells is the score being RIGHT
 about timing: the receipt does not exist mid-run, D(now) prices that, and
