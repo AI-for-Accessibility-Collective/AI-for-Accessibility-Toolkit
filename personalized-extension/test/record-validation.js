@@ -78,7 +78,56 @@ const COMMIT_SCENARIOS = [
   },
 ];
 
+// Complex multi-decision workflows, added once the retrieval tier and the
+// utility router shipped. Each is phrased with several binding constraints and
+// several open decisions, because a single-goal query exercises none of the
+// routing: what matters here is which constraints get checked, which open
+// decisions get raised, what rides the commit bundle, and what the wrap-up
+// says at the end.
+const COMPLEX_SCENARIOS = [
+  {
+    // Retrieval must fire: "book ... hotel room" matches the built hotel HTA,
+    // so this run carries the full 352-question model - which also measures
+    // the big-model read times the bench never covered.
+    name: 'hotel',
+    query: 'book a refundable hotel room in san diego for october 9 to 11 for '
+      + '2 adults under $180 a night with breakfast included near the '
+      + 'convention center, on google hotels, and stop before any payment',
+    start: 'https://www.google.com/travel/search',
+    maxSteps: 26,
+    watchFor: 'gen.stage=retrieved, read times at 352 questions, refundable/'
+      + 'breakfast/price/dates checked, a hold before anything commits',
+  },
+  {
+    // Retrieval again, different domain: "book ... appointment" matches the
+    // built doctor HTA (395 questions, 24 of them uncoded - the router's
+    // legacy path gets real traffic too).
+    name: 'doctor',
+    query: 'find a dermatologist in palo alto who takes new patients and is '
+      + 'well reviewed, and book the earliest appointment next week on '
+      + 'zocdoc, but stop before confirming anything',
+    start: 'https://www.zocdoc.com',
+    maxSteps: 24,
+    watchFor: 'gen.stage=retrieved for doctor, new-patient/reviews/timing '
+      + 'checked, a hold before any confirmation',
+  },
+  {
+    // A multi-way conditional the retrieval tier must NOT claim: no flights
+    // HTA exists, so this must fall through to generation and still handle a
+    // compare-then-decide-with-a-condition workflow.
+    name: 'multiway',
+    query: 'compare the cheapest nonstop and the cheapest one-stop flight '
+      + 'from SFO to San Diego next Friday on google flights, pick whichever '
+      + 'is cheaper but only if it is under $250, and open its booking page',
+    start: 'https://www.google.com/travel/flights',
+    maxSteps: 26,
+    watchFor: 'generation (not retrieval), both branches visited, the $250 '
+      + 'condition checked against the real fare, a hold at the fare',
+  },
+];
+
 const SCENARIOS = [
+  ...COMPLEX_SCENARIOS.map((c) => ({ ...c, model: null })),
   ...COMMIT_SCENARIOS.map((c) => ({ ...c, model: null, maxSteps: 26 })),
   {
     name: 'shopping',
@@ -202,7 +251,9 @@ async function runScenario(sc) {
 
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aa-rec-'));
   const browser = await puppeteer.launch({
-    headless: false,
+    // REC_HEADLESS=1 runs Chrome's new headless (extensions supported) so a
+    // recording can run without putting a window on the user's screen
+    headless: process.env.REC_HEADLESS ? 'new' : false,
     userDataDir,
     ignoreDefaultArgs: ['--enable-automation'],
     args: [
@@ -239,10 +290,17 @@ async function runScenario(sc) {
     // a window changes nothing about what it renders.
     const scr = await (await browser.pages())[0].evaluate(
       () => ({ w: screen.width, h: screen.availHeight }));
-    await sw((url, left, width, height) => chrome.windows.create(
-      { url, left, top: 25, width, height, type: 'popup', focused: true }),
-      `chrome-extension://${extId}/sidepanel/sidepanel.html`,
-      1180, Math.max(460, scr.w - 1180), scr.h - 25);
+    // headless has no visible screen, so beside-the-browser bounds get
+    // rejected; overlapping at 0,0 is fine because frames are per-target
+    // screenshots, not display capture
+    const panelBounds = process.env.REC_HEADLESS
+      ? { left: 0, top: 0, width: 900, height: 1000 }
+      : { left: 1180, top: 25,
+          width: Math.max(460, scr.w - 1180), height: scr.h - 25 };
+    await sw((url, b) => chrome.windows.create(
+      { url, left: b.left, top: b.top, width: b.width, height: b.height,
+        type: 'popup', focused: true }),
+      `chrome-extension://${extId}/sidepanel/sidepanel.html`, panelBounds);
     await sleep(1500);
     const panelTarget = await browser.waitForTarget(
       (t) => t.url().includes('sidepanel/sidepanel.html'), { timeout: 10000 });
