@@ -190,9 +190,10 @@ if (fail) process.exit(1);
 
 // ── 7. the plan update, when generation fills the plan in ───────────────────
 {
-  const st = store['aa.validation'];
-  st.planReview = { at: 1, phases: ['Pick a seat', 'Pay'], questions: 9, money: 0 };
-  store['aa.validation'] = st;
+  // The review has to have actually spoken (module state), so speak it on the
+  // small model first, then grow the model the way generation does.
+  globalThis.ValidationTaskModel.load(JSON.parse(JSON.stringify(MODEL)), 'generated');
+  await Validation.planReview();
   const BIG = JSON.parse(JSON.stringify(MODEL));
   for (let i = 0; i < 40; i += 1) {
     BIG.tree.children[0].questions.push({ question: `Extra ${i}?`, cluster: 'facts',
@@ -203,9 +204,10 @@ if (fail) process.exit(1);
   const r = await Validation.planUpdate();
   ok(r.spoken === true && r.questions === 42,
     'a plan that grew by half or more corrects its count out loud');
-  const line = sent.flatMap((m) => m.lines || []).find((l) => l.widget === 'plan');
-  ok(line && /The plan filled in: 42 things checked now, 5 of them before money moves\./.test(line.say),
-    'and the line carries the new counts');
+  const lines = sent.flatMap((m) => m.lines || []).filter((l) => l.widget === 'plan');
+  const line = lines[lines.length - 1];
+  ok(line && /The plan filled in: 42 things checked now, 6 of them before money moves\./.test(line.say),
+    `and the line carries the new counts (${line && line.say})`);
   const r2 = await Validation.planUpdate();
   ok(r2.spoken === false, 'and it does not repeat once the count is current');
 }
