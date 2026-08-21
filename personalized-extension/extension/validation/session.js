@@ -2236,6 +2236,25 @@ const Validation = {
   async instructionFor(control = {}) {
     if (!flatModel) return null;
     const node = control.node ?? null;
+    // The injection window. An instruction about a phase the run has already
+    // moved past does not steer anything - the dependent actions are done -
+    // and measured on long-horizon agents, a late injected answer can land
+    // BELOW never answering at all: the agent reconciles stale guidance
+    // against work it has already finished and sometimes redoes it. So an
+    // answer whose phase is behind the run routes to the completion review
+    // instead of into the agent. Same phase or a future one injects fine -
+    // answering early is how constraints want to arrive.
+    if (node != null && currentNode != null && srcModel?.tree?.children) {
+      const order = srcModel.tree.children.map((c) => String(c.id));
+      const topOf = (id) => String(id).split('.')[0];
+      const at = order.indexOf(topOf(node));
+      const now = order.indexOf(topOf(currentNode));
+      if (at >= 0 && now >= 0 && at < now) {
+        return { stale: true, node, phase: flatModel.phases[at] || null,
+          say: `That part (${labelFor(node) || 'it'}) is already behind the run. `
+             + 'I kept your answer for the review instead of steering the agent with it.' };
+      }
+    }
     let cluster = control.cluster || null;
     let question = control.widget || null;
     if (!cluster || !question) {

@@ -205,6 +205,20 @@ R.setGeminiCaller(async () => JSON.stringify({
     'a click at a money node is a commit whatever the button says, and off-plan holds it');
 }
 
+// 8. the injection window: an answer for a phase behind the run steers
+// nothing - it goes to the review instead of into the agent's context.
+{
+  // The run sits at Pay for the room (node 2) from step 7. An instruction
+  // about Search (node 1) is behind it.
+  const stale = await Validation.instructionFor({ node: '1', cluster: 'facts',
+    widget: 'Right destination?' });
+  ok(stale && stale.stale === true && /already behind the run/.test(stale.say),
+    'an answer for a passed phase is kept for the review, not injected');
+  const live = await Validation.instructionFor({ node: '2', cluster: 'facts',
+    widget: 'Right total?' });
+  ok(live && !live.stale, 'an answer for the current phase still injects');
+}
+
 console.log(`\n${pass}/${pass + fail} - plan, checkpoints, gate, signals and masks working `
   + 'as one system.');
 if (fail) process.exit(1);
