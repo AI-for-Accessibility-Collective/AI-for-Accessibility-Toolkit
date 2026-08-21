@@ -89,7 +89,9 @@ const RunMod = await import('../extension/validation/run.js');
   for (let i = 0; i < 400; i += 1) {
     flood.push({
       widget: `Question ${i}?`, phase: 'Search', say: `Question ${i}? Answer ${i}.`,
-      from: 'q', answerable: true, confirming: false, contradicts: false,
+      // Distinct evidence per finding: identical quotes would be the reworded
+      // repeat case, and the evidence guard silences those by design.
+      from: `fact ${i} on the page`, answerable: true, confirming: false, contradicts: false,
       moment: 'Now', moneyMoving: false, confidence: 0.8, verified: 'verified_exact',
     });
   }

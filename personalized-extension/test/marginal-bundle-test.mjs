@@ -95,3 +95,36 @@ const BLV = { vision: { descriptions: true } };
 console.log(`\n${pass}/${pass + fail} - a pause is paid for once, and what rides it pays `
   + 'for a sentence.');
 if (fail) process.exit(1);
+
+// ── the reworded repeat: same evidence, fresh wording, spoken once ──────────
+{
+  const run2 = RunMod.createRun({ item: 'a flight' });
+  const first = run2.observeFindings([{
+    widget: 'Did the booking page load?', phase: 'Book',
+    say: 'Did the booking page load? No, protocol error.', from: 'ERR_HTTP2_PROTOCOL_ERROR',
+    answerable: true, confirming: false, contradicts: true, node: '4',
+    moment: 'Now', moneyMoving: false, confidence: 0.9, verified: 'verified_exact',
+  }], 'Book').findings;
+  ok(first[0].level === 'stop', 'the first surfacing of a failure stops');
+  const reworded = run2.observeFindings([{
+    widget: 'The partner page failed with a protocol error.', phase: 'Book',
+    say: 'The partner page failed with a protocol error. Booking cannot proceed.',
+    from: 'ERR_HTTP2_PROTOCOL_ERROR',
+    answerable: true, confirming: false, contradicts: true, node: '4',
+    moment: 'Now', moneyMoving: false, confidence: 0.9, verified: 'verified_exact',
+  }], 'Book').findings;
+  ok(reworded[0].level === 'ambient',
+    'the same evidence reworded as a new question is kept, not spoken again');
+  ok(run2.gate().waitingOn.length === 1,
+    'and it does not become a second hold');
+  const other = run2.observeFindings([{
+    widget: 'What is the total?', phase: 'Book',
+    say: 'What is the total? $210.', from: 'Total $210',
+    answerable: true, confirming: false, contradicts: false, node: '4',
+    moment: 'Now', moneyMoving: false, confidence: 0.9, verified: 'verified_exact',
+  }], 'Book').findings;
+  ok(other[0].level !== 'ambient',
+    'a different fact on the same page still comes through');
+}
+
+console.log('(reworded repeat block done)');

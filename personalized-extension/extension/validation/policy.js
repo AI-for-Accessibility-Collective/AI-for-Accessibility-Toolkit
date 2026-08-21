@@ -90,6 +90,18 @@ export function decide(f, state = {}) {
     return { level: 'ambient', why: 'already raised at this step' };
   }
 
+  // The same EVIDENCE already raised at this step, under different wording.
+  // The reasoner supplies a fresh question string every time it re-notices a
+  // fact, so the widget-keyed guard above never fires on the reworded form -
+  // a recorded run surfaced one page failure six times, twice as stops. The
+  // quote is the finding's identity: same quote, same phase, same fact. One
+  // contradiction per evidence still gets its stop (the first wording took
+  // it); everything after is kept, not spoken.
+  if (state.evidenceKey && f.from
+      && seen.has(`q|${f.phase}|${state.evidenceKey(f.from)}`)) {
+    return { level: 'ambient', why: 'the same evidence was already raised here' };
+  }
+
   let level, why;
   if (f.contradicts) {
     level = 'stop';

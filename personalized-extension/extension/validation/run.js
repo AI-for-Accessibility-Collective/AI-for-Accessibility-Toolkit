@@ -46,6 +46,13 @@ const READS = {
             'orderStatus', 'adBlocks', 'orderTotal'],
 };
 
+// One fact, one key, however it is worded. Lowercased, non-alphanumerics
+// collapsed, capped - enough that "ERR_HTTP2_PROTOCOL_ERROR" and the same
+// error quoted with different surrounding words collide, and short enough
+// that two long quotes sharing a prefix do too rather than never.
+export const evidenceKey = (quote) => String(quote || '')
+  .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 60);
+
 // Plain names for the extractors, supplied with the rest of the analysis.
 // Empty means fall back to the internal name — ugly, but never wrong.
 let NAMES = {};
@@ -99,7 +106,7 @@ export function createRun(contract, opts = {}) {
       // everything found on it. Nothing about earlier in the run enters here:
       // the same finding on the same page routes the same way whether it is
       // the first thing this run has said or the fortieth.
-      const d = decide(f, { seen, style, model, signals,
+      const d = decide(f, { seen, style, model, signals, evidenceKey,
         joiningPause: f.joiningPause === true });
       let { level, why } = d;
       // Route and scores travel on the finding, so they survive publish and a
@@ -127,6 +134,14 @@ export function createRun(contract, opts = {}) {
       // Also keyed by the answer, so policy.js can tell a contradiction that
       // CHANGED from one that is simply still true on the next page.
       seen.add(`${f.widget}|${f.phase}|${f.say}`);
+      // And keyed by the EVIDENCE. The reasoner words the same fact
+      // differently every time it re-notices it, so the widget-keyed guard
+      // never fires: one page-load failure was surfaced six times in one
+      // recorded run, two of them as stops, and the labeling pass found a
+      // third of everything not worth surfacing was this class. The same
+      // quote at the same phase is the same fact, however it is worded -
+      // spoken once, then kept.
+      if (f.from) seen.add(`q|${f.phase}|${evidenceKey(f.from)}`);
       const r = render(f, level, channels);
       rendered.push({ ...r, why });
       if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
