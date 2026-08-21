@@ -171,6 +171,40 @@ R.setGeminiCaller(async () => JSON.stringify({
   ok(g.allowed === true, 'an aligned page clears the off-plan hold');
 }
 
+// 6. structural classification: the tool name beats the sentence.
+{
+  // An unread stop is pending again.
+  await Validation.annotate({
+    append: [{ widget: 'A pending stop', level: 'stop', phase: 'Pay for the room',
+      say: 'A pending stop. Yes.', from: 'Total', confirming: false }],
+  });
+  // The agent's sentence matches no regex; the tool name says it acts.
+  const g1 = await Validation.allow('perform the frobnicate', { action: 'frobnicate_page' });
+  ok(g1.allowed === false,
+    'a tool the layer never heard of counts as changing the world - unknown fails closed');
+  const g2 = await Validation.allow('scroll to see more', { action: 'scroll' });
+  ok(g2.allowed === true, 'a looking-only tool passes whatever its sentence says');
+  await Validation.answer('A pending stop', 'fine');
+}
+
+// 7. position beats wording: a click at a money-moving node is a commit even
+// when the button says something the regex never heard.
+{
+  R.setGeminiCaller(async () => JSON.stringify({
+    alignedPhase: 'Pay for the room', alignedNodes: ['2'], answers: [], noticed: [],
+  }));
+  PAGE = 'Pay for the room. Kaufen.';
+  await Validation.observe(1);          // the run now sits at node 2 (moneyMoving)
+  R.setGeminiCaller(async () => JSON.stringify({
+    alignedPhase: 'none', alignedNodes: [], answers: [], noticed: [],
+  }));
+  PAGE = 'Somewhere unrecognisable.';
+  await Validation.observe(1);          // off the plan, currentNode still 2
+  const g = await Validation.allow('click the Jetzt kaufen button', { action: 'click_index' });
+  ok(g.allowed === false && /does not match any step/.test(g.say || ''),
+    'a click at a money node is a commit whatever the button says, and off-plan holds it');
+}
+
 console.log(`\n${pass}/${pass + fail} - plan, checkpoints, gate, signals and masks working `
   + 'as one system.');
 if (fail) process.exit(1);

@@ -70,6 +70,38 @@ const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy
 // holding them buys nothing and costs the agent its eyes.
 const CHANGES_SOMETHING = /click|type|press|submit|select|check|navigate|open|close|switch|go[_ ]?(back|forward)|refresh|upload|drag|add|remove|place|buy|checkout|finish the task|fill|dialog|\bjs\b/i;
 
+// The structural form of the same question, for callers that say WHICH tool
+// is running rather than only describing it. The regex above classifies a
+// sentence the model wrote about itself, and a miss fails OPEN - a vaguely
+// worded action was never held. The harness's action vocabulary is a closed
+// set, so when the tool name is on hand the classification is a lookup, and
+// a tool this list has never heard of counts as changing the world until
+// someone says otherwise - unknown fails CLOSED.
+const LOOKS_ONLY = new Set(['scroll', 'wait', 'wait_for_element',
+  'wait_for_network_idle', 'read_skill', 'dropdown_options', 'screenshot',
+  'extract', 'read']);
+
+function changesSomething(actionDescription, ctx) {
+  const kind = typeof ctx?.action === 'string' ? ctx.action : ctx?.action?.action;
+  if (kind) return !LOOKS_ONLY.has(String(kind));
+  return CHANGES_SOMETHING.test(String(actionDescription || ''));
+}
+
+// Is this action commit-class? Two triggers, either suffices. The words on
+// the control ("place your order") - which come off the PAGE via the target
+// description, so they are more than the agent's account - and the position:
+// a world-changing action while the run sits at a node the task model marks
+// money-moving is a commit whatever the button happens to say, which is what
+// catches the wording the regex never heard.
+function commitClass(actionDescription, ctx) {
+  if (COMMITTING.test(String(actionDescription || ''))) return true;
+  if (!flatModel || currentNode == null) return false;
+  if (!changesSomething(actionDescription, ctx)) return false;
+  const here = String(currentNode);
+  return (flatModel.questions || []).some(
+    (q) => q.moneyMoving === true && String(q.node) === here);
+}
+
 let run = null;
 let contract = null;
 let runOpts = {};
@@ -1496,7 +1528,8 @@ const Validation = {
     // one reads as diligence rather than lag. With streaming, the rows that
     // can stop this commit arrive in the first seconds, so the common case is
     // a short wait or none.
-    if (COMMITTING.test(String(actionDescription || '')) && readInFlight) {
+    const committing = commitClass(actionDescription, ctx);
+    if (committing && readInFlight) {
       let waited = false;
       const talk = setTimeout(() => {
         waited = true;
@@ -1514,7 +1547,7 @@ const Validation = {
     // is held outright. This is the out-of-distribution half of the hard
     // gate: for a step that is hard to undo, "I do not recognise where the
     // agent is" is itself the reason to ask, however clean the findings are.
-    if (COMMITTING.test(String(actionDescription || '')) && lastOffPlan && flatModel) {
+    if (committing && lastOffPlan && flatModel) {
       await traceAction('held, committing on a page that matches no step of the task');
       const say = 'This page does not match any step of the task I know. '
         + 'I am not letting anything commit here until you look.';
@@ -1536,7 +1569,7 @@ const Validation = {
     // in the agent's own process and a worker restart or a second run would
     // clear it; the gate is checked at the point of action and does not care
     // how the action got there.
-    if (holder === 'person' && CHANGES_SOMETHING.test(String(actionDescription || ''))) {
+    if (holder === 'person' && changesSomething(actionDescription, ctx)) {
       await traceAction('held, the person has the wheel');
       return {
         allowed: false,
@@ -1563,7 +1596,7 @@ const Validation = {
     // Ambient findings never hold either: they are the ones deliberately not
     // announced, so waiting on them would be waiting for someone to
     // acknowledge something we chose not to say.
-    if (!CHANGES_SOMETHING.test(String(actionDescription || ''))) {
+    if (!changesSomething(actionDescription, ctx)) {
       return { allowed: true };
     }
 
@@ -1609,7 +1642,7 @@ const Validation = {
       }
     }
 
-    if (!COMMITTING.test(String(actionDescription || ''))) return { allowed: true };
+    if (!committing) return { allowed: true };
     const g = run.gate();
     if (!g.allowed) {
       chrome.runtime.sendMessage({
