@@ -1735,6 +1735,30 @@ const Validation = {
   },
 
   /**
+   * The plan filled in after the review spoke. On the generated path the
+   * review fires when the first batch of questions lands, so it can honestly
+   * say "9 questions" about a model that finishes at 66. One polite line
+   * corrects the count when generation completes and the plan grew by half
+   * or more; anything less is not worth a sentence.
+   */
+  async planUpdate() {
+    if (!planReviewSpoken || !flatModel) return { spoken: false };
+    const prev = await stored();
+    const before = prev.planReview?.questions ?? 0;
+    const qs = flatModel.questions || [];
+    const money = qs.filter((q) => q.moneyMoving === true).length;
+    if (!before || qs.length < before * 1.5) return { spoken: false };
+    const say = `The plan filled in: ${qs.length} things checked now, `
+      + `${money} of them before money moves.`;
+    chrome.runtime.sendMessage({ type: 'validationSpeak', phase: currentPhase,
+      lines: calmSpeech([{ say, level: 'checkpoint', live: 'polite', widget: 'plan' }]) })
+      .catch(() => {});
+    await publish({ planReview: { ...(prev.planReview || {}), questions: qs.length,
+      money, grew: true } });
+    return { spoken: true, questions: qs.length };
+  },
+
+  /**
    * Checkpoint zero: the plan, spoken once, before the run gets going.
    *
    * One polite sentence and a panel record - never a blocking form

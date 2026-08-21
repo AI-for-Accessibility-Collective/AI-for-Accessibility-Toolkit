@@ -825,6 +825,9 @@ function startModelFor(task) {
       const now = countQuestions(model);
       const first = had === 0 && now > 0;
       const complete = st.stage === 'done';
+      // The review spoke at the first batch; if the finished plan is much
+      // bigger, one line corrects the count.
+      if (complete) globalThis.Validation?.planUpdate?.().catch(() => {});
       if (now > had) {
         // Only now is there anything to ask a page. The tree on its own is not
         // a reason to let the agent go.
