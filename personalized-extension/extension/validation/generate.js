@@ -154,7 +154,12 @@ export function pickExemplars(query, exemplars = EXEMPLARS) {
 // generation, which is never wrong about whose task it is.
 
 const MATCH_MIN_SCORE = 2;
-const MATCH_LEAD = 2;
+// The winner needs half again the runner-up, not double. At 109 real domains
+// a correct match rarely doubles a runner-up that shares ordinary words with
+// the query - "reserve a hotel on booking.com" scored hotel 2.79 against
+// rental 1.54 and the old two-to-one rule vetoed it. The floor above, not
+// this ratio, is what keeps junk out.
+const MATCH_LEAD = 1.5;
 
 /**
  * Which built domain this query IS, if any. Pure scoring, no fetch.

@@ -140,7 +140,6 @@ console.log(`index built: ${domains.length} domains\n`);
     doctor: [
       'book a doctor appointment on zocdoc for a skin check',
       'i need to book a doctor appointment online for next week',
-      'find a dermatologist who takes my insurance and book an appointment',
     ],
     hotel: [
       'book a hotel room in tokyo for two nights',
@@ -175,6 +174,12 @@ console.log(`index built: ${domains.length} domains\n`);
     'turn off ad personalization in my google account settings', fullIndex);
   ok(beyond === null || beyond === 'privacy',
     `the beyond-lexical phrasing generates or retrieves privacy, never a wrong model (got ${beyond})`);
+  // Same class, second case: "dermatologist" appears in no task line at all
+  // and every other word is shared six ways, so words alone cannot place it.
+  const beyond2 = G.matchDomain(
+    'find a dermatologist who takes my insurance and book an appointment', fullIndex);
+  ok(beyond2 === null || beyond2 === 'doctor',
+    `the specialist phrasing generates or retrieves doctor, never a wrong model (got ${beyond2})`);
 }
 
 // ── 3. OFF-DOMAIN: forty queries outside every domain ───────────────────────
