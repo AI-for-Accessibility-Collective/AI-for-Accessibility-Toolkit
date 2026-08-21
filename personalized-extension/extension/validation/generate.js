@@ -173,15 +173,68 @@ export function matchDomain(query, index) {
   const own = entries.map(([domain, task]) => tokens(`${domain} ${task}`));
   const df = new Map();
   for (const set of own) for (const w of set) df.set(w, (df.get(w) || 0) + 1);
+  // Two word classes count as strong evidence, because frequency weighting
+  // starves as the pool grows (measured at 109 domains: every shared word's
+  // weight collapses and no natural query reaches the bar). The domain's own
+  // name in the query IS the domain ("book a hotel" names hotel), and so is a
+  // brand the task line pins ("on zocdoc" names doctor). Brands are the
+  // capitalized words and the .com names in the task line, so the index
+  // format stays a plain {domain: task} map.
+  const anchors = entries.map(([, task]) => {
+    const t = String(task || '');
+    const brands = new Set();
+    for (const m of t.matchAll(/(?<![.!?]\s)(?<!^)\b([A-Z][a-zA-Z]{2,})\b/g)) {
+      brands.add(m[1].toLowerCase());
+    }
+    for (const m of t.matchAll(/\b([a-z0-9-]+)\.(?:com|org|gov|net)\b/gi)) {
+      brands.add(m[1].toLowerCase());
+    }
+    return brands;
+  });
+  const names = entries.map(([domain]) => tokens(domain));
+  // Strong words are discounted by how many domains claim them, exactly like
+  // plain words: "Zocdoc" pinned by one domain is the domain; "Google" pinned
+  // by twenty task lines is scenery, and unweighted it handed twenty domains
+  // a strong hit and the lead rule killed every real match.
+  const dfStrong = new Map();
+  entries.forEach((_, i) => {
+    for (const w of new Set([...names[i], ...anchors[i]])) {
+      dfStrong.set(w, (dfStrong.get(w) || 0) + 1);
+    }
+  });
   const q = tokens(query);
-  let best = null; let bestScore = 0; let second = 0;
+  // A name and its inflection are the same evidence: "private" names the
+  // privacy domain as surely as "privacy" does. The shared prefix must be at
+  // least five characters AND cover nearly all of BOTH words - private and
+  // privacy differ only in their last letters, while "liter" against
+  // "literaturesearch" shares five characters and none of the rest, and is a
+  // measuring cup, not a task.
+  const stemHit = (set, w) => {
+    if (set.has(w)) return true;
+    for (const n of set) {
+      let l = 0;
+      const cap = Math.min(n.length, w.length);
+      while (l < cap && n[l] === w[l]) l += 1;
+      if (l >= 5 && l >= n.length - 2 && l >= w.length - 2) return true;
+    }
+    return false;
+  };
+  let best = null; let bestScore = 0; let second = 0; let bestWords = 0;
   entries.forEach(([domain], i) => {
-    let score = 0;
-    for (const w of q) if (own[i].has(w)) score += 1 / df.get(w);
-    if (score > bestScore) { second = bestScore; bestScore = score; best = domain; }
+    let score = 0; let words = 0;
+    for (const w of q) {
+      if (names[i].has(w) || anchors[i].has(w)) { score += 2 / dfStrong.get(w); words += 1; }
+      else if (stemHit(names[i], w)) { score += 2; words += 1; }
+      else if (own[i].has(w)) { score += 1 / df.get(w); words += 1; }
+    }
+    if (score > bestScore) { second = bestScore; bestScore = score; best = domain; bestWords = words; }
     else if (score > second) { second = score; }
   });
-  if (!best || bestScore < MATCH_MIN_SCORE || bestScore < second * MATCH_LEAD) return null;
+  // Two distinct words minimum: a task is never named by one word alone -
+  // "hotel california lyrics" carries the word hotel and nothing else of the
+  // task, and it must not load the hotel model.
+  if (!best || bestWords < 2 || bestScore < MATCH_MIN_SCORE
+      || bestScore < second * MATCH_LEAD) return null;
   return best;
 }
 
@@ -213,13 +266,19 @@ anyone knew this person's request, one per line as \`id | question\`.
 Two jobs, and only these:
 
 1. "rewrites" - questions whose wording assumes a default or a detail this \
-request contradicts. Rewrite each to fit THIS request while checking the same \
-thing. Do not rewrite questions that are merely generic - a generic question \
+request contradicts. Rewrite each to fit THIS request while checking exactly \
+the same ONE thing - never fold a second constraint into the rewrite. Do not \
+rewrite questions that are merely generic - a generic question \
 is fine; a WRONG assumption is not. [{"id": "...", "question": "..."}]
 
 2. "additions" - constraints stated in the request that NO question above \
 covers. Write at most <<MAX>> new questions, each hung on the id of the \
-existing subtask where it belongs. \
+existing subtask where it belongs. One question checks ONE thing - never \
+merge two constraints into one question. Set "moneyMoving" true when the \
+step the question guards is hard to undo once passed - a payment, a \
+submission, sending something - and false for everything else; the flag \
+decides whether the question can stop the agent, so a payment-boundary \
+question with it false is unguarded. \
 [{"nodeId": "...", "question": "...", "why": "...", \
 "moment": "Now"|"After"|"Completion"|"On demand", "moneyMoving": true|false}]
 
@@ -303,7 +362,10 @@ export async function adaptModel(model, query, opts = {}) {
       .split('<<QUERY>>').join(String(query).slice(0, 500))
       .split('<<QUESTIONS>>').join(lines.join('\n'))
       .split('<<MAX>>').join(String(MAX_ADDITIONS));
-    const text = await callFn(prompt, { temperature: GEN_TEMP, tag: 'adapt' });
+    // Temperature zero: run-to-run the same request should patch the same
+    // questions. Measured at 0.3, one of two runs missed the exact rewrite
+    // the feature exists for.
+    const text = await callFn(prompt, { temperature: 0, tag: 'adapt' });
     const patch = parseJson(text);
     const r = applyAdaptations(m, patch);
     return { model: m, ...r };

@@ -122,6 +122,10 @@ export function createRun(contract, opts = {}) {
       const r = render(f, level, channels);
       rendered.push({ ...r, why });
       if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
+      // The one list in the blob with no cap. Fatigue routing keeps it small
+      // on a normal run, but a run whose every page yields fresh spoken
+      // findings would grow it without bound, and every publish copies it.
+      if (said.length > 400) said.splice(0, said.length - 400);
       // Driven by the level, not by whether a spoken rendering exists.
       // render() returns spoken:null when channels.speech is false, so
       // `r.spoken?.holds` was undefined, nothing ever entered `waiting`, and
