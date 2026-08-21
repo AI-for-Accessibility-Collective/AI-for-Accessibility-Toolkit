@@ -262,7 +262,20 @@ export function mountValidationPanel(root, { onControl } = {}) {
       // of the record of what was checked — it just stops asking.
       const seenAlready = new Set(state.acknowledged || []);
       const list = el('ul', 'va-list');
+      // Grouped by the step of the task each finding belongs to, so a node's
+      // questions read as one moment rather than an interleaved list. The
+      // group header is the node's own label; findings with no node fall
+      // under their phase.
+      let lastGroup = null;
       for (const f of findings) {
+        const group = f.nodeLabel || f.phase || null;
+        if (group && group !== lastGroup) {
+          const h = el('li', 'va-nodehead');
+          h.setAttribute('role', 'presentation');
+          h.append(el('span', null, group));
+          list.append(h);
+          lastGroup = group;
+        }
         const done = seenAlready.has(`${f.widget}|${f.phase}|${f.say}`);
         const li = el('li', `va-item ${tone(f)}${done ? ' va-read' : ''}`);
         li.append(el('span', 'va-dot'));
