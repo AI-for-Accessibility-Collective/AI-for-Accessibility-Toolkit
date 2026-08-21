@@ -720,6 +720,7 @@ async function observeByModel(snap, opts = {}) {
         node: f.node || null, cluster: f.cluster || null,
         moment: f.moment || null, verified: f.verified || null,
         contradicts: f.contradicts === true, moneyMoving: f.moneyMoving === true,
+        costDims: f.costDims ?? null,
         confidence: f.confidence ?? null, aligned: false,
         why: f.why ?? null, whatTheAgentLoses: f.whatTheAgentLoses ?? null,
         route: null, eu: null, source: 'reasoner',
@@ -874,6 +875,7 @@ async function observeByModel(snap, opts = {}) {
     // findings, so it needs the fields the decision was made from.
     contradicts: f.finding.contradicts === true,
     moneyMoving: f.finding.moneyMoving === true,
+    costDims: f.finding.costDims ?? null,
     confidence: f.finding.confidence ?? null,
     aligned: f.finding.aligned === true,
     why: f.finding.why ?? null,

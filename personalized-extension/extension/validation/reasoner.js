@@ -158,6 +158,9 @@ export function flattenModel(model) {
         // in policy.js today. Nothing reads it here; it travels on the finding
         // so the step that generalises the stop rule has it already.
         moneyMoving: q.moneyMoving === true,
+        // The six-dimension error-cost coding, when the model carries one.
+        // cundOf() grades C_und from it; absent, the moneyMoving bit decides.
+        costDims: q.costDims && typeof q.costDims === 'object' ? q.costDims : null,
       });
     });
     for (const c of n.children || []) walk(c, here);
@@ -810,6 +813,7 @@ async function callJsonStream(prompt, schema, opts, log, flat, pageText, onRow) 
         await onRow({
           id: q.id, node: q.node, question: q.question, subtask: q.subtask,
           cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
+          costDims: q.costDims ?? null,
           paradigm: q.paradigm, why: q.why ?? null,
           whatTheAgentLoses: q.whatTheAgentLoses ?? null,
           contradictsAsk: r.contradictsAsk === true,
@@ -901,6 +905,7 @@ export async function readPage(flat, pageText, opts = {}) {
     return {
       id: q.id, node: q.node, question: q.question, subtask: q.subtask,
       cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
+      costDims: q.costDims ?? null,
       paradigm: q.paradigm,
       // The model wrote these when it wrote the question, and this join was
       // dropping them - so a spoken explanation of a pause had nothing to say
@@ -1341,6 +1346,7 @@ export function toFindings(result, phase) {
       // Carried for the trace and for the steps that come after this one.
       node: a.node, cluster: a.cluster, moment: a.moment,
       moneyMoving: a.moneyMoving === true,
+      costDims: a.costDims ?? null,
       why: a.why ?? null, whatTheAgentLoses: a.whatTheAgentLoses ?? null,
       confidence: a.confidence,
       verified: a.verify,

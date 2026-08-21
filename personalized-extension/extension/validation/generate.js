@@ -283,9 +283,16 @@ merge two constraints into one question. Set "moneyMoving" true when the \
 step the question guards is hard to undo once passed - a payment, a \
 submission, sending something - and false for everything else; the flag \
 decides whether the question can stop the agent, so a payment-boundary \
-question with it false is unguarded. \
+question with it false is unguarded. Also code "costDims": how much an \
+UNDETECTED error at this check would cost, six integers 0-3 (0 none, 3 high): \
+"money" (money at stake), "privacy" (privacy or identity exposure), \
+"thirdParty" (messages or money reaching a real person in the user's name), \
+"safety" (safety or legal consequence), "reversibility" (how hard the \
+consequence is to reverse), "recovery" (effort to notice and redo). \
 [{"nodeId": "...", "question": "...", "why": "...", \
-"moment": "Now"|"After"|"Completion"|"On demand", "moneyMoving": true|false}]
+"moment": "Now"|"After"|"Completion"|"On demand", "moneyMoving": true|false, \
+"costDims": {"money": 0, "privacy": 0, "thirdParty": 0, "safety": 0, \
+"reversibility": 0, "recovery": 0}}]
 
 Return only JSON: {"rewrites": [...], "additions": [...]}. Empty arrays when \
 nothing needs it.`;
@@ -338,6 +345,8 @@ export function applyAdaptations(model, patch) {
       whatTheAgentLoses: '',
       moment: MOMENTS.has(a.moment) ? a.moment : 'Now',
       moneyMoving: a.moneyMoving === true,
+      ...(a.costDims && typeof a.costDims === 'object'
+        ? { costDims: a.costDims } : {}),
       fromAsk: true,
     });
     out.added += 1;
@@ -426,7 +435,7 @@ function stripQuestions(model, { codingsOnly = false } = {}) {
     if (codingsOnly) {
       for (const q of n.questions || []) {
         delete q.cluster; delete q.moment; delete q.exampleWidgets;
-        delete q.paradigm; delete q.moneyMoving;
+        delete q.paradigm; delete q.moneyMoving; delete q.costDims;
       }
     } else {
       delete n.questions;
@@ -572,6 +581,10 @@ function applyCodings(model, out) {
     // it before falling back to three Amazon phase names, so a model without it
     // can only ever be stopped by a contradiction.
     q.moneyMoving = c.moneyMoving === true;
+    // The six-dimension error-cost coding (0-3 each). Kept only when it is an
+    // object; cundOf() ignores non-finite entries, so a partial coding still
+    // grades and a malformed one falls back to the moneyMoving bit.
+    if (c.costDims && typeof c.costDims === 'object') q.costDims = c.costDims;
     let p = c.paradigm;
     if (typeof p === 'string' && /^\d+$/.test(p.trim())) p = parseInt(p.trim(), 10);
     if (Number.isInteger(p) && p >= 1 && p <= 12) q.paradigm = p;
