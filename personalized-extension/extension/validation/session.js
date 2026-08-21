@@ -422,7 +422,12 @@ async function _publish(extra = {}) {
   if (gate.allowed !== false) {
     const merged0 = extra.findings || mergeFindings(prev.findings || [], extra.append || []);
     const ack = new Set([...(prev.acknowledged || []), ...acknowledged]);
-    const unread = merged0.filter((f) => f.level !== 'ambient' && !f.confirming)
+    // Only a stop holds. An aside is by definition "one line, agent continues"
+    // - policy.js's own words - but this filter read every non-ambient finding
+    // as a hold, so an unread aside paused the agent without ever being spoken
+    // as a pause. Holding and saying are different decisions: a stop does
+    // both, an aside only says.
+    const unread = merged0.filter((f) => f.level === 'stop' && !f.confirming)
       .filter((f) => !ack.has(fkey(f)));
     if (unread.length) {
       gate = { allowed: false, waitingOn: unread.map((f) => f.widget),
@@ -1343,8 +1348,11 @@ const Validation = {
     }
 
     const prev = await stored();
+    // Stops only, same rule as the derived gate in _publish. An aside used to
+    // land here too, so the agent silently could not move while an unread
+    // aside sat in the panel - a pause the layer never announced as one.
     const unread = (prev.findings || [])
-      .filter((f) => f.level !== 'ambient' && !f.confirming)
+      .filter((f) => f.level === 'stop' && !f.confirming)
       .filter((f) => !acknowledged.has(fkey(f)));
 
     if (unread.length) {

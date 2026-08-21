@@ -68,11 +68,14 @@ const qSize = flat.questions.find((q) => /size/i.test(q.question));
 ok(!!qSize, 'the model has a question about the size to go back to');
 
 const QUOTE = '- text: $14.99';
+// A contradiction, so the finding is a stop. Only a stop holds the agent now -
+// an aside shows without pausing, which is the level this answer used to get -
+// and the held-action lookup below is what this test exists for.
 R.setGeminiCaller(async () => JSON.stringify({
   alignedPhase: 'Inspect the item',
   alignedNodes: [qSize.node],
   answers: [{ id: qSize.id, answer: 'Size 5 Toddler', quote: QUOTE,
-              confidence: 0.9, contradictsAsk: false }],
+              confidence: 0.9, contradictsAsk: true }],
   noticed: [],
 }));
 
@@ -101,7 +104,7 @@ ok(read.findings === 1, 'the page answered one question');
 // ── an agent action ─────────────────────────────────────────────────────────
 {
   const g = await Validation.allow('click add to cart', { step: 7 });
-  ok(g.allowed === false, 'the unread finding holds the agent, as before');
+  ok(g.allowed === false, 'the unread stop holds the agent');
   const e = (await Trace.all()).filter((x) => /add to cart/.test(x.action || '')).pop();
   ok(!!e, 'the action the agent tried is on the record');
   ok(e.step === 7, 'with the step it happened at');
