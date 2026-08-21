@@ -1241,6 +1241,28 @@ const asClause = (s) => {
  * @param {string} phase  what this page is called in the plan
  * @returns {Array<Object>} findings in checkPage() shape
  */
+/**
+ * Sensitive values are referenced, never spoken (decision 24). Screen-reader
+ * speech is public to the room, so a card number or an SSN read aloud is a
+ * disclosure, not a finding. Masked at the sentence, not at the stored quote:
+ * verification already ran against the exact page text, and the evidence
+ * record stays exact. Shapes are deliberately narrow - an order number like
+ * 113-2116825-7916228 groups as 3-7-7 and must read out in full, because the
+ * order-number case is the whole reason the receipts route exists.
+ */
+export function maskSensitive(text) {
+  let t = String(text ?? '');
+  // Card numbers: 13-19 contiguous digits, or four groups of four.
+  t = t.replace(/\b(?:\d{4}[ -]){3}(\d{1,4})\b/g, (m, last) => `a card ending ${last}`);
+  t = t.replace(/\b\d{9,15}(\d{4})\b/g, (m, last) => `a number ending ${last}`);
+  // SSNs: exactly 3-2-4.
+  t = t.replace(/\b\d{3}-\d{2}-(\d{4})\b/g, (m, last) => `an SSN ending ${last}`);
+  // Stated secrets.
+  t = t.replace(/\b(password|passcode|pin)\s*(?:is|was|:)\s*\S+/gi,
+    (m, kind) => `${kind} (not read aloud)`);
+  return t;
+}
+
 export function toFindings(result, phase) {
   const aligned = new Set(result.alignedNodes || []);
   const out = [];
@@ -1254,8 +1276,9 @@ export function toFindings(result, phase) {
       widget: a.question,
       phase,
       // The panel and the overlay render `say` and nothing else, so it has to
-      // carry the whole thing.
-      say: `${a.question} ${asSentence(a.answer)}`,
+      // carry the whole thing. Masked: what gets said and shown never carries
+      // a card number, an SSN, or a stated secret.
+      say: maskSensitive(`${a.question} ${asSentence(a.answer)}`),
       // Where it came from, which for the reasoner is the page's own words.
       from: a.quote,
       answerable: true,
@@ -1299,7 +1322,7 @@ export function toFindings(result, phase) {
     out.push({
       widget: String(n.what || 'Something on this page'),
       phase,
-      say: `${asSentence(n.what)} ${asClause(n.whyItMatters)}`.trim(),
+      say: maskSensitive(`${asSentence(n.what)} ${asClause(n.whyItMatters)}`.trim()),
       from: n.quote,
       answerable: true,
       confirming: false,
