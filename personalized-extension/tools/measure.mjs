@@ -30,7 +30,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { decide } from '../extension/validation/policy.js';
-import { route, cundOf, DEFER, WEIGHTS, MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
+import { route, cundOf, uncoverOf, severityOf, DEFER, WEIGHTS, MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -875,7 +875,15 @@ function cmdAttention() {
 
 function cmdAuroc() {
   const L = readLabels();
-  const runs = loadRuns(DIR);
+  // The labels were written against a frozen snapshot and the default dir is
+  // LIVE - the recorder reuses one directory per scenario, so later runs
+  // overwrite the findings these labels describe. Four labeled stops had
+  // already drifted out of the live dir when this defaulted there. Measure
+  // against the labels' own source unless a dir was passed explicitly.
+  const dir = argOf('--dir')
+    || (L.source && existsSync(L.source) ? L.source : DIR);
+  if (dir !== DIR) console.log(`reading runs from the labels' source: ${dir}\n`);
+  const runs = loadRuns(dir);
   // Same occurrence-counted key as the label file, for the same reason: two
   // surfacings of one finding with identical text are two rows, not one.
   const byKey = new Map();
@@ -951,7 +959,7 @@ function cmdAuroc() {
     const conf = Number.isFinite(f.confidence)
       ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
     const pe = Math.min(1, WEIGHTS.peBase + WEIGHTS.peDoubt * (1 - conf));
-    const uncover = f.verified ? WEIGHTS.uncoverVerified : WEIGHTS.uncoverOther;
+    const uncover = uncoverOf(f, WEIGHTS);
     const cund = cundOf(f, WEIGHTS);
     const benefit = pe * uncover * cund;
     const persona = WEIGHTS.personaSpeech;
@@ -992,8 +1000,10 @@ function cmdAuroc() {
   console.log(`EU(now) takes ${distinctEu} distinct values over those ${rows.length} findings; `
     + `the benefit term takes ${distinctBen}. C_und is now graded from the six-dimension `
     + 'coding where a code joins (before the coding both predictors were near-categorical: '
-    + '2 and 4 distinct values, benefit AUROC 0.443). P(uncover) is still one boolean and '
-    + 'P(e) still moves only with reported confidence, so those remain tied groups.\n');
+    + '2 and 4 distinct values, benefit AUROC 0.443). P(uncover) now grades exact above '
+    + 'normalized evidence, but every labeled stop here carries a byte-exact quote, so on '
+    + 'this set it stays one tied group and the numbers match the pre-grading run exactly; '
+    + 'P(e) still moves only with reported confidence.\n');
 
   if (distinctEu <= 8) {
     console.log('| EU(now) | worth-it | not-worth-it |');
@@ -1015,12 +1025,170 @@ function cmdAuroc() {
   if (AS_JSON) console.log('\n' + JSON.stringify(rows, null, 2));
 }
 
+// ── worst-case dominance over the money questions ───────────────────────────
+//
+// The design question this measures: can a STRONG utility score carry the
+// money-safety property by arithmetic dominance alone, with no rule in front
+// of it? Today policy.js locks a stop at every money-moving finding BEFORE
+// the score runs, and nothing here changes that. This sweep asks what the
+// score would do on its own: for every money-moving question, sweep the other
+// inputs across their full ranges and check whether the interrupting route
+// wins the argmax in EVERY cell. Where it does not, the flipping inputs and
+// the margins are the exact specification of what a stronger score would
+// have to overcome. Pure measurement; writes tools/dominance-sweep.md.
+
+function cmdDominance() {
+  const corpora = loadCorpora();
+  const CONFS = [0, 0.25, 0.5, 0.75, 1];
+  const VERIFIED = ['verified_exact', null];
+  const AMBIG = [false, true];
+  const PAUSE = [false, true];
+  const personas = Object.entries(PERSONAS);
+
+  const qs = [];
+  for (const c of corpora) {
+    for (const q of c.rows) {
+      if (q.moneyMoving === true) qs.push({ corpus: c.name, q });
+    }
+  }
+
+  const L = [];
+  L.push('# worst-case dominance sweep over the money-moving questions');
+  L.push('');
+  L.push('For each money-moving question, every combination of: confidence '
+    + `{${CONFS.join(', ')}}, quote verified {exact, no}, page ambiguity {off, on}, `
+    + 'persona {sighted, screen reader}, joining an existing pause {no, yes} - '
+    + `${CONFS.length * 2 * 2 * 2 * 2} cells per question. In each cell the shipped `
+    + 'route() runs with NO locked-stop rule in front of it, and the question is '
+    + 'whether the now route wins the argmax anyway. The shipped layer still '
+    + 'decides money stops before the score; this table is evidence about whether '
+    + 'the arithmetic could carry that property alone.');
+  L.push('');
+
+  let dominantNow = 0, dominantSpoken = 0;
+  const perQ = [];
+  const failByFactor = { unverified: 0, verified: 0, pause: 0, noPause: 0,
+                         sighted: 0, screenReader: 0, ambiguity: 0, calm: 0 };
+  const failByMoment = {};
+  let failCells = 0, totalCells = 0, worstDeficit = 0;
+  const deficits = [];
+
+  for (const { corpus, q } of qs) {
+    let nowWins = 0, spokenWins = 0, cells = 0;
+    const flips = [];
+    for (const conf of CONFS) {
+      for (const v of VERIFIED) {
+        for (const amb of AMBIG) {
+          for (const [personaName, model] of personas) {
+            for (const jp of PAUSE) {
+              const f = { ...canonical(q), confidence: conf, verified: v };
+              const r = route(f, { model, joiningPause: jp,
+                                   signals: amb ? { ambiguity: true } : null });
+              cells += 1; totalCells += 1;
+              if (r.route === 'now') { nowWins += 1; spokenWins += 1; continue; }
+              if (r.route === 'after') spokenWins += 1;
+              const deficit = r.eu[r.route] - r.eu.now;
+              deficits.push(deficit);
+              if (deficit > worstDeficit) worstDeficit = deficit;
+              failCells += 1;
+              failByFactor[v ? 'verified' : 'unverified'] += 1;
+              failByFactor[jp ? 'pause' : 'noPause'] += 1;
+              failByFactor[personaName === 'sighted' ? 'sighted' : 'screenReader'] += 1;
+              failByFactor[amb ? 'ambiguity' : 'calm'] += 1;
+              flips.push({ conf, v, amb, personaName, jp, winner: r.route, deficit });
+            }
+          }
+        }
+      }
+    }
+    if (nowWins === cells) dominantNow += 1;
+    if (spokenWins === cells) dominantSpoken += 1;
+    if (nowWins < cells) {
+      failByMoment[q.moment ?? 'unlabelled'] =
+        (failByMoment[q.moment ?? 'unlabelled'] || 0) + 1;
+    }
+    perQ.push({ corpus, q, cells, nowWins, spokenWins,
+                sev: severityOf(canonical(q)), flips });
+  }
+
+  L.push(`${qs.length} money-moving questions, ${totalCells} cells swept.`);
+  L.push('');
+  L.push('| property | questions | share |');
+  L.push('|---|---|---|');
+  L.push(`| now wins EVERY cell | ${dominantNow} | ${pct(dominantNow, qs.length)} |`);
+  L.push(`| a spoken route (now or after) wins every cell | ${dominantSpoken} `
+    + `| ${pct(dominantSpoken, qs.length)} |`);
+  L.push(`| at least one cell where a kept route beats now | ${qs.length - dominantSpoken} `
+    + `| ${pct(qs.length - dominantSpoken, qs.length)} |`);
+  L.push('');
+
+  if (failCells) {
+    deficits.sort((a, b) => a - b);
+    const med = deficits[Math.floor(deficits.length / 2)];
+    L.push(`${failCells} of ${totalCells} cells put a non-now route first. `
+      + `Deficit of the now route in those cells: median ${med.toFixed(4)}, `
+      + `worst ${worstDeficit.toFixed(4)} (the whole benefit side of a typical `
+      + 'finding is roughly 0.02 to 0.08, so these margins are material).');
+    L.push('');
+    L.push('what the failing cells have in common (each failing cell counted once per factor):');
+    L.push('');
+    L.push('| factor | failing cells with it | failing cells without it |');
+    L.push('|---|---|---|');
+    L.push(`| quote unverified | ${failByFactor.unverified} | ${failByFactor.verified} |`);
+    L.push(`| screen-reader persona | ${failByFactor.screenReader} | ${failByFactor.sighted} |`);
+    L.push(`| joining an existing pause | ${failByFactor.pause} | ${failByFactor.noPause} |`);
+    L.push(`| page ambiguity signal | ${failByFactor.ambiguity} | ${failByFactor.calm} |`);
+    L.push('');
+    L.push('questions with any failing cell, by their moment label:');
+    L.push('');
+    L.push('| moment | questions |');
+    L.push('|---|---|');
+    for (const [m, n] of Object.entries(failByMoment).sort((a, b) => b[1] - a[1])) {
+      L.push(`| ${m} | ${n} |`);
+    }
+    L.push('');
+    const worst = perQ.filter((x) => x.nowWins < x.cells)
+      .sort((a, b) => (a.nowWins / a.cells) - (b.nowWins / b.cells)).slice(0, 10);
+    L.push('the 10 questions the arithmetic protects least (fewest now-wins):');
+    L.push('');
+    L.push('| now wins | severity | corpus | moment | question |');
+    L.push('|---|---|---|---|---|');
+    for (const x of worst) {
+      L.push(`| ${x.nowWins}/${x.cells} | ${x.sev === null ? 'uncoded' : x.sev.toFixed(2)} `
+        + `| ${x.corpus.replace('bank:', '').replace('gold:', '')} | ${x.q.moment ?? '-'} `
+        + `| ${String(x.q.question).replace(/\|/g, '/').slice(0, 100)} |`);
+    }
+    L.push('');
+  }
+
+  const nowLabelledFails = perQ.filter((x) => x.nowWins < x.cells
+    && x.q.moment === 'Now').length;
+  L.push('Reading it. The moment table above separates two different things. A');
+  L.push('Completion-labelled money question losing now-cells is the score being RIGHT');
+  L.push('about timing: the receipt does not exist mid-run, D(now) prices that, and');
+  L.push('the review route winning is the designed behavior, not a safety gap. The');
+  L.push(`real dominance gap is the ${nowLabelledFails} Now-labelled money questions`);
+  L.push('with failing cells: moments where the human said interrupt, money moves,');
+  L.push('and some input combination still lets a kept route outbid the interruption.');
+  L.push('Those cells, their flipping factors and their margins are the exact');
+  L.push('specification of what a stronger score must price in before the arithmetic');
+  L.push('could carry the money-safety property alone. Until that count is zero and');
+  L.push('holds under the study labels, the safety property lives upstream of the');
+  L.push('score, where it is today.');
+
+  const text = L.join('\n') + '\n';
+  console.log(text);
+  writeFileSync(join(HERE, 'dominance-sweep.md'), text);
+  console.log(`written to ${join(HERE, 'dominance-sweep.md')}`);
+}
+
 // ── dispatch ────────────────────────────────────────────────────────────────
 
 const COMMANDS = { agreement: cmdAgreement, label: cmdLabel, precision: cmdPrecision,
-                   attention: cmdAttention, auroc: cmdAuroc };
+                   attention: cmdAttention, auroc: cmdAuroc,
+                   dominance: cmdDominance };
 if (!COMMANDS[CMD]) {
-  console.error('usage: node tools/measure.mjs <agreement|label|precision|attention|auroc> '
+  console.error('usage: node tools/measure.mjs <agreement|label|precision|attention|auroc|dominance> '
     + '[--dir <recordings>] [--golds <gold-v2 dir>] [--json]');
   process.exit(1);
 }
