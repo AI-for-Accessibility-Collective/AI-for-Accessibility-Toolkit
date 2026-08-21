@@ -184,7 +184,9 @@ async function rehydrate() {
   run = createRun(contract, runOpts);
   // The holds the dead worker was carrying. Without this the rebuilt run has
   // an empty waiting list and run.gate() opens for the rest of the task.
-  run.restoreWaiting?.(prev.waiting);
+  // `prev.holds` is the list; `prev.waiting` is a count the surfaces read,
+  // and feeding the count here was why holds never survived a restart.
+  run.restoreWaiting?.(prev.holds);
   for (const k of prev.acknowledged || []) acknowledged.add(k);
   // The task model dies with the worker and is only reloaded by a top-level
   // fetch in background.js, which resolves AFTER the queued event that woke
@@ -408,7 +410,8 @@ async function _publish(extra = {}) {
   // the run is gone, the stored values stand in.
   const s = run ? run.summary()
     : { steps: prev.steps || [], said: prev.said || [],
-        spokenWords: prev.spokenWords || 0, waiting: prev.waiting || 0 };
+        spokenWords: prev.spokenWords || 0, waiting: prev.waiting || 0,
+        holds: prev.holds || [] };
   // A rehydrated run has empty bookkeeping; the stored record is the truth.
   if (run && !(s.steps || []).length && (prev.steps || []).length) {
     s.steps = prev.steps; s.said = prev.said || [];

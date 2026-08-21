@@ -306,7 +306,12 @@ export function createRun(contract, opts = {}) {
         .reduce((n, s) => n + s.say.split(/\s+/).length, 0);
       return {
         steps: this.plan(), said: said.slice(),
-        spokenWords: words, waiting: waiting.length, unreadable: gaps.length,
+        // `waiting` stays a count because the surfaces read it as one; `holds`
+        // is the actual list, published so rehydrate() can hand it back to
+        // restoreWaiting - which takes an array, and was being fed the count,
+        // so holds never actually survived a worker restart.
+        spokenWords: words, waiting: waiting.length,
+        holds: waiting.map((w) => ({ ...w })), unreadable: gaps.length,
       };
     },
   };
