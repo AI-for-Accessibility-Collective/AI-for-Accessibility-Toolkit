@@ -150,6 +150,27 @@ function leadWith(unread) {
 /** What identifies one finding. Must match the overlay's key exactly. */
 const fkey = (f) => `${f.widget}|${f.phase}|${f.say}`;
 
+// The read the gate may need to wait for, and what the last read said about
+// where the run is. Both feed one rule - nothing commits blind: a committing
+// action waits for the in-flight read of its own page (decision 22, at most
+// once per task, bounded), and a committing action on a page that matches no
+// step of the task is held outright (the out-of-distribution half of the hard
+// gate: an irreversible step on unfamiliar territory always asks).
+let readInFlight = null;
+let lastOffPlan = false;
+// The narration channel's own state: which phase was last announced as a
+// checkpoint, and whether the plan review has been spoken for this task.
+// Plan review, checkpoints, and the wrap-up are ONE channel - the review is
+// checkpoint zero, the boundaries are the middle, the wrap-up is the end -
+// and all of it goes through calmSpeech so it never talks over a stop.
+let lastCheckpointPhase = null;
+let planReviewSpoken = false;
+// Bounded well under the read timeout: with streaming, the rows that can stop
+// a commit arrive in the first seconds, so waiting out a whole slow read buys
+// little and feels broken. If the read is still going at the cap, the gate
+// proceeds on what is known.
+const COMMIT_WAIT_MS = 20_000;
+
 // One interruption per burst, not one per stop.
 //
 // A live hotel run opened with four distinct holds inside twenty seconds -
@@ -1215,6 +1236,13 @@ const Validation = {
     currentNode = null;
     currentNodeLabel = null;
     currentPhase = null;
+    // A new task starts the narration channel over: no phase has been
+    // announced, no plan has been reviewed, nothing is off the plan, and no
+    // read is in flight from the previous run.
+    lastCheckpointPhase = null;
+    planReviewSpoken = false;
+    lastOffPlan = false;
+    readInFlight = null;
     holder = 'agent';
     handOverNode = null;
     handOverAt = null;
@@ -1313,7 +1341,14 @@ const Validation = {
     // answer. With no model loaded this is skipped entirely and the Amazon
     // path below runs unchanged.
     if (flatModel) {
-      const r = await observeByModel(snap, opts);
+      // Tracked so the gate can wait for it: a commit clicked while this read
+      // is mid-flight would otherwise be judged on the page BEFORE the one
+      // being committed. The whole read is the flight, not just the model
+      // call, so the findings are published by the time a waiter proceeds.
+      const flight = observeByModel(snap, opts);
+      readInFlight = flight.catch(() => {});
+      flight.finally(() => { if (readInFlight) readInFlight = null; });
+      const r = await flight;
       return { ...r, watched: await watchNow() };
     }
 
@@ -1405,6 +1440,43 @@ const Validation = {
       step: ctx.step ?? null, holder,
       action: `${actionDescription || 'something'}${verdict ? ` — ${verdict}` : ''}`,
     });
+
+    // Nothing commits blind, in two halves.
+    //
+    // First: a committing action clicked while this page's read is mid-flight
+    // waits for the read, bounded. The wait is narrated only if it actually
+    // engages for more than a beat, so a fast read costs nothing and a slow
+    // one reads as diligence rather than lag. With streaming, the rows that
+    // can stop this commit arrive in the first seconds, so the common case is
+    // a short wait or none.
+    if (COMMITTING.test(String(actionDescription || '')) && readInFlight) {
+      let waited = false;
+      const talk = setTimeout(() => {
+        waited = true;
+        chrome.runtime.sendMessage({ type: 'validationSpeak', phase: currentPhase,
+          lines: [{ say: 'One moment. Checking this page before anything commits.',
+            level: 'aside', live: 'polite', widget: 'commit wait' }] }).catch(() => {});
+      }, 1500);
+      await Promise.race([readInFlight,
+        new Promise((r) => setTimeout(r, COMMIT_WAIT_MS))]);
+      clearTimeout(talk);
+      if (waited) await traceAction('waited for the page read before committing');
+    }
+
+    // Second: a committing action on a page that matches no step of the task
+    // is held outright. This is the out-of-distribution half of the hard
+    // gate: for a step that is hard to undo, "I do not recognise where the
+    // agent is" is itself the reason to ask, however clean the findings are.
+    if (COMMITTING.test(String(actionDescription || '')) && lastOffPlan && flatModel) {
+      await traceAction('held, committing on a page that matches no step of the task');
+      return {
+        allowed: false,
+        waitingOn: ['off the plan'],
+        say: 'This page does not match any step of the task I know. '
+           + 'I am not letting anything commit here until you look.',
+      };
+    }
+
 
     // The person has the wheel. The agent may look all it likes and may not
     // move the page under their hands.
