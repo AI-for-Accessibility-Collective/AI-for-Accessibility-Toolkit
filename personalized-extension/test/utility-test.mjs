@@ -185,6 +185,49 @@ const midTier = {
     'a low cost coding cannot soften a money-moving stop');
 }
 
+// ── graded evidence quality ─────────────────────────────────────────────────
+
+{
+  // The three levels, and the order that makes them evidence quality.
+  const exact = U.uncoverOf({ verified: 'verified_exact' });
+  const norm = U.uncoverOf({ verified: 'verified_normalized' });
+  const none = U.uncoverOf({ verified: null });
+  ok(exact === U.WEIGHTS.uncoverVerified
+     && norm === U.WEIGHTS.uncoverNormalized
+     && none === U.WEIGHTS.uncoverOther
+     && exact > norm && norm > none,
+    'P(uncover) grades exact above normalized above unverified');
+
+  // Byte-compatibility: every truthy value the old boolean rule ever saw
+  // still grades as exact, so the corpus path and the synthetic measurement
+  // findings score exactly as before.
+  ok(U.uncoverOf({ verified: true }) === U.WEIGHTS.uncoverVerified
+     && U.uncoverOf({}) === U.WEIGHTS.uncoverOther
+     && U.uncoverOf({ verified: '' }) === U.WEIGHTS.uncoverOther,
+    'legacy truthy verify values grade as exact and falsy as unverified');
+
+  // A normalized match outranks no match on the whole route score, and an
+  // exact match outranks normalized: monotone through route(), not just in
+  // the helper.
+  const base = { moment: 'Now', confidence: 0.8, moneyMoving: false };
+  const eE = U.route({ ...base, verified: 'verified_exact' }, {}).eu.now;
+  const eN = U.route({ ...base, verified: 'verified_normalized' }, {}).eu.now;
+  const eU = U.route({ ...base, verified: null }, {}).eu.now;
+  ok(eE > eN && eN > eU, 'evidence grade is monotone through the route score');
+}
+
+// ── the severity helper behind the graded cost ──────────────────────────────
+
+{
+  // severityOf: null without codes, 0..1 with them, rising with the dims.
+  // cundOf() builds on it and the measurement instruments read it directly.
+  ok(U.severityOf({}) === null && U.severityOf({ costDims: {} }) === null,
+    'severity is null when no usable coding exists');
+  const s0 = U.severityOf({ costDims: { money: 0 } });
+  const s3 = U.severityOf({ costDims: { money: 3 } });
+  ok(s0 === 0 && s3 > s0 && s3 <= 1, 'severity runs 0..1 and rises with the dims');
+}
+
 console.log(`\n${pass}/${pass + fail} - the utility model routes, the locked stops hold, `
   + 'and every finding lands on one of the four routes.');
 if (fail) process.exit(1);

@@ -37,10 +37,11 @@ export const WEIGHTS = {
   peOffPlan: 0.2,
   peAmbiguity: 0.1,
   peAnomaly: 0.1,
-  // P(uncover): a verified quote is close to certain evidence; anything else
-  // is weaker.
-  uncoverVerified: 0.95,
-  uncoverOther: 0.6,
+  // P(uncover): graded evidence quality, from signals the reader already
+  // produces. See uncoverOf() for the levels and what each one means.
+  uncoverVerified: 0.95,     // endpoint: byte-exact page words
+  uncoverNormalized: 0.9,    // verified after punctuation canonicalization
+  uncoverOther: 0.6,         // endpoint: no page-backed words at all
   // C_und: what an undetected error costs. Two forms. A question that carries
   // the six-dimension coding (costDims) gets a graded value from cundOf();
   // one that does not falls back to the moneyMoving bit and these two levels,
@@ -143,22 +144,75 @@ export const COST_DIMS = ['money', 'privacy', 'thirdParty', 'safety',
  * to the old behavior instead of poisoning the score.
  */
 export function cundOf(f, w = WEIGHTS) {
-  const d = f?.costDims;
-  if (d && typeof d === 'object') {
-    let max = 0; let sum = 0; let n = 0;
-    for (const k of COST_DIMS) {
-      const v = Number(d[k]);
-      if (!Number.isFinite(v)) continue;
-      const x = Math.max(0, Math.min(3, v)) / 3;
-      if (x > max) max = x;
-      sum += x; n += 1;
-    }
-    if (n > 0) {
-      const sev = w.cundMaxBlend * max + (1 - w.cundMaxBlend) * (sum / n);
-      return w.cundFloor + w.cundSpan * sev;
-    }
-  }
+  const sev = severityOf(f, w);
+  if (sev !== null) return w.cundFloor + w.cundSpan * sev;
   return f?.moneyMoving === true ? w.cundMoney : w.cundOther;
+}
+
+/**
+ * P(uncover) for one finding: how likely this evidence reveals an error,
+ * graded from signals the reader already produces. No new calls, no new
+ * fields: the verify status and the quote are already on every finding.
+ *
+ * The levels, and what each means as evidence quality:
+ *
+ *   0.95  verified_exact — the page's own words, byte for byte.
+ *         Near-certain the page really asserts this.
+ *   0.90  verified_normalized — the same words after the deterministic
+ *         canonicalization steps (whitespace, invisible characters, quote
+ *         marks, a rendered ellipsis). Still the page's words, but the
+ *         match survived character deletion, which is marginally weaker
+ *         than a byte-identical span.
+ *   0.60  unverified — the claim has no page-backed words. Only the legacy
+ *         corpus path produces these; the reasoner discards unverified
+ *         answers before they become findings, and policy keeps the
+ *         blind-commit rule (an unverified claim can never lock a stop)
+ *         regardless of this number.
+ *
+ * Two signals were considered and deliberately excluded, so the next reader
+ * does not re-add them:
+ *
+ *   confidence — already moves P(e) through the doubt term; using the same
+ *   report on both factors of the product double-counts it.
+ *
+ *   quote length or specificity — the read prompt itself demands "the
+ *   SHORTEST span that proves the answer", so a short quote is what
+ *   compliance looks like, not weak evidence: "Hello, sign in" fully proves
+ *   the session is signed out. A discount for short digit-free quotes was
+ *   built, measured on the labeled stops (benefit AUROC 0.617 to 0.602),
+ *   and removed on that principle; the measurement is recorded in
+ *   MEASUREMENT.md, and the labels were read, never fitted to.
+ *
+ * A legacy boolean `verified: true` grades as exact, so the corpus path and
+ * the synthetic measurement findings behave exactly as before.
+ */
+export function uncoverOf(f, w = WEIGHTS) {
+  const v = f?.verified;
+  // Any truthy verify value graded as exact except the one explicitly
+  // normalized form: byte-identical to the old `verified ? a : b` on every
+  // value the old code ever saw, and a strict refinement on normalized.
+  if (!v) return w.uncoverOther;
+  return v === 'verified_normalized' ? w.uncoverNormalized : w.uncoverVerified;
+}
+
+/**
+ * The graded severity of an undetected error, in [0,1], or null when the
+ * question carries no usable cost coding. cundOf() maps it onto the C_und
+ * scale; the measurement instruments read it directly.
+ */
+export function severityOf(f, w = WEIGHTS) {
+  const d = f?.costDims;
+  if (!d || typeof d !== 'object') return null;
+  let max = 0; let sum = 0; let n = 0;
+  for (const k of COST_DIMS) {
+    const v = Number(d[k]);
+    if (!Number.isFinite(v)) continue;
+    const x = Math.max(0, Math.min(3, v)) / 3;
+    if (x > max) max = x;
+    sum += x; n += 1;
+  }
+  if (n === 0) return null;
+  return w.cundMaxBlend * max + (1 - w.cundMaxBlend) * (sum / n);
 }
 
 /**
@@ -192,7 +246,7 @@ export function route(f, ctx = {}) {
     + (sig.offPlan ? w.peOffPlan : 0)
     + (sig.ambiguity ? w.peAmbiguity : 0)
     + (sig.traceAnomaly ? w.peAnomaly : 0));
-  const uncover = f.verified ? w.uncoverVerified : w.uncoverOther;
+  const uncover = uncoverOf(f, w);
   const cund = cundOf(f, w);
   const defer = DEFER[f.moment] || DEFER_DEFAULT;
 
