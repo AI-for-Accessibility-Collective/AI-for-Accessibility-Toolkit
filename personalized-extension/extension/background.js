@@ -362,6 +362,66 @@ async function callGemini(prompt, apiKey, optsOrImages) {
   return text;
 }
 
+/**
+ * The streaming form of callGemini: same request, but against the
+ * streamGenerateContent endpoint, handing each text piece to `onText` as it
+ * arrives and resolving with the complete text. Text calls only - the
+ * reasoner is its one consumer and sends no images or audio.
+ */
+async function callGeminiStream(prompt, apiKey, opts, onText) {
+  const { mimeType, model, responseSchema, maxOutputTokens, timeoutMs } = opts || {};
+  const generationConfig = { temperature: opts?.temperature ?? 0.7 };
+  if (mimeType) generationConfig.responseMimeType = mimeType;
+  if (responseSchema) generationConfig.responseSchema = responseSchema;
+  if (maxOutputTokens) generationConfig.maxOutputTokens = maxOutputTokens;
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+    + `${model || GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs || 30000);
+  let full = '';
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig }),
+      signal: controller.signal,
+    });
+    if (!resp.ok || !resp.body) {
+      throw new Error(`Gemini stream error ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+    }
+    // SSE: `data: {json}` lines separated by blank lines. A chunk boundary can
+    // fall anywhere, so lines are only consumed once their newline arrives.
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let carry = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      carry += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = carry.indexOf('\n')) >= 0) {
+        const line = carry.slice(0, nl).trim();
+        carry = carry.slice(nl + 1);
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === '[DONE]') continue;
+        try {
+          const piece = JSON.parse(payload).candidates?.[0]?.content?.parts?.[0]?.text;
+          if (piece) {
+            full += piece;
+            if (onText) await onText(piece);
+          }
+        } catch { /* a malformed keep-alive line is not a failure */ }
+      }
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  if (!full) throw new Error('Gemini stream returned no text');
+  return full;
+}
+
 async function getApiKey() {
   const data = await chrome.storage.sync.get(['geminiApiKey', 'geminiKey']);
   return data.geminiApiKey || data.geminiKey || null;
@@ -587,6 +647,14 @@ if (globalThis.ValidationReasoner) {
     const key = await getApiKey();
     if (!key) throw new Error('No Gemini API key configured.');
     return await callGemini(prompt, key, opts);
+  });
+  // And the streaming form, so a stop-class answer written early in the reply
+  // reaches the gate while the rest is still being generated. The reasoner
+  // falls back to the plain call if a stream breaks, so this only adds speed.
+  globalThis.ValidationReasoner.setGeminiStreamCaller(async (prompt, opts, onText) => {
+    const key = await getApiKey();
+    if (!key) throw new Error('No Gemini API key configured.');
+    return await callGeminiStream(prompt, key, opts, onText);
   });
 }
 

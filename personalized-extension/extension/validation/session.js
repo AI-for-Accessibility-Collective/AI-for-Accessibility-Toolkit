@@ -598,11 +598,47 @@ async function observeByModel(snap, opts = {}) {
     .filter((f) => f.source === 'reasoner' && f.say)
     .slice(-12).map((f) => ({ question: f.widget, answer: String(f.say).slice(0, 120) }));
 
+  // Stop-class answers surface the moment the model writes them, mid-stream,
+  // instead of at the end of a 20-second reply. Only a contradiction or a
+  // money-moving answer comes through here, already quote-verified, and a
+  // stop-level finding in storage is what holds the agent - so the gate arms
+  // seconds into the read. The row is excluded from the final apply below so
+  // it is not raised twice.
+  const earlySurfaced = new Set();
+  const onRow = async (row) => {
+    try {
+      const phase = currentPhase || null;
+      const early = Reasoner.toFindings(
+        { answers: [row], alignedNodes: [], noticed: [] }, phase);
+      if (!early.length) return;
+      const f = early[0];
+      earlySurfaced.add(f.widget);
+      await publish({ append: [{
+        widget: f.widget, level: 'stop', say: f.say, from: f.from,
+        confirming: false, paradigm: f.paradigm || null, shape: f.shape || null,
+        checkedAgainst: null, control: f.control || null, phase,
+        node: f.node || null, cluster: f.cluster || null,
+        moment: f.moment || null, verified: f.verified || null,
+        contradicts: f.contradicts === true, moneyMoving: f.moneyMoving === true,
+        confidence: f.confidence ?? null, aligned: false,
+        why: f.why ?? null, whatTheAgentLoses: f.whatTheAgentLoses ?? null,
+        route: null, eu: null, source: 'reasoner',
+      }], phase });
+      chrome.runtime.sendMessage({ type: 'validationSpeak', phase,
+        lines: [{ say: f.say, level: 'stop', live: 'assertive', widget: f.widget }] })
+        .catch(() => {});
+      await Trace.record({ nodeId: f.node ?? currentNode,
+        label: labelFor(f.node ?? currentNode), phase, holder,
+        action: 'stopped mid-read', findings: [{ widget: f.widget, node: f.node, level: 'stop' }] });
+    } catch { /* an early surface must never break the read itself */ }
+  };
+
   const result = await Reasoner.readPage(flatModel, snap.text, {
     ask: contract ? describe(contract) : null,
     url: snap.url || null,
     agentDoing,
     alreadyAnswered,
+    onRow,
     ...(opts.reasoner || {}),
   });
 
@@ -619,7 +655,11 @@ async function observeByModel(snap, opts = {}) {
   }
 
   const phase = opts.phase || Reasoner.phaseFor(result, flatModel);
-  const findings = Reasoner.toFindings(result, phase);
+  // Anything already surfaced mid-stream is not raised a second time. It is
+  // in storage at the phase the run was in when it fired; the say and the
+  // quote are identical, so nothing is lost by the exclusion.
+  const findings = Reasoner.toFindings(result, phase)
+    .filter((f) => !earlySurfaced.has(f.widget));
 
   // Where the run is, read off the page. The first node the page is serving,
   // falling back to the first node a finding belongs to — a page that answered
@@ -1443,10 +1483,16 @@ const Validation = {
     // overlay's Got-it happened to paper over it, the side panel had no way
     // out at all.
     const prev = await stored();
+    let dealt = 0;
     for (const f of prev.findings || []) {
-      if (f.widget === widget) acknowledged.add(fkey(f));
+      if (f.widget === widget) { acknowledged.add(fkey(f)); dealt += 1; }
     }
     await publish();
+    // A stop surfaced mid-stream is in storage but never entered the run's
+    // waiting list, so run.answer() knows nothing about it - yet the
+    // acknowledgement above is what actually releases the hold. Answering a
+    // real stored finding is resolved, whatever the run thinks.
+    if (!r.resolved && dealt) return { resolved: true, remaining: 0 };
     return r;
   },
 

@@ -81,6 +81,16 @@ export function setGeminiCaller(fn) {
   callModel = fn;
 }
 
+// The streaming variant, when the host provides one. Same prompt, same reply;
+// the difference is that the reply's text arrives in pieces, so a stop-class
+// answer written early (the prompt orders them first) can reach the gate while
+// the rest of the reply is still being generated. Optional: with no stream
+// caller, every read runs exactly as before.
+let streamModel = null;
+export function setGeminiStreamCaller(fn) {
+  streamModel = fn;
+}
+
 export function hasCaller() {
   return typeof callModel === 'function';
 }
@@ -289,15 +299,21 @@ what would be generally sensible. False when the page agrees, when the question 
 is not about something the person specified, or when the answer is null.`;
 
 const ANSWERED_ONLY = `1. "answers" - one entry ONLY for the questions this page \
-actually answers, in the same order as above. Omit a question entirely if the \
+actually answers. Omit a question entirely if the \
 page text does not say - do not emit a null row for it, and do not write a \
 sentence explaining that the page does not say it. Set "id" to that question's \
 id, copied exactly. Every answer MUST carry a "quote" copied \
-character-for-character from the page text. Set "contradictsAsk" true when what \
+character-for-character from the page text - the SHORTEST span that proves the \
+answer, at most about twelve words, never a whole paragraph. Set \
+"contradictsAsk" true when what \
 the page says disagrees with what the person asked for - a different \
 destination, a different date, a price over the stated limit, a different item. \
 Judge it against the task and the ask at the top of this prompt, not against \
-what would be generally sensible.`;
+what would be generally sensible. \
+Write the entries in this order: FIRST every answer whose "contradictsAsk" is \
+true, THEN answers to questions whose step moves money or is hard to undo, \
+THEN everything else. The first entries are read while the rest are still \
+being written, so the ones that can stop the agent must come first.`;
 
 /**
  * @param {ReturnType<typeof flattenModel>} flat
@@ -677,6 +693,117 @@ async function callJson(prompt, schema, opts, log, wants) {
 }
 
 /**
+ * Complete answer rows out of a partial reply.
+ *
+ * The reply is one JSON object whose "answers" array grows as the model
+ * writes. This pulls every COMPLETE object out of that array from however
+ * much text has arrived, tolerating a chunk boundary anywhere - inside a
+ * string, between a backslash and its escape, mid-key. It re-reads from the
+ * start each time, which is fine at these sizes, and the caller tracks how
+ * many rows it has already consumed.
+ *
+ * @param {string} text  everything received so far
+ * @returns {Array<object>} the complete rows, in order
+ */
+export function streamRows(text) {
+  const s = String(text || '');
+  const m = s.match(/"answers"\s*:\s*\[/);
+  if (!m) return [];
+  const rows = [];
+  let i = m.index + m[0].length;
+  let depth = 0; let start = -1; let inStr = false; let esc = false;
+  for (; i < s.length; i += 1) {
+    const c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') { inStr = true; continue; }
+    if (c === '{') { if (depth === 0) start = i; depth += 1; continue; }
+    if (c === '}') {
+      depth -= 1;
+      if (depth === 0 && start >= 0) {
+        try { rows.push(JSON.parse(s.slice(start, i + 1))); } catch { /* not yet */ }
+        start = -1;
+      }
+      continue;
+    }
+    if (c === ']' && depth === 0) break;   // the array closed
+  }
+  return rows;
+}
+
+/**
+ * The streaming form of the call: same prompt, rows surfaced as they arrive.
+ *
+ * Only rows that can stop the agent are surfaced early - a contradiction, or
+ * an answer to a money-moving question - and only after their quote verifies
+ * against the page, exactly as it would at the end. Everything else waits for
+ * the complete reply, which is also what gets parsed and returned, so the
+ * final result is identical to the non-streaming call on the same text.
+ *
+ * Returns null on any failure, and the caller falls back to the plain call -
+ * a broken stream must never cost more than the streaming saved.
+ */
+async function callJsonStream(prompt, schema, opts, log, flat, pageText, onRow) {
+  const t0 = Date.now();
+  const byId = new Map(flat.questions.map((q) => [q.id, q]));
+  const forms = pageForms(pageText);
+  const earlyIds = [];
+  let consumed = 0;
+  let buffer = '';
+  const onText = async (chunk) => {
+    buffer += chunk;
+    const rows = streamRows(buffer);
+    for (; consumed < rows.length; consumed += 1) {
+      const r = rows[consumed];
+      const q = r && r.id != null ? byId.get(String(r.id)) : null;
+      if (!q) continue;
+      const stopClass = r.contradictsAsk === true || q.moneyMoving === true;
+      if (!stopClass) continue;
+      const { verify, level } = verifyQuoteAt(
+        typeof r.quote === 'string' ? r.quote : null, pageText, forms);
+      if (!isVerified(verify)) continue;   // unbacked never surfaces, early least of all
+      earlyIds.push(q.id);
+      try {
+        await onRow({
+          id: q.id, node: q.node, question: q.question, subtask: q.subtask,
+          cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
+          paradigm: q.paradigm, why: q.why ?? null,
+          whatTheAgentLoses: q.whatTheAgentLoses ?? null,
+          contradictsAsk: r.contradictsAsk === true,
+          answer: r.answer ?? null, quote: r.quote,
+          confidence: typeof r.confidence === 'number' ? r.confidence : null,
+          verify, verifyLevel: level,
+        });
+      } catch { /* a consumer error must never kill the read */ }
+    }
+  };
+  try {
+    const text = await streamModel(prompt, {
+      mimeType: 'application/json', responseSchema: schema,
+      maxOutputTokens: opts.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
+      timeoutMs: opts.timeoutMs ?? CALL_TIMEOUT_MS,
+      temperature: opts.temperature ?? 0,
+    }, onText);
+    const p = parseJsonLoose(text, (v) => Array.isArray(v.answers));
+    if (!p) {
+      log.push({ attempt: 'stream', ms: Date.now() - t0,
+                 error: `unparseable JSON (${String(text ?? '').length} chars)` });
+      return null;
+    }
+    log.push({ attempt: 'stream', ms: Date.now() - t0 });
+    return { parsed: p, earlyIds };
+  } catch (e) {
+    log.push({ attempt: 'stream', ms: Date.now() - t0,
+               error: String(e?.message || e).slice(0, 160) });
+    return null;
+  }
+}
+
+/**
  * One page settle: guard, call, parse, verify.
  *
  * Never throws for a model failure. A reasoner that throws would surface as
@@ -692,12 +819,23 @@ export async function readPage(flat, pageText, opts = {}) {
   const started = Date.now();
   const log = [];
 
-  if (!callModel) {
+  if (!callModel && !streamModel) {
     return fail(flat, guard, log, 'no model caller is wired up', started);
   }
 
-  const parsed = await callJson(prompt, SCHEMA, opts, log,
-    (v) => Array.isArray(v.answers));
+  // Streaming first, when the host wired it and the caller wants rows early.
+  // A failed stream falls through to the plain call, so streaming can only
+  // ever add speed, never subtract reliability.
+  let parsed = null;
+  let earlyIds = [];
+  if (streamModel && typeof opts.onRow === 'function') {
+    const st = await callJsonStream(prompt, SCHEMA, opts, log, flat, guard.text, opts.onRow);
+    if (st) { parsed = st.parsed; earlyIds = st.earlyIds; }
+  }
+  if (!parsed && callModel) {
+    parsed = await callJson(prompt, SCHEMA, opts, log,
+      (v) => Array.isArray(v.answers));
+  }
 
   if (!parsed) {
     return fail(flat, guard, log, log[log.length - 1]?.error || 'the call failed', started);
@@ -764,6 +902,9 @@ export async function readPage(flat, pageText, opts = {}) {
       discarded: nonNull.filter((a) => !isVerified(a.verify)).length,
       noticedKept: noticed.filter((n) => isVerified(n.verify)).length,
       noticedDiscarded: noticed.filter((n) => !isVerified(n.verify)).length,
+      // Question ids whose rows were already handed to onRow mid-stream, so
+      // the caller can avoid raising the same finding twice.
+      earlyIds,
       attempts: log.length,
       ms: Date.now() - started,
       guard: { truncated: guard.truncated, origChars: guard.origChars,
@@ -778,7 +919,7 @@ function fail(flat, guard, log, error, started) {
     ok: false, alignedPhase: 'none', alignedNodes: [], answers: [], noticed: [],
     pageText: guard.text,
     meta: { asked: flat.questions.length, answered: 0, discarded: 0,
-            unmatched: 0, unmatchedIds: [],
+            unmatched: 0, unmatchedIds: [], earlyIds: [],
             noticedKept: 0, noticedDiscarded: 0, attempts: log.length,
             ms: Date.now() - started,
             guard: { truncated: guard.truncated, origChars: guard.origChars,
