@@ -244,3 +244,16 @@
 .va-back .va-steps { list-style: none; margin: 0; padding: 0; }
 .va-back .va-steps li { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
 .va-note { font-size: 12px; opacity: 0.7; margin-top: 6px; }
+
+/* Step headers: findings grouped by the task node they belong to. */
+.va-nodehead { list-style: none; margin: 10px 0 2px; padding: 0 0 2px;
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: #5f6b6a; border-bottom: 1px solid #edf0ef; }
+
+/* The run, in review: outcome first, then counted expandable groups. */
+.va-review { margin: 10px 0; padding: 10px; background: #f7faf9;
+  border: 1px solid #dbe7e4; border-radius: 8px; }
+.va-review h2 { margin: 0 0 6px; font-size: 13px; }
+.va-revgroup { margin-top: 6px; }
+.va-revgroup summary { cursor: pointer; font-weight: 500; }
+.va-revgroup summary:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }

@@ -240,6 +240,55 @@ export function mountValidationPanel(root, { onControl } = {}) {
       root.append(box);
     }
 
+    // ── the run, in review ──────────────────────────────────────────────────
+    // Rendered once the run has wrapped up. Pull, not push: the outcome first
+    // in full, then the kept findings as counted groups by what kind of thing
+    // each is, expandable one group at a time. The counted-inventory shape is
+    // the eyes-free one: a screen reader user hears "3 kept about the price"
+    // and opens the group they care about instead of listening to a serial
+    // dump of everything.
+    if (state.wrapUp) {
+      const rev = el('section', 'va-review');
+      rev.append(el('h2', null, 'The run, in review'));
+      const kept = (state.findings || [])
+        .filter((f) => f.level === 'ambient' && !f.confirming);
+      const outcome = kept.filter((f) => f.moment === 'Completion');
+      const rest = kept.filter((f) => f.moment !== 'Completion');
+      for (const f of outcome) {
+        const item = el('div', 'va-asked');
+        item.append(el('p', 'va-text', f.say));
+        if (f.from) item.append(el('p', 'va-where', f.from));
+        rev.append(item);
+      }
+      if (!outcome.length) {
+        rev.append(el('p', null, 'No outcome question was answerable from the pages seen.'));
+      }
+      // Grouped by the question's own kind, strongest first inside a group.
+      const strength = (f) => (f.eu
+        ? Math.max(...Object.values(f.eu).filter((x) => typeof x === 'number')) : 0);
+      const groups = new Map();
+      for (const f of rest) {
+        const k = f.cluster || 'other';
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(f);
+      }
+      for (const [k, fs] of [...groups.entries()].sort((a, b) => b[1].length - a[1].length)) {
+        fs.sort((a, b) => strength(b) - strength(a));
+        const d = el('details', 'va-revgroup');
+        const sum = el('summary', null,
+          `${fs.length} kept about ${k === 'facts' ? 'what the pages said' : k}`);
+        d.append(sum);
+        for (const f of fs) {
+          const item = el('div', 'va-asked');
+          item.append(el('p', 'va-text', f.say));
+          if (f.from) item.append(el('p', 'va-where', f.from));
+          d.append(item);
+        }
+        rev.append(d);
+      }
+      root.append(rev);
+    }
+
     // ── findings ────────────────────────────────────────────────────────────
     // The finding the gate is holding for renders in the gate block above,
     // with the gate's own answers - listing it again below gave the same
@@ -288,6 +337,22 @@ export function mountValidationPanel(root, { onControl } = {}) {
           continue;
         }
         const row = el('div', 'va-answers');
+        // The page's own values for this choice, one button each. Pressing one
+        // sends the agent "Choose X, then read back what changed" and marks
+        // the finding dealt with. This is the option set being real: values
+        // read off the page and quote-verified, never invented.
+        if (Array.isArray(f.options) && f.options.length) {
+          for (const opt of f.options.slice(0, 4)) {
+            const b = el('button', 'va-do primary', `Pick ${opt}`);
+            b.dataset.vaKey = `opt:${f.widget}:${opt}`;
+            b.addEventListener('click', () => {
+              onControl?.({ ...(f.control || {}), action: f.control?.action || 'select-options',
+                node: f.node ?? null, widget: f.widget, option: opt });
+              onControl?.({ action: 'ack', key: `${f.widget}|${f.phase}|${f.say}` });
+            });
+            row.append(b);
+          }
+        }
         if (f.control) {
           const b = el('button', 'va-do', f.control.label);
           b.dataset.vaKey = `do:${f.widget}`;
