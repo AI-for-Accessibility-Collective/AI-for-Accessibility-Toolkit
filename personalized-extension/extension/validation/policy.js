@@ -115,7 +115,8 @@ export function decide(f, state = {}) {
     // above are deliberately decided before it so nothing here can soften
     // them.
     const r = euRoute(f, { spoken: state.spoken || 0, model: state.model,
-                           signals: state.signals || null });
+                           signals: state.signals || null,
+                           joiningPause: state.joiningPause === true });
     return { level: ROUTE_LEVEL[r.route], why: r.why, route: r.route, eu: r.eu };
   } else {
     level = 'aside';

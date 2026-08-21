@@ -75,13 +75,25 @@ const DEFER = {
 };
 const DEFER_DEFAULT = DEFER['Now'];
 
+// The marginal cost of joining a pause that is happening anyway. Horvitz's
+// compound-alert rule (attention-sensitive alerting, eq 8): a bundle's value
+// adds per item, its cost is charged once. Charging every question the full
+// pause cost double-counts the interruption and wrongly demotes cheap
+// additions - the ninth question on a pausing node costs a sentence of
+// listening, not a second interruption. A quarter of the base is that
+// sentence; fatigue still applies, because sentences are what fatigue counts.
+export const MARGINAL_NOW_FACTOR = 0.25;
+
 /**
  * The expected utility of each route for one finding, and the best route.
  *
  * @param {Object} f the finding (moment, moneyMoving, confidence, verified …)
- * @param {{spoken?: number, model?: object, weights?: object}} ctx
+ * @param {{spoken?: number, model?: object, weights?: object,
+ *          joiningPause?: boolean}} ctx
  *   spoken — how many things this run has already said out loud (fatigue)
  *   model  — the person's AbilityModel, if the Librarian had one
+ *   joiningPause — this finding's node is already pausing, so the now route
+ *   is priced at the marginal cost of riding the existing pause
  * @returns {{route: string, eu: Object<string,number>, why: string}}
  */
 export function route(f, ctx = {}) {
@@ -115,7 +127,9 @@ export function route(f, ctx = {}) {
   const eu = {};
   for (const r of ROUTES) {
     const spokenRoute = r === 'now' || r === 'after';
-    const burden = (w.intBase[r] + w.fatiguePerSaid[r] * spoken)
+    const base = r === 'now' && ctx.joiningPause
+      ? w.intBase.now * MARGINAL_NOW_FACTOR : w.intBase[r];
+    const burden = (base + w.fatiguePerSaid[r] * spoken)
       * (spokenRoute ? persona : 1);
     eu[r] = pe * uncover * defer[r] * cund
       + w.vmon * w.attention[r]

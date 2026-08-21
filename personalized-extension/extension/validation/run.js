@@ -85,14 +85,24 @@ export function createRun(contract, opts = {}) {
   // questions answered of questions asked.
   function apply(findings, phase, read, of, signals = null) {
     const rendered = [];
+    // The nodes this page is stopping at. A stop is one interruption for the
+    // whole node (decision 3), so a question on a stopping node rides that
+    // pause for the cost of one more sentence, not a second interruption -
+    // the compound-alert rule. Charged the full pause cost, the ninth
+    // question on a pausing node was wrongly demoted to the log.
+    const pausingNodes = new Set(findings
+      .filter((f) => f.contradicts === true || f.moneyMoving === true)
+      .map((f) => f.node).filter((n) => n != null));
     for (const f of findings) {
+      f.joiningPause = f.node != null && pausingNodes.has(f.node);
       // `spoken` is the fatigue input: how much this run has already said out
       // loud. The utility model raises the cost of the spoken routes with it,
       // which is what migrates mid-tier findings toward the log as a run
       // talks more. `signals` are the page's own danger signs, raising P(e)
       // for everything found on it.
       const spoken = said.filter((s) => s.level !== 'ambient').length;
-      const d = decide(f, { seen, style, model, spoken, signals });
+      const d = decide(f, { seen, style, model, spoken, signals,
+        joiningPause: f.joiningPause === true });
       let { level, why } = d;
       // Route and scores travel on the finding, so they survive publish and a
       // surface (or the completion review) can order by them.
