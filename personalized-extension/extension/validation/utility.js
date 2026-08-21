@@ -82,7 +82,13 @@ export function route(f, ctx = {}) {
   const spoken = ctx.spoken || 0;
   const m = ctx.model || null;
 
-  const pe = Math.min(1, w.peBase + w.peDoubt * (1 - (f.confidence ?? 0.8)));
+  // Clamped, because the confidence is a model-reported number and a model
+  // can report anything. NaN passes a typeof check ("number") and `??` does
+  // not catch it, so an unclamped NaN here turned every route's score NaN
+  // and the argmax into the first route. Found by the stress suite.
+  const conf = Number.isFinite(f.confidence)
+    ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
+  const pe = Math.min(1, w.peBase + w.peDoubt * (1 - conf));
   const uncover = f.verified ? w.uncoverVerified : w.uncoverOther;
   const cund = f.moneyMoving === true ? w.cundMoney : w.cundOther;
   const defer = DEFER[f.moment] || DEFER_DEFAULT;
