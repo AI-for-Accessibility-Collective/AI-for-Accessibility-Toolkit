@@ -1451,6 +1451,59 @@ const Validation = {
   },
 
   /**
+   * The spoken wrap-up, when the run ends.
+   *
+   * The completion review is not a filing cabinet. A route of "log" means
+   * "do not interrupt the run for this", never "the person does not hear it"
+   * — and the end of the run is the cheapest possible moment to speak, since
+   * there is nothing left to interrupt. So the run ends with: the task
+   * outcome first (the completion-moment findings — did the order go
+   * through, did the receipt come), then the top few kept findings the
+   * person never saw, ranked by the utility model's own scores. Everything
+   * else stays in the panel for the guided review.
+   */
+  async wrapUp(agentSummary) {
+    if (!run && !(await rehydrate())) return { spoke: 0 };
+    const prev = await stored();
+    const ack = new Set([...(prev.acknowledged || []), ...acknowledged]);
+    // Unheard: ambient findings were never spoken, and that is the whole
+    // pool the review draws from. Asides were already said out loud and
+    // stops were answered, so neither is news at the end.
+    const unheard = (prev.findings || [])
+      .filter((f) => f.level === 'ambient' && !f.confirming && !ack.has(fkey(f)));
+    const outcome = unheard.filter((f) => f.moment === 'Completion');
+    const strength = (f) => f.eu
+      ? Math.max(...Object.values(f.eu).filter((x) => typeof x === 'number'))
+      : (f.confidence ?? 0);
+    const rest = unheard.filter((f) => f.moment !== 'Completion')
+      .sort((a, b) => strength(b) - strength(a))
+      .slice(0, 3);
+
+    const lines = [];
+    for (const f of [...outcome, ...rest]) {
+      lines.push({ say: f.say, level: 'aside', live: 'polite', widget: f.widget });
+      acknowledged.add(fkey(f));
+    }
+    const kept = unheard.length - lines.length;
+    if (kept > 0) {
+      lines.push({ say: `${kept} more thing${kept === 1 ? ' is' : 's are'} in the panel `
+        + 'if you want to look back over the run.',
+      level: 'aside', live: 'polite', widget: 'wrap up' });
+    }
+    if (lines.length) {
+      chrome.runtime.sendMessage({ type: 'validationSpeak', lines, phase: 'wrap up' })
+        .catch(() => {});
+    }
+    await Trace.record({
+      nodeId: currentNode, label: currentNodeLabel, phase: currentPhase, holder,
+      action: `run ended: ${String(agentSummary || 'done').slice(0, 80)}`,
+    });
+    await publish({ wrapUp: { at: Date.now(), spoke: lines.length,
+      outcome: outcome.length, kept: Math.max(0, kept) } });
+    return { spoke: lines.length, outcome: outcome.length };
+  },
+
+  /**
    * Accept or decline an offered rule.
    *
    * Accepting writes it to the profile, where it roams and is never offered

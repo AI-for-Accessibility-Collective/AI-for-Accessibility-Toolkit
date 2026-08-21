@@ -676,6 +676,10 @@ export async function bhAgentRun(task, opts = {}) {
             }
           }
         } catch { /* the guard must never break a legitimate finish */ }
+        // The run ends spoken, not silent: the task outcome first, then the
+        // top kept findings the person never saw. The layer owns what gets
+        // said; a wrap-up that fails must never break a legitimate finish.
+        try { await globalThis.Validation?.wrapUp?.(summary); } catch { /* never fatal */ }
         await _bhAgentPatch({ status: 'done', endedAt: Date.now(), summary });
         await _bhAgentLog({ kind: 'done', text: summary });
         _bhAgentNotify('done', task, summary);
