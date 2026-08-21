@@ -31,9 +31,17 @@
 // profile and roams between devices, so how much someone wants interrupting is
 // remembered rather than re-decided.
 
+import { route as euRoute } from './utility.js';
+
 /** ambient — silent unless it conflicts · aside — one line, agent continues
  *  stop — blocks, waits for an answer */
 export const LEVELS = ['ambient', 'aside', 'stop'];
+
+// The utility model's four routes, folded onto the three levels the rest of
+// the layer speaks. Spoken routes are asides — only the locked stops above
+// ever hold the agent — and the two kept routes are ambient, differing in
+// whether the completion review leads with them.
+const ROUTE_LEVEL = { now: 'aside', after: 'aside', log: 'ambient', ondemand: 'ambient' };
 
 const ORDER = { ambient: 0, aside: 1, stop: 2 };
 
@@ -99,6 +107,15 @@ export function decide(f, state = {}) {
     // moneyMoving field. Kept so the shipped demo behaves exactly as before.
     level = 'stop';
     why = 'continuing from here is hard to undo';
+  } else if (f.moment != null) {
+    // A task-model finding that is not a locked stop is routed by the utility
+    // model: expected value of each route against its burden, with fatigue and
+    // the persona on the cost side. The old rule was one undifferentiated
+    // aside; this is the graded form of the same call, and the locked stops
+    // above are deliberately decided before it so nothing here can soften
+    // them.
+    const r = euRoute(f, { spoken: state.spoken || 0, model: state.model });
+    return { level: ROUTE_LEVEL[r.route], why: r.why, route: r.route, eu: r.eu };
   } else {
     level = 'aside';
     why = 'worth knowing, nothing is committed yet';

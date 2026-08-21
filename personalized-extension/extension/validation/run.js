@@ -86,7 +86,16 @@ export function createRun(contract, opts = {}) {
   function apply(findings, phase, read, of) {
     const rendered = [];
     for (const f of findings) {
-      let { level, why } = decide(f, { seen, style, model });
+      // `spoken` is the fatigue input: how much this run has already said out
+      // loud. The utility model raises the cost of the spoken routes with it,
+      // which is what migrates mid-tier findings toward the log as a run
+      // talks more.
+      const spoken = said.filter((s) => s.level !== 'ambient').length;
+      const d = decide(f, { seen, style, model, spoken });
+      let { level, why } = d;
+      // Route and scores travel on the finding, so they survive publish and a
+      // surface (or the completion review) can order by them.
+      if (d.route) { f.route = d.route; f.eu = d.eu; }
       // `quiet` is set only by the reasoner, off the task model's own `moment`
       // field: the model says which answers are wanted at the moment and which
       // are wanted on demand, and only the first kind is announced. Nothing in
@@ -98,7 +107,10 @@ export function createRun(contract, opts = {}) {
       // and the irreversible-phase fallback with one string comparison: 12 of
       // the 62 money-moving gold questions carry a moment other than "Now",
       // and every one of them was being silenced after being escalated.
-      if (f.quiet && level === 'aside') {
+      // When the utility model routed this finding, the moment is already in
+      // the computation - D(r) is derived from it - so the flag is not applied
+      // a second time on top.
+      if (f.quiet && level === 'aside' && !d.route) {
         level = 'ambient';
         why = 'the task model asks for this on demand, not now';
       }

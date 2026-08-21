@@ -711,6 +711,11 @@ async function observeByModel(snap, opts = {}) {
     aligned: f.finding.aligned === true,
     why: f.finding.why ?? null,
     whatTheAgentLoses: f.finding.whatTheAgentLoses ?? null,
+    // The utility model's verdict, when it routed this finding: which of the
+    // four routes won and the per-route scores it won on. The completion
+    // review orders by these.
+    route: f.finding.route ?? null,
+    eu: f.finding.eu ?? null,
     source: f.finding.source || 'reasoner',
   })), phase, reasoner: result.meta });
 
