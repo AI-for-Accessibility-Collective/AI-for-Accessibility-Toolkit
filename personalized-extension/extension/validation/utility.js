@@ -160,13 +160,48 @@ export const SURFACE = {
   // happen to a hold itself - a widget IS the hold, presented and waited on.
   // checkpoint carries the measured spoken value; log the shipped estimate.
   attention: { widget: 1, checkpoint: 0.8, log: 0.35 },
-  // What each surface costs the person. The widget price is the design
-  // interview's own pause price: intBase.now was 0.12 back when the now route
-  // meant "pause now", and was repriced to 0.04 exactly when now stopped
-  // pausing and became a spoken aside. The widget route restores the pause
-  // semantics, so it restores the pause price. checkpoint is the aside price;
-  // log is the shipped kept price.
-  intBase: { widget: 0.12, checkpoint: 0.04, log: 0.01 },
+  // What each surface costs the person. checkpoint is the aside price; log is
+  // the shipped kept price. The widget price is SPLIT (v6): see
+  // intWidgetHold / intWidgetSentence below. (A surface config object that
+  // instead carries intBase.widget and no split is scored with the v5 single
+  // price - the measurement grid uses that to reproduce v5 exactly.)
+  intBase: { checkpoint: 0.04, log: 0.01 },
+  // The v6 widget price, split into what the pause IS and what it SAYS.
+  // The interview's pause price was 0.12. Its two components are different
+  // things: the HOLD is wall-clock time the run stands still, which costs
+  // every person the same - nothing about it is spoken - so the persona
+  // multiplier has no business touching it. The SENTENCE is the spoken
+  // question itself, the same load as a checkpoint's sentence (0.04), and
+  // that part a screen reader does pay 1.6x for. v5 scaled the whole 0.12 by
+  // the persona, so 1.6 x 0.12 = 0.192 exceeded the entire benefit range and
+  // the widget switched off for screen readers (widget recall 0.00) - the
+  // same switch-not-multiplier defect shape as the 2a8bd38 fix. Split:
+  // sentence = the checkpoint's spoken price, hold = the remainder.
+  intWidgetHold: 0.08,
+  intWidgetSentence: 0.04,
+  // How strongly each signal says "this question asks for the person's
+  // decision or input" - the sources inputNeedOf() reads, each in [0,1],
+  // combined by max. Hand-set from the design record, not fitted:
+  //   money 1        consent to commit is itself the input (decision 7's
+  //                  gate class, as arithmetic)
+  //   handOver 1     credentials, identity, only-the-person-knows - the agent
+  //                  cannot proceed alone by definition of the cluster
+  //   fromAsk 0.8    the question was added from the person's own ask, so the
+  //                  person's preference is the answer
+  //   options 0.8    the page itself offers choices (harvested, verified) -
+  //                  a decision demonstrably exists on screen
+  //   approve 0.6    a consent screen; consent is input, but decision 14
+  //                  lets reversible defaults proceed, so below hand-over
+  //   select/refine 0.5  a choice the agent can default and narrate
+  //                  (decision 14); the behavioral mining showed people stop
+  //                  at the consequential ones, so not 0
+  inputNeed: { money: 1, handOver: 1, fromAsk: 0.8, options: 0.8,
+               approve: 0.6, select: 0.5, refine: 0.5 },
+  // Above this graded severity, an implicit decision exists no matter what
+  // the question asks: continue or stop. A catastrophic finding always
+  // carries that choice, so input-need ramps from 0 at this floor to 1 at
+  // severity 1. Below it, nothing implicit.
+  needSeverityFloor: 0.5,
   // D per surface, same moment-sensitivity as DEFER, cell by cell:
   //   widget takes DEFER's now column - it is an interception at this moment,
   //     and an answer wanted at completion is worth as little captured early
@@ -219,25 +254,83 @@ export function routeSurface(f, ctx = {}) {
   const cund = cundOf(f, w);
   const defer = s.defer[f.moment] || s.defer['Now'];
 
+  // v6: the widget's captured-resolution advantage exists only in proportion
+  // to there being an input to capture. I(widget) = 1 is the value of forcing
+  // a resolution; a finding with no decision in it has no resolution to
+  // force, and a "widget" for it is a modal announcement whose aversion
+  // probability is a checkpoint's. So the effective I(widget) interpolates
+  // from I(checkpoint) at need 0 to I(widget) at need 1. (A surface config
+  // without an inputNeed table is scored the v5 way: full I(widget) always.)
+  const hasNeed = s.inputNeed != null;
+  const need = hasNeed ? inputNeedOf(f, s, w) : 1;
+  const iWidget = hasNeed
+    ? s.I.checkpoint + (s.I.widget - s.I.checkpoint) * need
+    : s.I.widget;
+
   // Both interrupting surfaces are spoken for the population the layer is
-  // for, so the persona multiplies both; the log costs the same for everyone.
+  // for, so the persona multiplies what is SPOKEN; the log costs the same for
+  // everyone. v6 prices the widget as hold + sentence: only the sentence is
+  // spoken, so only the sentence takes the persona. The hold also scales down
+  // with input-need: when the agent cannot proceed without the person (a
+  // credential, a consent), the run stalls with or without the layer, so the
+  // widget's hold is structure on an intrinsic wait, not an added
+  // interruption. At need 0 the full hold is charged - the layer alone chose
+  // to stop the run.
   let persona = 1;
   if (m?.vision?.descriptions) persona *= w.personaSpeech;
   if (m?.cognition?.summarize) persona *= w.personaSummarize;
 
+  const widgetCost = s.intWidgetHold != null
+    ? s.intWidgetHold * (1 - need) + s.intWidgetSentence * persona
+    : s.intBase.widget * persona;                       // v5 single price
   const eu = {};
   for (const r of SURFACES) {
-    const spoken = r === 'widget' || r === 'checkpoint';
-    const base = r === 'widget' && ctx.joiningPause
-      ? s.intBase.widget * MARGINAL_NOW_FACTOR : s.intBase[r];
-    eu[r] = pe * uncover * defer[r] * s.I[r] * cund
+    let burden;
+    if (r === 'widget') {
+      burden = ctx.joiningPause ? widgetCost * MARGINAL_NOW_FACTOR : widgetCost;
+    } else {
+      burden = s.intBase[r] * (r === 'checkpoint' ? persona : 1);
+    }
+    const I = r === 'widget' ? iWidget : s.I[r];
+    eu[r] = pe * uncover * defer[r] * I * cund
       + w.vmon * s.attention[r]
-      - base * (spoken ? persona : 1);
+      - burden;
   }
 
   let best = SURFACES[0];
   for (const r of SURFACES) if (eu[r] > eu[best]) best = r;
   return { surface: best, eu };
+}
+
+/**
+ * How strongly this finding asks for the person's decision or input, in
+ * [0,1]. Reads only what the finding already carries at runtime - the
+ * harvested options, the model's cluster, the fromAsk provenance flag, the
+ * money flag - plus one implicit source: above the severity floor, a
+ * continue-or-stop decision exists no matter what the question asks.
+ * Combined by max, so adding evidence of need never lowers it; clamped;
+ * monotone in severity and in every source.
+ */
+export function inputNeedOf(f, s = SURFACE, w = WEIGHTS) {
+  const n = s.inputNeed;
+  if (!n) return 1;
+  let need = 0;
+  if (f?.moneyMoving === true) need = Math.max(need, n.money);
+  const cluster = typeof f?.cluster === 'string' ? f.cluster : '';
+  if (cluster === 'hand over') need = Math.max(need, n.handOver);
+  if (cluster === 'approve') need = Math.max(need, n.approve);
+  if (cluster === 'select') need = Math.max(need, n.select);
+  if (cluster === 'refine') need = Math.max(need, n.refine);
+  if (f?.fromAsk === true) need = Math.max(need, n.fromAsk);
+  if (Array.isArray(f?.options) && f.options.length > 0) {
+    need = Math.max(need, n.options);
+  }
+  const sev = severityOf(f, w);
+  if (sev !== null && sev > s.needSeverityFloor) {
+    need = Math.max(need,
+      (sev - s.needSeverityFloor) / (1 - s.needSeverityFloor));
+  }
+  return Math.max(0, Math.min(1, need));
 }
 
 // The six cost dimensions, in the design doc's three groups. Each is coded

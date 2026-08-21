@@ -75,9 +75,71 @@ const base = {
   ok(gap(high) > gap(low), 'raising C_und moves the score toward the widget');
   ok(high.surface === 'widget', 'an all-high cost coding at a Now moment wins the widget');
 
-  const calm = U.routeSurface({ ...base, confidence: 1 });
-  const doubted = U.routeSurface({ ...base, confidence: 0 });
+  // v6: doubt moves toward the widget only where an input-need exists - with
+  // nothing to capture, widget and checkpoint share a benefit core and doubt
+  // raises both equally. Options on the finding are the runtime need signal.
+  const calm = U.routeSurface({ ...base, options: ['aisle', 'window'], confidence: 1 });
+  const doubted = U.routeSurface({ ...base, options: ['aisle', 'window'], confidence: 0 });
   ok(gap(doubted) > gap(calm), 'raising P(e) through doubt moves the score toward the widget');
+}
+
+// ── v6: the input-need term ─────────────────────────────────────────────────
+{
+  const n = (f) => U.inputNeedOf(f);
+  ok(n({}) === 0 && n({ moneyMoving: true }) === 1 && n({ cluster: 'hand over' }) === 1,
+    'input-need: nothing 0, money and hand-over 1');
+  ok(n({ cluster: 'select' }) === 0.5 && n({ cluster: 'approve' }) === 0.6
+    && n({ fromAsk: true }) === 0.8 && n({ options: ['a'] }) === 0.8,
+    'input-need: graded sources at their documented levels');
+  ok(n({ cluster: 'select', moneyMoving: true }) === 1,
+    'input-need combines by max, never lowers');
+  const sevHigh = { costDims: { money: 3, privacy: 3, thirdParty: 3, safety: 3, reversibility: 3, recovery: 3 } };
+  ok(n(sevHigh) === 1, 'catastrophic severity implies the continue-or-stop decision');
+  ok(n({ costDims: { money: 1, privacy: 0, thirdParty: 0, safety: 0, reversibility: 0, recovery: 0 } }) === 0,
+    'mild severity implies nothing below the floor');
+  const vals = [n({}), n({ cluster: 'select' }), n({ fromAsk: true }), n({ moneyMoving: true })];
+  ok(vals.every((v, i) => i === 0 || v >= vals[i - 1]) && vals.every((v) => v >= 0 && v <= 1),
+    'input-need is ordered and clamped to [0,1]');
+}
+
+// ── v6: the split widget price ──────────────────────────────────────────────
+{
+  // At need 1 the hold is free (the run was stalling regardless) and only the
+  // sentence is charged - and only the sentence takes the persona.
+  const s = U.SURFACE;
+  const needy = { ...base, moneyMoving: true };
+  const sighted = U.routeSurface(needy);
+  const sr = U.routeSurface(needy, { model: { vision: { descriptions: true } } });
+  const gap = sighted.eu.widget - sr.eu.widget;
+  const expected = s.intWidgetSentence * (U.WEIGHTS.personaSpeech - 1);
+  ok(Math.abs(gap - expected) < 1e-12,
+    'at full input-need the persona touches only the sentence component');
+  // At need 0 the full hold is charged: the layer alone chose to stop the run.
+  const idle = U.routeSurface(base);
+  const idleSr = U.routeSurface(base, { model: { vision: { descriptions: true } } });
+  ok(Math.abs((idle.eu.widget - idleSr.eu.widget) - expected) < 1e-12
+    && idle.eu.widget < sighted.eu.widget,
+    'at zero input-need the hold is charged in full, persona-flat');
+}
+
+// ── the v5 form is still reproducible through a legacy config ───────────────
+{
+  const V5 = {
+    I: { widget: 1, checkpoint: 0.5, log: 0.5 },
+    attention: { widget: 1, checkpoint: 0.8, log: 0.35 },
+    intBase: { widget: 0.12, checkpoint: 0.04, log: 0.01 },
+    defer: U.SURFACE.defer,
+  };
+  const f = { ...base, moneyMoving: true };
+  const model = { vision: { descriptions: true } };
+  const r = U.routeSurface(f, { model, surface: V5 });
+  const w = U.WEIGHTS;
+  const pe = Math.min(1, w.peBase + w.peDoubt * 0.2);
+  const core = pe * U.uncoverOf(f, w) * U.cundOf(f, w);
+  const expectWidget = core * V5.defer.Now.widget * 1
+    + w.vmon * V5.attention.widget - V5.intBase.widget * w.personaSpeech;
+  ok(Math.abs(r.eu.widget - expectWidget) < 1e-12,
+    'a legacy surface config reproduces the v5 arithmetic exactly');
 }
 
 // ── all three surfaces reachable ────────────────────────────────────────────
