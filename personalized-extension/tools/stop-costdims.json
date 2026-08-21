@@ -1,0 +1,357 @@
+{
+ "note": "Six-dimension cost codes for the labeled stops' questions, coded blind (question text + run task only, never the verdict) at temperature 0 by gemini-3.5-flash. These are what the runtime coding would attach; the recordings predate costDims.",
+ "dims": [
+  "money",
+  "privacy",
+  "thirdParty",
+  "safety",
+  "reversibility",
+  "recovery"
+ ],
+ "codes": {
+  "cart|A warning that price and details vary by size and color": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|A warning that prices and details vary by size and color.": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|An organic search result is priced over the $40 budget.": {
+   "money": 2,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "cart|Are any of these top results sponsored ads that don't match my filters?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Did the search actually return flat sandals, or did it redirect?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Do these actually look flat?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|How are these rated?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Is size 5 actually selected, or is it unavailable?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "cart|Is this item eligible for free returns if it doesn't fit?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|The delivery location is pre-set to Saratoga 95070.": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|The product is highly popular with over 8,000 purchases in the past month.": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 0
+  },
+  "cart|The sandals are made of premium EVA and have a warning about shrinking in high temperatures.": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|The sandals are sold by a third-party seller named ITAJIA but fulfilled and shipped by Amazon.": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|What do these cost?": {
+   "money": 2,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "cart|What search query should I run?": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "cart|What sizing scale is this using, and is size 5 actually on the list?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "cart|When will these sandals actually get here?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Where is this delivering to?": {
+   "money": 2,
+   "privacy": 1,
+   "thirdParty": 2,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "cart|Which color is selected, and does changing it affect the price?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Which ones have Prime shipping?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Which sandal should we click on?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "cart|Whose account is this?": {
+   "money": 2,
+   "privacy": 3,
+   "thirdParty": 3,
+   "safety": 0,
+   "reversibility": 3,
+   "recovery": 3
+  },
+  "doctor|A bot detection screen is blocking access to the main website content.": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "doctor|Are you on the correct official portal to start booking your appointment?": {
+   "money": 2,
+   "privacy": 3,
+   "thirdParty": 2,
+   "safety": 2,
+   "reversibility": 3,
+   "recovery": 2
+  },
+  "doctor|DataDome CAPTCHA challenge": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "hotel|San Diego is available as a suggested destination link": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 0
+  },
+  "hotel|The default number of travelers is set to 2": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 1,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "hotel|What are your exact check-in and check-out dates?": {
+   "money": 2,
+   "privacy": 0,
+   "thirdParty": 2,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "hotel|What destination do you want to search for?": {
+   "money": 2,
+   "privacy": 0,
+   "thirdParty": 2,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "multiway|A cheap flight deal from SFO to San Diego is displayed on the homepage for Sep 26 to Oct 3": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|Are the region and currency correct?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  },
+  "multiway|Did the partner booking page load correctly?": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|How many passengers are traveling on this trip?": {
+   "money": 2,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "multiway|Is the default starting airport correct, or does it need to be cleared?": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|Is this trip a round-trip, one-way, or multi-city flight?": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|The United Airlines booking URL that failed to load": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|The United Airlines booking page failed to load due to a protocol error.": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|The browser is showing a chrome-error page instead of the United Airlines website.": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|The flight deal on the homepage is for Sep 26 to Oct 3, which does not match the requested date of next Friday.": {
+   "money": 2,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 2,
+   "recovery": 2
+  },
+  "multiway|The origin is already pre-filled with San Francisco": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|The page failed to load with an HTTP2 protocol error.": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|What origin airport or city are you searching from?": {
+   "money": 0,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 0,
+   "recovery": 1
+  },
+  "multiway|Which cabin class do you want to fly in?": {
+   "money": 1,
+   "privacy": 0,
+   "thirdParty": 0,
+   "safety": 0,
+   "reversibility": 1,
+   "recovery": 1
+  }
+ }
+}

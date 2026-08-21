@@ -30,7 +30,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { decide } from '../extension/validation/policy.js';
-import { route, WEIGHTS, MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
+import { route, cundOf, DEFER, WEIGHTS, MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
@@ -128,6 +128,7 @@ function flatten(tree, corpus) {
         question: q.question,
         moment: q.moment ?? null,
         moneyMoving: q.moneyMoving,
+        costDims: q.costDims ?? null,
         cluster: q.cluster ?? null,
       });
     }
@@ -174,6 +175,7 @@ function canonical(q) {
     node: q.node,
     moment: q.moment,
     moneyMoving: q.moneyMoving,
+    costDims: q.costDims ?? null,
     confidence: 0.8,
     verified: 'verified_exact',
     contradicts: false,
@@ -897,6 +899,31 @@ function cmdAuroc() {
   console.log('# AUROC of the EU as a predictor of worth-it\n');
   if (L.provisional) console.log('**PROVISIONAL LABELS.** ' + L.note + '\n');
 
+  // The recordings predate the cost coding, so their findings carry no
+  // costDims. The runtime would carry them (flattenModel copies them off the
+  // model), so the measurement joins each recorded finding back to its coded
+  // question by text. Findings the join misses (adapted rewrites, noticed
+  // findings, corpus-path runs) fall back to the moneyMoving bit, exactly as
+  // the runtime would for an uncoded question.
+  const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const dimsByQuestion = new Map();
+  for (const c of loadCorpora()) {
+    for (const q of c.rows) {
+      if (q.costDims) dimsByQuestion.set(norm(q.question), q.costDims);
+    }
+  }
+  // Most labeled stops have no bank question to join (the cart run is the
+  // corpus path, multiway used a generated model), so tools/stop-costdims.json
+  // carries the codes the runtime coding stage would have attached: the same
+  // coder, run blind over question text + task only, never the verdict
+  // (tools/code_stop_dims.py).
+  let sidecar = {};
+  try {
+    sidecar = JSON.parse(
+      readFileSync(join(HERE, 'stop-costdims.json'), 'utf8')).codes || {};
+  } catch { /* absent sidecar just means more fallback rows */ }
+  let joined = 0;
+
   const rows = [];
   const counter = new Map();
   for (const r of L.rows) {
@@ -910,22 +937,29 @@ function cmdAuroc() {
     // policy.js decides before the EU model runs. For a ranking question that
     // is the right move: the question is whether the number ORDERS the
     // findings, not whether the router consulted it.
-    const scored = route(d.f, { model: PERSONAS['screen reader'],
-                                joiningPause: d.joiningPause });
-    // The benefit half on its own: P(e) x P(uncover) x C_und, with D(now) = 1.
-    // Recomputed here from the same fields utility.js reads, and asserted
-    // against its EU so a drift in either shows up as a failure rather than a
-    // quietly wrong number.
-    const conf = Number.isFinite(d.f.confidence)
-      ? Math.max(0, Math.min(1, d.f.confidence)) : 0.8;
+    const dims = dimsByQuestion.get(norm(d.f.widget))
+      || sidecar[`${r.run}|${d.f.widget}`] || null;
+    if (dims) joined += 1;
+    const f = dims ? { ...d.f, costDims: dims } : d.f;
+    const scored = route(f, { model: PERSONAS['screen reader'],
+                              joiningPause: d.joiningPause });
+    // The benefit half on its own: P(e) x P(uncover) x C_und, with D(now) = 1
+    // deliberately, so the ranking asks what the finding is worth rather than
+    // when it was wanted. The drift assert against route()'s EU uses the REAL
+    // defer row - the old assert assumed D(now) = 1 there too, which stopped
+    // being true when the kept moments got D(now) < 1.
+    const conf = Number.isFinite(f.confidence)
+      ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
     const pe = Math.min(1, WEIGHTS.peBase + WEIGHTS.peDoubt * (1 - conf));
-    const uncover = d.f.verified ? WEIGHTS.uncoverVerified : WEIGHTS.uncoverOther;
-    const cund = d.f.moneyMoving === true ? WEIGHTS.cundMoney : WEIGHTS.cundOther;
+    const uncover = f.verified ? WEIGHTS.uncoverVerified : WEIGHTS.uncoverOther;
+    const cund = cundOf(f, WEIGHTS);
     const benefit = pe * uncover * cund;
     const persona = WEIGHTS.personaSpeech;
     const intNow = d.joiningPause
       ? WEIGHTS.intBase.now * MARGINAL_NOW_FACTOR : WEIGHTS.intBase.now;
-    const expect = benefit + WEIGHTS.vmon * WEIGHTS.attention.now - intNow * persona;
+    const deferNow = (DEFER[f.moment] || DEFER.Now).now;
+    const expect = benefit * deferNow
+      + WEIGHTS.vmon * WEIGHTS.attention.now - intNow * persona;
     if (Math.abs(expect - scored.eu.now) > 1e-9) {
       console.error(`EU recomputation drifted on ${r.run}|${r.widget}: `
         + `${expect} vs ${scored.eu.now}`);
@@ -937,7 +971,9 @@ function cmdAuroc() {
   const pos = rows.filter((r) => r.label).length;
   console.log(`${rows.length} labelled findings enter the ranking `
     + `(${pos} worth-it, ${rows.length - pos} not-worth-it). `
-    + `${L.rows.filter((r) => r.verdict === 'unclear').length} unclear rows are excluded.\n`);
+    + `${L.rows.filter((r) => r.verdict === 'unclear').length} unclear rows are excluded. `
+    + `${joined} carried a joined six-dimension cost coding; the rest fall back to the `
+    + 'moneyMoving bit (adapted rewrites, noticed findings, corpus-path runs).\n');
 
   const aEu = auroc(rows.map((r) => r.euNow), rows.map((r) => r.label));
   const aBen = auroc(rows.map((r) => r.benefit), rows.map((r) => r.label));
@@ -954,10 +990,10 @@ function cmdAuroc() {
   const distinctEu = new Set(rows.map((r) => r.euNow.toFixed(9))).size;
   const distinctBen = new Set(rows.map((r) => r.benefit.toFixed(9))).size;
   console.log(`EU(now) takes ${distinctEu} distinct values over those ${rows.length} findings; `
-    + `the benefit term takes ${distinctBen}. The v1 terms are coarse — C_und is one `
-    + 'boolean, P(uncover) is one boolean, P(e) moves only with the model\'s reported '
-    + 'confidence — so the ranking is nearly a small set of tied groups and the AUROC is '
-    + 'a statement about those groups, not about a continuous score.\n');
+    + `the benefit term takes ${distinctBen}. C_und is now graded from the six-dimension `
+    + 'coding where a code joins (before the coding both predictors were near-categorical: '
+    + '2 and 4 distinct values, benefit AUROC 0.443). P(uncover) is still one boolean and '
+    + 'P(e) still moves only with reported confidence, so those remain tied groups.\n');
 
   if (distinctEu <= 8) {
     console.log('| EU(now) | worth-it | not-worth-it |');

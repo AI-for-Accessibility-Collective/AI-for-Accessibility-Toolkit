@@ -101,7 +101,7 @@ export const WEIGHTS = {
 // On demand's log entry drops to 0.7 so the on-demand route is actually
 // reachable: at 0.9 the log route's higher attention constant beat it for
 // every question in the corpus, and a four-route model shipped with three.
-const DEFER = {
+export const DEFER = {
   'Now':        { now: 1, after: 0.5, log: 0.3, ondemand: 0.3 },
   'After':      { now: 1, after: 1, log: 0.6, ondemand: 0.5 },
   'Completion': { now: 0.4, after: 0.6, log: 1, ondemand: 0.8 },

@@ -49,7 +49,9 @@ const BANK = () => ({
     ],
     additions: [
       { nodeId: '2', question: 'Is breakfast included in the rate?',
-        why: 'the request asks for breakfast', moment: 'Now', moneyMoving: false },
+        why: 'the request asks for breakfast', moment: 'Now', moneyMoving: false,
+        costDims: { money: 1, privacy: 0, thirdParty: 0, safety: 0,
+                    reversibility: 1, recovery: 1 } },
       { nodeId: 'nowhere', question: 'Is it near the convention center?',
         why: 'stated location', moment: 'garbage', moneyMoving: 'yes' },
       { nodeId: '1', question: '   ' },                   // blank: skipped
@@ -65,6 +67,12 @@ const BANK = () => ({
   const rate = m.tree.children[1].questions;
   ok(rate.some((q) => /breakfast/.test(q.question) && q.fromAsk === true),
     'a constraint the bank lacked becomes a question where it belongs');
+  ok(rate.some((q) => /breakfast/.test(q.question) && q.costDims?.money === 1),
+    'an addition keeps its six-dimension cost coding');
+  const R0 = await import('../extension/validation/reasoner.js');
+  const flatAdd = R0.flattenModel(m).questions.find((q) => /breakfast/.test(q.question));
+  ok(flatAdd?.costDims?.money === 1,
+    'and the coding survives the flatten that feeds the router');
   const rootQ = m.tree.questions || [];
   ok(rootQ.some((q) => /convention center/.test(q.question) && q.moment === 'Now'
     && q.moneyMoving === false),

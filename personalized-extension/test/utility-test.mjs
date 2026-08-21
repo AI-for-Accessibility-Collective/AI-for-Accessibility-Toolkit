@@ -128,6 +128,63 @@ const midTier = {
   ok(all, 'every finding has a route - moved between them, never lost');
 }
 
+// ── the graded cost of an undetected error ──────────────────────────────────
+
+{
+  // Without a coding, the fallback is byte-identical to the two-level rule.
+  const zero = { money: 0, privacy: 0, thirdParty: 0, safety: 0,
+                 reversibility: 0, recovery: 0 };
+  ok(U.cundOf({ moneyMoving: true }) === U.WEIGHTS.cundMoney
+     && U.cundOf({ moneyMoving: false }) === U.WEIGHTS.cundOther
+     && U.cundOf({}) === U.WEIGHTS.cundOther,
+    'no coding falls back to the moneyMoving bit, byte-identical');
+
+  // A malformed coding degrades to the fallback instead of poisoning EU.
+  ok(U.cundOf({ moneyMoving: true, costDims: {} }) === U.WEIGHTS.cundMoney
+     && U.cundOf({ moneyMoving: false, costDims: { money: NaN } }) === U.WEIGHTS.cundOther
+     && U.cundOf({ moneyMoving: false, costDims: 'high' }) === U.WEIGHTS.cundOther,
+    'an empty, NaN, or non-object coding falls back rather than scoring');
+
+  // Monotone in every dimension: raising any one dim never lowers C_und.
+  let monotone = true;
+  for (const k of U.COST_DIMS) {
+    let prev = -1;
+    for (let v = 0; v <= 3; v += 1) {
+      const c = U.cundOf({ costDims: { ...zero, [k]: v } });
+      if (c < prev) monotone = false;
+      prev = c;
+    }
+  }
+  ok(monotone, 'C_und is monotone in each of the six dimensions');
+
+  // The graded scale brackets the old two levels: an all-zeros coding sits
+  // below cundOther, an all-high coding above cundMoney, and out-of-range
+  // values clamp instead of escaping the band.
+  const lo = U.cundOf({ costDims: zero });
+  const hi = U.cundOf({ costDims: { money: 3, privacy: 3, thirdParty: 3,
+                                    safety: 3, reversibility: 3, recovery: 3 } });
+  const wild = U.cundOf({ costDims: { ...zero, money: 99 } });
+  ok(lo < U.WEIGHTS.cundOther && hi > U.WEIGHTS.cundMoney
+     && wild <= U.WEIGHTS.cundFloor + U.WEIGHTS.cundSpan,
+    'the graded band brackets the two fallback levels and clamps 0..3');
+
+  // A high-cost coding outranks a low-cost one on the same finding, which is
+  // the whole point: the benefit side can finally order findings.
+  const base = { moment: 'Now', confidence: 0.8, verified: 'verified_exact' };
+  const cheap = U.route({ ...base, costDims: zero }, {});
+  const dear = U.route({ ...base, costDims: { ...zero, money: 3,
+                                              reversibility: 3 } }, {});
+  ok(dear.eu.now > cheap.eu.now,
+    'a costlier undetected error scores higher on every spoken route');
+
+  // The locked stops are upstream of the score: a money-moving finding stops
+  // however low its coding reads.
+  const d = P.decide({ widget: 'w', phase: 'Search', say: 's', moment: 'Now',
+                       moneyMoving: true, costDims: zero }, {});
+  ok(d.level === 'stop' && !d.route,
+    'a low cost coding cannot soften a money-moving stop');
+}
+
 console.log(`\n${pass}/${pass + fail} - the utility model routes, the locked stops hold, `
   + 'and every finding lands on one of the four routes.');
 if (fail) process.exit(1);
