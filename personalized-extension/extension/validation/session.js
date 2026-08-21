@@ -1040,7 +1040,12 @@ async function adopt(noticed, phase) {
     // `question` never existed on a schema-conformant item, so this read empty
     // on every real run and adopt silently added nothing; the test's mock used
     // `say` and hid it.
-    const text = String(n.what || n.say || n.question || '').trim();
+    // Bounded and flattened: an adopted question comes off a page the layer
+    // does not control, so it gets one line, no control characters, and a
+    // hard length cap before it becomes something every later read asks.
+    const text = String(n.what || n.say || n.question || '')
+      .replace(/[\r\n\t -]+/g, ' ').replace(/\s+/g, ' ')
+      .trim().slice(0, 160);
     if (!text || have.has(text.toLowerCase())) continue;
     if (discovered + added >= MAX_DISCOVERED) break;
     host.questions = host.questions || [];
