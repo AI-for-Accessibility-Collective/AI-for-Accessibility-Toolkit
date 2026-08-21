@@ -200,8 +200,13 @@ export const SURFACE = {
   // Above this graded severity, an implicit decision exists no matter what
   // the question asks: continue or stop. A catastrophic finding always
   // carries that choice, so input-need ramps from 0 at this floor to 1 at
-  // severity 1. Below it, nothing implicit.
-  needSeverityFloor: 0.5,
+  // severity 1. Below it, nothing implicit. 0.75, because the rationale says
+  // CATASTROPHIC and the floor has to sit where that lives in the coded
+  // corpus: 58% of coded questions score above 0.5 (a line most of the
+  // corpus clears describes the ordinary, not the catastrophic), while the
+  // top bucket above 0.75 holds 14%. Set from the severity distribution of
+  // the cost codes themselves, not from any label.
+  needSeverityFloor: 0.75,
   // D per surface, same moment-sensitivity as DEFER, cell by cell:
   //   widget takes DEFER's now column - it is an interception at this moment,
   //     and an answer wanted at completion is worth as little captured early
@@ -270,18 +275,28 @@ export function routeSurface(f, ctx = {}) {
   // Both interrupting surfaces are spoken for the population the layer is
   // for, so the persona multiplies what is SPOKEN; the log costs the same for
   // everyone. v6 prices the widget as hold + sentence: only the sentence is
-  // spoken, so only the sentence takes the persona. The hold also scales down
-  // with input-need: when the agent cannot proceed without the person (a
-  // credential, a consent), the run stalls with or without the layer, so the
-  // widget's hold is structure on an intrinsic wait, not an added
-  // interruption. At need 0 the full hold is charged - the layer alone chose
-  // to stop the run.
+  // spoken, so only the sentence takes the persona.
+  //
+  // The hold is waived only where the wait is INTRINSIC: the agent cannot
+  // proceed without the person (their credentials, their consent to commit)
+  // AND there is a pending action to wait on (a during-run moment). Then the
+  // run stalls with or without the layer, and the widget is structure on a
+  // wait that was happening anyway. This is deliberately NARROWER than
+  // input-need: a select has input-need (a decision exists) but the agent can
+  // default it and narrate (decision 14), so pausing there is an added
+  // interruption and pays the full hold. Conflating the two made every
+  // needful select half-price and the score over-paused (measured: 302
+  // checkpoint-labeled rows predicted widget before this split).
   let persona = 1;
   if (m?.vision?.descriptions) persona *= w.personaSpeech;
   if (m?.cognition?.summarize) persona *= w.personaSummarize;
 
+  const duringRun = f.moment !== 'Completion' && f.moment !== 'On demand';
+  const cluster = typeof f?.cluster === 'string' ? f.cluster : '';
+  const intrinsicHold = hasNeed && duringRun
+    && (f?.moneyMoving === true || cluster === 'hand over');
   const widgetCost = s.intWidgetHold != null
-    ? s.intWidgetHold * (1 - need) + s.intWidgetSentence * persona
+    ? s.intWidgetHold * (intrinsicHold ? 0 : 1) + s.intWidgetSentence * persona
     : s.intBase.widget * persona;                       // v5 single price
   const eu = {};
   for (const r of SURFACES) {

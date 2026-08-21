@@ -30,7 +30,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { decide } from '../extension/validation/policy.js';
-import { route, routeSurface, cundOf, uncoverOf, severityOf, DEFER, SURFACES, WEIGHTS,
+import { route, routeSurface, cundOf, uncoverOf, severityOf, DEFER, SURFACES,
+         SURFACE, WEIGHTS,
          MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -177,6 +178,7 @@ function canonical(q) {
     moment: q.moment,
     moneyMoving: q.moneyMoving,
     costDims: q.costDims ?? null,
+    cluster: q.cluster ?? null,
     confidence: 0.8,
     verified: 'verified_exact',
     contradicts: false,
@@ -1185,11 +1187,23 @@ function cmdIterations() {
     return d.route === 'now' || d.route === 'after' ? 'checkpoint' : 'log';
   };
 
-  // v5: the finalized three-surface function. v5np: the same with the
-  // persona multiplier off, to check the persona term is not what carries
-  // (or destroys) the accuracy.
-  const v5 = (r, model) => routeSurface(canonical(r.q), { model }).surface;
-  const v5np = (r) => routeSurface(canonical(r.q), { model: null }).surface;
+  // v5: the three-surface function as first shipped, reproduced exactly
+  // through a legacy surface config (single persona-scaled widget price, full
+  // I(widget) always - no input-need). v6: the current routeSurface defaults,
+  // which add the input-need term and the split widget price. v6np: v6 with
+  // the persona off, same check as before.
+  const SURFACE_V5 = {
+    I: { widget: 1, checkpoint: 0.5, log: 0.5 },
+    attention: { widget: 1, checkpoint: 0.8, log: 0.35 },
+    intBase: { widget: 0.12, checkpoint: 0.04, log: 0.01 },
+    defer: SURFACE.defer,
+  };
+  const v5 = (r, model) =>
+    routeSurface(canonical(r.q), { model, surface: SURFACE_V5 }).surface;
+  const v5np = (r) =>
+    routeSurface(canonical(r.q), { model: null, surface: SURFACE_V5 }).surface;
+  const v6 = (r, model) => routeSurface(canonical(r.q), { model }).surface;
+  const v6np = (r) => routeSurface(canonical(r.q), { model: null }).surface;
 
   const v1 = v1For(false);
   const v1g = v1For(true);
@@ -1200,8 +1214,10 @@ function cmdIterations() {
     ['v2 route-dependent EU, one-bit inputs', shipped(true), 'computed WHEN (D, A, V_mon, C_int per route) + the money lock'],
     ['v3 = v2 + graded C_und', shipped(false), 'the six-dimension cost coding'],
     ['v4 = v3 + graded P(uncover)', shipped(false), 'identical here: canonical evidence is byte-exact, grading separates runtime cases'],
-    ['v5 = the finalized three-surface function', v5, 'adds I(r) captured resolution; no rule in front of the score'],
+    ['v5 = the three-surface function, first form', v5, 'adds I(r) captured resolution; no rule in front of the score (legacy config, reproduced exactly)'],
     ['v5 minus persona', v5np, 'v5 with the speech multiplier off, both personas'],
+    ['v6 = v5 + input-need + split widget price', v6, 'the widget earns its pause: I(widget) scales with input-need, the hold is persona-flat and free when the run would stall anyway'],
+    ['v6 minus persona', v6np, 'v6 with the speech multiplier off, both personas'],
   ];
 
   const mappings = {
