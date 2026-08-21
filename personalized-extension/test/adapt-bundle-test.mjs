@@ -128,7 +128,7 @@ global.chrome = {
   runtime: { async sendMessage(m) { sent.push(m); } },
   tabs: { async query() { return [{ id: 1 }]; } },
 };
-const PAGE = 'Destination near 94025 Menlo Park. Dates Mon Aug 31. Travelers 2.';
+const PAGE = 'Destination near 94025 Menlo Park. Dates Mon Aug 31. Travelers 2. Fee $9 added.';
 globalThis.BrowserHarness = { async axSnapshot() { return { text: PAGE, url: 'https://x.test' }; } };
 
 const R = await import('../extension/validation/reasoner.js');
@@ -185,8 +185,8 @@ Validation.setSpeechCooldown(300);
     alignedPhase: 'Search', alignedNodes: ['1'],
     // A changed value produces a changed quote - identical evidence would be
     // the reworded-repeat case, which the evidence guard now keeps silent.
-    answers: [contradiction('1#1', 'still wrong, and the traveler count moved too',
-      'Travelers 2')],
+    answers: [contradiction('1#1', 'still wrong, and now a fee appeared',
+      'Fee $9 added')],
     noticed: [],
   }));
   sent.length = 0;
