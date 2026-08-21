@@ -1712,6 +1712,32 @@ const Validation = {
   setSpeechCooldown(ms) { ASSERTIVE_COOLDOWN_MS = ms; lastAssertiveAt = 0; },
 
   /**
+   * Retire findings raised from questions that no longer exist.
+   *
+   * The raw bank checks pages while the adapt patch is being written, so a
+   * finding can land under a question's OLD wording seconds before the
+   * rewrite replaces it. That finding is then about a question nobody is
+   * asking - the live run showed the retired one-adult default flagged as a
+   * mismatch by exactly this race. Retiring acknowledges it, which clears it
+   * from the ask list and releases any hold it carries; it stays in storage
+   * as part of the record.
+   */
+  async retireQuestions(names) {
+    const gone = new Set((names || []).filter(Boolean));
+    if (!gone.size) return { retired: 0 };
+    const prev = await stored();
+    let retired = 0;
+    for (const f of prev.findings || []) {
+      if (gone.has(f.widget) && !acknowledged.has(fkey(f))) {
+        acknowledged.add(fkey(f));
+        retired += 1;
+      }
+    }
+    if (retired) await publish();
+    return { retired };
+  },
+
+  /**
    * The adapt patch landed after the plan review was spoken. One polite line
    * naming what the person's own request added; without it, the retrieval
    * path never says "from your request I added" because the review fires at

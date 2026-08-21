@@ -309,15 +309,19 @@ function resolveFlatId(model, flatId) {
  * is counted, and nothing else on the model moves.
  */
 export function applyAdaptations(model, patch) {
-  const out = { rewritten: 0, added: 0, skipped: 0 };
+  const out = { rewritten: 0, added: 0, skipped: 0, rewrites: [] };
   for (const r of (patch?.rewrites || []).slice(0, MAX_REWRITES)) {
     const hit = r && typeof r.question === 'string' && r.question.trim()
       ? resolveFlatId(model, r.id) : null;
     if (!hit) { out.skipped += 1; continue; }
     const q = hit.node.questions[hit.idx];
     // The original wording is kept on the question: the rewrite is this
-    // run's view, and the bank's wording is the provenance.
+    // run's view, and the bank's wording is the provenance. The pair is also
+    // returned, because a finding raised from the OLD wording before the
+    // patch landed is now about a question nobody is asking, and the caller
+    // retires it.
     q.originalQuestion = q.originalQuestion || q.question;
+    out.rewrites.push({ from: q.originalQuestion, to: r.question.trim() });
     q.question = r.question.trim();
     q.adapted = true;
     out.rewritten += 1;

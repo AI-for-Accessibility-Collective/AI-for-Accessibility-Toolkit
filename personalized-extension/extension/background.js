@@ -770,6 +770,13 @@ function startModelFor(task) {
       }).catch(() => {});
       console.log(`[validation] model adapted to the request: `
         + `${a.rewritten} rewritten, ${a.added} added`);
+      // Findings raised from the OLD wording of a rewritten question are
+      // about a question nobody is asking any more - retire them so they
+      // stop asking and stop holding.
+      if (Array.isArray(a.rewrites) && a.rewrites.length) {
+        globalThis.Validation?.retireQuestions?.(a.rewrites.map((r) => r.from))
+          .catch(() => {});
+      }
       // The plan review has already been spoken by now - it fires at
       // retrieval, and this patch lands half a minute later. What the
       // request added is worth one line of its own, or "from your request I

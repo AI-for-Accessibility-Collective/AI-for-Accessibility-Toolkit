@@ -237,3 +237,27 @@ if (fail) process.exit(1);
 }
 
 console.log(`(addendum block done)`);
+
+// ── the pre-adapt race: findings from a rewritten question retire ───────────
+{
+  const m = BANK();
+  const r = G.applyAdaptations(m, {
+    rewrites: [{ id: '1#1', question: 'Are the settings right for 2 adults?' }],
+    additions: [],
+  });
+  ok(Array.isArray(r.rewrites) && r.rewrites[0].from.includes('one adult'),
+    'the patch reports which questions it rewrote, old wording included');
+
+  const p = store['aa.validation'] || {};
+  p.findings = [{ widget: 'Are the default settings of one adult and one room correct for your trip?',
+    phase: 'Set the search', level: 'stop', confirming: false,
+    say: 'No, the page shows 2 travelers.', from: 'travelers is 2' }];
+  p.acknowledged = [];
+  store['aa.validation'] = p;
+  const res = await Validation.retireQuestions(r.rewrites.map((x) => x.from));
+  ok(res.retired === 1, 'a finding raised from the old wording is retired');
+  const g = await Validation.allow('click search', { action: 'click_index' });
+  ok(g.allowed === true, 'and the hold it carried is released');
+}
+
+console.log('(retire block done)');
