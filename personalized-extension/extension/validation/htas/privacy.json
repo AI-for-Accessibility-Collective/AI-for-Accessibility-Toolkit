@@ -1,0 +1,3139 @@
+{
+ "task": "change privacy or account settings and verify they took effect (Google privacy checkup / activity controls, Facebook or Instagram privacy settings, TikTok privacy, iPhone app permissions): open the settings, find the specific control (ad personalization, private/public account, location access, activity history), change it, and confirm the new state is shown; complete when the changed setting visibly shows its new state on screen. Surface pinned: the settings pages of a major account or device. Variants: VPN marketing, general privacy-advice talking heads, jailbreak/bypass content, and enterprise admin-console content do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Change a privacy setting and verify it",
+  "note": "do 1 for the surface holding the first setting. then per setting: 2, then 3, then 4 - with 5 wherever the surface demands one - then 6. next setting: back to 2 on the same surface, or to 1 when it lives elsewhere. repeat until the checklist is done.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Open the settings surface",
+    "note": "1.1, then 1.2 and 1.3 for in-app settings. 1.4 when the setting lives on the account rather than the app or device. 1.5 replaces the walk for a web console. 1.6 when a quick panel already holds the control. 1.7 before touching anything on a shared or multi-account device; 1.8 when the surface demands proof; 1.9 whenever prompts land on the way in.",
+    "questions": [
+     {
+      "question": "Do you need to enter your personal information into this third-party data removal service to complete the privacy checkup?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows an Incogni onboarding form requesting your name and email as part of a sponsored segment, which is separate from the actual platform privacy settings.",
+      "whatTheAgentLoses": "An agent might unnecessarily share your personal data with a third-party service by mistaking a sponsored advertisement for the required privacy settings menu."
+     },
+     {
+      "question": "Should you open the Settings app or swipe down to the Control Center to disable location sharing?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The home screen clearly displays the Settings app, but accessing the Control Center provides an alternative, potentially faster way to manage connectivity and location.",
+      "whatTheAgentLoses": "The user loses the ability to decide which specific method or shortcut is used to discreetly disable their location sharing."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the right app",
+      "questions": [
+       {
+        "question": "Which app should you open to change your location settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen shows multiple apps like Facebook, TikTok, and Settings, so you must decide whether to manage location access through the system settings or a specific app.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to decide whether to manage your privacy globally at the device level or within a specific app's internal settings."
+       },
+       {
+        "question": "Which folder or app should you open to access your Google account settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple individual apps alongside a dedicated Google folder, requiring you to choose the correct path to reach your privacy controls.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific app or shortcut is used as the entry point to their account settings."
+       },
+       {
+        "question": "Which app in this folder should you open to access your account settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several Google apps, so you must choose one that provides a reliable path to your overarching Google account settings.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific app is used as the entry point, which might unnecessarily expose personal data like their email inbox."
+       },
+       {
+        "question": "Which app do you want to open to adjust the privacy settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple apps with configurable privacy settings, such as Instagram, Snapchat, and TikTok, requiring a specific choice for the task.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific application's privacy settings are being modified."
+       },
+       {
+        "question": "Which app should you open to change your device settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "With dozens of apps visible on the home screen, you must specifically select the Settings app to access your device's privacy and account controls.",
+        "whatTheAgentLoses": "The user loses the assurance of knowing exactly which application the agent is entering to manage their sensitive device permissions."
+       },
+       {
+        "question": "How do you want to open the system settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Start button context menu displays various administrative shortcuts, making it necessary to specifically select 'Settings' to reach the main configuration hub.",
+        "whatTheAgentLoses": "You lose the opportunity to learn alternative navigation shortcuts or discover other administrative tools available in the Start context menu."
+       },
+       {
+        "question": "Which app should you open to access the web?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays several native apps like Facebook and TikTok, but selecting Safari from the dock determines that you will navigate to the settings via a web browser.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to manage your privacy settings through a dedicated native app or a web browser."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Find the menu entry point",
+      "questions": [
+       {
+        "question": "Where should you click to access the browser settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Finding the three-dot menu on the start page is the necessary first step to reach the privacy and activity controls.",
+        "whatTheAgentLoses": "Delegating this navigation means you lose the hands-on familiarity of knowing exactly where the settings menu is located for future adjustments."
+       },
+       {
+        "question": "Which menu section should you expand to access your account settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented broad categories like 'Settings & privacy' and 'Help & support', requiring you to identify the correct path to the privacy controls.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the overall organization of your account management and support options."
+       },
+       {
+        "question": "Do you want to access settings through this sidebar menu, or use your preferred alternative method?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar clearly displays a 'Settings' option, but you might have a simpler or more direct route you prefer to use.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred, potentially faster navigation habit if the agent defaults to the first visible settings link."
+       },
+       {
+        "question": "Where do you tap to access the account settings menu?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The hamburger menu icon in the top right corner of the profile is the standard entry point for Instagram's settings.",
+        "whatTheAgentLoses": "The user loses the knowledge of the specific navigation path required to access and monitor their own account settings."
+       },
+       {
+        "question": "Where do you tap to access the account menu from the home feed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the YouTube home feed with an avatar icon in the top right, which is the entry point to the account settings.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent correctly identified the entry point to the account settings from the main screen."
+       },
+       {
+        "question": "How do you access the app settings from the 'Time watched' screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main settings are not explicitly labeled and must be accessed through the three vertical dots in the top right corner.",
+        "whatTheAgentLoses": "You lose the opportunity to learn the specific menu navigation patterns required to find settings in this app."
+       },
+       {
+        "question": "Where do you tap to access account management or family settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The hamburger menu in the top left corner typically houses broader account and family settings not visible on the main dashboard.",
+        "whatTheAgentLoses": "The user loses the opportunity to learn the app's navigation structure for finding broader account settings."
+       },
+       {
+        "question": "Which icon should you tap to access the account settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu screen displays numerous shortcuts and profile options, making it necessary to locate the specific gear icon to proceed to the settings.",
+        "whatTheAgentLoses": "Delegating this navigation means you lose the chance to review your current profile status or other available menu shortcuts before entering the settings."
+       },
+       {
+        "question": "Where do you tap to access the settings menu from your profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The three dots icon at the top right is the standard entry point to access the settings and privacy menu from a TikTok profile.",
+        "whatTheAgentLoses": "You lose the chance to learn the app's navigation layout and discover exactly where your account settings are located."
+       },
+       {
+        "question": "How do you open the settings menu to disable ads in File Explorer?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu displays several system actions, and selecting 'Options' is required to access the specific folder settings where ad preferences are managed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to discover or configure other system and network management tools available in the command bar dropdown."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Enter the settings menu",
+      "questions": [
+       {
+        "question": "Which menu option should you select to access your browsing history?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Chrome dropdown menu displays multiple navigation options, and selecting 'History' is required to view or manage your past activity.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific section of their browser data or settings to access."
+       },
+       {
+        "question": "Which option should you select from the context menu to access the app's system settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu displays several shortcuts like 'New tab' and 'Remove', but selecting 'App info' is the direct path to manage system-level permissions.",
+        "whatTheAgentLoses": "Delegating this step means you miss learning a fast, universal shortcut for accessing system settings for any app directly from the home screen."
+       },
+       {
+        "question": "Which menu option should you choose to access your account settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The bottom sheet menu presents multiple administrative options like 'Creator tools' and 'Business suite', so you must select 'Settings and privacy' to reach the correct configuration area.",
+        "whatTheAgentLoses": "Delegating this step means you miss discovering other available account management tools that are presented in the main menu."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Reach the account hub",
+      "questions": [
+       {
+        "question": "Which option do you select to access your Google Account settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile menu displays several app-specific options, so you must identify the exact button that opens your overarching account settings.",
+        "whatTheAgentLoses": "You lose the knowledge of how to navigate to your overarching Google Account settings from within a connected app."
+       },
+       {
+        "question": "Where do you tap to access your Google account settings from this main menu?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main settings screen lists many device-level options like Wi-Fi and Display, requiring you to scroll down to find the specific 'Google' entry for account controls.",
+        "whatTheAgentLoses": "The user loses the awareness of where their Google account settings are located relative to other device security and privacy menus."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Go straight to the settings URL",
+      "questions": [
+       {
+        "question": "Which search result should you click to access the My Activity dashboard?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display both the direct link to the dashboard and several support articles, requiring you to choose the actual tool rather than a help page.",
+        "whatTheAgentLoses": "You lose the assurance that the agent is navigating to the official settings portal instead of getting sidetracked by support documentation."
+       },
+       {
+        "question": "Should you tap the autocomplete suggestion for 'myactivity.google.com' or continue typing the full address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows autocomplete options for 'myactivity.google.com' after typing 'my', presenting a choice between using a quick shortcut and manually entering the exact URL.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to trust the browser's autocomplete history or manually type the exact destination to ensure accuracy."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Open the quick-settings panel",
+      "questions": [
+       {
+        "question": "How do you access the network settings from the home screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen does not display a direct button for network settings, requiring a specific swipe gesture to reveal the Control Center.",
+        "whatTheAgentLoses": "You lose the physical muscle memory and convenience of quickly swiping to access your device's core system toggles."
+       },
+       {
+        "question": "How do you close the Control Center to return to the home screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen currently shows the Control Center overlay, which must be dismissed to access the home screen and find the Settings app.",
+        "whatTheAgentLoses": "The user gives up the direct control of using familiar swipe gestures to navigate out of system overlays."
+       },
+       {
+        "question": "How do you revert the network settings from the home screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Swiping down to open the Control Center provides immediate access to network toggles without needing to navigate through the main Settings app.",
+        "whatTheAgentLoses": "You lose the ability to manually verify and control your device's immediate network connectivity state before proceeding."
+       },
+       {
+        "question": "Which network setting should you adjust as a workaround?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Control Center shows the Airplane mode toggle is currently off, providing an immediate option to reset the device's connectivity.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to completely cut off your network connection as a temporary workaround."
+       },
+       {
+        "question": "Should you use Airplane Mode to quickly cut off all connectivity and location tracking?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Control Center shows the Airplane Mode toggle, which provides a fast but blunt way to disable all network and location services at once.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to use a system-wide kill switch for connectivity instead of adjusting specific privacy settings."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Confirm the right account",
+      "questions": [
+       {
+        "question": "Do you need to switch accounts before changing your privacy settings?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Switch account' menu shows '[account]' as the active account, meaning any settings changed next will apply to that specific profile.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to verify which specific account profile the agent is about to modify."
+       },
+       {
+        "question": "Which account's settings do you want to modify?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple family accounts, so you must specify whether to change settings for the organizer or the child account.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might alter the privacy settings of the wrong family member."
+       },
+       {
+        "question": "Which option should you select to proceed with managing the kid's account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The side menu shows general family options alongside the child's profile 'Anita', requiring you to select the specific profile to access its settings.",
+        "whatTheAgentLoses": "You lose the ability to verify exactly which child's profile is being selected for account changes."
+       },
+       {
+        "question": "Did you verify that you are in the correct account and platform to apply these privacy changes?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile picture and account handle visible on the screen confirm exactly whose data permissions are about to be altered.",
+        "whatTheAgentLoses": "The user loses the ability to personally guarantee that their primary account, rather than a secondary or work profile, is the one being restricted."
+       },
+       {
+        "question": "Is this the specific device you want to use to determine your shared location?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'My Location' setting currently displays 'This Device', indicating that this specific phone's physical location is what gets broadcasted to your family and friends.",
+        "whatTheAgentLoses": "You lose the ability to verify or change which of your Apple devices is actively acting as your location beacon."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Sign in or re-authenticate",
+      "questions": [
+       {
+        "question": "Which method do you want to use to sign up or log in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple authentication methods, including phone, email, and various third-party social accounts, which determines how your account is linked and accessed.",
+        "whatTheAgentLoses": "You lose control over which personal credentials or third-party accounts are linked to this profile."
+       },
+       {
+        "question": "How should you authenticate to proceed to the account settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Apple Account Password' dialog requiring the password for the specified email address to continue.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your highly sensitive Apple ID password with the agent, which compromises your overall account security."
+       }
+      ]
+     },
+     {
+      "id": "1.9",
+      "label": "Clear the startup interruptions",
+      "questions": [
+       {
+        "question": "How should you handle the 'Cookies are disabled' error preventing your login?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google sign-in page explicitly states that cookies are disabled, requiring you to fix the browser settings before you can access your account.",
+        "whatTheAgentLoses": "You lose the ability to choose how to troubleshoot the browser's cookie settings or whether to switch to a different browser entirely."
+       },
+       {
+        "question": "How do you want to handle the Chrome enhanced ad privacy prompt?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an informational prompt about new ad privacy features that must be dismissed or interacted with to continue.",
+        "whatTheAgentLoses": "The user loses the chance to review or customize these specific browser-level ad privacy features before proceeding."
+       },
+       {
+        "question": "Do you wait for the Instagram splash screen to finish loading before attempting to navigate to your profile?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen only shows the Instagram logo and a loading state, meaning the bottom navigation bar is not yet available to interact with.",
+        "whatTheAgentLoses": "The user loses task reliability if the agent hallucinates interface elements and tries to click buttons that have not yet appeared on screen."
+       },
+       {
+        "question": "Do you need to wait for the splash screen to clear before trying to access your profile?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen currently only shows the TikTok launch logo on a black background, meaning the bottom navigation bar is not yet available to interact with.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is interacting with the actual loaded interface rather than hallucinating actions on a loading screen."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Locate the control",
+    "note": "repeat 2.1 then 2.2 a level at a time until the control is on screen - 2.3 instead when the path is unknown and the surface can search. 2.4 when the control governs a list of apps, sites, devices, or people. 2.5 when the documented path is missing. on a checklist, 2.6 picks the next target and 2.7 climbs back up between settings.",
+    "questions": [
+     {
+      "question": "Do you want to disable 'Find My iPhone' entirely or just stop sharing your location with friends and family?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen presents two distinct location features: 'Find My iPhone' which tracks the device for recovery, and 'Share My Location' which broadcasts your whereabouts to contacts.",
+      "whatTheAgentLoses": "The agent might disable the crucial device recovery feature when the user only intended to stop sharing their location socially."
+     },
+     {
+      "question": "Do you want to use the guided 'Privacy guide' or manually locate the specific settings?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers a 'Privacy guide' option to review key privacy and security controls, which provides a structured alternative to manually navigating the settings menu.",
+      "whatTheAgentLoses": "You lose the ability to choose a guided, step-by-step review of your privacy settings, which might surface important controls you wouldn't have thought to check."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the settings category",
+      "questions": [
+       {
+        "question": "Which menu option do you choose to access the privacy settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a hamburger menu with options like 'Settings' and 'Your activity', so you must identify the correct path to find the privacy controls.",
+        "whatTheAgentLoses": "The user loses the chance to learn the app's menu structure and know exactly where their sensitive account settings are located."
+       },
+       {
+        "question": "Which menu option do you select to access your privacy settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The bottom sheet displays both 'Creator tools' and 'Settings and privacy', requiring you to choose the correct path to modify your account.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the app's menu structure and discover where other account management tools are located."
+       },
+       {
+        "question": "Which option do you select to access the battery settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays numerous top-level categories like Network and Apps, so you need to know to scroll down to find the Battery option.",
+        "whatTheAgentLoses": "You lose the spatial memory of where the battery controls are located within your device's menu structure."
+       },
+       {
+        "question": "Which settings category should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple settings options like 'Basics', 'Safety check', and 'Privacy and security', requiring you to choose the correct path to the privacy controls.",
+        "whatTheAgentLoses": "The user loses the ability to direct the agent to the exact settings category they want to review or change."
+       },
+       {
+        "question": "Which settings category should you open to adjust your privacy preferences?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The settings menu lists many categories like 'General' and 'Accessibility', so you must identify the correct path to reach the specific privacy controls.",
+        "whatTheAgentLoses": "You lose the ability to choose exactly which privacy aspect, such as location services, is prioritized for review and adjustment."
+       },
+       {
+        "question": "Which tab should you select to access device security settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The visible tabs only include 'Home', 'Personal info', and 'Data & privacy', so you must swipe left on the menu to reveal the 'Security' tab.",
+        "whatTheAgentLoses": "The user loses the ability to manually explore the navigation menu to find the correct category for their desired setting."
+       },
+       {
+        "question": "Which option should you select to manage installed applications?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Settings menu displays numerous categories, requiring you to locate the specific one for app settings to adjust permissions.",
+        "whatTheAgentLoses": "The user loses the opportunity to learn the navigation path to their app settings for future reference."
+       },
+       {
+        "question": "Which settings category should you select to find the private account option?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple categories like Privacy, Security, and Notifications, so you must choose the correct path to access account visibility controls.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the app's menu structure and discover other related privacy settings you might want to adjust."
+       },
+       {
+        "question": "Which settings category do you select to manage your search history?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the top-level settings menu, requiring you to identify that 'History & privacy' is the correct path to reach the data clearing options.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is navigating to the correct privacy sub-menu rather than altering unrelated account preferences."
+       },
+       {
+        "question": "Which settings category do you want to open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple account management sections like 'Personal info', 'Security and sign-in', and 'Data and privacy', requiring a choice of which area to explore.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific area of their account settings is accessed and modified."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Find the control in the section",
+      "questions": [
+       {
+        "question": "Which option should you select from the Media & Purchases pop-up?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a menu with options to sign out or view the account, requiring a choice to proceed to the correct settings area.",
+        "whatTheAgentLoses": "You lose the control to decide whether to securely view your account details or sign out of your media purchases."
+       },
+       {
+        "question": "Where do you navigate to change the Family Sharing settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple apps, and you must select the Settings app to access the device's account and family controls.",
+        "whatTheAgentLoses": "The user loses the ability to personally secure the parent's physical device and passcode required to authorize these changes."
+       },
+       {
+        "question": "Where do you find the setting for screen rotation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple display options, requiring you to scroll down to locate the auto-rotate setting.",
+        "whatTheAgentLoses": "The user loses the opportunity to learn the exact location of the screen rotation setting within the display menu."
+       },
+       {
+        "question": "Which menu option should you select to adjust the screen's responsiveness?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple display and touch controls, so you must identify the specific option for touch sensitivity to adjust how the screen responds to input.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to ensure the agent selects the correct touch setting instead of altering unrelated display features like color contrast or night light."
+       },
+       {
+        "question": "Which setting should you select to change the default search engine?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Basics' section displays multiple options including 'Privacy and security' and 'Search engine', requiring you to identify the correct menu to adjust your search preferences.",
+        "whatTheAgentLoses": "You lose the opportunity to review other basic browser configurations, such as password management and safety checks, while navigating to the search controls."
+       },
+       {
+        "question": "Which option do you select to configure safe browsing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple privacy controls like \"Clear browsing data\" and \"Ads privacy\", so you must identify the specific \"Safe Browsing\" option to adjust its settings.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally review the available privacy options and ensure the correct security control is being accessed."
+       },
+       {
+        "question": "Which option should you select from the left menu?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct sub-menu from the left navigation is necessary to locate the specific setting you want to modify instead of interacting with the default DNS options.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent navigates to the exact internal diagnostic tool they intended to configure."
+       },
+       {
+        "question": "Which tab should you select to view all Google services?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to a 'Recommended' list, which might hide the specific privacy control you are trying to locate.",
+        "whatTheAgentLoses": "You lose the opportunity to review Google's curated privacy recommendations for your account before navigating to the full list of controls."
+       },
+       {
+        "question": "Which setting do you choose to control shared data for personalization?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a long list of Google services, requiring you to locate the specific 'Personalise using shared data' option under the privacy section.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to review and understand the other privacy and security options available for your account."
+       },
+       {
+        "question": "Which setting do you tap to control usage and diagnostics data?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the 'All services' tab with options like 'Play Games' and 'Search, Assistant and Voice', but 'Usage and diagnostics' was not visible.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent actually located and interacted with the correct setting instead of hallucinating an action on an invisible option."
+       },
+       {
+        "question": "Which option should you select to manage location settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple privacy categories, so you must identify that 'Location Services' at the top is the correct path to modify location permissions.",
+        "whatTheAgentLoses": "You lose the opportunity to review other top-level privacy categories on this screen that you might also want to secure."
+       },
+       {
+        "question": "Which tab should you select to find your location sharing settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displays multiple tabs like 'People' and 'Me', so you must identify which one actually contains your personal location controls.",
+        "whatTheAgentLoses": "You lose the opportunity to learn exactly where your personal location sharing controls are located within the app's interface."
+       },
+       {
+        "question": "Which specific submenu should you select to find the connection security settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple privacy and security categories like 'Site settings' and 'Cookies', requiring you to choose the exact path for your desired control.",
+        "whatTheAgentLoses": "You lose the opportunity to review the other available privacy and security categories that might need your attention."
+       },
+       {
+        "question": "Where do you find the setting to manage secure connections?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple toggles under the Advanced section, so you must identify the specific switch for always using secure connections.",
+        "whatTheAgentLoses": "You lose the spatial awareness of where this specific security setting is located within the advanced options menu."
+       },
+       {
+        "question": "Where should you go to find the log of my past activities?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The settings page is divided into multiple categories like 'Permissions' and 'Your information', requiring you to identify the correct section for activity history.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover other data management tools like downloading or transferring their information."
+       },
+       {
+        "question": "Which activity category should you expand to manage your past posts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The activity log groups interactions under broad categories like 'Your activity across Facebook', requiring you to drill down into specific sections to find the post management controls.",
+        "whatTheAgentLoses": "You lose the awareness of how your various interactions, such as comments and tags, are categorized and stored by the platform."
+       },
+       {
+        "question": "Which menu option should you select to manage app notifications?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Settings menu displays many categories like 'Lock screen' and 'Display & brightness', so you must choose 'Notifications & status bar' to find the right controls.",
+        "whatTheAgentLoses": "You lose the ability to personally navigate the system menus and learn where your device's notification controls are located."
+       },
+       {
+        "question": "Which privacy topic should you select to restrict your profile visibility?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple distinct privacy topics, requiring you to choose the correct path to access profile visibility controls.",
+        "whatTheAgentLoses": "You lose the opportunity to personally decide which specific aspects of your online presence need the most immediate restriction."
+       },
+       {
+        "question": "Which category under audience and visibility should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple privacy categories like profile locking and posts, so you must choose the specific one that controls your public content.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to review or adjust other related visibility settings like who can see your posts or stories."
+       },
+       {
+        "question": "Where do you find the list of devices currently signed into your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial view only shows security tips and sign-in options, so scrolling is required to reveal the 'Your devices' section.",
+        "whatTheAgentLoses": "You lose the chance to personally review the list of active devices, such as 'Raj's iphone' or 'iPad', to spot any unauthorized access."
+       },
+       {
+        "question": "Which option lets you manage the app's stored data?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App info screen lists several categories like Permissions, Mobile data, and Storage, so you must identify the correct menu to manage saved files and cache.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review how much internal storage the app is currently consuming before deciding to modify its data."
+       },
+       {
+        "question": "Where do you find the settings for specific site permissions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen only shows the top of the Chrome Settings menu, meaning you must scroll down to locate the 'Site settings' option.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent knows to scroll down to find the correct privacy controls instead of getting stuck at the top of the menu."
+       },
+       {
+        "question": "Which site setting should you select to manage cookies?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a long list of site settings like Motion sensors and Notifications, with 'Third-party cookies' appearing at the very bottom under the Content header.",
+        "whatTheAgentLoses": "Delegating this step means losing direct control over which specific site permissions and tracking cookies are restricted."
+       },
+       {
+        "question": "Which option should you select to access the ad settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple Google services like 'Ads', 'Autofill', and 'Backup', requiring you to choose the correct path to the specific control.",
+        "whatTheAgentLoses": "The user loses the ability to decide exactly which privacy or account setting to focus on modifying."
+       },
+       {
+        "question": "Which sub-menu do you select to find the location controls?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main settings menu lists multiple categories like 'Battery' and 'Sounds & Haptics', requiring you to specifically identify 'Privacy' to manage app permissions.",
+        "whatTheAgentLoses": "The user loses the spatial awareness of where their device's sensitive location and privacy permissions are actually located."
+       },
+       {
+        "question": "Which menu option do you select to access the account visibility settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Settings and privacy' menu displays multiple options like 'Manage account' and 'Privacy', requiring the correct choice to find the visibility controls.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent navigated to the correct privacy sub-menu rather than altering unrelated account settings."
+       },
+       {
+        "question": "Where do you find the option to switch accounts on this page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Because the settings menu contains many sections like 'Account' and 'Content & Display', you need to know that the login controls are located at the very bottom.",
+        "whatTheAgentLoses": "You lose the spatial familiarity with the app's menu layout and where specific login controls are grouped."
+       },
+       {
+        "question": "Which option do you select to add another account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Switch account' bottom sheet displays the active profile alongside the '+ Add account' button needed to link a new one.",
+        "whatTheAgentLoses": "The user loses the ability to securely input and verify the specific secondary account they want to link to the app."
+       },
+       {
+        "question": "Where do you find the global pop-up settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Site Settings page contains numerous permissions, requiring you to scroll down to the Content section at the very bottom to locate the pop-ups and redirects control.",
+        "whatTheAgentLoses": "You lose the chance to review or adjust other related content permissions, such as JavaScript or image loading, while navigating this section."
+       },
+       {
+        "question": "Which option within Screen Time should you choose to manage specific restrictions?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple digital wellbeing categories like App Limits and Downtime, requiring you to identify which one contains the actual privacy controls.",
+        "whatTheAgentLoses": "You lose the opportunity to review your daily average screen time or adjust other digital wellbeing limits while navigating to the privacy controls."
+       },
+       {
+        "question": "Which specific content restriction do you want to view or modify?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple categories for content restrictions, such as store content and web content, requiring a choice of which specific setting to adjust.",
+        "whatTheAgentLoses": "The user loses the ability to decide exactly which type of content restriction is targeted for modification."
+       },
+       {
+        "question": "Which submenu should you select to access the region settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple system options like 'Date & Time' and 'Keyboard', requiring you to specifically identify 'Language & Region' to find the right controls.",
+        "whatTheAgentLoses": "You lose the knowledge of exactly where your device's localization preferences are located within the general settings menu."
+       },
+       {
+        "question": "Which section should you open to manage your App Store settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Apple Account screen displays multiple categories like 'Subscriptions' and 'iCloud', requiring you to know that 'Media & Purchases' is the correct path for App Store preferences.",
+        "whatTheAgentLoses": "Delegating this step means you miss the chance to review your other active Apple Account configurations, such as current subscriptions or connected devices."
+       },
+       {
+        "question": "Which menu option do you select to access your account-level location settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main settings menu displays many categories, so you must know that account-wide location controls are nested specifically under the Apple ID profile at the top of the screen.",
+        "whatTheAgentLoses": "You lose the immediate visibility of which specific Apple ID profile is currently active and having its privacy settings modified."
+       },
+       {
+        "question": "Which menu item leads to the 'Ask to Buy' controls?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main Settings menu displays the parent's Apple ID banner, which houses family sharing and purchase settings.",
+        "whatTheAgentLoses": "The user loses the intuitive understanding of how Apple organizes family and purchase controls under the main Apple ID profile."
+       },
+       {
+        "question": "Should I tap the 'You have security tips' section to review the recommendations?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen highlights a 'You have security tips' section that leads directly to the recommended security controls.",
+        "whatTheAgentLoses": "The user loses the chance to review their recent security activity listed on this page before diving into the tips."
+       },
+       {
+        "question": "Which option under the Controls tab should you select to adjust the supervision settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple supervision categories like 'App limits', 'Content restrictions', and 'Account settings', requiring you to choose the correct path for the intended modification.",
+        "whatTheAgentLoses": "Delegating this step means you miss out on reviewing the full range of parental controls and restrictions available for the supervised account."
+       },
+       {
+        "question": "Which option allows you to stop supervision?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple settings categories like 'Account supervision' and 'Privacy settings', requiring the correct selection to manage supervision controls.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify and select the correct settings category for managing account supervision."
+       },
+       {
+        "question": "Which menu option should you select to manage the family group?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu presents multiple family-related options like 'Parent access' and 'Manage family', requiring you to select the right path to adjust the group's settings.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to review other available options like parent access controls or privacy notices."
+       },
+       {
+        "question": "Which setting should you select to manage the profile information used for ads?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple ad preference options like activity information and audience-based advertising, requiring you to identify the correct path for profile data.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review the various categories of data advertisers use to target you."
+       },
+       {
+        "question": "Should you review the additional non-profile categories used to reach you?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Other categories' option that contains additional, non-profile data points advertisers use for targeting.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate and restrict the specific, non-profile categories used to target ads to your account."
+       },
+       {
+        "question": "Do you click the direct 'Activity controls' link in the sidebar or use the three-dot menu?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a direct 'Activity controls' link in the left sidebar, but the three-dot menu offers an alternative, less obvious path.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent takes the most direct and efficient navigation path available on the screen."
+       },
+       {
+        "question": "Which option in this menu leads to the tracking settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown lists multiple activity-related options like \"Delete activity by\" and \"Other Google activity\", so you must select the correct one to manage your tracking preferences.",
+        "whatTheAgentLoses": "You lose the opportunity to review or select other privacy management tools like deleting past activity."
+       },
+       {
+        "question": "Which privacy category do you want to configure for individual apps?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays various privacy permissions like Location Services, Contacts, and Camera, requiring you to choose which specific data access to manage.",
+        "whatTheAgentLoses": "Delegating this step means the agent decides which privacy category to explore, potentially missing the specific permissions you actually wanted to restrict."
+       },
+       {
+        "question": "Which section should you open to find the advertising ID and content suggestion toggles?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen divides privacy settings into multiple categories like Security and Windows permissions, requiring you to identify which sub-menu contains the specific ad and content controls.",
+        "whatTheAgentLoses": "You lose the awareness of where your operating system locates and categorizes specific data collection and advertising preferences."
+       },
+       {
+        "question": "Which category should you select to manage personalized ads based on your device usage?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Device usage' option explicitly states it controls personalized tips, ads, and recommendations within Microsoft experiences.",
+        "whatTheAgentLoses": "You lose the ability to personally review and decide exactly which types of device usage data are shared for ad personalization."
+       },
+       {
+        "question": "Which setting in the advanced list should you disable to stop provider notifications?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The advanced settings list contains many unrelated file display options, requiring you to scroll down to find the specific 'Show sync provider notifications' checkbox.",
+        "whatTheAgentLoses": "You lose the chance to review and adjust other file visibility and privacy settings available in this detailed list."
+       },
+       {
+        "question": "Which activity setting do you want to modify, and are you in the correct account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple tracking categories like Web & App Activity and Location History, requiring you to choose the specific data stream to adjust.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the active account and decide exactly which data tracking categories to restrict."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Search the settings",
+      "questions": [
+       {
+        "question": "Which search result should you select to access the Bluetooth scanning settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search returned multiple paths containing the word Bluetooth, requiring you to identify the specific result that leads to the location services scanning toggle.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent selected the exact system path for Bluetooth scanning rather than a general Bluetooth menu."
+       },
+       {
+        "question": "Which search result should you select to manage notification settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results highlight 'Site settings' in yellow, indicating that notification permissions are nested within that specific section.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to learn how your browser categorizes specific permissions under broader site controls."
+       },
+       {
+        "question": "How do you want to locate the specific setting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Search settings' bar alongside numerous categories like 'Accounts' and 'Google', offering multiple ways to find the control.",
+        "whatTheAgentLoses": "You lose the choice of whether to quickly search for the exact term or manually browse the categories to discover related privacy options."
+       },
+       {
+        "question": "Is this the exact setting you were searching for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'Private DNS' as a search result, so you need to confirm this is the correct control before opening it.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agent is opening the correct system setting from the search results."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Pick the target item",
+      "questions": [
+       {
+        "question": "Which app's location access should you change from 'Always'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of apps alongside their current location permissions, requiring you to spot which ones currently have constant access.",
+        "whatTheAgentLoses": "You lose the ability to personally audit your apps and decide which specific ones you no longer trust with constant location tracking."
+       },
+       {
+        "question": "Which apps should you downgrade from 'Always' before scrolling down to System Services?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen clearly showed apps like AAA and Alaska set to 'Always', which contradicts the goal of restricting location access.",
+        "whatTheAgentLoses": "The user loses the chance to immediately secure specific third-party apps that are over-collecting location data."
+       },
+       {
+        "question": "Which app's location access do you want to change?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists various apps like Google and Chrome along with their current location permission levels, requiring a choice of which to modify.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal judgment regarding which specific apps you trust with your location data."
+       },
+       {
+        "question": "Which of these signed-in devices do you recognize?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple connected devices, including an 'unknown type' from Haryana, so you must determine which ones are legitimate before taking action.",
+        "whatTheAgentLoses": "An agent lacks the personal context to know which specific devices and locations actually belong to you."
+       },
+       {
+        "question": "Which signed-out device's options menu should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Where you've signed out' section with multiple devices like a Google Pixel 4 XL and a Mac, each with a closed three-dot button that must be tapped to reveal further actions.",
+        "whatTheAgentLoses": "The user loses the ability to specify which past device's security settings or account history should be reviewed."
+       },
+       {
+        "question": "Which app do you want to clear the cache for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a long alphabetical list of installed apps, and you must select the correct one to access its specific storage settings.",
+        "whatTheAgentLoses": "You lose the ability to specify exactly which application's temporary data gets deleted."
+       },
+       {
+        "question": "Which website in the allowed list is causing the unwanted notifications?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of URLs permitted to send notifications, allowing you to pinpoint the exact source of the fake pop-ups.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the list of allowed sites and recognize which unfamiliar URLs are acting maliciously."
+       },
+       {
+        "question": "Whose location sharing settings should you modify?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Find My screen currently shows an offline alert, so you must know exactly which person to select once the connection is restored.",
+        "whatTheAgentLoses": "You lose the ability to ensure the correct individual's privacy settings are targeted when the agent resolves the connectivity issue."
+       },
+       {
+        "question": "How do you easily locate a specific app in the notifications list?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the app list is currently sorted by 'Most recent', which makes finding a specific app much harder than if it were sorted alphabetically.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred sorting method for navigating and managing long lists of applications."
+       },
+       {
+        "question": "Which device should you remove from your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of signed-in devices, requiring you to identify and select unrecognized sessions like the unknown device from Haryana, India.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review your login history and distinguish your actual devices from potentially unauthorized access."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Recover the missing control",
+      "questions": [
+       {
+        "question": "Which menu option do you choose to find the history settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account menu displays several options including 'Time watched' and 'Settings', requiring a choice on how to best navigate to the activity controls.",
+        "whatTheAgentLoses": "The user loses control over which specific dashboard the agent navigates through to manage their viewing history."
+       },
+       {
+        "question": "Is the direct profile locking feature available for your account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Audience and visibility' section shows whether the 'Profile locking' option is currently supported and visible for this specific account.",
+        "whatTheAgentLoses": "Delegating this step means you lose the awareness of whether your account natively supports the direct profile locking feature or if you must rely on individual privacy toggles."
+       },
+       {
+        "question": "Which tool should you select to manage your privacy settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple options under 'Tools and resources', requiring you to choose the correct path for adjusting your account privacy.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to use a guided checkup tool or manually navigate to specific privacy controls."
+       },
+       {
+        "question": "Is the 'History & privacy' option visible in this settings menu?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several settings categories like 'General' and 'Data saving', but the necessary 'History & privacy' option is missing.",
+        "whatTheAgentLoses": "You lose the ability to verify if the agent is searching in the correct menu hierarchy to find your privacy controls."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Pick the next setting",
+      "questions": [
+       {
+        "question": "Which audio setting should you select to modify?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Sound and vibration' menu displays numerous options, so you must identify the specific control you intend to change.",
+        "whatTheAgentLoses": "The user's personal preference for which specific device setting they want to adjust."
+       },
+       {
+        "question": "Which privacy setting do you want to review next?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists numerous privacy categories like Photos, Camera, and Microphone, so you must decide which specific area of data sharing to inspect or restrict.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might prioritize adjusting device analytics rather than more sensitive personal data permissions like location or photos."
+       },
+       {
+        "question": "Which of these contact settings should you adjust to maximize your privacy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple visibility options with their current states, requiring you to identify which ones are not yet set to the most restrictive level.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally evaluate and choose the exact level of restriction you are comfortable with for each individual contact method."
+       },
+       {
+        "question": "Which profile and tagging setting should you change first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple viewing and sharing options, requiring you to choose whether to adjust who can post, who can see posts, or who can share them.",
+        "whatTheAgentLoses": "You lose the ability to prioritize which specific aspect of your profile's interaction permissions gets restricted."
+       },
+       {
+        "question": "Which privacy setting do you want to adjust first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Privacy menu displays multiple options like 'Private account' and 'Suggest your account to others', requiring you to choose the exact control to modify.",
+        "whatTheAgentLoses": "Delegating this step means the agent decides which aspect of your privacy to change, potentially altering discoverability settings you wanted to keep as they were."
+       },
+       {
+        "question": "Do you need to make any changes to your block list before clicking next?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays that you have blocked 27 people and offers options to add to or review this list before moving on.",
+        "whatTheAgentLoses": "You lose the opportunity to actively manage who is restricted from seeing your posts or contacting you during this privacy review."
+       },
+       {
+        "question": "Do you want to adjust any of the additional safety settings like comments or direct messages?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Safety' section with granular options like 'Duet', 'Stitch', and 'Mentions and tags' that can further restrict account interactions.",
+        "whatTheAgentLoses": "You lose the ability to personally fine-tune exactly how other users are allowed to interact with your specific content and profile."
+       },
+       {
+        "question": "How do you proceed to the second method?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows that 'Share My Location' is successfully toggled off, meaning the first setting is verified and you must navigate away to continue the task.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific app or privacy setting should be modified next."
+       },
+       {
+        "question": "Should you suggest powering off the phone as another way to prevent location sharing?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "With the home screen and its battery and calendar widgets displayed, the software steps are finished, making it a natural moment to offer verbal hardware alternatives before locking the device.",
+        "whatTheAgentLoses": "The user loses out on comprehensive security advice that extends beyond just toggling software settings."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Step back to the parent menu",
+      "questions": [
+       {
+        "question": "How do you return to the previous menu to continue the process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the back arrow at the top left returns the screen to the Google services menu so the next step can begin.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent navigates back to the correct menu rather than accidentally closing the settings."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Read the current state",
+    "note": "3.1 always - skip 4 entirely when the state already matches the goal. 3.2 when the label alone does not say what the setting governs. 3.3 when the current behavior can be probed from outside before touching anything.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Check the control's state",
+      "questions": [
+       {
+        "question": "Are you connected to a WiFi network before proceeding?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The green WiFi icon in the notification shade confirms the device has the internet access required to update online privacy settings.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying the device is online before attempting to modify cloud-synced account settings."
+       },
+       {
+        "question": "Does the 'Share My Location' row have a toggle switch or a navigation arrow?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a chevron next to 'Share My Location', meaning it is a menu to open rather than a switch to toggle directly.",
+        "whatTheAgentLoses": "The user loses the assurance that their privacy settings were actually modified if the agent claims to flip a switch that does not exist on this screen."
+       },
+       {
+        "question": "Do all of these apps really need full access to your photo library?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple apps with 'Full Access' to over 8,000 personal photos and videos, which poses a privacy risk if that access is unnecessary.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own personal judgment about which specific apps you actually trust with your private photos."
+       },
+       {
+        "question": "What is the current state of your Bluetooth and Bluetooth scanning?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Bluetooth scanning toggle is enabled while the quick settings panel confirms the main Bluetooth feature is turned off.",
+        "whatTheAgentLoses": "The user loses the awareness that apps can still scan for nearby devices in the background even when the main Bluetooth setting is disabled."
+       },
+       {
+        "question": "What is the current status of your location services, and where do you tap to access the toggle?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Noting that the status currently says 'Off' establishes your baseline privacy state before you navigate deeper to change the permission.",
+        "whatTheAgentLoses": "You lose the immediate, firsthand confirmation of whether your device was already blocking location access prior to this adjustment."
+       },
+       {
+        "question": "What is the current privacy status of your account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile page explicitly shows a lock icon next to 'Private account', establishing the baseline state before any changes are made.",
+        "whatTheAgentLoses": "The user loses the initial context of their account's privacy status, making it harder to verify if a subsequent change was successful."
+       },
+       {
+        "question": "Do you want to add a phone number to your recovery methods?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that only a recovery email is currently set up, leaving the phone number option empty.",
+        "whatTheAgentLoses": "You lose the opportunity to decide exactly which personal contact details are used to secure your account."
+       },
+       {
+        "question": "Is the specific privacy control visible but grayed out and unclickable?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Privacy controls can be locked by the platform due to age restrictions, regional privacy laws, or enterprise device management, preventing any modification even if the user finds the correct menu.",
+        "whatTheAgentLoses": "The user loses the awareness that a higher-level policy is actively blocking their desired privacy change, which an agent might misinterpret as the setting simply being unavailable or missing."
+       },
+       {
+        "question": "How do you want to configure your Private Space settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays options to lock, hide, or delete the private space, requiring you to decide if the current setup is sufficient for your privacy needs.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify and choose exactly how your hidden apps are secured."
+       },
+       {
+        "question": "Is the setting you are instructed to select already active?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator instructs you to select 'Enhanced protection', but the on-screen radio button shows it is already selected.",
+        "whatTheAgentLoses": "The user loses the certainty that an actual change was made to their account settings, as the agent is instructed to apply a state that already exists."
+       },
+       {
+        "question": "Is this the correct toggle to disable your location sharing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an active green toggle for 'Share My Location', and you need to be certain this is the right control to stop broadcasting your whereabouts.",
+        "whatTheAgentLoses": "You lose the reassurance of personally confirming that the correct master toggle for location sharing was identified and disabled."
+       },
+       {
+        "question": "Are you able to change the wired accessories permission to a more secure option?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the setting is locked to 'Always Allow' and explicitly states it is managed by your organization and cannot be changed.",
+        "whatTheAgentLoses": "The user loses the awareness that an organizational restriction is actively blocking the agent from securing the device."
+       },
+       {
+        "question": "Is the toggle to allow search engines to link to your profile already turned off?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a grey toggle switch for the search engine setting, indicating it is already disabled so no modification is needed.",
+        "whatTheAgentLoses": "The user loses the guarantee that the agent checked the current state of the toggle before acting, which could lead to accidentally turning the setting on."
+       },
+       {
+        "question": "Who can currently see your liked videos?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the 'Who can watch your liked videos' setting with 'Only me' currently selected by a red dot.",
+        "whatTheAgentLoses": "You lose the ability to personally decide whether your history of liked videos should be kept private or shared publicly."
+       },
+       {
+        "question": "Do you need to enable 2-step verification, or is it already turned on?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows '2-step verification' is already 'On', meaning no changes are necessary to secure the account.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their extra layer of account security is actively enabled."
+       },
+       {
+        "question": "How do you turn off location services on this screen, and what are the system-wide effects?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Understanding the master Location Services toggle matters because disabling it overrides individual app permissions and stops all apps from accessing your location.",
+        "whatTheAgentLoses": "You lose the direct confirmation that your master location tracking is fully disabled and the awareness of how this impacts your other apps."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Read the policy or description",
+      "questions": [
+       {
+        "question": "Do you want to review or export your Apple Intelligence Report?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states this report contains personal data like messages and text from the last seven days.",
+        "whatTheAgentLoses": "You lose the chance to personally review what sensitive data your device has processed recently."
+       },
+       {
+        "question": "Do you want to change your account to public despite the default privacy setting for users under 16?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The support page explicitly states that accounts for users under 16 are set to private by default so that only approved users can watch your videos.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the safety benefits of a private account against your desire for a larger public audience."
+       },
+       {
+        "question": "What do the different colored arrow icons next to the system services mean?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The legend at the bottom of the screen explains that hollow, purple, and gray arrows indicate different conditions and recency of location access.",
+        "whatTheAgentLoses": "You lose the nuanced understanding of exactly when and how often different system services have been accessing your location data."
+       },
+       {
+        "question": "Which specific Google services are included in your activity tracking?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a carousel of icons for various Google services under the 'See and delete activity' section.",
+        "whatTheAgentLoses": "You lose the awareness of exactly which of your Google services are having their activity tracked or deleted."
+       },
+       {
+        "question": "Does a prompt indicate that your current account type prevents you from making the account private?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "On platforms like Instagram or TikTok, Business or Creator accounts cannot be set to private, requiring you to decide whether to downgrade your account type first.",
+        "whatTheAgentLoses": "The user loses the context that their broader account strategy is fundamentally incompatible with their immediate privacy goal."
+       },
+       {
+        "question": "Are you aware that making your account private will not prevent non-followers from messaging or tagging you?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog explicitly clarifies that switching to a private account only hides your photos and videos, but does not automatically restrict who can tag, @mention, or message you.",
+        "whatTheAgentLoses": "You might falsely assume your account is completely locked down, missing the opportunity to separately restrict unwanted messages and tags."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Probe the current behavior",
+      "questions": [
+       {
+        "question": "Are these the specific fake pop-up notifications you want to block?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a fake McAfee expiration warning in Chrome, which is the exact type of intrusive notification that needs to be disabled.",
+        "whatTheAgentLoses": "The user loses the ability to visually confirm that the agent has identified the correct malicious notifications before altering the browser settings."
+       },
+       {
+        "question": "Should you download one of these apps to test permissions, or proceed directly to your device settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several apps with download buttons, offering a chance to install a fresh app to verify the privacy changes.",
+        "whatTheAgentLoses": "The user loses the choice of whether to test the privacy settings on a newly downloaded app versus one already on the device."
+       },
+       {
+        "question": "Which app should you download to trigger the permission prompt?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must select an app with a 'GET' button from the 'Top apps this week' list, such as Disney+, to install a new application for adjusting and verifying permissions.",
+        "whatTheAgentLoses": "You lose control over which specific third-party application gets installed on your device to test the privacy settings."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Change the setting",
+    "note": "one of 4.1, 4.2, 4.3, 4.4, 4.5 by what the control is. 4.6 when the same change applies across many items. 4.7 at the end when the change was meant to be temporary.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Flip the toggle",
+      "questions": [
+       {
+        "question": "Should you enable Adaptive connectivity to manage your network connections?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that this setting automatically manages network connections to extend battery life and improve device performance.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize strict manual control over your network connections or automated battery savings."
+       },
+       {
+        "question": "Do you want the exact battery percentage to be visible in the top status bar?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a 'Battery percentage' toggle that controls whether the exact numeric charge level is always displayed.",
+        "whatTheAgentLoses": "Delegating this means the agent decides your interface preference for seeing the exact battery percentage versus having a cleaner status bar."
+       },
+       {
+        "question": "Should you toggle on Smooth display to increase the screen refresh rate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Smooth display' option that automatically raises the refresh rate, which impacts visual performance and battery consumption.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to balance your personal preference for smoother screen animations against potential battery drain."
+       },
+       {
+        "question": "Should you enable adaptive vibration to automatically adjust based on your environment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Adaptive vibration' toggle that automatically adjusts the phone's vibrations based on the surrounding environment.",
+        "whatTheAgentLoses": "The user loses the ability to decide if they prefer consistent vibration strength or automated environmental adjustments."
+       },
+       {
+        "question": "Do you want to enable face detection for auto-rotate, granting it access to your front-facing camera?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen explicitly states that this feature uses the front-facing camera, requiring a choice about hardware privacy.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally decide whether a minor convenience feature is worth granting camera access."
+       },
+       {
+        "question": "Should you enable increased touch sensitivity, perhaps because you are using a screen protector?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays options for 'Adaptive touch' and 'Increased sensitivity', which adjust how the screen responds to physical touches.",
+        "whatTheAgentLoses": "The user loses the ability to customize screen responsiveness based on their specific physical device setup, such as the presence of a screen protector."
+       },
+       {
+        "question": "Should you enable themed icons for the home screen?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a live preview of the home screen, allowing you to toggle the setting and visually compare the standard and themed icons before applying.",
+        "whatTheAgentLoses": "Delegating this means losing the opportunity to visually compare the previews and choose the aesthetic that best fits your personal taste."
+       },
+       {
+        "question": "Should you enable the option to filter spam calls?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines whether the system will automatically prevent suspected spam calls from disturbing you.",
+        "whatTheAgentLoses": "The user loses the ability to weigh their desire to avoid spam against the risk of missing misidentified legitimate calls."
+       },
+       {
+        "question": "Should you enable the 'Hold for Me' feature so Call Assist waits on hold for you?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines whether your phone will wait on hold for you and notify you when someone is ready to talk, as described on the screen.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide if you are comfortable with an automated assistant handling your phone calls while on hold."
+       },
+       {
+        "question": "Should you enable the 'Flip to Shhh' gesture to activate Do Not Disturb when the phone is face down?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines whether placing your device face down on a flat surface will automatically silence your notifications.",
+        "whatTheAgentLoses": "Delegating this means you lose control over whether your physical phone habits will automatically trigger Do Not Disturb mode."
+       },
+       {
+        "question": "Do you want to enable Device protection, and if so, should the device be restarted immediately or later?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Enabling this feature safeguards the device against online attacks and harmful apps but requires accepting security warnings and scheduling a device restart.",
+        "whatTheAgentLoses": "You lose the ability to weigh the strict security changes against your current workflow and decide the most convenient time to restart your device."
+       },
+       {
+        "question": "Do you want to keep sharing your usage and diagnostic data with Google?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that sending this data helps improve system stability, but it requires continuously sharing your device and app usage with Google.",
+        "whatTheAgentLoses": "Delegating this decision means you lose the opportunity to weigh the trade-off between helping developers improve Android and maximizing your own device's privacy and background performance."
+       },
+       {
+        "question": "Should you toggle on 'Share My Location' to set up your location-freezing strategy?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Share My Location' toggle is currently off, and enabling it is required to track the stationary device you left at home.",
+        "whatTheAgentLoses": "Delegating this means the agent makes the software change without understanding your physical real-world strategy of leaving a specific device behind to manipulate your location."
+       },
+       {
+        "question": "Should you disable 'Always use secure connections' to bypass the HTTPS warning?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states this setting upgrades navigations to HTTPS and warns you about unsupported sites, meaning turning it off reduces your browsing security.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the security risk of allowing unencrypted HTTP traffic against your need to access a specific older website."
+       },
+       {
+        "question": "Should you allow this app to access your precise location?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains the app uses location for travel information, but leaving precise location enabled can compromise your privacy by making your data easily identifiable.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate whether the app's functionality truly requires your exact coordinates or if an approximate location is sufficient for your privacy preferences."
+       },
+       {
+        "question": "Should you disable the Wi-Fi Calling toggle?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator advised that the Wi-Fi Calling feature could be safely turned off, but the toggle was visibly left enabled on the screen.",
+        "whatTheAgentLoses": "The user loses the ability to exercise personal preference by keeping a useful feature enabled despite external advice suggesting it can be disabled."
+       },
+       {
+        "question": "Do you want your phone to build a profile of the places you visit often?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen states this feature allows your devices to continuously learn your significant places and frequent routes to personalize your apps.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the privacy implications and battery drain against the convenience of location-based app features."
+       },
+       {
+        "question": "Do you want to turn off personalized ads, knowing it won't reduce the total number of ads you receive?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that disabling this setting only limits ad relevance, not the actual quantity of ads shown.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to weigh your personal privacy preferences against receiving less relevant advertisements."
+       },
+       {
+        "question": "Should you disable the App Privacy Report?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states the report records data, sensor access, and network activity, which requires a judgment call on whether this tracking is a privacy risk.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep this local privacy monitoring tool active based on your personal understanding that the data never leaves the device."
+       },
+       {
+        "question": "Should you turn off background Bluetooth scanning to save battery?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that this feature allows apps to scan for nearby devices even when Bluetooth is off to improve location services, which creates a trade-off with battery life.",
+        "whatTheAgentLoses": "You lose the ability to personally decide if the improvement in location-based features is worth the continuous background battery drain."
+       },
+       {
+        "question": "Do you want search engines outside Facebook to link to your profile?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines whether people can easily find your Facebook profile by searching your name on external search engines like Google.",
+        "whatTheAgentLoses": "You lose the ability to control your public discoverability on the broader internet outside of the platform."
+       },
+       {
+        "question": "Should you allow previews of your public group posts outside of Facebook?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This controls whether your username, profile image, and post content can be seen when your public group posts are shared outside the platform.",
+        "whatTheAgentLoses": "You lose control over whether your identity and content are exposed when your posts are shared outside of the platform."
+       },
+       {
+        "question": "Should you toggle your account to private?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Private Account toggle is currently off, requiring a decision on whether to restrict your profile's visibility.",
+        "whatTheAgentLoses": "Delegating this step means the agent decides your account's public visibility without your input on who should be allowed to see your content."
+       },
+       {
+        "question": "Should you toggle off the private account setting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the private account toggle is currently green, meaning turning it off will allow unapproved users to follow you and watch your videos.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally weigh the privacy implications of making your account public before the change occurs."
+       },
+       {
+        "question": "Do you want to turn off the 'Require Purchase Approval' restriction?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a toggle that controls whether this user needs a parent or guardian's approval for downloads and purchases.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to grant this account unrestricted purchasing power."
+       },
+       {
+        "question": "Should you continue with turning on Enhanced Safe Browsing or dismiss it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The expanded Safe Browsing section offers a choice between continuing to enable enhanced protection or dismissing the prompt.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the privacy trade-offs of enabling enhanced security features for your browsing activity."
+       },
+       {
+        "question": "Do you want your account to be suggested to your contacts and Facebook friends?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides toggles to suggest your account to contacts, Facebook friends, and mutual connections, which determines how easily people you know in real life can find your profile.",
+        "whatTheAgentLoses": "Delegating this decision means an agent might allow real-life acquaintances to find your account, compromising your desired level of anonymity."
+       },
+       {
+        "question": "Do you want to sync your contacts and Facebook friends with TikTok?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows toggles for syncing contacts and Facebook friends, which dictates whether your personal network data is shared with the app.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how much of your personal social network data is exposed to the platform."
+       },
+       {
+        "question": "Do you want to allow TikTok to use your off-app activity for targeted advertising?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a toggle for 'Use of Off-TikTok activity for ad targeting' which controls whether your data from other apps and websites is used to tailor ads.",
+        "whatTheAgentLoses": "Delegating this choice means an agent decides your personal comfort level with cross-app tracking and targeted advertising."
+       },
+       {
+        "question": "Do you want to turn off Web & App Activity tracking by clicking the blue toggle?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates that Web & App Activity is currently enabled and saving your search history to customize your experience.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to personally weigh the privacy trade-off of sharing your browsing history in exchange for customized Google services."
+       },
+       {
+        "question": "Should you enable location-based suggestions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the 'Location-Based Suggestions' toggle in the off position, requiring a choice about granting this specific location access.",
+        "whatTheAgentLoses": "Delegating this decision means losing the opportunity to personally weigh the convenience of location-aware features against your own privacy boundaries."
+       },
+       {
+        "question": "Do you want to share your location data with Apple for product improvement?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'iPhone Analytics' toggle under 'PRODUCT IMPROVEMENT' is currently off, which controls whether your location history is sent to Apple.",
+        "whatTheAgentLoses": "Delegating this means the agent might enable analytics sharing without your consent, compromising your location privacy."
+       },
+       {
+        "question": "Do you want to allow third-party advertisers to use your videos in ads?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents an 'Ad authorization' toggle that controls whether external advertisers can use your videos in their campaigns.",
+        "whatTheAgentLoses": "Delegating this decision means an agent might authorize the commercial use of your personal content without your explicit consent."
+       },
+       {
+        "question": "Should you leave the 'Downloads' setting turned on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Downloads' setting is currently 'On', presenting a choice about whether to restrict this feature.",
+        "whatTheAgentLoses": "An agent might automatically disable this setting to maximize privacy, overriding your personal preference to keep it enabled."
+       },
+       {
+        "question": "Do you want to completely turn off Web & App Activity tracking here?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a master 'Turn off' button alongside specific subsettings for Chrome history and voice activity, requiring a choice between a complete pause or granular adjustments.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to decide exactly how much of your browsing and app data Google continues to collect."
+       },
+       {
+        "question": "Do you want to turn on the private account setting, knowing it restricts who can follow you and watch your videos?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that enabling this setting means only approved users can interact with your content, which fundamentally changes your account's public reach.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate whether the privacy benefits outweigh the loss of public discoverability before the restriction is applied."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Pick the new option",
+      "questions": [
+       {
+        "question": "Which home screen pages do you want to keep visible?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays three page thumbnails with checkmarks, indicating that you can hide an entire page of apps by unchecking it.",
+        "whatTheAgentLoses": "The user loses the ability to personally curate their home screen layout and decide which specific groups of apps remain visible."
+       },
+       {
+        "question": "Do you prefer to use adaptive charging or strictly limit your battery charge to 80%?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a choice between learning your charging routine to pause at 80% or strictly limiting the charge to 80% to extend battery lifespan.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize a full 100% charge for daily use or cap it at 80% to maximize long-term battery health."
+       },
+       {
+        "question": "What do you want to happen when you press and hold the power button?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to assign either the digital assistant or the power menu to the press and hold action.",
+        "whatTheAgentLoses": "You lose the opportunity to customize the physical button shortcuts according to your personal daily workflow preferences."
+       },
+       {
+        "question": "Are you willing to send your browsing data to Google to enable Enhanced protection?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that Enhanced protection requires sending your browsing data to Google, creating a trade-off between maximum security and data privacy.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might opt into data sharing without knowing your personal comfort level regarding Google's data collection."
+       },
+       {
+        "question": "Which alternative search engine should you select for better privacy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple search engines like Google, Bing, and DuckDuckGo, which have significantly different policies regarding tracking your search history and showing targeted ads.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-off between search result familiarity and enhanced privacy protections like avoiding saved histories."
+       },
+       {
+        "question": "Which privacy level do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Edit Privacy' menu with options for Public, Friends, and Only me, requiring a choice to set the desired visibility.",
+        "whatTheAgentLoses": "You lose the ability to personally decide the exact audience that can view your account activity."
+       },
+       {
+        "question": "Should you change the location access from 'Always' to a more restrictive setting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows location access is currently set to 'Always', which allows the app to track your location even when running in the background.",
+        "whatTheAgentLoses": "You lose the ability to weigh the convenience of the app's background features against your personal privacy comfort level."
+       },
+       {
+        "question": "What level of contact access should you grant to this app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers options like 'None', 'Limited Access', and 'Full Access', which determine exactly how much of your personal data is exposed.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal judgment on whether this specific app truly needs access to your contacts."
+       },
+       {
+        "question": "Should you require a security delay only when away from familiar locations, or always?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options for when to enforce a security delay, which dictates your level of protection against someone who knows your passcode while inside your home or office.",
+        "whatTheAgentLoses": "You lose the ability to evaluate your personal risk tolerance for theft within familiar locations and enforce maximum security accordingly."
+       },
+       {
+        "question": "What level of location access should you grant this app, and do you want it to use your precise location?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple access levels like \"Allow only while using the app\" and a \"Use precise location\" toggle, which directly dictate how much tracking data the app collects.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose the ability to balance your personal privacy comfort against the app's need for your exact whereabouts."
+       },
+       {
+        "question": "Who should be able to see your future posts by default?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This setting dictates the default visibility for all your future posts, ranging from anyone on or off Facebook to only yourself.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select an audience that is either too restrictive or too public for your personal sharing preferences."
+       },
+       {
+        "question": "Do you need to change who can send you friend requests?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown shows the current setting is 'Friends of friends', which dictates whether you need to select a new audience or leave it as is.",
+        "whatTheAgentLoses": "You lose the peace of mind of seeing firsthand that your friend request privacy is already restricted to your comfort level."
+       },
+       {
+        "question": "Who should be able to find your profile using your phone number?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to choose who Facebook can suggest your profile to if they already have your phone number.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides your discoverability level, potentially allowing unwanted contacts to find your profile."
+       },
+       {
+        "question": "Who should be allowed to find your profile using your email address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This setting controls whether possible connections, friends, or no one can use your email address to discover your Facebook profile.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose control over exactly who can discover your account using your personal email address."
+       },
+       {
+        "question": "Who do you want to allow to follow your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This setting controls whether anyone on the platform or only your friends can see your posts, reels, and stories in their feed.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides the visibility of your future content, potentially exposing your posts to strangers or unnecessarily restricting your audience."
+       },
+       {
+        "question": "Who should be allowed to comment on your public posts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides audience options like Public, Friends, or specific exclusions to control who can interact with your public content.",
+        "whatTheAgentLoses": "Delegating this choice means losing personal control over exactly which groups of people are permitted to interact with your public posts."
+       },
+       {
+        "question": "Which third-party cookie setting do you want to enable?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers different levels of cookie blocking, such as allowing all third-party cookies or blocking them in Incognito mode, which determines how much tracking you permit across sites.",
+        "whatTheAgentLoses": "Letting an agent choose means you lose control over your preferred balance between site functionality and cross-site tracking privacy."
+       },
+       {
+        "question": "Do you want to allow the App Store to access your location while using the app, or never?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between completely denying location access or allowing it only when the app is visible on screen.",
+        "whatTheAgentLoses": "Delegating this decision means letting an agent determine the strictness of your physical location privacy for this specific app."
+       },
+       {
+        "question": "Which option should you select from the dropdown to block pop-ups for this specific website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown shows that the default setting currently allows pop-ups, so you must explicitly select 'Block' to change the site's permissions.",
+        "whatTheAgentLoses": "Delegating this means you lose direct control over explicitly defining site permissions versus relying on the browser's default settings."
+       },
+       {
+        "question": "Do you want to allow or block pop-ups and redirects across all websites?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays two default behavior options that dictate whether sites are universally permitted or blocked from sending pop-ups and using redirects.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to balance your personal tolerance for pop-ups against the functional requirements of websites you visit."
+       },
+       {
+        "question": "Which level of web content restriction do you want to apply?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays options like \"Unrestricted\" and \"Limit Adult Websites\", which dictate how strictly the device filters internet browsing.",
+        "whatTheAgentLoses": "You lose the ability to personally decide the exact strictness of web filtering applied to the device."
+       },
+       {
+        "question": "Which account type do you want to switch to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a bottom sheet dialog requiring a choice between switching to a Business Account or a Personal Account.",
+        "whatTheAgentLoses": "You lose the ability to decide how your profile is categorized, which directly impacts your available privacy controls and account features."
+       },
+       {
+        "question": "How do you proceed with changing the region?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that changing the region requires accepting new Terms and Conditions and having a valid payment method for the new location.",
+        "whatTheAgentLoses": "The user loses the opportunity to evaluate if they have a valid payment method for the new region before committing to the change."
+       },
+       {
+        "question": "Which country do you want to select for your region?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a list of countries, and selecting the correct one ensures your account is governed by the appropriate regional privacy laws.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a region that does not match your actual residence, potentially altering your localized content and privacy rights."
+       },
+       {
+        "question": "Which payment method do you want to select for the new region?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting a payment method such as a credit card, PayPal, or 'None' to complete the account region change.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to link a financial account or keep their payment information off the device."
+       },
+       {
+        "question": "Who should be allowed to see your friends list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that setting this to 'Only me' hides your full friends list from others on your timeline, though mutual friends will still be visible.",
+        "whatTheAgentLoses": "Delegating this means an agent might choose a less restrictive setting, exposing your private social network to acquaintances or the public."
+       },
+       {
+        "question": "Which type of screen lock do you want to set?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple security options like Face recognition, Fingerprints, Pattern, PIN, and Password to protect the phone.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific security method that best fits your personal convenience and privacy preferences."
+       },
+       {
+        "question": "Which comment moderation filters do you want active on your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to filter all comments, spam and offensive comments, or specific keywords, which determines how strictly your interactions are moderated.",
+        "whatTheAgentLoses": "The user loses control over their personal boundaries for engagement, potentially allowing unwanted comments to appear or overly restricting interactions."
+       },
+       {
+        "question": "Do you want to remove the app from the Home Screen?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog explicitly states that removing it from the Home Screen will hide it but keep the app in your App Library.",
+        "whatTheAgentLoses": "You lose the ability to control your personal home screen layout and decide how visible or accessible the app remains."
+       },
+       {
+        "question": "Which age restriction should you apply to hide downloaded apps?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers specific age ratings from '4+' to '17+', which determines exactly which apps will be hidden from the device.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to decide exactly how strict the app restrictions should be for your device."
+       },
+       {
+        "question": "Which comment permissions and filters do you want to apply to your videos?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options to restrict commenters to everyone, friends, or no one, plus toggles to filter all comments or just spam.",
+        "whatTheAgentLoses": "Delegating this decision means losing the ability to personally set the boundary for who can interact with your content."
+       },
+       {
+        "question": "Who should be able to see the list of accounts you follow?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers the choice to either publicly show your following list to everyone or restrict it so others only see mutual friends.",
+        "whatTheAgentLoses": "You lose the opportunity to personally determine the exact privacy boundary for your social connections."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Enter the required value",
+      "questions": [
+       {
+        "question": "What birthday should you enter for this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sign-up screen requires selecting a date of birth in the picker to proceed with creating the account.",
+        "whatTheAgentLoses": "The user loses the ability to provide their actual date of birth, which could impact account recovery or access to age-restricted features."
+       },
+       {
+        "question": "Which private DNS provider hostname should you enter?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to type a specific hostname to route your traffic through a custom DNS provider.",
+        "whatTheAgentLoses": "You lose the ability to choose which specific third-party service handles and filters your device's web traffic."
+       },
+       {
+        "question": "How will you fill out the required billing address fields?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several fields marked as 'Required' such as Street, City, and Zip that must be addressed to proceed with the setting change.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to provide real, accurate billing information or dummy data for their account profile."
+       },
+       {
+        "question": "Should I add a screen lock to your Galaxy M35 5G as recommended?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Security Check-Up page shows a warning icon advising you to add a screen lock to this specific device.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether or not to enforce a screen lock on your physical device."
+       },
+       {
+        "question": "What pattern should you set, and are you ready to proceed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that forgetting the pattern will require resetting the phone and erasing all data.",
+        "whatTheAgentLoses": "The user loses the ability to choose a memorable pattern, risking total data loss if the agent sets an unknown one."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Delete the stored data",
+      "note": "4.4.4 first when the data still matters. then 4.4.1; 4.4.2 and 4.4.3 where the surface offers them; the commit itself runs through 5.",
+      "questions": [
+       {
+        "question": "Which time range and specific types of browsing data do you want to clear?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen allows you to delete data from 'All time' including 12 saved passwords and autofill data, which could permanently remove information you might still need.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to selectively preserve important saved passwords or cookies while clearing other history."
+       }
+      ],
+      "children": [
+       {
+        "id": "4.4.1",
+        "label": "Pick the deletion control",
+        "questions": [
+         {
+          "question": "Should I proceed to manage all your past Web & App Activity?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides a specific button to access and manage your Web & App Activity, which contains sensitive historical data about your account usage.",
+          "whatTheAgentLoses": "You lose the opportunity to personally review your historical activity data before the agent potentially modifies or deletes it."
+         },
+         {
+          "question": "Which option do you select to initiate clearing your browsing data?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen presents multiple privacy controls like ad privacy and cookies, so you must explicitly choose the 'Clear browsing data' option to begin removing your history and cache.",
+          "whatTheAgentLoses": "You lose the opportunity to review or adjust other visible privacy settings, such as third-party cookies or ad privacy, before jumping into the data clearing process."
+         },
+         {
+          "question": "How do you initiate the deletion process for your activity?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen presents both filtering and deletion options, so you must select the 'Delete' dropdown to begin removing your data.",
+          "whatTheAgentLoses": "You lose the opportunity to decide whether to filter the data first or proceed directly to the deletion options."
+         },
+         {
+          "question": "Should you reset your advertising ID or delete it entirely?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers options to either generate a new ID for future apps to use or delete it entirely so apps can no longer show personalized ads.",
+          "whatTheAgentLoses": "Delegating this choice means the agent decides whether to allow future tracking with a new ID or to block personalized ads completely."
+         },
+         {
+          "question": "Which option should you select to clear the cache without deleting user data?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers both 'Clear storage' and 'Clear cache' buttons, and choosing the wrong one would delete personal data.",
+          "whatTheAgentLoses": "The user loses the ability to ensure that only temporary files are removed while their personal app data is preserved."
+         },
+         {
+          "question": "Do you want to clear the 191 MB of cache currently stored by this app?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows that 191 MB of storage is currently used by the cache, which will be freed up once you tap the clear button.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to decide whether freeing up 191 MB of space is worth losing your temporarily cached data."
+         },
+         {
+          "question": "Should you clear the app cache to free up the 235 MB of space?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The settings menu shows the cache is currently taking up 235 MB of storage space that could be freed.",
+          "whatTheAgentLoses": "You lose the opportunity to manage your device's storage by deciding exactly when to clear cached app data."
+         }
+        ]
+       },
+       {
+        "id": "4.4.2",
+        "label": "Set the deletion range",
+        "questions": [
+         {
+          "question": "How long do you want to keep your activity data before it auto-deletes?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen presents options to automatically delete activity data after specific timeframes like 3 or 18 months.",
+          "whatTheAgentLoses": "The user loses the ability to choose a data retention period that aligns with their personal privacy preferences."
+         },
+         {
+          "question": "How much of your activity history do you want to delete?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dialog box offers options ranging from the last hour to all time, which determines exactly how much of your personal data is permanently erased.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to keep older history for convenience or completely wipe your digital footprint."
+         }
+        ]
+       },
+       {
+        "id": "4.4.3",
+        "label": "Scope what gets deleted",
+        "questions": [
+         {
+          "question": "Do you want to preview more of the older activity that will be deleted immediately before confirming?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen warns that activity older than 3 months will be deleted now and offers a 'Preview more' button to see those items.",
+          "whatTheAgentLoses": "The user loses the opportunity to review specific historical data before it is permanently erased."
+         },
+         {
+          "question": "Should you clear all shared dictionaries or just the specific one for this isolation key?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays both a global 'Clear all' button at the top and an individual 'Clear' button next to the specific Google isolation key data.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to wipe all dictionary data completely or selectively preserve data from other sites."
+         },
+         {
+          "question": "Which specific Google products do you want to delete activity for?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen selects all Google products by default, meaning you could accidentally delete history for apps you want to keep personalized.",
+          "whatTheAgentLoses": "You lose the ability to selectively preserve your activity history for certain apps while clearing it for others."
+         },
+         {
+          "question": "Should you proceed with the 3 products you have selected?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows that exactly 3 products are selected, meaning the upcoming privacy changes will apply specifically to them.",
+          "whatTheAgentLoses": "You lose the chance to verify exactly which of your products or apps are about to have their privacy settings changed."
+         },
+         {
+          "question": "Which specific block of tracked activity do you want to delete?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays an activity block for 'Today' with a three-dot menu that allows for the targeted deletion of those specific items.",
+          "whatTheAgentLoses": "You lose the discretion to selectively curate your activity history by choosing exactly which past searches to keep or remove."
+         },
+         {
+          "question": "Are you aware that clearing this data will also remove it from your synced devices?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly warns that the 103 items of browsing history will be deleted here 'and more on synced devices', meaning this action affects other hardware linked to your account.",
+          "whatTheAgentLoses": "The user loses the chance to realize this deletion is global across their synced ecosystem, not just local to this specific device."
+         },
+         {
+          "question": "Do you want to clear cookies, knowing it will sign you out of most sites but keep you signed into your Google Account?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly notes that clearing cookies and site data will not sign you out of your Google Account, which is a crucial detail if you were hoping to completely sever all active sessions.",
+          "whatTheAgentLoses": "You lose the awareness that your Google Account session will remain active even after clearing your cookies, potentially leaving your account exposed if you are on a shared device."
+         }
+        ]
+       },
+       {
+        "id": "4.4.4",
+        "label": "Export the data first"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Strip the granted access",
+      "questions": [
+       {
+        "question": "Should you allow apps to request tracking, and what should you do with apps that currently have permission?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a master toggle for tracking requests and a list of apps with existing permissions, requiring a choice on how to handle them when turning the master toggle off.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to revoke tracking permissions for previously approved apps or only block future requests."
+       },
+       {
+        "question": "How do you want to handle the unrecognized device?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to either sign out or flag the unrecognized device, which determines the appropriate security response.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to simply disconnect the device or formally report it as a security breach."
+       },
+       {
+        "question": "Do you want to sign out of this unknown device or flag it as unrecognized?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a popup menu on the unknown device card with options to either sign out or report it.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to simply revoke access or formally flag the device as a security concern."
+       },
+       {
+        "question": "Should you block the website entirely or just remove its current permission?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu offers both 'Block' and 'Remove' options, which determine whether the site can ask for notification access again in the future.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to permanently block future notification requests from this specific website."
+       },
+       {
+        "question": "Should I execute the action to stop sharing my location with this person?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an alert to turn off Airplane Mode or use Wi-Fi, indicating the device is offline and cannot update the setting.",
+        "whatTheAgentLoses": "The user loses the ability to successfully update their privacy settings due to the lack of network connectivity."
+       },
+       {
+        "question": "Which profile information categories do you want to disable for ad targeting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lets you choose whether advertisers can use specific profile details like your employer, job title, education, or relationship status to target you with ads.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which personal details are kept private from advertisers versus which ones you are comfortable sharing for personalized ads."
+       },
+       {
+        "question": "Which specific ad categories do you want to remove?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a list of ad categories like 'Birthday in August' and 'Frequent Travelers' with individual 'Remove' buttons, requiring a decision on what to delete.",
+        "whatTheAgentLoses": "The user loses the ability to selectively keep certain ad categories that they might actually want to influence their ads."
+       },
+       {
+        "question": "Do you also need to remove previously synced contacts, since turning off sync does not delete them?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that turning off sync will not remove synced contacts, meaning a separate action is required to actually clear the data from the platform's servers.",
+        "whatTheAgentLoses": "The user loses the ability to fully revoke their data, mistakenly believing that toggling the sync off automatically deletes the contacts already uploaded."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Sweep the change across items",
+      "questions": [
+       {
+        "question": "Which specific types of activity should you continue to track and save?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple subsettings for Web & App Activity, such as Chrome history and voice recordings, which dictate exactly what personal data Google retains.",
+        "whatTheAgentLoses": "Delegating this decision means an agent might disable tracking that you rely on for personalized experiences or leave tracking enabled that compromises your privacy preferences."
+       },
+       {
+        "question": "Do you want to select all the filtered posts at once?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a dimmed list of posts with small grey squares behind a rising blank bottom sheet, suggesting a bulk selection action is underway.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to apply the privacy change to all filtered posts at once or select them individually."
+       },
+       {
+        "question": "Which option do you select from the bottom sheet to modify the selected posts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an open menu with options like 'Archive', 'Trash', and 'Change Audience', requiring a choice to proceed with the privacy change.",
+        "whatTheAgentLoses": "The user loses direct control over which specific action is applied to their selected posts, risking accidental deletion or archiving instead of a privacy update."
+       },
+       {
+        "question": "Have you verified which posts are selected before applying the new audience setting?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that all posts are currently selected, meaning the privacy change will apply to your entire post history rather than just specific items.",
+        "whatTheAgentLoses": "The user loses granular control over their privacy if the agent bulk-updates all posts instead of only the intended ones."
+       },
+       {
+        "question": "Which system services do you want to keep enabled for safety and core functionality versus toggling off for privacy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple background services like Emergency Calls & SOS and Find My iPhone, requiring a choice between maximizing privacy and maintaining crucial device safety features.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh their privacy preferences against their individual need for specific location-based safety and functionality features."
+       },
+       {
+        "question": "Do you want to share your location data for Apple's product improvements, and should the status bar icon display when tracking occurs?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents toggles that control whether your location data is sent to Apple for analytics and whether a visual indicator appears when your location is being accessed.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose the ability to enforce your personal preference for strict data privacy and tracking transparency."
+       },
+       {
+        "question": "Which specific analytics and improvement features do you want to disable?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple distinct data sharing options, such as iPhone Analytics and Siri dictation, each affecting different types of personal data sent to Apple.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which types of usage data you are comfortable sharing with Apple."
+       },
+       {
+        "question": "Which specific apps should you disable notifications for to reduce distractions and save battery?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a long list of installed apps with active notification toggles, requiring a judgment call on which ones are non-essential.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal preferences regarding which apps are important enough to interrupt you versus which ones are just annoying."
+       },
+       {
+        "question": "Which specific pieces of your profile information do you want to change to 'Only me'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple personal details like your phone number, emails, and hometown, requiring you to decide the appropriate visibility level for each specific item.",
+        "whatTheAgentLoses": "Letting an agent handle this removes your personal judgment in deciding exactly which pieces of sensitive contact and biographical information should remain visible to others."
+       },
+       {
+        "question": "Do you want to limit the visibility of all your past posts to friends?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog warns that undoing this bulk action requires changing the audience of each post one at a time.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to decide whether to make a sweeping, hard-to-reverse change to your account's history."
+       },
+       {
+        "question": "Should you use the master toggle to disable all restrictions at once?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a main toggle switch that disables all individual privacy and content restrictions below it simultaneously.",
+        "whatTheAgentLoses": "You lose control over whether specific privacy protections like location or microphone access should remain restricted."
+       },
+       {
+        "question": "Which built-in apps do you want to hide from your home screen and app library?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of built-in apps with individual toggles, meaning turning them off will completely remove their icons and access from the device.",
+        "whatTheAgentLoses": "Letting an agent choose means you lose personal control over exactly which core apps remain accessible for your daily use versus which ones are hidden."
+       },
+       {
+        "question": "Which of these general privacy toggles do you want to disable?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed five different privacy toggles, and deciding which to disable determines the balance between your privacy and system personalization.",
+        "whatTheAgentLoses": "The user loses the ability to decide their personal comfort level with each specific type of tracking and personalization."
+       },
+       {
+        "question": "Which specific system suggestion notifications do you want to turn off?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed three different checkboxes for system suggestions under the 'Additional settings' dropdown.",
+        "whatTheAgentLoses": "The person loses the opportunity to selectively keep certain system tips or welcome experiences while disabling others."
+       },
+       {
+        "question": "Which device usage categories do you want to disable for personalized tips and ads?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific categories like Gaming, Family, and Business for personalized recommendations, allowing you to selectively control which activities influence your ads.",
+        "whatTheAgentLoses": "Delegating this step means the agent might disable all categories, causing you to lose potentially useful tailored recommendations for activities you actually care about."
+       },
+       {
+        "question": "Which categories of users should my account be suggested to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple toggles for suggesting the account to different groups like contacts, Facebook friends, and mutual connections, directly impacting who can discover the profile.",
+        "whatTheAgentLoses": "The user loses the ability to customize their account's discoverability according to their personal privacy preferences for different types of connections."
+       },
+       {
+        "question": "Does this audience change also hide the posts you have shared in Facebook Groups?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog explicitly warns that this privacy change only applies to posts on your profile, meaning any content shared in Groups remains visible and must be managed separately.",
+        "whatTheAgentLoses": "The user might falsely believe their privacy has been secured across the entire platform, unaware that their posts in public Groups are still exposed."
+       },
+       {
+        "question": "Are you aware that limiting past posts will not hide them from people who are tagged in them or their friends?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog explicitly states that anyone tagged in these posts and their friends may still see them, which means the posts are not completely hidden.",
+        "whatTheAgentLoses": "The user loses the awareness that their 'limited' posts are still visible to a potentially large network of people connected to anyone tagged in them."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Put the setting back",
+      "questions": [
+       {
+        "question": "Should you turn off Airplane mode to restore network connectivity?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Control Center shows Airplane mode is currently enabled, which prevents the device from connecting to the internet to access and update account settings.",
+        "whatTheAgentLoses": "The user loses the ability to control exactly when their device reconnects to cellular and Wi-Fi networks."
+       },
+       {
+        "question": "Should you click the grey toggle to turn Web & App Activity tracking back on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows Web & App Activity is currently paused with a grey toggle, so clicking it will resume data collection across your apps and sites.",
+        "whatTheAgentLoses": "Delegating this means the agent decides to re-enable personal data tracking without your explicit consent."
+       },
+       {
+        "question": "Should you tap the toggle switch to re-enable Location Services?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Location Services toggle is currently in the off position, meaning you must tap it to restore location access.",
+        "whatTheAgentLoses": "Delegating this step means you lose direct control over deciding whether to restore the system's access to your physical whereabouts."
+       },
+       {
+        "question": "Do you want to leave all restrictions disabled, or turn the main toggle back on to adjust specific settings individually?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The main toggle is currently grey, indicating that all content and privacy restrictions have been globally disabled rather than individually adjusted.",
+        "whatTheAgentLoses": "You lose the ability to choose whether to disable all restrictions entirely or maintain granular control over specific privacy settings."
+       },
+       {
+        "question": "How do you restore the original settings to avoid detection?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Require Purchase Approval' toggle, which must be turned back on to revert the temporary changes.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their temporary changes are reverted to avoid detection by the account owner."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Pass the checkpoint",
+    "note": "5.1 at every warning sheet. 5.2 when the surface demands proof of authority. 5.3 instead of 5.1 when the warning changes the answer. 5.4 after the surface reports done. 5.5 only where the change does not save itself.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Weigh the consequence warning",
+      "questions": [
+       {
+        "question": "Should you agree to the Apple Media Services Terms and Conditions without reading them?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a legal contract that requires your explicit agreement to proceed.",
+        "whatTheAgentLoses": "The user loses the chance to review the specific legal terms they are agreeing to before the agent accepts the contract on their behalf."
+       },
+       {
+        "question": "Do you want to activate 'Hold for Me' despite the warning about urgent situations?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The prompt explicitly warns that the feature might not always work as expected and should not be used for urgent calls.",
+        "whatTheAgentLoses": "You lose the ability to personally assess if the call's urgency makes it inappropriate to rely on an automated assistant."
+       },
+       {
+        "question": "Are you sure you want to permanently delete this activity?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific items like feed cards and notifications that will be permanently removed if you proceed.",
+        "whatTheAgentLoses": "Delegating this means the agent might permanently delete specific activity history that you actually wanted to keep."
+       },
+       {
+        "question": "Are you sure you want to reset your advertising ID, knowing it will temporarily make ads less relevant to you?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation popup warns that replacing your ID with a new random number means you will still see ads, but they may be less relevant or interesting for a while.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the privacy benefit of a new random ID against the temporary inconvenience of seeing less relevant ads."
+       },
+       {
+        "question": "Are you sure you want to permanently delete your advertising ID?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that deleting this ID means you will see less relevant ads and have less control over the types of ads shown to you.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the privacy benefits against the drawback of receiving less personalized and potentially less interesting ads."
+       },
+       {
+        "question": "Do you want to clear the data from the specific sites Chrome flagged as important?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a popup asking if you want to clear data from sites like apkcombo.com and exness.com that Chrome identified as important to you.",
+        "whatTheAgentLoses": "You lose the opportunity to preserve your saved data on specific frequently visited sites while clearing the rest of your browsing history."
+       },
+       {
+        "question": "Do you want to proceed with switching to a private account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Switch to Private Account?' confirmation dialog with a blue button to finalize the change.",
+        "whatTheAgentLoses": "The user loses the final say in whether to actually make their account private after reading the implications."
+       },
+       {
+        "question": "Do you want to confirm switching to a private account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Switch to Private Account?' confirmation sheet with a blue button to finalize the privacy change.",
+        "whatTheAgentLoses": "The user loses the final chance to abort the change before their account visibility becomes restricted."
+       },
+       {
+        "question": "Are you sure you want to clear your search history?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog requires a final decision because clearing your search history is a permanent action.",
+        "whatTheAgentLoses": "You lose the opportunity to review or save any important past searches before they are permanently deleted."
+       },
+       {
+        "question": "Are you sure you want to confirm turning off Location Services for all apps?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog warns that this action disables location access system-wide, which fundamentally changes how your apps and device operate.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the trade-off between strict privacy and losing location-based functionality across all your apps."
+       },
+       {
+        "question": "Are you sure you want to make your account public, allowing anyone to view your videos and auto-approving followers?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog explicitly warns that switching to a public account means anyone can watch your videos and all pending follow requests will be automatically approved.",
+        "whatTheAgentLoses": "You lose the chance to evaluate the specific privacy trade-offs and decide if you are truly comfortable exposing your content and account to the public."
+       },
+       {
+        "question": "Do you want to confirm the change to a public account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A confirmation dialog is open on screen asking to finalize the switch from a private to a public account.",
+        "whatTheAgentLoses": "The user loses the final opportunity to cancel the action and keep their account private."
+       },
+       {
+        "question": "Are you sure you want to switch to a personal account and permanently lose your content insights?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that switching back to a personal account will permanently delete all in-app insights and promotion data.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if the permanent deletion of your account's analytics is an acceptable trade-off for this change."
+       },
+       {
+        "question": "Do you actually see a confirmation dialog warning about losing insights?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a plain Account settings list rather than the claimed confirmation dialog about switching to a personal account.",
+        "whatTheAgentLoses": "You lose the assurance that the agent is accurately navigating the account modification process instead of hallucinating steps that did not occur."
+       },
+       {
+        "question": "Do you want to acknowledge the consequences and permanently stop supervision for this account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that continuing will remove supervision from the account and all supervised devices, requiring a checkbox confirmation to proceed.",
+        "whatTheAgentLoses": "You lose the opportunity to review the specific warnings about losing management access before making a major change to the account's supervision status."
+       },
+       {
+        "question": "Do you want to review the specific consequences of removing this family member before proceeding?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation screen lists important details like lost access to services and potential charges for pending purchases that you are accepting by proceeding.",
+        "whatTheAgentLoses": "You lose the chance to review the specific service access changes and financial implications before the removal becomes final."
+       },
+       {
+        "question": "Do you want to proceed with deleting the family group?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that deleting the family group will cause members to lose access to shared Google services.",
+        "whatTheAgentLoses": "The user loses the chance to reconsider the deletion based on the impact it will have on other family members."
+       },
+       {
+        "question": "What are the consequences of pausing this setting, and how do you confirm the change?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pop-up explains that pausing limits personalized content across Google products, which you must accept by clicking the pause button to finalize the change.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to read the specific warnings about how pausing affects your personalized content and features."
+       },
+       {
+        "question": "Are you sure you want to enable Web & App Activity tracking?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation dialog explicitly states that turning this on will store your searches, location, and activity across Google services.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate the privacy trade-offs of allowing Google to store your search and location history."
+       },
+       {
+        "question": "Does turning off this tracking feature also prompt you to delete the historical data it has already collected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Stopping future data collection does not automatically erase past data, and platforms often present a secondary prompt asking if you want to clear the existing history when you disable a tracking toggle.",
+        "whatTheAgentLoses": "You lose the opportunity to clean up your past digital footprint at the exact moment you decide to stop future tracking."
+       },
+       {
+        "question": "Is the Pause button actually enabled and ready to be clicked?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation modal forces you to scroll through the explanation text before the Pause button becomes active, meaning a premature click will silently fail.",
+        "whatTheAgentLoses": "The user loses the assurance that their tracking was actually paused, as the agent might falsely record a successful click on a temporarily disabled button."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Authenticate the change",
+      "questions": [
+       {
+        "question": "What is the Screen Time passcode required to confirm turning off these restrictions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a numeric keypad and requires a 4-digit Screen Time passcode to authorize changing the restriction settings.",
+        "whatTheAgentLoses": "Delegating this requires sharing your private Screen Time passcode, giving the agent the ability to bypass device security controls."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Back out of the risky path",
+      "questions": [
+       {
+        "question": "Do you want to proceed with turning off Safe Browsing despite the security warning?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The prompt warns that turning off this feature removes your protection against deceptive websites and requires extra caution.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose the opportunity to evaluate the personal risk of browsing without protection."
+       },
+       {
+        "question": "Should you change your password to secure the account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog warns that someone else might have your password and suggests changing it immediately to protect your Google Account.",
+        "whatTheAgentLoses": "The user loses the choice of whether to initiate a disruptive password change that would sign them out of all other devices."
+       },
+       {
+        "question": "How do you exit the region selection menu without making changes?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'United States' is already checked and provides a 'Cancel' button at the top right to exit without altering this selection.",
+        "whatTheAgentLoses": "The user loses the ability to safely back out of a settings menu without accidentally modifying their account's region."
+       },
+       {
+        "question": "Should you tap 'Ask' or 'Cancel' when the parental permission pop-up appears?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Ask Permission' pop-up that prevents downloading the app without a parent's approval.",
+        "whatTheAgentLoses": "Delegating this means losing the physical coordination required to approve the request on the parent's separate device."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Dismiss the completion notice",
+      "questions": [
+       {
+        "question": "How do you dismiss the deletion confirmation screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Deletion complete' message that must be acknowledged to return to the main settings.",
+        "whatTheAgentLoses": "You lose the reassurance of personally reading the confirmation that your selected activity was permanently deleted and is no longer tied to you."
+       },
+       {
+        "question": "How do you dismiss the preference saved confirmation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen explicitly confirms that your activity older than 3 months is being permanently deleted and requires acknowledgment.",
+        "whatTheAgentLoses": "The user loses the reassurance of personally reading the confirmation details about exactly what data is being permanently deleted from their account."
+       },
+       {
+        "question": "How do you acknowledge the successful setup to exit the confirmation screen?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays an 'All set!' message and a 'GOT IT' button that must be tapped to finalize the process and return to the settings menu.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally seeing the confirmation message stating your device is now secured."
+       },
+       {
+        "question": "Should I tap 'Back to home' to acknowledge that supervision has been stopped?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen confirms that parent management settings have been turned off, and returning to the home screen concludes the verification step.",
+        "whatTheAgentLoses": "The user loses the opportunity to read the confirmation message or learn how to undo the action if it was a mistake."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Save the change",
+      "questions": [
+       {
+        "question": "Should you click Apply before clicking OK to save your changes?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows both Apply and OK buttons, giving you the choice to save changes while keeping the window open or to save and close it simultaneously.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep the settings window open to make further adjustments or to close it immediately."
+       },
+       {
+        "question": "Do you need to scroll to the bottom of the page to click a 'Save' or 'Apply' button for the change to take effect?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Unlike instant mobile toggles, many web-based account settings require explicitly submitting the form to commit the changes to the server.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent didn't just change the visual dropdown or radio button and navigate away before actually saving the form."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Verify the new state",
+    "note": "6.1 always. then whichever of 6.2 to 6.7 the setting can prove itself by - 6.4 and 6.5 for outward-facing changes, 6.3 after deletions, 6.7 when the system says so. 6.8 once everything on the checklist reads back correct.",
+    "questions": [
+     {
+      "question": "Do your on-screen actions match your stated intent to turn off location tracking?",
+      "cluster": "facts",
+      "moment": "Completion",
+      "moneyMoving": false,
+      "why": "You stated you were turning off location tracking, but the screen showed the main location permission remaining on 'Allow all the time' with only precise location disabled.",
+      "whatTheAgentLoses": "The user believes their location is completely hidden, but the app continues to track their general location, compromising their intended privacy."
+     },
+     {
+      "question": "Do the moments of this task agree with each other?",
+      "cluster": "facts",
+      "moment": "Completion",
+      "moneyMoving": false,
+      "why": "The screen showed the 'Security' tab with 'Recent security activity', contradicting the claim that the 'Your devices' card was visible with 5 connected devices.",
+      "whatTheAgentLoses": "You lose an accurate assessment of your account security if the agent hallucinates the presence of connected devices that aren't actually on the screen."
+     },
+     {
+      "question": "How do you verify the privacy settings you just changed across all these categories?",
+      "cluster": "hand over",
+      "moment": "Completion",
+      "moneyMoving": false,
+      "why": "While the 'Audience and visibility' list shows individual controls for Posts, Stories, and Reels, you must navigate back to the main menu to actually confirm your profile is hidden from others.",
+      "whatTheAgentLoses": "You lose the personal reassurance of seeing exactly what your restricted profile looks like to the outside world."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Re-read the control",
+      "questions": [
+       {
+        "question": "Did you actually toggle the setting to the on position as instructed?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The audio instructs turning on increased sensitivity, but the on-screen toggle remains in the off position until the video cuts.",
+        "whatTheAgentLoses": "The user believes their account settings have been updated when they actually remain unchanged."
+       },
+       {
+        "question": "Did you actually change the setting for every app like you said you would?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "You stated you would change every app's permission, but the screen shows the 'American' app was left on 'Always' as you scrolled past it.",
+        "whatTheAgentLoses": "The user loses the assurance that their privacy settings were comprehensively updated as requested without any apps slipping through the cracks."
+       },
+       {
+        "question": "Did you verify that the 'System Customization' toggle was left in the on position?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the System Services list, making it important to confirm the toggle visually matches the instruction to leave it enabled.",
+        "whatTheAgentLoses": "The user loses precise control over their privacy preferences if the agent accidentally disables a setting they meant to keep on."
+       },
+       {
+        "question": "Did you actually turn off the Wi-Fi Calling setting as you just stated?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "You said the setting could be turned off safely, but the screen showed you scrolling past the toggle while leaving it in the on position.",
+        "whatTheAgentLoses": "The user is left with a device configured differently than the spoken instructions led them to believe."
+       },
+       {
+        "question": "Is the account actually private, or do you still need to confirm the prompt?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Switch to Private Account?' bottom sheet over a dimmed page with the toggle still in the off position.",
+        "whatTheAgentLoses": "The user loses the security of a private account if the agent prematurely assumes the setting was changed without confirming the dialog."
+       },
+       {
+        "question": "Are you assuming the system is processing the change despite the lack of any visible interface?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the frame shows a presenter and a stock photo of people applauding, not a settings menu or processing indicator.",
+        "whatTheAgentLoses": "The user loses the ability to know if their privacy setting was actually modified since the agent is hallucinating interface actions during a video cutaway."
+       },
+       {
+        "question": "Is the 'Share My Location' toggle visibly grey and turned off on this screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The frame shows the Find My settings screen, but it does not actually display the 'Share My Location' toggle in the grey, off position.",
+        "whatTheAgentLoses": "You lose the assurance that your privacy settings were successfully updated if the agent incorrectly assumes the toggle changed state."
+       },
+       {
+        "question": "Does the screen actually confirm that your location is not being shared?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The frame shows the Find My People tab displaying a map and a contact's active location, contradicting the claim that location sharing is turned off.",
+        "whatTheAgentLoses": "The user loses certainty about their privacy if the agent falsely confirms a setting is disabled while the app still displays active location data."
+       },
+       {
+        "question": "Do you see the final state of the setting after tapping 'Stop Sharing'?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The video ends immediately after the button is tapped, failing to show if the location access was successfully revoked.",
+        "whatTheAgentLoses": "You lose the certainty that your privacy setting was successfully updated and your location is no longer being shared."
+       },
+       {
+        "question": "Are the last accessed timestamps consistent with the system clock?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The system clock shows 9:31 while the location settings list access times like 3:46 pm and a future time of 9:58 pm, indicating a potential glitch or time zone mismatch.",
+        "whatTheAgentLoses": "The user loses the ability to spot glaring inconsistencies in the system's timestamps that suggest the privacy settings might not be reporting accurately."
+       },
+       {
+        "question": "Did you verify the custom DNS hostname appeared under the setting before going back?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Seeing the specific hostname displayed under the Private DNS setting confirms the system successfully saved and applied the new configuration.",
+        "whatTheAgentLoses": "The user loses the visual reassurance of seeing their chosen DNS provider actively applied in the device settings."
+       },
+       {
+        "question": "How do you verify that Wi-Fi and cellular connections are off after enabling Airplane Mode?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen currently shows Wi-Fi and cellular connections as active, so you must visually confirm they turn off to ensure location sharing is actually stopped.",
+        "whatTheAgentLoses": "The user loses the certainty that their location sharing was successfully disabled if the agent fails to verify the connectivity icons' final states."
+       },
+       {
+        "question": "Did you disable Airplane mode to verify that the toggle actually worked?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Turn Off Airplane Mode' alert, indicating that the device needs a network connection to apply and confirm the setting change.",
+        "whatTheAgentLoses": "The user is left unsure if their privacy setting was actually changed since the agent did not resolve the network error to show the final confirmed state."
+       },
+       {
+        "question": "How do you confirm the account is now private before returning to the main feed?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Seeing the 'Private account' label and lock icon under the user ID confirms the privacy change successfully took effect.",
+        "whatTheAgentLoses": "You lose the direct visual reassurance of seeing the lock icon on your profile to know your account is truly protected."
+       },
+       {
+        "question": "Did the toggle remain in the new position after a few seconds, or did it snap back to its previous state?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Network errors or server-side sync issues can cause a setting to visually change for a moment before reverting, meaning the privacy change failed silently.",
+        "whatTheAgentLoses": "The user loses the true verification of their privacy state if the agent assumes the first visual change was permanent without waiting for server confirmation."
+       },
+       {
+        "question": "Does the setting retain its new state if you pull down to refresh or exit and re-enter the menu?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Some apps cache the UI state locally, meaning a toggle might look changed until the page is reloaded and fetches the actual failed state from the server.",
+        "whatTheAgentLoses": "The user loses the guarantee that the setting actually took effect on the server side, rather than just updating the local interface temporarily."
+       },
+       {
+        "question": "Does the parent menu row for Location Services reflect the new 'Off' status?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Returning to the main Privacy menu and seeing 'Off' next to Location Services confirms that the system-wide setting change registered successfully at the higher menu level.",
+        "whatTheAgentLoses": "You lose the secondary visual confirmation that the setting change propagated correctly to the parent menu."
+       },
+       {
+        "question": "Does the master privacy setting display a definitive checkmark, or an indeterminate minus line indicating partial restriction?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Some privacy categories use an indeterminate visual state (like a dash instead of a check) to show that only some sub-items or specific apps are restricted, rather than all of them.",
+        "whatTheAgentLoses": "The user loses the nuance that their privacy is only partially protected, as an agent might misinterpret an indeterminate visual icon as fully enabled or fully disabled."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Read the completion receipt",
+      "questions": [
+       {
+        "question": "Do you see the 'no data' message confirming the data was cleared?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays 'no data' below the buttons, which confirms that the history was successfully cleared.",
+        "whatTheAgentLoses": "The user loses the peace of mind that comes from visually confirming their privacy action actually took effect."
+       },
+       {
+        "question": "Does the dialog confirm that your selected data has been cleared?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The dialog explicitly states that the selected data has been removed from Chrome and your synced devices, verifying that your privacy change was successful.",
+        "whatTheAgentLoses": "You lose the reassurance of reading the success confirmation and the important reminder about other forms of history still stored in your Google account."
+       },
+       {
+        "question": "Do you see the downloading indicator to confirm the app installation has started?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The App Store showed a downloading circle and the home screen displayed 'Waiting...', verifying that the account restriction changes successfully allowed the download.",
+        "whatTheAgentLoses": "The user loses the practical, visual confirmation that the modified account settings actually took effect on the device."
+       },
+       {
+        "question": "Are all the security checkmarks complete?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a green shield and checkmarks next to each security item, confirming the account is protected.",
+        "whatTheAgentLoses": "The user loses the direct visual reassurance of seeing the green checkmarks that confirm their account's security status."
+       },
+       {
+        "question": "Did a brief confirmation toast, such as 'Settings updated', appear and vanish at the bottom of the screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Many apps confirm privacy changes with a temporary toast notification rather than a persistent state change or dialog box.",
+        "whatTheAgentLoses": "The user loses the immediate, definitive proof of success if the agent fails to read the screen during the brief window the message is visible."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check for leftovers",
+      "questions": [
+       {
+        "question": "Should you review third-party app access before tapping OK?",
+        "cluster": "approve",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The dialog warns that installed third-party apps might still access your account unless you explicitly revoke their permissions.",
+        "whatTheAgentLoses": "You lose the certainty that your account is fully secure from third-party apps that might still retain access on the device."
+       },
+       {
+        "question": "Is there local browsing history remaining after deleting my Google account activity?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen showed a list of visited sites, indicating that local browser history was not removed by the account-level deletion.",
+        "whatTheAgentLoses": "The user loses the assurance that their local device history is fully cleared alongside their account activity."
+       },
+       {
+        "question": "Do you see any of your past searches in the address bar dropdown?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The dropdown showed 'Trending searches' and generic queries instead of personal history, confirming the setting change took effect.",
+        "whatTheAgentLoses": "The user loses the direct visual confirmation that their personal search history has been successfully removed from the search bar's autocomplete suggestions."
+       },
+       {
+        "question": "Do you want to review the specific location permissions for each app?",
+        "cluster": "refine",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen now lists individual apps like Camera and Chrome with their current location access levels, which you may want to audit.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify and restrict location access for specific apps on your device."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Check the visible effect",
+      "questions": [
+       {
+        "question": "Is the profile successfully locked from public view?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows 'No posts available' from the public perspective, confirming the privacy change took effect.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their private information is no longer publicly visible."
+       },
+       {
+        "question": "Do the before and after profile views confirm the 'Private account' badge was removed?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Verifying that the lock icon and 'Private account' text disappeared from the main profile ensures the setting change actually took effect.",
+        "whatTheAgentLoses": "You lose the direct visual confirmation that your profile's public visibility status successfully updated."
+       },
+       {
+        "question": "How do you access more profile options to verify visibility?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a '...' button next to 'Edit profile' which likely contains options to view the profile as the public sees it.",
+        "whatTheAgentLoses": "The user loses the assurance of seeing exactly how their profile appears to others after the privacy changes."
+       },
+       {
+        "question": "Does the public view of your profile confirm your posts are hidden?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Verifying the 'No posts available' message on the public view ensures your recent privacy changes successfully restricted access to your content.",
+        "whatTheAgentLoses": "Letting an agent verify this deprives you of the firsthand reassurance that your personal photos and posts are genuinely hidden from strangers."
+       },
+       {
+        "question": "Which account from the search results should you select?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The search dropdown displays multiple similar usernames like '[account]' and '[account]', requiring you to identify the exact target.",
+        "whatTheAgentLoses": "You lose the certainty that the agent is verifying the privacy settings against the correct user profile instead of a similarly named account."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Test the changed behavior",
+      "questions": [
+       {
+        "question": "Should I confirm that you are 17 or older to download Yubo?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning that Yubo contains age-restricted material and requires confirmation of your age before downloading.",
+        "whatTheAgentLoses": "You lose the ability to block the download of age-restricted content to your device."
+       },
+       {
+        "question": "How do you verify that the browser will now allow an HTTP connection without upgrading it?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Manually editing the URL in the address bar to remove the 's' from HTTPS is necessary to test if the disabled security setting actually permits insecure connections.",
+        "whatTheAgentLoses": "You lose the direct visual confirmation of seeing the browser successfully load the insecure HTTP version of the site without forcing a secure redirect."
+       },
+       {
+        "question": "Do the moments of this task agree with each other regarding the connection security?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "You manually entered an HTTP URL to test the disabled secure connection, but the resulting page displays a secure lock icon indicating an HTTPS connection.",
+        "whatTheAgentLoses": "The user loses the assurance that their requested security setting change actually took effect."
+       },
+       {
+        "question": "Should you tap 'Install' to verify the app downloads without needing approval?",
+        "cluster": "approve",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Tapping the install button on the App Store pop-up confirms whether the disabled approval setting actually took effect.",
+        "whatTheAgentLoses": "The user loses the firsthand confirmation that their child can now download apps without triggering an approval request."
+       },
+       {
+        "question": "Are the restricted apps successfully hidden from your App Library search?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Seeing no results for the restricted app in the App Library confirms the new privacy setting actually took effect across the device.",
+        "whatTheAgentLoses": "Delegating this means you lose the personal peace of mind of seeing firsthand that the restricted app is truly inaccessible on your device."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Check on a second surface"
+     },
+     {
+      "id": "6.7",
+      "label": "Restart to apply",
+      "questions": [
+       {
+        "question": "Which power option should I select to apply the system changes?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The XOS power menu presents both 'POWER OFF' and 'RESTART' options, and selecting the correct one is necessary to reboot the device and apply the new settings.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the device restarts rather than completely shutting down, which would abruptly end the session and prevent verification."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Leave the settings surface",
+      "questions": [
+       {
+        "question": "How do you navigate away from this settings page now that the task is complete?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the location toggle is grey, indicating the setting is successfully disabled and it is time to exit using the back button.",
+        "whatTheAgentLoses": "You lose the final visual confirmation of the disabled setting before choosing to exit the menu."
+       },
+       {
+        "question": "Should I close all background apps or just the settings app?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The recent apps screen displays a 'Close all' button alongside the Settings app card.",
+        "whatTheAgentLoses": "The user loses the choice of whether to keep other background apps open or close them all."
+       },
+       {
+        "question": "How do you return to the home screen?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen does not have a visible home button, requiring a swipe up from the bottom edge to exit the settings.",
+        "whatTheAgentLoses": "You lose the physical reassurance of manually executing the system gesture to close the app and conclude the task."
+       },
+       {
+        "question": "How do you return to the previous screen from the Privacy menu?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen is titled 'Privacy' and features a '<' back arrow at the top left that must be tapped to navigate back toward the profile.",
+        "whatTheAgentLoses": "The user loses the spatial understanding of how the privacy settings are nested within the app's overall menu hierarchy."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -126,6 +126,60 @@ export function pickExemplars(query, exemplars = EXEMPLARS) {
   return scored.map((s) => s.ex);
 }
 
+// ── the retrieval tier ──────────────────────────────────────────────────────
+//
+// A query about a task the pipeline has already built an HTA for should not
+// spend a minute generating a weaker model of the same task. The full models
+// ship beside the exemplars (validation/htas/), and this decides whether one
+// of them IS this task rather than merely the nearest example for writing a
+// new one.
+//
+// The match is deliberately conservative, because a wrong tier-1 match is the
+// exact failure the generated path was built to end: checking one task's
+// pages against another task's questions. The scoring is the same lexical
+// overlap as pickExemplars, and a domain only wins with at least two distinct
+// word hits AND twice the runner-up. Anything short of that falls through to
+// generation, which is never wrong about whose task it is.
+
+const MATCH_MIN_HITS = 2;
+const MATCH_LEAD = 2;
+
+/** Which built domain this query IS, if any. Pure scoring, no fetch. */
+export function matchDomain(query, index) {
+  const q = tokens(query);
+  let best = null; let bestHits = 0; let second = 0;
+  for (const [domain, task] of Object.entries(index || {})) {
+    const own = tokens(`${domain} ${task}`);
+    let hits = 0;
+    for (const w of q) if (own.has(w)) hits += 1;
+    if (hits > bestHits) { second = bestHits; bestHits = hits; best = domain; }
+    else if (hits > second) { second = hits; }
+  }
+  if (!best || bestHits < MATCH_MIN_HITS || bestHits < second * MATCH_LEAD) return null;
+  return best;
+}
+
+/**
+ * The built model for this query, or null if no built domain matches.
+ *
+ * @returns {Promise<{domain, source, model}|null>} `source` is the extension
+ *   path the model was fetched from, which is what rehydrate() refetches
+ *   after a worker restart.
+ */
+export async function retrieveModel(query, fetcher) {
+  const get = fetcher || ((p) => fetch(chrome.runtime.getURL(p)).then((r) => r.json()));
+  let index;
+  try { index = await get('validation/htas/index.json'); } catch { return null; }
+  const domain = matchDomain(query, index);
+  if (!domain) return null;
+  try {
+    const source = `validation/htas/${domain}.json`;
+    const model = await get(source);
+    if (!model?.tree) return null;
+    return { domain, source, model };
+  } catch { return null; }
+}
+
 // ── tree helpers, ported from the rig's common.py ───────────────────────────
 
 export function* walk(node) {

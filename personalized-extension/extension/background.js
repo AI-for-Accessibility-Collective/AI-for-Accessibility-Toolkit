@@ -672,6 +672,23 @@ function startModelFor(task) {
 
   try { globalThis.ValidationTaskModel?.unload?.(); } catch { /* nothing loaded */ }
 
+  // The retrieval tier first. A task the pipeline has a built HTA for loads in
+  // milliseconds instead of generating for a minute, and the built model is
+  // the stronger one — the generator's own coverage tops out well under the
+  // gold it would be imitating. The match is conservative by design; anything
+  // uncertain falls through to generation, which cannot be wrong about whose
+  // task it is. The source is the extension path, so a worker restart
+  // refetches the same file.
+  const retrieved = G.retrieveModel?.(task)?.then?.((hit) => {
+    if (!hit || mine.aborted) return false;
+    globalThis.ValidationTaskModel?.load(hit.model, hit.source);
+    chrome.storage.local.set({
+      'aa.validation.gen': { stage: 'retrieved', domain: hit.domain, at: Date.now() },
+    }).catch(() => {});
+    console.log('[validation] built model retrieved:', hit.domain);
+    return true;
+  }).catch(() => false) || Promise.resolve(false);
+
   // Resolves on the first piece, so the caller can hold the agent for it. The
   // ceiling matters more than the wait: a generation that stalls must not
   // become an agent that never starts.
@@ -748,27 +765,47 @@ function startModelFor(task) {
     }
   };
 
-  G.generate(task, {
-    signal: mine,
-    onPartial: (m, st) => use(m, st),
-    // Published, not just logged. A generation that fails inside the service
-    // worker is otherwise invisible to everything outside it — including the
-    // panel, which has to tell the person why nothing is being checked yet.
-    onStage: (st) => {
-      console.log('[validation] model', JSON.stringify(st));
-      chrome.storage.local.set({ 'aa.validation.gen': { ...st, at: Date.now() } })
-        .catch(() => {});
-    },
-  }).then(async (model) => {
-    if (mine.aborted || !model) return;
-    await use(model, { stage: 'done' });
-    console.log('[validation] model complete for:', task);
-  }).catch((e) => {
-    console.warn('[validation] no model written:', e.message);
-    chrome.storage.local.set({
-      'aa.validation.gen': { stage: 'failed', error: e.message, at: Date.now() },
-    }).catch(() => {});
-    arrived('failed');   // never leave the agent waiting on a generation that died
+  retrieved.then((got) => {
+    if (mine.aborted) return;
+    if (got) {
+      // The whole model is already loaded, so the agent has nothing to wait
+      // for and the current page is worth reading right away.
+      arrived('retrieved');
+      chrome.windows.getAll({ windowTypes: ['normal'], populate: true }).then((wins) => {
+        const tabs = [];
+        for (const w of wins || []) for (const t of w.tabs || []) tabs.push(t);
+        const real = tabs.filter((t) => /^https?:/.test(t.url || ''));
+        const tab = real.find((t) => t.active) || real[0];
+        if (tab?.id) {
+          globalThis.Validation?.observe?.(tab.id)
+            .catch((e) => console.warn('[validation] re-read failed:', e.message));
+        }
+      }).catch(() => {});
+      return;
+    }
+
+    G.generate(task, {
+      signal: mine,
+      onPartial: (m, st) => use(m, st),
+      // Published, not just logged. A generation that fails inside the service
+      // worker is otherwise invisible to everything outside it — including the
+      // panel, which has to tell the person why nothing is being checked yet.
+      onStage: (st) => {
+        console.log('[validation] model', JSON.stringify(st));
+        chrome.storage.local.set({ 'aa.validation.gen': { ...st, at: Date.now() } })
+          .catch(() => {});
+      },
+    }).then(async (model) => {
+      if (mine.aborted || !model) return;
+      await use(model, { stage: 'done' });
+      console.log('[validation] model complete for:', task);
+    }).catch((e) => {
+      console.warn('[validation] no model written:', e.message);
+      chrome.storage.local.set({
+        'aa.validation.gen': { stage: 'failed', error: e.message, at: Date.now() },
+      }).catch(() => {});
+      arrived('failed');   // never leave the agent waiting on a generation that died
+    });
   });
 
   return ready;
