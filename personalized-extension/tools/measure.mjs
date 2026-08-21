@@ -1039,7 +1039,8 @@ function cmdAuroc() {
 // approve-cluster questions counted widget) so that sub-question is answered
 // with numbers instead of taste.
 
-const SURFACE_LABELS = '/Users/chuanenl/Stanford/Summer Project Ideation '
+const SURFACE_LABELS = argOf('--labels')
+  || '/Users/chuanenl/Stanford/Summer Project Ideation '
   + '/Verification Affordances/notes/utility-model/labeling/surface-labels.json';
 
 // Join every labeled corpus question to its surface label. The corpus rows
