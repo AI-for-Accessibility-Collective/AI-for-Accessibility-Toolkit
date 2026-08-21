@@ -431,7 +431,11 @@ export async function bhAgentRun(task, opts = {}) {
         });
       }
       const items = (enumResult && Array.isArray(enumResult.items)) ? enumResult.items : [];
-      const rawScreenshot = typeof shot === 'string' ? shot : shot.data;
+      // `shot` is null when the capture failed - the catch above already
+      // logged "Screenshot skipped this step" and returned null, and reading
+      // .data off it killed a whole run four steps in. A step without a
+      // screenshot proceeds on the element list alone.
+      const rawScreenshot = typeof shot === 'string' ? shot : (shot ? shot.data : null);
       const imgScale = (shot && typeof shot === 'object' && shot.scale) || 1;
       const imgWidth = (shot && typeof shot === 'object' && shot.width) || 0;
       const imgHeight = (shot && typeof shot === 'object' && shot.height) || 0;
