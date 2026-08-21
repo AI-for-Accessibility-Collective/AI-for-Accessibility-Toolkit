@@ -618,6 +618,9 @@ async function _publish(extra = {}) {
             noticed: extra.reasoner.noticedKept ?? null,
             ms: extra.reasoner.ms ?? null,
             truncated: extra.reasoner.guard?.truncated ?? null,
+            // How many rows went out mid-stream, so a recording shows whether
+            // streaming actually engaged rather than silently falling back.
+            early: extra.reasoner.earlyIds?.length ?? 0,
           })
         : (prev.reads || [])).slice(-KEEP_READS),
       lookedBack: extra.lookedBack !== undefined ? extra.lookedBack

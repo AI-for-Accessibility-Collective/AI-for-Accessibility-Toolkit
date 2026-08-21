@@ -351,6 +351,8 @@ async function runScenario(sc) {
     let lastFindings = 0;
     let lastSaid = 0;
     let seenModel = false;
+    let seenPlan = false;
+    let seenWrap = false;
     let lastGen = '';
     let lastRead = 0;
     const DEADLINE = 9 * 60 * 1000;
@@ -365,10 +367,27 @@ async function runScenario(sc) {
         note('read', { ...rd,
           summary: `asked ${rd.asked}, page answered ${rd.answered}`
             + (rd.discarded ? `, ${rd.discarded} discarded for no quote` : '')
+            + (rd.early ? `, ${rd.early} surfaced mid-stream` : '')
             + (rd.truncated ? ', page was truncated' : '')
             + ` (${rd.ms}ms)` });
       }
       lastRead = reads.length;
+
+      // The narration channel's milestones, so a recording shows whether the
+      // plan review and the wrap-up actually happened - the live region
+      // itself is invisible to this script.
+      if (v.planReview && !seenPlan) {
+        seenPlan = true;
+        note('plan', { ...v.planReview,
+          summary: `plan review: ${v.planReview.questions} questions, `
+            + `${v.planReview.money} money, ${(v.planReview.fromAsk || []).length} from the ask` });
+      }
+      if (v.wrapUp && !seenWrap) {
+        seenWrap = true;
+        note('wrapup', { ...v.wrapUp,
+          summary: `wrap-up spoke ${v.wrapUp.spoke} (${v.wrapUp.outcome} outcome, `
+            + `${v.wrapUp.kept} kept in the panel)` });
+      }
 
       const genKey = gen ? JSON.stringify(gen) : '';
       if (genKey && genKey !== lastGen) {
