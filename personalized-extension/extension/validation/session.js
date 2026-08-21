@@ -150,6 +150,42 @@ function leadWith(unread) {
 /** What identifies one finding. Must match the overlay's key exactly. */
 const fkey = (f) => `${f.widget}|${f.phase}|${f.say}`;
 
+// One interruption per burst, not one per stop.
+//
+// A live hotel run opened with four distinct holds inside twenty seconds -
+// four assertive announcements in a row, each cutting into the last. Two
+// rules fix it without hiding anything. Stops raised by ONE page read are
+// spoken as one sentence: the first in full, the rest named. And after any
+// assertive announcement, further assertive lines inside the cooldown go out
+// politely with an "Also:" - they still hold the agent and still reach the
+// panel; what changes is only that they stop cutting the person off.
+let lastAssertiveAt = 0;
+let ASSERTIVE_COOLDOWN_MS = 20_000;
+
+function calmSpeech(lines) {
+  let out = lines;
+  const stops = lines.filter((l) => l.level === 'stop');
+  if (stops.length > 1) {
+    const rest = lines.filter((l) => l.level !== 'stop');
+    const more = stops.length - 1;
+    const names = stops.slice(1, 3).map((l) => l.widget).join('; ');
+    const tail = stops.length > 3 ? `; and ${stops.length - 3} more` : '';
+    out = [{
+      say: `${stops[0].say} And ${more} more need${more === 1 ? 's' : ''} you: ${names}${tail}.`,
+      level: 'stop', live: stops[0].live, widget: stops[0].widget,
+    }, ...rest];
+  }
+  const now = Date.now();
+  return out.map((l) => {
+    if (l.live !== 'assertive') return l;
+    if (now - lastAssertiveAt < ASSERTIVE_COOLDOWN_MS) {
+      return { ...l, live: 'polite', say: `Also: ${l.say}` };
+    }
+    lastAssertiveAt = now;
+    return l;
+  });
+}
+
 // Findings live in storage, not in a module variable.
 //
 // An MV3 service worker is torn down after about thirty seconds of idle and
@@ -625,7 +661,7 @@ async function observeByModel(snap, opts = {}) {
         route: null, eu: null, source: 'reasoner',
       }], phase });
       chrome.runtime.sendMessage({ type: 'validationSpeak', phase,
-        lines: [{ say: f.say, level: 'stop', live: 'assertive', widget: f.widget }] })
+        lines: calmSpeech([{ say: f.say, level: 'stop', live: 'assertive', widget: f.widget }]) })
         .catch(() => {});
       await Trace.record({ nodeId: f.node ?? currentNode,
         label: labelFor(f.node ?? currentNode), phase, holder,
@@ -716,10 +752,10 @@ async function observeByModel(snap, opts = {}) {
     return { phase, findings: 0, error: String(e.message || e) };
   }
 
-  const speak = rendered
+  const speak = calmSpeech(rendered
     .filter((f) => f.spoken?.speak)
     .map((f) => ({ say: f.spoken.speak, level: f.level, live: f.spoken.live,
-                   widget: f.finding.widget }));
+                   widget: f.finding.widget })));
 
   const marks = rendered
     .filter((f) => f.visual && f.level !== 'ambient')
@@ -1308,10 +1344,10 @@ const Validation = {
 
     // Only what is meant to be heard. Ambient findings stay reachable on
     // request rather than being announced.
-    const speak = rendered
+    const speak = calmSpeech(rendered
       .filter((f) => f.spoken?.speak)
       .map((f) => ({ say: f.spoken.speak, level: f.level, live: f.spoken.live,
-                     widget: f.finding.widget }));
+                     widget: f.finding.widget })));
 
     const marks = rendered
       .filter((f) => f.visual && f.level !== 'ambient')
@@ -1495,6 +1531,9 @@ const Validation = {
     if (!r.resolved && dealt) return { resolved: true, remaining: 0 };
     return r;
   },
+
+  /** For tests: shrink the assertive cooldown so "later" fits in a test run. */
+  setSpeechCooldown(ms) { ASSERTIVE_COOLDOWN_MS = ms; lastAssertiveAt = 0; },
 
   /**
    * The spoken wrap-up, when the run ends.

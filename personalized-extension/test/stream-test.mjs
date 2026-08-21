@@ -207,9 +207,13 @@ await Validation.start('fly to LAX under $300');
   ok(Object.values(byWidget).every((n) => n === 1),
     'nothing is raised twice when the read completes');
   ok(stops.length === 2, 'both stop-class findings are on the record');
-  const spokeAssertive = sent.filter((m) => m.type === 'validationSpeak'
-    && m.lines?.some((l) => l.live === 'assertive'));
-  ok(spokeAssertive.length >= 2, 'and each was spoken assertively when it fired');
+  // The cooldown applies here too: the first early stop cuts in assertively,
+  // the second joins politely instead of cutting the first one off.
+  const earlySpoken = sent.filter((m) => m.type === 'validationSpeak'
+    && m.lines?.some((l) => l.level === 'stop')).flatMap((m) => m.lines);
+  ok(earlySpoken.some((l) => l.live === 'assertive')
+    && earlySpoken.some((l) => l.live === 'polite' && /^Also: /.test(l.say)),
+  'the first early stop is assertive and the second joins politely');
 
   // Answering the early-surfaced stop releases it even though the run's own
   // waiting list never saw it.
