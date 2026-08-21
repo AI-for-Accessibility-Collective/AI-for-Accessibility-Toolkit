@@ -1257,8 +1257,10 @@ export function maskSensitive(text) {
   t = t.replace(/\b\d{9,15}(\d{4})\b/g, (m, last) => `a number ending ${last}`);
   // SSNs: exactly 3-2-4.
   t = t.replace(/\b\d{3}-\d{2}-(\d{4})\b/g, (m, last) => `an SSN ending ${last}`);
-  // Stated secrets.
-  t = t.replace(/\b(password|passcode|pin)\s*(?:is|was|:)\s*\S+/gi,
+  // Stated secrets. The token must contain a digit, because "a PIN is
+  // required at checkout" is a sentence about a pin, not a pin - and masking
+  // "required" turned an honest finding into noise.
+  t = t.replace(/\b(password|passcode|pin)\s*(?:is|was|:)\s*(?=\S*\d)\S+/gi,
     (m, kind) => `${kind} (not read aloud)`);
   return t;
 }

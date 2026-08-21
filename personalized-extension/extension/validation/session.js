@@ -625,6 +625,14 @@ async function _publish(extra = {}) {
         : (prev.reads || [])).slice(-KEEP_READS),
       lookedBack: extra.lookedBack !== undefined ? extra.lookedBack
         : prev.lookedBack || null,
+      // Milestones survive unrelated publishes, like `probe` does. Every
+      // agent action publishes, so without the carry-forward the plan review
+      // and the wrap-up were erased from storage within a step of being
+      // written - the panel and the recorder mostly never saw them.
+      planReview: extra.planReview !== undefined ? extra.planReview
+        : prev.planReview || null,
+      wrapUp: extra.wrapUp !== undefined ? extra.wrapUp
+        : prev.wrapUp || null,
       ...s, steps, gate, rules: book,
       // Offered against everything on record: computing it against only this
       // call's appends meant any quiet page withdrew a standing offer.
@@ -1047,7 +1055,7 @@ async function adopt(noticed, phase) {
     // does not control, so it gets one line, no control characters, and a
     // hard length cap before it becomes something every later read asks.
     const text = String(n.what || n.say || n.question || '')
-      .replace(/[\r\n\t -]+/g, ' ').replace(/\s+/g, ' ')
+      .replace(/[\r\n\t\x00-\x1f]+/g, ' ').replace(/\s+/g, ' ')
       .trim().slice(0, 160);
     if (!text || have.has(text.toLowerCase())) continue;
     if (discovered + added >= MAX_DISCOVERED) break;
@@ -1381,8 +1389,12 @@ const Validation = {
       // being committed. The whole read is the flight, not just the model
       // call, so the findings are published by the time a waiter proceeds.
       const flight = observeByModel(snap, opts);
-      readInFlight = flight.catch(() => {});
-      flight.finally(() => { if (readInFlight) readInFlight = null; });
+      const guarded = flight.catch(() => {});
+      readInFlight = guarded;
+      // Cleared only if it is still OUR flight. Two reads can overlap, and
+      // the first one finishing must not blank the tracker while the second
+      // is still flying - that would let a commit slip through unwaited.
+      flight.finally(() => { if (readInFlight === guarded) readInFlight = null; });
       const r = await flight;
       return { ...r, watched: await watchNow() };
     }
@@ -1504,12 +1516,15 @@ const Validation = {
     // agent is" is itself the reason to ask, however clean the findings are.
     if (COMMITTING.test(String(actionDescription || '')) && lastOffPlan && flatModel) {
       await traceAction('held, committing on a page that matches no step of the task');
-      return {
-        allowed: false,
-        waitingOn: ['off the plan'],
-        say: 'This page does not match any step of the task I know. '
-           + 'I am not letting anything commit here until you look.',
-      };
+      const say = 'This page does not match any step of the task I know. '
+        + 'I am not letting anything commit here until you look.';
+      // Spoken, not just returned: the agent's own log is the only other
+      // place this reason lands, and the person this exists for cannot see
+      // it there. calmSpeech keeps repeats inside the cooldown polite.
+      chrome.runtime.sendMessage({ type: 'validationSpeak', phase: currentPhase,
+        lines: calmSpeech([{ say, level: 'stop', live: 'assertive', widget: 'off the plan' }]) })
+        .catch(() => {});
+      return { allowed: false, waitingOn: ['off the plan'], say };
     }
 
 
