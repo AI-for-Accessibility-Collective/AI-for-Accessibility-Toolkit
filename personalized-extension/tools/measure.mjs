@@ -30,8 +30,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { decide } from '../extension/validation/policy.js';
-import { route, routeSurface, cundOf, uncoverOf, severityOf, DEFER, SURFACES,
-         SURFACE, WEIGHTS,
+import { route, routeSurface, surfaceVariant, cundOf, uncoverOf, severityOf,
+         DEFER, SURFACES, SURFACE, WEIGHTS,
          MARGINAL_NOW_FACTOR } from '../extension/validation/utility.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -933,6 +933,7 @@ function cmdAuroc() {
     sidecar = JSON.parse(
       readFileSync(join(HERE, 'stop-costdims.json'), 'utf8')).codes || {};
   } catch { /* absent sidecar just means more fallback rows */ }
+  const careMap = loadCareRates();
   let joined = 0;
 
   const rows = [];
@@ -976,7 +977,22 @@ function cmdAuroc() {
         + `${expect} vs ${scored.eu.now}`);
       process.exit(1);
     }
-    rows.push({ ...r, euNow: scored.eu.now, benefit, label: r.verdict === 'worth-it' });
+    // v8 lab: the care-rate prior, joined by question text (the stops carry
+    // no clean domain; the cart and multiway runs will mostly miss). Both
+    // placements scored; the base row above is untouched.
+    const careRate = careMap.byQuestion.get(norm(f.widget));
+    let euCarePe = null; let euCareVmon = null; let benefitCarePe = null;
+    if (careRate != null) {
+      const fc = { ...f, careRate };
+      euCarePe = route(fc, { model: PERSONAS['screen reader'],
+                             joiningPause: d.joiningPause, carePrior: 'pe' }).eu.now;
+      euCareVmon = route(fc, { model: PERSONAS['screen reader'],
+                               joiningPause: d.joiningPause, carePrior: 'vmon' }).eu.now;
+      benefitCarePe = Math.min(1, pe + WEIGHTS.peCare
+        * Math.max(0, Math.min(1, careRate))) * uncover * cund;
+    }
+    rows.push({ ...r, euNow: scored.eu.now, benefit, label: r.verdict === 'worth-it',
+                careRate: careRate ?? null, euCarePe, euCareVmon, benefitCarePe });
   }
 
   const pos = rows.filter((r) => r.label).length;
@@ -1025,6 +1041,31 @@ function cmdAuroc() {
   console.log(`n = ${rows.length}. No claim of significance is made or available at this size; `
     + 'this is a direction to check against the study labels, not a result.');
 
+  // ── the care-rate prior (v8 lab experiment, both placements) ─────────────
+  const cared = rows.filter((r) => r.careRate != null);
+  console.log('\n## care-rate prior (v8 lab, experiment - ships as neither placement)\n');
+  console.log(`care-rate joined for ${cared.length} of ${rows.length} labeled stops `
+    + '(by question text; the cart and multiway runs use questions the mined '
+    + 'corpus does not carry).');
+  if (cared.length >= 5) {
+    const basSub = auroc(cared.map((r) => r.euNow), cared.map((r) => r.label));
+    const aPe = auroc(cared.map((r) => r.euCarePe), cared.map((r) => r.label));
+    const aVm = auroc(cared.map((r) => r.euCareVmon), cared.map((r) => r.label));
+    const aBenPe = auroc(cared.map((r) => r.benefitCarePe), cared.map((r) => r.label));
+    const aBenSub = auroc(cared.map((r) => r.benefit), cared.map((r) => r.label));
+    console.log(`\n| predictor (joined subset, n=${cared.length}) | AUROC |`);
+    console.log('|---|---|');
+    console.log(`| EU(now), no prior | ${basSub === null ? '—' : basSub.toFixed(3)} |`);
+    console.log(`| EU(now), care in P(e) | ${aPe === null ? '—' : aPe.toFixed(3)} |`);
+    console.log(`| EU(now), care in V_mon | ${aVm === null ? '—' : aVm.toFixed(3)} |`);
+    console.log(`| benefit half, no prior | ${aBenSub === null ? '—' : aBenSub.toFixed(3)} |`);
+    console.log(`| benefit half, care in P(e) | ${aBenPe === null ? '—' : aBenPe.toFixed(3)} |`);
+    console.log('\nread the deltas within the subset only; the subset is not the full set.');
+  } else {
+    console.log('too few joins to rank; the care prior stays measurable on the corpus '
+      + 'grids (`variants`) and waits for fresh recorded runs here.');
+  }
+
   if (AS_JSON) console.log('\n' + JSON.stringify(rows, null, 2));
 }
 
@@ -1062,10 +1103,35 @@ function loadSurfaceRows() {
       if (q.moment == null) continue;
       const lab = byKey.get(`${domain}|${norm(q.question)}`);
       if (!lab) { missed += 1; continue; }
-      rows.push({ q, label: lab.surface, cluster: lab.cluster, moment: q.moment });
+      rows.push({ q, label: lab.surface, cluster: lab.cluster, moment: q.moment,
+                  domain });
     }
   }
   return { rows, missed };
+}
+
+// The mined care-rates (behavioral-labels.json): per question, the fraction of
+// observed opportunities where real people actually performed the check.
+// Keyed domain|question with a question-only fallback for joins that carry no
+// domain (the recorded stops). Read-only; absent file just means zero joins.
+const CARE_FILE = argOf('--care-file')
+  || '/Users/chuanenl/Stanford/Summer Project Ideation '
+  + '/Verification Affordances/notes/utility-model/labeling/behavioral-labels.json';
+
+function loadCareRates() {
+  const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const byDomain = new Map();
+  const byQuestion = new Map();
+  try {
+    const data = JSON.parse(readFileSync(CARE_FILE, 'utf8'));
+    for (const r of data.rows || []) {
+      if (!Number.isFinite(r.care_rate)) continue;
+      byDomain.set(`${r.domain}|${norm(r.question)}`, r.care_rate);
+      const k = norm(r.question);
+      if (!byQuestion.has(k)) byQuestion.set(k, r.care_rate);
+    }
+  } catch { /* no care file, no prior - every cell degrades to care-off */ }
+  return { byDomain, byQuestion, norm };
 }
 
 function cmdSurfaces() {
@@ -1258,6 +1324,107 @@ function cmdIterations() {
   console.log('\nnothing in v2..v5 touched the labels; v1\'s cutoffs did (class proportions');
   console.log('only) and are flagged. reasoning per rung:\n');
   for (const [name, , why] of VARIANTS) console.log(`- ${name}: ${why}`);
+}
+
+// ── variants: the v8 lab grid over v6's design knobs ────────────────────────
+//
+// Campaign wave W3. Each knob is an open design question, not a tuning dial:
+// severity-implied pause on/off (the 36-question class awaiting David's
+// call), the consent weight, the select weight (the behavioral mining's
+// 72-row finding), and the mined care-rate as a P(e) prior. The grid scores
+// every combination against whatever labels file --labels points at, so the
+// decisive runs (D-GOLD, behavioral-v2) are one line each when those land.
+// Reading rule, stated before any grid ran: a cell becomes a candidate only
+// by winning on BOTH gold and behavioral labels - winning on the authored
+// labels alone is the circularity trap.
+
+function cmdVariants() {
+  const { rows, missed } = loadSurfaceRows();
+  const care = loadCareRates();
+  let careJoined = 0;
+  for (const r of rows) {
+    const c = care.byDomain.get(`${r.domain}|${care.norm(r.q.question)}`);
+    if (c != null) { r.care = c; careJoined += 1; }
+  }
+
+  const labelName = SURFACE_LABELS.split('/').pop().replace(/\.json$/, '');
+  const SEVS = [['sev:on', undefined], ['sev:off', false]];
+  const APPROVES = [0.3, 0.6, 0.8];
+  const SELECTS = [0.3, 0.5, 0.7];
+  const CARES = [['care:off', null], ['care:pe', 'pe']];
+
+  const scoreCell = (surface, carePrior, model) => {
+    const cm = {};
+    for (const a of SURFACES) { cm[a] = {}; for (const b of SURFACES) cm[a][b] = 0; }
+    for (const r of rows) {
+      const f = canonical(r.q);
+      if (carePrior && r.care != null) f.careRate = r.care;
+      cm[r.label][routeSurface(f, { model, surface, carePrior }).surface] += 1;
+    }
+    let hit = 0;
+    const f1s = [];
+    for (const s of SURFACES) {
+      hit += cm[s][s];
+      const rowN = SURFACES.reduce((t, b) => t + cm[s][b], 0);
+      const colN = SURFACES.reduce((t, a) => t + cm[a][s], 0);
+      const rec = rowN ? cm[s][s] / rowN : 0;
+      const prec = colN ? cm[s][s] / colN : 0;
+      f1s.push(prec + rec ? 2 * prec * rec / (prec + rec) : 0);
+    }
+    return { acc: hit / rows.length,
+             macroF1: f1s.reduce((a, b) => a + b) / f1s.length };
+  };
+
+  const cells = [];
+  for (const [sevName, sev] of SEVS) {
+    for (const a of APPROVES) {
+      for (const sel of SELECTS) {
+        const surface = surfaceVariant({ severityImpliedPause: sev,
+                                         approve: a, select: sel });
+        for (const [careName, carePrior] of CARES) {
+          const s = scoreCell(surface, carePrior, PERSONAS.sighted);
+          const sr = scoreCell(surface, carePrior, PERSONAS['screen reader']);
+          cells.push({
+            id: `${sevName} approve:${a} select:${sel} ${careName}`,
+            shipped: sev === undefined && a === 0.6 && sel === 0.5 && !carePrior,
+            f1S: s.macroF1, f1SR: sr.macroF1, accS: s.acc, accSR: sr.acc,
+          });
+        }
+      }
+    }
+  }
+  cells.sort((x, y) => y.f1S - x.f1S);
+  const best = cells[0];
+  const shipped = cells.find((c) => c.shipped);
+
+  const L = [];
+  L.push(`# the v8 variant grid - ${labelName}\n`);
+  L.push('36 cells over v6\'s design knobs, every cell the same equation with one');
+  L.push('combination of the open design answers. MAPPING/LABELS INHERIT THEIR OWN');
+  L.push(`STATUS (see the labels file). ${rows.length} rows`
+    + (missed ? `, ${missed} missed the label join` : '')
+    + `; care-rate joined for ${careJoined} rows`
+    + (careJoined === 0 ? ' (care cells degrade to care:off)' : '') + '.\n');
+  L.push('Reading rule, fixed before the grid ran: a cell becomes a candidate only by');
+  L.push('winning on BOTH the gold set and the behavioral labels. A win on authored');
+  L.push('labels alone is the circularity trap and promotes nothing.\n');
+  L.push('| cell | F1 sighted | F1 screen reader | acc S | acc SR |');
+  L.push('|---|---|---|---|---|');
+  for (const c of cells) {
+    const tag = c === best ? ' **best**' : c.shipped ? ' (shipped v6)' : '';
+    L.push(`| ${c.id}${tag} | ${c.f1S.toFixed(3)} | ${c.f1SR.toFixed(3)} `
+      + `| ${pct(Math.round(c.accS * rows.length), rows.length)} `
+      + `| ${pct(Math.round(c.accSR * rows.length), rows.length)} |`);
+  }
+  L.push('');
+  L.push(`best cell: ${best.id} (F1 ${best.f1S.toFixed(3)} / ${best.f1SR.toFixed(3)}); `
+    + `shipped v6 cell: ${shipped ? `${shipped.f1S.toFixed(3)} / ${shipped.f1SR.toFixed(3)}` : 'missing'}.`);
+
+  const text = L.join('\n') + '\n';
+  console.log(text);
+  const out = join(HERE, `variant-grid-${labelName}.md`);
+  writeFileSync(out, text);
+  console.log(`written to ${out}`);
 }
 
 // ── worst-case dominance over the money questions ───────────────────────────
@@ -1474,11 +1641,12 @@ function cmdDominance() {
 const COMMANDS = { agreement: cmdAgreement, label: cmdLabel, precision: cmdPrecision,
                    attention: cmdAttention, auroc: cmdAuroc,
                    dominance: cmdDominance, surfaces: cmdSurfaces,
-                   iterations: cmdIterations };
+                   iterations: cmdIterations, variants: cmdVariants };
 if (!COMMANDS[CMD]) {
   console.error('usage: node tools/measure.mjs '
-    + '<agreement|label|precision|attention|auroc|dominance|surfaces|iterations> '
-    + '[--dir <recordings>] [--golds <gold-v2 dir>] [--json]');
+    + '<agreement|label|precision|attention|auroc|dominance|surfaces|iterations|variants> '
+    + '[--dir <recordings>] [--golds <gold-v2 dir>] [--labels <surface labels>] '
+    + '[--care-file <behavioral labels>] [--json]');
   process.exit(1);
 }
 COMMANDS[CMD]();
