@@ -233,6 +233,11 @@ export function createRun(contract, opts = {}) {
       return {
         allowed: false,
         waitingOn: waiting.map((w) => w.widget),
+        // Which one the say line is showing, so the surfaces can exclude it
+        // from their own list. The derived unread gate in session.js has
+        // always named this; this gate reached the panel without it whenever
+        // a stop entered `waiting` first, and the finding appeared twice.
+        leading: waiting[0].widget,
         say: waiting.length === 1
           ? `I'm waiting on one thing: ${waiting[0].ask}`
           : `${waiting[0].ask || waiting[0].widget} `
