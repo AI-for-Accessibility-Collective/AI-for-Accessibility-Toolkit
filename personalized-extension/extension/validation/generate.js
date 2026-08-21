@@ -62,6 +62,10 @@ const LEAVES_PER_CALL = 12;
 // agent waits for.
 const EXAMPLES_FOR_QUESTIONS = 1;
 const EXAMPLES_FOR_CODING = 1;
+// How many trees the first stage shows. With four exemplars this was all of
+// them; the pool now grows as pipeline HTAs land, and twenty trees would put
+// the whole dataset in a prompt whose examples are meant to calibrate size.
+const EXAMPLES_FOR_TREE = 4;
 const QUESTIONS_PER_CALL = 24;
 const GEN_TEMP = 0.3;
 
@@ -89,6 +93,38 @@ export async function loadAssets(fetcher) {
 }
 
 export function setAssets(prompts, exemplars) { PROMPTS = prompts; EXEMPLARS = exemplars; }
+
+// ── which examples this query gets ──────────────────────────────────────────
+//
+// The exemplar pool is no longer four fixed golds: it is whatever domains the
+// pipeline has produced HTAs for, re-exported as new ones land. The question
+// and coding stages carry one example each, so which one matters — the rig
+// measured 74% coverage with the matching example against 9-30% with a
+// mismatched one. Scored lexically, no extra call: the words of the query
+// against the words of each exemplar's task line, domain name and top-level
+// labels. All-zero overlap keeps the pool's own order, which is the honest
+// state for a task unlike anything in the pool.
+
+const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'you',
+  'your', 'when', 'online', 'other', 'sites', 'site']);
+
+const tokens = (s) => new Set(String(s || '').toLowerCase()
+  .split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOP_WORDS.has(w)));
+
+/** Exemplars ranked by how much they look like this query, best first. */
+export function pickExemplars(query, exemplars = EXEMPLARS) {
+  const entries = Object.entries(exemplars || {});
+  const q = tokens(query);
+  const scored = entries.map(([name, ex], i) => {
+    const own = tokens(`${name} ${ex.task || ''} `
+      + (ex.tree?.children || []).map((c) => c.label || '').join(' '));
+    let hits = 0;
+    for (const w of q) if (own.has(w)) hits += 1;
+    return { ex, hits, i };
+  });
+  scored.sort((a, b) => b.hits - a.hits || a.i - b.i);
+  return scored.map((s) => s.ex);
+}
 
 // ── tree helpers, ported from the rig's common.py ───────────────────────────
 
@@ -293,18 +329,22 @@ export async function generate(query, opts = {}) {
   if (!hasCaller()) return null;
   if (!(await loadAssets(opts.fetcher))) return null;
 
-  const exs = Object.values(EXEMPLARS);
+  // Ranked by likeness to the query, so the one example the question and
+  // coding stages carry is the nearest thing the pool has to this task.
+  const exs = pickExemplars(query);
   if (!exs.length) return null;
 
   // ---- stage 1: the tree ----
   say({ stage: 'tree', of: 3 });
-  const trees = exs.map((e) => stripQuestions(e));
+  const treeExs = exs.slice(0, EXAMPLES_FOR_TREE);
+  const trees = treeExs.map((e) => stripQuestions(e));
   const model = await call(fill(PROMPTS['strong-stage1'], {
     EXEMPLAR_TREE: block(trees,
       'Here are <<N>> finished trees, one per task. The questions have been '
       + 'removed - this stage is only about the tree:'),
     QUERY: query,
-    ...calibration(exs),
+    // The size band comes from the trees actually shown, not the whole pool.
+    ...calibration(treeExs),
   }), 'gen-tree');
   for (const k of ['task', 'ask', 'tree']) {
     if (!(k in model)) throw new Error(`stage 1 output missing '${k}'`);

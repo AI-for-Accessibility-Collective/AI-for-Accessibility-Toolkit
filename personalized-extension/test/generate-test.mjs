@@ -256,6 +256,50 @@ const run = async (replies, opts = {}) => {
   }
 }
 
+// ── which example the query gets ────────────────────────────────────────────
+//
+// The pool is whatever domains the pipeline has HTAs for, so the one example
+// the questions and coding stages carry has to be picked, not hardcoded. The
+// rig's own numbers are why it matters: 74% coverage with the matching
+// example, 9-30% with a mismatched one.
+{
+  const pool = {
+    doctor: { task: 'book a doctor appointment online', tree: { id: '0', children: [{ label: 'Find a doctor' }] } },
+    hotel: { task: 'book a hotel room online with dates and a budget', tree: { id: '0', children: [{ label: 'Search hotels' }] } },
+    privacy: { task: 'change privacy or account settings', tree: { id: '0', children: [{ label: 'Open the settings' }] } },
+  };
+  const rank = (q) => G.pickExemplars(q, pool).map((e) => e.task.split(' ')[0]);
+  ok(rank('book me a hotel in tokyo under $200')[0] === 'book'
+    && G.pickExemplars('book me a hotel in tokyo under $200', pool)[0] === pool.hotel,
+    'a hotel query gets the hotel exemplar first');
+  ok(G.pickExemplars('make my instagram account private', pool)[0] === pool.privacy,
+    'a settings query gets the privacy exemplar first');
+  ok(G.pickExemplars('schedule a doctor appointment for tuesday', pool)[0] === pool.doctor,
+    'an appointment query gets the doctor exemplar first');
+  ok(G.pickExemplars('order a pizza', pool).length === 3,
+    'a query unlike anything in the pool still gets the whole ranked pool');
+
+  // The shipped exemplars are the pipeline's HTAs, re-exported as they land.
+  const shippedEx = JSON.parse(fs.readFileSync('extension/validation/exemplars.json', 'utf8'));
+  ok(Object.keys(shippedEx).length >= 3, 'the shipped pool has at least the three built domains');
+  for (const [name, ex] of Object.entries(shippedEx)) {
+    ok(typeof ex.task === 'string' && ex.task.length > 10 && ex.tree?.id != null,
+      `the shipped ${name} exemplar has a task line and a tree`);
+    let coded = 0; let uncoded = 0;
+    const walkT = (n) => {
+      for (const q of n.questions || []) {
+        if (q.cluster && q.moment) coded += 1; else uncoded += 1;
+      }
+      (n.children || []).forEach(walkT);
+    };
+    walkT(ex.tree);
+    ok(coded >= 10 && uncoded === 0,
+      `the shipped ${name} exemplar carries only fully coded questions (${coded})`);
+  }
+  const best = G.pickExemplars('book a hotel room in tokyo', shippedEx)[0];
+  ok(best === shippedEx.hotel, 'against the shipped pool a hotel query still picks hotel');
+}
+
 console.log(`\n${pass}/${pass + fail} - the model is written from the query, and a failure `
   + 'leaves no model rather than one about another task.');
 if (fail) process.exit(1);
