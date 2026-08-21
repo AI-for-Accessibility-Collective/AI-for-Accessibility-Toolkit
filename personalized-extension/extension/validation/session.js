@@ -698,6 +698,16 @@ async function observeByModel(snap, opts = {}) {
     // the trace can be keyed to nodes rather than step indices.
     node: f.finding.node || null, cluster: f.finding.cluster || null,
     moment: f.finding.moment || null, verified: f.finding.verified || null,
+    // These four were dropped here, which made leadWith()'s contradiction
+    // clause dead against stored findings and left nothing downstream of
+    // storage able to weigh a finding - the utility model reads stored
+    // findings, so it needs the fields the decision was made from.
+    contradicts: f.finding.contradicts === true,
+    moneyMoving: f.finding.moneyMoving === true,
+    confidence: f.finding.confidence ?? null,
+    aligned: f.finding.aligned === true,
+    why: f.finding.why ?? null,
+    whatTheAgentLoses: f.finding.whatTheAgentLoses ?? null,
     source: f.finding.source || 'reasoner',
   })), phase, reasoner: result.meta });
 

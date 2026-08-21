@@ -725,6 +725,10 @@ export async function readPage(flat, pageText, opts = {}) {
       id: q.id, node: q.node, question: q.question, subtask: q.subtask,
       cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
       paradigm: q.paradigm,
+      // The model wrote these when it wrote the question, and this join was
+      // dropping them - so a spoken explanation of a pause had nothing to say
+      // beyond the question itself.
+      why: q.why ?? null, whatTheAgentLoses: q.whatTheAgentLoses ?? null,
       contradictsAsk: r.contradictsAsk === true,
       answer: r.answer ?? null,
       quote: typeof r.quote === 'string' ? r.quote : null,
@@ -1102,6 +1106,7 @@ export function toFindings(result, phase) {
       // Carried for the trace and for the steps that come after this one.
       node: a.node, cluster: a.cluster, moment: a.moment,
       moneyMoving: a.moneyMoving === true,
+      why: a.why ?? null, whatTheAgentLoses: a.whatTheAgentLoses ?? null,
       confidence: a.confidence,
       verified: a.verify,
       aligned: aligned.has(a.node),
@@ -1127,6 +1132,7 @@ export function toFindings(result, phase) {
       control: null,
       quiet: false,
       node: null, cluster: null, moment: ANNOUNCED, moneyMoving: false,
+      why: n.whyItMatters ?? null, whatTheAgentLoses: null,
       confidence: null,
       verified: n.verify,
       aligned: false,
