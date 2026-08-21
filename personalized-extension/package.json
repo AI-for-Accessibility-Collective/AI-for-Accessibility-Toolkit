@@ -8,7 +8,7 @@
   "scripts": {
     "build": "node build.js",
     "watch": "node build.js --watch",
-    "test": "node test/verifier-test.mjs && node test/reasoner-test.mjs && node test/widget-press-test.mjs && node test/hold-timeout-test.mjs && node test/pause-resume-test.mjs && node test/interrogate-ask-test.mjs && node test/trace-test.mjs && node test/hand-over-test.mjs && node test/watch-test.mjs && node test/probe-test.mjs && node test/control-instruction-test.mjs && node test/panel-test.mjs && node test/generate-test.mjs && node test/adopt-test.mjs && node test/utility-test.mjs && node test/retrieve-test.mjs && node test/wrapup-test.mjs && node test/stress-test.mjs && node test/stream-test.mjs && node test/adapt-bundle-test.mjs && node test/blind-commit-test.mjs && node test/scale-fuzz-test.mjs && node test/marginal-bundle-test.mjs"
+    "test": "node test/verifier-test.mjs && node test/reasoner-test.mjs && node test/widget-press-test.mjs && node test/hold-timeout-test.mjs && node test/pause-resume-test.mjs && node test/interrogate-ask-test.mjs && node test/trace-test.mjs && node test/hand-over-test.mjs && node test/watch-test.mjs && node test/probe-test.mjs && node test/control-instruction-test.mjs && node test/panel-test.mjs && node test/generate-test.mjs && node test/adopt-test.mjs && node test/utility-test.mjs && node test/retrieve-test.mjs && node test/wrapup-test.mjs && node test/stress-test.mjs && node test/stream-test.mjs && node test/adapt-bundle-test.mjs && node test/blind-commit-test.mjs && node test/scale-fuzz-test.mjs && node test/marginal-bundle-test.mjs && node test/experience-test.mjs"
   },
   "devDependencies": {
     "aria-query": "^5.3.2",
