@@ -16,6 +16,13 @@
 // experiment row ("v7 fitted (CV)"), never installed as shipped weights.
 //
 // Run: node tools/fit-weights.mjs [--labels <path>]
+//
+// Rematch mode (campaign W4): --labels <train elicited> --eval <gold elicited>
+// fits on the labels set exactly as above (CV for mean/sd), then refits once
+// on the FULL labels set and scores that single configuration ONE time on the
+// eval set. The eval set is never seen inside any fitting loop. Adds the
+// care-rate prior (carePrior: null|'pe'|'vmon') to the searched space, with
+// f.careRate joined from the behavioral mining where a question has one.
 
 import { readFileSync } from 'fs';
 import { routeSurface, SURFACES, SURFACE, WEIGHTS }
@@ -28,8 +35,11 @@ const argOf = (k) => {
 const LABELS = argOf('--labels')
   || '/Users/chuanenl/Stanford/Summer Project Ideation '
   + '/Verification Affordances/notes/utility-model/labeling/surface-labels.json';
+const EVAL = argOf('--eval');
 const BEHAVIORAL = '/Users/chuanenl/Stanford/Summer Project Ideation '
   + '/Verification Affordances/notes/utility-model/labeling/behavioral-eval-labels.json';
+const CARE = '/Users/chuanenl/Stanford/Summer Project Ideation '
+  + '/Verification Affordances/notes/utility-model/labeling/behavioral-labels.json';
 const HTAS = '/Users/chuanenl/Projects/AI-for-Accessibility-Toolkit/'
   + 'personalized-extension/extension/validation/htas';
 const GOLDS = '/Users/chuanenl/Stanford/Summer Project Ideation '
@@ -50,6 +60,21 @@ function questionsOf(root) {
   };
   walk(root);
   return out;
+}
+
+let careByKey = null;
+function careRateOf(domain, question) {
+  if (careByKey === null) {
+    careByKey = new Map();
+    try {
+      for (const r of JSON.parse(readFileSync(CARE, 'utf8')).rows) {
+        if (Number.isFinite(r.care_rate)) {
+          careByKey.set(`${r.domain}|${norm(r.question)}`, r.care_rate);
+        }
+      }
+    } catch { /* no mining file: carePrior cells stay inert */ }
+  }
+  return careByKey.get(`${domain}|${norm(question)}`) ?? null;
 }
 
 function loadRows(labelPath) {
@@ -81,6 +106,7 @@ function loadRows(labelPath) {
         costDims: q.costDims ?? null, cluster: q.cluster ?? null,
         confidence: 0.8, verified: 'verified_exact',
         contradicts: false, confirming: false,
+        careRate: careRateOf(r.domain, r.question),
       },
     });
   }
@@ -90,12 +116,19 @@ function loadRows(labelPath) {
 // ── scoring ────────────────────────────────────────────────────────────────
 const PERSONAS = { sighted: null, sr: { vision: { descriptions: true } } };
 
-function macroF1(rows, cfg, model) {
+function confusion(rows, cfg, model) {
   const cm = {};
   for (const a of SURFACES) { cm[a] = {}; for (const b of SURFACES) cm[a][b] = 0; }
   for (const r of rows) {
-    cm[r.label][routeSurface(r.f, { model, weights: cfg.weights, surface: cfg.surface }).surface] += 1;
+    cm[r.label][routeSurface(r.f, {
+      model, weights: cfg.weights, surface: cfg.surface, carePrior: cfg.carePrior ?? null,
+    }).surface] += 1;
   }
+  return cm;
+}
+
+function macroF1(rows, cfg, model) {
+  const cm = confusion(rows, cfg, model);
   const f1s = [];
   for (const s of SURFACES) {
     const rowN = SURFACES.reduce((t, b) => t + cm[s][b], 0);
@@ -123,11 +156,13 @@ const SPACE = [
   ['need.select',     (c, v) => { c.surface.inputNeed.select = v; c.surface.inputNeed.refine = v; }, [0.3, 0.4, 0.5, 0.6, 0.7]],
   ['need.approve',    (c, v) => { c.surface.inputNeed.approve = v; }, [0.4, 0.5, 0.6, 0.7, 0.8]],
   ['sevFloor',        (c, v) => { c.surface.needSeverityFloor = v; }, [0.6, 0.75, 0.9]],
+  ['carePrior',       (c, v) => { c.carePrior = v; },                [null, 'pe', 'vmon']],
 ];
 
 const freshCfg = () => ({
   weights: JSON.parse(JSON.stringify(WEIGHTS)),
   surface: JSON.parse(JSON.stringify(SURFACE)),
+  carePrior: null,
 });
 
 function fit(rows) {
@@ -202,4 +237,40 @@ console.log(`transfer, behavioral rows: mean ${mean(transferBeh).toFixed(3)} sd 
 console.log(`\nchosen values per fold (stability check):`);
 for (const [name] of SPACE) {
   console.log(`  ${name}: ${allChosen.map((c) => c[name]).join(' ')}`);
+}
+
+// ── rematch mode: refit on the FULL fit set, then ONE eval-set scoring ──────
+if (EVAL) {
+  const evalRows = loadRows(EVAL);
+  const { cfg, chosen } = fit(rows);
+  console.log(`\n=== rematch: fitted on all ${rows.length} fit rows, `
+    + `scored ONCE on ${evalRows.length} eval rows ===`);
+  const s = macroF1(evalRows, cfg, PERSONAS.sighted);
+  const sr = macroF1(evalRows, cfg, PERSONAS.sr);
+  console.log(`eval macro-F1: sighted ${s.toFixed(3)} / sr ${sr.toFixed(3)}`);
+  for (const [pname, model] of Object.entries(PERSONAS)) {
+    const cm = confusion(evalRows, cfg, model);
+    const rec = SURFACES.map((x) => {
+      const rowN = SURFACES.reduce((t, b) => t + cm[x][b], 0);
+      return `${x} ${rowN ? (cm[x][x] / rowN).toFixed(2) : 'n/a'}`;
+    }).join(' · ');
+    console.log(`per-surface recall (${pname}): ${rec}`);
+  }
+  console.log(`behavioral transfer of this config: `
+    + `${objective(behavioral, cfg).toFixed(3)}`);
+  const hand = freshCfg();
+  console.log(`\nfitted vs hand-set:`);
+  for (const [name, set, grid] of SPACE) {
+    const probe = freshCfg();
+    // recover the hand-set value by reading what freshCfg holds at that knob:
+    // set() writers have no readers, so probe by finding the grid value whose
+    // set() leaves the config unchanged from hand-set.
+    let handVal = 'custom';
+    for (const v of grid) {
+      const a = freshCfg(); set(a, v);
+      if (JSON.stringify(a) === JSON.stringify(hand)) { handVal = v; break; }
+    }
+    const marker = String(chosen[name]) === String(handVal) ? '' : '   <- moved';
+    console.log(`  ${name}: hand ${handVal} -> fitted ${chosen[name]}${marker}`);
+  }
 }
