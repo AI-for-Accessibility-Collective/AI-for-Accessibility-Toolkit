@@ -185,6 +185,133 @@ export function matchDomain(query, index) {
   return best;
 }
 
+// ── adapting a retrieved model to THIS request ──────────────────────────────
+//
+// A built model's questions were written for the KIND of task, from
+// recordings of other people, before this person typed anything. Two things
+// follow, and a live run produced both on its first night: a question can
+// bake in a default the request contradicts ("are the default settings of
+// one adult and one room correct?" against a request for 2 adults - the
+// layer flagged a correct page as a mismatch), and a request can carry a
+// constraint no question covers ("breakfast included", "near the convention
+// center"). One call fixes both: it returns a small patch - rewrites and
+// additions - which is applied deterministically here, so the model's
+// structure can never be corrupted by a generation hiccup.
+
+const MAX_REWRITES = 20;
+const MAX_ADDITIONS = 8;
+const MOMENTS = new Set(['Now', 'After', 'Completion', 'On demand']);
+
+const ADAPT_PROMPT = `A person just typed this request:
+"<<QUERY>>"
+
+Below is every verification question for this KIND of task, written before \
+anyone knew this person's request, one per line as \`id | question\`.
+
+<<QUESTIONS>>
+
+Two jobs, and only these:
+
+1. "rewrites" - questions whose wording assumes a default or a detail this \
+request contradicts. Rewrite each to fit THIS request while checking the same \
+thing. Do not rewrite questions that are merely generic - a generic question \
+is fine; a WRONG assumption is not. [{"id": "...", "question": "..."}]
+
+2. "additions" - constraints stated in the request that NO question above \
+covers. Write at most <<MAX>> new questions, each hung on the id of the \
+existing subtask where it belongs. \
+[{"nodeId": "...", "question": "...", "why": "...", \
+"moment": "Now"|"After"|"Completion"|"On demand", "moneyMoving": true|false}]
+
+Return only JSON: {"rewrites": [...], "additions": [...]}. Empty arrays when \
+nothing needs it.`;
+
+/** Where a flat question id lives on the tree: its node, and which question. */
+function resolveFlatId(model, flatId) {
+  const s = String(flatId);
+  const hash = s.lastIndexOf('#');
+  const nodeId = hash > 0 ? s.slice(0, hash) : s;
+  const idx = hash > 0 ? parseInt(s.slice(hash + 1), 10) - 1 : 0;
+  const node = nodeById(model, nodeId);
+  if (!node || !Array.isArray(node.questions) || idx < 0 || idx >= node.questions.length) {
+    return null;
+  }
+  return { node, idx };
+}
+
+/**
+ * Apply a patch to a model, refusing anything malformed. Pure bookkeeping:
+ * every accepted change lands exactly where the id says, every rejected one
+ * is counted, and nothing else on the model moves.
+ */
+export function applyAdaptations(model, patch) {
+  const out = { rewritten: 0, added: 0, skipped: 0 };
+  for (const r of (patch?.rewrites || []).slice(0, MAX_REWRITES)) {
+    const hit = r && typeof r.question === 'string' && r.question.trim()
+      ? resolveFlatId(model, r.id) : null;
+    if (!hit) { out.skipped += 1; continue; }
+    const q = hit.node.questions[hit.idx];
+    // The original wording is kept on the question: the rewrite is this
+    // run's view, and the bank's wording is the provenance.
+    q.originalQuestion = q.originalQuestion || q.question;
+    q.question = r.question.trim();
+    q.adapted = true;
+    out.rewritten += 1;
+  }
+  for (const a of (patch?.additions || []).slice(0, MAX_ADDITIONS)) {
+    if (!a || typeof a.question !== 'string' || !a.question.trim()) {
+      out.skipped += 1; continue;
+    }
+    const node = nodeById(model, a.nodeId) || model.tree;
+    node.questions = node.questions || [];
+    node.questions.push({
+      question: a.question.trim(),
+      why: typeof a.why === 'string' ? a.why : 'stated in the request',
+      whatTheAgentLoses: '',
+      moment: MOMENTS.has(a.moment) ? a.moment : 'Now',
+      moneyMoving: a.moneyMoving === true,
+      fromAsk: true,
+    });
+    out.added += 1;
+  }
+  return out;
+}
+
+/**
+ * One call that fits a retrieved model to the person's request.
+ *
+ * Never throws and never returns a half-model: on any failure the original
+ * model is returned untouched, which is exactly the state before this
+ * existed. The patch shape keeps the call's output small, so this runs in
+ * seconds where full generation runs in minutes.
+ */
+export async function adaptModel(model, query, opts = {}) {
+  const callFn = opts.caller || caller;
+  if (typeof callFn !== 'function' || !query) return { model, rewritten: 0, added: 0 };
+  const m = JSON.parse(JSON.stringify(model));
+  try {
+    const lines = [];
+    const rec = (n) => {
+      const qs = Array.isArray(n.questions) ? n.questions : [];
+      qs.forEach((q, i) => {
+        lines.push(`${qs.length > 1 ? `${n.id}#${i + 1}` : String(n.id)} | ${q.question}`);
+      });
+      for (const c of n.children || []) rec(c);
+    };
+    rec(m.tree);
+    const prompt = ADAPT_PROMPT
+      .split('<<QUERY>>').join(String(query).slice(0, 500))
+      .split('<<QUESTIONS>>').join(lines.join('\n'))
+      .split('<<MAX>>').join(String(MAX_ADDITIONS));
+    const text = await callFn(prompt, { temperature: GEN_TEMP, tag: 'adapt' });
+    const patch = parseJson(text);
+    const r = applyAdaptations(m, patch);
+    return { model: m, ...r };
+  } catch (e) {
+    return { model, rewritten: 0, added: 0, error: String(e?.message || e).slice(0, 120) };
+  }
+}
+
 /**
  * The built model for this query, or null if no built domain matches.
  *

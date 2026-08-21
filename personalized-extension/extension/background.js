@@ -754,6 +754,22 @@ function startModelFor(task) {
       'aa.validation.gen': { stage: 'retrieved', domain: hit.domain, at: Date.now() },
     }).catch(() => {});
     console.log('[validation] built model retrieved:', hit.domain);
+
+    // Fit the bank to THIS request, without making the agent wait for it. The
+    // raw model checks pages meanwhile; the adapted one replaces it when the
+    // patch lands, a few seconds later. Stored like a generated model, because
+    // a worker restart refetching the FILE would silently lose the patch.
+    G.adaptModel?.(hit.model, task).then(async (a) => {
+      if (mine.aborted || !a || (!a.rewritten && !a.added)) return;
+      globalThis.ValidationTaskModel?.load(a.model, 'generated');
+      await chrome.storage.local.set({ 'aa.validation.model': a.model });
+      chrome.storage.local.set({
+        'aa.validation.gen': { stage: 'adapted', domain: hit.domain,
+          rewrites: a.rewritten, additions: a.added, at: Date.now() },
+      }).catch(() => {});
+      console.log(`[validation] model adapted to the request: `
+        + `${a.rewritten} rewritten, ${a.added} added`);
+    }).catch(() => { /* the raw bank keeps working */ });
     return true;
   }).catch(() => false) || Promise.resolve(false);
 
