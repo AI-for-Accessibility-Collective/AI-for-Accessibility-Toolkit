@@ -712,6 +712,17 @@ async function observeByModel(snap, opts = {}) {
   }
 
   const phase = opts.phase || Reasoner.phaseFor(result, flatModel);
+  // Where the run is, in one bit: a page that aligns to nothing while a model
+  // is loaded is off the plan, and the gate holds any commit there. Cleared
+  // the moment an aligned page is read.
+  lastOffPlan = !phase && !(result.alignedNodes || []).length;
+  // The page's own danger signs, feeding P(e) for everything found on it.
+  const signals = {
+    offPlan: lastOffPlan,
+    ambiguity: (result.ambiguity || []).length,
+    traceAnomaly: !!(result.traceAnomaly
+      && ((result.traceAnomaly.retries ?? 0) > 1 || result.traceAnomaly.backtrack === true)),
+  };
   // Anything already surfaced mid-stream is not raised a second time. It is
   // in storage at the phase the run was in when it fired; the say and the
   // quote are identical, so nothing is lost by the exclusion.
@@ -764,7 +775,7 @@ async function observeByModel(snap, opts = {}) {
 
   let rendered;
   try {
-    ({ findings: rendered } = run.observeFindings(findings, phase, { read, of }));
+    ({ findings: rendered } = run.observeFindings(findings, phase, { read, of, signals }));
   } catch (e) {
     await publish({ append: [{ widget: 'Checking failed', level: 'aside',
       say: `I could not finish checking this page. ${String(e.message || e).slice(0, 80)}`,

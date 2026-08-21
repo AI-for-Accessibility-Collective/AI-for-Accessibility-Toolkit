@@ -114,7 +114,8 @@ export function decide(f, state = {}) {
     // aside; this is the graded form of the same call, and the locked stops
     // above are deliberately decided before it so nothing here can soften
     // them.
-    const r = euRoute(f, { spoken: state.spoken || 0, model: state.model });
+    const r = euRoute(f, { spoken: state.spoken || 0, model: state.model,
+                           signals: state.signals || null });
     return { level: ROUTE_LEVEL[r.route], why: r.why, route: r.route, eu: r.eu };
   } else {
     level = 'aside';

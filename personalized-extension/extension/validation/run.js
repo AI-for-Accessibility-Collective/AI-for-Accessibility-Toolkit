@@ -83,15 +83,16 @@ export function createRun(contract, opts = {}) {
   // `read` and `of` are what the step line says the page gave up: for the
   // extractors that is facts read of facts wanted, and for the reasoner it is
   // questions answered of questions asked.
-  function apply(findings, phase, read, of) {
+  function apply(findings, phase, read, of, signals = null) {
     const rendered = [];
     for (const f of findings) {
       // `spoken` is the fatigue input: how much this run has already said out
       // loud. The utility model raises the cost of the spoken routes with it,
       // which is what migrates mid-tier findings toward the log as a run
-      // talks more.
+      // talks more. `signals` are the page's own danger signs, raising P(e)
+      // for everything found on it.
       const spoken = said.filter((s) => s.level !== 'ambient').length;
-      const d = decide(f, { seen, style, model, spoken });
+      const d = decide(f, { seen, style, model, spoken, signals });
       let { level, why } = d;
       // Route and scores travel on the finding, so they survive publish and a
       // surface (or the completion review) can order by them.
@@ -196,7 +197,7 @@ export function createRun(contract, opts = {}) {
     observeFindings(findings, phase, counts = {}) {
       const of = counts.of ?? findings.length;
       const read = counts.read ?? findings.length;
-      return { findings: apply(findings, phase, read, of) };
+      return { findings: apply(findings, phase, read, of, counts.signals || null) };
     },
 
     /** Read a page, check it, and decide how loudly to say each thing. */

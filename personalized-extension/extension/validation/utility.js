@@ -31,6 +31,13 @@ export const WEIGHTS = {
   // model itself was unsure of its own reading.
   peBase: 0.15,
   peDoubt: 0.2,          // scaled by (1 − confidence)
+  // Live danger signals, from the same page read (decision 9). Each raises
+  // suspicion for every finding on the page it fired on: a page whose plan
+  // position is unknown, a page showing several values for one fact, a trace
+  // that has been retrying or backtracking.
+  peOffPlan: 0.2,
+  peAmbiguity: 0.1,
+  peAnomaly: 0.1,
   // P(uncover): a verified quote is close to certain evidence; anything else
   // is weaker.
   uncoverVerified: 0.95,
@@ -88,7 +95,11 @@ export function route(f, ctx = {}) {
   // and the argmax into the first route. Found by the stress suite.
   const conf = Number.isFinite(f.confidence)
     ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
-  const pe = Math.min(1, w.peBase + w.peDoubt * (1 - conf));
+  const sig = ctx.signals || {};
+  const pe = Math.min(1, w.peBase + w.peDoubt * (1 - conf)
+    + (sig.offPlan ? w.peOffPlan : 0)
+    + (sig.ambiguity ? w.peAmbiguity : 0)
+    + (sig.traceAnomaly ? w.peAnomaly : 0));
   const uncover = f.verified ? w.uncoverVerified : w.uncoverOther;
   const cund = f.moneyMoving === true ? w.cundMoney : w.cundOther;
   const defer = DEFER[f.moment] || DEFER_DEFAULT;
