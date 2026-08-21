@@ -907,7 +907,11 @@ async function adopt(noticed, phase) {
   const have = new Set((flatModel?.questions || []).map((q) => String(q.question).toLowerCase()));
   let added = 0;
   for (const n of noticed) {
-    const text = String(n.say || n.question || '').trim();
+    // `what` is the schema's field - NOTICED_ITEM requires it. `say` and
+    // `question` never existed on a schema-conformant item, so this read empty
+    // on every real run and adopt silently added nothing; the test's mock used
+    // `say` and hid it.
+    const text = String(n.what || n.say || n.question || '').trim();
     if (!text || have.has(text.toLowerCase())) continue;
     if (discovered + added >= MAX_DISCOVERED) break;
     host.questions = host.questions || [];

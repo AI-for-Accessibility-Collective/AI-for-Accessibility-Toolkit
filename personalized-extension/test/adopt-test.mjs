@@ -72,13 +72,19 @@ const questionsIn = (m) => {
 
 // The page read: it answers nothing, and notices two things no question asked
 // for. Both quotes are on the page, which is what lets them through at all.
+// The fields the real schema requires: NOTICED_ITEM is {what, quote,
+// whyItMatters, contradictsAsk}. An earlier version of this mock used `say`,
+// which no schema-conformant response carries - and adopt() happened to read
+// `say`, so the mock passed while the real path silently added nothing.
 R.setGeminiCaller(async () => JSON.stringify({
   alignedPhase: 'Review',
   alignedNodes: ['2.1'],
   answers: [],
   noticed: [
-    { say: 'Is trip protection already added?', quote: '- text: Trip protection $24.99 — added', contradictsAsk: false },
-    { say: 'Is the total over the $300 I said?', quote: '- text: Total $312.98', contradictsAsk: true },
+    { what: 'Is trip protection already added?', whyItMatters: 'a $24.99 add-on nobody chose',
+      quote: '- text: Trip protection $24.99 — added', contradictsAsk: false },
+    { what: 'Is the total over the $300 I said?', whyItMatters: 'the stated limit was $300',
+      quote: '- text: Total $312.98', contradictsAsk: true },
   ],
 }));
 
