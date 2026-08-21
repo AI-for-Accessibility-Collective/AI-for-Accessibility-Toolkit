@@ -754,6 +754,7 @@ function startModelFor(task) {
       'aa.validation.gen': { stage: 'retrieved', domain: hit.domain, at: Date.now() },
     }).catch(() => {});
     console.log('[validation] built model retrieved:', hit.domain);
+    globalThis.Validation?.planReview?.().catch(() => {});
 
     // Fit the bank to THIS request, without making the agent wait for it. The
     // raw model checks pages meanwhile; the adapted one replaces it when the
@@ -823,6 +824,7 @@ function startModelFor(task) {
         // Only now is there anything to ask a page. The tree on its own is not
         // a reason to let the agent go.
         arrived('ready');
+        if (had === 0) globalThis.Validation?.planReview?.().catch(() => {});
         had = now;
       }
       // Re-read at most twice: when there are first questions to ask, and once

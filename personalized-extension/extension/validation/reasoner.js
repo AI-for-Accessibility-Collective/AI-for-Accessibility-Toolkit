@@ -150,6 +150,9 @@ export function flattenModel(model) {
         paradigm: Number.isInteger(q.paradigm) ? q.paradigm : null,
         why: q.why || null,
         whatTheAgentLoses: q.whatTheAgentLoses || null,
+        // Where the question came from: true when the adapt call wrote it
+        // from the person's own request. The plan review names these.
+        fromAsk: q.fromAsk === true,
         // Carried, not yet acted on. This is the field the design names as the
         // general form of `IRREVERSIBLE_AFTER`, which is three Amazon strings
         // in policy.js today. Nothing reads it here; it travels on the finding

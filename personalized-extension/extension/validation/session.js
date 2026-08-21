@@ -773,10 +773,26 @@ async function observeByModel(snap, opts = {}) {
     return { phase, findings: 0, error: String(e.message || e) };
   }
 
-  const speak = calmSpeech(rendered
+  // The cognitive checkpoint: one short polite line when the run crosses a
+  // phase boundary, and only then (decision 16). It rides in front of this
+  // read's findings so "now: compare properties" frames what follows, and it
+  // goes through the same calmSpeech as everything else so it never talks
+  // over a stop.
+  const checkpoint = [];
+  if (phase && phase !== lastCheckpointPhase) {
+    checkpoint.push({
+      say: lastCheckpointPhase
+        ? `${lastCheckpointPhase} done. Now: ${phase}.`
+        : `Starting: ${phase}.`,
+      level: 'checkpoint', live: 'polite', widget: 'checkpoint',
+    });
+    lastCheckpointPhase = phase;
+  }
+
+  const speak = [...checkpoint, ...calmSpeech(rendered
     .filter((f) => f.spoken?.speak)
     .map((f) => ({ say: f.spoken.speak, level: f.level, live: f.spoken.live,
-                   widget: f.finding.widget })));
+                   widget: f.finding.widget })))];
 
   const marks = rendered
     .filter((f) => f.visual && f.level !== 'ambient')
@@ -1606,6 +1622,36 @@ const Validation = {
 
   /** For tests: shrink the assertive cooldown so "later" fits in a test run. */
   setSpeechCooldown(ms) { ASSERTIVE_COOLDOWN_MS = ms; lastAssertiveAt = 0; },
+
+  /**
+   * Checkpoint zero: the plan, spoken once, before the run gets going.
+   *
+   * One polite sentence and a panel record - never a blocking form
+   * (decision 15: skippable means the default is to keep moving). Says what
+   * the plan is, how much will be checked, how much of that guards money,
+   * and what the request itself added if the adapt call ran. Called by the
+   * host when a model becomes ready; calling it again is free.
+   */
+  async planReview() {
+    if (planReviewSpoken || !flatModel) return { spoken: false };
+    planReviewSpoken = true;
+    const phases = flatModel.phases || [];
+    const qs = flatModel.questions || [];
+    const money = qs.filter((q) => q.moneyMoving === true).length;
+    const fromAsk = qs.filter((q) => q.fromAsk === true).map((q) => q.question);
+    const parts = [`The plan: ${phases.join(', ')}.`,
+      `I will check ${qs.length} things, ${money} of them before money moves.`];
+    if (fromAsk.length) {
+      parts.push(`From your request I added: ${fromAsk.slice(0, 3).join('; ')}.`);
+    }
+    const say = parts.join(' ');
+    chrome.runtime.sendMessage({ type: 'validationSpeak', phase: null,
+      lines: calmSpeech([{ say, level: 'checkpoint', live: 'polite', widget: 'plan' }]) })
+      .catch(() => {});
+    await publish({ planReview: { at: Date.now(), phases, questions: qs.length,
+      money, fromAsk: fromAsk.slice(0, 8) } });
+    return { spoken: true, phases: phases.length, questions: qs.length };
+  },
 
   /**
    * The spoken wrap-up, when the run ends.
