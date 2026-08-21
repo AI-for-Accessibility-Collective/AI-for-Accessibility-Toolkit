@@ -155,6 +155,47 @@
         }
         root.append(box);
       }
+      if (state.wrapUp) {
+        const rev = el("section", "va-review");
+        rev.append(el("h2", null, "The run, in review"));
+        const kept = (state.findings || []).filter((f) => f.level === "ambient" && !f.confirming);
+        const outcome = kept.filter((f) => f.moment === "Completion");
+        const rest = kept.filter((f) => f.moment !== "Completion");
+        for (const f of outcome) {
+          const item = el("div", "va-asked");
+          item.append(el("p", "va-text", f.say));
+          if (f.from) item.append(el("p", "va-where", f.from));
+          rev.append(item);
+        }
+        if (!outcome.length) {
+          rev.append(el("p", null, "No outcome question was answerable from the pages seen."));
+        }
+        const strength = (f) => f.eu ? Math.max(...Object.values(f.eu).filter((x) => typeof x === "number")) : 0;
+        const groups = /* @__PURE__ */ new Map();
+        for (const f of rest) {
+          const k = f.cluster || "other";
+          if (!groups.has(k)) groups.set(k, []);
+          groups.get(k).push(f);
+        }
+        for (const [k, fs] of [...groups.entries()].sort((a, b) => b[1].length - a[1].length)) {
+          fs.sort((a, b) => strength(b) - strength(a));
+          const d = el("details", "va-revgroup");
+          const sum = el(
+            "summary",
+            null,
+            `${fs.length} kept about ${k === "facts" ? "what the pages said" : k}`
+          );
+          d.append(sum);
+          for (const f of fs) {
+            const item = el("div", "va-asked");
+            item.append(el("p", "va-text", f.say));
+            if (f.from) item.append(el("p", "va-where", f.from));
+            d.append(item);
+          }
+          rev.append(d);
+        }
+        root.append(rev);
+      }
       const heldNow = new Set(
         state.gate && state.gate.allowed === false && state.gate.leading ? [state.gate.leading] : []
       );
@@ -164,7 +205,16 @@
       } else {
         const seenAlready = new Set(state.acknowledged || []);
         const list = el("ul", "va-list");
+        let lastGroup = null;
         for (const f of findings) {
+          const group = f.nodeLabel || f.phase || null;
+          if (group && group !== lastGroup) {
+            const h = el("li", "va-nodehead");
+            h.setAttribute("role", "presentation");
+            h.append(el("span", null, group));
+            list.append(h);
+            lastGroup = group;
+          }
           const done = seenAlready.has(`${f.widget}|${f.phase}|${f.say}`);
           const li = el("li", `va-item ${tone(f)}${done ? " va-read" : ""}`);
           li.append(el("span", "va-dot"));
@@ -177,6 +227,23 @@
             continue;
           }
           const row = el("div", "va-answers");
+          if (Array.isArray(f.options) && f.options.length) {
+            for (const opt of f.options.slice(0, 4)) {
+              const b = el("button", "va-do primary", `Pick ${opt}`);
+              b.dataset.vaKey = `opt:${f.widget}:${opt}`;
+              b.addEventListener("click", () => {
+                onControl?.({
+                  ...f.control || {},
+                  action: f.control?.action || "select-options",
+                  node: f.node ?? null,
+                  widget: f.widget,
+                  option: opt
+                });
+                onControl?.({ action: "ack", key: `${f.widget}|${f.phase}|${f.say}` });
+              });
+              row.append(b);
+            }
+          }
           if (f.control) {
             const b = el("button", "va-do", f.control.label);
             b.dataset.vaKey = `do:${f.widget}`;
