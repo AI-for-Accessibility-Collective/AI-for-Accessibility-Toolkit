@@ -119,6 +119,127 @@ const DEFER_DEFAULT = DEFER['Now'];
 // sentence.
 export const MARGINAL_NOW_FACTOR = 0.25;
 
+// ── the three-surface shadow score ──────────────────────────────────────────
+//
+// David's 2026-08-21 direction (STRONG-SCORE.md in the research repo): one
+// strong utility function that decides, per finding, which SURFACE it gets -
+// widget (pause the agent, capture the person's input), cognitive checkpoint
+// (speak, nothing pauses), or the agent log (kept, shown at the end). No
+// on-demand class: pull is a property of the log, not a route. routeSurface()
+// below scores that three-way decision with the same terms as route(), plus
+// the one term the four-route form is missing: I(r), the probability that
+// surfacing on r leads to the error actually being AVERTED. A widget forces
+// the resolution before the agent proceeds, so I(widget) = 1 by construction;
+// a spoken checkpoint only averts if the person intervenes on what they
+// heard; the log only averts what a remedy after the fact can still fix.
+//
+// SHADOW means: nothing live calls this. decide() still routes with route()
+// and the locked stops; routeSurface() exists so the measurement instruments
+// can score the three-way form against the surface labels and sweep its
+// dominance properties before anything ships. That order is deliberate.
+export const SURFACES = ['widget', 'checkpoint', 'log'];
+
+export const SURFACE = {
+  // I(r), the captured-resolution term: the probability the surfacing leads
+  // to the error being averted GIVEN the person received it - A(r) already
+  // prices receipt, so I must not re-price it. The one evidenced distinction
+  // is capture versus offer: a widget does not let the run proceed until the
+  // answer arrives, so I(widget) = 1 by construction. Whether a spoken offer
+  // converts to intervention more often than a review offer is NOT evidenced
+  // either way (the review attaches its remedy to the item; the recordings
+  // cannot measure either rate, because the scripted presser acts only inside
+  // holds), so checkpoint and log carry the SAME stated estimate rather than
+  // an invented difference. An earlier draft set I(log) = 0.25 and the
+  // Completion questions promptly routed to speech - the same
+  // awareness-inflation pathology the vmon repricing fixed - which is what
+  // an unevidenced spread between the offer surfaces buys. The study
+  // observes both rates directly and replaces the estimate.
+  I: { widget: 1, checkpoint: 0.5, log: 0.5 },
+  // A(r) for the surfaces. A(widget) = 1 where A(now) measured 0.8: the 0.8
+  // includes spoken findings that cleared before the next hold, which cannot
+  // happen to a hold itself - a widget IS the hold, presented and waited on.
+  // checkpoint carries the measured spoken value; log the shipped estimate.
+  attention: { widget: 1, checkpoint: 0.8, log: 0.35 },
+  // What each surface costs the person. The widget price is the design
+  // interview's own pause price: intBase.now was 0.12 back when the now route
+  // meant "pause now", and was repriced to 0.04 exactly when now stopped
+  // pausing and became a spoken aside. The widget route restores the pause
+  // semantics, so it restores the pause price. checkpoint is the aside price;
+  // log is the shipped kept price.
+  intBase: { widget: 0.12, checkpoint: 0.04, log: 0.01 },
+  // D per surface, same moment-sensitivity as DEFER, cell by cell:
+  //   widget takes DEFER's now column - it is an interception at this moment,
+  //     and an answer wanted at completion is worth as little captured early
+  //     as spoken early (0.4 / 0.35).
+  //   checkpoint takes the better of DEFER's two spoken columns - the surface
+  //     decision is widget-vs-checkpoint-vs-log, and checkpoint's internal
+  //     now-vs-next-pause timing stays with the existing spoken machinery,
+  //     which picks the better moment; the surface is scored at that.
+  //   log takes the better of DEFER's kept columns - the on-demand class
+  //     dissolved into the log, and a question wanted on request keeps FULL
+  //     value there (someone asks, the log answers), so its log cell is 1
+  //     where DEFER priced the log route 0.7 against a separate on-demand
+  //     route that no longer exists.
+  defer: {
+    'Now':        { widget: 1,    checkpoint: 1,   log: 0.3 },
+    'After':      { widget: 1,    checkpoint: 1,   log: 0.6 },
+    'Completion': { widget: 0.4,  checkpoint: 0.6, log: 1 },
+    'On demand':  { widget: 0.35, checkpoint: 0.4, log: 1 },
+  },
+};
+
+/**
+ * The three-surface expected utility for one finding, and the best surface.
+ *
+ *   EU(r) = P(e) x P(uncover) x D(r) x I(r) x C_und + V_mon x A(r) - C_int(r)
+ *
+ * Same P(e), P(uncover), C_und and persona machinery as route() - the only
+ * new physics is I(r) and the surface-shaped D, A and cost tables above.
+ * History-free for the same reasons. Called by measurement only.
+ *
+ * @param {Object} f the finding (moment, moneyMoving, costDims, confidence,
+ *                   verified ...)
+ * @param {{model?: object, weights?: object, surface?: object,
+ *          joiningPause?: boolean, signals?: object}} ctx
+ * @returns {{surface: string, eu: Object<string,number>}}
+ */
+export function routeSurface(f, ctx = {}) {
+  const w = ctx.weights || WEIGHTS;
+  const s = ctx.surface || SURFACE;
+  const m = ctx.model || null;
+
+  const conf = Number.isFinite(f.confidence)
+    ? Math.max(0, Math.min(1, f.confidence)) : 0.8;
+  const sig = ctx.signals || {};
+  const pe = Math.min(1, w.peBase + w.peDoubt * (1 - conf)
+    + (sig.offPlan ? w.peOffPlan : 0)
+    + (sig.ambiguity ? w.peAmbiguity : 0)
+    + (sig.traceAnomaly ? w.peAnomaly : 0));
+  const uncover = uncoverOf(f, w);
+  const cund = cundOf(f, w);
+  const defer = s.defer[f.moment] || s.defer['Now'];
+
+  // Both interrupting surfaces are spoken for the population the layer is
+  // for, so the persona multiplies both; the log costs the same for everyone.
+  let persona = 1;
+  if (m?.vision?.descriptions) persona *= w.personaSpeech;
+  if (m?.cognition?.summarize) persona *= w.personaSummarize;
+
+  const eu = {};
+  for (const r of SURFACES) {
+    const spoken = r === 'widget' || r === 'checkpoint';
+    const base = r === 'widget' && ctx.joiningPause
+      ? s.intBase.widget * MARGINAL_NOW_FACTOR : s.intBase[r];
+    eu[r] = pe * uncover * defer[r] * s.I[r] * cund
+      + w.vmon * s.attention[r]
+      - base * (spoken ? persona : 1);
+  }
+
+  let best = SURFACES[0];
+  for (const r of SURFACES) if (eu[r] > eu[best]) best = r;
+  return { surface: best, eu };
+}
+
 // The six cost dimensions, in the design doc's three groups. Each is coded
 // 0-3 on the question at generation time (0 none .. 3 high):
 //   economic     money       — money magnitude at stake if this goes wrong
