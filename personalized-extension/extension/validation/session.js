@@ -1691,6 +1691,29 @@ const Validation = {
   setSpeechCooldown(ms) { ASSERTIVE_COOLDOWN_MS = ms; lastAssertiveAt = 0; },
 
   /**
+   * The adapt patch landed after the plan review was spoken. One polite line
+   * naming what the person's own request added; without it, the retrieval
+   * path never says "from your request I added" because the review fires at
+   * load and the patch arrives half a minute later.
+   */
+  async planAddendum(a) {
+    if (!a || !flatModel) return { spoken: false };
+    const fromAsk = (flatModel.questions || [])
+      .filter((q) => q.fromAsk === true).map((q) => q.question);
+    if (!fromAsk.length) return { spoken: false };
+    const say = `From your request I also check: ${fromAsk.slice(0, 3).join('; ')}.`;
+    chrome.runtime.sendMessage({ type: 'validationSpeak', phase: currentPhase,
+      lines: calmSpeech([{ say, level: 'checkpoint', live: 'polite', widget: 'plan' }]) })
+      .catch(() => {});
+    const prev = await stored();
+    if (prev.planReview) {
+      await publish({ planReview: { ...prev.planReview,
+        fromAsk: fromAsk.slice(0, 8), adapted: true } });
+    }
+    return { spoken: true, added: fromAsk.length };
+  },
+
+  /**
    * Checkpoint zero: the plan, spoken once, before the run gets going.
    *
    * One polite sentence and a panel record - never a blocking form

@@ -770,6 +770,11 @@ function startModelFor(task) {
       }).catch(() => {});
       console.log(`[validation] model adapted to the request: `
         + `${a.rewritten} rewritten, ${a.added} added`);
+      // The plan review has already been spoken by now - it fires at
+      // retrieval, and this patch lands half a minute later. What the
+      // request added is worth one line of its own, or "from your request I
+      // added" is never heard on the retrieval path at all.
+      globalThis.Validation?.planAddendum?.(a).catch(() => {});
     }).catch(() => { /* the raw bank keeps working */ });
     return true;
   }).catch(() => false) || Promise.resolve(false);

@@ -215,3 +215,25 @@ Validation.setSpeechCooldown(300);
 console.log(`\n${pass}/${pass + fail} - the bank fits the request, and a burst is one `
   + 'interruption instead of four.');
 if (fail) process.exit(1);
+
+// ── the addendum: what the request added is spoken even on the late path ────
+{
+  const MODEL2 = {
+    task: 'book a hotel',
+    tree: { id: '0', label: 'root', children: [
+      { id: '1', label: 'Search', questions: [
+        { question: 'Right city?', cluster: 'facts', moment: 'Now' },
+        { question: 'Is breakfast included?', cluster: 'facts', moment: 'Now', fromAsk: true },
+      ] } ] },
+  };
+  globalThis.ValidationTaskModel.load(JSON.parse(JSON.stringify(MODEL2)), 'generated');
+  sent.length = 0;
+  const r = await Validation.planAddendum({ added: 1, rewritten: 0 });
+  ok(r.spoken === true, 'the addendum speaks when the patch added questions');
+  const line = sent.flatMap((m) => m.lines || []).find((l) => l.widget === 'plan');
+  ok(line && /From your request I also check: Is breakfast included\?/.test(line.say)
+    && line.live === 'polite',
+  'and it names them politely instead of re-reading the whole plan');
+}
+
+console.log(`(addendum block done)`);
