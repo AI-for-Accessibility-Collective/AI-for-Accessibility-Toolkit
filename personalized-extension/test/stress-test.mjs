@@ -99,17 +99,20 @@ const RunMod = await import('../extension/validation/run.js');
   const levels = findings.map((f) => f.level);
   ok(findings.length === 400, 'four hundred findings in one page read all get a level');
   ok(ms < 3000, `and routing them is fast (${ms}ms)`);
-  const firstAside = levels.indexOf('aside');
-  const lastAside = levels.lastIndexOf('aside');
-  ok(firstAside === 0 && lastAside < 60,
-    `fatigue migrates the flood: first spoken at ${firstAside}, none spoken after ${lastAside}`);
+  // The routing is history free by design, so four hundred identical findings
+  // route identically. This is the honest consequence and the number worth
+  // watching: what bounds a run's spoken items is the count of findings a
+  // page actually answers, not anything the router remembers.
+  const spokenCount = levels.filter((l) => l !== 'ambient').length;
+  ok(new Set(levels).size === 1,
+    `four hundred identical findings route identically (${spokenCount} would be spoken)`);
   ok(run.gate().allowed === true, 'no stop in the flood, so nothing holds');
 
   // The same flood again is all repeats: nothing new is spoken.
   const again = run.observeFindings(flood, 'Search').findings;
   ok(again.every((f) => f.level === 'ambient'), 'the same flood again is silent');
 
-  // A contradiction still cuts through 800 findings of fatigue.
+  // A contradiction still cuts through after 800 routed findings.
   const cut = run.observeFindings([{
     widget: 'Is this the right item?', phase: 'Search',
     say: 'Is this the right item? No, it is a boot.', from: 'boot',
@@ -186,18 +189,19 @@ const RunMod = await import('../extension/validation/run.js');
   }
   ok(sane, 'garbage confidences and moments still produce a route and no NaN');
 
-  // EU of speaking must fall monotonically with fatigue, always.
+  // Routing is history free: no amount of anything passed as history moves a
+  // score. This is the property that replaced the old fatigue curve.
   const f = { ...base, moment: 'Now', confidence: 0.8, verified: 'verified_exact' };
-  let monotone = true;
-  let prev = Infinity;
-  for (let s = 0; s <= 200; s += 10) {
-    const eu = U.route(f, { spoken: s }).eu.now;
-    if (eu > prev) monotone = false;
-    prev = eu;
+  const baseline = JSON.stringify(U.route(f, {}).eu);
+  let stable = true;
+  for (const n of [1, 10, 200]) {
+    if (JSON.stringify(U.route(f, { spoken: n, spent: n, said: n }).eu) !== baseline) {
+      stable = false;
+    }
   }
-  ok(monotone, 'the cost of speaking never goes down as the run talks more');
+  ok(stable, 'no history of any shape moves a score - the routing is history free');
 
-  const d = P.decide({ ...base, moment: 'Now', confidence: NaN }, { spoken: 3 });
+  const d = P.decide({ ...base, moment: 'Now', confidence: NaN }, {});
   ok(['ambient', 'aside', 'stop'].includes(d.level), 'decide() absorbs the same garbage');
 }
 

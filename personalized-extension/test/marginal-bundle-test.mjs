@@ -6,10 +6,11 @@
  * already pausing prices its now route at the marginal cost of one more
  * sentence. What is tested:
  *
- *   - a mid-tier finding that routes to the log alone routes to now when its
- *     node is already pausing
+ *   - a mid-tier finding a screen-reader user would otherwise keep is spoken
+ *     when its node is already pausing, because then it costs a sentence
+ *     rather than an interruption
  *   - a finding on a DIFFERENT node gets no discount from someone else's pause
- *   - fatigue still applies to the marginal sentence
+ *   - the persona still prices that sentence
  *   - locked stops are untouched (they never reach the EU model)
  *   - end to end through a run: a stop plus a near-miss on one node come out
  *     as one hold and one spoken aside, not a hold and a logged orphan
@@ -25,8 +26,9 @@ const ok = (c, w) => {
 const U = await import('../extension/validation/utility.js');
 const RunMod = await import('../extension/validation/run.js');
 
-// A finding tuned to sit just under the pause bar: verified, wanted now, some
-// fatigue, so alone it lands in the log.
+// A mid-tier finding: verified, wanted now, no money at stake. For a
+// screen-reader user, speaking costs enough that this is kept rather than
+// said - unless it can ride a pause that is happening anyway.
 const nearMiss = {
   widget: 'What does the room cost per night?', phase: 'Pick a room',
   moment: 'Now', moneyMoving: false, confidence: 0.8, verified: 'verified_exact',
@@ -34,33 +36,29 @@ const nearMiss = {
   say: 'What does the room cost per night? $175.',
 };
 
+const BLV = { vision: { descriptions: true } };
+
 {
-  const alone = U.route(nearMiss, { spoken: 6 });
-  const riding = U.route(nearMiss, { spoken: 6, joiningPause: true });
-  ok(alone.route !== 'now', 'alone at fatigue the finding is not spoken now');
+  const alone = U.route(nearMiss, { model: BLV });
+  const riding = U.route(nearMiss, { model: BLV, joiningPause: true });
+  ok(alone.route !== 'now',
+    'alone, a screen-reader user keeps this rather than hearing it');
   ok(riding.route === 'now', 'on a pausing node it rides the pause and is spoken');
   ok(riding.eu.log === alone.eu.log && riding.eu.after === alone.eu.after,
     'only the now route is repriced - the others are untouched');
 }
 
 {
-  const light = U.route(nearMiss, { spoken: 0, joiningPause: true });
-  const heavy = U.route(nearMiss, { spoken: 60, joiningPause: true });
-  ok(heavy.eu.now < light.eu.now,
-    'fatigue still prices the marginal sentence - a bundle is not a free-for-all');
+  const sighted = U.route(nearMiss, { joiningPause: true });
+  const blv = U.route(nearMiss, { model: BLV, joiningPause: true });
+  ok(blv.eu.now < sighted.eu.now,
+    'the persona still prices the marginal sentence - a bundle is not free');
 }
 
 // ── end to end through a run ────────────────────────────────────────────────
 
 {
-  const run = RunMod.createRun({ item: 'a hotel room', budget: 180 });
-  // Warm the fatigue: six spoken findings on another node first.
-  const warm = Array.from({ length: 6 }, (_, i) => ({
-    widget: `W${i}?`, phase: 'Search', say: `W${i}? Yes.`, from: 'q',
-    answerable: true, confirming: false, contradicts: false, node: '1',
-    moment: 'Now', moneyMoving: false, confidence: 0.9, verified: 'verified_exact',
-  }));
-  run.observeFindings(warm, 'Search');
+  const run = RunMod.createRun({ item: 'a hotel room', budget: 180 }, { model: BLV });
 
   // One page: a contradiction (locked stop) and the near-miss, both on node 2,
   // plus a bystander on node 3.

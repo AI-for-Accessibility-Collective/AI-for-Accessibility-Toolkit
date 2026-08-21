@@ -63,9 +63,8 @@ ok(/password \(not read aloud\)/.test(R.maskSensitive('your password is hunter2'
 {
   const f = { moment: 'Now', confidence: 0.8, verified: 'verified_exact',
     moneyMoving: false, contradicts: false };
-  const calm = U.route(f, { spoken: 0 });
-  const scared = U.route(f, { spoken: 0,
-    signals: { offPlan: true, ambiguity: 2, traceAnomaly: true } });
+  const calm = U.route(f, {});
+  const scared = U.route(f, { signals: { offPlan: true, ambiguity: 2, traceAnomaly: true } });
   ok(scared.eu.now > calm.eu.now,
     'danger signals raise the value of checking now, through the same EU');
 }

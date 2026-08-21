@@ -109,12 +109,12 @@ export function decide(f, state = {}) {
     why = 'continuing from here is hard to undo';
   } else if (f.moment != null) {
     // A task-model finding that is not a locked stop is routed by the utility
-    // model: expected value of each route against its burden, with fatigue and
-    // the persona on the cost side. The old rule was one undifferentiated
+    // model: expected value of each route against what that route costs the
+    // person, with the persona on the cost side. The old rule was one undifferentiated
     // aside; this is the graded form of the same call, and the locked stops
     // above are deliberately decided before it so nothing here can soften
     // them.
-    const r = euRoute(f, { spoken: state.spoken || 0, model: state.model,
+    const r = euRoute(f, { model: state.model,
                            signals: state.signals || null,
                            joiningPause: state.joiningPause === true });
     return { level: ROUTE_LEVEL[r.route], why: r.why, route: r.route, eu: r.eu };

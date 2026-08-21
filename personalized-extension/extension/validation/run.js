@@ -95,13 +95,11 @@ export function createRun(contract, opts = {}) {
       .map((f) => f.node).filter((n) => n != null));
     for (const f of findings) {
       f.joiningPause = f.node != null && pausingNodes.has(f.node);
-      // `spoken` is the fatigue input: how much this run has already said out
-      // loud. The utility model raises the cost of the spoken routes with it,
-      // which is what migrates mid-tier findings toward the log as a run
-      // talks more. `signals` are the page's own danger signs, raising P(e)
-      // for everything found on it.
-      const spoken = said.filter((s) => s.level !== 'ambient').length;
-      const d = decide(f, { seen, style, model, spoken, signals,
+      // `signals` are the page's own danger signs, raising P(e) for
+      // everything found on it. Nothing about earlier in the run enters here:
+      // the same finding on the same page routes the same way whether it is
+      // the first thing this run has said or the fortieth.
+      const d = decide(f, { seen, style, model, signals,
         joiningPause: f.joiningPause === true });
       let { level, why } = d;
       // Route and scores travel on the finding, so they survive publish and a
@@ -132,9 +130,9 @@ export function createRun(contract, opts = {}) {
       const r = render(f, level, channels);
       rendered.push({ ...r, why });
       if (level !== 'ambient') said.push({ phase, say: f.say, level, widget: f.widget });
-      // The one list in the blob with no cap. Fatigue routing keeps it small
-      // on a normal run, but a run whose every page yields fresh spoken
-      // findings would grow it without bound, and every publish copies it.
+      // The one list in the blob with no cap, and every publish copies it, so
+      // a long run with fresh spoken findings on every page would grow it
+      // without bound.
       if (said.length > 400) said.splice(0, said.length - 400);
       // Driven by the level, not by whether a spoken rendering exists.
       // render() returns spoken:null when channels.speech is false, so

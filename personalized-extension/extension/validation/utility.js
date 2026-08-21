@@ -11,17 +11,16 @@
 //
 // What this file decides and what it does not. The locked stops — a
 // contradiction, a money-moving step — are decided in policy.js BEFORE this
-// runs and never reach it: those are the hard gate, and no amount of fatigue
-// or preference is allowed to soften them. This file routes everything else,
+// runs and never reach it: those are the hard gate, and no preference is
+// allowed to soften them. This file routes everything else,
 // which under the old ladder was one undifferentiated "aside". The terms it
 // can compute today are the ones the finding already carries; the ones it
 // cannot (page ambiguity, reversibility classes, listening seconds) are named
 // in the design doc and arrive with the generator work.
 //
 // The weights are hand-set to reproduce the worked examples from the design
-// interview (the seat question pauses, the order number goes to the log, a
-// contradiction survives any fatigue) and are the thing the replay tuning and
-// the human-label study replace. They are exported so a test can hold them
+// interview (the seat question pauses, the order number goes to the log) and
+// are the thing the replay tuning and the human-label study replace. They are exported so a test can hold them
 // still and the tuning can move them.
 
 export const ROUTES = ['now', 'after', 'log', 'ondemand'];
@@ -50,13 +49,10 @@ export const WEIGHTS = {
   // route is to actually reach the person.
   vmon: 0.15,
   attention: { now: 1, after: 0.8, log: 0.35, ondemand: 0.2 },
-  // C_int(r): the burden of each route, before fatigue and persona. Set so a
-  // verified wanted-now finding is spoken at the start of a quiet run and
-  // migrates to the log after roughly four spoken things.
+  // C_int(r): what each route costs the person, before the persona multiplier.
+  // Listening time is the unit: a spoken line costs seconds of a serial
+  // channel, a panel row costs nothing until it is asked for.
   intBase: { now: 0.12, after: 0.08, log: 0.01, ondemand: 0 },
-  // Each thing already spoken this run makes the next spoken thing cost more.
-  // Linear for v1; the curve shape is an open question in the design doc.
-  fatiguePerSaid: { now: 0.01, after: 0.012, log: 0, ondemand: 0 },
   // A screen reader pays in listening time for everything spoken; someone who
   // asked for summaries pays in attention. Multipliers on the spoken routes.
   personaSpeech: 1.6,
@@ -81,16 +77,20 @@ const DEFER_DEFAULT = DEFER['Now'];
 // pause cost double-counts the interruption and wrongly demotes cheap
 // additions - the ninth question on a pausing node costs a sentence of
 // listening, not a second interruption. A quarter of the base is that
-// sentence; fatigue still applies, because sentences are what fatigue counts.
+// sentence.
 export const MARGINAL_NOW_FACTOR = 0.25;
 
 /**
  * The expected utility of each route for one finding, and the best route.
  *
+ * The routing depends on the question, the page and the person, and on
+ * nothing that happened earlier in the run. There is no model of the person
+ * tiring here: a claim about how attention decays over a session needs
+ * evidence a single session cannot produce, so the layer does not make one.
+ *
  * @param {Object} f the finding (moment, moneyMoving, confidence, verified …)
- * @param {{spoken?: number, model?: object, weights?: object,
- *          joiningPause?: boolean}} ctx
- *   spoken — how many things this run has already said out loud (fatigue)
+ * @param {{model?: object, weights?: object, joiningPause?: boolean,
+ *          signals?: object}} ctx
  *   model  — the person's AbilityModel, if the Librarian had one
  *   joiningPause — this finding's node is already pausing, so the now route
  *   is priced at the marginal cost of riding the existing pause
@@ -98,7 +98,6 @@ export const MARGINAL_NOW_FACTOR = 0.25;
  */
 export function route(f, ctx = {}) {
   const w = ctx.weights || WEIGHTS;
-  const spoken = ctx.spoken || 0;
   const m = ctx.model || null;
 
   // Clamped, because the confidence is a model-reported number and a model
@@ -117,7 +116,7 @@ export function route(f, ctx = {}) {
   const defer = DEFER[f.moment] || DEFER_DEFAULT;
 
   // The spoken routes cost more for someone whose only channel is speech, and
-  // for someone who asked for less. This scales the burden of being told; it
+  // for someone who asked for less. This scales what being told costs; it
   // never touches the benefit side, which is why a locked stop is decided
   // before this file is reached.
   let persona = 1;
@@ -129,8 +128,7 @@ export function route(f, ctx = {}) {
     const spokenRoute = r === 'now' || r === 'after';
     const base = r === 'now' && ctx.joiningPause
       ? w.intBase.now * MARGINAL_NOW_FACTOR : w.intBase[r];
-    const burden = (base + w.fatiguePerSaid[r] * spoken)
-      * (spokenRoute ? persona : 1);
+    const burden = base * (spokenRoute ? persona : 1);
     eu[r] = pe * uncover * defer[r] * cund
       + w.vmon * w.attention[r]
       - burden;
