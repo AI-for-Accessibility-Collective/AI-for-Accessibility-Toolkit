@@ -1683,6 +1683,23 @@ const Validation = {
     // waiting list, so run.answer() knows nothing about it - yet the
     // acknowledgement above is what actually releases the hold. Answering a
     // real stored finding is resolved, whatever the run thinks.
+    const resolved = r.resolved || dealt > 0;
+    // One resumption line when the last hold clears. Sighted users see the
+    // suspended context sitting on screen; a screen reader user resumes into
+    // silence, and the recovery cost of an interruption lives in exactly that
+    // gap. Only when nothing else is waiting - resuming is one sentence, not
+    // a recap.
+    if (resolved) {
+      const still = (await stored()).findings || [];
+      const ack2 = new Set([...((await stored()).acknowledged) || [], ...acknowledged]);
+      const waitingLeft = still.filter((f) => f.level === 'stop' && !f.confirming
+        && !ack2.has(fkey(f))).length;
+      if (!waitingLeft && currentPhase) {
+        chrome.runtime.sendMessage({ type: 'validationSpeak', phase: currentPhase,
+          lines: [{ say: `Going on: ${currentPhase}.`, level: 'checkpoint',
+            live: 'polite', widget: 'resumed' }] }).catch(() => {});
+      }
+    }
     if (!r.resolved && dealt) return { resolved: true, remaining: 0 };
     return r;
   },
