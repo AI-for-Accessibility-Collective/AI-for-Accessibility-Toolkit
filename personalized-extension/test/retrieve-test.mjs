@@ -44,6 +44,21 @@ ok(G.matchDomain('book something', INDEX) === null,
   'a query two domains tie on matches nothing');
 ok(G.matchDomain('', INDEX) === null, 'an empty query matches nothing');
 
+// The regression that real task lines exposed: long task paragraphs are full
+// of generic verbs, and a runner-up scoring junk hits (find, new) must not
+// veto a genuine match carrying words that belong to one domain alone.
+{
+  const real = JSON.parse(fs.readFileSync('extension/validation/htas/index.json', 'utf8'));
+  ok(G.matchDomain('find a dermatologist in palo alto who takes new patients and is '
+    + 'well reviewed, and book the earliest appointment next week on zocdoc, but stop '
+    + 'before confirming anything', real) === 'doctor',
+  'generic-verb junk hits on another domain do not veto a real match');
+  ok(G.matchDomain('compare the cheapest nonstop and the cheapest one-stop flight '
+    + 'from SFO to San Diego next Friday on google flights, pick whichever is cheaper '
+    + 'but only if it is under $250, and open its booking page', real) === null,
+  'a flights query still matches nothing because no flights model is built');
+}
+
 // ── retrieveModel, with a fake fetcher ──────────────────────────────────────
 
 {

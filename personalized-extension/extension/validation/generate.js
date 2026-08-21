@@ -105,8 +105,20 @@ export function setAssets(prompts, exemplars) { PROMPTS = prompts; EXEMPLARS = e
 // labels. All-zero overlap keeps the pool's own order, which is the honest
 // state for a task unlike anything in the pool.
 
+// Two kinds of word carry no evidence about WHICH task this is: grammar, and
+// the verbs any task instruction uses. Both are stopped. Domain-shared words
+// like "book" are handled separately, by the document-frequency weighting in
+// matchDomain - they carry some evidence, just less. What must never land
+// here is a word that tells tasks apart: search, compare, appointment,
+// refundable, settings.
 const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'you',
-  'your', 'when', 'online', 'other', 'sites', 'site']);
+  'your', 'when', 'online', 'other', 'sites', 'site',
+  'find', 'get', 'make', 'take', 'takes', 'pick', 'open', 'close', 'stop',
+  'start', 'check', 'show', 'tell', 'give', 'look', 'need', 'want', 'help',
+  'well', 'good', 'best', 'new', 'near', 'next', 'week', 'today', 'tomorrow',
+  'before', 'after', 'only', 'but', 'who', 'how', 'what', 'where', 'anything',
+  'something', 'please', 'complete', 'belong', 'variants', 'surface', 'pinned',
+  'seeded', 'variant', 'app', 'web', 'screen']);
 
 const tokens = (s) => new Set(String(s || '').toLowerCase()
   .split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOP_WORDS.has(w)));
@@ -141,21 +153,35 @@ export function pickExemplars(query, exemplars = EXEMPLARS) {
 // word hits AND twice the runner-up. Anything short of that falls through to
 // generation, which is never wrong about whose task it is.
 
-const MATCH_MIN_HITS = 2;
+const MATCH_MIN_SCORE = 2;
 const MATCH_LEAD = 2;
 
-/** Which built domain this query IS, if any. Pure scoring, no fetch. */
+/**
+ * Which built domain this query IS, if any. Pure scoring, no fetch.
+ *
+ * Words are weighted by how many domains use them, because the real task
+ * lines are long paragraphs and their generic verbs otherwise decide the
+ * outcome. Found on real data: "book the earliest appointment on zocdoc"
+ * scored doctor 3 (book, appointment, zocdoc) but privacy 2 on junk (find,
+ * new), and the two-to-one lead rule vetoed the real match. A word unique to
+ * one domain counts in full; a word shared by k domains counts 1/k. So a
+ * match needs about two words that belong to that domain and no other, which
+ * is also how a person would tell the tasks apart.
+ */
 export function matchDomain(query, index) {
+  const entries = Object.entries(index || {});
+  const own = entries.map(([domain, task]) => tokens(`${domain} ${task}`));
+  const df = new Map();
+  for (const set of own) for (const w of set) df.set(w, (df.get(w) || 0) + 1);
   const q = tokens(query);
-  let best = null; let bestHits = 0; let second = 0;
-  for (const [domain, task] of Object.entries(index || {})) {
-    const own = tokens(`${domain} ${task}`);
-    let hits = 0;
-    for (const w of q) if (own.has(w)) hits += 1;
-    if (hits > bestHits) { second = bestHits; bestHits = hits; best = domain; }
-    else if (hits > second) { second = hits; }
-  }
-  if (!best || bestHits < MATCH_MIN_HITS || bestHits < second * MATCH_LEAD) return null;
+  let best = null; let bestScore = 0; let second = 0;
+  entries.forEach(([domain], i) => {
+    let score = 0;
+    for (const w of q) if (own[i].has(w)) score += 1 / df.get(w);
+    if (score > bestScore) { second = bestScore; bestScore = score; best = domain; }
+    else if (score > second) { second = score; }
+  });
+  if (!best || bestScore < MATCH_MIN_SCORE || bestScore < second * MATCH_LEAD) return null;
   return best;
 }
 
