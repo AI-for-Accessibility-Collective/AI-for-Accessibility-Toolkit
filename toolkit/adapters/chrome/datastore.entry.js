@@ -1,4 +1,4 @@
-// esbuild entry → built to personalized-extension/extension/lib/datastore.js
+// esbuild entry → a Chrome host bundles this into its own lib/datastore.js
 // (classic IIFE). Constructs the datastore against chrome-backed ports and
 // assigns globalThis.Datastore, preserving the load contract the service
 // worker and test rely on.

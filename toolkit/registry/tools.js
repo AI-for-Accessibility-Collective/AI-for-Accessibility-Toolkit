@@ -1,13 +1,13 @@
 // Canonical built-in tools registry — the single source of truth for the
 // "global Tools db" tier of the toolkit datastore. LIVES IN THE TOOLKIT so
 // every host (Chrome extension, server, XR, mobile) shares one settings
-// vocabulary; personalized-extension/skills/registry.js is a re-export shim.
+// vocabulary shared by every host.
 //
 // Consumed three ways:
 //   1. Directly as ESM by node-side code (toolkit hosts, the service in
-//      server/, personalized-extension/utils/recommender.js, tests).
+//      server/, host recommenders, tests).
 //   2. Generated into extension/lib/tools-registry.js (a classic script
-//      assigning globalThis.AA_TOOLS) by personalized-extension/build.js.
+//      assigning globalThis.AA_TOOLS) by a browser host's bundler.
 //   3. As a live AA_TOOLS-shaped object via asAATools() below (what
 //      createToolkit's `toolsRegistry` port expects).
 //
@@ -664,7 +664,7 @@ export function getRegistryForPrompt() {
 
 
 // ---------------------------------------------------------------------------
-// AA_TOOLS-shaped live registry — the exact object personalized-extension's
+// AA_TOOLS-shaped live registry — the exact object a browser host's
 // build.js bakes into extension/lib/tools-registry.js, exported here so any
 // host can hand it to createToolkit({ toolsRegistry: asAATools() }).
 export function asAATools() {

@@ -1,4 +1,4 @@
-// esbuild entry → built to personalized-extension/extension/lib/web-surface.js
+// esbuild entry → a Chrome host bundles this into its own lib/web-surface.js
 // (classic IIFE). Exposes the web SurfaceAdapter + the abilityModel→webSettings
 // derivation + the resolveWebPreferences composer as a service-worker global,
 // so background.js can route the `librarianEffectivePreferences` response

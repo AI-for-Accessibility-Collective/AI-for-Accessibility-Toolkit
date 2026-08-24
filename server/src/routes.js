@@ -1,5 +1,5 @@
 // The 36 `/v1/librarian/{method}` routes, alias-mapped exactly the way
-// personalized-extension/extension/background.js's `librarian*` message
+// a host's `librarian*` message
 // switch (lines ~1798-1929) maps message types onto Librarian methods.
 //
 // `route` is the wire {method} path segment: drop the message type's

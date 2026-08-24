@@ -12,7 +12,7 @@ let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
 
 // Every setting a profile is allowed to enable. Kept in sync with the settings
-// vocabulary (personalized-extension/skills/registry.js `settingsMeta`) plus
+// vocabulary (toolkit/registry/tools.js `settingsMeta`) plus
 // `fixContrast`, which the basic extension + CLI consume directly. A profile key
 // outside this set is a dead setting nothing applies.
 const RECOGNIZED = new Set([

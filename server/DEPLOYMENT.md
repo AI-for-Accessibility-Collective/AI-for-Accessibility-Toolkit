@@ -66,24 +66,19 @@ Every `/v1/*` call needs `Authorization: Bearer <token>`; each token maps to a
        -H "content-type: application/json" -d '{"uid":"<uid>","label":"<label>"}'
   ```
 
-## Pointing the browser extension at a server
+## Pointing a host client at a server
 
-Extension → **Options**: paste the Server URL and an access token, **Save**,
-then **Test connection**. Clearing both fields returns to fully-local mode.
-When configured, all 41 librarian wire routes — including the voice side
-panel's direct calls — go to the server.
+A host that uses the toolkit in "remote mode" points its Librarian facade at
+the Server URL with an access token; clearing them returns to fully-local mode.
+When configured, all librarian wire routes go to the server instead of an
+embedded core.
 
 ## Verification
 
 - `node server/test/server-test.mjs` — in-process, file store.
-- `node personalized-extension/test/remote-integration-test.mjs` — real
-  facade ↔ real app over HTTP, locally.
-- Same test against a live deployment (throwaway uids, tokens revoked after):
-  ```bash
-  REMOTE_BASE=https://<your-service-url> \
-  REMOTE_ADMIN_PASSWORD=$(gcloud secrets versions access latest --secret toolkit-admin-password) \
-  node personalized-extension/test/remote-integration-test.mjs
-  ```
+- A host's remote-facade integration test can run the real facade ↔ real app
+  over HTTP (locally, and against a live deployment with throwaway uids and
+  tokens revoked afterward).
 
 ## Cost / teardown
 

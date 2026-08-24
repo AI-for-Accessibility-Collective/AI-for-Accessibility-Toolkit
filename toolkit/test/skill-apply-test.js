@@ -17,7 +17,7 @@ const BUILTIN_DIR = join(__dirname, '..', 'skills', 'builtin');
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
 
-// The exact settings keys the extension apply path (personalized-extension
+// The exact settings keys a host apply path (
 // content.js applyProfileSettings + the basic extension) knows how to act on.
 // A resolved key outside this set would be silently ignored at apply time.
 const APPLY_KEYS = new Set([

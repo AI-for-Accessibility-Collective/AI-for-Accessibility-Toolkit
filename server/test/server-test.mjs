@@ -16,7 +16,7 @@ import { createGeminiCaller } from '../src/gemini.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 
 // The 36 extension `librarian*` message routes, independently transcribed
-// from personalized-extension/extension/background.js's switch (~lines
+// from a host's `librarian*` switch (~lines
 // 1798-1929) — an oracle kept separate from server/src/routes.js so this test
 // actually checks the server against the extension's alias table, not just
 // against its own copy of it.

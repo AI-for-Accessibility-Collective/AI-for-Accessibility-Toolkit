@@ -3,7 +3,7 @@
 // caller must satisfy (see toolkit/core/librarian.js: `let _gemini = null;
 // // async (prompt) => string`, invoked as `await _gemini(prompt)` in
 // getSiteCategory/extract/reflect/buildSkill) and the exact request/response
-// shape the extension's own caller uses (personalized-extension/extension/
+// shape a host's own caller uses (
 // background.js: GEMINI_MODEL, getApiUrl, callGemini, wired at
 // `globalThis.Librarian.setGeminiCaller(async (prompt) => {...})`), so
 // extraction/reflection/skill-building behave identically whether the key

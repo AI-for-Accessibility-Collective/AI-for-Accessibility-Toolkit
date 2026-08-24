@@ -4,10 +4,10 @@
 // them, read the page aloud, and perform simple page interactions.
 //
 // Lifted out of the Chrome extension's
-// personalized-extension/extension/voice-routes.js, where all of this used to
+// a host's voice-routes, where all of this used to
 // be welded directly to chrome.tabs / chrome.scripting / chrome.storage. That
 // file now calls a concrete ActuationPort
-// (personalized-extension/extension/chrome-actuation.js) instead of touching
+// (a host's chrome-actuation implementation) instead of touching
 // chrome.* itself, so the SAME voice tool-call contract (voiceGetContext /
 // voiceApplySettings / voiceUndoLast / voiceResetUndo / voiceReadPage /
 // voicePageAction — see extension/offscreen/src/live/tools.js) can be
@@ -24,7 +24,7 @@
 //   import { noopActuation } from '<path-to>/toolkit/ports/actuation.js';
 //
 // The Chrome host implements this shape in
-// personalized-extension/extension/chrome-actuation.js — but as a classic
+// a host's chrome-actuation implementation — but as a classic
 // (importScripts) script, not an ES module, because it runs in the
 // extension's service worker alongside voice-routes.js (no ES module loader
 // there). It therefore can't literally `import` this file; it satisfies the

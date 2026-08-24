@@ -1,4 +1,4 @@
-// esbuild entry → built to personalized-extension/extension/lib/librarian.js
+// esbuild entry → a Chrome host bundles this into its own lib/librarian.js
 // (classic IIFE). Constructs the Librarian against chrome-backed ports +
 // the already-loaded globalThis.Datastore / globalThis.AA_TAXONOMY, and
 // assigns globalThis.Librarian. Gemini is injected afterwards by background.js

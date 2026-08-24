@@ -25,10 +25,9 @@ modules.
 - `src/gemini.js` — the server-side Gemini REST caller
   (`librarian.setGeminiCaller`'s contract: `async (prompt) => string`).
 - `src/auth.js` — bearer-token issue/verify (`aat_` + sha256-hashed storage).
-- `src/routes.js` — the 36 `/v1/librarian/{method}` routes, alias-mapped from
-  `personalized-extension/extension/background.js`'s `librarian*` message
-  switch. Single source of truth for both dispatch (`app.js`) and docs
-  (`meta.js`).
+- `src/routes.js` — the 36 `/v1/librarian/{method}` routes, alias-mapped from a host's
+  `librarian*` message switch. Single source of truth for both dispatch
+  (`app.js`) and docs (`meta.js`).
 - `src/meta.js` — builds `/v1/meta` and `API.md` from the live route table +
   a real (throwaway, in-memory) Librarian instance.
 - `src/admin-page.js` — the `GET /admin` HTML shell.

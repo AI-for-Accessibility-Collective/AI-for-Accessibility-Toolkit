@@ -117,7 +117,7 @@ export const ReaderMode = {
   // Strip Readability output down to safe HTML before injecting it with
   // innerHTML. No DOMPurify dependency is vendored for tools/ (only the
   // extension's popup.html loads it as a devDependency of
-  // personalized-extension), so this replicates DOMPurify's HTML-profile
+  // a browser host), so this replicates DOMPurify's HTML-profile
   // sanitize with a hand-rolled allowlist-of-dangers pass: strip
   // script-capable elements, all `on*` handlers, and URL-bearing attributes
   // that carry an executable scheme (javascript:/vbscript:/data:text/html
