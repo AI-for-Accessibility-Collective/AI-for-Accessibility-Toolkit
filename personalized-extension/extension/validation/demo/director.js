@@ -297,7 +297,11 @@ const Director = {
           }
           continue;
         }
-        if (facts.page === 'checkout' || /order|book|pay|checkout|complete|reserve|confirm/i.test(String(w))) {
+        // Whole commit PHRASES, not fragments: on booking.com every other
+        // string contains "book", so a fragment match left ordinary holds
+        // standing and the gate then refused even a date click.
+        if (facts.page === 'checkout'
+            || /\b(?:place (?:your |the )?order|buy now|book (?:it|now)|complete (?:the )?booking|finish booking|reserve now|pay now|payment|checkout|confirm (?:and pay|booking|purchase))\b/i.test(String(w))) {
           if (!S.fired.some((f) => f.id === `standing:${w}`)) {
             S.fired.push({ id: `standing:${w}`, kind: 'log', at: Date.now(),
               say: `Left a hold standing (${String(w).slice(0, 40)}) - never waved past near a commit` });
