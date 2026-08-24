@@ -127,10 +127,10 @@ export const BEATS = [
     say: "I'm filling in your name, email, and phone number now. They use the phone to confirm the booking." },
   { id: 'form-log-1', kind: 'log', page: 'form',
     when: 'declines filed silently as the form is walked',
-    say: 'Said no to marketing emails, taxi, car rental' },
+    say: 'Said **no** to marketing emails, taxi, car rental' },
   { id: 'form-log-3', kind: 'log', page: 'form',
     when: 'an unverifiable site claim is quoted, not repeated as fact',
-    say: 'The site claimed "we have 5 left" - couldn\'t verify' },
+    say: 'The site claimed "**we have 5 left**" - couldn\'t verify' },
 
   { id: 'gate', kind: 'widget', page: 'review',
     when: 'the next press commits money - the agent is held until she answers',

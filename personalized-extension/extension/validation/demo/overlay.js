@@ -47,18 +47,22 @@ const CSS = `
 .vd-gone{opacity:0}
 .vd-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;
  clip:rect(0 0 0 0);white-space:nowrap}
-.vd-drawer{position:fixed;right:16px;bottom:16px;z-index:2147483646;
- width:min(380px,calc(100vw - 32px));max-height:60vh;overflow:auto;
- background:#fff;border:1px solid #e4e4e7;border-radius:12px;
- padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.12);
- font:13px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
- color:#09090b}
-.vd-drawer h2{margin:0 0 8px;font-size:11px;font-weight:600;
- letter-spacing:.5px;text-transform:uppercase;color:#71717a}
+.vd-drawer{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;
+ z-index:2147483646;width:min(430px,calc(100vw - 32px));max-height:64vh;
+ overflow:auto;background:#fff;border:1px solid #e4e4e7;border-radius:10px;
+ padding:18px 22px 14px;box-shadow:0 12px 40px rgba(0,0,0,.18);
+ font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#3f3f46}
+.vd-drawer h2{margin:0 0 4px;font-size:12px;font-weight:700;text-align:center;
+ letter-spacing:3px;text-transform:uppercase;color:#18181b}
+.vd-drawer .vd-rule{border:0;border-top:1px dashed #d4d4d8;margin:8px 0}
 .vd-drawer ul{list-style:none;margin:0;padding:0}
-.vd-drawer li{border:1px dashed #d4d4d8;border-radius:10px;background:#fafafa;
- color:#71717a;padding:8px 12px;margin:0 0 8px}
-.vd-drawer li b{font-weight:600;color:#3f3f46}
+.vd-drawer li{border:0;border-bottom:1px dashed #e4e4e7;background:none;
+ color:#3f3f46;padding:7px 2px;margin:0}
+.vd-drawer li:last-child{border-bottom:0}
+.vd-drawer li:focus{outline:none;background:#f4f4f5;border-radius:6px}
+.vd-drawer li b{font-weight:700;color:#09090b}
+.vd-drawer .vd-kind{display:block;font-size:10px;letter-spacing:1px;
+ text-transform:uppercase;color:#a1a1aa;margin-bottom:1px}
 @media (prefers-reduced-motion: reduce){.vd-fade{transition:none}}
 `;
 
@@ -382,51 +386,75 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     else preDismissed.add(id);
   }
 
-  function log(entry) {
-    entries.push(entry);
+  function addLi(sayText, kindLabel) {
     const li = document.createElement('li');
-    li.innerHTML = mark(entry.say ?? entry);
-    // Reachable by Tab, and spoken with its place when landed on - she
-    // always knows where she is in the list.
+    li.innerHTML = (kindLabel ? `<span class="vd-kind">${esc(kindLabel)}</span>` : '')
+      + mark(sayText);
     li.setAttribute('tabindex', '0');
     li.addEventListener('focus', () => {
       if (muteNextFocusSpeech) { muteNextFocusSpeech = false; return; }
       const all = [...drawer.querySelectorAll('li')];
       const i = all.indexOf(li);
-      tts(`${plain(entry.say ?? entry)}. Note ${i + 1} of ${all.length}.`,
+      tts(`${kindLabel ? `${kindLabel}. ` : ''}${plain(sayText)}. Entry ${i + 1} of ${all.length}.`,
         { interrupt: true });
     });
     drawer.querySelector('ul').appendChild(li);
+    return li;
+  }
+
+  function log(entry) {
+    entries.push(entry);
+    addLi(entry.say ?? entry);
   }
 
   let muteNextFocusSpeech = false;
-  // Arrows walk the notes too, like the widget options.
+  // Tab and arrows both walk the entries, wrapping - exactly like the
+  // widget options, so one keyboard habit covers the whole demo.
   drawer.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const fwd = e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey);
+    const back = e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey);
+    if (!fwd && !back) return;
     const all = [...drawer.querySelectorAll('li')];
     const i = all.indexOf(document.activeElement);
     if (i < 0) return;
     e.preventDefault();
-    all[e.key === 'ArrowDown' ? Math.min(i + 1, all.length - 1) : Math.max(i - 1, 0)].focus();
+    all[fwd ? (i + 1) % all.length : (i - 1 + all.length) % all.length].focus();
   });
 
   // The end report, GUIDED: orient her first (what this is, how to move),
   // read the notes numbered so each is locatable, say when it ends, then
   // park focus on the first note so Tab and arrows take over from there.
   let reported = false;
-  function report() {
+  // The FULL record: checkpoints, questions with her answers, and the filed
+  // notes - receipt-style. The read-through speaks the decisions and notes;
+  // the checkpoints are there to tab through, not to hear twice.
+  function report(items) {
     drawer.classList.remove('vd-sr');
     drawer.classList.add('vd-drawer');
     if (reported) return;
     reported = true;
-    announce(`The run is over. Here is the agent's log - ${entries.length} notes `
-      + 'on what it did, declined, and could not verify. Tab or arrows move '
+    const all = items && items.length
+      ? items : entries.map((e) => ({ say: e.say ?? e, kind: 'note', speak: true }));
+    const ul = drawer.querySelector('ul');
+    ul.innerHTML = '';
+    if (!drawer.querySelector('.vd-rule')) {
+      drawer.querySelector('h2').insertAdjacentHTML('afterend', '<hr class="vd-rule">');
+    }
+    for (const it of all) addLi(it.say, it.kind);
+    announce(`The run is over. Here is the full log - ${all.length} entries: `
+      + 'what it did, what it asked, and your answers. Tab or arrows move '
       + 'through them.');
-    entries.forEach((e, i) => announce(`Note ${i + 1}. ${plain(e.say ?? e)}`));
+    all.filter((it) => it.speak).forEach((it) => announce(plain(it.say)));
     announce('End of the log.');
     queueIdle().then(() => {
-      muteNextFocusSpeech = true;        // the read-through just said note 1
-      drawer.querySelector('li')?.focus();
+      const first = drawer.querySelector('li');
+      const grab = (n) => {
+        if (!first) return;
+        muteNextFocusSpeech = true;
+        first.focus();
+        if (document.activeElement !== first && n > 0) setTimeout(() => grab(n - 1), 500);
+      };
+      grab(8);
     });
   }
 

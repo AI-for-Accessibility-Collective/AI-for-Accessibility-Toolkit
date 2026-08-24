@@ -135,7 +135,7 @@ const LOGIC = {
       if (ads.length === 0) return 'No ads in these results';
       const named = ads.slice(0, 3)
         .map((a) => `${a.name}${a.price != null ? ` ${fmtRound(a.price)}` : ''}`);
-      return `Skipped ${ads.length} ad${ads.length === 1 ? '' : 's'} (${named.join(', ')})`;
+      return `Skipped **${ads.length} ad${ads.length === 1 ? '' : 's'}** (${named.join(', ')})`;
     },
   },
   collision: {
@@ -175,7 +175,7 @@ const LOGIC = {
     sayLive: (f, s) => {
       const c = s.roles?.closest;
       if (!c) return null;
-      if (/sofa bed/i.test(c.units || '')) return `Ruled out ${c.name} - it counts a couch as a bed`;
+      if (/sofa bed/i.test(c.units || '')) return `Ruled out ${c.name} - it counts a **couch** as a bed`;
       if (oneKing(c)) return `Ruled out ${c.name} - only 1 king bed`;
       return `Checked ${c.name} first - waiting on the budget`;
     },
@@ -601,8 +601,6 @@ const Director = {
       try { globalThis.BrowserAgent?.stop?.('demo ends at the gate'); } catch { /* best-effort */ }
       if (/book it/i.test(String(response))) {
         S.done = true;
-        S.fired.push({ id: 'demo-end', kind: 'log', at: Date.now(),
-          say: 'Stopped at the gate - nothing was paid' });
       } else {
         S.done = true;
         S.fired.push({ id: 'gate-change', kind: 'checkpoint', at: Date.now(),

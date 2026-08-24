@@ -150,8 +150,19 @@ function renderNew(st) {
     }
   }
   if (st.done) {
-    overlay.report();
-    // The run is over; stop reading the page. The drawer stays.
+    // The report is the run's FULL record: every checkpoint, every question
+    // with the option she chose, every filed note. Only the choices and the
+    // notes are read aloud; the rest is there to tab through.
+    const items = (st.fired || []).map((f) => {
+      if (f.kind === 'widget') {
+        const a = st.answers?.[f.id]?.response;
+        return { kind: 'asked you', speak: !!a,
+          say: a ? `${f.say} **You chose: ${a}.**` : f.say };
+      }
+      if (f.kind === 'log') return { kind: 'noted', say: f.say, speak: true };
+      return { kind: 'said', say: f.say, speak: false };
+    });
+    overlay.report(items);
     observer?.disconnect(); observer = null;
     clearInterval(heartbeat); heartbeat = null;
   }
