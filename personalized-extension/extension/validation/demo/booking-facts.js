@@ -153,6 +153,7 @@ function checkoutFacts(doc) {
     penalty: penaltyM ? Number(penaltyM[1].replace(/,/g, '')) : null,
     occupancy: occM ? { adults: Number(occM[1]), children: Number(occM[2]) } : null,
     hasForm: !!$(doc, 'input[name="firstname"], #firstname'),
+    formFilled: !!($(doc, 'input[name="firstname"], #firstname')?.value || '').trim(),
     hasArrival: $$(doc, 'select').some((s) =>
       /arrival/i.test(s.name + s.id + (s.getAttribute('aria-label') || ''))) || /arrival time/i.test(body),
     hasSpecialRequests: /Special requests/i.test(body),

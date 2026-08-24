@@ -147,6 +147,11 @@ function ready(beat, f) {
   const pr = RANK[f?.page] ?? -1;
   if (beat.id === 'contract') return true;
   if (beat.id === 'stanfords') return (f?.page === 'home' && !!f.destQuery) || pr > 0;
+  // The gate's own `when` is "the next press commits money" - which first
+  // becomes possible once the form is filled. Firing it on page arrival
+  // held the agent from details-answer straight into the gate with ZERO
+  // runtime between, so the form never got typed.
+  if (beat.id === 'gate') return pr >= 3 && !!f?.formFilled;
   return pr >= (SECTION[beat.page] ?? 0);
 }
 
