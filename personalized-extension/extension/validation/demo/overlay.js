@@ -87,12 +87,31 @@ export function createOverlay({ mount = document.body } = {}) {
   mount.appendChild(wrap);
 
   // One polite live region for every checkpoint, so there is a single spoken
-  // channel and two announcements can never talk over each other.
+  // channel. Writes are QUEUED and paced by line length: winnow, sort and ad
+  // can fire in one pass milliseconds apart, and a polite region replaced
+  // before the reader settles announces only the last write - she would hear
+  // the sort line and never the result count.
   const live = document.createElement('div');
   live.className = 'vd-sr';
   live.setAttribute('aria-live', 'polite');
   live.setAttribute('data-bh-ignore', 'true');
   mount.appendChild(live);
+  const sayQueue = [];
+  let saying = false;
+  async function announce(text) {
+    sayQueue.push(text);
+    if (saying) return;
+    saying = true;
+    while (sayQueue.length) {
+      const t = sayQueue.shift();
+      live.textContent = '';
+      await new Promise((r) => setTimeout(r, 60));
+      live.textContent = t;
+      // Rough speaking time at screen-reader pace, plus a settle gap.
+      await new Promise((r) => setTimeout(r, 700 + t.split(/\s+/).length * 280));
+    }
+    saying = false;
+  }
 
   // The log region exists in the accessibility tree for the whole run - her
   // rotor can jump to it any time - but draws nothing until report().
@@ -115,13 +134,15 @@ export function createOverlay({ mount = document.body } = {}) {
     card.innerHTML = `<p>${mark(beat.say)}</p>`;
     wrap.appendChild(card);
     fading.add(card);
-    live.textContent = plain(beat.say);
+    announce(plain(beat.say));
     const t = setTimeout(() => {
       card.classList.add('vd-gone');
       setTimeout(() => { card.remove(); fading.delete(card); }, 450);
     }, ttl);
     return { dismiss: () => { clearTimeout(t); card.remove(); fading.delete(card); } };
   }
+
+  let open = null;   // { id, card, scrim, close } while a dialog is up
 
   function widget(beat) {
     return new Promise((resolve) => {
@@ -191,15 +212,40 @@ export function createOverlay({ mount = document.body } = {}) {
         }
       });
 
+      // The trap must hold even when focus escapes the card: a scrim press
+      // or a screen-reader cursor move lands on the page behind, where
+      // aria-modal says nothing exists. Recapture instead of trusting the
+      // card's own keydown alone.
+      const recapture = (e) => {
+        if (!card.contains(e.target)) {
+          e.preventDefault?.();
+          stops()[0]?.focus();
+        }
+      };
+      scrim.addEventListener('mousedown', recapture);
+      document.addEventListener('focusin', recapture);
+
       function done(answer) {
+        document.removeEventListener('focusin', recapture);
+        open = null;
         card.remove();
         scrim.remove();
-        if (before && before.focus) before.focus();
+        // A navigation may have replaced the element that had focus; a
+        // detached element swallows focus() silently, so only restore what
+        // is still on the page.
+        if (before?.focus && document.contains(before)) before.focus();
         resolve({ beat: beat.id, ...answer });
       }
 
+      open = { id: beat.id, close: () => done({ dismissed: true }) };
       requestAnimationFrame(() => stops()[0]?.focus());
     });
+  }
+
+  /** Close a dialog answered elsewhere (another tab). Resolves the widget
+   *  promise with dismissed:true so no second answer is ever sent. */
+  function dismissWidget(id) {
+    if (open?.id === id) open.close();
   }
 
   function log(entry) {
@@ -221,5 +267,5 @@ export function createOverlay({ mount = document.body } = {}) {
     document.getElementById(STYLE_ID)?.remove();
   }
 
-  return { widget, checkpoint, log, report, destroy, entries };
+  return { widget, checkpoint, log, report, destroy, dismissWidget, entries };
 }
