@@ -17,6 +17,18 @@ import { AgentWatch } from '../../../skills/builtin/agent-watch.js';
 
 const KEY = 'aa.demo';
 
+// The demo lives on booking.com. Without this gate the observer, heartbeat
+// and overlay ran on EVERY open tab while armed - dashboards included.
+const ON_STAGE = /(^|\.)booking\.com$/.test(location.hostname);
+
+// After an extension reload, tabs opened earlier keep running THIS dead
+// copy of the script, and any chrome API call from it throws "Extension
+// context invalidated" - uncaught, every heartbeat, in every stale tab.
+// A dead copy detects itself and cleans up instead.
+function contextAlive() {
+  try { return !!chrome.runtime?.id; } catch { return false; }
+}
+
 let overlay = null;
 let rendered = 0;        // how far into st.fired this page has drawn
 let observer = null;
@@ -34,6 +46,7 @@ export async function isDemoArmed() {
 function pushFacts() {
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => {
+    if (!contextAlive()) { teardown(); return; }
     let facts;
     try { facts = readPage(document, location.href); } catch { return; }
     // Booking mutates constantly; only a read that changed is worth a send.
@@ -42,7 +55,8 @@ function pushFacts() {
       facts.hasForm, facts.freeCancelBefore]);
     if (sig === lastSent) return;
     lastSent = sig;
-    chrome.runtime.sendMessage({ type: 'demoFacts', facts }).catch(() => {});
+    try { chrome.runtime.sendMessage({ type: 'demoFacts', facts }).catch(() => {}); }
+    catch { teardown(); }
   }, 600);
 }
 
@@ -63,9 +77,11 @@ function renderNew(st) {
       overlay.widget(b).then((a) => {
         delete openWidgets[b.id];
         if (a.dismissed) return;
-        chrome.runtime.sendMessage({
-          type: 'demoAnswer', id: b.id, response: a.typed || a.choice,
-        }).catch(() => {});
+        try {
+          chrome.runtime.sendMessage({
+            type: 'demoAnswer', id: b.id, response: a.typed || a.choice,
+          }).catch(() => {});
+        } catch { teardown(); return; }
         // The page a widget paused on often never mutates again, and the
         // worker may have restarted (losing its lastFacts) - a fresh read
         // right after the answer keeps the story moving either way.
@@ -113,7 +129,8 @@ function arm(st) {
   // nothing on screen may name the demo (David, 2026-08-24).
   document.addEventListener('keydown', (e) => {
     if (e.altKey && e.shiftKey && (e.key === 'N' || e.key === 'n')) {
-      chrome.runtime.sendMessage({ type: 'demoForce' }).catch(() => {});
+      try { chrome.runtime.sendMessage({ type: 'demoForce' }).catch(() => {}); }
+      catch { teardown(); }
     }
   });
   pushFacts();
@@ -131,6 +148,7 @@ function teardown() {
 
 /** Idempotent; safe to call on every page. Wakes only when the demo arms. */
 export function initDemoClient() {
+  if (!ON_STAGE) return;
   chrome.storage.local.get(KEY).then((r) => { if (r[KEY]?.armed) arm(r[KEY]); });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !changes[KEY]) return;
