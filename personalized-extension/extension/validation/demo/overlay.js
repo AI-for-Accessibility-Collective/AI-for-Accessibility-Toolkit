@@ -374,24 +374,43 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     entries.push(entry);
     const li = document.createElement('li');
     li.innerHTML = mark(entry.say ?? entry);
-    // Reachable by Tab, not only by rotor - and each entry speaks when it
-    // takes focus, like the widget options do.
+    // Reachable by Tab, and spoken with its place when landed on - she
+    // always knows where she is in the list.
     li.setAttribute('tabindex', '0');
-    li.addEventListener('focus', () => tts(plain(entry.say ?? entry), { interrupt: true }));
+    li.addEventListener('focus', () => {
+      const all = [...drawer.querySelectorAll('li')];
+      const i = all.indexOf(li);
+      tts(`${plain(entry.say ?? entry)}. Note ${i + 1} of ${all.length}.`,
+        { interrupt: true });
+    });
     drawer.querySelector('ul').appendChild(li);
   }
 
-  // The end report: the same region, now drawn - and SPOKEN. Without a
-  // screen reader the drawer was a silent box nobody could navigate; the
-  // voice reads it through, and Tab walks the entries one by one.
+  // Arrows walk the notes too, like the widget options.
+  drawer.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const all = [...drawer.querySelectorAll('li')];
+    const i = all.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    all[e.key === 'ArrowDown' ? Math.min(i + 1, all.length - 1) : Math.max(i - 1, 0)].focus();
+  });
+
+  // The end report, GUIDED: orient her first (what this is, how to move),
+  // read the notes numbered so each is locatable, say when it ends, then
+  // park focus on the first note so Tab and arrows take over from there.
   let reported = false;
   function report() {
     drawer.classList.remove('vd-sr');
     drawer.classList.add('vd-drawer');
     if (reported) return;
     reported = true;
-    announce(`The report. ${entries.length} notes.`);
-    for (const e of entries) announce(plain(e.say ?? e));
+    announce(`The run is over. Here is the agent's log - ${entries.length} notes `
+      + 'on what it did, declined, and could not verify. Tab or arrows move '
+      + 'through them.');
+    entries.forEach((e, i) => announce(`Note ${i + 1}. ${plain(e.say ?? e)}`));
+    announce('End of the log.');
+    queueIdle().then(() => drawer.querySelector('li')?.focus());
   }
 
   function destroy() {
