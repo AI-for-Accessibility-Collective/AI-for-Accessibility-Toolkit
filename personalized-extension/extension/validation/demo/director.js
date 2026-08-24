@@ -226,7 +226,13 @@ const Director = {
   async maybeArm(task) { return serial(async () => {
     await load();
     const t = String(task || '');
-    if (!(SCENARIO_RE.test(t) && TASK_RE.test(t))) return { armed: false };
+    if (!(SCENARIO_RE.test(t) && TASK_RE.test(t))) {
+      // A non-matching task DISARMS: without this, the demo from a previous
+      // run stayed armed into the next ordinary task - overlay rendering,
+      // organic speech muted, agent-watch suppressed, all on a normal run.
+      if (S.armed) { S = fresh(); await save(); }
+      return { armed: false };
+    }
     S = { ...fresh(), armed: true, task: t };
     await save();
     return { armed: true };
