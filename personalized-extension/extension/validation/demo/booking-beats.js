@@ -78,7 +78,6 @@ export const BEATS = [
       { label: 'Under $700. 2 hotels near campus', primary: true },
       { label: 'Under $1,300. 4 hotels' },
       { label: 'Under $1,700. 6 hotels' },
-      { label: 'Type a number' },
     ] },
   { id: 'collision-log', kind: 'log', page: 'results',
     when: 'filed as the collision fires',

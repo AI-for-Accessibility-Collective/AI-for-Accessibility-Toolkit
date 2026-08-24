@@ -184,6 +184,10 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     if (saying) return;
     saying = true;
     while (sayQueue.length) {
+      // A dialog owns the voice while it is up. Without this, the dialog's
+      // interrupt cancels the queue's current line, the queue reads that as
+      // "finished" and starts its NEXT line - two voices at once.
+      while (open) await new Promise((r) => setTimeout(r, 400));
       const item = sayQueue.shift();
       live.textContent = '';
       await new Promise((r) => setTimeout(r, 60));

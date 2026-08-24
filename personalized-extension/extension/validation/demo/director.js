@@ -146,7 +146,13 @@ const SECTION = { home: 0, results: 1, property: 2, checkout: 3, form: 3, review
 function ready(beat, f) {
   const pr = RANK[f?.page] ?? -1;
   if (beat.id === 'contract') return true;
-  if (beat.id === 'stanfords') return (f?.page === 'home' && !!f.destQuery) || pr > 0;
+  // Not on text alone: a profile that remembers the last search pre-fills
+  // the box at page load, and the widget fired before anyone typed. The
+  // autocomplete must actually be open (visible suggestions).
+  if (beat.id === 'stanfords') {
+    return (f?.page === 'home' && !!f.destQuery
+      && (f.destOptions || []).length >= 2) || pr > 0;
+  }
   // The gate's own `when` is "the next press commits money" - which first
   // becomes possible once the form is filled. Firing it on page arrival
   // held the agent from details-answer straight into the gate with ZERO

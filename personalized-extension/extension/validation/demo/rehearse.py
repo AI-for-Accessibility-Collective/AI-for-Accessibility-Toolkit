@@ -184,10 +184,14 @@ def main():
         page.goto("https://www.booking.com/", wait_until="domcontentloaded")
         page.wait_for_timeout(2500)
         dismiss_popups(page)
-        box = page.locator("input[name='ss']").first
-        box.click()
-        box.press_sequentially("Stanford", delay=90)
-        page.wait_for_timeout(1500)
+        # A remembered profile pre-fills the box; if the widget is already
+        # up (scrim), answer it instead of fighting the scrim for the input.
+        if not page.locator(".vd-scrim").count():
+            box = page.locator("input[name='ss']").first
+            box.click()
+            if "Stanford" not in (box.input_value() or ""):
+                box.press_sequentially("Stanford", delay=90)
+            page.wait_for_timeout(1500)
 
         # The widget can fire MID-TYPING - the autocomplete shows several
         # Stanfords well before the word is done, the scrim drops, and the
@@ -265,15 +269,23 @@ def main():
                 report(sw, "checkout (the form)")
                 print("overlay:", json.dumps(overlay_probe(page)))
                 page.screenshot(path=str(out / "rehearsal-checkout.png"))
-                # true-price and details are widgets; answer them, then leave
-                # the GATE standing for the screenshot - never answered here,
-                # and the site's own submit is never touched.
+                # true-price and details are widgets; answer them, then FILL
+                # the form the way the agent would - the gate now waits for
+                # facts.formFilled - and leave the GATE standing for the
+                # screenshot. The site's own submit is never touched.
                 for _ in range(3):
                     if any(f["id"] == "gate" for f in state_of(sw)["fired"]):
                         break
                     if not answer_widget(sw, page):
                         break
                     page.wait_for_timeout(2000)
+                try:
+                    page.fill("input[name='firstname'], #firstname", "Susan")
+                    page.fill("input[name='lastname'], #lastname", "Miller")
+                    page.fill("input[name='email'], #email", "susan.miller.family@gmail.com")
+                except Exception as e:
+                    print("form fill:", e)
+                page.wait_for_timeout(8000)
                 report(sw, "checkout, at the gate")
                 page.screenshot(path=str(out / "rehearsal-gate.png"))
             except Exception as e:
