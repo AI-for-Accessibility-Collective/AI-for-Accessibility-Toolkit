@@ -158,12 +158,12 @@ const LOGIC = {
       if (/sofa bed/i.test(c.units || '')) {
         return `Booking marks the closest one '**recommended for your group**', `
           + `at **${price}**. But it counts a **pull-out couch** as the third `
-          + `bed. **Emma would sleep on the couch**. What's your budget? `
+          + `bed. **Your 8-year-old would sleep on the couch**. What's your budget? `
           + `I'll find real beds for everyone.`;
       }
       if (oneKing(c)) {
         return `The closest one only has **one king bed** for the three of `
-          + `you, at **${price}**. **Emma would have no bed**. What's your `
+          + `you, at **${price}**. **Your 8-year-old would have no bed**. What's your `
           + `budget? I'll find real beds for everyone.`;
       }
       return `The closest one starts at **${price}**. Before I pick anything: `
