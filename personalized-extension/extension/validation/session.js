@@ -62,7 +62,10 @@ function phaseOf(url) {
 
 // Steps that commit something. The gate is checked before these, and only
 // these — stopping the agent from scrolling would be theatre.
-const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now|finish the task|dialog|\bjs\b/i;
+// "complete booking" / "reserve" are booking.com's words for the same press
+// amazon spells "place your order" - the regex must speak both dialects, or
+// a hotel commit walks through a gate written for a shopping cart.
+const COMMITTING = /add[- ]?to[- ]?cart|proceed to checkout|place your order|buy now|complete (?:the )?booking|confirm (?:and pay|booking)|(?:i'?ll )?reserve\b|book now|finish (?:the task|booking)|dialog|\bjs\b/i;
 
 // Actions that change the world rather than look at it.
 //
