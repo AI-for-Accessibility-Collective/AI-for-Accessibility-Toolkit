@@ -226,6 +226,14 @@ async function advance(facts) {
 }
 
 const Director = {
+  /** Pure check, no side effects: would this task arm the demo? The start
+   *  route asks before deciding whether the validation session needs a
+   *  clean restart. */
+  wouldArm(task) {
+    const t = String(task || '');
+    return SCENARIO_RE.test(t) && TASK_RE.test(t);
+  },
+
   /** Called with the task sentence when the agent starts. */
   async maybeArm(task) { return serial(async () => {
     await load();
@@ -239,6 +247,19 @@ const Director = {
     }
     S = { ...fresh(), armed: true, task: t };
     await save();
+    // A previous take's widget hold can survive into this run - the
+    // validation session outlives the agent, so a wedged demo left
+    // demo:stanfords in waiting and the NEW run's first navigate was
+    // refused at the gate before any page had even loaded. A fresh arm
+    // owes the run a clean slate.
+    try {
+      const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'];
+      for (const w of st?.gate?.waitingOn || []) {
+        if (String(w).startsWith(HOLD_PREFIX)) {
+          await globalThis.Validation?.answer?.(w, 'New demo run - cleared a stale hold.');
+        }
+      }
+    } catch { /* the onFacts sweep below also self-heals this */ }
     return { armed: true };
   }); },
 
@@ -263,7 +284,19 @@ const Director = {
     try {
       const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'];
       for (const w of st?.gate?.waitingOn || []) {
-        if (String(w).startsWith(HOLD_PREFIX)) continue;
+        if (String(w).startsWith(HOLD_PREFIX)) {
+          // Our own hold - legitimate only while its widget is up and
+          // unanswered in THIS run. Anything else is a leftover from an
+          // earlier take (worker restarts keep the session's waiting list
+          // alive across runs) and would park the agent forever.
+          const id = String(w).slice(HOLD_PREFIX.length);
+          const current = S.fired.some((f) => f.id === id && f.kind === 'widget')
+            && !S.answers[id] && !S.done;
+          if (!current) {
+            await globalThis.Validation?.answer?.(w, 'Cleared a stale hold from an earlier run.');
+          }
+          continue;
+        }
         if (facts.page === 'checkout' || /order|book|pay|checkout|complete|reserve|confirm/i.test(String(w))) {
           if (!S.fired.some((f) => f.id === `standing:${w}`)) {
             S.fired.push({ id: `standing:${w}`, kind: 'log', at: Date.now(),

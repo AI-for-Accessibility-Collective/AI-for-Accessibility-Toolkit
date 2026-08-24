@@ -1473,11 +1473,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     let modelReady = Promise.resolve();
     // The demo arms itself off the task sentence (David 2026-08-23: no
     // switch to remember on stage). A non-matching task changes nothing.
-    try { globalThis.DemoDirector?.maybeArm?.(msg.task); } catch { /* demo only */ }
-    if (globalThis.Validation && !globalThis.Validation.isRunning()) {
+    let demoArm = false;
+    try {
+      demoArm = !!globalThis.DemoDirector?.wouldArm?.(msg.task);
+      globalThis.DemoDirector?.maybeArm?.(msg.task);
+    } catch { /* demo only */ }
+    // A demo take starts from a CLEAN session. The validation run outlives
+    // the agent, so a session left over from an earlier take feeds its old
+    // findings and holds straight into the new run's gate - one leftover
+    // demo hold refused the new agent's first navigate before any page had
+    // loaded, and a stale panel showed last week's findings.
+    if (globalThis.Validation && (demoArm || !globalThis.Validation.isRunning())) {
       try {
         const contract = msg.contract || globalThis.ValidationAsk.contractFromAsk(msg.task);
-        globalThis.Validation.start(contract, { style: msg.style || 'balanced' });
+        const begin = () => {
+          try { globalThis.Validation.start(contract, { style: msg.style || 'balanced' }); }
+          catch (e) { console.warn('validation did not start:', e); }
+        };
+        if (demoArm && globalThis.Validation.isRunning()) {
+          globalThis.Validation.stop().then(begin, begin);
+        } else {
+          begin();
+        }
         modelReady = startModelFor(msg.task);
       } catch (e) {
         console.warn('validation did not start:', e);   // never block the agent
