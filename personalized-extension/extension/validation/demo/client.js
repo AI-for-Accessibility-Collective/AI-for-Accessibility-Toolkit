@@ -87,7 +87,6 @@ function spotlight(anchor) {
   }
   if (!el) return;
   el.classList.add('vd-spot');
-  try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* fine */ }
   setTimeout(() => el.classList.remove('vd-spot'), 7000);
 }
 
@@ -139,64 +138,9 @@ function renderNew(st) {
   }
 }
 
-// The one control the agent cannot drive, driven here instead: booking's
-// occupancy stepper. Set the family (1 child, age 8) on the REAL popup as
-// soon as the demo arms on the home page, so the visible search reads
-// "2 adults - 1 child" before the agent ever presses Search. Heuristic DOM
-// work - if the popup shifts, the director's URL fixup still catches it.
-async function setFamilyOccupancy() {
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const typed = () =>
-    ((document.querySelector('input[name="ss"]')?.value || '').trim().length > 0);
-  const esc = () => document.dispatchEvent(
-    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  // Two quick attempts, ~4s total, and it stands down the moment the agent
-  // has typed anything - the first version retried for 12s and fought the
-  // agent for the search box, so Stanford never landed.
-  for (let tries = 0; tries < 2; tries += 1) {
-    if (typed()) return false;
-    const opener = document.querySelector('[data-testid="occupancy-config"]');
-    if (!opener) { await sleep(1200); continue; }
-    if (/1 child/i.test(opener.textContent || '')) return true;
-    opener.click();
-    await sleep(500);
-    const popup = document.querySelector('[data-testid="occupancy-popup"]');
-    const rows = popup ? [...popup.querySelectorAll('div')]
-      .filter((g) => /children/i.test(g.textContent || '')
-        && g.querySelectorAll('button').length >= 2
-        && (g.textContent || '').length < 220)
-      .sort((a, b) => (a.textContent || '').length - (b.textContent || '').length) : [];
-    const plus = rows[0] && [...rows[0].querySelectorAll('button')].pop();
-    if (plus && !typed()) {
-      plus.click();
-      await sleep(500);
-      const age = popup.querySelector('select[name="age"], select[data-testid*="age" i]');
-      if (age) {
-        age.value = '8';
-        age.dispatchEvent(new Event('change', { bubbles: true }));
-        await sleep(250);
-      }
-      const done = [...popup.querySelectorAll('button')]
-        .find((b) => /^done$/i.test((b.textContent || '').trim()));
-      if (done) done.click(); else esc();
-      await sleep(300);
-      if (/1 child/i.test(opener.textContent || '')) return true;
-    }
-    esc();                       // never leave our popup in the agent's way
-    await sleep(400);
-  }
-  esc();
-  return false;
-}
-
 function arm(st) {
   if (overlay) { renderNew(st); return; }
   runStamp = st.startedAt ?? null;
-  // Home page of a fresh take: put the child into the search box up front.
-  if (!st.done && document.querySelector('input[name="ss"]')) {
-    setFamilyOccupancy().then((ok) =>
-      console.log('[AI4A11y demo] occupancy preset:', ok ? 'set' : 'fell back to URL fixup'));
-  }
   // The demo's surfaces are the only voice; the generic on-page panel would
   // talk over the story in its own register.
   try { if (AgentWatch.enabled) AgentWatch.disable(); } catch { /* not fatal */ }

@@ -323,6 +323,9 @@ const Director = {
         globalThis.BrowserAgent?.interject?.(
           'The search now includes the guests (2 adults, 1 child aged 8) and '
           + 'the dates. Continue from these results.');
+        // This page is about to reload; anything spoken now dies mid-line.
+        await save();
+        return { armed: true, fired: 0, fixed: true };
       } catch { /* the story continues on whatever results are up */ }
     }
     // A one-line trace of what each push actually read. When a beat refuses
@@ -354,6 +357,19 @@ const Director = {
             + 'map", or any map thumbnail.');
         } catch { /* the client also closes the map if it opens */ }
       }
+      if (rank === 3) {
+        // Once, as checkout arrives: the agent cannot fill a form with an
+        // identity nobody gave it. Fictional details (555 number), and the
+        // run stops at the gate before anything submits.
+        try {
+          globalThis.BrowserAgent?.interject?.(
+            'Fill the booking form with these details: first name Susan, '
+            + 'last name Miller, email susan.miller.family@gmail.com, phone '
+            + '+1 650 555 0135, country United States. Decline marketing '
+            + 'emails, taxi, and car rental offers. Do NOT press the final '
+            + 'booking or payment button.');
+        } catch { /* the gate still holds the final press */ }
+      }
     }
     const fired = await advance(facts);
     if (newSection) {
@@ -380,6 +396,23 @@ const Director = {
       if (m) S.budget = Number(m[1].replace(/,/g, ''));
     }
     if (id === 'true-price' && /750/.test(String(response))) S.budget = 750;
+
+    // The storyline's own agent-reply pattern ("Done. Booking the Zen
+    // double.") fills the silence after each answer while the agent works -
+    // the recorded runs had long dead air exactly there.
+    const AFTERS = {
+      stanfords: () => 'OK. Setting September 15 to 17 and searching.',
+      collision: (r) => (/700/.test(r) ? 'Under 700. Looking at what fits.'
+        : 'Got it. Looking at what fits.'),
+      compare: (r) => (/zen/i.test(r) ? 'The Zen it is. Opening its page.' : 'Got it.'),
+      room: () => 'Two full beds. Reserving that room.',
+      'true-price': (r) => (/750/.test(r) ? 'Done. Booking the Zen double.' : 'Got it.'),
+      details: () => "Set. They can still say no to the bag hold - it's a request.",
+    };
+    const afterLine = AFTERS[id]?.(String(response));
+    if (afterLine) {
+      S.fired.push({ id: `${id}-done`, kind: 'checkpoint', say: afterLine, at: Date.now() });
+    }
 
     if (id === 'gate') {
       // The gate's hold is NEVER released - a click already parked at the
@@ -413,9 +446,11 @@ const Director = {
     // the guest count into the results URL once, quietly.
     const NEXT = {
       stanfords: 'Do this now: click that suggestion in the autocomplete, '
-        + 'set check-in September 15 2026 and check-out September 17 2026 in '
-        + 'the calendar, then press Search. Do NOT open the occupancy or '
-        + 'guests dropdown - the guest count is handled for you.',
+        + 'then set check-in September 15 2026 and check-out September 17 '
+        + '2026 in the calendar. Then, instead of the Search button, submit '
+        + `by navigating to ${SCENARIO.searchUrl} - it runs the same search `
+        + 'with the guests already set (2 adults, 1 child aged 8). Never '
+        + 'open the occupancy or guests dropdown.',
       compare: /zen/i.test(String(response))
         ? 'Do this now: in the results list, click the hotel named '
           + '"The Zen Hotel Palo Alto" to open its page. It may be far down '

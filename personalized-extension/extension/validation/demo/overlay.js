@@ -337,14 +337,24 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     entries.push(entry);
     const li = document.createElement('li');
     li.innerHTML = mark(entry.say ?? entry);
+    // Reachable by Tab, not only by rotor - and each entry speaks when it
+    // takes focus, like the widget options do.
+    li.setAttribute('tabindex', '0');
+    li.addEventListener('focus', () => tts(plain(entry.say ?? entry), { interrupt: true }));
     drawer.querySelector('ul').appendChild(li);
   }
 
-  // The end report: the same region, now drawn. Everything filed during the
-  // run is already inside it, in order.
+  // The end report: the same region, now drawn - and SPOKEN. Without a
+  // screen reader the drawer was a silent box nobody could navigate; the
+  // voice reads it through, and Tab walks the entries one by one.
+  let reported = false;
   function report() {
     drawer.classList.remove('vd-sr');
     drawer.classList.add('vd-drawer');
+    if (reported) return;
+    reported = true;
+    announce(`The report. ${entries.length} notes.`);
+    for (const e of entries) announce(plain(e.say ?? e));
   }
 
   function destroy() {
