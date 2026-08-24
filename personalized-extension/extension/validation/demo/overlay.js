@@ -149,10 +149,11 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
           }
         }, 500);
         // Still silent after the retry? Chrome blocks speech until the page
-        // has USER ACTIVATION - the run's first line fires before anyone
-        // has touched the page and was silently dropped. Hold the line and
-        // speak it on the first pointer or key instead of losing it.
-        setTimeout(() => {
+        // has USER ACTIVATION - which on a demo tab first arrives when the
+        // AGENT starts typing, 10-20s in. Before any line has ever spoken,
+        // arm the retry listeners immediately and wait long enough for that
+        // first keystroke instead of dropping the opening line.
+        const armKick = () => {
           if (started || settled) return;
           const kick = () => {
             if (started || settled) return;
@@ -161,7 +162,8 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
           };
           ['pointerdown', 'keydown'].forEach((ev) =>
             document.addEventListener(ev, kick, { capture: true, once: true }));
-        }, 2100);
+        };
+        if (!everSpoke) armKick(); else setTimeout(armKick, 2100);
         keepalive = setInterval(() => {
           try { speechSynthesis.resume(); } catch { /* engine state */ }
         }, 4000);
@@ -174,7 +176,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
         const guard = () => setTimeout(() => {
           if (settled) return;
           if (started) { done(); return; }
-          setTimeout(() => done(), everSpoke ? 1200 : 20000);
+          setTimeout(() => done(), everSpoke ? 1200 : 60000);
         }, 2000 + words * 380);
         guard();
       };
