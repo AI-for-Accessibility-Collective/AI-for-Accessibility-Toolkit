@@ -170,6 +170,7 @@ const LOGIC = {
         + `what's your budget? I'll only look at real beds for all three of you.`;
     },
   },
+  collisionOptions_: null,   // placeholder key, unused
   'collision-log': {
     slots: (f, s) => ({ closestName: s.roles?.closest?.name || null }),
     sayLive: (f, s) => {

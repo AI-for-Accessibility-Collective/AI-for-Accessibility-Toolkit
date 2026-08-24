@@ -53,9 +53,9 @@ export const BEATS = [
     ] },
 
   { id: 'winnow', kind: 'checkpoint', page: 'results',
-    when: 'the result count lands and the property-type facet is readable',
-    say: "Found {count} places. You asked for a hotel, so I'm skipping the motels. This leaves {hotels}.",
-    fallbacks: { count: '100', hotels: '63' } },
+    when: 'the result count lands',
+    say: 'Found {count} places, all cancellable - your rule, applied.',
+    fallbacks: { count: '100' } },
 
   { id: 'sort', kind: 'checkpoint', page: 'results',
     when: 'the page discloses that payments affect ranking',
@@ -75,9 +75,9 @@ export const BEATS = [
     say: "Booking marks the closest one '**recommended for your group**', at **{closestPrice}**. But it counts a **pull-out couch** as the third bed. **Emma would sleep on the couch**. What's your budget? I'll find real beds for everyone.",
     fallbacks: { closestPrice: '$358' },
     options: [
-      { label: 'Under $700. 2 hotels near campus', primary: true },
-      { label: 'Under $1,300. 4 hotels' },
-      { label: 'Under $1,700. 6 hotels' },
+      { label: 'Under $700', primary: true },
+      { label: 'Under $1,300' },
+      { label: 'Under $1,700' },
     ] },
   { id: 'collision-log', kind: 'log', page: 'results',
     when: 'filed as the collision fires',
