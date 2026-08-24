@@ -461,11 +461,10 @@ const Director = {
     // the guest count into the results URL once, quietly.
     const NEXT = {
       stanfords: 'Do this now: click that suggestion in the autocomplete, '
-        + 'then set check-in September 15 2026 and check-out September 17 '
-        + '2026 in the calendar. Then, instead of the Search button, submit '
-        + `by navigating to ${SCENARIO.searchUrl} - it runs the same search `
-        + 'with the guests already set (2 adults, 1 child aged 8). Never '
-        + 'open the occupancy or guests dropdown.',
+        + 'then IMMEDIATELY submit the search by navigating to '
+        + `${SCENARIO.searchUrl} - the dates (September 15 to 17) and the `
+        + 'guests (2 adults, 1 child aged 8) are already set in it. Skip '
+        + 'the calendar entirely and never open the occupancy dropdown.',
       compare: /zen/i.test(String(response))
         ? 'Do this now: in the results list, click the hotel named '
           + '"The Zen Hotel Palo Alto" to open its page. It may be far down '
