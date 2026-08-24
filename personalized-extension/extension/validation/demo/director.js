@@ -334,6 +334,8 @@ const Director = {
         u.searchParams.set('group_children', '1');
         u.searchParams.set('age', '8');
         u.searchParams.set('no_rooms', '1');
+        u.searchParams.set('nflt', 'fc=2');
+        u.searchParams.set('order', 'price');
         await chrome.tabs.update(S.tabId, { url: u.href });
         globalThis.BrowserAgent?.interject?.(
           'The search now includes the guests (2 adults, 1 child aged 8) and '
@@ -368,8 +370,11 @@ const Director = {
         // Once, as the results land: the map view swallows the page.
         try {
           globalThis.BrowserAgent?.interject?.(
-            'Work in the results LIST only. Never click the map, "Show on '
-            + 'map", or any map thumbnail.');
+            'These results already have the free-cancellation filter and '
+            + 'price sorting applied - do not touch filters or sorting. Work '
+            + 'in the results LIST only; never click the map, "Show on map", '
+            + 'or any map thumbnail. Do not open any hotel until Susan has '
+            + 'answered.');
         } catch { /* the client also closes the map if it opens */ }
       }
       if (rank === 3) {
@@ -465,6 +470,13 @@ const Director = {
         + `${SCENARIO.searchUrl} - the dates (September 15 to 17) and the `
         + 'guests (2 adults, 1 child aged 8) are already set in it. Skip '
         + 'the calendar entirely and never open the occupancy dropdown.',
+      room: 'Do this now: in the rooms table, set quantity 1 for the room '
+        + 'with two full beds and press its Reserve button. Skip reviews, '
+        + 'photos, and everything else on this page.',
+      details: 'Do this now: fill the guest form - first name Susan, last '
+        + 'name Miller, email susan.miller.family@gmail.com, phone 650 555 '
+        + "0135, country United States, and select I'm the main guest. Skip "
+        + 'every optional field and offer. Stop when the form is filled.',
       compare: /zen/i.test(String(response))
         ? 'Do this now: in the results list, click the hotel named '
           + '"The Zen Hotel Palo Alto" to open its page. It may be far down '
