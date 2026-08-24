@@ -239,13 +239,21 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
 
       const row = document.createElement('div');
       row.className = 'vd-row';
-      for (const o of beat.options || []) {
+      const nOpts = (beat.options || []).length;
+      // She must know where she is in the list: "1 of 5" like a real screen
+      // reader. The group carries the count for AT; the buttons carry their
+      // position; the focus speech says both out loud.
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-label', `${nOpts} choices`);
+      (beat.options || []).forEach((o, i) => {
         const b = document.createElement('button');
         b.className = o.primary ? 'vd-do primary' : 'vd-do';
         b.innerHTML = mark(o.label);
+        b.setAttribute('aria-posinset', String(i + 1));
+        b.setAttribute('aria-setsize', String(nOpts));
         b.addEventListener('click', () => done({ choice: plain(o.label) }));
         row.appendChild(b);
-      }
+      });
       card.appendChild(row);
 
       // Last in the tab order on purpose: the buttons are never the whole
@@ -315,12 +323,16 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       card.addEventListener('focusin', (e) => {
         const label = e.target?.getAttribute?.('aria-label')
           || e.target?.textContent || '';
-        if (label.trim()) tts(label.trim(), { interrupt: true });
+        if (!label.trim()) return;
+        const all = stops();
+        const i = all.indexOf(e.target);
+        const where = i >= 0 ? `. ${i + 1} of ${all.length}` : '';
+        tts(`${label.trim()}${where}`, { interrupt: true });
       });
       open = { id: beat.id, close: () => done({ dismissed: true }) };
-      // The question speaks in full, THEN focus lands (which speaks the
-      // first option) - a fixed delay cut the question off mid-sentence.
-      tts(plain(beat.say), { interrupt: true }).then(() => {
+      // The question speaks in full with the choice count, THEN focus lands
+      // (which speaks the first option and its position).
+      tts(`${plain(beat.say)} ${nOpts} choices.`, { interrupt: true }).then(() => {
         if (open?.id === beat.id) stops()[0]?.focus();
       });
     });
