@@ -51,7 +51,8 @@ const CSS = `
  z-index:2147483646;width:min(430px,calc(100vw - 32px));max-height:64vh;
  overflow:auto;background:#fff;border:1px solid #e4e4e7;border-radius:10px;
  padding:18px 22px 14px;box-shadow:0 12px 40px rgba(0,0,0,.18);
- font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#3f3f46}
+ font:13px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+ color:#3f3f46}
 .vd-drawer h2{margin:0 0 4px;font-size:12px;font-weight:700;text-align:center;
  letter-spacing:3px;text-transform:uppercase;color:#18181b}
 .vd-drawer .vd-rule{border:0;border-top:1px dashed #d4d4d8;margin:8px 0}
