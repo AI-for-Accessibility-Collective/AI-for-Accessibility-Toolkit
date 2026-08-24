@@ -121,6 +121,10 @@ def main():
     ap.add_argument("--headful", action="store_true")
     ap.add_argument("--checkout", action="store_true",
                     help="also open the Zen booking form (still never books)")
+    ap.add_argument("--manual", action="store_true",
+                    help="arm the demo and hand the browser to YOU: navigate "
+                         "booking.com yourself (VoiceOver on) and the beats "
+                         "fire around your own driving; Ctrl+C here to end")
     ap.add_argument("--outdir", default=str(HERE / "rehearsal"))
     a = ap.parse_args()
     out = Path(a.outdir)
@@ -154,6 +158,27 @@ def main():
         print("armed:", armed)
 
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
+
+        if a.manual:
+            # You are the agent. The director watches your pages and fires
+            # the story; widgets pause nothing here (no agent runs), they
+            # just wait for your press. The state prints every 15s.
+            page.goto("https://www.booking.com/", wait_until="domcontentloaded")
+            print("\nmanual mode: browse booking.com yourself. type Stanford in the")
+            print("destination box to start the story. Ctrl+C here when done.\n")
+            try:
+                seen = 0
+                while True:
+                    time.sleep(15)
+                    st = state_of(sw)
+                    if len(st["fired"]) != seen:
+                        seen = len(st["fired"])
+                        report(sw, "so far")
+            except KeyboardInterrupt:
+                report(sw, "final")
+                (out / "rehearsal-state.json").write_text(json.dumps(state_of(sw), indent=1))
+                ctx.close()
+                return
 
         # ── the home page: type the destination, let the widget fire ──
         page.goto("https://www.booking.com/", wait_until="domcontentloaded")
