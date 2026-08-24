@@ -193,30 +193,40 @@ const LOGIC = {
     },
   },
   compare: {
+    // The Zen is ALWAYS the first option - everything after this beat (the
+    // rooms, the checkout, the gate) is the Zen's story. Its price adapts
+    // to the live card when the page shows one.
     bind: (f, s) => {
-      if (s.budget == null) return {};
-      const u = underBudget(f, s.budget).sort((a, b) => miles(a) - miles(b));
-      if (u.length < 2) return {};
-      return { near: { ...u[0] }, far: { ...u[u.length - 1] } };
+      const cards = (f.cards || []).filter((c) => !c.isAd && c.price != null);
+      const zen = cards.find((c) => /zen/i.test(c.name || ''));
+      const u = s.budget != null
+        ? underBudget(f, s.budget).sort((a, b) => miles(a) - miles(b)) : [];
+      const near = zen || u[0] || null;
+      const far = u.filter((c) => c !== near)
+        .sort((a, b) => miles(b) - miles(a))[0] || null;
+      const out = {};
+      if (near) out.near = { ...near };
+      if (far) out.far = { ...far };
+      return out;
     },
-    sayLive: (f, s) => {
-      const { near, far } = s.roles || {};
-      if (!near || !far) return null;
-      return `Two good hotels under ${s.budget}. Which one?`;
-    },
+    sayLive: (f, s) => (s.budget != null
+      ? `Two good hotels under ${s.budget}. Which one?` : null),
     optionsLive: (f, s) => {
       const { near, far } = s.roles || {};
-      if (!near || !far) return null;
-      const line = (c, tag) => {
+      const line = (c, primary) => {
         const bits = [`${shortName(c.name)}, **${fmtRound(c.price)}**`];
         const m = milesOf(c);
         if (m != null) bits.push(m <= 3 ? `**${m} miles from campus**` : `a **${m} mile drive**`);
         if (c.rating != null) bits.push(`rated ${c.rating}`);
         if (/2 (full|queen|double) beds/i.test(c.units || '')) bits.push('two real beds');
-        return { label: bits.join('. '), primary: tag === 'near' };
+        return { label: bits.join('. '), primary };
       };
-      return [line(near, 'near'), line(far, 'far'),
-        { label: 'Raise the budget instead' }];
+      const zenStatic = { label: 'The Zen, **$638**. Close to campus, '
+        + '**two real beds**, great reviews, free breakfast', primary: true };
+      const first = (near && /zen/i.test(near.name || '')) ? line(near, true) : zenStatic;
+      const second = far ? line(far, false)
+        : { label: 'Radisson Sunnyvale, **$590**. A **25 minute drive** away' };
+      return [first, second, { label: 'Raise the budget instead' }];
     },
   },
   room: {
@@ -473,7 +483,6 @@ const Director = {
         u.searchParams.set('age', '8');
         u.searchParams.set('no_rooms', '1');
         u.searchParams.set('nflt', 'fc=2');
-        u.searchParams.set('order', 'price');
         await chrome.tabs.update(S.tabId, { url: u.href });
         globalThis.BrowserAgent?.interject?.(
           'The search now includes the guests (2 adults, 1 child aged 8) and '

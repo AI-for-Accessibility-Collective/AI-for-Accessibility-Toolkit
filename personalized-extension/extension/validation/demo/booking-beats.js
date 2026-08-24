@@ -20,7 +20,7 @@ export const SCENARIO = {
   // sort checkpoint's "sorting by price instead" is now literally true.
   searchUrl: 'https://www.booking.com/searchresults.html?ss=Stanford+University'
     + '&checkin=2026-09-15&checkout=2026-09-17&group_adults=2'
-    + '&group_children=1&age=8&no_rooms=1&nflt=fc%3D2&order=price',
+    + '&group_children=1&age=8&no_rooms=1&nflt=fc%3D2',
   propertyUrl: 'https://www.booking.com/hotel/us/the-zen.html'
     + '?checkin=2026-09-15&checkout=2026-09-17&group_adults=2'
     + '&group_children=1&age=8&no_rooms=1',

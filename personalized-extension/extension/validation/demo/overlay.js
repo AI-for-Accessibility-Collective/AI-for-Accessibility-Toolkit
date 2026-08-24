@@ -100,6 +100,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
   const sayQueue = [];
   let saying = false;
   let idleResolvers = [];
+  let everSpoke = false;
   if (voiced && typeof speechSynthesis !== 'undefined') {
     try { speechSynthesis.getVoices(); } catch { /* warmup only */ }
   }
@@ -129,7 +130,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       const attempt = () => {
         const u = new SpeechSynthesisUtterance(text);
         u.rate = rate;
-        u.onstart = () => { started = true; };
+        u.onstart = () => { started = true; everSpoke = true; };
         u.onend = done;
         u.onerror = done;
         speechSynthesis.speak(u);
@@ -162,11 +163,14 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
         }, 4000);
         // The give-up clock: normal length once speech started, a long
         // leash while waiting on activation, never a silent drop before.
+        // The long activation leash applies ONLY before speech has ever
+        // worked - after that, a line that will not start is the drop bug,
+        // and 20 silent seconds per line read as the demo hanging.
         const words = text.split(/\s+/).length;
         const guard = () => setTimeout(() => {
           if (settled) return;
           if (started) { done(); return; }
-          setTimeout(() => done(), 20000);
+          setTimeout(() => done(), everSpoke ? 1200 : 20000);
         }, 2000 + words * 380);
         guard();
       };
