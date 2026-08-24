@@ -391,17 +391,27 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     else preDismissed.add(id);
   }
 
+  // ONE composer for an entry's spoken line, used by both the focus handler
+  // and the auto read-through - so what tabbing says and what the walk says
+  // are the same words for the same row, always.
+  const entrySpeech = (li) => {
+    const rows = [...drawer.querySelectorAll('li')];
+    const i = rows.indexOf(li);
+    const t = li.dataset.plain;
+    return `${li.dataset.kind ? `${li.dataset.kind}. ` : ''}${t}`
+      + `${/[.!?]$/.test(t) ? ' ' : '. '}Entry ${i + 1} of ${rows.length}.`;
+  };
+
   function addLi(sayText, kindLabel) {
     const li = document.createElement('li');
     li.innerHTML = (kindLabel ? `<span class="vd-kind">${esc(kindLabel)}</span>` : '')
       + mark(sayText);
+    li.dataset.kind = kindLabel || '';
+    li.dataset.plain = plain(sayText);
     li.setAttribute('tabindex', '0');
     li.addEventListener('focus', () => {
       if (muteNextFocusSpeech) { muteNextFocusSpeech = false; return; }
-      const all = [...drawer.querySelectorAll('li')];
-      const i = all.indexOf(li);
-      tts(`${kindLabel ? `${kindLabel}. ` : ''}${plain(sayText)}. Entry ${i + 1} of ${all.length}.`,
-        { interrupt: true });
+      tts(entrySpeech(li), { interrupt: true });
     });
     drawer.querySelector('ul').appendChild(li);
     return li;
@@ -413,12 +423,19 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
   }
 
   let muteNextFocusSpeech = false;
+  // The auto read-through stops the moment the user drives: a nav key or a
+  // click sets tookOver, and the focus speech (interrupt: true) cuts the
+  // walk's current line off cleanly.
+  let walking = false;
+  let tookOver = false;
+  drawer.addEventListener('pointerdown', () => { tookOver = true; walking = false; });
   // Tab and arrows both walk the entries, wrapping - exactly like the
   // widget options, so one keyboard habit covers the whole demo.
   drawer.addEventListener('keydown', (e) => {
     const fwd = e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey);
     const back = e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey);
     if (!fwd && !back) return;
+    tookOver = true; walking = false;
     const all = [...drawer.querySelectorAll('li')];
     const i = all.indexOf(document.activeElement);
     if (i < 0) return;
@@ -447,22 +464,38 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     }
     for (const it of all) addLi(it.say, it.kind);
     announce(`The run is over. Here is the full log - ${all.length} entries: `
-      + 'what the agent said, what it noted, and what you chose. Tab or '
-      + 'arrows move through them.');
-    all.filter((it) => it.speak).forEach((it) => announce(it.speech || plain(it.say)));
-    announce('End of the log.');
-    // Focus lands in the log IMMEDIATELY - waiting for the read-through to
-    // finish left the keyboard nowhere for half a minute. Tab and arrows
-    // work from the first second; touching an entry speaks it, taking
-    // priority over the ongoing read-through, exactly like a screen reader.
-    const first = drawer.querySelector('li');
-    const grab = (n) => {
-      if (!first) return;
+      + 'what the agent said, what it noted, and what you chose. I will read '
+      + 'them in order - press tab or arrows any time to take over.');
+    // The read-through IS a guided focus walk: focus moves to each entry as
+    // it is spoken, so the voice, the highlight, and the tab position never
+    // disagree - and EVERY entry is read, in receipt order. The old version
+    // pumped a separate speech queue while focus sat on entry one: the voice
+    // ran ahead of the highlight, a tab cancelled the queue's line and the
+    // next one played over the focus speech, and rows the queue filtered
+    // out went silently missing.
+    const lis = [...drawer.querySelectorAll('li')];
+    const focusMuted = (li) => {
+      if (document.activeElement === li) return;
       muteNextFocusSpeech = true;
-      first.focus();
-      if (document.activeElement !== first && n > 0) setTimeout(() => grab(n - 1), 400);
+      li.focus();
+      // Focus refused (page fought back): clear the flag so the user's next
+      // real tab is not silently swallowed.
+      if (document.activeElement !== li) muteNextFocusSpeech = false;
     };
-    grab(12);
+    if (lis[0]) focusMuted(lis[0]);
+    queueIdle().then(async () => {
+      if (tookOver || !lis.length) return;
+      walking = true;
+      for (const li of lis) {
+        if (!walking || tookOver) return;
+        focusMuted(li);
+        await tts(entrySpeech(li));
+        if (!walking || tookOver) return;
+        await new Promise((r) => setTimeout(r, 320));
+      }
+      walking = false;
+      tts('End of the log. Tab or arrows to review any entry.');
+    });
   }
 
   function destroy() {
