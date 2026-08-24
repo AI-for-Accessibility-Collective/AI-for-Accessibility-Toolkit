@@ -21,6 +21,7 @@
 const STYLE_ID = 'vd-overlay-style';
 
 const CSS = `
+.vd-wrap,.vd-wrap *,.vd-drawer,.vd-drawer *{box-sizing:border-box}
 .vd-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);
  z-index:2147483646;width:min(460px,calc(100vw - 32px));
  font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif}
