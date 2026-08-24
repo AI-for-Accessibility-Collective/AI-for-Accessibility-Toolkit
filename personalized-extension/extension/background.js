@@ -1490,8 +1490,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           try { globalThis.Validation.start(contract, { style: msg.style || 'balanced' }); }
           catch (e) { console.warn('validation did not start:', e); }
         };
-        if (demoArm && globalThis.Validation.isRunning()) {
-          globalThis.Validation.stop().then(begin, begin);
+        if (demoArm) {
+          // A model left over from an earlier run re-arms the reasoner and
+          // the off-plan hard gate on a take that generated no model - a
+          // recorded demo wedged at Reserve on exactly that stale model.
+          const wipe = () => chrome.storage.local
+            .remove(['aa.validation.model', 'aa.validation.gen']).catch(() => {});
+          if (globalThis.Validation.isRunning()) {
+            globalThis.Validation.stop().then(wipe, wipe).then(begin, begin);
+          } else {
+            wipe().then(begin, begin);
+          }
         } else {
           begin();
         }

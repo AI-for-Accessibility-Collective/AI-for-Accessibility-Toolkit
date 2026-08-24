@@ -290,6 +290,28 @@ const Director = {
       }
     } catch { /* never let the release path stall the story */ }
     lastFacts = facts;
+    // The occupancy stepper is the one control the agent cannot drive (its
+    // "+" never enumerates). When the agent's own search lands without the
+    // child, fix the guest count into the URL once - a single reload right
+    // after the agent's own press, not a teleport.
+    if (facts.page === 'results' && S.answers.stanfords && !S.familyFixed
+        && S.tabId != null && /searchresults/.test(facts.url || '')
+        && !/group_children=1/.test(facts.url || '')) {
+      S.familyFixed = true;
+      try {
+        const u = new URL(facts.url);
+        u.searchParams.set('checkin', '2026-09-15');
+        u.searchParams.set('checkout', '2026-09-17');
+        u.searchParams.set('group_adults', '2');
+        u.searchParams.set('group_children', '1');
+        u.searchParams.set('age', '8');
+        u.searchParams.set('no_rooms', '1');
+        await chrome.tabs.update(S.tabId, { url: u.href });
+        globalThis.BrowserAgent?.interject?.(
+          'The search now includes the guests (2 adults, 1 child aged 8) and '
+          + 'the dates. Continue from these results.');
+      } catch { /* the story continues on whatever results are up */ }
+    }
     // A one-line trace of what each push actually read. When a beat refuses
     // to fire on stage, this is the difference between a diagnosis and a
     // guess about what the page said.
@@ -343,27 +365,29 @@ const Director = {
     try { await globalThis.Validation?.answer?.(HOLD_PREFIX + id, response); }
     catch { /* the resume below still frees the loop */ }
 
-    let told = false;
+    // The agent does the on-page work itself - typing, clicking, scrolling
+    // is what a demo audience watches. Deterministic tab-jumps made the run
+    // read as fake (David: "not much activity on the page itself"), and the
+    // recorded runs show the agent follows a JUST-IN-TIME directive at the
+    // answer moment even though it ignored the arm-time playbook. The one
+    // thing it truly cannot drive is the occupancy stepper; onFacts fixes
+    // the guest count into the results URL once, quietly.
+    const NEXT = {
+      stanfords: 'Do this now: click that suggestion in the autocomplete, '
+        + 'set check-in September 15 2026 and check-out September 17 2026 in '
+        + 'the calendar, then press Search. Do NOT open the occupancy or '
+        + 'guests dropdown - the guest count is handled for you.',
+      compare: /zen/i.test(String(response))
+        ? 'Do this now: in the results list, click the hotel named '
+          + '"The Zen Hotel Palo Alto" to open its page.'
+        : null,
+    };
     try {
-      const nav = id === 'stanfords' ? SCENARIO.searchUrl
-        : (id === 'compare' && /zen/i.test(String(response))) ? SCENARIO.propertyUrl
-        : null;
-      if (nav && S.tabId != null) {
-        await chrome.tabs.update(S.tabId, { url: nav });
-        globalThis.BrowserAgent?.interject?.(
-          `Susan answered: "${response}". The page is already being opened with `
-          + 'her answer applied (dates Sep 15-17, 2 adults, 1 child aged 8 are '
-          + 'set in the URL). Wait for it to load and continue from there - do '
-          + 'not re-enter dates or guests.');
-        told = true;
-      }
-    } catch { /* fall through to the plain interject */ }
-    if (!told) {
-      try {
-        globalThis.BrowserAgent?.interject?.(
-          `Susan answered: "${response}". Act on her answer and continue the task.`);
-      } catch { /* the answer is already in the validation record */ }
-    }
+      const next = NEXT[id];
+      globalThis.BrowserAgent?.interject?.(
+        `Susan answered: "${response}". `
+        + (next || 'Act on her answer and continue the task.'));
+    } catch { /* the answer is already in the validation record */ }
     try { globalThis.BrowserAgent?.resume?.(); } catch { /* paused-state is recoverable from the popup */ }
     if (lastFacts) await advance(lastFacts);
     await save();
