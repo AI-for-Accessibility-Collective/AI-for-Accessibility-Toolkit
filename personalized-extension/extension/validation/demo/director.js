@@ -77,76 +77,68 @@ const underBudget = (f, budget) => (f.cards || [])
 const familyRooms = (f) => (f.rooms || [])
   .filter((r) => r.beds.some((b) => /^2\s/i.test(b)));
 
-// ── when each beat may fire, and what its line reads off the page ──────────
-// Keyed by beat id. guard: does the relation hold on these facts? slots: the
-// live values for the line's {tokens} - null falls back to the rehearsal
-// value, and the miss lands in fired[i].missed.
+// ── what each beat reads off the live page ─────────────────────────────────
+// The storyline is the spec: every beat plays, in order, when the run
+// reaches its page (David, 2026-08-24: "follow my storyline exactly,
+// adapted with values based on the page"). There are no relation guards -
+// a value the page will not give up falls back to the rehearsal number and
+// the miss is recorded on the beat. `bind` captures a role at fire time so
+// trailing logs name the card their beat fired on.
 const LOGIC = {
-  contract: { guard: () => true },
-  stanfords: { guard: (f) => f.page === 'home' && !!f.destQuery
-    && (f.destOptions || []).length > 1 },
   winnow: {
-    guard: (f) => f.page === 'results' && f.resultCount > 0,
-    slots: (f) => ({ count: String(f.resultCount ?? ''), hotels: f.hotelFacet != null ? String(f.hotelFacet) : null }),
+    slots: (f) => ({ count: f.resultCount != null ? String(f.resultCount) : null,
+      hotels: f.hotelFacet != null ? String(f.hotelFacet) : null }),
   },
-  sort: { guard: (f) => f.page === 'results' },
   ad: {
-    guard: (f) => (f.cards || []).some((c) => c.isAd),
-    // The role is bound the moment this beat fires; the trailing log reads
-    // the binding, so a later card shuffle cannot rename the ad it filed.
     bind: (f) => { const i = (f.cards || []).findIndex((c) => c.isAd);
-      return { ad: { ...((f.cards || [])[i] || {}), ordinal: ORDINALS[i] || null } }; },
+      return i < 0 ? {} : { ad: { ...(f.cards || [])[i], ordinal: ORDINALS[i] || null } }; },
     slots: (f, s) => ({ adOrdinal: s.roles?.ad?.ordinal || null }),
   },
   'ad-log': {
-    guard: () => true,
     slots: (f, s) => ({ adName: s.roles?.ad?.name || null,
       adPrice: fmtRound(s.roles?.ad?.price) }),
   },
   collision: {
-    guard: (f, s) => f.page === 'results' && s.budget == null && oneKing(closest(f)),
-    bind: (f) => ({ closest: { ...closest(f) } }),
+    bind: (f) => { const c = closest(f); return c ? { closest: { ...c } } : {}; },
     slots: (f, s) => ({ closestPrice: fmtRound(s.roles?.closest?.price) }),
   },
   'collision-log': {
-    guard: () => true,
     slots: (f, s) => ({ closestName: s.roles?.closest?.name || null }),
   },
-  freeway: {
-    guard: (f) => (f.cards || []).some((c) => /palo alto/i.test(c.name || '')
-      && !/east palo alto/i.test(c.name || '')
-      && /east palo alto/i.test(c.address || '')),
-  },
   compare: {
-    guard: (f, s) => f.page === 'results' && s.budget != null && underBudget(f, s.budget).length >= 2,
-    slots: (f, s) => { const u = underBudget(f, s.budget).sort((a, b) => miles(a) - miles(b));
+    slots: (f, s) => { if (s.budget == null) return {};
+      const u = underBudget(f, s.budget).sort((a, b) => miles(a) - miles(b));
       return { zenPrice: fmtRound(u[0]?.price), radPrice: fmtRound(u[u.length - 1]?.price) }; },
   },
   room: {
-    guard: (f) => f.page === 'property' && familyRooms(f).length >= 2,
     slots: (f) => { const r = familyRooms(f).sort((a, b) => (a.price ?? 9e9) - (b.price ?? 9e9));
       return { room1Price: fmtRound(r[0]?.price), room2Price: fmtRound(r[1]?.price) }; },
   },
   'true-price': {
-    guard: (f, s) => f.page === 'checkout' && f.total != null && s.budget != null && f.total > s.budget,
     slots: (f, s) => ({ totalRounded: fmtRound(f.total),
-      overBudget: fmtRound(f.total - s.budget) }),
+      overBudget: s.budget != null && f.total != null ? fmtRound(f.total - s.budget) : null }),
   },
   cancellation: {
-    guard: (f) => f.page === 'checkout' && !!f.freeCancelBefore,
-    slots: (f) => ({ cancelDate: spokenDate(f.freeCancelBefore), penaltyRounded: fmtRound(f.penalty) }),
+    slots: (f) => ({ cancelDate: f.freeCancelBefore ? spokenDate(f.freeCancelBefore) : null,
+      penaltyRounded: fmtRound(f.penalty) }),
   },
-  details: { guard: (f) => f.page === 'checkout' && (f.hasArrival || f.hasSpecialRequests) },
-  form: { guard: (f) => f.page === 'checkout' && f.hasForm },
-  'form-log-1': { guard: () => true },
-  'form-log-2': { guard: () => true },
-  'form-log-3': { guard: () => true },
   gate: {
-    guard: (f) => f.page === 'checkout' && f.total != null,
     slots: (f) => ({ total: fmt(f.total),
       cancelDate: f.freeCancelBefore ? spokenDate(f.freeCancelBefore) : null }),
   },
 };
+
+// When a beat's turn comes: its page section has arrived, or the run is
+// already PAST it (catch-up - a beat is never skipped, so a run that got
+// ahead pays the story back widget by widget, each pausing the agent).
+const RANK = { unknown: -1, home: 0, results: 1, property: 2, checkout: 3 };
+const SECTION = { home: 0, results: 1, property: 2, checkout: 3, form: 3, review: 3 };
+function ready(beat, f) {
+  const pr = RANK[f?.page] ?? -1;
+  if (beat.id === 'contract') return true;
+  if (beat.id === 'stanfords') return (f?.page === 'home' && !!f.destQuery) || pr > 0;
+  return pr >= (SECTION[beat.page] ?? 0);
+}
 
 /** Fill {tokens} from live slots, falling back to the beat's rehearsal
  *  values. Returns the filled beat plus which tokens fell back. */
@@ -200,24 +192,7 @@ async function advance(facts) {
   while (S.idx < BEATS.length) {
     const b = BEATS[S.idx];
     if (b.post) break;                       // past the gate: never live
-    const g = LOGIC[b.id]?.guard;
-    if (!g || !g(facts, S)) {
-      // Story order is strict for the spine. An optional beat whose
-      // relation does not hold right now is skipped only when the next
-      // required beat is ready on these same facts - so a missing ad or
-      // freeway trap cannot stall the run, and cannot fire out of place.
-      if (b.optional) {
-        let j = S.idx + 1;
-        while (j < BEATS.length && BEATS[j].optional) j += 1;
-        const ng = j < BEATS.length && !BEATS[j].post && LOGIC[BEATS[j].id]?.guard;
-        if (ng && ng(facts, S)) {
-          (S.skipped ||= []).push(b.id);
-          S.idx += 1;
-          continue;
-        }
-      }
-      break;
-    }
+    if (!ready(b, facts)) break;             // its page has not arrived yet
     await fire(b, facts);
     fired += 1;
     if (b.kind === 'widget') break;          // wait for her answer
