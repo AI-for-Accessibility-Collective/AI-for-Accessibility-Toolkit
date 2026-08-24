@@ -100,6 +100,9 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
   const sayQueue = [];
   let saying = false;
   let idleResolvers = [];
+  if (voiced && typeof speechSynthesis !== 'undefined') {
+    try { speechSynthesis.getVoices(); } catch { /* warmup only */ }
+  }
 
   // Real audio, not only aria-live. The live region is silent unless a
   // screen reader is running - a demo audience heard NOTHING. The browser's
@@ -140,11 +143,32 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
             setTimeout(attempt, 90);
           }
         }, 900);
+        // Still silent after the retry? Chrome blocks speech until the page
+        // has USER ACTIVATION - the run's first line fires before anyone
+        // has touched the page and was silently dropped. Hold the line and
+        // speak it on the first pointer or key instead of losing it.
+        setTimeout(() => {
+          if (started || settled) return;
+          const kick = () => {
+            if (started || settled) return;
+            try { speechSynthesis.cancel(); } catch { /* engine state */ }
+            setTimeout(attempt, 90);
+          };
+          ['pointerdown', 'keydown'].forEach((ev) =>
+            document.addEventListener(ev, kick, { capture: true, once: true }));
+        }, 2100);
         keepalive = setInterval(() => {
           try { speechSynthesis.resume(); } catch { /* engine state */ }
         }, 4000);
-        // A wedged engine must not wedge the queue.
-        setTimeout(done, 2000 + text.split(/\s+/).length * 380);
+        // The give-up clock: normal length once speech started, a long
+        // leash while waiting on activation, never a silent drop before.
+        const words = text.split(/\s+/).length;
+        const guard = () => setTimeout(() => {
+          if (settled) return;
+          if (started) { done(); return; }
+          setTimeout(() => done(), 20000);
+        }, 2000 + words * 380);
+        guard();
       };
       if (interrupt && (speechSynthesis.speaking || speechSynthesis.pending)) {
         speechSynthesis.cancel();
