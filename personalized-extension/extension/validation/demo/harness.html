@@ -66,8 +66,14 @@ async function step(auto = false) {
     const p = overlay.widget(b);
     // Fast-forward mode presses the primary, the way the storyline's Susan
     // answers, so ?upto=N can land on any beat for a screenshot.
-    if (auto) setTimeout(() =>
-      document.querySelector('.vd-wrap .primary')?.click(), 30);
+    if (auto) {
+      const tryClick = (n) => {
+        const b = document.querySelector('.vd-wrap .primary');
+        if (b) b.click();
+        else if (n > 0) setTimeout(() => tryClick(n - 1), 250);
+      };
+      tryClick(120);
+    }
     const a = await p;
     busy = false;
     console.log('[answer]', JSON.stringify(a));

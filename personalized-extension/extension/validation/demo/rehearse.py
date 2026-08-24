@@ -92,13 +92,16 @@ def force_until(sw, page, target, limit=4):
     return any(f["id"] == target for f in state_of(sw)["fired"])
 
 
-def answer_widget(sw, page, label=None):
-    """Press the widget's primary (or the option containing `label`)."""
+def answer_widget(sw, page, label=None, wait_s=28):
+    """Press the widget's primary (or the option containing `label`).
+    Polls: the dialog appears only after the announcement queue drains."""
     sel = ".vd-wrap .vd-do.primary" if not label else f".vd-wrap .vd-do:has-text('{label}')"
-    if page.locator(sel).count():
-        page.locator(sel).first.click()
-        page.wait_for_timeout(1200)
-        return True
+    for _ in range(int(wait_s * 2)):
+        if page.locator(sel).count():
+            page.locator(sel).first.click()
+            page.wait_for_timeout(1200)
+            return True
+        page.wait_for_timeout(500)
     return False
 
 

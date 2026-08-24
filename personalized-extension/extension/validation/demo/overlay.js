@@ -70,7 +70,7 @@ const plain = (s) => String(s).replace(/\*\*/g, '');
 
 let uid = 0;
 
-export function createOverlay({ mount = document.body } = {}) {
+export function createOverlay({ mount = document.body, wordMs = 280 } = {}) {
   if (!document.getElementById(STYLE_ID)) {
     const st = document.createElement('style');
     st.id = STYLE_ID;
@@ -98,20 +98,28 @@ export function createOverlay({ mount = document.body } = {}) {
   mount.appendChild(live);
   const sayQueue = [];
   let saying = false;
-  async function announce(text) {
-    sayQueue.push(text);
+  let idleResolvers = [];
+  async function announce(text, spoken) {
+    sayQueue.push({ text, spoken });
     if (saying) return;
     saying = true;
     while (sayQueue.length) {
-      const t = sayQueue.shift();
+      const item = sayQueue.shift();
       live.textContent = '';
       await new Promise((r) => setTimeout(r, 60));
-      live.textContent = t;
-      // Rough speaking time at screen-reader pace, plus a settle gap.
-      await new Promise((r) => setTimeout(r, 700 + t.split(/\s+/).length * 280));
+      live.textContent = item.text;
+      // Rough speaking time at screen-reader pace, plus a settle gap. The
+      // per-word pace is a knob (wordMs) so it can be tuned to her actual
+      // VoiceOver rate at rehearsal.
+      await new Promise((r) => setTimeout(r, 700 + item.text.split(/\s+/).length * wordMs));
+      // The line has had its slot - the visual card it mirrors can go now.
+      try { item.spoken?.(); } catch { /* visual only */ }
     }
     saying = false;
+    idleResolvers.splice(0).forEach((r) => r());
   }
+  const queueIdle = () => (saying
+    ? new Promise((r) => idleResolvers.push(r)) : Promise.resolve());
 
   // The log region exists in the accessibility tree for the whole run - her
   // rotor can jump to it any time - but draws nothing until report().
@@ -125,7 +133,7 @@ export function createOverlay({ mount = document.body } = {}) {
   const entries = [];
   const fading = new Set();
 
-  function checkpoint(beat, { ttl = 6000 } = {}) {
+  function checkpoint(beat, { ttl = 2500 } = {}) {
     const card = document.createElement('div');
     card.className = 'vd-card vd-fade';
     // The live region is the one spoken channel; the card is its visual
@@ -134,17 +142,28 @@ export function createOverlay({ mount = document.body } = {}) {
     card.innerHTML = `<p>${mark(beat.say)}</p>`;
     wrap.appendChild(card);
     fading.add(card);
-    announce(plain(beat.say));
-    const t = setTimeout(() => {
+    // The card fades a beat AFTER its line's speech slot ends, so what is
+    // on screen and what is being said stay in step however deep the queue.
+    announce(plain(beat.say), () => setTimeout(() => {
       card.classList.add('vd-gone');
       setTimeout(() => { card.remove(); fading.delete(card); }, 450);
-    }, ttl);
-    return { dismiss: () => { clearTimeout(t); card.remove(); fading.delete(card); } };
+    }, ttl));
+    return { dismiss: () => { card.remove(); fading.delete(card); } };
   }
 
   let open = null;   // { id, card, scrim, close } while a dialog is up
+  const preDismissed = new Set();
 
-  function widget(beat) {
+  async function widget(beat) {
+    // The dialog waits for the checkpoint queue to finish speaking - a
+    // dialog that takes focus mid-line talks over the context she needs for
+    // this very question, and the leftover lines then arrive as stale
+    // interjections inside the dialog. Capped well above the longest real
+    // queue (winnow+sort+ad is ~13s), because a cap that cuts the last line
+    // off recreates the exact overlap this wait exists to prevent.
+    await Promise.race([queueIdle(), new Promise((r) => setTimeout(r, 20000))]);
+    // Answered from another tab while waiting? Never open at all.
+    if (preDismissed.delete(beat.id)) return { beat: beat.id, dismissed: true };
     return new Promise((resolve) => {
       // A widget takes the stage alone. Any checkpoint still fading out goes
       // now - it was already spoken, and nothing competes with a pause.
@@ -246,6 +265,7 @@ export function createOverlay({ mount = document.body } = {}) {
    *  promise with dismissed:true so no second answer is ever sent. */
   function dismissWidget(id) {
     if (open?.id === id) open.close();
+    else preDismissed.add(id);
   }
 
   function log(entry) {
