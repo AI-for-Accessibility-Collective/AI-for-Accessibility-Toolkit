@@ -1545,7 +1545,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   // ---- the demo director ------------------------------------------------
   if (msg.type === 'demoFacts') {
-    (globalThis.DemoDirector?.onFacts?.(msg.facts) || Promise.resolve({}))
+    (globalThis.DemoDirector?.onFacts?.(msg.facts, sender?.tab?.id) || Promise.resolve({}))
       .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
     return true;
   }

@@ -271,9 +271,10 @@ const Director = {
 
   /** Page facts from the content script. Fires every beat whose turn has
    *  come and whose relation holds; stops at a widget until it is answered. */
-  async onFacts(facts) { return serial(async () => {
+  async onFacts(facts, tabId) { return serial(async () => {
     await load();
     if (!S.armed || S.done || !facts) return { armed: S.armed };
+    if (tabId != null) S.tabId = tabId;   // the tab the run lives in
     // An organic stop with no surface to answer it would park the run
     // forever - the demo's surfaces only speak the story. Release what the
     // generic layer is holding on, and file that it happened - EXCEPT where
@@ -367,10 +368,27 @@ const Director = {
     try { await globalThis.Validation?.answer?.(HOLD_PREFIX + id, response); }
     catch { /* the resume below still frees the loop */ }
 
+    let told = false;
     try {
-      globalThis.BrowserAgent?.interject?.(
-        `Susan answered: "${response}". Act on her answer and continue the task.`);
-    } catch { /* the answer is already in the validation record */ }
+      const nav = id === 'stanfords' ? SCENARIO.searchUrl
+        : (id === 'compare' && /zen/i.test(String(response))) ? SCENARIO.propertyUrl
+        : null;
+      if (nav && S.tabId != null) {
+        await chrome.tabs.update(S.tabId, { url: nav });
+        globalThis.BrowserAgent?.interject?.(
+          `Susan answered: "${response}". The page is already being opened with `
+          + 'her answer applied (dates Sep 15-17, 2 adults, 1 child aged 8 are '
+          + 'set in the URL). Wait for it to load and continue from there - do '
+          + 'not re-enter dates or guests.');
+        told = true;
+      }
+    } catch { /* fall through to the plain interject */ }
+    if (!told) {
+      try {
+        globalThis.BrowserAgent?.interject?.(
+          `Susan answered: "${response}". Act on her answer and continue the task.`);
+      } catch { /* the answer is already in the validation record */ }
+    }
     try { globalThis.BrowserAgent?.resume?.(); } catch { /* paused-state is recoverable from the popup */ }
     if (lastFacts) await advance(lastFacts);
     await save();

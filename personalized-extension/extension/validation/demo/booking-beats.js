@@ -18,6 +18,9 @@ export const SCENARIO = {
   searchUrl: 'https://www.booking.com/searchresults.html?ss=Stanford+University'
     + '&checkin=2026-09-15&checkout=2026-09-17&group_adults=2'
     + '&group_children=1&age=8&no_rooms=1',
+  propertyUrl: 'https://www.booking.com/hotel/us/the-zen.html'
+    + '?checkin=2026-09-15&checkout=2026-09-17&group_adults=2'
+    + '&group_children=1&age=8&no_rooms=1',
   // Told to the agent at arm time. Booking's calendar and occupancy
   // steppers do not enumerate reliably (the + button never gets an index
   // and coordinate clicks miss after re-renders) - a recorded run looped on
