@@ -89,7 +89,7 @@ export const BEATS = [
     ],
     fallbacks: { room1Price: '$638', room2Price: '$648' } },
 
-  { id: 'true-price', kind: 'widget', page: 'checkout',
+  { id: 'true-price', kind: 'widget', page: 'checkout', optional: true,
     when: 'the checkout total crosses the ceiling the listed price sat under',
     say: "Heads up, the real price is **{totalRounded}** with taxes. That's **{overBudget} over** your budget.",
     fallbacks: { totalRounded: '$738', overBudget: '$38' },
@@ -99,12 +99,12 @@ export const BEATS = [
       { label: 'Keep looking under $700' },
     ] },
 
-  { id: 'cancellation', kind: 'checkpoint', page: 'checkout',
+  { id: 'cancellation', kind: 'checkpoint', page: 'checkout', optional: true,
     when: 'the exact free-cancellation cutoff and penalty are readable',
     say: 'You can cancel free until **{cancelDate}**. After that it costs **{penaltyRounded}**.',
     fallbacks: { cancelDate: 'September 14', penaltyRounded: '$368' } },
 
-  { id: 'details', kind: 'widget', page: 'form',
+  { id: 'details', kind: 'widget', page: 'form', optional: true,
     when: 'the form offers arrival time and special requests',
     say: "Check-in is at 3, but you'll be with Ashley until evening. Three quick things.",
     options: [
@@ -114,16 +114,16 @@ export const BEATS = [
       { label: 'Change something' },
     ] },
 
-  { id: 'form', kind: 'checkpoint', page: 'form',
+  { id: 'form', kind: 'checkpoint', page: 'form', optional: true,
     when: 'her identity starts leaving the machine',
     say: "I'm filling in your name, email, and phone number now. They use the phone to confirm the booking." },
-  { id: 'form-log-1', kind: 'log', page: 'form',
+  { id: 'form-log-1', kind: 'log', page: 'form', optional: true,
     when: 'declines filed silently as the form is walked',
     say: 'Said no to marketing emails, taxi, car rental' },
-  { id: 'form-log-2', kind: 'log', page: 'form',
+  { id: 'form-log-2', kind: 'log', page: 'form', optional: true,
     when: 'requests filed - requests, not promises',
     say: 'Asked the hotel to hold bags + help at check-in' },
-  { id: 'form-log-3', kind: 'log', page: 'form',
+  { id: 'form-log-3', kind: 'log', page: 'form', optional: true,
     when: 'an unverifiable site claim is quoted, not repeated as fact',
     say: 'The site claimed "we have 5 left" - couldn\'t verify' },
 
