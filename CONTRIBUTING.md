@@ -1,45 +1,57 @@
 # Contributing
 
-Most contributions add a new auditor, adapter, skill, or profile.
+This is a **toolkit**, not an app. Contributions extend one of three layers:
+
+- the **core** (`toolkit/`) — the Librarian/datastore, ability model, skill
+  engine, ports, surfaces, and reference host adapters;
+- the **catalog** (`tools/`) — reusable adapters, auditors, and profiles any
+  host can draw from;
+- the **service** (`server/`) — the hosted HTTP surface over the core.
+
+Most contributions add an **adapter, auditor, profile, or skill** to the
+catalog, a **surface** renderer, or a **platform port**.
 
 ## Set up
 
 ```bash
-git clone https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git
-cd AI-for-Accessibility-Toolkit && npm install && pip install -e .
-
-ai4a11y create my-adapter --type adapter   # scaffold
-npm run build                               # build
-# Chrome: chrome://extensions → Load unpacked → extension/
+git clone <your fork>
+cd AI-for-Accessibility-Toolkit && npm install
+npm test        # toolkit/test + tools/test
 ```
+
+Pure ES modules — the core has no build step. There is no browser extension or
+CLI in this repo; hosts (web/mobile/XR/server) live in their own projects and
+consume this toolkit.
 
 ## Skill or adapter — which am I building?
 
-This is the first decision, and you usually build **one, not both**:
+Usually **one, not both**:
 
-- **Adapter** = executable **code** that performs one page adaptation (the "hands"). Build a new adapter only when you need a **brand-new capability** no existing adapter provides (e.g. "collapse comment threads deeper than 2 levels"). Lives in `tools/adapters/`.
-- **Skill** = a `SKILL.md` **recipe** that composes existing adapters for a need (the "brain"). Build a skill when you want a **reusable combination/tuning** of things that already exist (e.g. "calm, readable news" = `visual-assist` + `focus-mode`). No code. Lives in `toolkit/skills/builtin/`.
+- **Adapter** = executable **code** that performs one adaptation (the "hands").
+  Build one only for a **brand-new capability** no existing adapter provides.
+  Lives in `tools/adapters/`.
+- **Skill** = a `SKILL.md` **recipe** composing existing adapters for a need
+  (the "brain"). Build one for a **reusable combination/tuning** of things that
+  already exist. No code. Lives in `toolkit/skills/builtin/`.
 
-Rule of thumb: **need a new primitive → adapter (code); need a new recipe → skill (no code).** A skill can only reference adapters that already exist, so if your recipe needs something missing, build that adapter first, then compose it in a skill.
+Rule of thumb: **new primitive → adapter (code); new recipe → skill (no code).**
+A skill can only reference adapters that already exist.
 
-## Cheat Sheet
+## Cheat sheet
 
-| I want to... | Do this |
+| I want to… | Do this |
 |--------------|---------|
-| **Find an issue** | Add auditor → `tools/auditors/` → export from `index.js` |
+| **Detect an issue** | Add auditor → `tools/auditors/` → export from `index.js` |
 | **Fix an issue** | Add adapter → `tools/adapters/` → add to `axeHandlers` in `index.js` |
-| **Combine adapters for a need** | Add skill → `toolkit/skills/builtin/<name>.md` (see [Adding a Skill](#adding-a-skill)) |
+| **Register a tool** | Add its entry to `toolkit/registry/tools.js` (`supportAreas`, `settings`, `description`) + any new keys to `settingsMeta` |
+| **Combine adapters for a need** | Add skill → `toolkit/skills/builtin/<name>.md` |
 | **Add a profile** | Edit `tools/profiles/settings.json` |
-| **Add AI feature** | `tools/utils/ai.js` + `extension/background.js` + `cli/ai4a11y.py` |
-| **Test changes** | `npm run build` → load in Chrome → test on real sites |
+| **Render to a new platform** | Add a surface → `toolkit/surfaces/<name>.js` |
+| **Support a new host runtime** | Implement the ports → `toolkit/adapters/<host>/` (copy `adapters/node/`) |
 
-## Adding an Auditor
+## Adding an auditor
 
-Auditors find accessibility issues. Use **axe-core** for standard WCAG; custom auditors for issues axe misses.
-
-```bash
-ai4a11y create missing-headings --type auditor
-```
+Auditors find accessibility issues (axe-core for standard WCAG; custom for what axe misses).
 
 ```js
 // tools/auditors/missing-headings.js
@@ -51,15 +63,9 @@ export function findSectionsWithoutHeadings() {
 }
 ```
 
-Then add to `tools/auditors/index.js`: `export * from './missing-headings.js';`
+Then `export * from './missing-headings.js';` in `tools/auditors/index.js`.
 
-## Adding an Adapter
-
-Adapters fix issues. They can handle specific [axe rule IDs](https://dequeuniversity.com/rules/axe/).
-
-```bash
-ai4a11y create fix-carousels --type adapter --profiles blind,motor
-```
+## Adding an adapter
 
 ```js
 // tools/adapters/fix-carousels.js
@@ -78,41 +84,16 @@ export function fixCarouselControls(carousel) {
 export const axeHandlers = { 'aria-required-attr': fixCarouselControls };
 ```
 
-Then in `tools/adapters/index.js`, add the export and spread its handlers:
+Then in `tools/adapters/index.js` add the export and spread its handlers, and
+register the tool in `toolkit/registry/tools.js` (id, `supportAreas`,
+`settings`, one-line `description`) plus any new setting keys in `settingsMeta`.
+Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
+`tools/adapters/fix-landmarks.js` (deterministic) for a full example.
 
-```js
-export * from './fix-carousels.js';
-import { axeHandlers as carouselHandlers } from './fix-carousels.js';
-// In the axeHandlers export, add: ...carouselHandlers,
-```
-
-For a real end-to-end example, read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or `tools/adapters/fix-landmarks.js` (deterministic, with axe handler).
-
-### Making it available in the personalized extension
-
-`tools/adapters/` is the canonical copy. The personalized extension reaches it
-through a one-line re-export, so an adapter lands in both extensions with two
-small files:
-
-```js
-// personalized-extension/skills/builtin/fix-carousels.js
-export * from '../../../tools/adapters/fix-carousels.js';
-```
-
-Then register it in `personalized-extension/skills/registry.js` with its
-metadata (`supportAreas`, `settings`, a one-line `description` the recommender
-reads, `quickStart: true` to show it in fast onboarding), and add any new
-setting keys to `settingsMeta` in the same file.
-
-A handful of adapters in `skills/builtin/` still carry their own code because
-they genuinely diverged (they use the extension's AI provider directly). If
-you edit one of those, check whether `tools/adapters/` needs the same change.
-
-## Adding a Profile
-
-Edit `tools/profiles/settings.json`:
+## Adding a profile
 
 ```json
+// tools/profiles/settings.json
 "myProfile": {
   "name": "My Profile",
   "description": "What it does",
@@ -120,19 +101,18 @@ Edit `tools/profiles/settings.json`:
 }
 ```
 
-**Available tools:** the full vocabulary — every key, its type, and its valid
-range — is `settingsMeta` in [`personalized-extension/skills/registry.js`](personalized-extension/skills/registry.js).
-Read it there rather than from a list in this file; it's the same vocabulary
-`validateSkill` checks recipes against, and it grows with every new adapter.
+The full settings vocabulary — every key, type, and range — is `settingsMeta` in
+[`toolkit/registry/tools.js`](toolkit/registry/tools.js); it's the same vocabulary
+`validateSkill` checks recipes against.
 
-## Adding a Skill
+## Adding a skill
 
-A skill composes existing adapters into a reusable recipe for a need — **no code**. Add a `SKILL.md` file in `toolkit/skills/builtin/`:
+A `SKILL.md` composing existing adapters — no code:
 
-```markdown
+````markdown
 ---
 name: quiet-reading
-description: Distraction-free, high-contrast reading. Use on articles and docs for focus-sensitive readers.
+description: Distraction-free, high-contrast reading. Use on articles and docs.
 supportAreas: [cognitive, reading, sensory]
 siteRelevance: [news, education, reference]
 ---
@@ -153,72 +133,55 @@ Strips clutter and boosts contrast so text is easy to focus on.
   ]
 }
 ```
-```
+````
 
-Rules:
-- The `Recipe` JSON is the runnable truth. Reference only **adapter ids that exist** (`ai4a11y list tools`) and **setting keys** from the profile list above — `validateSkill` rejects unknown ones.
-- Keep it minimal: 1–4 adapters that directly serve the need. Make the prose match the recipe.
-- `npm run build` regenerates the extension's built-in `AA_SKILLS`. Verify with `node toolkit/test/skill-test.js`.
+- The `Recipe` JSON is the runnable truth. Reference only adapter ids and setting
+  keys that exist in the registry — `validateSkill` rejects unknown ones.
+- Keep it minimal (1–4 adapters). Verify with `node toolkit/test/skill-test.js`.
 
-Users can also build skills without editing files — the **Skill Builder** in the personalized extension does this from a plain-language description via the Engineer.
+A host's **Engineer** (`toolkit/core/skill-builder.js`) can also author skills
+from a plain-language need at runtime — the same validation applies.
 
-## Adding an AI Tool
+## Adding an AI capability
 
-AI tools need implementations in three places:
-
-1. **`tools/utils/ai.js`** — provider-agnostic interface
-2. **`extension/background.js`** — Gemini handler (add to `handlers` object)
-3. **`cli/ai4a11y.py`** — Claude handler (via `page.expose_function`)
+The core and adapters reach the model through a provider abstraction, never a
+concrete SDK. Add the method to the provider interface (`tools/utils/ai.js` for
+catalog adapters; the toolkit core takes an injected LLM caller) and implement it
+in your host's provider. Keep prompts and the provider host-side.
 
 ## Testing
 
 ```bash
-npm test                                        # Auditors, adapters, profiles
-node personalized-extension/test/librarian-test.js   # Librarian regression gate
-node personalized-extension/test/run-tests.js
-for f in toolkit/test/*-test.js; do node "$f"; done  # Core + skill layer
+npm test                                 # toolkit/test + tools/test
+node toolkit/hosts/xr-demo/demo.js       # cross-surface + broker loop
+node toolkit/hosts/skill-demo/demo.js    # retrieve → resolve → build → validate → save
+node server/test/server-test.mjs         # hosted service
 ```
 
-Then try it on real pages:
+`toolkit/API.md` and the `ai4a11y-toolkit` skill are **generated** — if you
+change the core API, regenerate them (see the note at the top of each file)
+rather than hand-editing.
 
-```bash
-npm run build                                   # Build extension
-ai4a11y session start                           # Launch test browser
-ai4a11y session go https://example.com
-ai4a11y session audit                           # Run accessibility audit
-ai4a11y session describe                        # AI describes the page
-ai4a11y session stop
-```
+## PR guidelines
 
-Two browser tests need a local Chromium and are skipped in CI —
-`personalized-extension/test/skills-page-test.js` and `demo-beats-e2e.js`. Run
-them locally if you touched the Skill Builder page or the demo.
+- One feature per PR.
+- Tests must pass (`npm test` + the demos above).
+- Regenerate `toolkit/API.md` / the skill if you changed the core surface.
+- Describe who benefits (which disability/need).
 
-## PR Guidelines
+## Code style
 
-- One feature per PR
-- Test on real sites
-- `npm run build` must pass
-- **Commit the rebuilt bundles.** `extension/content.bundle.js`,
-  `extension/popup.bundle.js`, `cli/cli-tools.bundle.js`, and the generated
-  `personalized-extension/extension/lib/{taxonomy,datastore,librarian,tools-registry,skills-db}.js`
-  are checked in, and CI fails if they drift from source. Run both builds
-  (root and `personalized-extension/`) and commit what changes.
-- Describe who benefits (which disability/profile)
-
-## Code Style
-
-- ES modules in `tools/`, bundled by esbuild
-- Use the AI provider abstraction (`tools/utils/ai.js`) for AI features
-- Document which profiles/disabilities the feature helps
-- No large binaries — use Git LFS or link externally
+- ES modules throughout.
+- Use the AI provider abstraction for AI features — no concrete SDK in core/catalog.
+- Document which needs/profiles a feature helps.
+- No large binaries — link externally.
 
 ## Ethics
 
-- People with disabilities must be involved in design and evaluation
-- Compensate participants
-- Handle user profiles and personalization data carefully
-- Don't simulate ability profiles without community input
+- People with disabilities must be involved in design and evaluation.
+- Compensate participants.
+- Handle profiles and personalization data carefully.
+- Don't simulate ability profiles without community input.
 
 ## Questions?
 

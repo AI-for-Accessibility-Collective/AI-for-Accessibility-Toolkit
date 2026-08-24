@@ -1,45 +1,74 @@
 # AI for Accessibility Toolkit
 
-## Code Review Notes
-
-### Known Tradeoffs (DO NOT flag in reviews)
-
-1. **Gemini API key in URL query parameter** — This is required by the Gemini API when called from browser extensions. There's no alternative without adding a proxy server, which adds complexity and latency. Users are informed this is a client-side extension. This is an accepted tradeoff, not a security bug.
-
-2. **Acting-user partition: job anchoring (RESOLVED in Phase 3 inc 3)** (`toolkit/core/`) — The datastore's `partitionKey` isolation is total. The earlier gap — background jobs running against whatever partition was active at *fire*-time — is now closed: the debounced `extract` is anchored to the partition that enqueued it (skips on switch, the periodic net drains it later); `extract`/`reflect`/`requestGrant`/`importInsight`/`respondToProposal`/`recordScopedSettings` hold a slow-lane drain gate so `setActingUser` waits for in-flight writes; the cross-app entry points also capture+verify the partition. Migrations no longer mutate the shared `_actingUserId` (they run against an explicit partition-bound view), and a **migrate-on-activation** sweep keeps a named partition current. Two **accepted residual limitations** (prototype-scoped, first-party/mistakes-not-malice): (a) `setActingUser`'s drain wait has no timeout, so a hung LLM call in an in-flight `extract` can delay a partition switch — a host should give its LLM fetch an `AbortSignal` timeout; (b) cross-app insight proposals share the user's single weekly proposal budget with no per-source sub-cap, so a buggy granted app spamming distinct insight `kind`s could crowd out the user's own device-learned proposals for the week.
+A general, platform-agnostic toolkit developers embed to add **agentic
+accessibility** to any app. It is a library, not an application: no browser
+extension, no bundled UI. Host apps (web, mobile, XR, server) wire in platform
+ports and consume the core, the catalog, or the hosted service.
 
 ## Architecture
 
-- `tools/` — Shared JS code (auditors, adapters, profiles, utils)
-- `extension/` — Chrome extension (imports from tools/, bundles via esbuild)
-- `toolkit/` — Platform-agnostic core (Librarian, datastore, skill layer)
-- `cli/` — Python CLI with Playwright + Claude
-- `tools/utils/ai.js` — AI provider abstraction so same adapters work in both contexts
+- `toolkit/` — the platform-agnostic core. Sub-parts:
+  - `core/` — Librarian (memory/profile agent), datastore, ability-model,
+    broker, and the skill engine (`skill.js`, `skill-builder.js`). Imports only
+    `ports/` and `sync/` — never a surface, adapter, or catalog.
+  - `ports/` — the interfaces a host implements (KVStore, Clock, Scheduler,
+    Consent, actuation). The core reaches every platform capability through these.
+  - `surfaces/` — pure renderers mapping an AbilityModel → per-platform settings
+    (`web.js`, `xr.js`).
+  - `adapters/node/`, `adapters/chrome/` — reference host implementations of the
+    ports (the template a new host copies).
+  - `registry/` — the canonical tools catalog + settings vocabulary.
+  - `skills/builtin/` — starter `SKILL.md` recipes.
+  - `sync/`, `protocol/` — profile-blob transport + JSON-schema wire contracts.
+  - `hosts/` — runnable demos (`xr-demo`, `skill-demo`).
+- `tools/` — the developer **catalog**: `adapters/` (executable fixes),
+  `auditors/` (issue detectors), `profiles/` (ability presets), `utils/`.
+- `server/` — hosted HTTP service exposing the Librarian methods to any
+  language/runtime.
+- `examples/`, `docs/` — runnable examples and documentation.
+
+`createToolkit({ kv, clock, scheduler, consent, ... }) → { datastore, librarian }`
+is the entry point. See `toolkit/API.md` (generated) and the `ai4a11y-toolkit`
+skill for the full surface.
 
 ## Terminology
 
-- **Adapter** — the executable code that adapts a page. Developer-authored
-  ones live in `tools/adapters/`; users generate their own in the **Adapter
-  Builder** (`personalized-extension/extension/adapter-builder/`), which
-  writes real JS run as a user-script. Build one only for a capability no
-  adapter has yet.
-- **Skill / `SKILL.md`** — a model-facing playbook that composes existing
-  adapters into a recipe for a need. Built in the **Skill Builder**
-  (`personalized-extension/extension/skill-builder/`) by the Engineer, or
-  hand-written in `toolkit/skills/builtin/`. No code. This is the common
-  case, and where onboarding sends the needs it couldn't cover — the Skill
-  Builder hands off to the Adapter Builder only when composition fails.
-- **Auditor** — code in `tools/auditors/` that finds issues for adapters to
-  fix.
-- *Internal identifiers in `personalized-extension/` (`customSkills`,
-  `skillRegistry`, `openSkillBuilder` → the Adapter Builder,
-  `openSkillManager` → the Skill Builder, `aa-custom-` user-script IDs,
-  storage keys) still say "skill" from an earlier naming — renaming them
-  needs a storage migration.*
+- **AbilityModel** — the device-independent understanding of a person's needs.
+  Every surface renders it; hosts never store platform settings as the source of
+  truth.
+- **Adapter** — executable code performing one accessibility fix. The catalog is
+  `tools/adapters/`; the registry (`toolkit/registry/tools.js`) is the manifest of
+  them + their settings vocabulary.
+- **Skill / `SKILL.md`** — a model-facing recipe composing adapters for a need.
+  The **Engineer** (`toolkit/core/skill-builder.js`) authors them; they resolve
+  deterministically at apply-time (no LLM). Starter recipes: `toolkit/skills/builtin/`.
+- **Auditor** — code in `tools/auditors/` that finds issues for adapters to fix.
+- **Port / Surface / Host** — a host implements ports and (optionally) a surface;
+  the core stays platform-free.
 
-## Build
+## Known Tradeoffs (DO NOT flag in reviews)
+
+1. **Acting-user partition: job anchoring** (`toolkit/core/`) — The datastore's
+   `partitionKey` isolation is total; background jobs are anchored to the
+   partition that enqueued them, and `setActingUser` drains in-flight writes.
+   Two **accepted residual limitations** (prototype-scoped, first-party /
+   mistakes-not-malice): (a) `setActingUser`'s drain wait has no timeout, so a
+   hung LLM call in an in-flight `extract` can delay a partition switch — a host
+   should give its LLM fetch an `AbortSignal` timeout; (b) cross-app insight
+   proposals share the user's single weekly proposal budget with no per-source
+   sub-cap.
+
+## Build & Test
+
+Pure ES modules — no build step for the core. Run the suites:
 
 ```bash
-npm run build        # Build extension
-pip install -e .     # Install CLI
+npm test                       # toolkit/test + tools/test
+node toolkit/hosts/xr-demo/demo.js
+node toolkit/hosts/skill-demo/demo.js
+node server/test/server-test.mjs
 ```
+
+`toolkit/API.md` and the `ai4a11y-toolkit` skill are **generated** from the
+introspected model — edit the source and regenerate (see the note at the top of
+each), never hand-edit.
