@@ -53,14 +53,26 @@ export function classify(doc, url) {
 }
 
 function homeFacts(doc) {
-  // The destination autocomplete. Booking renders it as a listbox of results
-  // with a place name and a locality line under it.
-  const items = $$(doc, `${tid('autocomplete-results')} li, ul[role="listbox"] li`);
-  const destOptions = items.map((li) => {
-    const lines = [...li.querySelectorAll('div,span')].map(text).filter(Boolean);
-    return { main: lines[0] || text(li), sub: lines.find((l, i) => i > 0 && l !== lines[0]) || null };
-  }).filter((o) => o.main);
-  return { destOptions };
+  // The destination autocomplete - and ONLY it. Booking's home page keeps
+  // other listboxes in the DOM while closed (pickers, recent searches), and
+  // counting those fired the stanfords widget before the agent had typed a
+  // letter, whose hold then blocked the agent's own type action. So: only
+  // the container the destination input names via aria-controls (or the
+  // autocomplete testid), only elements that actually render, and only
+  // while the box holds a typed query.
+  const box = $(doc, 'input[name="ss"]');
+  const destQuery = (box?.value || '').trim();
+  const owned = box?.getAttribute('aria-controls');
+  const root = (owned && doc.getElementById(owned))
+    || $(doc, tid('autocomplete-results'));
+  const items = root ? [...root.querySelectorAll('li')] : [];
+  const destOptions = items
+    .filter((li) => li.getClientRects().length > 0)
+    .map((li) => {
+      const lines = [...li.querySelectorAll('div,span')].map(text).filter(Boolean);
+      return { main: lines[0] || text(li), sub: lines.find((l, i) => i > 0 && l !== lines[0]) || null };
+    }).filter((o) => o.main);
+  return { destQuery, destOptions };
 }
 
 function resultsFacts(doc) {

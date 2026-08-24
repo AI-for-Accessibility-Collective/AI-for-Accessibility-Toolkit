@@ -83,7 +83,8 @@ const familyRooms = (f) => (f.rooms || [])
 // value, and the miss lands in fired[i].missed.
 const LOGIC = {
   contract: { guard: () => true },
-  stanfords: { guard: (f) => f.page === 'home' && (f.destOptions || []).length > 1 },
+  stanfords: { guard: (f) => f.page === 'home' && !!f.destQuery
+    && (f.destOptions || []).length > 1 },
   winnow: {
     guard: (f) => f.page === 'results' && f.resultCount > 0,
     slots: (f) => ({ count: String(f.resultCount ?? ''), hotels: f.hotelFacet != null ? String(f.hotelFacet) : null }),
