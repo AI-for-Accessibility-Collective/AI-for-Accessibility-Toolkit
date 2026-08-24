@@ -473,10 +473,14 @@ const Director = {
       room: 'Do this now: in the rooms table, set quantity 1 for the room '
         + 'with two full beds and press its Reserve button. Skip reviews, '
         + 'photos, and everything else on this page.',
-      details: 'Do this now: fill the guest form - first name Susan, last '
-        + 'name Miller, email susan.miller.family@gmail.com, phone 650 555 '
-        + "0135, country United States, and select I'm the main guest. Skip "
-        + 'every optional field and offer. Stop when the form is filled.',
+      details: 'Do this now, in order: (1) fill the guest form - first name '
+        + 'Susan, last name Miller, email susan.miller.family@gmail.com, '
+        + "phone 650 555 0135, country United States, select I'm the main "
+        + 'guest. (2) Set the estimated arrival time dropdown to 6:00 PM - '
+        + '7:00 PM. (3) In the special requests box type: "Could you hold '
+        + 'our bags in the morning before check-in? And some help finding '
+        + 'our room at check-in would be appreciated." (4) Decline every '
+        + 'other offer. Stop when all three are done.',
       compare: /zen/i.test(String(response))
         ? 'Do this now: in the results list, click the hotel named '
           + '"The Zen Hotel Palo Alto" to open its page. It may be far down '
