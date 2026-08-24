@@ -30,6 +30,16 @@ const TASK_RE = /\b(hotel|room|stay|night|book)/i;
 
 let S = null;            // { armed, idx, fired, answers, budget, done, startedAt }
 let loading = null;
+let lastFacts = null;    // worker-lifetime; an answer re-advances on these
+// One mutation at a time. Facts arrive on a debounce and answers on clicks,
+// and two interleaved onFacts calls would both read the same idx and fire
+// the same beat twice. Every entry point queues behind the last.
+let chain = Promise.resolve();
+const serial = (fn) => {
+  const p = chain.then(fn, fn);
+  chain = p.catch(() => {});
+  return p;
+};
 
 const fresh = () => ({ armed: false, idx: 0, fired: [], answers: {}, budget: null,
   done: false, startedAt: Date.now() });
@@ -156,10 +166,11 @@ function fill(beat, facts) {
   };
 }
 
-async function fire(beat, facts) {
+async function fire(beat, facts, { forced = false } = {}) {
   const bound = LOGIC[beat.id]?.bind?.(facts, S);
   if (bound) S.roles = { ...(S.roles || {}), ...bound };
   const filled = fill(beat, facts);
+  if (forced) filled.forced = true;
   S.fired.push(filled);
   S.idx += 1;
   if (beat.kind === 'widget') {
@@ -175,26 +186,61 @@ async function fire(beat, facts) {
   await save();
 }
 
+/** Fire every beat whose turn has come on these facts; stop at a widget.
+ *  A fired widget she has not answered blocks everything after it - the
+ *  agent is paused, and the story does not talk over its own question. */
+async function advance(facts) {
+  const pending = [...S.fired].reverse().find((f) => f.kind === 'widget');
+  if (pending && !S.answers[pending.id]) return 0;
+  let fired = 0;
+  while (S.idx < BEATS.length) {
+    const b = BEATS[S.idx];
+    if (b.post) break;                       // past the gate: never live
+    const g = LOGIC[b.id]?.guard;
+    if (!g || !g(facts, S)) {
+      // Story order is strict for the spine. An optional beat whose
+      // relation does not hold right now is skipped only when the next
+      // required beat is ready on these same facts - so a missing ad or
+      // freeway trap cannot stall the run, and cannot fire out of place.
+      if (b.optional) {
+        let j = S.idx + 1;
+        while (j < BEATS.length && BEATS[j].optional) j += 1;
+        const ng = j < BEATS.length && !BEATS[j].post && LOGIC[BEATS[j].id]?.guard;
+        if (ng && ng(facts, S)) {
+          (S.skipped ||= []).push(b.id);
+          S.idx += 1;
+          continue;
+        }
+      }
+      break;
+    }
+    await fire(b, facts);
+    fired += 1;
+    if (b.kind === 'widget') break;          // wait for her answer
+  }
+  return fired;
+}
+
 const Director = {
   /** Called with the task sentence when the agent starts. */
-  async maybeArm(task) {
+  async maybeArm(task) { return serial(async () => {
     await load();
     const t = String(task || '');
     if (!(SCENARIO_RE.test(t) && TASK_RE.test(t))) return { armed: false };
     S = { ...fresh(), armed: true, task: t };
     await save();
     return { armed: true };
-  },
+  }); },
 
-  async disarm() {
+  async disarm() { return serial(async () => {
     await load();
     S = fresh();
     await save();
-  },
+  }); },
 
   /** Page facts from the content script. Fires every beat whose turn has
    *  come and whose relation holds; stops at a widget until it is answered. */
-  async onFacts(facts) {
+  async onFacts(facts) { return serial(async () => {
     await load();
     if (!S.armed || S.done || !facts) return { armed: S.armed };
     // An organic stop with no surface to answer it would park the run
@@ -210,42 +256,24 @@ const Director = {
         }
       }
     } catch { /* never let the release path stall the story */ }
-    // A fired widget she has not answered blocks everything after it - the
-    // agent is paused, and the story does not talk over its own question.
-    const pending = [...S.fired].reverse().find((f) => f.kind === 'widget');
-    if (pending && !S.answers[pending.id]) return { armed: true, waiting: pending.id };
-    let fired = 0;
-    while (S.idx < BEATS.length) {
-      const b = BEATS[S.idx];
-      if (b.post) break;                       // past the gate: never live
-      const g = LOGIC[b.id]?.guard;
-      if (!g || !g(facts, S)) {
-        // Story order is strict for the spine. An optional beat whose
-        // relation does not hold right now is skipped only when the next
-        // required beat is ready on these same facts - so a missing ad or
-        // freeway trap cannot stall the run, and cannot fire out of place.
-        if (b.optional) {
-          let j = S.idx + 1;
-          while (j < BEATS.length && BEATS[j].optional) j += 1;
-          const ng = j < BEATS.length && !BEATS[j].post && LOGIC[BEATS[j].id]?.guard;
-          if (ng && ng(facts, S)) {
-            (S.skipped ||= []).push(b.id);
-            S.idx += 1;
-            continue;
-          }
-        }
-        break;
-      }
-      await fire(b, facts);
-      fired += 1;
-      if (b.kind === 'widget') break;          // wait for her answer
-    }
+    lastFacts = facts;
+    // A one-line trace of what each push actually read. When a beat refuses
+    // to fire on stage, this is the difference between a diagnosis and a
+    // guess about what the page said.
+    (S.reads ||= []).push({ at: Date.now(), page: facts.page,
+      resultCount: facts.resultCount ?? null, hotelFacet: facts.hotelFacet ?? null,
+      cards: facts.cards?.length ?? null, ads: facts.adCount ?? null,
+      rooms: facts.rooms?.length ?? null, total: facts.total ?? null,
+      cancel: facts.freeCancelBefore ?? null, form: facts.hasForm ?? null,
+      err: facts.readError ?? null });
+    if (S.reads.length > 60) S.reads.splice(0, S.reads.length - 60);
+    const fired = await advance(facts);
     await save();
     return { armed: true, fired, idx: S.idx };
-  },
+  }); },
 
   /** Her answer, from the overlay. Releases the hold, steers the agent. */
-  async onAnswer(id, response) {
+  async onAnswer(id, response) { return serial(async () => {
     await load();
     if (!S.armed) return { ok: false };
     if (!S.fired.some((f) => f.id === id)) return { ok: false, why: 'not fired' };
@@ -277,19 +305,21 @@ const Director = {
         `Susan answered: "${response}". Act on her answer and continue the task.`);
     } catch { /* the answer is already in the validation record */ }
     try { globalThis.BrowserAgent?.resume?.(); } catch { /* paused-state is recoverable from the popup */ }
+    if (lastFacts) await advance(lastFacts);
     await save();
     return { ok: true };
-  },
+  }); },
 
   /** Stage lever: play the next beat on its rehearsal fallbacks, relation or
    *  no relation. For live recovery only; the miss list marks it. */
-  async force() {
+  async force() { return serial(async () => {
     await load();
     if (!S.armed || S.idx >= BEATS.length) return { ok: false };
     const b = BEATS[S.idx];
-    await fire(b, {});
+    await fire(b, lastFacts || {}, { forced: true });
+    await save();
     return { ok: true, id: b.id };
-  },
+  }); },
 
   async state() { await load(); return { ...S }; },
   SCENARIO,
