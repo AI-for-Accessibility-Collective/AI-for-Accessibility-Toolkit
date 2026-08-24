@@ -354,10 +354,11 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
         tts(`${label.trim()}${where}`, { interrupt: true });
       });
       open = { id: beat.id, close: () => done({ dismissed: true }) };
-      // The question speaks in full with the choice count, THEN focus lands
-      // (which speaks the first option and its position).
+      // The question speaks in full with the choice count, then a breath,
+      // THEN focus lands (which speaks the first option and its position) -
+      // back-to-back they ran into each other.
       tts(`${plain(beat.say)} ${nOpts} choices.`, { interrupt: true }).then(() => {
-        if (open?.id === beat.id) stops()[0]?.focus();
+        setTimeout(() => { if (open?.id === beat.id) stops()[0]?.focus(); }, 750);
       });
     });
   }
