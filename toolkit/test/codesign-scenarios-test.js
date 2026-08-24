@@ -34,7 +34,7 @@ import { TAXONOMY } from '../core/taxonomy.js';
 // the point: "an adapter exists for this need" must mean the actual catalog
 // has it, not a hand-copied list.
 import { skillRegistry, settingsMeta as REAL_META, getSkillById, getRegistryForPrompt }
-  from '../../personalized-extension/skills/registry.js';
+  from '../registry/tools.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const BUILTIN_DIR = join(HERE, '..', 'skills', 'builtin');

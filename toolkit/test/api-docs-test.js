@@ -119,7 +119,12 @@ const model = await buildModel();
 // ============================================================================
 // (d) every librarian* case in background.js maps to a method in the model
 // ============================================================================
-{
+// Skipped when no Chrome extension is present in the repo (core-only checkout):
+// this cross-checks a web HOST's message switch against the model, which only
+// applies where a host ships alongside the toolkit.
+if (!existsSync(BACKGROUND_JS_PATH)) {
+  console.log('(d) skipped — no extension host in this repo (core-only)');
+} else {
   const bg = readFileSync(BACKGROUND_JS_PATH, 'utf8');
   const caseNames = [...new Set([...bg.matchAll(/case '(librarian[A-Za-z0-9]+)'/g)].map((m) => m[1]))];
 
