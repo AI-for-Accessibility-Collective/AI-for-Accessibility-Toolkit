@@ -451,16 +451,18 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       + 'arrows move through them.');
     all.filter((it) => it.speak).forEach((it) => announce(it.speech || plain(it.say)));
     announce('End of the log.');
-    queueIdle().then(() => {
-      const first = drawer.querySelector('li');
-      const grab = (n) => {
-        if (!first) return;
-        muteNextFocusSpeech = true;
-        first.focus();
-        if (document.activeElement !== first && n > 0) setTimeout(() => grab(n - 1), 500);
-      };
-      grab(8);
-    });
+    // Focus lands in the log IMMEDIATELY - waiting for the read-through to
+    // finish left the keyboard nowhere for half a minute. Tab and arrows
+    // work from the first second; touching an entry speaks it, taking
+    // priority over the ongoing read-through, exactly like a screen reader.
+    const first = drawer.querySelector('li');
+    const grab = (n) => {
+      if (!first) return;
+      muteNextFocusSpeech = true;
+      first.focus();
+      if (document.activeElement !== first && n > 0) setTimeout(() => grab(n - 1), 400);
+    };
+    grab(12);
   }
 
   function destroy() {
