@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>verification overlay harness</title>
+<style>
+  /* A stand-in for a booking results page: light, busy enough that the cards
+     have something real to float over. Not part of the overlay. */
+  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    background:#fff;color:#1a1a1a}
+  .bar{background:#003b95;color:#fff;padding:14px 24px;font-weight:700;font-size:18px}
+  .page{max-width:1000px;margin:0 auto;padding:20px 24px}
+  .tile{display:flex;gap:14px;border:1px solid #e7e7e7;border-radius:8px;
+    padding:14px;margin:0 0 12px}
+  .tile .ph{width:180px;height:120px;background:#e9edf2;border-radius:6px;flex:none}
+  .tile h3{margin:0 0 4px;color:#006ce4;font-size:16px}
+  .tile .meta{color:#595959;font-size:12.5px}
+  .tile .price{margin-left:auto;text-align:right;font-weight:700;font-size:18px}
+  .hud{position:fixed;left:16px;bottom:16px;background:#f4f4f5;border:1px solid #e4e4e7;
+    border-radius:8px;padding:8px 12px;font-size:12px;color:#52525b;z-index:2147483647}
+  .hud b{color:#18181b}
+</style>
+</head>
+<body>
+<div class="bar">Booking.com (harness stand-in)</div>
+<div class="page" id="tiles"></div>
+<div class="hud" id="hud"><b>n</b> next beat · <b>r</b> end report · answers land in the console</div>
+
+<script type="module">
+import { createOverlay } from './overlay.js';
+import { BEATS } from './booking-beats.js';
+
+for (let i = 0; i < 8; i++) {
+  const t = document.createElement('div');
+  t.className = 'tile';
+  t.innerHTML = `<div class="ph"></div><div><h3>Property ${i + 1}</h3>
+    <div class="meta">Palo Alto · stand-in tile so the overlay floats over something</div></div>
+    <div class="price">$${400 + i * 60}</div>`;
+  document.getElementById('tiles').appendChild(t);
+}
+
+const overlay = createOverlay();
+const params = new URLSearchParams(location.search);
+const includePost = params.get('post') === '1';
+const beats = BEATS.filter((b) => includePost || !b.post);
+let i = 0;
+let busy = false;
+
+async function step(auto = false) {
+  if (busy || i >= beats.length) return;
+  const b = beats[i++];
+  document.getElementById('hud').innerHTML =
+    `<b>${b.id}</b> (${b.kind}) · ${i}/${beats.length} · <b>n</b> next · <b>r</b> report`;
+  if (b.kind === 'checkpoint') overlay.checkpoint(b);
+  else if (b.kind === 'log') overlay.log(b);
+  else if (b.kind === 'widget') {
+    busy = true;
+    const p = overlay.widget(b);
+    // Fast-forward mode presses the primary, the way the storyline's Susan
+    // answers, so ?upto=N can land on any beat for a screenshot.
+    if (auto) setTimeout(() =>
+      document.querySelector('.vd-wrap .primary')?.click(), 30);
+    const a = await p;
+    busy = false;
+    console.log('[answer]', JSON.stringify(a));
+  }
+}
+
+// ?upto=N plays beats 0..N-1 answering primaries, then waits on beat N live.
+// ?report=1 opens the log drawer afterward, so the end report can be checked.
+const upto = parseInt(params.get('upto') || '-1', 10);
+(async () => {
+  for (let k = 0; k < upto && i < beats.length; k++) await step(true);
+  if (params.get('report') === '1') overlay.report();
+  else if (upto >= 0 && i < beats.length) step(false);
+})();
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.closest?.('[data-ai4a11y-ui]')) return;
+  if (e.key === 'n') step(false);
+  if (e.key === 'r') overlay.report();
+});
+</script>
+</body>
+</html>
