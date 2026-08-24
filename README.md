@@ -89,6 +89,7 @@ A developer library of reusable accessibility building blocks, usable on their o
 
 - **Adapters** ([`tools/adapters/`](tools/adapters/)) — 40+ fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more.
 - **Auditors** ([`tools/auditors/`](tools/auditors/)) — detectors that find issues for adapters to fix (missing alt text, low contrast, unlabeled controls).
+- **Validators** ([`tools/validators/`](tools/validators/)) — the verifier engine for agentic flows: check that a page matches what the person asked an agent for and decide how hard to insist. Pairs with the `contract-mismatch` auditor and the `agent-watch` adapter. Machinery only — a host renders its own validation UI.
 - **Profiles** ([`tools/profiles/`](tools/profiles/)) — evidence-based ability presets (Blind, Low Vision, Dyslexia, Motor, …) mapping to settings.
 - **Registry** ([`toolkit/registry/tools.js`](toolkit/registry/tools.js)) — the single catalog of tools + their settings vocabulary that grounds the Engineer and any host UI.
 - **Starter skills** ([`toolkit/skills/builtin/`](toolkit/skills/builtin/)) — `SKILL.md` recipes composing adapters for common needs.

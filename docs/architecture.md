@@ -173,6 +173,18 @@ flowchart TB
 - **Host apps live in their own repos.** This repository is the toolkit and its
   catalog — not any particular application. A web extension, mobile app, or XR
   runtime consumes it (by embedding the ES modules or calling the HTTP service).
+- **Validation is machinery, not a bundled UI.** When an agent acts on the
+  person's behalf, the toolkit can verify that the page actually matches what
+  was asked for and hold the agent before anything hard to undo. That layer's
+  *logic* ships in the catalog — the verifier engine (`tools/validators/`, incl.
+  its "how hard to insist" `policy.js`), the `contract-mismatch` auditor
+  (`tools/auditors/`, which asks "does this match what the person asked?", not
+  "is this accessible?"), and the `agent-watch` adapter (`tools/adapters/`, which
+  reports a delegate's progress on the page). There is **no bundled validation
+  panel or overlay** — that was host UI and lives with the host. A host that
+  wants a validation experience composes these pieces and renders its own.
+  (`docs/design/verifier-architecture.md` is a point-in-time snapshot and still
+  describes the retired extension wiring.)
 
 ## Principles
 
