@@ -98,6 +98,37 @@ const underBudget = (f, budget) => (f.cards || [])
 const familyRooms = (f) => (f.rooms || [])
   .filter((r) => r.beds.some((b) => /^2\s/i.test(b)));
 
+// One list for the compare: the count spoken and the options shown come
+// from the same array (they diverged: "Three good hotels" over four rows).
+// Labels argue the choice themselves - the Zen leads with real beds for
+// all three; anything whose extra bed is a sofa says so.
+function slateOptions(s) {
+  const slate = s.roles?.slate || [];
+  const line = (c, primary) => {
+    const bits = [`${shortName(c.name)}, **${fmtRound(c.price)}**`];
+    if (/zen/i.test(c.name || '')) {
+      bits.push('**real beds for all three of you**');
+      const m = milesOf(c);
+      if (m != null) bits.push(`${m} miles from campus`);
+      if (c.rating != null) bits.push(`rated ${c.rating}`);
+      if (/breakfast/i.test(c.units || '')) bits.push('free breakfast');
+    } else {
+      const m = milesOf(c);
+      if (m != null) bits.push(m <= 3 ? `${m} miles from campus` : `a ${m} mile drive`);
+      if (c.rating != null) bits.push(`rated ${c.rating}`);
+      if (/sofa bed/i.test(c.units || '')) bits.push('but the extra bed is a **sofa**');
+      else if (/2 (full|queen|double) beds/i.test(c.units || '')) bits.push('two real beds');
+    }
+    return { label: bits.join('. '), primary };
+  };
+  const opts = slate.map((c, i) => line(c, i === 0 && /zen/i.test(c.name || '')));
+  if (!opts.length || !/zen/i.test(slate?.[0]?.name || '')) {
+    opts.unshift({ label: 'The Zen, **$638**. **Real beds for all three of '
+      + 'you**, close to campus, great reviews, free breakfast', primary: true });
+  }
+  return opts.slice(0, 4);
+}
+
 // ── what each beat reads off the live page ─────────────────────────────────
 // The storyline is the spec: every beat plays, in order, when the run
 // reaches its page (David, 2026-08-24: "follow my storyline exactly,
@@ -151,6 +182,15 @@ const LOGIC = {
       return c ? { closest: { ...c } } : {};
     },
     slots: (f, s) => ({ closestPrice: fmtRound(s.roles?.closest?.price) }),
+    optionsLive: (f, s) => {
+      const cards = (f.cards || []).filter((c) => !c.isAd && c.price != null);
+      if (!cards.length) return null;
+      const opt = (t, primary) => {
+        const n = cards.filter((c) => c.price <= t).length;
+        return { label: `Under $${t.toLocaleString('en-US')} - ${n} option${n === 1 ? '' : 's'}`, primary };
+      };
+      return [opt(700, true), opt(1300, false), opt(1700, false)];
+    },
     sayLive: (f, s) => {
       const c = s.roles?.closest;
       if (!c || c.price == null) return null;
@@ -216,25 +256,12 @@ const LOGIC = {
     },
     sayLive: (f, s) => {
       if (s.budget == null) return null;
-      const n = Math.max((s.roles?.slate || []).length, 2);
-      return `${COUNTS[n] || n} good hotels under ${s.budget}. Which one?`;
+      const n = slateOptions(s).length;
+      return `${COUNTS[n] || n} good options under ${s.budget}. Which one?`;
     },
     optionsLive: (f, s) => {
-      const { slate } = s.roles || {};
-      const line = (c, primary) => {
-        const bits = [`${shortName(c.name)}, **${fmtRound(c.price)}**`];
-        const m = milesOf(c);
-        if (m != null) bits.push(m <= 3 ? `**${m} miles from campus**` : `a **${m} mile drive**`);
-        if (c.rating != null) bits.push(`rated ${c.rating}`);
-        if (/2 (full|queen|double) beds/i.test(c.units || '')) bits.push('two real beds');
-        return { label: bits.join('. '), primary };
-      };
-      const zenStatic = { label: 'The Zen, **$638**. Close to campus, '
-        + '**two real beds**, great reviews, free breakfast', primary: true };
-      const opts = (slate || []).map((c, i) => line(c, i === 0 && /zen/i.test(c.name || '')));
-      if (!opts.length || !/zen/i.test(slate?.[0]?.name || '')) opts.unshift(zenStatic);
-      opts.push({ label: 'Raise the budget instead' });
-      return opts.slice(0, 5);
+      if (s.budget == null) return null;
+      return [...slateOptions(s), { label: 'Raise the budget instead' }];
     },
   },
   room: {
@@ -474,8 +501,11 @@ const Director = {
         // Whole commit PHRASES, not fragments: on booking.com every other
         // string contains "book", so a fragment match left ordinary holds
         // standing and the gate then refused even a date click.
-        if (facts.page === 'checkout'
-            || /\b(?:place (?:your |the )?order|buy now|book (?:it|now)|complete (?:the )?booking|finish booking|reserve now|pay now|payment|checkout|confirm (?:and pay|booking|purchase))\b/i.test(String(w))) {
+        // Only commit-NAMED holds stand. A page-wide checkout blanket
+        // deadlocked the form fill: with the model wiped, the holds there
+        // are the shopping-shaped contract checks with no surface to answer
+        // them, and the rulebook rule already hard-stops the final press.
+        if (/\b(?:place (?:your |the )?order|buy now|book (?:it|now)|complete (?:the )?booking|finish booking|reserve now|pay now|payment|checkout|confirm (?:and pay|booking|purchase))\b/i.test(String(w))) {
           continue;                   // near a commit: the hold stands, quietly
         }
         // Released SILENTLY - these internal releases leaked into her log
@@ -639,10 +669,9 @@ const Director = {
         + 'with two full beds and press its Reserve button. Skip reviews, '
         + 'photos, and everything else on this page.',
       compare: /zen/i.test(String(response))
-        ? 'Do this now: in the results list, click the hotel named '
-          + '"The Zen Hotel Palo Alto" to open its page. It may be far down '
-          + 'the list. If two scrolls do not reveal it, navigate directly to '
-          + `${SCENARIO.propertyUrl} instead.`
+        ? `Do this now: navigate directly to ${SCENARIO.propertyUrl} - `
+          + "that opens The Zen Hotel's page with the dates and guests set. "
+          + 'Do not scroll the results first.'
         : null,
     };
     try {
