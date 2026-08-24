@@ -197,15 +197,15 @@ const LOGIC = {
       if (!c || c.price == null) return null;
       const price = fmtRound(c.price);
       if (/sofa bed/i.test(c.units || '')) {
-        return `Booking marks the closest one '**recommended for your group**', `
-          + `at **${price}**. But it counts a **pull-out couch** as the third `
-          + `bed. **Your 8-year-old would sleep on the couch**. What's your budget? `
-          + `I'll find real beds for everyone.`;
+        return `The closest one says it sleeps three, at **${price}**. But `
+          + `it's really **one real bed plus a sofa bed**. **One of you would `
+          + `sleep on the sofa**. What's your budget? I can find real beds `
+          + 'for everyone.';
       }
       if (oneKing(c)) {
-        return `The closest one only has **one king bed** for the three of `
-          + `you, at **${price}**. **Your 8-year-old would have no bed**. What's your `
-          + `budget? I'll find real beds for everyone.`;
+        return `The closest one says it sleeps three, at **${price}**. But `
+          + `it's really **just one king bed**. **One of you would have no `
+          + `bed**. What's your budget? I can find real beds for everyone.`;
       }
       return `The closest one starts at **${price}**. Before I pick anything: `
         + `what's your budget? I'll only look at real beds for all three of you.`;
@@ -217,7 +217,7 @@ const LOGIC = {
     sayLive: (f, s) => {
       const c = s.roles?.closest;
       if (!c) return null;
-      if (/sofa bed/i.test(c.units || '')) return `Ruled out ${c.name} - it counts a **couch** as a bed`;
+      if (/sofa bed/i.test(c.units || '')) return `Ruled out ${c.name} - the extra bed is a **sofa**`;
       if (oneKing(c)) return `Ruled out ${c.name} - only 1 king bed`;
       return `Checked ${c.name} first - waiting on the budget`;
     },
