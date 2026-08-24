@@ -15,6 +15,19 @@ export const SCENARIO = {
     + '8-year-old, and make sure we can cancel if plans change',
   cast: 'Susan Miller (screen reader, booking) · Ryan · Ashley (incoming freshman) · Emma, 8',
   site: 'https://www.booking.com',
+  searchUrl: 'https://www.booking.com/searchresults.html?ss=Stanford+University'
+    + '&checkin=2026-09-15&checkout=2026-09-17&group_adults=2'
+    + '&group_children=1&age=8&no_rooms=1',
+  // Told to the agent at arm time. Booking's calendar and occupancy
+  // steppers do not enumerate reliably (the + button never gets an index
+  // and coordinate clicks miss after re-renders) - a recorded run looped on
+  // "add 1 child" for five straight steps. The URL sets everything at once.
+  playbook: 'Booking.com playbook for this task: after confirming the '
+    + 'destination is Stanford University, DO NOT use the calendar or the '
+    + 'occupancy dropdown - their buttons do not respond reliably. Instead '
+    + 'navigate directly to {searchUrl} which sets the dates (Sep 15-17) '
+    + 'and the guests (2 adults, 1 child aged 8) in one step. From the '
+    + 'results, follow the person\'s answers.',
 };
 
 export const BEATS = [

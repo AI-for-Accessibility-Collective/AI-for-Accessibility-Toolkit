@@ -24,6 +24,7 @@ let pushTimer = null;
 let lastSent = '';
 let runStamp = null;     // st.startedAt - a new stamp means a new take
 let openWidgets = {};    // beat id -> true while this tab shows the dialog
+let heartbeat = null;    // periodic read: sweeps must not wait for a mutation
 
 export async function isDemoArmed() {
   try { return !!(await chrome.storage.local.get(KEY))[KEY]?.armed; }
@@ -77,6 +78,7 @@ function renderNew(st) {
     overlay.report();
     // The run is over; stop reading the page. The drawer stays.
     observer?.disconnect(); observer = null;
+    clearInterval(heartbeat); heartbeat = null;
   }
 }
 
@@ -102,6 +104,10 @@ function arm(st) {
 
   observer = new MutationObserver(pushFacts);
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  // A page that stops mutating must not stop the director: the stale-hold
+  // sweep and the beat guards both run on facts ticks, so a quiet page gets
+  // a heartbeat read every few seconds while the run is live.
+  heartbeat = setInterval(() => { lastSent = ''; pushFacts(); }, 5000);
   // The stage lever, invisible: Alt+Shift+N plays the next beat on its
   // rehearsal fallbacks. A keyboard chord instead of a button because
   // nothing on screen may name the demo (David, 2026-08-24).
@@ -115,6 +121,7 @@ function arm(st) {
 
 function teardown() {
   observer?.disconnect(); observer = null;
+  clearInterval(heartbeat); heartbeat = null;
   overlay?.destroy(); overlay = null;
   rendered = 0;
   runStamp = null;

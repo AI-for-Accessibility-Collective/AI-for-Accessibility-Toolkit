@@ -1495,7 +1495,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         } else {
           begin();
         }
-        modelReady = startModelFor(msg.task);
+        // No task model on a demo take: the reasoner's stops are the wrong
+        // voice for the story, and its per-page LLM passes were the bulk of
+        // the run's latency (every stop briefly gated even a date click).
+        // The gate machinery still runs; the director's beats hold it.
+        if (!demoArm) modelReady = startModelFor(msg.task);
       } catch (e) {
         console.warn('validation did not start:', e);   // never block the agent
       }
@@ -1507,6 +1511,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (active.length) {
           globalThis.BrowserAgent.interject?.(
             `Standing rules from the person, always in force: ${active.join('; ')}.`);
+        }
+        if (demoArm) {
+          const sc = globalThis.DemoDirector?.SCENARIO;
+          if (sc?.playbook) {
+            globalThis.BrowserAgent.interject?.(
+              sc.playbook.replace('{searchUrl}', sc.searchUrl || ''));
+          }
         }
       } catch { /* rules are also enforced at the gate */ }
     })();
