@@ -99,7 +99,17 @@ const LOGIC = {
       adPrice: fmtRound(s.roles?.ad?.price) }),
   },
   collision: {
-    bind: (f) => { const c = closest(f); return c ? { closest: { ...c } } : {}; },
+    // The flagship catch: booking badges a listing "Recommended for your
+    // group" whose second bed is a sofa. Bind THAT card when the live page
+    // has one (closest first); fall back to the plain closest card.
+    bind: (f) => {
+      const traps = (f.cards || []).filter((c) => !c.isAd
+        && /sofa bed/i.test(c.units || '')
+        && /recommended for your group/i.test(c.units || ''))
+        .sort((a, b) => miles(a) - miles(b));
+      const c = traps[0] || closest(f);
+      return c ? { closest: { ...c } } : {};
+    },
     slots: (f, s) => ({ closestPrice: fmtRound(s.roles?.closest?.price) }),
   },
   'collision-log': {

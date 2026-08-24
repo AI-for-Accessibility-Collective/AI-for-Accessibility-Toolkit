@@ -68,9 +68,9 @@ export const BEATS = [
     fallbacks: { adName: 'Hotel Citrine', adPrice: '$1,658' } },
 
   { id: 'collision', kind: 'widget', page: 'results',
-    when: 'the closest hotel\'s recommended room sleeps fewer than the party, and no budget is on file',
-    say: "The closest hotel only has **one king bed** for the three of you. Emma would have **no bed**. And it starts at **{closestPrice}**. What's your budget?",
-    fallbacks: { closestPrice: '$1,870' },
+    when: 'the closest match sleeps three only by putting one of them on a sofa bed',
+    say: "The closest one says it sleeps three, at **{closestPrice}**. But the second bed is a **pull-out couch** - **Emma would sleep on the couch**. What's your budget? I'll find real beds for everyone.",
+    fallbacks: { closestPrice: '$358' },
     options: [
       { label: 'Under $700. 2 hotels near campus', primary: true },
       { label: 'Under $1,300. 4 hotels' },
@@ -79,8 +79,8 @@ export const BEATS = [
     ] },
   { id: 'collision-log', kind: 'log', page: 'results',
     when: 'filed as the collision fires',
-    say: 'Ruled out {closestName} - only 1 king bed',
-    fallbacks: { closestName: 'the Sheraton' } },
+    say: 'Ruled out {closestName} - the second bed is a couch',
+    fallbacks: { closestName: 'the Coronet Motel' } },
 
   { id: 'freeway', kind: 'checkpoint', page: 'results',
     when: 'a listing\'s name says one city and the map pin sits in another',
