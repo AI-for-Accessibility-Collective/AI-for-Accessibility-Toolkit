@@ -1515,6 +1515,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     (async () => {
       try {
+        // The run clears its interject queue as it starts - anything queued
+        // NOW is wiped before the model's first turn (review finding: the
+        // playbook and standing rules never arrived). Wait until the run is
+        // actually up, then a beat past the clear.
+        for (let w = 0; w < 75 && !globalThis.BrowserAgent.isRunning(); w += 1) {
+          await new Promise((r) => setTimeout(r, 200));
+        }
+        await new Promise((r) => setTimeout(r, 700));
         const book = (await chrome.storage.sync.get('aa.rulebook'))['aa.rulebook'] || [];
         const active = book.filter((r) => r.on !== false).map((r) => r.text);
         if (active.length) {

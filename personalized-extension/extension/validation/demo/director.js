@@ -44,6 +44,20 @@ const serial = (fn) => {
 const fresh = () => ({ armed: false, idx: 0, fired: [], answers: {}, budget: null,
   done: false, startedAt: Date.now() });
 
+// An abandoned demo must not leave its holds in the still-running session -
+// they surfaced as "waiting on demo:collision" in the middle of the NEXT,
+// perfectly ordinary task.
+async function releaseDemoHolds() {
+  try {
+    const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'];
+    for (const w of st?.gate?.waitingOn || []) {
+      if (String(w).startsWith(HOLD_PREFIX)) {
+        await globalThis.Validation?.answer?.(w, 'Demo ended - cleared its hold.');
+      }
+    }
+  } catch { /* the arm-time sweep is the second chance */ }
+}
+
 async function load() {
   if (S) return S;
   if (!loading) {
@@ -355,11 +369,25 @@ const Director = {
       // A non-matching task DISARMS: without this, the demo from a previous
       // run stayed armed into the next ordinary task - overlay rendering,
       // organic speech muted, agent-watch suppressed, all on a normal run.
-      if (S.armed) { S = fresh(); await save(); }
+      if (S.armed) { S = fresh(); await save(); await releaseDemoHolds(); }
       return { armed: false };
     }
     S = { ...fresh(), armed: true, task: t };
     await save();
+    // A hard stop under the final press, independent of every demo
+    // mechanism: a rulebook rule with a blocks pattern refuses the action
+    // at the exec gate even with nothing else waiting (review finding: on
+    // a model-free take the demo hold was the ONLY structural barrier).
+    try {
+      const RULE = { id: 'demo-final-press',
+        text: 'Never press the final booking or payment button yourself',
+        blocks: 'complete booking|confirm and pay|confirm booking|book now|finish booking',
+        on: true };
+      const book = (await chrome.storage.sync.get('aa.rulebook'))['aa.rulebook'] || [];
+      if (!book.some((r) => r.id === RULE.id)) {
+        await chrome.storage.sync.set({ 'aa.rulebook': [...book, RULE] });
+      }
+    } catch { /* the demo hold still gates */ }
     // A previous take's widget hold can survive into this run - the
     // validation session outlives the agent, so a wedged demo left
     // demo:stanfords in waiting and the NEW run's first navigate was
@@ -557,8 +585,9 @@ const Director = {
         S.fired.push({ id: 'demo-end', kind: 'log', at: Date.now(),
           say: 'Stopped at the gate - nothing was paid' });
       } else {
-        S.fired.push({ id: 'gate-change', kind: 'log', at: Date.now(),
-          say: 'Stopped at the gate - change requested, nothing was paid' });
+        S.done = true;
+        S.fired.push({ id: 'gate-change', kind: 'checkpoint', at: Date.now(),
+          say: 'Stopped at the gate. Nothing was booked, and nothing was paid.' });
       }
       await save();
       return { ok: true, done: S.done };
@@ -615,6 +644,10 @@ const Director = {
   async force() { return serial(async () => {
     await load();
     if (!S.armed || S.idx >= BEATS.length) return { ok: false };
+    // Forcing past an OPEN widget would strand its hold forever (the sweep
+    // treats a fired-unanswered widget as legitimate). Answer it first.
+    const pend = [...S.fired].reverse().find((f) => f.kind === 'widget');
+    if (pend && !S.answers[pend.id]) return { ok: false, why: 'answer the open widget first' };
     const b = BEATS[S.idx];
     await fire(b, lastFacts || {}, { forced: true });
     await save();
@@ -627,7 +660,12 @@ const Director = {
    *  page extraction would follow David around his ordinary browsing. */
   async abandon() { return serial(async () => {
     await load();
-    if (S.armed && !S.done) { S = fresh(); await save(); return { disarmed: true }; }
+    if (S.armed && !S.done) {
+      S = fresh();
+      await save();
+      await releaseDemoHolds();
+      return { disarmed: true };
+    }
     return { disarmed: false };
   }); },
 

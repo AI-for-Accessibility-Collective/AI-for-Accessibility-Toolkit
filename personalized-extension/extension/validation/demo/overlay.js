@@ -352,9 +352,13 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
         const label = e.target?.getAttribute?.('aria-label')
           || e.target?.textContent || '';
         if (!label.trim()) return;
-        const all = stops();
-        const i = all.indexOf(e.target);
-        const where = i >= 0 ? `. ${i + 1} of ${all.length}` : '';
+        // Numbered among the OPTIONS only - "5 choices" then "1 of 6"
+        // (counting the text field) is the first thing a screen-reader
+        // audience catches. The field announces as what it is instead.
+        const btns = [...row.querySelectorAll('button')];
+        const i = btns.indexOf(e.target);
+        const where = i >= 0 ? `. Option ${i + 1} of ${btns.length}.`
+          : '. Text field.';
         tts(`${label.trim()}${where}`, { interrupt: true });
       });
       open = { id: beat.id, close: () => done({ dismissed: true }) };
@@ -382,6 +386,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     // always knows where she is in the list.
     li.setAttribute('tabindex', '0');
     li.addEventListener('focus', () => {
+      if (muteNextFocusSpeech) { muteNextFocusSpeech = false; return; }
       const all = [...drawer.querySelectorAll('li')];
       const i = all.indexOf(li);
       tts(`${plain(entry.say ?? entry)}. Note ${i + 1} of ${all.length}.`,
@@ -390,6 +395,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     drawer.querySelector('ul').appendChild(li);
   }
 
+  let muteNextFocusSpeech = false;
   // Arrows walk the notes too, like the widget options.
   drawer.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -414,7 +420,10 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       + 'through them.');
     entries.forEach((e, i) => announce(`Note ${i + 1}. ${plain(e.say ?? e)}`));
     announce('End of the log.');
-    queueIdle().then(() => drawer.querySelector('li')?.focus());
+    queueIdle().then(() => {
+      muteNextFocusSpeech = true;        // the read-through just said note 1
+      drawer.querySelector('li')?.focus();
+    });
   }
 
   function destroy() {

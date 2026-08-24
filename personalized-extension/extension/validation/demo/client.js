@@ -144,7 +144,9 @@ function arm(st) {
   // The demo's surfaces are the only voice; the generic on-page panel would
   // talk over the story in its own register.
   try { if (AgentWatch.enabled) AgentWatch.disable(); } catch { /* not fatal */ }
-  overlay = createOverlay();
+  // aa.demo.voiced === false silences our TTS for real-VoiceOver
+  // presentations, so the two voices never talk over each other.
+  overlay = createOverlay({ voiced: st.voiced !== false });
   // Everything already fired belongs to earlier pages and was heard there -
   // except a widget she has not answered, which must survive the navigation.
   const fired = st.fired || [];
