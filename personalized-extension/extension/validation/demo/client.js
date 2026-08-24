@@ -102,6 +102,14 @@ function arm(st) {
 
   observer = new MutationObserver(pushFacts);
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  // The stage lever, invisible: Alt+Shift+N plays the next beat on its
+  // rehearsal fallbacks. A keyboard chord instead of a button because
+  // nothing on screen may name the demo (David, 2026-08-24).
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.shiftKey && (e.key === 'N' || e.key === 'n')) {
+      chrome.runtime.sendMessage({ type: 'demoForce' }).catch(() => {});
+    }
+  });
   pushFacts();
 }
 
