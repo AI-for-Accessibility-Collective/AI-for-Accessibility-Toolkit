@@ -322,7 +322,25 @@ const Director = {
       cancel: facts.freeCancelBefore ?? null, form: facts.hasForm ?? null,
       err: facts.readError ?? null });
     if (S.reads.length > 60) S.reads.splice(0, S.reads.length - 60);
+    // The layer reads a page before the agent acts on it. A fresh section
+    // (home -> results -> property -> checkout) pauses the agent until the
+    // section's beats have spoken - the recorded run had the agent clicking
+    // a motel in the two seconds between its own Search press and the
+    // collision widget arriving. One pause per section, released as soon as
+    // the beats fire unless a widget is holding.
+    const rank = RANK[facts.page] ?? -1;
+    const newSection = rank > (S.lastRank ?? -1);
+    if (newSection) {
+      S.lastRank = rank;
+      try { globalThis.BrowserAgent?.pause?.(); } catch { /* beats still fire */ }
+    }
     const fired = await advance(facts);
+    if (newSection) {
+      const pend = [...S.fired].reverse().find((f) => f.kind === 'widget');
+      if (!(pend && !S.answers[pend.id])) {
+        try { globalThis.BrowserAgent?.resume?.(); } catch { /* recoverable */ }
+      }
+    }
     await save();
     return { armed: true, fired, idx: S.idx };
   }); },
@@ -379,7 +397,9 @@ const Director = {
         + 'guests dropdown - the guest count is handled for you.',
       compare: /zen/i.test(String(response))
         ? 'Do this now: in the results list, click the hotel named '
-          + '"The Zen Hotel Palo Alto" to open its page.'
+          + '"The Zen Hotel Palo Alto" to open its page. It may be far down '
+          + 'the list. If two scrolls do not reveal it, navigate directly to '
+          + `${SCENARIO.propertyUrl} instead.`
         : null,
     };
     try {
