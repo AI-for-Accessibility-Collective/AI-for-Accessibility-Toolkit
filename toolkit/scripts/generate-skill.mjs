@@ -211,7 +211,10 @@ Regenerate with: \`npm run docs\` (from \`toolkit/\`). Full reference (surfaces,
 `;
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+// Compare filesystem paths, not URL strings: import.meta.url is
+// percent-encoded (spaces, ~) so a raw `file://` + argv comparison fails on
+// paths like an iCloud checkout. fileURLToPath decodes both to the same form.
+const isMain = fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const model = await buildModel();
   const md = renderSkillMd(model);
