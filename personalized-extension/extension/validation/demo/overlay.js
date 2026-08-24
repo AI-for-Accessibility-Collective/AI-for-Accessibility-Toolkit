@@ -143,7 +143,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
             try { speechSynthesis.cancel(); } catch { /* engine state */ }
             setTimeout(attempt, 90);
           }
-        }, 900);
+        }, 500);
         // Still silent after the retry? Chrome blocks speech until the page
         // has USER ACTIVATION - the run's first line fires before anyone
         // has touched the page and was silently dropped. Hold the line and
@@ -197,7 +197,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       await new Promise((r) => setTimeout(r, 60));
       live.textContent = item.text;
       await tts(item.text);
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 80));
       // The line has had its slot - the visual card it mirrors can go now.
       try { item.spoken?.(); } catch { /* visual only */ }
     }
@@ -370,7 +370,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       // THEN focus lands (which speaks the first option and its position) -
       // back-to-back they ran into each other.
       tts(`${plain(beat.say)} ${nOpts} choices.`, { interrupt: true }).then(() => {
-        setTimeout(() => { if (open?.id === beat.id) stops()[0]?.focus(); }, 750);
+        setTimeout(() => { if (open?.id === beat.id) stops()[0]?.focus(); }, 450);
       });
     });
   }

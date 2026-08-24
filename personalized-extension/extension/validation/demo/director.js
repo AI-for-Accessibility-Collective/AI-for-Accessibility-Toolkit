@@ -204,15 +204,22 @@ const LOGIC = {
       const near = zen || u[0] || null;
       const far = u.filter((c) => c !== near)
         .sort((a, b) => miles(b) - miles(a))[0] || null;
-      const out = {};
+      // The slate: the Zen pinned first, then the best of the rest under
+      // budget by distance - a real choice, not a binary.
+      const others = u.filter((c) => c !== zen).slice(0, 3);
+      const slate = (zen ? [zen, ...others] : others).slice(0, 4);
+      const out = { slate: slate.map((c) => ({ ...c })) };
       if (near) out.near = { ...near };
       if (far) out.far = { ...far };
       return out;
     },
-    sayLive: (f, s) => (s.budget != null
-      ? `Two good hotels under ${s.budget}. Which one?` : null),
+    sayLive: (f, s) => {
+      if (s.budget == null) return null;
+      const n = Math.max((s.roles?.slate || []).length, 2);
+      return `${COUNTS[n] || n} good hotels under ${s.budget}. Which one?`;
+    },
     optionsLive: (f, s) => {
-      const { near, far } = s.roles || {};
+      const { slate } = s.roles || {};
       const line = (c, primary) => {
         const bits = [`${shortName(c.name)}, **${fmtRound(c.price)}**`];
         const m = milesOf(c);
@@ -223,10 +230,10 @@ const LOGIC = {
       };
       const zenStatic = { label: 'The Zen, **$638**. Close to campus, '
         + '**two real beds**, great reviews, free breakfast', primary: true };
-      const first = (near && /zen/i.test(near.name || '')) ? line(near, true) : zenStatic;
-      const second = far ? line(far, false)
-        : { label: 'Radisson Sunnyvale, **$590**. A **25 minute drive** away' };
-      return [first, second, { label: 'Raise the budget instead' }];
+      const opts = (slate || []).map((c, i) => line(c, i === 0 && /zen/i.test(c.name || '')));
+      if (!opts.length || !/zen/i.test(slate?.[0]?.name || '')) opts.unshift(zenStatic);
+      opts.push({ label: 'Raise the budget instead' });
+      return opts.slice(0, 5);
     },
   },
   room: {
