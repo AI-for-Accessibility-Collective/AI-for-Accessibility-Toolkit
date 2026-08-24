@@ -4,7 +4,7 @@
 // the web surface reports `unmet` only for keys it has no rendering for — e.g.
 // an XR-originated need like `angularTextHeight` that arrives via cross-app
 // flow but has no web equivalent. This is where Phase 1's "move the web
-// settings mapping into adapters/chrome" lands.
+// settings mapping into platforms/chrome" lands.
 //
 // Not yet wired into content.js — getEffectivePreferences().settings is still
 // applied directly, unchanged. This makes the seam available (and gives XR /

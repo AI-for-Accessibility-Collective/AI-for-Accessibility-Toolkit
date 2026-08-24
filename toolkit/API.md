@@ -23,13 +23,13 @@
 
 ## Quick Start
 
-`createToolkit` wired to the plain-Node reference adapters (`toolkit/adapters/node/`) — the template a new JS-runtime host (iOS/React Native bridge, XR runtime, a server) copies.
+`createToolkit` wired to the plain-Node reference adapters (`toolkit/platforms/node/`) — the template a new JS-runtime host (iOS/React Native bridge, XR runtime, a server) copies.
 
 <!-- QUICKSTART:START -->
 ```javascript
 import { createToolkit } from './index.js';
-import { memoryKV } from './adapters/node/kv.js';
-import { nodeClock, nodeScheduler, consoleConsent } from './adapters/node/ports.js';
+import { memoryKV } from './platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './platforms/node/ports.js';
 
 const { datastore, librarian } = createToolkit({
   kv: memoryKV(),

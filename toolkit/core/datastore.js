@@ -7,7 +7,7 @@
 // Platform-agnostic: all persistence goes through an injected `KVStore` port
 // (see ../ports). The Chrome host wires `chrome.storage.*` behind it and
 // assigns the result to `globalThis.Datastore`
-// (adapters/chrome/datastore.entry.js); other hosts supply their own KVStore.
+// (platforms/chrome/datastore.entry.js); other hosts supply their own KVStore.
 //
 // Two tiers, mirroring the architecture diagram:
 //   global — read-only data shipped with the host (built-in tools registry,

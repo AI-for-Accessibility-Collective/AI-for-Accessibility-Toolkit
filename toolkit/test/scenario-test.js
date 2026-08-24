@@ -96,7 +96,7 @@ function makeEngineer() {
 
 // ---- system factory: fresh in-memory toolkit each scenario -----------------
 // In-memory ports, shaped like the chain's KVStore port (get/set/getAll per
-// area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
+// area) — see toolkit/ports/index.js and platforms/chrome/ports.js chromeKV.
 function makeSystem() {
   const mem = { local: {}, sync: {} };
   const kv = {

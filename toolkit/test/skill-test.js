@@ -129,7 +129,7 @@ check('Engineer strips outer markdown fence, keeps recipe', resolveSkill(built.s
 
 // ---- Librarian skill API (in-memory ports, builtin skills injected) --------
 // In-memory KVStore, shaped like the chain's KVStore port (get/set/getAll per
-// area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
+// area) — see toolkit/ports/index.js and platforms/chrome/ports.js chromeKV.
 const mem = { local: {}, sync: {} };
 const kv = {
   async get(area, key) { return mem[area][key] === undefined ? undefined : structuredClone(mem[area][key]); },

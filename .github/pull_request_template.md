@@ -4,7 +4,7 @@
 
 - [ ] Core (`toolkit/core/` — Librarian, datastore, ability model, broker, skill engine)
 - [ ] Ports / surfaces (`toolkit/ports/`, `toolkit/surfaces/`)
-- [ ] Reference host adapters (`toolkit/adapters/`)
+- [ ] Platform bindings / host port impls (`toolkit/platforms/`)
 - [ ] Catalog: auditors (`tools/auditors/`)
 - [ ] Catalog: adapters (`tools/adapters/`)
 - [ ] Catalog: profiles (`tools/profiles/`)

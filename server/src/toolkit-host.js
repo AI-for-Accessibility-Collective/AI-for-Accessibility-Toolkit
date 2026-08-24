@@ -1,7 +1,7 @@
 // Per-uid Toolkit instances. This is the one file that actually calls
 // `createToolkit()` — everything else in server/ reaches the toolkit only
 // through this seam (or, for meta.js's static introspection, the barrel
-// directly). Follows toolkit/adapters/node/host.js's own pattern (its
+// directly). Follows toolkit/platforms/node/host.js's own pattern (its
 // `bootToolkit`: fileKV + nodeClock + a minimal toolsRegistry +
 // datastore.runMigrations() before first use) adapted to:
 //   - a KVStore over `server/src/store.js`'s doc store instead of raw
@@ -20,7 +20,7 @@
 //     from the durable store on the next access).
 
 import { createToolkit, noopScheduler, noopConsent } from '../../toolkit/index.js';
-import { nodeClock } from '../../toolkit/adapters/node/ports.js';
+import { nodeClock } from '../../toolkit/platforms/node/ports.js';
 import { asAATools } from '../../toolkit/registry/tools.js';
 
 const DEFAULT_CAP = 50;
@@ -33,7 +33,7 @@ const TOOLS_REGISTRY = asAATools();
 
 /** A KVStore (get/set/getAll per area — see toolkit/ports/index.js) backed by
  *  one store-document per `users/<uid>/<area>.json`. Same read-whole/
- *  mutate/write-whole algorithm as toolkit/adapters/node/kv.js's fileKV,
+ *  mutate/write-whole algorithm as toolkit/platforms/node/kv.js's fileKV,
  *  retargeted at the store's doc interface so it works over fileStore OR
  *  gcsStore unchanged. */
 function kvStoreFor(store, uid) {

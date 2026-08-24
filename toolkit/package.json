@@ -16,7 +16,7 @@
     "./core/memory-class": "./core/memory-class.js",
     "./core/skill": "./core/skill.js",
     "./core/skill-builder": "./core/skill-builder.js",
-    "./adapters/chrome/web-surface": "./adapters/chrome/web-surface.js",
+    "./platforms/chrome/web-surface": "./platforms/chrome/web-surface.js",
     "./surfaces/web": "./surfaces/web.js",
     "./surfaces/xr": "./surfaces/xr.js",
     "./sync": "./sync/index.js",
@@ -38,6 +38,6 @@
     "docs": "node scripts/generate-api-docs.mjs && node scripts/generate-skill.mjs",
     "demo:xr": "node hosts/xr-demo/demo.js",
     "demo:skill": "node hosts/skill-demo/demo.js",
-    "demo:node": "node adapters/node/host.js"
+    "demo:node": "node platforms/node/host.js"
   }
 }

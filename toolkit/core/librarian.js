@@ -9,7 +9,7 @@
 // DOM. It depends only on injected ports — a `datastore`, the `taxonomy`, a
 // `clock`, a `scheduler`, a `consent` channel, and a `demo` hook (see
 // ../ports). The Chrome host wires these and assigns the result to
-// `globalThis.Librarian` (adapters/chrome/librarian.entry.js). Gemini access
+// `globalThis.Librarian` (platforms/chrome/librarian.entry.js). Gemini access
 // is still injected post-construction via `setGeminiCaller`, the pre-existing
 // seam (unchanged in this refactor).
 //

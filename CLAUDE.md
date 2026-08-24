@@ -15,7 +15,7 @@ ports and consume the core, the catalog, or the hosted service.
     Consent, actuation). The core reaches every platform capability through these.
   - `surfaces/` — pure renderers mapping an AbilityModel → per-platform settings
     (`web.js`, `xr.js`).
-  - `adapters/node/`, `adapters/chrome/` — reference host implementations of the
+  - `platforms/node/`, `platforms/chrome/` — reference host implementations of the
     ports (the template a new host copies).
   - `registry/` — the canonical tools catalog + settings vocabulary.
   - `skills/builtin/` — starter `SKILL.md` recipes.

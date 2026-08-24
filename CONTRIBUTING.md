@@ -3,7 +3,7 @@
 This is a **toolkit**, not an app. Contributions extend one of three layers:
 
 - the **core** (`toolkit/`) — the Librarian/datastore, ability model, skill
-  engine, ports, surfaces, and reference host adapters;
+  engine, ports, surfaces, and reference platform bindings;
 - the **catalog** (`tools/`) — reusable adapters, auditors, and profiles any
   host can draw from;
 - the **service** (`server/`) — the hosted HTTP surface over the core.
@@ -47,7 +47,7 @@ A skill can only reference adapters that already exist.
 | **Combine adapters for a need** | Add skill → `toolkit/skills/builtin/<name>.md` |
 | **Add a profile** | Edit `tools/profiles/settings.json` |
 | **Render to a new platform** | Add a surface → `toolkit/surfaces/<name>.js` |
-| **Support a new host runtime** | Implement the ports → `toolkit/adapters/<host>/` (copy `adapters/node/`) |
+| **Support a new host runtime** | Implement the ports → `toolkit/platforms/<host>/` (copy `platforms/node/`) |
 
 ## Adding an auditor
 

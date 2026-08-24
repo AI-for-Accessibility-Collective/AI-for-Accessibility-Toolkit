@@ -27,7 +27,7 @@ toolkit/
 ├── sync/                  Cross-app sharing: grants.js (scopes, audience ceiling,
 │                          share-audit trail), blob.js, transport.js
 ├── ports/                 Port contracts a host must provide (JSDoc) + index
-├── adapters/chrome/       Chrome host adapter (reference): port impls a
+├── platforms/chrome/       Chrome host adapter (reference): port impls a
 │                          browser host bundles into its own lib scripts
 ├── hosts/                 Runnable consumers, no browser needed
 │   ├── xr-demo/           node hosts/xr-demo/demo.js

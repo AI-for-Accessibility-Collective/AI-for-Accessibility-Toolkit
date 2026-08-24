@@ -5,7 +5,7 @@
 // (`TOOLKIT_BUCKET` set -> gcs, else `DATA_DIR` -> file):
 //
 //   - fileStore(dir):   one JSON file per document, under `dir`. Mirrors
-//     toolkit/adapters/node/kv.js's fileKV read-whole/write-whole pattern —
+//     toolkit/platforms/node/kv.js's fileKV read-whole/write-whole pattern —
 //     same prototype-scope tradeoff (no file locking, no atomic rename), just
 //     applied to a `<dir>/<key>` document instead of one file per KV area.
 //   - gcsStore(bucket): the same interface over the GCS JSON REST v1 API,

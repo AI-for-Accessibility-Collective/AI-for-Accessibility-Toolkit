@@ -23,12 +23,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..'); // toolkit/
 
 // A self-contained smoke test of createToolkit on the node reference
-// adapters (toolkit/adapters/node/*) — imports are relative to toolkit/,
+// adapters (toolkit/platforms/node/*) — imports are relative to toolkit/,
 // which is where the conformance test places this snippet before running
 // it. Throws (non-zero exit) on any failed assertion.
 export const QUICK_START_CODE = `import { createToolkit } from './index.js';
-import { memoryKV } from './adapters/node/kv.js';
-import { nodeClock, nodeScheduler, consoleConsent } from './adapters/node/ports.js';
+import { memoryKV } from './platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './platforms/node/ports.js';
 
 const { datastore, librarian } = createToolkit({
   kv: memoryKV(),
@@ -77,7 +77,7 @@ ${renderToc(model)}
 
 ## Quick Start
 
-\`createToolkit\` wired to the plain-Node reference adapters (\`toolkit/adapters/node/\`) — the template a new JS-runtime host (iOS/React Native bridge, XR runtime, a server) copies.
+\`createToolkit\` wired to the plain-Node reference adapters (\`toolkit/platforms/node/\`) — the template a new JS-runtime host (iOS/React Native bridge, XR runtime, a server) copies.
 
 <!-- QUICKSTART:START -->
 \`\`\`javascript

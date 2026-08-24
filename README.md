@@ -24,12 +24,12 @@ It is **not an app.** It's a library you build on. Any developer — web, mobile
 
 ## Quick Start
 
-The core is plain ES modules. Wire it to the reference Node adapters and go — no browser, no build, no API key:
+The core is plain ES modules. Wire it to the reference Node platform bindings and go — no browser, no build, no API key:
 
 ```javascript
 import { createToolkit } from './toolkit/index.js';
-import { memoryKV } from './toolkit/adapters/node/kv.js';
-import { nodeClock, nodeScheduler, consoleConsent } from './toolkit/adapters/node/ports.js';
+import { memoryKV } from './toolkit/platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './toolkit/platforms/node/ports.js';
 
 const { datastore, librarian } = createToolkit({
   kv: memoryKV(),
@@ -79,7 +79,7 @@ See [docs/architecture.md](docs/architecture.md) for how they fit together, and 
 
 Three ways to build on it, depending on your host:
 
-1. **Embed the core directly (any JS runtime).** `createToolkit({ ports }) → { datastore, librarian }`. Implement the ports for your platform — the Node adapters in [`toolkit/adapters/node/`](toolkit/adapters/node/) are the template; a Chrome host implementation lives in [`toolkit/adapters/chrome/`](toolkit/adapters/chrome/).
+1. **Embed the core directly (any JS runtime).** `createToolkit({ ports }) → { datastore, librarian }`. Implement the ports for your platform — the Node bindings in [`toolkit/platforms/node/`](toolkit/platforms/node/) are the template; a Chrome host implementation lives in [`toolkit/platforms/chrome/`](toolkit/platforms/chrome/).
 2. **Call the hosted HTTP service (any language).** Run [`server/`](server/) (locally or on Cloud Run) and hit the same Librarian methods over HTTP with a bearer token — for non-JS clients, or to keep the profile server-side. See [server/README.md](server/README.md).
 3. **Draw from the catalog.** Use the ready-made accessibility fixes, detectors, and profiles in [`tools/`](tools/) — and the tools/skills registry in [`toolkit/registry/`](toolkit/registry/) — as building blocks, whether or not you embed the personalization core.
 
@@ -97,7 +97,7 @@ A developer library of reusable accessibility building blocks, usable on their o
 
 ```
 toolkit/     Platform-agnostic core — Librarian, datastore, ability model, broker,
-             skill engine, ports, sync, protocol, surfaces, reference host adapters
+             skill engine, ports, sync, protocol, surfaces, reference platform bindings
 tools/       Developer catalog — adapters, auditors, profiles, utils
 server/      Hosted HTTP service exposing the core to any language/runtime
 examples/    Runnable, dependency-free examples

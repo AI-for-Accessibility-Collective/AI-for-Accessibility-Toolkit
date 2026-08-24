@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
 import { createToolkit } from '../index.js';
-import { memoryKV } from '../adapters/node/kv.js';
+import { memoryKV } from '../platforms/node/kv.js';
 import { buildModel } from '../scripts/introspect.mjs';
 import { renderApiMd } from '../scripts/generate-api-docs.mjs';
 import { renderSkillMd } from '../scripts/generate-skill.mjs';
@@ -97,7 +97,7 @@ const model = await buildModel();
 
   if (extracted) {
     // Written INSIDE toolkit/ (not os.tmpdir()) so the snippet's relative
-    // imports ('./index.js', './adapters/node/kv.js', ...) resolve exactly
+    // imports ('./index.js', './platforms/node/kv.js', ...) resolve exactly
     // as documented.
     const tmpPath = path.join(TOOLKIT_ROOT, '.quickstart-check.tmp.mjs');
     writeFileSync(tmpPath, extracted, 'utf8');

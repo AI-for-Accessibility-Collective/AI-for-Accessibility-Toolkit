@@ -110,7 +110,7 @@ The same toolkit powers an **XR Agent**:
 1. **Onboarding** — identical to the web flow: personal abilities → Librarian → Ability Profile/Memory db. Onboard once, use everywhere.
 2. **Facilitation** — the XR agent *senses the environment* (the outdoor world), exchanges **needs and skills** with the toolkit (Librarian ⇄ Ability Profile db), and delivers **real-time adaptations** to the user.
 
-This is why the toolkit core must stay platform-agnostic. **The [extraction plan](design/toolkit-refactor-plan.md) is complete (Phases 0–4)**: the Librarian, Datastore, and taxonomy live in the top-level [`toolkit/`](../toolkit/README.md) as pure ES modules behind platform ports, with reference host adapters (`toolkit/adapters/node`, `toolkit/adapters/chrome`) implementing those ports. `librarian.getAbilityModel()` returns the device-independent **AbilityModel**, and **SurfaceAdapters** render it per device — `toolkit/surfaces/web.js` produces web settings, `toolkit/surfaces/xr.js` produces FOV-aware angular text size, world-locked captions, and motion-comfort parameters. The cross-app **permission broker** (`toolkit/core/broker.js`) shares that understanding with other apps under default-deny grants — each grant carries an audience (personal / friends / anyone) capped by the profile's sharing level — and a runnable XR host (`node toolkit/hosts/xr-demo/demo.js`) proves the whole loop on in-memory ports. Future work is cross-device transport and native (Swift/C#) conformers.
+This is why the toolkit core must stay platform-agnostic. **The [extraction plan](design/toolkit-refactor-plan.md) is complete (Phases 0–4)**: the Librarian, Datastore, and taxonomy live in the top-level [`toolkit/`](../toolkit/README.md) as pure ES modules behind platform ports, with reference platform bindings (`toolkit/platforms/node`, `toolkit/platforms/chrome`) implementing those ports. `librarian.getAbilityModel()` returns the device-independent **AbilityModel**, and **SurfaceAdapters** render it per device — `toolkit/surfaces/web.js` produces web settings, `toolkit/surfaces/xr.js` produces FOV-aware angular text size, world-locked captions, and motion-comfort parameters. The cross-app **permission broker** (`toolkit/core/broker.js`) shares that understanding with other apps under default-deny grants — each grant carries an audience (personal / friends / anyone) capped by the profile's sharing level — and a runnable XR host (`node toolkit/hosts/xr-demo/demo.js`) proves the whole loop on in-memory ports. Future work is cross-device transport and native (Swift/C#) conformers.
 
 ## How the Code Is Organized
 
@@ -168,8 +168,8 @@ flowchart TB
   names — the core never imports the catalog.
 - **The core is host-free.** `toolkit/core` imports only `toolkit/ports` and
   `toolkit/sync`; it never touches a surface, adapter, or platform API. Hosts
-  and surfaces bring the platform. Reference host adapters live in
-  `toolkit/adapters/node/` (the template) and `toolkit/adapters/chrome/`.
+  and surfaces bring the platform. Reference platform bindings live in
+  `toolkit/platforms/node/` (the template) and `toolkit/platforms/chrome/`.
 - **Host apps live in their own repos.** This repository is the toolkit and its
   catalog — not any particular application. A web extension, mobile app, or XR
   runtime consumes it (by embedding the ES modules or calling the HTTP service).
@@ -213,8 +213,8 @@ AI-for-Accessibility-Toolkit/
 │   ├── core/                   # librarian, datastore, ability-model, broker, skill engine
 │   ├── ports/                  # host interfaces: KVStore, Clock, Scheduler, Consent, actuation
 │   ├── surfaces/               # AbilityModel → per-platform settings (web.js, xr.js)
-│   ├── adapters/node/          # reference host port impls (the template a new host copies)
-│   ├── adapters/chrome/        # Chrome host port impls (reference)
+│   ├── platforms/node/          # reference host port impls (the template a new host copies)
+│   ├── platforms/chrome/        # Chrome host port impls (reference)
 │   ├── registry/               # canonical tools catalog + settings vocabulary
 │   ├── skills/builtin/         # starter SKILL.md recipes
 │   ├── sync/ · protocol/       # profile-blob transport + JSON-schema wire contracts

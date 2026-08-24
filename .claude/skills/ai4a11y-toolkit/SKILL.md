@@ -15,8 +15,8 @@ Paths below are relative to the `toolkit/` package root (run from there, or adju
 
 ```javascript
 import { createToolkit } from './index.js';
-import { memoryKV } from './adapters/node/kv.js';
-import { nodeClock, nodeScheduler, consoleConsent } from './adapters/node/ports.js';
+import { memoryKV } from './platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './platforms/node/ports.js';
 
 const { datastore, librarian } = createToolkit({
   kv: memoryKV(),

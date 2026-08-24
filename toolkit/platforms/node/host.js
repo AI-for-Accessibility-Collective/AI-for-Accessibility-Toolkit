@@ -22,7 +22,7 @@
 //      into the shared inbox; A drains it into a consent-gated proposal,
 //      accepts it, and the accepted value lands in A's AbilityModel.
 //
-// Run: node toolkit/adapters/node/host.js
+// Run: node toolkit/platforms/node/host.js
 // Exits 0 on a clean loop, 1 (with a message) on any assertion failure.
 // Writes nothing outside a temp dir under the OS tmpdir, which it deletes
 // before exiting either way.
