@@ -27,6 +27,7 @@ import * as Trace from './trace.js';
 import * as Watch from './watch.js';
 import * as Probe from './probe.js';
 import * as Generate from './generate.js';
+import './demo/director.js';   // hangs DemoDirector on globalThis when bundled
 
 const KEY = 'aa.validation';
 // A task model written from the person's query, and the name that marks one.
@@ -1659,6 +1660,19 @@ const Validation = {
     }
     await traceAction(g.allowed ? 'went ahead' : 'held at the gate');
     return g;
+  },
+
+  /**
+   * A hold injected by the demo director. It enters the run's real waiting
+   * list, so publish() closes the gate exec.js reads and the agent's own
+   * wait loop parks - the demo's pause is the product's pause, not a
+   * lookalike. Released through answer(), like any stop.
+   */
+  async demoHold(widget, ask) {
+    if (!run && !(await rehydrate())) return { held: false };
+    run.restoreWaiting?.([{ widget, ask, phase: currentPhase }]);
+    await publish();
+    return { held: true };
   },
 
   /** Resolve a stop so the agent can continue. */

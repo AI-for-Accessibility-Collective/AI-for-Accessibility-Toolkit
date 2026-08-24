@@ -35,22 +35,26 @@ export const BEATS = [
 
   { id: 'winnow', kind: 'checkpoint', page: 'results',
     when: 'the result count lands and the property-type facet is readable',
-    say: "Found 100 places. You asked for a hotel, so I'm skipping the motels. This leaves 63." },
+    say: "Found {count} places. You asked for a hotel, so I'm skipping the motels. This leaves {hotels}.",
+    fallbacks: { count: '100', hotels: '63' } },
 
   { id: 'sort', kind: 'checkpoint', page: 'results',
     when: 'the page discloses that payments affect ranking',
     say: "The sort order here is partly paid ads. I'm sorting by price and distance instead." },
 
-  { id: 'ad', kind: 'checkpoint', page: 'results',
+  { id: 'ad', kind: 'checkpoint', page: 'results', optional: true,
     when: 'a result inside the organic list carries the Ad badge',
-    say: "The second result is an ad, so I'm skipping it." },
-  { id: 'ad-log', kind: 'log', page: 'results',
+    say: "The {adOrdinal} result is an ad, so I'm skipping it.",
+    fallbacks: { adOrdinal: 'second' } },
+  { id: 'ad-log', kind: 'log', page: 'results', optional: true,
     when: 'filed as the ad checkpoint fires',
-    say: 'Skipped 1 ad (Hotel Citrine, $1,658)' },
+    say: 'Skipped 1 ad ({adName}, {adPrice})',
+    fallbacks: { adName: 'Hotel Citrine', adPrice: '$1,658' } },
 
   { id: 'collision', kind: 'widget', page: 'results',
     when: 'the closest hotel\'s recommended room sleeps fewer than the party, and no budget is on file',
-    say: "The closest hotel only has **one king bed** for the three of you. Emma would have **no bed**. And it starts at **$1,870**. What's your budget?",
+    say: "The closest hotel only has **one king bed** for the three of you. Emma would have **no bed**. And it starts at **{closestPrice}**. What's your budget?",
+    fallbacks: { closestPrice: '$1,870' },
     options: [
       { label: 'Under $700. 2 hotels near campus', primary: true },
       { label: 'Under $1,300. 4 hotels' },
@@ -59,9 +63,10 @@ export const BEATS = [
     ] },
   { id: 'collision-log', kind: 'log', page: 'results',
     when: 'filed as the collision fires',
-    say: 'Ruled out Sheraton - only 1 king bed' },
+    say: 'Ruled out {closestName} - only 1 king bed',
+    fallbacks: { closestName: 'the Sheraton' } },
 
-  { id: 'freeway', kind: 'checkpoint', page: 'results',
+  { id: 'freeway', kind: 'checkpoint', page: 'results', optional: true,
     when: 'a listing\'s name says one city and the map pin sits in another',
     say: "One hotel says Palo Alto, but it's actually across the freeway, in East Palo Alto." },
 
@@ -69,22 +74,25 @@ export const BEATS = [
     when: 'the budget leaves exactly two candidates, split on distance',
     say: 'Two good hotels under 700. Which one?',
     options: [
-      { label: 'The Zen, **$638**. Close to campus, **two real beds**, great reviews, free breakfast', primary: true },
-      { label: 'Radisson Sunnyvale, **$590**. A **25 minute drive** away' },
+      { label: 'The Zen, **{zenPrice}**. Close to campus, **two real beds**, great reviews, free breakfast', primary: true },
+      { label: 'Radisson Sunnyvale, **{radPrice}**. A **25 minute drive** away' },
       { label: 'Raise the budget instead' },
-    ] },
+    ],
+    fallbacks: { zenPrice: '$638', radPrice: '$590' } },
 
   { id: 'room', kind: 'widget', page: 'property',
     when: 'more than one room on the property page fits the party',
     say: 'The Zen has two rooms that work.',
     options: [
-      { label: '**Two full beds**, $638. Garden view', primary: true },
-      { label: '**Two bigger queen beds**, $648. A little more space' },
-    ] },
+      { label: '**Two full beds**, {room1Price}. Garden view', primary: true },
+      { label: '**Two bigger queen beds**, {room2Price}. A little more space' },
+    ],
+    fallbacks: { room1Price: '$638', room2Price: '$648' } },
 
   { id: 'true-price', kind: 'widget', page: 'checkout',
     when: 'the checkout total crosses the ceiling the listed price sat under',
-    say: "Heads up, the real price is **$738** with taxes. That's **$38 over** your budget.",
+    say: "Heads up, the real price is **{totalRounded}** with taxes. That's **{overBudget} over** your budget.",
+    fallbacks: { totalRounded: '$738', overBudget: '$38' },
     options: [
       { label: 'Go up to $750', primary: true },
       { label: 'Radisson, about $683 all-in. The cheaper one, farther away' },
@@ -93,7 +101,8 @@ export const BEATS = [
 
   { id: 'cancellation', kind: 'checkpoint', page: 'checkout',
     when: 'the exact free-cancellation cutoff and penalty are readable',
-    say: 'You can cancel free until **September 14**. After that it costs **$368**.' },
+    say: 'You can cancel free until **{cancelDate}**. After that it costs **{penaltyRounded}**.',
+    fallbacks: { cancelDate: 'September 14', penaltyRounded: '$368' } },
 
   { id: 'details', kind: 'widget', page: 'form',
     when: 'the form offers arrival time and special requests',
@@ -120,9 +129,10 @@ export const BEATS = [
 
   { id: 'gate', kind: 'widget', page: 'review',
     when: 'the next press commits money - the agent is held until she answers',
-    say: 'Ready to book. The Zen, **two full beds**, **September 15 to 17**, for the three of you. **$738.17 total**, breakfast included. Free to cancel until **September 14**.',
+    say: 'Ready to book. The Zen, **two full beds**, **September 15 to 17**, for the three of you. **{total} total**, breakfast included. Free to cancel until **{cancelDate}**.',
+    fallbacks: { total: '$738.17', cancelDate: 'September 14' },
     options: [
-      { label: 'Book it - **$738.17 total**', primary: true },
+      { label: 'Book it - **{total} total**', primary: true },
       { label: 'Change something first' },
     ] },
 
