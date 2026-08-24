@@ -1529,13 +1529,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           globalThis.BrowserAgent.interject?.(
             `Standing rules from the person, always in force: ${active.join('; ')}.`);
         }
-        if (demoArm) {
-          const sc = globalThis.DemoDirector?.SCENARIO;
-          if (sc?.playbook) {
-            globalThis.BrowserAgent.interject?.(
-              sc.playbook.replace('{searchUrl}', sc.searchUrl || ''));
-          }
-        }
       } catch { /* rules are also enforced at the gate */ }
     })();
     // Hold the agent until there is something to check it against.

@@ -287,8 +287,8 @@ function ready(beat, f) {
   // the box at page load, and the widget fired before anyone typed. The
   // autocomplete must actually be open (visible suggestions).
   if (beat.id === 'stanfords') {
-    return (f?.page === 'home' && !!f.destQuery
-      && (f.destOptions || []).length >= 2) || pr > 0;
+    return f?.page === 'home' && !!f.destQuery
+      && (f.destOptions || []).length >= 2;
   }
   // The gate's own `when` is "the next press commits money" - which first
   // becomes possible once the form is filled. Firing it on page arrival
@@ -371,6 +371,14 @@ async function advance(facts) {
   while (S.idx < BEATS.length) {
     const b = BEATS[S.idx];
     if (b.post) break;                       // past the gate: never live
+    // The which-Stanford question only makes sense while the autocomplete
+    // is on screen. If the run is already past the home page, asking it
+    // over the RESULTS reads as broken - skip, never replay.
+    if (b.id === 'stanfords' && (RANK[facts?.page] ?? -1) > 0) {
+      (S.skipped ||= []).push(b.id);
+      S.idx += 1;
+      continue;
+    }
     if (!ready(b, facts)) break;             // its page has not arrived yet
     await fire(b, facts);
     fired += 1;
