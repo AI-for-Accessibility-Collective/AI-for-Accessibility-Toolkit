@@ -22,6 +22,8 @@ let rendered = 0;        // how far into st.fired this page has drawn
 let observer = null;
 let pushTimer = null;
 let lastSent = '';
+let runStamp = null;     // st.startedAt - a new stamp means a new take
+let openWidgets = {};    // beat id -> true while this tab shows the dialog
 
 export async function isDemoArmed() {
   try { return !!(await chrome.storage.local.get(KEY))[KEY]?.armed; }
@@ -45,22 +47,42 @@ function pushFacts() {
 
 function renderNew(st) {
   if (!overlay || !st) return;
+  // A widget answered in ANOTHER tab must close here too - this page's copy
+  // would otherwise stand as a stale focus trap, answerable a second time.
+  for (const id of Object.keys(openWidgets)) {
+    if (st.answers?.[id]) { overlay.dismissWidget(id); delete openWidgets[id]; }
+  }
   const fired = st.fired || [];
   for (; rendered < fired.length; rendered += 1) {
     const b = fired[rendered];
     if (b.kind === 'checkpoint') overlay.checkpoint(b);
     else if (b.kind === 'log') overlay.log(b);
     else if (b.kind === 'widget' && !st.answers?.[b.id]) {
-      overlay.widget(b).then((a) => chrome.runtime.sendMessage({
-        type: 'demoAnswer', id: b.id, response: a.typed || a.choice,
-      }).catch(() => {}));
+      openWidgets[b.id] = true;
+      overlay.widget(b).then((a) => {
+        delete openWidgets[b.id];
+        if (a.dismissed) return;
+        chrome.runtime.sendMessage({
+          type: 'demoAnswer', id: b.id, response: a.typed || a.choice,
+        }).catch(() => {});
+        // The page a widget paused on often never mutates again, and the
+        // worker may have restarted (losing its lastFacts) - a fresh read
+        // right after the answer keeps the story moving either way.
+        lastSent = '';
+        pushFacts();
+      });
     }
   }
-  if (st.done) overlay.report();
+  if (st.done) {
+    overlay.report();
+    // The run is over; stop reading the page. The drawer stays.
+    observer?.disconnect(); observer = null;
+  }
 }
 
 function arm(st) {
   if (overlay) { renderNew(st); return; }
+  runStamp = st.startedAt ?? null;
   // The demo's surfaces are the only voice; the generic on-page panel would
   // talk over the story in its own register.
   try { if (AgentWatch.enabled) AgentWatch.disable(); } catch { /* not fatal */ }
@@ -87,6 +109,9 @@ function teardown() {
   observer?.disconnect(); observer = null;
   overlay?.destroy(); overlay = null;
   rendered = 0;
+  runStamp = null;
+  openWidgets = {};
+  lastSent = '';
 }
 
 /** Idempotent; safe to call on every page. Wakes only when the demo arms. */
@@ -96,6 +121,11 @@ export function initDemoClient() {
     if (area !== 'local' || !changes[KEY]) return;
     const st = changes[KEY].newValue;
     if (!st?.armed) { teardown(); return; }
+    // A fresh startedAt is a new take: rebuild instead of appending, or the
+    // second run stays silent until it out-fires the first one's count.
+    if (overlay && runStamp != null && st.startedAt !== runStamp) {
+      teardown();
+    }
     if (!overlay) arm(st);
     else renderNew(st);
   });
