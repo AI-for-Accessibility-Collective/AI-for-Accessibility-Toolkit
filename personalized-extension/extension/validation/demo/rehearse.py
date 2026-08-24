@@ -142,7 +142,7 @@ def main():
         # Bundled chromium: branded Chrome dropped --load-extension support,
         # and extensions in headless need the NEW headless (channel chromium).
         ctx = pw.chromium.launch_persistent_context(
-            user_data_dir=PROFILE, headless=not a.headful, channel="chromium",
+            user_data_dir=PROFILE, headless=not (a.headful or a.manual), channel="chromium",
             viewport={"width": 1440, "height": 900}, user_agent=UA,
             locale="en-US", timezone_id="America/Los_Angeles",
             args=[f"--disable-extensions-except={EXT}",
