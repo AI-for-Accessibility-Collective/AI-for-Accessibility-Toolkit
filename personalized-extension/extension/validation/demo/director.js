@@ -62,7 +62,14 @@ const MONTHS = { Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', Ma
   Nov: 'November', Dec: 'December' };
 const spokenDate = (s) => String(s || '').replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b\.?/,
   (m) => MONTHS[m.slice(0, 3)]);
-const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
+  'eighth', 'ninth', 'tenth'];
+const COUNTS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'];
+const listWords = (xs) => (xs.length <= 1 ? xs.join('')
+  : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+const shortName = (n) => String(n || '').split(/\s+/).slice(0, 3).join(' ')
+  .replace(/[,-]$/, '');
+const milesOf = (c) => { const m = miles(c); return Number.isFinite(m) ? m : null; };
 
 const miles = (c) => {
   const m = String(c?.distance || '').match(/([\d.]+)\s*(mi|km)/i);
@@ -90,13 +97,32 @@ const LOGIC = {
       hotels: f.hotelFacet != null ? String(f.hotelFacet) : null }),
   },
   ad: {
-    bind: (f) => { const i = (f.cards || []).findIndex((c) => c.isAd);
-      return i < 0 ? {} : { ad: { ...(f.cards || [])[i], ordinal: ORDINALS[i] || null } }; },
-    slots: (f, s) => ({ adOrdinal: s.roles?.ad?.ordinal || null }),
+    bind: (f) => {
+      const ads = (f.cards || [])
+        .map((c, i) => ({ ...c, ordinal: ORDINALS[i] || `number ${i + 1}` }))
+        .filter((c) => c.isAd);
+      return { ads, ad: ads[0] || null };
+    },
+    sayLive: (f, s) => {
+      const ads = s.roles?.ads;
+      if (!ads) return null;
+      if (ads.length === 0) return 'No ads mixed into these results.';
+      if (ads.length === 1) {
+        return `The ${ads[0].ordinal} result is an ad, so I'm skipping it.`;
+      }
+      return `${COUNTS[ads.length] || ads.length} of these are ads - the `
+        + `${listWords(ads.map((a) => a.ordinal))} results. I'm skipping them.`;
+    },
   },
   'ad-log': {
-    slots: (f, s) => ({ adName: s.roles?.ad?.name || null,
-      adPrice: fmtRound(s.roles?.ad?.price) }),
+    sayLive: (f, s) => {
+      const ads = s.roles?.ads;
+      if (!ads) return null;
+      if (ads.length === 0) return 'No ads in these results';
+      const named = ads.slice(0, 3)
+        .map((a) => `${a.name}${a.price != null ? ` ${fmtRound(a.price)}` : ''}`);
+      return `Skipped ${ads.length} ad${ads.length === 1 ? '' : 's'} (${named.join(', ')})`;
+    },
   },
   collision: {
     // The flagship catch: booking badges a listing "Recommended for your
@@ -111,14 +137,73 @@ const LOGIC = {
       return c ? { closest: { ...c } } : {};
     },
     slots: (f, s) => ({ closestPrice: fmtRound(s.roles?.closest?.price) }),
+    sayLive: (f, s) => {
+      const c = s.roles?.closest;
+      if (!c || c.price == null) return null;
+      const price = fmtRound(c.price);
+      if (/sofa bed/i.test(c.units || '')) {
+        return `Booking marks the closest one '**recommended for your group**', `
+          + `at **${price}**. But it counts a **pull-out couch** as the third `
+          + `bed. **Emma would sleep on the couch**. What's your budget? `
+          + `I'll find real beds for everyone.`;
+      }
+      if (oneKing(c)) {
+        return `The closest one only has **one king bed** for the three of `
+          + `you, at **${price}**. **Emma would have no bed**. What's your `
+          + `budget? I'll find real beds for everyone.`;
+      }
+      return `The closest one starts at **${price}**. Before I pick anything: `
+        + `what's your budget? I'll only look at real beds for all three of you.`;
+    },
   },
   'collision-log': {
     slots: (f, s) => ({ closestName: s.roles?.closest?.name || null }),
+    sayLive: (f, s) => {
+      const c = s.roles?.closest;
+      if (!c) return null;
+      if (/sofa bed/i.test(c.units || '')) return `Ruled out ${c.name} - it counts a couch as a bed`;
+      if (oneKing(c)) return `Ruled out ${c.name} - only 1 king bed`;
+      return `Checked ${c.name} first - waiting on the budget`;
+    },
+  },
+  freeway: {
+    sayLive: (f, s) => {
+      const trap = (f.cards || []).find((c) => /palo alto/i.test(c.name || '')
+        && !/east palo alto/i.test(c.name || '')
+        && /east palo alto/i.test(c.address || ''));
+      if (trap) {
+        return `${shortName(trap.name)} says Palo Alto, but it's actually `
+          + 'across the freeway, in East Palo Alto.';
+      }
+      return '';
+    },
   },
   compare: {
-    slots: (f, s) => { if (s.budget == null) return {};
+    bind: (f, s) => {
+      if (s.budget == null) return {};
       const u = underBudget(f, s.budget).sort((a, b) => miles(a) - miles(b));
-      return { zenPrice: fmtRound(u[0]?.price), radPrice: fmtRound(u[u.length - 1]?.price) }; },
+      if (u.length < 2) return {};
+      return { near: { ...u[0] }, far: { ...u[u.length - 1] } };
+    },
+    sayLive: (f, s) => {
+      const { near, far } = s.roles || {};
+      if (!near || !far) return null;
+      return `Two good hotels under ${s.budget}. Which one?`;
+    },
+    optionsLive: (f, s) => {
+      const { near, far } = s.roles || {};
+      if (!near || !far) return null;
+      const line = (c, tag) => {
+        const bits = [`${shortName(c.name)}, **${fmtRound(c.price)}**`];
+        const m = milesOf(c);
+        if (m != null) bits.push(m <= 3 ? `**${m} miles from campus**` : `a **${m} mile drive**`);
+        if (c.rating != null) bits.push(`rated ${c.rating}`);
+        if (/2 (full|queen|double) beds/i.test(c.units || '')) bits.push('two real beds');
+        return { label: bits.join('. '), primary: tag === 'near' };
+      };
+      return [line(near, 'near'), line(far, 'far'),
+        { label: 'Raise the budget instead' }];
+    },
   },
   room: {
     slots: (f) => { const r = familyRooms(f).sort((a, b) => (a.price ?? 9e9) - (b.price ?? 9e9));
@@ -127,6 +212,17 @@ const LOGIC = {
   'true-price': {
     slots: (f, s) => ({ totalRounded: fmtRound(f.total),
       overBudget: s.budget != null && f.total != null ? fmtRound(f.total - s.budget) : null }),
+    optionsLive: (f, s) => {
+      const { near, far } = s.roles || {};
+      if (!far || f.total == null || !near?.price) return null;
+      const est = Math.round(far.price * (f.total / near.price));
+      const ceiling = Math.ceil(f.total / 10) * 10 + 10;
+      return [
+        { label: `Go up to $${ceiling.toLocaleString('en-US')}`, primary: true },
+        { label: `${shortName(far.name)}, about **$${est.toLocaleString('en-US')}** all-in. The cheaper one, farther away` },
+        { label: `Keep looking under $${s.budget}` },
+      ];
+    },
   },
   cancellation: {
     slots: (f) => ({ cancelDate: f.freeCancelBefore ? spokenDate(f.freeCancelBefore) : null,
@@ -164,6 +260,8 @@ function ready(beat, f) {
 /** Fill {tokens} from live slots, falling back to the beat's rehearsal
  *  values. Returns the filled beat plus which tokens fell back. */
 function fill(beat, facts) {
+  const composed = LOGIC[beat.id]?.sayLive?.(facts, S);
+  const liveOptions = LOGIC[beat.id]?.optionsLive?.(facts, S) || null;
   const live = LOGIC[beat.id]?.slots?.(facts, S) || {};
   const missed = [];
   const sub = (s) => String(s).replace(/\{(\w+)\}/g, (_, k) => {
@@ -183,10 +281,11 @@ function fill(beat, facts) {
     cancellation: () => 'Free cancellation',
     gate: () => 'Total',
   };
+  if (composed === '') return null;
   return {
     id: beat.id, kind: beat.kind, page: beat.page,
-    say: sub(beat.say),
-    options: beat.options?.map((o) => ({ ...o, label: sub(o.label) })),
+    say: composed || sub(beat.say),
+    options: liveOptions || beat.options?.map((o) => ({ ...o, label: sub(o.label) })),
     missed: [...new Set(missed)],
     spot: SPOTS[beat.id]?.() || null,
     at: Date.now(),
@@ -197,6 +296,11 @@ async function fire(beat, facts, { forced = false } = {}) {
   const bound = LOGIC[beat.id]?.bind?.(facts, S);
   if (bound) S.roles = { ...(S.roles || {}), ...bound };
   const filled = fill(beat, facts);
+  if (!filled) {                                  // nothing true to say today
+    (S.skipped ||= []).push(beat.id);
+    S.idx += 1;
+    return;
+  }
   if (forced) filled.forced = true;
   S.fired.push(filled);
   S.idx += 1;
