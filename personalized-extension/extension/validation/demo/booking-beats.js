@@ -69,7 +69,7 @@ export const BEATS = [
 
   { id: 'collision', kind: 'widget', page: 'results',
     when: 'the closest match sleeps three only by putting one of them on a sofa bed',
-    say: "The closest one says it sleeps three, at **{closestPrice}**. But the second bed is a **pull-out couch** - **Emma would sleep on the couch**. What's your budget? I'll find real beds for everyone.",
+    say: "Booking marks the closest one '**recommended for your group**', at **{closestPrice}**. But it counts a **pull-out couch** as the third bed. **Emma would sleep on the couch**. What's your budget? I'll find real beds for everyone.",
     fallbacks: { closestPrice: '$358' },
     options: [
       { label: 'Under $700. 2 hotels near campus', primary: true },
@@ -79,7 +79,7 @@ export const BEATS = [
     ] },
   { id: 'collision-log', kind: 'log', page: 'results',
     when: 'filed as the collision fires',
-    say: 'Ruled out {closestName} - the second bed is a couch',
+    say: 'Ruled out {closestName} - it counts a couch as a bed',
     fallbacks: { closestName: 'the Coronet Motel' } },
 
   { id: 'freeway', kind: 'checkpoint', page: 'results',
