@@ -153,14 +153,22 @@ function renderNew(st) {
     // The report is the run's FULL record: every checkpoint, every question
     // with the option she chose, every filed note. Only the choices and the
     // notes are read aloud; the rest is there to tab through.
+    // Attribution is explicit both on paper and out loud: YOUR CHOICE vs
+    // AGENT NOTED vs AGENT SAID - and the read-through speaks the decision
+    // ("You chose: X"), not the whole question again. Distinct prefixes
+    // also give the ear a clean boundary between entries.
     const items = (st.fired || []).map((f) => {
       if (f.kind === 'widget') {
         const a = st.answers?.[f.id]?.response;
-        return { kind: 'asked you', speak: !!a,
-          say: a ? `${f.say} **You chose: ${a}.**` : f.say };
+        return { kind: 'your choice', speak: !!a,
+          say: a ? `${f.say} **You chose: ${a}.**` : f.say,
+          speech: a ? `You chose: ${a}.` : null };
       }
-      if (f.kind === 'log') return { kind: 'noted', say: f.say, speak: true };
-      return { kind: 'said', say: f.say, speak: false };
+      if (f.kind === 'log') {
+        return { kind: 'agent noted', say: f.say, speak: true,
+          speech: `The agent noted: ${String(f.say).replace(/\*\*/g, '')}` };
+      }
+      return { kind: 'agent said', say: f.say, speak: false };
     });
     overlay.report(items);
     observer?.disconnect(); observer = null;

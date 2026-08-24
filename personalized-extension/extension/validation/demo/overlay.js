@@ -446,9 +446,9 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     }
     for (const it of all) addLi(it.say, it.kind);
     announce(`The run is over. Here is the full log - ${all.length} entries: `
-      + 'what it did, what it asked, and your answers. Tab or arrows move '
-      + 'through them.');
-    all.filter((it) => it.speak).forEach((it) => announce(plain(it.say)));
+      + 'what the agent said, what it noted, and what you chose. Tab or '
+      + 'arrows move through them.');
+    all.filter((it) => it.speak).forEach((it) => announce(it.speech || plain(it.say)));
     announce('End of the log.');
     queueIdle().then(() => {
       const first = drawer.querySelector('li');
