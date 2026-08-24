@@ -39,7 +39,7 @@ export const SCENARIO = {
 export const BEATS = [
   { id: 'contract', kind: 'checkpoint', page: 'home',
     when: 'the prompt is parsed; no budget was given',
-    say: "Got it. A hotel near Stanford, September 15 to 17, for three people, and it has to be cancellable. No budget yet, so I'll ask when the prices are real." },
+    say: "Got it. A hotel near Stanford, September 15 to 17, for you, Ryan, and Emma - that's from your profile. It has to be cancellable. No budget yet, so I'll ask when the prices are real." },
 
   { id: 'stanfords', kind: 'widget', page: 'home',
     when: 'the destination autocomplete returns more than one match for the typed place',
@@ -124,7 +124,7 @@ export const BEATS = [
 
   { id: 'form', kind: 'checkpoint', page: 'form',
     when: 'her identity starts leaving the machine',
-    say: "I'm filling in your name, email, and phone number now. They use the phone to confirm the booking." },
+    say: "I'm filling in your name, email, and phone number from your profile. They use the phone to confirm the booking." },
   { id: 'form-log-1', kind: 'log', page: 'form',
     when: 'declines filed silently as the form is walked',
     say: 'Said **no** to marketing emails, taxi, car rental' },
