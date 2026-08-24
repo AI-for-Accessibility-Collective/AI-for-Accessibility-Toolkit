@@ -13,7 +13,7 @@
 export const SCENARIO = {
   prompt: 'book us a hotel near stanford for sep 15 to 17 - 2 adults and our '
     + '8-year-old, and make sure we can cancel if plans change',
-  cast: 'Susan Miller (screen reader, booking) · Ryan · Ashley (incoming freshman) · Emma, 8',
+  cast: 'Susan Miller (screen reader, booking) - 2 adults and their 8-year-old',
   site: 'https://www.booking.com',
   // fc=2 pre-applies the free-cancellation filter and order=price the sort
   // - the agent burned whole turns hunting the sidebar for both, and the
