@@ -46,9 +46,17 @@ const beats = BEATS.filter((b) => includePost || !b.post);
 let i = 0;
 let busy = false;
 
+// The harness has no live page, so every {token} takes its rehearsal
+// fallback - the director fills these from page facts in the real run.
+const onFallbacks = (b) => {
+  const sub = (s) => String(s).replace(/\{(\w+)\}/g, (_, k) => b.fallbacks?.[k] ?? `{${k}}`);
+  return { ...b, say: sub(b.say),
+    options: b.options?.map((o) => ({ ...o, label: sub(o.label) })) };
+};
+
 async function step(auto = false) {
   if (busy || i >= beats.length) return;
-  const b = beats[i++];
+  const b = onFallbacks(beats[i++]);
   document.getElementById('hud').innerHTML =
     `<b>${b.id}</b> (${b.kind}) · ${i}/${beats.length} · <b>n</b> next · <b>r</b> report`;
   if (b.kind === 'checkpoint') overlay.checkpoint(b);
