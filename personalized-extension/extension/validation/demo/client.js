@@ -146,37 +146,46 @@ function renderNew(st) {
 // work - if the popup shifts, the director's URL fixup still catches it.
 async function setFamilyOccupancy() {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  for (let tries = 0; tries < 8; tries += 1) {
+  const typed = () =>
+    ((document.querySelector('input[name="ss"]')?.value || '').trim().length > 0);
+  const esc = () => document.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  // Two quick attempts, ~4s total, and it stands down the moment the agent
+  // has typed anything - the first version retried for 12s and fought the
+  // agent for the search box, so Stanford never landed.
+  for (let tries = 0; tries < 2; tries += 1) {
+    if (typed()) return false;
     const opener = document.querySelector('[data-testid="occupancy-config"]');
-    if (opener) {
-      if (/1 child/i.test(opener.textContent || '')) return true;
-      opener.click();
-      await sleep(600);
-      const popup = document.querySelector('[data-testid="occupancy-popup"]') || document.body;
-      const rows = [...popup.querySelectorAll('div')]
-        .filter((g) => /children/i.test(g.textContent || '')
-          && g.querySelectorAll('button').length >= 2
-          && (g.textContent || '').length < 220)
-        .sort((a, b) => (a.textContent || '').length - (b.textContent || '').length);
-      const plus = rows[0] && [...rows[0].querySelectorAll('button')].pop();
-      if (plus) {
-        plus.click();
-        await sleep(700);
-        const age = popup.querySelector('select[name="age"], select[data-testid*="age" i]');
-        if (age) {
-          age.value = '8';
-          age.dispatchEvent(new Event('change', { bubbles: true }));
-          await sleep(300);
-        }
-        const done = [...popup.querySelectorAll('button')]
-          .find((b) => /^done$/i.test((b.textContent || '').trim()));
-        (done || opener).click();
-        return /1 child/i.test(opener.textContent || '');
+    if (!opener) { await sleep(1200); continue; }
+    if (/1 child/i.test(opener.textContent || '')) return true;
+    opener.click();
+    await sleep(500);
+    const popup = document.querySelector('[data-testid="occupancy-popup"]');
+    const rows = popup ? [...popup.querySelectorAll('div')]
+      .filter((g) => /children/i.test(g.textContent || '')
+        && g.querySelectorAll('button').length >= 2
+        && (g.textContent || '').length < 220)
+      .sort((a, b) => (a.textContent || '').length - (b.textContent || '').length) : [];
+    const plus = rows[0] && [...rows[0].querySelectorAll('button')].pop();
+    if (plus && !typed()) {
+      plus.click();
+      await sleep(500);
+      const age = popup.querySelector('select[name="age"], select[data-testid*="age" i]');
+      if (age) {
+        age.value = '8';
+        age.dispatchEvent(new Event('change', { bubbles: true }));
+        await sleep(250);
       }
-      opener.click();          // close what we opened; try again next round
+      const done = [...popup.querySelectorAll('button')]
+        .find((b) => /^done$/i.test((b.textContent || '').trim()));
+      if (done) done.click(); else esc();
+      await sleep(300);
+      if (/1 child/i.test(opener.textContent || '')) return true;
     }
-    await sleep(1500);
+    esc();                       // never leave our popup in the agent's way
+    await sleep(400);
   }
+  esc();
   return false;
 }
 
