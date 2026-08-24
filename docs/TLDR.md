@@ -16,8 +16,8 @@ tl;dr: The toolkit understands the person and decides what should change; the de
 
 Developer flow:
 * A developer implements a different repository with their application in it.
-* That repository links into to the toolkit in a local directory ...  OR uses the toolkit in [server mode](https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/tree/rearch-experiment/server).
-* The developers task is to use the toolkit and create the interface layer that makes the application accessible for users across ability profiles
+* That repository links into the toolkit in a local directory ...  OR uses the toolkit in [server mode](https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/tree/rearch-experiment/server).
+* The developer's task is to use the toolkit and create the interface layer that makes the application accessible for users across ability profiles
 
 Disabled user's experience in an app that uses the toolkit
 * A user with any specific needs should be able to come to the app
