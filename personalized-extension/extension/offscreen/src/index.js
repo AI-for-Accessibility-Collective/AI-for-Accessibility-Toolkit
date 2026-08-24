@@ -427,8 +427,14 @@ async function undoFromUi() {
 // summarise, because the wording is the design — every line was written to put
 // the number first and to be answerable out loud. A summary of a validation
 // finding is a validation finding you cannot act on.
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener(async (msg) => {
   if (msg?.type !== 'validationSpeak' || !Array.isArray(msg.lines)) return;
+  // While the demo is armed, the story's overlay (and the person's own
+  // screen reader) is the voice. Two speakers on one run talk over each
+  // other, and the generic lines are not in the demo's register.
+  try {
+    if ((await chrome.storage.local.get('aa.demo'))['aa.demo']?.armed) return;
+  } catch { /* no storage, no demo */ }
   const stop = msg.lines.find((l) => l.level === 'stop');
   const body = msg.lines.map((l) => l.say).join(' ');
   if (!body.trim()) return;

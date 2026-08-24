@@ -1937,8 +1937,12 @@ ${lines.join("\n")}`;
     }
     return result;
   }
-  chrome.runtime.onMessage.addListener((msg) => {
+  chrome.runtime.onMessage.addListener(async (msg) => {
     if (msg?.type !== "validationSpeak" || !Array.isArray(msg.lines)) return;
+    try {
+      if ((await chrome.storage.local.get("aa.demo"))["aa.demo"]?.armed) return;
+    } catch {
+    }
     const stop = msg.lines.find((l) => l.level === "stop");
     const body = msg.lines.map((l) => l.say).join(" ");
     if (!body.trim()) return;

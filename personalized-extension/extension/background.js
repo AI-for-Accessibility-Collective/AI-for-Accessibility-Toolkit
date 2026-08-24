@@ -1471,6 +1471,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // parsed, and whatever could not be read from it becomes a question rather
     // than a guess.
     let modelReady = Promise.resolve();
+    // The demo arms itself off the task sentence (David 2026-08-23: no
+    // switch to remember on stage). A non-matching task changes nothing.
+    try { globalThis.DemoDirector?.maybeArm?.(msg.task); } catch { /* demo only */ }
     if (globalThis.Validation && !globalThis.Validation.isRunning()) {
       try {
         const contract = msg.contract || globalThis.ValidationAsk.contractFromAsk(msg.task);
@@ -1510,6 +1513,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     })();
     sendResponse({ started: true });
     return false;
+  }
+
+  // ---- the demo director ------------------------------------------------
+  if (msg.type === 'demoFacts') {
+    (globalThis.DemoDirector?.onFacts?.(msg.facts) || Promise.resolve({}))
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'demoAnswer') {
+    (globalThis.DemoDirector?.onAnswer?.(msg.id, msg.response) || Promise.resolve({}))
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  }
+  if (msg.type === 'demoForce') {
+    (globalThis.DemoDirector?.force?.() || Promise.resolve({}))
+      .then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
   }
 
   // ---- validation layer -------------------------------------------------

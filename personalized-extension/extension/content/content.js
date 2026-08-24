@@ -12,6 +12,7 @@ import { BigTargets } from '../../skills/builtin/big-targets.js';
 import { LinkHighlighter } from '../../skills/builtin/link-highlighter.js';
 import { PageOutline } from '../../skills/builtin/page-outline.js';
 import { AgentWatch } from '../../skills/builtin/agent-watch.js';
+import { initDemoClient, isDemoArmed } from '../validation/demo/client.js';
 import { BionicReading } from '../../skills/builtin/bionic-reading.js';
 import { UnpinSticky } from '../../skills/builtin/unpin-sticky.js';
 import { TranslatePage } from '../../skills/builtin/translate-page.js';
@@ -944,6 +945,9 @@ const AA_VALIDATION_KEY = 'aa.validation';
 
 async function wireAgentWatch() {
   if (!AgentWatch.enabled) return;
+  // While the demo is armed, its overlay is the one voice on the page; the
+  // generic panel would talk over the story in a different register.
+  if (await isDemoArmed()) { AgentWatch.disable(); return; }
 
   // The person's own model decides wording, type size, contrast and how much
   // is shown. Failing to get it is not fatal — the adapter falls back to
@@ -1085,6 +1089,7 @@ function wireAgentWatchHandlers() {
 }
 
 init().then(wireAgentWatch);
+initDemoClient();
 
 // A task can start while this page is already open - Validation.start flips
 // sync agentWatch, and without this listener the overlay only ever appeared
@@ -1092,8 +1097,11 @@ init().then(wireAgentWatch);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync' || !changes.agentWatch) return;
   if (changes.agentWatch.newValue && !AgentWatch.enabled) {
-    AgentWatch.enable({});
-    wireAgentWatch();
+    isDemoArmed().then((armed) => {
+      if (armed) return;
+      AgentWatch.enable({});
+      wireAgentWatch();
+    });
   }
 });
 
