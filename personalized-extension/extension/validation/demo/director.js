@@ -178,9 +178,12 @@ async function fire(beat, facts, { forced = false } = {}) {
     // refuse a commit already in flight; the pause is what stops the model
     // burning turns against a closed gate (the recorded 24-step spin).
     try {
-      await globalThis.Validation?.demoHold?.(HOLD_PREFIX + beat.id,
+      const h = await globalThis.Validation?.demoHold?.(HOLD_PREFIX + beat.id,
         filled.say.replace(/\*\*/g, ''));
-    } catch { /* the pause below still holds the loop */ }
+      // No validation run means the gate was never real - only the pause
+      // stands. Recorded on the beat so the state says so out loud.
+      if (!h || h.held === false) filled.heldFailed = true;
+    } catch { filled.heldFailed = true; }
     try { globalThis.BrowserAgent?.pause?.(); } catch { /* hold alone then */ }
   }
   await save();
@@ -250,16 +253,26 @@ const Director = {
     await load();
     if (!S.armed || S.done || !facts) return { armed: S.armed };
     // An organic stop with no surface to answer it would park the run
-    // forever - the demo's surfaces only speak the story. Release anything
-    // the generic layer is holding on, and file that it happened.
+    // forever - the demo's surfaces only speak the story. Release what the
+    // generic layer is holding on, and file that it happened - EXCEPT where
+    // money can move. On a checkout page nothing is ever waved past, and a
+    // hold whose name smells of committing is never waved past anywhere:
+    // the review's concrete path was the story stalling short of the gate
+    // while this loop stripped every protection the agent had left.
     try {
       const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'];
       for (const w of st?.gate?.waitingOn || []) {
-        if (!String(w).startsWith(HOLD_PREFIX)) {
-          await globalThis.Validation?.answer?.(w, 'Continue.');
-          S.fired.push({ id: `released:${w}`, kind: 'log', at: Date.now(),
-            say: `Waved past a generic hold (${String(w).slice(0, 40)}) - the story speaks for this run` });
+        if (String(w).startsWith(HOLD_PREFIX)) continue;
+        if (facts.page === 'checkout' || /order|book|pay|checkout|complete|reserve|confirm/i.test(String(w))) {
+          if (!S.fired.some((f) => f.id === `standing:${w}`)) {
+            S.fired.push({ id: `standing:${w}`, kind: 'log', at: Date.now(),
+              say: `Left a hold standing (${String(w).slice(0, 40)}) - never waved past near a commit` });
+          }
+          continue;
         }
+        await globalThis.Validation?.answer?.(w, 'Continue.');
+        S.fired.push({ id: `released:${w}`, kind: 'log', at: Date.now(),
+          say: `Waved past a generic hold (${String(w).slice(0, 40)}) - the story speaks for this run` });
       }
     } catch { /* never let the release path stall the story */ }
     lastFacts = facts;
@@ -283,6 +296,7 @@ const Director = {
     await load();
     if (!S.armed) return { ok: false };
     if (!S.fired.some((f) => f.id === id)) return { ok: false, why: 'not fired' };
+    if (S.answers[id]) return { ok: false, why: 'already answered' };
     S.answers[id] = { response, at: Date.now() };
 
     // Answers that carry state the later guards read.
@@ -292,19 +306,28 @@ const Director = {
     }
     if (id === 'true-price' && /750/.test(String(response))) S.budget = 750;
 
+    if (id === 'gate') {
+      // The gate's hold is NEVER released - a click already parked at the
+      // exec gate would fire the moment it opened, and the stop must land
+      // before anything else moves. On "Book it" the demo ends by design:
+      // nothing is paid, and the record says so. On any other answer the
+      // hold and the pause both stand - the agent does not walk a checkout
+      // page on a half-answered gate.
+      try { globalThis.BrowserAgent?.stop?.('demo ends at the gate'); } catch { /* best-effort */ }
+      if (/book it/i.test(String(response))) {
+        S.done = true;
+        S.fired.push({ id: 'demo-end', kind: 'log', at: Date.now(),
+          say: 'Stopped at the gate - nothing was paid' });
+      } else {
+        S.fired.push({ id: 'gate-change', kind: 'log', at: Date.now(),
+          say: 'Stopped at the gate - change requested, nothing was paid' });
+      }
+      await save();
+      return { ok: true, done: S.done };
+    }
+
     try { await globalThis.Validation?.answer?.(HOLD_PREFIX + id, response); }
     catch { /* the resume below still frees the loop */ }
-
-    if (id === 'gate' && /book it/i.test(String(response))) {
-      // The demo ends here, by design. Nothing is paid, and the record says
-      // so rather than leaving the ending implicit.
-      S.done = true;
-      S.fired.push({ id: 'demo-end', kind: 'log', at: Date.now(),
-        say: 'Stopped at the gate - nothing was paid' });
-      await save();
-      try { globalThis.BrowserAgent?.stop?.('demo ends at the gate'); } catch { /* stopping is best-effort */ }
-      return { ok: true, done: true };
-    }
 
     try {
       globalThis.BrowserAgent?.interject?.(
@@ -325,6 +348,16 @@ const Director = {
     await fire(b, lastFacts || {}, { forced: true });
     await save();
     return { ok: true, id: b.id };
+  }); },
+
+  /** The run ended under the demo (stop button, agent finished). A done
+   *  demo keeps its state - the end report reads from it - but an
+   *  abandoned one disarms, or the overlay, the muted speech, and the
+   *  page extraction would follow David around his ordinary browsing. */
+  async abandon() { return serial(async () => {
+    await load();
+    if (S.armed && !S.done) { S = fresh(); await save(); return { disarmed: true }; }
+    return { disarmed: false };
   }); },
 
   async state() { await load(); return { ...S }; },

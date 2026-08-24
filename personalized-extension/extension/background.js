@@ -1842,6 +1842,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // The reason travels with the stop so the run's own record says what
     // ended it. Absent one, the agent falls back to "Stopped by user", which
     // is what a press of the stop button is.
+    // A stopped run also ends an unfinished demo - a done demo keeps its
+    // end report, an abandoned one must not follow ordinary browsing around.
+    try { globalThis.DemoDirector?.abandon?.(); } catch { /* demo only */ }
     globalThis.BrowserAgent?.stop(msg.reason);
     sendResponse({ success: true });
     return false;
