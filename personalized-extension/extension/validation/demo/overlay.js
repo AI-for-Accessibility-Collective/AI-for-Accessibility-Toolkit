@@ -71,7 +71,7 @@ const plain = (s) => String(s).replace(/\*\*/g, '');
 
 let uid = 0;
 
-export function createOverlay({ mount = document.body, wordMs = 280, voiced = true } = {}) {
+export function createOverlay({ mount = document.body, wordMs = 280, voiced = true, rate = 1.4 } = {}) {
   if (!document.getElementById(STYLE_ID)) {
     const st = document.createElement('style');
     st.id = STYLE_ID;
@@ -110,16 +110,48 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
     if (!voiced || typeof speechSynthesis === 'undefined') {
       return new Promise((r) => setTimeout(r, 700 + text.split(/\s+/).length * wordMs));
     }
+    // Chrome's engine has two traps this dodges: speak() right after
+    // cancel() silently DROPS the new utterance (lines went missing), and
+    // long speech stalls mid-sentence unless resume() nudges it.
     return new Promise((resolve) => {
-      if (interrupt) speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 1.02;
-      const done = () => resolve();
-      u.onend = done;
-      u.onerror = done;
-      // A stuck engine must not wedge the queue.
-      setTimeout(done, 2000 + text.split(/\s+/).length * 450);
-      speechSynthesis.speak(u);
+      let settled = false;
+      let started = false;
+      let keepalive = null;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        clearInterval(keepalive);
+        resolve();
+      };
+      const attempt = () => {
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = rate;
+        u.onstart = () => { started = true; };
+        u.onend = done;
+        u.onerror = done;
+        speechSynthesis.speak(u);
+      };
+      const begin = () => {
+        attempt();
+        // Dropped after a cancel: it never starts. Give it one clean retry.
+        setTimeout(() => {
+          if (!started && !settled) {
+            try { speechSynthesis.cancel(); } catch { /* engine state */ }
+            setTimeout(attempt, 90);
+          }
+        }, 900);
+        keepalive = setInterval(() => {
+          try { speechSynthesis.resume(); } catch { /* engine state */ }
+        }, 4000);
+        // A wedged engine must not wedge the queue.
+        setTimeout(done, 2000 + text.split(/\s+/).length * 380);
+      };
+      if (interrupt && (speechSynthesis.speaking || speechSynthesis.pending)) {
+        speechSynthesis.cancel();
+        setTimeout(begin, 90);
+      } else {
+        begin();
+      }
     });
   }
 
@@ -133,7 +165,7 @@ export function createOverlay({ mount = document.body, wordMs = 280, voiced = tr
       await new Promise((r) => setTimeout(r, 60));
       live.textContent = item.text;
       await tts(item.text);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 120));
       // The line has had its slot - the visual card it mirrors can go now.
       try { item.spoken?.(); } catch { /* visual only */ }
     }
