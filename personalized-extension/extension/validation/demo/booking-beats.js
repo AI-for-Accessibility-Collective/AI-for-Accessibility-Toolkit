@@ -81,7 +81,7 @@ export const BEATS = [
     ] },
   { id: 'collision-log', kind: 'log', page: 'results',
     when: 'filed as the collision fires',
-    say: 'Ruled out {closestName} - it counts a couch as a bed',
+    say: 'Ruled out {closestName} - the extra bed is a **sofa**',
     fallbacks: { closestName: 'the Coronet Motel' } },
 
   { id: 'freeway', kind: 'checkpoint', page: 'results',
