@@ -150,11 +150,24 @@ function fill(beat, facts) {
     missed.push(k);
     return beat.fallbacks?.[k] ?? `{${k}}`;
   });
+  // What on the page this beat is ABOUT, for the client's spotlight.
+  const SPOTS = {
+    ad: () => S.roles?.ad?.name,
+    'ad-log': () => S.roles?.ad?.name,
+    collision: () => S.roles?.closest?.name,
+    'collision-log': () => S.roles?.closest?.name,
+    compare: () => 'The Zen',
+    winnow: () => 'properties found',
+    'true-price': () => 'Total',
+    cancellation: () => 'Free cancellation',
+    gate: () => 'Total',
+  };
   return {
     id: beat.id, kind: beat.kind, page: beat.page,
     say: sub(beat.say),
     options: beat.options?.map((o) => ({ ...o, label: sub(o.label) })),
     missed: [...new Set(missed)],
+    spot: SPOTS[beat.id]?.() || null,
     at: Date.now(),
   };
 }
@@ -333,6 +346,14 @@ const Director = {
     if (newSection) {
       S.lastRank = rank;
       try { globalThis.BrowserAgent?.pause?.(); } catch { /* beats still fire */ }
+      if (rank === 1) {
+        // Once, as the results land: the map view swallows the page.
+        try {
+          globalThis.BrowserAgent?.interject?.(
+            'Work in the results LIST only. Never click the map, "Show on '
+            + 'map", or any map thumbnail.');
+        } catch { /* the client also closes the map if it opens */ }
+      }
     }
     const fired = await advance(facts);
     if (newSection) {

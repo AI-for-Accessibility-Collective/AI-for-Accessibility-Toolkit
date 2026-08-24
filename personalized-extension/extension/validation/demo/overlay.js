@@ -71,7 +71,7 @@ const plain = (s) => String(s).replace(/\*\*/g, '');
 
 let uid = 0;
 
-export function createOverlay({ mount = document.body, wordMs = 280 } = {}) {
+export function createOverlay({ mount = document.body, wordMs = 280, voiced = true } = {}) {
   if (!document.getElementById(STYLE_ID)) {
     const st = document.createElement('style');
     st.id = STYLE_ID;
@@ -100,6 +100,29 @@ export function createOverlay({ mount = document.body, wordMs = 280 } = {}) {
   const sayQueue = [];
   let saying = false;
   let idleResolvers = [];
+
+  // Real audio, not only aria-live. The live region is silent unless a
+  // screen reader is running - a demo audience heard NOTHING. The browser's
+  // own TTS speaks every line; the live region still gets the text so a
+  // real screen reader has parity. When presenting WITH VoiceOver, pass
+  // voiced:false to createOverlay so the two never talk over each other.
+  function tts(text, { interrupt = false } = {}) {
+    if (!voiced || typeof speechSynthesis === 'undefined') {
+      return new Promise((r) => setTimeout(r, 700 + text.split(/\s+/).length * wordMs));
+    }
+    return new Promise((resolve) => {
+      if (interrupt) speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.02;
+      const done = () => resolve();
+      u.onend = done;
+      u.onerror = done;
+      // A stuck engine must not wedge the queue.
+      setTimeout(done, 2000 + text.split(/\s+/).length * 450);
+      speechSynthesis.speak(u);
+    });
+  }
+
   async function announce(text, spoken) {
     sayQueue.push({ text, spoken });
     if (saying) return;
@@ -109,10 +132,8 @@ export function createOverlay({ mount = document.body, wordMs = 280 } = {}) {
       live.textContent = '';
       await new Promise((r) => setTimeout(r, 60));
       live.textContent = item.text;
-      // Rough speaking time at screen-reader pace, plus a settle gap. The
-      // per-word pace is a knob (wordMs) so it can be tuned to her actual
-      // VoiceOver rate at rehearsal.
-      await new Promise((r) => setTimeout(r, 700 + item.text.split(/\s+/).length * wordMs));
+      await tts(item.text);
+      await new Promise((r) => setTimeout(r, 400));
       // The line has had its slot - the visual card it mirrors can go now.
       try { item.spoken?.(); } catch { /* visual only */ }
     }
@@ -257,8 +278,19 @@ export function createOverlay({ mount = document.body, wordMs = 280 } = {}) {
         resolve({ beat: beat.id, ...answer });
       }
 
+      // Speak the question, then speak each option as it takes focus -
+      // exactly the order a screen reader gives her.
+      card.addEventListener('focusin', (e) => {
+        const label = e.target?.getAttribute?.('aria-label')
+          || e.target?.textContent || '';
+        if (label.trim()) tts(label.trim(), { interrupt: true });
+      });
       open = { id: beat.id, close: () => done({ dismissed: true }) };
-      requestAnimationFrame(() => stops()[0]?.focus());
+      // The question speaks in full, THEN focus lands (which speaks the
+      // first option) - a fixed delay cut the question off mid-sentence.
+      tts(plain(beat.say), { interrupt: true }).then(() => {
+        if (open?.id === beat.id) stops()[0]?.focus();
+      });
     });
   }
 

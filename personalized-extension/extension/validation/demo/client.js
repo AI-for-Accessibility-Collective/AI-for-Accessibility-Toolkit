@@ -60,6 +60,46 @@ function pushFacts() {
   }, 600);
 }
 
+// The spotlight: when a beat names something on the page (the ad, the
+// closest hotel, the total), outline it while the card shows - the visible
+// proof that the layer reads the real page. Sighted-audience only; the
+// spoken line already carries every fact (speech parity).
+const SPOT_STYLE_ID = 'vd-spot-style';
+function spotlight(anchor) {
+  if (!anchor) return;
+  if (!document.getElementById(SPOT_STYLE_ID)) {
+    const st = document.createElement('style');
+    st.id = SPOT_STYLE_ID;
+    st.textContent = '.vd-spot{outline:3px solid #18181b !important;'
+      + 'outline-offset:3px;border-radius:8px;transition:outline-color .3s}';
+    document.head.appendChild(st);
+  }
+  let el = null;
+  for (const card of document.querySelectorAll('[data-testid="property-card"]')) {
+    if ((card.textContent || '').includes(anchor)) { el = card; break; }
+  }
+  if (!el) {
+    el = [...document.querySelectorAll('h1,h2,td,div,span')]
+      .filter((n) => !n.closest('[data-ai4a11y-ui]')
+        && (n.textContent || '').trim().includes(anchor)
+        && (n.textContent || '').length < 300)
+      .sort((a, b) => a.textContent.length - b.textContent.length)[0];
+  }
+  if (!el) return;
+  el.classList.add('vd-spot');
+  try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* fine */ }
+  setTimeout(() => el.classList.remove('vd-spot'), 7000);
+}
+
+// Booking's map view swallows the whole results page; the agent sometimes
+// opens it by accident and the demo drowns. Close it the moment it appears.
+function closeMapIfOpen() {
+  const close = [...document.querySelectorAll('button')]
+    .find((b) => /close map/i.test(b.getAttribute('aria-label') || b.textContent || ''));
+  if (close) { close.click(); return true; }
+  return false;
+}
+
 function renderNew(st) {
   if (!overlay || !st) return;
   // A widget answered in ANOTHER tab must close here too - this page's copy
@@ -70,10 +110,11 @@ function renderNew(st) {
   const fired = st.fired || [];
   for (; rendered < fired.length; rendered += 1) {
     const b = fired[rendered];
-    if (b.kind === 'checkpoint') overlay.checkpoint(b);
+    if (b.kind === 'checkpoint') { overlay.checkpoint(b); spotlight(b.spot); }
     else if (b.kind === 'log') overlay.log(b);
     else if (b.kind === 'widget' && !st.answers?.[b.id]) {
       openWidgets[b.id] = true;
+      spotlight(b.spot);
       overlay.widget(b).then((a) => {
         delete openWidgets[b.id];
         if (a.dismissed) return;
@@ -98,9 +139,55 @@ function renderNew(st) {
   }
 }
 
+// The one control the agent cannot drive, driven here instead: booking's
+// occupancy stepper. Set the family (1 child, age 8) on the REAL popup as
+// soon as the demo arms on the home page, so the visible search reads
+// "2 adults - 1 child" before the agent ever presses Search. Heuristic DOM
+// work - if the popup shifts, the director's URL fixup still catches it.
+async function setFamilyOccupancy() {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  for (let tries = 0; tries < 8; tries += 1) {
+    const opener = document.querySelector('[data-testid="occupancy-config"]');
+    if (opener) {
+      if (/1 child/i.test(opener.textContent || '')) return true;
+      opener.click();
+      await sleep(600);
+      const popup = document.querySelector('[data-testid="occupancy-popup"]') || document.body;
+      const rows = [...popup.querySelectorAll('div')]
+        .filter((g) => /children/i.test(g.textContent || '')
+          && g.querySelectorAll('button').length >= 2
+          && (g.textContent || '').length < 220)
+        .sort((a, b) => (a.textContent || '').length - (b.textContent || '').length);
+      const plus = rows[0] && [...rows[0].querySelectorAll('button')].pop();
+      if (plus) {
+        plus.click();
+        await sleep(700);
+        const age = popup.querySelector('select[name="age"], select[data-testid*="age" i]');
+        if (age) {
+          age.value = '8';
+          age.dispatchEvent(new Event('change', { bubbles: true }));
+          await sleep(300);
+        }
+        const done = [...popup.querySelectorAll('button')]
+          .find((b) => /^done$/i.test((b.textContent || '').trim()));
+        (done || opener).click();
+        return /1 child/i.test(opener.textContent || '');
+      }
+      opener.click();          // close what we opened; try again next round
+    }
+    await sleep(1500);
+  }
+  return false;
+}
+
 function arm(st) {
   if (overlay) { renderNew(st); return; }
   runStamp = st.startedAt ?? null;
+  // Home page of a fresh take: put the child into the search box up front.
+  if (!st.done && document.querySelector('input[name="ss"]')) {
+    setFamilyOccupancy().then((ok) =>
+      console.log('[AI4A11y demo] occupancy preset:', ok ? 'set' : 'fell back to URL fixup'));
+  }
   // The demo's surfaces are the only voice; the generic on-page panel would
   // talk over the story in its own register.
   try { if (AgentWatch.enabled) AgentWatch.disable(); } catch { /* not fatal */ }
@@ -118,7 +205,7 @@ function arm(st) {
   for (const f of fired.slice(0, rendered)) if (f.kind === 'log') overlay.log(f);
   renderNew(st);
 
-  observer = new MutationObserver(pushFacts);
+  observer = new MutationObserver(() => { closeMapIfOpen(); pushFacts(); });
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   // A page that stops mutating must not stop the director: the stale-hold
   // sweep and the beat guards both run on facts ticks, so a quiet page gets
