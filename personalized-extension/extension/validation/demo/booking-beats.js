@@ -72,7 +72,7 @@ export const BEATS = [
 
   { id: 'collision', kind: 'widget', page: 'results',
     when: 'the closest match sleeps three only by putting one of them on a sofa bed',
-    say: "Booking marks the closest one '**recommended for your group**', at **{closestPrice}**. But it counts a **pull-out couch** as the third bed. **Emma would sleep on the couch**. What's your budget? I'll find real beds for everyone.",
+    say: "The closest one says it sleeps three, at **{closestPrice}**. But it's really **one real bed plus a sofa bed**. **One of you would sleep on the sofa**. What's your budget? I can find real beds for everyone.",
     fallbacks: { closestPrice: '$358' },
     options: [
       { label: 'Under $700', primary: true },
