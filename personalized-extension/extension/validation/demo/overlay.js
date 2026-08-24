@@ -71,7 +71,7 @@ const plain = (s) => String(s).replace(/\*\*/g, '');
 
 let uid = 0;
 
-export function createOverlay({ mount = document.body, wordMs = 280, voiced = true, rate = 1.4 } = {}) {
+export function createOverlay({ mount = document.body, wordMs = 280, voiced = true, rate = 1.75 } = {}) {
   if (!document.getElementById(STYLE_ID)) {
     const st = document.createElement('style');
     st.id = STYLE_ID;
