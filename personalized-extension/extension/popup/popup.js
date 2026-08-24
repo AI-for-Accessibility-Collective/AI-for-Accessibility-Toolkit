@@ -1524,6 +1524,28 @@ function setupAgentPanel() {
   // Initial render from persisted state.
   chrome.storage.local.get('bhAgent', (data) => renderAgent(data.bhAgent));
 
+  // The demo director's status row. Appears only when a run armed the demo;
+  // "Next beat" is the stage lever (demoForce) for a relation the live page
+  // will not hold.
+  const demoRow = document.getElementById('demoRow');
+  const demoStatus = document.getElementById('demoStatus');
+  const renderDemo = (d) => {
+    if (!demoRow) return;
+    demoRow.hidden = !d?.armed;
+    if (!d?.armed) return;
+    const last = d.fired?.[d.fired.length - 1];
+    demoStatus.textContent = d.done
+      ? `Demo done - stopped at the gate (${d.fired?.length || 0} beats)`
+      : `Demo armed - beat ${d.fired?.length || 0} of 19${last ? ` (${last.id})` : ''}`;
+  };
+  chrome.storage.local.get('aa.demo', (r) => renderDemo(r['aa.demo']));
+  chrome.storage.onChanged.addListener((ch, area) => {
+    if (area === 'local' && ch['aa.demo']) renderDemo(ch['aa.demo'].newValue);
+  });
+  document.getElementById('demoForceBtn')?.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'demoForce' }, () => {});
+  });
+
   // Live updates while the popup is open.
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !changes.bhAgent) return;
