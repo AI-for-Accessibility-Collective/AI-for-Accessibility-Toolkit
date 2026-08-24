@@ -244,15 +244,25 @@ const LOGIC = {
     slots: (f, s) => ({ totalRounded: fmtRound(f.total),
       overBudget: s.budget != null && f.total != null ? fmtRound(f.total - s.budget) : null }),
     optionsLive: (f, s) => {
-      const { near, far } = s.roles || {};
-      if (!far || f.total == null || !near?.price) return null;
-      const est = Math.round(far.price * (f.total / near.price));
+      const { near, slate } = s.roles || {};
+      if (f.total == null || !near?.price) return null;
       const ceiling = Math.ceil(f.total / 10) * 10 + 10;
-      return [
+      const opts = [
         { label: `Go up to $${ceiling.toLocaleString('en-US')}`, primary: true },
-        { label: `${shortName(far.name)}, about **$${est.toLocaleString('en-US')}** all-in. The cheaper one, farther away` },
-        { label: `Keep looking under $${s.budget}` },
       ];
+      // Offer the alternative only when it is genuinely cheaper all-in -
+      // "the cheaper one" at $1,140 against a $738 total was nonsense.
+      const cheap = (slate || []).filter((c) => !/zen/i.test(c.name || ''))
+        .sort((a, b) => (a.price ?? 9e9) - (b.price ?? 9e9))[0];
+      if (cheap?.price != null) {
+        const est = Math.round(cheap.price * (f.total / near.price));
+        if (est < f.total - 20) {
+          opts.push({ label: `${shortName(cheap.name)}, about `
+            + `**$${est.toLocaleString('en-US')}** all-in. Cheaper, but farther away` });
+        }
+      }
+      opts.push({ label: `Keep looking under $${s.budget}` });
+      return opts;
     },
   },
   cancellation: {
@@ -444,10 +454,6 @@ const Director = {
       const st = (await chrome.storage.local.get('aa.validation'))['aa.validation'];
       for (const w of st?.gate?.waitingOn || []) {
         if (String(w).startsWith(HOLD_PREFIX)) {
-          // Our own hold - legitimate only while its widget is up and
-          // unanswered in THIS run. Anything else is a leftover from an
-          // earlier take (worker restarts keep the session's waiting list
-          // alive across runs) and would park the agent forever.
           const id = String(w).slice(HOLD_PREFIX.length);
           const current = S.fired.some((f) => f.id === id && f.kind === 'widget')
             && !S.answers[id] && !S.done;
@@ -461,15 +467,13 @@ const Director = {
         // standing and the gate then refused even a date click.
         if (facts.page === 'checkout'
             || /\b(?:place (?:your |the )?order|buy now|book (?:it|now)|complete (?:the )?booking|finish booking|reserve now|pay now|payment|checkout|confirm (?:and pay|booking|purchase))\b/i.test(String(w))) {
-          if (!S.fired.some((f) => f.id === `standing:${w}`)) {
-            S.fired.push({ id: `standing:${w}`, kind: 'log', at: Date.now(),
-              say: `Left a hold standing (${String(w).slice(0, 40)}) - never waved past near a commit` });
-          }
-          continue;
+          continue;                   // near a commit: the hold stands, quietly
         }
+        // Released SILENTLY - these internal releases leaked into her log
+        // as "Waved past a generic hold (How many am I buying...)" and read
+        // as gibberish. The console keeps them for us.
         await globalThis.Validation?.answer?.(w, 'Continue.');
-        S.fired.push({ id: `released:${w}`, kind: 'log', at: Date.now(),
-          say: `Waved past a generic hold (${String(w).slice(0, 40)}) - the story speaks for this run` });
+        console.log('[demo] released organic hold:', String(w).slice(0, 60));
       }
     } catch { /* never let the release path stall the story */ }
     lastFacts = facts;
@@ -581,7 +585,6 @@ const Director = {
       compare: (r) => (/zen/i.test(r) ? 'The Zen it is. Opening its page.' : 'Got it.'),
       room: () => 'Two full beds. Reserving that room.',
       'true-price': (r) => (/750/.test(r) ? 'Done. Booking the Zen double.' : 'Got it.'),
-      details: () => "Set. They can still say no to the bag hold - it's a request.",
     };
     const afterLine = AFTERS[id]?.(String(response));
     if (afterLine) {
@@ -628,14 +631,6 @@ const Director = {
       room: 'Do this now: in the rooms table, set quantity 1 for the room '
         + 'with two full beds and press its Reserve button. Skip reviews, '
         + 'photos, and everything else on this page.',
-      details: 'Do this now, in order: (1) fill the guest form - first name '
-        + 'Susan, last name Miller, email susan.miller.family@gmail.com, '
-        + "phone 650 555 0135, country United States, select I'm the main "
-        + 'guest. (2) Set the estimated arrival time dropdown to 6:00 PM - '
-        + '7:00 PM. (3) In the special requests box type: "Could you hold '
-        + 'our bags in the morning before check-in? And some help finding '
-        + 'our room at check-in would be appreciated." (4) Decline every '
-        + 'other offer. Stop when all three are done.',
       compare: /zen/i.test(String(response))
         ? 'Do this now: in the results list, click the hotel named '
           + '"The Zen Hotel Palo Alto" to open its page. It may be far down '

@@ -158,13 +158,8 @@ function checkoutFacts(doc) {
     // field one), and an autofilled firstname tripped the gate on arrival.
     formFilled: (() => {
       const first = ($(doc, 'input[name="firstname"], #firstname')?.value || '').trim();
-      if (!first) return false;
-      const requests = [...doc.querySelectorAll('textarea')]
-        .some((t) => (t.value || '').trim().length > 5);
-      const arrival = $$(doc, 'select').some((sel) =>
-        /arrival/i.test(sel.name + sel.id + (sel.getAttribute('aria-label') || ''))
-        && (sel.value || '').trim().length > 0);
-      return requests || arrival;
+      const email = ($(doc, 'input[name="email"], #email, input[type="email"]')?.value || '').trim();
+      return !!first && email.length > 3;
     })(),
     hasArrival: $$(doc, 'select').some((s) =>
       /arrival/i.test(s.name + s.id + (s.getAttribute('aria-label') || ''))) || /arrival time/i.test(body),

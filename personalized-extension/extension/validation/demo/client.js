@@ -99,8 +99,27 @@ function closeMapIfOpen() {
   return false;
 }
 
+// After an answer, bring the agent's next target into view - its next
+// screenshot then already contains the thing, instead of 2-4 scroll turns.
+let lastAssist = '';
+function assistFor(st) {
+  const a = st.answers || {};
+  if (a.compare && !a.room && lastAssist !== 'zen') {
+    lastAssist = 'zen';
+    const el = [...document.querySelectorAll('[data-testid="property-card"]')]
+      .find((c) => /zen/i.test(c.textContent || ''));
+    try { el?.scrollIntoView({ block: 'center' }); } catch { /* fine */ }
+  }
+  if (a.room && lastAssist !== 'reserve') {
+    lastAssist = 'reserve';
+    const el = document.querySelector('.hprt-reservation-cta, [class*="hprt-table"]');
+    try { el?.scrollIntoView({ block: 'center' }); } catch { /* fine */ }
+  }
+}
+
 function renderNew(st) {
   if (!overlay || !st) return;
+  assistFor(st);
   // A widget answered in ANOTHER tab must close here too - this page's copy
   // would otherwise stand as a stale focus trap, answerable a second time.
   for (const id of Object.keys(openWidgets)) {
