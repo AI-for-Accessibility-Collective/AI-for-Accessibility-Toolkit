@@ -152,10 +152,15 @@
   // - the DIRECT-surface methods the voice side panel / chrome-actuation call
   //   on the Librarian object (first-class wire routes per CONTRACT.md, no
   //   alias), so remote mode covers the voice memory path too.
+  // - the natural-language note methods, whose wire routes carry their own
+  //   names (CONTRACT.md "natural-language notes"). Without these, notes would
+  //   be the one part of the profile that silently stayed on-device while
+  //   everything else went remote.
   const EXTRA_METHODS = [
     'getShareAudit',
     'interpretNeedsPrompt', 'hasScopedSetting', 'getScopedSetting',
     'removeScopedSetting', 'recordExplicitSetting',
+    'addNote', 'listNotes', 'updateNote', 'deleteNote', 'findNotes',
   ];
 
   function asLibrarian() {

@@ -1956,6 +1956,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse(await L.respondToProposal(msg.id, msg.response)); break;
           case 'librarianDeleteMemory':
             sendResponse({ success: await L.deleteMemory(msg.id) }); break;
+          // Natural-language notes — prose the person wrote about their own
+          // needs. Routed through `L` like every other arm, so they follow the
+          // local/remote switch instead of pinning themselves to one store.
+          case 'librarianAddNote':
+            sendResponse(await L.addNote(msg.text, msg.opts || {})); break;
+          case 'librarianListNotes':
+            sendResponse({ notes: await L.listNotes(msg.filter || {}) }); break;
+          case 'librarianUpdateNote':
+            sendResponse(await L.updateNote(msg.id, msg.patch || {})); break;
+          case 'librarianDeleteNote':
+            sendResponse(await L.deleteNote(msg.id)); break;
+          case 'librarianFindNotes':
+            sendResponse({ notes: await L.findNotes(msg.query, msg.opts || {}) }); break;
           case 'librarianSetPause':
             if (msg.origin) await L.setOriginPaused(msg.origin, msg.paused);
             else await L.setMemoryPaused(msg.paused);

@@ -5,8 +5,8 @@
 //
 // Covers the full extension-visible surface: token issue → whoami → profile →
 // ability model → scoped settings → effective preferences → skills → grants →
-// consent → export/import blob → BOTH setPause arg shapes → share audit →
-// per-uid isolation.
+// consent → export/import blob → natural-language notes → BOTH setPause arg
+// shapes → share audit → per-uid isolation.
 //
 // Run: node personalized-extension/test/remote-integration-test.mjs
 import http from 'node:http';
@@ -146,6 +146,26 @@ try {
   await L2.importProfileBlob(blob);
   const after = await L2.getAbilityModel();
   check('blob import transfers the model across uids', (after.needs || []).some((n) => n.dimension === 'textSize'));
+
+  // ---- natural-language notes over the wire --------------------------------
+  // The whole point of notes is that they are the person's own words; if the
+  // wire mangled or dropped them, the profile would silently lose the one part
+  // of itself that isn't reconstructible from settings.
+  const note = await L.addNote('Long pages tire my eyes; I read in short bursts.', { topic: 'fatigue' });
+  check('addNote over the wire returns the stored note', note?.ok === true && typeof note.id === 'string', JSON.stringify(note));
+  check('the prose survives the round trip verbatim',
+    (await L.listNotes({ topic: 'fatigue' }))[0]?.text === 'Long pages tire my eyes; I read in short bursts.');
+  const noteHits = await L.findNotes('eyes tire');
+  check('findNotes ranks over the wire and reports matched terms',
+    noteHits.length === 1 && noteHits[0].matched.length >= 1, JSON.stringify(noteHits));
+  await L.updateNote(note.id, { scope: 'category:news' });
+  check('updateNote re-files across shards over the wire',
+    (await L.listNotes({ scope: 'category:news' })).some((n) => n.id === note.id));
+  check('a note never becomes an applied setting, even remotely',
+    !('fatigue' in ((await L.getEffectivePreferences('https://bbc.com/news', [])).settings || {})));
+  check('notes are isolated per uid like every other record',
+    (await L2.listNotes()).length === 0);
+  check('deleteNote over the wire', (await L.deleteNote(note.id))?.removed === true);
 
   // ---- both setPause shapes (the seam that was actually broken) ------------
   await L.setMemoryPaused(true);

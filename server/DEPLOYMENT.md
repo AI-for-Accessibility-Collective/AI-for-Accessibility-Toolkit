@@ -70,8 +70,8 @@ Every `/v1/*` call needs `Authorization: Bearer <token>`; each token maps to a
 
 Extension → **Options**: paste the Server URL and an access token, **Save**,
 then **Test connection**. Clearing both fields returns to fully-local mode.
-When configured, all 41 librarian wire routes — including the voice side
-panel's direct calls — go to the server.
+When configured, all 46 librarian wire routes — including the voice side
+panel's direct calls and the natural-language note methods — go to the server.
 
 ## Verification
 

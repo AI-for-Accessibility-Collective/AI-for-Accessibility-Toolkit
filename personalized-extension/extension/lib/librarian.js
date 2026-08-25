@@ -533,6 +533,72 @@ Rules:
       fast: 1e3 * 60 * 60 * 24 * 7
       // ~7 days
     };
+    const NOTE_KIND = "note";
+    const NOTE_TEXT_MAX = 500;
+    function normalizeTopic(topic) {
+      const t = String(topic == null ? "" : topic).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      return t ? t.slice(0, 40) : null;
+    }
+    function toNote(r, scope) {
+      return {
+        id: r.id,
+        text: r.text,
+        topic: r.aspect && r.aspect.startsWith("note.") ? r.aspect.slice(5) : null,
+        scope,
+        source: r.source,
+        importance: r.importance,
+        status: r.status,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+        occurrenceCount: r.occurrenceCount
+      };
+    }
+    const NOTE_STOPWORDS = /* @__PURE__ */ new Set([
+      "a",
+      "an",
+      "and",
+      "are",
+      "as",
+      "at",
+      "be",
+      "but",
+      "by",
+      "can",
+      "do",
+      "for",
+      "from",
+      "have",
+      "i",
+      "if",
+      "in",
+      "is",
+      "it",
+      "me",
+      "my",
+      "of",
+      "on",
+      "or",
+      "so",
+      "that",
+      "the",
+      "to",
+      "up",
+      "was",
+      "we",
+      "when",
+      "with",
+      "you",
+      "your"
+    ]);
+    function tokenizeQuery(query) {
+      return String(query == null ? "" : query).toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 1 && !NOTE_STOPWORDS.has(t));
+    }
+    function matchTerms(text, terms) {
+      if (!terms.length) return { score: 1, matched: [] };
+      const words = String(text || "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+      const matched = terms.filter((t) => words.some((w) => w === t || w.startsWith(t) || t.startsWith(w)));
+      return { score: matched.length / terms.length, matched };
+    }
     function scoreRecord(r, now) {
       const half = DECAY_HALF_LIFE[r.decayClass] || DECAY_HALF_LIFE.slow;
       const age = now - (r.lastConfirmedAt || r.updatedAt || r.createdAt || now);
@@ -582,7 +648,7 @@ Rules:
       r.text = String(r.text || "").slice(0, 500);
       r.tier = ["profile", "preference", "site", "task"].includes(r.tier) ? r.tier : "preference";
       r.scope = VALID_SCOPE.test(r.scope || "") ? r.scope : "general";
-      r.kind = ["preference", "procedural", "suppression", "rule", "observation"].includes(r.kind) ? r.kind : "preference";
+      r.kind = ["preference", "procedural", "suppression", "rule", "observation", "note"].includes(r.kind) ? r.kind : "preference";
       r.strength = ["floor", "preference", "hint"].includes(r.strength) ? r.strength : "preference";
       r.importance = Math.min(10, Math.max(1, Number(r.importance) || 5));
       r.confidence = Math.min(1, Math.max(0, Number(r.confidence ?? 0.7)));
@@ -911,8 +977,13 @@ Rules:
         const lines = [];
         const core = views.coreBlock || `Support areas: ${profile.supportAreas.join(", ") || "not specified"}.` + (profile.freeText ? ` Notes: ${profile.freeText}` : "");
         lines.push("### About this user", core);
+        const noteHits = top.filter((f) => f.kind === NOTE_KIND);
+        if (noteHits.length) {
+          lines.push("### In their own words");
+          for (const f of noteHits) lines.push(`- ${f.text}`);
+        }
         const byScope = (pred, title) => {
-          const hits = top.filter(pred);
+          const hits = top.filter((f) => f.kind !== NOTE_KIND).filter(pred);
           if (hits.length) {
             lines.push(`### ${title}`);
             for (const f of hits) lines.push(`- ${f.text}`);
@@ -962,6 +1033,188 @@ Rules:
           return next;
         });
         return found;
+      },
+      // ---- Natural-language notes ------------------------------------------
+      //
+      // What the person SAYS about their own needs, kept as prose. Everything
+      // else the Librarian stores is machine-actionable (`settings`) or derived
+      // from an inference; a note is neither. It is the "in their words" half of
+      // the profile, which until now existed only as the single `profile.freeText`
+      // string that onboarding overwrote each time.
+      //
+      // A note is a memory record like any other — same shards, same scope chain,
+      // same decay/supersede machinery — distinguished by `kind: 'note'` and by
+      // carrying NO `settings`. That absence is load-bearing: getEffectivePreferences
+      // filters on `r.settings`, so a note can never leak into what gets applied
+      // to a page. A note describes; it never actuates.
+      //
+      // DEVICE-LOCAL BY DESIGN. Notes are deliberately absent from GRANT_SCOPES
+      // and from the AbilityModel, for the same reason `freeText` and `confidence`
+      // are never exported (toolkit/sync/grants.js): free-form text is the hardest
+      // thing to scope-limit once it has left. exportAbilityModel cannot reach a
+      // note today, and adding a scope for one should be a deliberate, separate
+      // decision — not a side effect of this API existing.
+      // Store one note. `text` is the person's own words; everything in `opts`
+      // is about filing it, not rewriting it.
+      //   scope  — where it applies: general | category:<id> | origin:<host> |
+      //            context:<id> (same chain as every other record).
+      //   topic  — a short slug ('vision', 'reading', 'fatigue'). Notes sharing a
+      //            topic AND scope are ONE note, updated in place, so re-answering
+      //            "tell me about your vision" refines rather than accumulates.
+      //            Omit it for a standalone note that should just pile up.
+      //   source — 'user-explicit' (default: they wrote it) vs anything else,
+      //            which reads as inferred and respects the memory pause.
+      async addNote(text, opts = {}) {
+        const body = String(text == null ? "" : text).trim();
+        if (!body) return { ok: false, reason: "empty-text" };
+        const scope = VALID_SCOPE.test(opts.scope || "") ? opts.scope : "general";
+        const source = String(opts.source || "user-explicit");
+        if (source !== "user-explicit") {
+          const profile = await getOrInitProfile();
+          if (profile.memoryPaused) return { ok: false, reason: "paused" };
+        }
+        const topic = normalizeTopic(opts.topic);
+        const now = clock.now();
+        const shard = await DS().getMemoryShard(scope);
+        const aspect = topic ? `note.${topic}` : null;
+        let rec = aspect ? shard.find((r) => r.kind === NOTE_KIND && r.aspect === aspect && r.status === "active") : null;
+        if (rec) {
+          rec.text = body.slice(0, NOTE_TEXT_MAX);
+          rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
+          rec.updatedAt = now;
+          rec.lastAccessed = now;
+          rec.lastConfirmedAt = now;
+          if (opts.importance != null) rec.importance = Math.min(10, Math.max(1, Number(opts.importance) || 5));
+        } else {
+          rec = normalizeRecord({
+            kind: NOTE_KIND,
+            tier: "profile",
+            scope,
+            aspect,
+            source,
+            // A person's account of themselves does not go stale the way an
+            // inferred preference does, so it decays only if something inferred it.
+            decayClass: source === "user-explicit" ? "stable" : "slow",
+            confidence: source === "user-explicit" ? 1 : 0.7,
+            importance: opts.importance != null ? opts.importance : 6,
+            settings: null,
+            text: body
+          }, now);
+          shard.push(rec);
+        }
+        await DS().setMemoryShard(scope, shard);
+        return { ok: true, id: rec.id, note: toNote(rec, scope) };
+      },
+      // Browse what is stored. Filters compose (all must match); omit them all
+      // for every note at every scope.
+      async listNotes(filter = {}) {
+        const wantTopic = normalizeTopic(filter.topic);
+        const status = filter.status === void 0 ? "active" : filter.status;
+        const out = [];
+        for (const [scope, recs] of Object.entries(await DS().allMemoryShards())) {
+          for (const r of recs || []) {
+            if (r.kind !== NOTE_KIND) continue;
+            if (status && r.status !== status) continue;
+            if (filter.scope && scope !== filter.scope) continue;
+            if (wantTopic && r.aspect !== `note.${wantTopic}`) continue;
+            if (filter.source && r.source !== filter.source) continue;
+            out.push(toNote(r, scope));
+          }
+        }
+        out.sort((a, b) => b.updatedAt - a.updatedAt);
+        return out;
+      },
+      // Re-file or reword one note. Only the keys present in `patch` change.
+      // Moving a note's scope moves it between shards, since scope IS the shard.
+      async updateNote(id, patch = {}) {
+        const shards = await DS().allMemoryShards();
+        for (const [scope, recs] of Object.entries(shards)) {
+          const rec = (recs || []).find((r) => r.id === id && r.kind === NOTE_KIND);
+          if (!rec) continue;
+          const now = clock.now();
+          if (patch.text != null) {
+            const body = String(patch.text).trim();
+            if (!body) return { ok: false, reason: "empty-text" };
+            rec.text = body.slice(0, NOTE_TEXT_MAX);
+            rec.lastConfirmedAt = now;
+          }
+          if (patch.topic !== void 0) {
+            const t = normalizeTopic(patch.topic);
+            rec.aspect = t ? `note.${t}` : null;
+          }
+          if (patch.importance != null) rec.importance = Math.min(10, Math.max(1, Number(patch.importance) || 5));
+          if (patch.status && ["active", "superseded", "expired"].includes(patch.status)) rec.status = patch.status;
+          rec.updatedAt = now;
+          const target = patch.scope !== void 0 && VALID_SCOPE.test(patch.scope || "") ? patch.scope : scope;
+          if (target !== scope) {
+            await DS().setMemoryShard(scope, recs.filter((r) => r.id !== id));
+            const dest = await DS().getMemoryShard(target);
+            rec.scope = target;
+            dest.push(rec);
+            await DS().setMemoryShard(target, dest);
+          } else {
+            await DS().setMemoryShard(scope, recs);
+          }
+          return { ok: true, note: toNote(rec, target) };
+        }
+        return { ok: false, reason: "not-found" };
+      },
+      // Forget one note outright. Restricted to notes by id, so a stray call
+      // can never delete a preference record that happens to share an id space.
+      async deleteNote(id) {
+        const shards = await DS().allMemoryShards();
+        for (const [scope, recs] of Object.entries(shards)) {
+          const idx = (recs || []).findIndex((r) => r.id === id && r.kind === NOTE_KIND);
+          if (idx >= 0) {
+            recs.splice(idx, 1);
+            await DS().setMemoryShard(scope, recs);
+            return { ok: true, removed: true };
+          }
+        }
+        return { ok: false, removed: false, reason: "not-found" };
+      },
+      // Query the prose. Ranking is LEXICAL, not semantic: word overlap with the
+      // query, weighted by the same recency x importance x confidence score every
+      // other record is ranked by, plus a bump for notes filed at a scope that
+      // matches `opts.url`. No model call, so it is deterministic, offline, and
+      // testable — but it will miss a paraphrase that shares no words ("tiny
+      // print" vs "small text"). A caller that wants semantic matching should
+      // rank `listNotes()` itself.
+      //
+      //   opts.url / opts.contexts — restrict + boost by the page's scope chain
+      //   opts.scope               — restrict to exactly one scope
+      //   opts.limit               — default 10
+      async findNotes(query, opts = {}) {
+        const asked = String(query == null ? "" : query).trim() !== "";
+        const terms = tokenizeQuery(query);
+        if (asked && !terms.length) return [];
+        const now = clock.now();
+        const limit = Math.max(1, Math.min(100, Number(opts.limit) || 10));
+        let pool;
+        if (opts.url) {
+          const { shards } = await loadScopeShards(opts.url, opts.contexts || []);
+          pool = shards;
+        } else {
+          pool = await DS().allMemoryShards();
+        }
+        if (opts.scope) pool = { [opts.scope]: await DS().getMemoryShard(opts.scope) };
+        const hits = [];
+        for (const [scope, recs] of Object.entries(pool)) {
+          for (const r of recs || []) {
+            if (r.kind !== NOTE_KIND || r.status !== "active") continue;
+            const { score: overlap, matched } = matchTerms(r.text, terms);
+            if (terms.length && !matched.length) continue;
+            const base = scoreRecord(r, now);
+            const specific = scope === "general" ? 1 : 1.25;
+            hits.push({
+              ...toNote(r, scope),
+              score: (terms.length ? overlap : 1) * base * specific,
+              matched
+            });
+          }
+        }
+        hits.sort((a, b) => b.score - a.score);
+        return hits.slice(0, limit);
       },
       async listProposals(status = "pending") {
         const props = await DS().get("mine.proposals");

@@ -212,13 +212,13 @@ function loadSeeder({ defaults, sync = {}, local = {} }) {
   RemoteLibrarian.configure({ url: BASE, token: TOKEN });
 
   // 9. Facade coverage: every `L.<method>` background.js's dispatcher calls
-  //    must exist on the facade as a function. 37, not 36: the dispatcher
-  //    has 36 `case 'librarian*'` arms, but `librarianShareAudit` now calls
-  //    TWO things on `L` in remote-aware code (`L.getShareAudit?.(dsGetter)`
-  //    falling back to the Grants bridge locally), so the arm count and the
-  //    distinct-L.-method count aren't the same number.
+  //    must exist on the facade as a function. 42, not the 41 `case
+  //    'librarian*'` arms: `librarianShareAudit` calls TWO things on `L` in
+  //    remote-aware code (`L.getShareAudit?.(dsGetter)` falling back to the
+  //    Grants bridge locally), so the arm count and the distinct-L.-method
+  //    count aren't the same number. (36 original arms + 5 note arms.)
   const required = requiredMethodsFromBackground();
-  check('background.js dispatcher has the expected 37 distinct L.<method> calls (sanity on the extraction itself)', required.length === 37);
+  check('background.js dispatcher has the expected 42 distinct L.<method> calls (sanity on the extraction itself)', required.length === 42, required.length);
   const facade = RemoteLibrarian.asLibrarian();
   const missing = required.filter((m) => typeof facade[m] !== 'function');
   check(`facade covers every dispatcher method (${required.length} required)`, missing.length === 0);

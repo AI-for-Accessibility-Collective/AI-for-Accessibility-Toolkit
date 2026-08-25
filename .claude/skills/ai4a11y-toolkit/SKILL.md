@@ -75,6 +75,16 @@ Read directly off a live `createToolkit(...)` instance — call as `toolkit.libr
 | `librarian.extract()` | async | Drain the episodic log behind the cursor: one Gemini call extracts candidate facts AND gates them against existing same-scope memories, returning ADD/UPDATE/SUPERSEDE/NOOP operations plus profile-tier proposal drafts. |
 | `librarian.reflect()` | async | Daily consolidation. |
 
+### notes
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.addNote(text, opts)` | async | Store one note. |
+| `librarian.listNotes(filter)` | async | Browse what is stored. |
+| `librarian.updateNote(id, patch)` | async | Re-file or reword one note. |
+| `librarian.deleteNote(id)` | async | Forget one note outright. |
+| `librarian.findNotes(query, opts)` | async | Query the prose. |
+
 ### proposals/consent
 
 | Method | Async | Description |
@@ -314,7 +324,13 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   methods (called by the voice side panel on the Librarian object rather than
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
-  `removeScopedSetting`, `recordExplicitSetting` — 41 routes total.
+  `removeScopedSetting`, `recordExplicitSetting`.
+- The natural-language note methods — `addNote`, `listNotes`, `updateNote`,
+  `deleteNote`, `findNotes` — are routes under their own names too. Notes are
+  the free-form text the person wrote about their own needs; a hosted instance
+  partitions them by uid like every other record, and they remain outside
+  `GRANT_SCOPES`, so no other app can read one.
+- 46 routes total.
 
 ## Connecting to a hosted instance (URL + token)
 
