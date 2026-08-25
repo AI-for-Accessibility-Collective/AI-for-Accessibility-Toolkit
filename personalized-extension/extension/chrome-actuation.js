@@ -359,8 +359,13 @@
     return result;
   }
 
-  // Persist a resolved plan: scoped keys → Librarian records, global keys → one
-  // batched sync.set. Returns an error string on failure (null on success).
+  // Persist a resolved plan: every key becomes a Librarian record at its scope,
+  // and global keys ALSO go into one batched sync.set. The record is what the
+  // profile keeps (and what outranks a learned record that disagrees); sync is
+  // the applied baseline each surface reads directly — a global value living
+  // only there would be device-local and invisible to the AbilityModel. Undo
+  // already reverts both halves for general scope (see undoLast: removeSync +
+  // removeScopedSetting). Returns an error string on failure (null on success).
   async function persistPlan(clean, scopesUsed, origin) {
     const globalWrites = {};
     const scopedWrites = {};
@@ -373,7 +378,10 @@
       for (const [s, settings] of Object.entries(scopedWrites)) {
         await (await LIB()).recordScopedSettings(s, settings, origin ? { origin } : {});
       }
-      if (Object.keys(globalWrites).length) await chrome.storage.sync.set(globalWrites);
+      if (Object.keys(globalWrites).length) {
+        await chrome.storage.sync.set(globalWrites);
+        await (await LIB()).recordScopedSettings('general', globalWrites, origin ? { origin } : {});
+      }
       return null;
     } catch (e) {
       return `could not save: ${e.message}`;

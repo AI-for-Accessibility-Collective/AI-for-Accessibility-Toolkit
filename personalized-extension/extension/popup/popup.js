@@ -102,21 +102,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   // Persist a settings change to the scope its current value belongs to: if the
   // value is site-scoped (category:/origin:), update that Librarian record;
-  // otherwise write the global baseline. Keeps "150% on news sites" from being
+  // otherwise the change is a global one. Keeps "150% on news sites" from being
   // overwritten globally when the user nudges the slider on a news page.
+  //
+  // EVERY change is recorded in the Librarian, general scope included. The two
+  // stores are not redundant: chrome.storage.sync is the applied baseline each
+  // surface reads directly, while the record is what the profile keeps — a
+  // value living only in sync is device-local, so it never reaches the
+  // AbilityModel, can't travel to another host, and can't outrank a learned
+  // record that disagrees with it (user-explicit records get final say in
+  // getEffectivePreferences). A global change writes both; a scoped one writes
+  // only the record, so it stays confined to the sites it was meant for.
   async function persistSetting(key, value) {
     const scope = effProvenance[key];
-    if (scope && (scope.startsWith('category:') || scope.startsWith('origin:'))) {
-      await new Promise((resolve) => {
-        try {
-          chrome.runtime.sendMessage(
-            { type: 'librarianRecordScopedSettings', scope, settings: { [key]: value } },
-            () => { void chrome.runtime.lastError; resolve(); });
-        } catch { resolve(); }
-      });
-    } else {
-      await chrome.storage.sync.set({ [key]: value });
-    }
+    const target = (scope && (scope.startsWith('category:') || scope.startsWith('origin:')))
+      ? scope
+      : 'general';
+    if (target === 'general') await chrome.storage.sync.set({ [key]: value });
+    await new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage(
+          { type: 'librarianRecordScopedSettings', scope: target, settings: { [key]: value } },
+          () => { void chrome.runtime.lastError; resolve(); });
+      } catch { resolve(); }
+    });
   }
 
   // Show setup nudge if onboarding hasn't been completed
@@ -778,21 +787,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     aiSuggestion.hidden = false;
   }
 
-  // Apply the suggestion's built-in settings. A scoped request
-  // ("...on news sites") is stored as a scoped Librarian preference (applies
-  // only where it should) and pushed live to the current tab; an unscoped
-  // request writes the global baseline as before.
+  // Apply the suggestion's built-in settings. Both scopes are recorded as
+  // Librarian preferences (see persistSetting for why general scope is recorded
+  // too); they differ only in how they reach the page. A scoped request
+  // ("...on news sites") applies only where it should, so it is pushed straight
+  // to the current tab; an unscoped one goes through applyPreset, which also
+  // moves the popup's own controls and writes the global baseline.
   async function applySuggestionSettings(suggestion) {
     if (!suggestion?.settings || !Object.keys(suggestion.settings).length) return;
-    const scope = suggestion.scope;
-    if (scope && scope !== 'general') {
-      await sendMessageSafe({
-        type: 'librarianRecordScopedSettings', scope, settings: suggestion.settings,
-      });
-      await sendToContent({ type: 'applyProfile', settings: suggestion.settings });
-    } else {
-      applyPreset(suggestion.settings);
-    }
+    const scope = suggestion.scope && suggestion.scope !== 'general' ? suggestion.scope : 'general';
+    await sendMessageSafe({
+      type: 'librarianRecordScopedSettings', scope, settings: suggestion.settings,
+    });
+    if (scope === 'general') applyPreset(suggestion.settings);
+    else await sendToContent({ type: 'applyProfile', settings: suggestion.settings });
   }
 
   // Open the Skill Builder for the needs this suggestion couldn't cover,

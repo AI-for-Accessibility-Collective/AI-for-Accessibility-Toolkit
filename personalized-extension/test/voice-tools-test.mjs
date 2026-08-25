@@ -294,7 +294,15 @@ syncStore = {}; scopedCalls = []; tabMessages.length = 0;
 effective = { settings: { fontScale: 150 }, provenance: { fontScale: 'category:news' } };
 r = await callRoute({ type: 'voiceApplySettings', changes: { fontScale: 175, darkMode: true } });
 check('site-scoped key updates its Librarian record',
-  scopedCalls.length === 1 && scopedCalls[0].scope === 'category:news' && scopedCalls[0].settings.fontScale === 175);
+  scopedCalls.some((c) => c.scope === 'category:news' && c.settings.fontScale === 175));
+// Every explicit change is recorded, general scope included — a value that
+// lived only in chrome.storage.sync never reached the profile, so it could not
+// travel to another host and a learned record could quietly outrank it.
+check('global key is ALSO recorded at general scope (reaches the profile)',
+  scopedCalls.some((c) => c.scope === 'general' && c.settings.darkMode === true));
+check('a general record carries only the global keys, not the scoped ones',
+  scopedCalls.filter((c) => c.scope === 'general').every((c) => !('fontScale' in c.settings)));
+check('one record write per scope, not one per key', scopedCalls.length === 2);
 check('global key still writes sync', syncStore.darkMode === true && !('fontScale' in syncStore));
 check('scopesUsed reports the split', r.scopesUsed.fontScale === 'category:news' && r.scopesUsed.darkMode === 'general');
 check('explicit scope overrides provenance', (await callRoute({
