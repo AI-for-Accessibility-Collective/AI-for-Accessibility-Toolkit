@@ -99,6 +99,37 @@ function requiredMethodsFromBackground() {
   return [...names].sort();
 }
 
+// ---- run background.js's seedRemoteDefaults against a fake chrome.storage --
+// Lifts the function out of background.js by source so the test exercises the
+// shipped code, not a copy: background.js as a whole can't be imported here
+// (it importScripts a dozen bundles and needs the full extension runtime), but
+// this one function only touches globalThis.AA_REMOTE_DEFAULTS and
+// chrome.storage, both of which the sandbox supplies.
+function loadSeeder({ defaults, sync = {}, local = {} }) {
+  const bgSrc = fs.readFileSync(path.join(EXT_DIR, 'background.js'), 'utf8');
+  const start = bgSrc.indexOf('async function seedRemoteDefaults()');
+  const end = bgSrc.indexOf('\nconst _remoteSeeded =', start);
+  if (start === -1 || end === -1) throw new Error('could not locate seedRemoteDefaults in background.js');
+
+  const area = (store) => ({
+    get: async (keys) => {
+      const out = {};
+      for (const k of [].concat(keys)) if (k in store) out[k] = store[k];
+      return out;
+    },
+    set: async (obj) => { Object.assign(store, obj); },
+  });
+  const sandbox = {
+    console: { log() {}, warn() {} },
+    chrome: { storage: { sync: area(sync), local: area(local) } },
+    AA_REMOTE_DEFAULTS: defaults,
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(bgSrc.slice(start, end) + '\nglobalThis.__seed = seedRemoteDefaults;', sandbox,
+    { filename: 'background.js#seedRemoteDefaults' });
+  return { run: sandbox.__seed, sync, local };
+}
+
 (async () => {
   const server = await startServer();
   const { port } = server.address();
@@ -239,6 +270,37 @@ function requiredMethodsFromBackground() {
   check('setGeminiCaller does not throw', threw === false);
   check('setGeminiCaller warns rather than silently doing nothing', warned === true);
   check('setGeminiCaller is synchronous (no network round-trip)', ret === undefined);
+
+  // 13. seedRemoteDefaults: the build-time default fills an empty config once,
+  //     never overwrites a real one, and never resurrects a cleared one.
+  const DEFAULTS = { url: 'https://seeded.example', token: 'aat_seed_token' };
+
+  const fresh = loadSeeder({ defaults: DEFAULTS });
+  await fresh.run();
+  check('seed: fresh profile gets the build-time server config',
+    fresh.sync.toolkitServerUrl === DEFAULTS.url && fresh.sync.toolkitServerToken === DEFAULTS.token);
+  check('seed: fresh profile is marked seeded', fresh.local.toolkitRemoteSeeded === true);
+
+  const configured = loadSeeder({
+    defaults: DEFAULTS,
+    sync: { toolkitServerUrl: 'https://mine.example', toolkitServerToken: 'aat_mine' },
+  });
+  await configured.run();
+  check('seed: an already-configured server is left alone',
+    configured.sync.toolkitServerUrl === 'https://mine.example'
+    && configured.sync.toolkitServerToken === 'aat_mine');
+
+  // The options page's "Use local (clear)" removes both sync keys and leaves
+  // the marker set; the next service-worker start must not undo that.
+  const cleared = loadSeeder({ defaults: DEFAULTS, local: { toolkitRemoteSeeded: true } });
+  await cleared.run();
+  check('seed: "Use local (clear)" is not undone on the next SW start',
+    !('toolkitServerUrl' in cleared.sync) && !('toolkitServerToken' in cleared.sync));
+
+  const noDefaults = loadSeeder({ defaults: undefined });
+  await noDefaults.run();
+  check('seed: no baked config (fresh clone) is a no-op, not a crash',
+    Object.keys(noDefaults.sync).length === 0 && Object.keys(noDefaults.local).length === 0);
 
   server.close();
   console.log(`\n${pass} passed, ${fail} failed`);

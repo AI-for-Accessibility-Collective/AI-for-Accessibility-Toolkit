@@ -341,9 +341,20 @@ TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted 
    `Authorization: Bearer $TOOLKIT_SERVER_TOKEN` returns the token's
    `{uid, label}`.
 
-The browser extension does **not** use `.env` — its equivalent config is the
-extension's Options page (stored in `chrome.storage.sync` as
-`toolkitServerUrl` / `toolkitServerToken`).
+The browser extension does **not** use `.env`. Its config lives in
+`chrome.storage.sync` (`toolkitServerUrl` / `toolkitServerToken`), written by
+the extension's Options page. For a demo build that should already be pointed
+at an instance, put the same two values in an untracked
+`personalized-extension/extension-config.local.json`:
+
+```json
+{ "toolkitServerUrl": "https://<your-instance>", "toolkitServerToken": "aat_..." }
+```
+
+`npm run build` bakes it into the (gitignored) `extension/lib/remote-config.js`,
+and the service worker seeds those storage keys once per browser profile. The
+Options page still owns every write after that — including "Use local (clear)",
+which stays cleared. No local config file = no generated file = local mode.
 
 ## Running or deploying your own toolkit service
 
