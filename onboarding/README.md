@@ -2,7 +2,12 @@
 
 A tiny, zero-dependency web service to **capture a person's accessibility needs
 into a toolkit ability profile**, and — with the admin password — **list and
-delete profiles**.
+delete profiles**. From the same port it also serves the **Controller** UI (the
+text/voice control surface, `toolkit/controller/`) at `/controller`.
+
+Routes: `/onboarding` (the onboarding page, also the redirect target of `/`) and
+`/controller` (the Controller demo; its ESM loads under `/controller/lib` and the
+shared settings vocabulary under `/controller/registry`).
 
 It talks to the toolkit in one of two modes:
 
@@ -17,7 +22,8 @@ Local (embedded toolkit, its own data dir):
 
 ```bash
 ADMIN_PASSWORD=dev DATA_DIR=./onboarding-data node onboarding/server.js
-# open http://127.0.0.1:4000/onboarding
+# open http://127.0.0.1:4000/onboarding   (onboarding)
+# open http://127.0.0.1:4000/controller   (controller UI)
 ```
 
 Remote (against a running `server/` on :8080 — ADMIN_PASSWORD must match it):

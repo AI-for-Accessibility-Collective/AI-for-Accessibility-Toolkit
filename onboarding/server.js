@@ -33,6 +33,13 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'onboarding-data');
 const TOOLKIT_URL = (process.env.TOOLKIT_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
 
+// The Controller UI (toolkit/controller) is served from THIS same port at
+// /controller. Its ESM modules load statically under /controller/lib, and the
+// shared settings vocabulary under /controller/registry.
+const TOOLKIT_DIR = path.join(__dirname, '..', 'toolkit');
+const CONTROLLER_DIR = path.join(TOOLKIT_DIR, 'controller');
+const REGISTRY_DIR = path.join(TOOLKIT_DIR, 'registry');
+
 // Support-area vocabulary (mirrors the toolkit's ability dimensions). The UI
 // offers these; onboarding accepts any subset.
 const SUPPORT_AREAS = ['vision', 'reading', 'cognitive', 'motor', 'hearing', 'sensory', 'attention'];
@@ -179,6 +186,26 @@ function sendJSON(res, status, obj) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'content-length': Buffer.byteLength(s) });
   res.end(s);
 }
+function contentType(file) {
+  if (file.endsWith('.js') || file.endsWith('.mjs')) return 'text/javascript; charset=utf-8';
+  if (file.endsWith('.html')) return 'text/html; charset=utf-8';
+  if (file.endsWith('.css')) return 'text/css; charset=utf-8';
+  if (file.endsWith('.json')) return 'application/json; charset=utf-8';
+  if (file.endsWith('.svg')) return 'image/svg+xml';
+  return 'text/plain; charset=utf-8';
+}
+// Serve one file from under baseDir, rejecting path traversal.
+async function serveStatic(res, baseDir, rel) {
+  const safe = path.normalize('/' + rel).replace(/^[/\\]+/, '');
+  if (!safe || safe.includes('..')) return sendJSON(res, 400, { error: 'bad-path' });
+  try {
+    const data = await readFile(path.join(baseDir, safe));
+    res.writeHead(200, { 'content-type': contentType(safe) });
+    return res.end(data);
+  } catch {
+    return sendJSON(res, 404, { error: 'not-found' });
+  }
+}
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -202,6 +229,22 @@ const server = http.createServer(async (req, res) => {
       const html = await readFile(path.join(__dirname, 'index.html'), 'utf8');
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(html);
+    }
+
+    // Controller UI at /controller. The demo's imports are relative to
+    // toolkit/controller/demo/; rewrite them to the /controller/lib prefix this
+    // server exposes so the same page works when served from here.
+    if (method === 'GET' && (pathname === '/controller' || pathname === '/controller/')) {
+      let html = await readFile(path.join(CONTROLLER_DIR, 'demo', 'index.html'), 'utf8');
+      html = html.replace(/from '\.\.\//g, "from '/controller/lib/");
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+    if (method === 'GET' && pathname.startsWith('/controller/lib/')) {
+      return serveStatic(res, CONTROLLER_DIR, pathname.slice('/controller/lib/'.length));
+    }
+    if (method === 'GET' && pathname.startsWith('/controller/registry/')) {
+      return serveStatic(res, REGISTRY_DIR, pathname.slice('/controller/registry/'.length));
     }
 
     if (method === 'GET' && pathname === '/api/config') {
@@ -258,6 +301,7 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(`[onboarding] mode=${MODE} target=${MODE === 'remote' ? TOOLKIT_URL : DATA_DIR}`);
     console.log(`[onboarding] admin ${ADMIN_PASSWORD ? 'enabled' : 'DISABLED (set ADMIN_PASSWORD to list/delete)'}`);
     console.log(`[onboarding] open http://127.0.0.1:${PORT}/onboarding`);
+    console.log(`[onboarding] controller http://127.0.0.1:${PORT}/controller`);
   });
 }
 
