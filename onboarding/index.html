@@ -19,6 +19,13 @@
   .current { margin: .5rem 0 0; padding: .6rem .75rem; border: 1px solid rgba(128,128,128,.35);
              border-radius: 8px; background: rgba(31,111,235,.08); font-size: .95rem; }
   .current strong { font-family: ui-monospace, Menlo, monospace; }
+  .need-row { display: flex; gap: .5rem; align-items: stretch; }
+  .need-row input { flex: 1; }
+  .need-row button { margin-top: 0; white-space: nowrap; }
+  #mic[aria-pressed="true"] { background: #b3261e; color: #fff; border-color: #b3261e; }
+  .voice-controls { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; margin: .5rem 0 0; }
+  .voice-controls button { margin: 0; }
+  .voice-controls .inline { display: inline-flex; align-items: center; gap: .4rem; font-weight: 400; margin: 0; font-size: .9rem; }
   section { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; margin: 1.25rem 0; }
   h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
   label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
@@ -50,14 +57,21 @@
   <h1>Accessibility Onboarding</h1>
   <p class="target" id="target">Loading…</p>
   <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
+  <div class="voice-controls">
+    <button type="button" id="hear" class="secondary" hidden>🔊 Hear setting</button>
+    <label class="inline" id="readaloud-wrap" hidden><input type="checkbox" id="readaloud"> Read the setting aloud after adding</label>
+  </div>
 
   <section aria-labelledby="add-h">
     <h2 id="add-h">Add a profile</h2>
     <p class="muted">Describe the support this person needs. This creates an ability profile the toolkit can adapt to.</p>
     <form id="add-form">
       <label for="need">What do you need? <span class="muted">(in your own words)</span></label>
-      <input type="text" id="need" name="need" autocomplete="off"
-             placeholder="e.g. small text is hard to read; too much motion is distracting">
+      <div class="need-row">
+        <input type="text" id="need" name="need" autocomplete="off"
+               placeholder="e.g. small text is hard to read; too much motion is distracting">
+        <button type="button" id="mic" class="secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
+      </div>
 
       <label id="areas-label">Support areas</label>
       <div class="areas" role="group" aria-labelledby="areas-label" id="areas"></div>
@@ -88,6 +102,24 @@
 <script>
 const $ = (id) => document.getElementById(id);
 let adminPass = '';
+let currentProfile = null;   // last-loaded {uid, exists, supportAreas, freeText}
+
+// ── Voice (Web Speech API) — optional; hidden if the browser lacks support ──
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const TTS = 'speechSynthesis' in window;
+let recog = null, listening = false;
+
+function speak(text) {
+  if (!TTS || !text) return;
+  try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch (e) {}
+}
+function settingSentence(d) {
+  if (!d || !d.uid) return 'No profile selected.';
+  if (d.exists === false) return 'Profile ' + d.uid + ' is not set yet.';
+  const areas = (d.supportAreas && d.supportAreas.length) ? d.supportAreas.join(', ') : 'none';
+  const needs = d.freeText ? ('You said: ' + d.freeText + '. ') : '';
+  return needs + 'Support areas: ' + areas + '.';
+}
 
 // ── Current-profile banner: the targeted uid's name + configuration ─────────
 function renderCurrent(d) {
@@ -106,11 +138,11 @@ function renderCurrent(d) {
 async function loadCurrent() {
   const uid = $('uid').value.trim();
   if (uid) localStorage.setItem('onb-uid', uid); else localStorage.removeItem('onb-uid');
-  if (!uid) { renderCurrent(null); return; }
+  if (!uid) { currentProfile = null; renderCurrent(null); return; }
   try {
     const d = await (await fetch('/api/profile?uid=' + encodeURIComponent(uid))).json();
-    renderCurrent(d);
-  } catch { renderCurrent({ uid, exists: false }); }
+    currentProfile = d; renderCurrent(d);
+  } catch { currentProfile = { uid, exists: false }; renderCurrent(currentProfile); }
 }
 
 function setStatus(el, msg, kind) {
@@ -156,6 +188,9 @@ $('add-form').addEventListener('submit', async (e) => {
     $('add-form').reset();
     $('uid').value = d.uid;           // keep the just-created profile as the current one
     loadCurrent();
+    if (TTS && $('readaloud').checked) {
+      speak(settingSentence({ exists: true, uid: d.uid, supportAreas: d.supportAreas, freeText: d.freeText }));
+    }
     if (!$('profiles-table').hidden) refreshProfiles();
   } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
 });
@@ -218,6 +253,34 @@ $('admin-form').addEventListener('submit', (e) => {
 
 // Typing/selecting a different profile id updates the banner.
 $('uid').addEventListener('change', loadCurrent);
+
+// Voice input — dictate the need into the field (optional).
+if (SR) {
+  const mic = $('mic'); mic.hidden = false;
+  recog = new SR(); recog.lang = 'en-US'; recog.interimResults = true; recog.maxAlternatives = 1;
+  recog.onresult = (e) => {
+    let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
+    $('need').value = txt.replace(/\s+/g, ' ').trim();
+  };
+  recog.onerror = (e) => setStatus($('add-status'),
+    'Voice input: ' + (e.error === 'not-allowed' ? 'microphone permission denied.' : e.error), 'err');
+  recog.onend = () => { listening = false; mic.textContent = '🎤 Speak'; mic.setAttribute('aria-pressed', 'false'); };
+  mic.addEventListener('click', () => {
+    if (listening) { recog.stop(); return; }
+    try {
+      recog.start(); listening = true;
+      mic.textContent = '⏹ Stop'; mic.setAttribute('aria-pressed', 'true');
+      setStatus($('add-status'), 'Listening… speak your need, then press Stop.', '');
+    } catch (e) {}
+  });
+}
+
+// Voice output — hear the current setting read aloud (optional).
+if (TTS) {
+  $('hear').hidden = false;
+  $('readaloud-wrap').hidden = false;
+  $('hear').addEventListener('click', () => speak(settingSentence(currentProfile)));
+}
 
 (async () => {
   await loadConfig();
