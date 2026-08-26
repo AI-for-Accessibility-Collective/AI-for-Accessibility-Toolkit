@@ -106,7 +106,7 @@ let currentProfile = null;   // last-loaded {uid, exists, supportAreas, freeText
 // ── Voice (Web Speech API) — optional; hidden if the browser lacks support ──
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const TTS = 'speechSynthesis' in window;
-let recog = null, listening = false;
+let recog = null, listening = false, usedVoice = false;
 
 function speak(text) {
   if (!TTS || !text) return;
@@ -187,6 +187,9 @@ $('add-form').addEventListener('submit', async (e) => {
     $('add-form').reset();
     $('uid').value = d.uid;           // keep the just-created profile as the current one
     loadCurrent();
+    // Read the setting back aloud only when the need was entered by voice.
+    if (usedVoice) speak(settingSentence({ exists: true, uid: d.uid, supportAreas: d.supportAreas, freeText: d.freeText }));
+    usedVoice = false;
     if (!$('profiles-table').hidden) refreshProfiles();
   } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
 });
@@ -263,7 +266,10 @@ if (SR) {
   recog.onresult = (e) => {
     let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
     $('need').value = txt.replace(/\s+/g, ' ').trim();
+    usedVoice = true;   // the need was dictated — read the setting back after adding
   };
+  // Manual typing clears the flag (programmatic value sets above don't fire 'input').
+  $('need').addEventListener('input', () => { usedVoice = false; });
   recog.onerror = (e) => setStatus($('add-status'),
     'Voice input: ' + (e.error === 'not-allowed' ? 'microphone permission denied.' : e.error), 'err');
   recog.onend = () => setMicState(false);
