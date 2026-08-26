@@ -193,7 +193,12 @@ const server = http.createServer(async (req, res) => {
     const { pathname } = new URL(req.url, 'http://localhost');
     const method = req.method;
 
+    // The page lives at /onboarding; bare / redirects there.
     if (method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
+      res.writeHead(302, { location: '/onboarding' });
+      return res.end();
+    }
+    if (method === 'GET' && (pathname === '/onboarding' || pathname === '/onboarding/')) {
       const html = await readFile(path.join(__dirname, 'index.html'), 'utf8');
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(html);
@@ -252,7 +257,7 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
   server.listen(PORT, () => {
     console.log(`[onboarding] mode=${MODE} target=${MODE === 'remote' ? TOOLKIT_URL : DATA_DIR}`);
     console.log(`[onboarding] admin ${ADMIN_PASSWORD ? 'enabled' : 'DISABLED (set ADMIN_PASSWORD to list/delete)'}`);
-    console.log(`[onboarding] open http://127.0.0.1:${PORT}`);
+    console.log(`[onboarding] open http://127.0.0.1:${PORT}/onboarding`);
   });
 }
 
