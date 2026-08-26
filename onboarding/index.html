@@ -16,6 +16,9 @@
   h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
   .target { font-size: .85rem; color: #667; }
   .target code { background: rgba(128,128,128,.15); padding: .1rem .35rem; border-radius: 4px; }
+  .current { margin: .5rem 0 0; padding: .6rem .75rem; border: 1px solid rgba(128,128,128,.35);
+             border-radius: 8px; background: rgba(31,111,235,.08); font-size: .95rem; }
+  .current strong { font-family: ui-monospace, Menlo, monospace; }
   section { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; margin: 1.25rem 0; }
   h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
   label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
@@ -46,6 +49,7 @@
 <body>
   <h1>Accessibility Onboarding</h1>
   <p class="target" id="target">Loading…</p>
+  <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
 
   <section aria-labelledby="add-h">
     <h2 id="add-h">Add a profile</h2>
@@ -84,6 +88,30 @@
 <script>
 const $ = (id) => document.getElementById(id);
 let adminPass = '';
+
+// ── Current-profile banner: the targeted uid's name + configuration ─────────
+function renderCurrent(d) {
+  const el = $('current');
+  el.textContent = '';
+  if (!d || !d.uid) { el.textContent = 'Current profile: not set'; return; }
+  el.append('Current profile: ');
+  const name = document.createElement('strong'); name.textContent = d.uid; el.append(name);
+  if (!d.exists) { el.append(' — not set yet'); return; }
+  const parts = [];
+  if (d.supportAreas && d.supportAreas.length) parts.push('Support areas: ' + d.supportAreas.join(', '));
+  if (d.freeText) parts.push('Needs: “' + d.freeText + '”');  // .append(string) = text node, no HTML
+  el.append(' · ' + (parts.length ? parts.join(' · ') : 'Configuration: not set'));
+}
+
+async function loadCurrent() {
+  const uid = $('uid').value.trim();
+  if (uid) localStorage.setItem('onb-uid', uid); else localStorage.removeItem('onb-uid');
+  if (!uid) { renderCurrent(null); return; }
+  try {
+    const d = await (await fetch('/api/profile?uid=' + encodeURIComponent(uid))).json();
+    renderCurrent(d);
+  } catch { renderCurrent({ uid, exists: false }); }
+}
 
 function setStatus(el, msg, kind) {
   el.textContent = msg; el.hidden = false;
@@ -124,6 +152,8 @@ $('add-form').addEventListener('submit', async (e) => {
     if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     setStatus($('add-status'), 'Added profile “' + d.uid + '” · areas: ' + (d.supportAreas.join(', ') || 'none'), 'ok');
     $('add-form').reset();
+    $('uid').value = d.uid;           // keep the just-created profile as the current one
+    loadCurrent();
     if (!$('profiles-table').hidden) refreshProfiles();
   } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
 });
@@ -174,7 +204,15 @@ $('admin-form').addEventListener('submit', (e) => {
   refreshProfiles();
 });
 
-loadConfig();
+// Typing/selecting a different profile id updates the banner.
+$('uid').addEventListener('change', loadCurrent);
+
+(async () => {
+  await loadConfig();
+  const saved = localStorage.getItem('onb-uid');
+  if (saved) $('uid').value = saved;
+  loadCurrent();
+})();
 </script>
 </body>
 </html>

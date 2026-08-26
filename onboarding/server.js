@@ -109,6 +109,36 @@ async function onboard({ uid, supportAreas, freeText }) {
   return { uid, supportAreas: areas, freeText: text };
 }
 
+// ── Read one profile's current configuration (for the "current profile" banner)
+// Returns {exists:false} for a uid that was never onboarded — WITHOUT creating
+// it (we check the profile list before touching getProfile, which would init a
+// default partition).
+async function profileSummary(uid) {
+  uid = String(uid || '').trim();
+  if (!uid) return { exists: false, uid: '' };
+  const exists = (await listProfiles()).includes(uid);
+  if (!exists) return { exists: false, uid };
+
+  let profile = {};
+  if (MODE === 'remote') {
+    const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-view' });
+    if (t.body?.token) {
+      const r = await remoteLibrarian(t.body.token, 'getProfile', []);
+      profile = r.body?.result || {};
+    }
+  } else {
+    const { host } = await localBits();
+    const { librarian } = await host.getInstance(uid);
+    profile = await librarian.getProfile();
+  }
+  return {
+    exists: true,
+    uid,
+    supportAreas: profile.supportAreas || [],
+    freeText: profile.freeText || '',
+  };
+}
+
 // ── Admin: list + delete profiles (gated by ADMIN_PASSWORD) ─────────────────
 function adminOk(req) {
   if (!ADMIN_PASSWORD) return false;
@@ -169,6 +199,12 @@ const server = http.createServer(async (req, res) => {
         supportAreas: SUPPORT_AREAS,
         adminEnabled: !!ADMIN_PASSWORD,
       });
+    }
+
+    if (method === 'GET' && pathname === '/api/profile') {
+      const uid = new URL(req.url, 'http://localhost').searchParams.get('uid') || '';
+      try { return sendJSON(res, 200, await profileSummary(uid)); }
+      catch (e) { return sendJSON(res, 502, { error: e.message }); }
     }
 
     if (method === 'POST' && pathname === '/api/onboard') {
