@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility Onboarding</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 44rem; margin: 0 auto; padding: 1.5rem; line-height: 1.5;
+    color: #1a1a1a; background: #fff;
+  }
+  @media (prefers-color-scheme: dark) { body { color: #eee; background: #16181c; } }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .target { font-size: .85rem; color: #667; }
+  .target code { background: rgba(128,128,128,.15); padding: .1rem .35rem; border-radius: 4px; }
+  section { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; margin: 1.25rem 0; }
+  h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+  label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: .55rem .65rem; font-size: 1rem;
+    border: 1px solid #99a; border-radius: 6px; background: transparent; color: inherit;
+  }
+  .areas { display: flex; flex-wrap: wrap; gap: .5rem .9rem; margin-top: .35rem; }
+  .areas label { display: inline-flex; align-items: center; gap: .35rem; font-weight: 400; margin: 0; }
+  button {
+    margin-top: 1rem; padding: .55rem 1rem; font-size: 1rem; font-weight: 600;
+    border: 0; border-radius: 6px; background: #1f6feb; color: #fff; cursor: pointer;
+  }
+  button:hover { background: #1a5fd0; }
+  button.secondary { background: transparent; color: inherit; border: 1px solid #99a; }
+  button.danger { background: #b3261e; padding: .3rem .6rem; font-size: .85rem; margin: 0; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
+  .status { margin-top: .9rem; padding: .6rem .75rem; border-radius: 6px; font-size: .95rem; }
+  .status.ok { background: rgba(31,122,79,.15); }
+  .status.err { background: rgba(179,38,30,.15); }
+  .muted { color: #778; font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: .75rem; }
+  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid rgba(128,128,128,.25); font-size: .9rem; }
+  code.uid { font-family: ui-monospace, Menlo, monospace; }
+  .row-actions { text-align: right; }
+</style>
+</head>
+<body>
+  <h1>Accessibility Onboarding</h1>
+  <p class="target" id="target">Loading…</p>
+
+  <section aria-labelledby="add-h">
+    <h2 id="add-h">Add a profile</h2>
+    <p class="muted">Describe the support this person needs. This creates an ability profile the toolkit can adapt to.</p>
+    <form id="add-form">
+      <label for="need">What do you need? <span class="muted">(in your own words)</span></label>
+      <input type="text" id="need" name="need" autocomplete="off"
+             placeholder="e.g. small text is hard to read; too much motion is distracting">
+
+      <label id="areas-label">Support areas</label>
+      <div class="areas" role="group" aria-labelledby="areas-label" id="areas"></div>
+
+      <label for="uid">Profile id <span class="muted">(optional — leave blank to auto-generate)</span></label>
+      <input type="text" id="uid" name="uid" autocomplete="off" placeholder="auto">
+
+      <button type="submit">Add profile</button>
+    </form>
+    <div id="add-status" class="status" role="status" aria-live="polite" hidden></div>
+  </section>
+
+  <section aria-labelledby="mng-h">
+    <h2 id="mng-h">Manage profiles</h2>
+    <p class="muted">Enter the admin password to list and delete profiles.</p>
+    <form id="admin-form">
+      <label for="admin-pass">Admin password</label>
+      <input type="password" id="admin-pass" name="admin-pass" autocomplete="off">
+      <button type="submit">Load profiles</button>
+    </form>
+    <div id="admin-status" class="status" role="status" aria-live="polite" hidden></div>
+    <table id="profiles-table" hidden>
+      <thead><tr><th scope="col">Profile</th><th scope="col" class="row-actions">Action</th></tr></thead>
+      <tbody id="profiles-body"></tbody>
+    </table>
+  </section>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let adminPass = '';
+
+function setStatus(el, msg, kind) {
+  el.textContent = msg; el.hidden = false;
+  el.className = 'status ' + (kind || '');
+}
+
+async function loadConfig() {
+  try {
+    const cfg = await (await fetch('/api/config')).json();
+    $('target').innerHTML = cfg.mode === 'remote'
+      ? 'Target: <strong>remote server</strong> <code>' + cfg.target + '</code>'
+      : 'Target: <strong>local library</strong> <code>' + cfg.target + '</code>';
+    const box = $('areas');
+    box.innerHTML = '';
+    (cfg.supportAreas || []).forEach((a) => {
+      const id = 'area-' + a;
+      const lbl = document.createElement('label');
+      lbl.innerHTML = '<input type="checkbox" value="' + a + '" id="' + id + '"> ' + a;
+      box.appendChild(lbl);
+    });
+    if (!cfg.adminEnabled) {
+      setStatus($('admin-status'), 'Admin is disabled — start the service with ADMIN_PASSWORD to list/delete profiles.', 'err');
+    }
+  } catch (e) { $('target').textContent = 'Could not load config: ' + e.message; }
+}
+
+$('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const supportAreas = [...document.querySelectorAll('#areas input:checked')].map((c) => c.value);
+  const payload = { uid: $('uid').value.trim() || undefined, freeText: $('need').value.trim(), supportAreas };
+  if (!payload.freeText && supportAreas.length === 0) {
+    return setStatus($('add-status'), 'Enter a need or pick at least one support area.', 'err');
+  }
+  setStatus($('add-status'), 'Adding…', '');
+  try {
+    const r = await fetch('/api/onboard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    setStatus($('add-status'), 'Added profile “' + d.uid + '” · areas: ' + (d.supportAreas.join(', ') || 'none'), 'ok');
+    $('add-form').reset();
+    if (!$('profiles-table').hidden) refreshProfiles();
+  } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
+});
+
+async function refreshProfiles() {
+  try {
+    const r = await fetch('/api/profiles', { headers: { 'x-admin-password': adminPass } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    const body = $('profiles-body');
+    body.innerHTML = '';
+    (d.profiles || []).forEach((uid) => {
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.innerHTML = '<code class="uid"></code>';
+      td1.querySelector('.uid').textContent = uid;
+      const td2 = document.createElement('td');
+      td2.className = 'row-actions';
+      const btn = document.createElement('button');
+      btn.className = 'danger'; btn.textContent = 'Delete';
+      btn.setAttribute('aria-label', 'Delete profile ' + uid);
+      btn.onclick = () => del(uid);
+      td2.appendChild(btn);
+      tr.append(td1, td2);
+      body.appendChild(tr);
+    });
+    $('profiles-table').hidden = false;
+    setStatus($('admin-status'), (d.profiles || []).length + ' profile(s).', 'ok');
+  } catch (e) {
+    $('profiles-table').hidden = true;
+    setStatus($('admin-status'), 'Failed: ' + e.message, 'err');
+  }
+}
+
+async function del(uid) {
+  if (!confirm('Delete profile “' + uid + '”? This removes its ability profile and memory.')) return;
+  try {
+    const r = await fetch('/api/profiles/' + encodeURIComponent(uid), { method: 'DELETE', headers: { 'x-admin-password': adminPass } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    refreshProfiles();
+  } catch (e) { setStatus($('admin-status'), 'Delete failed: ' + e.message, 'err'); }
+}
+
+$('admin-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  adminPass = $('admin-pass').value;
+  refreshProfiles();
+});
+
+loadConfig();
+</script>
+</body>
+</html>

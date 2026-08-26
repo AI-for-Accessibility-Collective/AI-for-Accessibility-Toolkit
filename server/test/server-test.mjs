@@ -343,6 +343,38 @@ async function main() {
       const r2 = await fetch(base + '/admin/tokens', { headers: { authorization: `Basic ${bad}` } });
       assert.equal(r2.status, 401);
     });
+
+    // ---- admin: list + delete user PROFILES (distinct from tokens) ----------
+    await test('admin/users: list includes onboarded profiles, delete wipes one, unauth is 401', async () => {
+      // Onboard two profiles (writing a profile field creates users/<uid>/).
+      for (const uid of ['profile-a', 'profile-b']) {
+        const t = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid, label: 'onboard' } });
+        const w = await call('POST', '/v1/librarian/setProfileField', { token: t.body.token, body: { args: ['supportAreas', ['vision']] } });
+        assert.equal(w.body.ok, true, `setProfileField for ${uid}`);
+      }
+
+      // Unauthorized listing is rejected.
+      const noauth = await call('GET', '/admin/users');
+      assert.equal(noauth.status, 401);
+
+      // List shows both profiles.
+      const list = await call('GET', '/admin/users', { adminToken: ADMIN_PASSWORD });
+      assert.equal(list.status, 200);
+      assert.ok(list.body.users.includes('profile-a'));
+      assert.ok(list.body.users.includes('profile-b'));
+
+      // Delete one; it disappears from the list, the other remains.
+      const del = await call('DELETE', '/admin/users/profile-a', { adminToken: ADMIN_PASSWORD });
+      assert.equal(del.status, 200);
+      assert.equal(del.body.ok, true);
+      const list2 = await call('GET', '/admin/users', { adminToken: ADMIN_PASSWORD });
+      assert.ok(!list2.body.users.includes('profile-a'));
+      assert.ok(list2.body.users.includes('profile-b'));
+
+      // Deleting a non-existent profile -> 404.
+      const missing = await call('DELETE', '/admin/users/nope', { adminToken: ADMIN_PASSWORD });
+      assert.equal(missing.status, 404);
+    });
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await fs.rm(dataDir, { recursive: true, force: true });

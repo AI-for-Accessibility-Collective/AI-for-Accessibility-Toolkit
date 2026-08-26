@@ -14,6 +14,7 @@ import { buildMeta } from './meta.js';
 import { renderAdminPage } from './admin-page.js';
 
 const ADMIN_TOKENS_PREFIX = '/admin/tokens';
+const ADMIN_USERS_PREFIX = '/admin/users';
 const LIBRARIAN_PREFIX = '/v1/librarian/';
 
 /** @param {Object} config
@@ -81,6 +82,10 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       return handleAdminTokens(req, res, method, pathname);
     }
 
+    if (pathname === ADMIN_USERS_PREFIX || pathname.startsWith(ADMIN_USERS_PREFIX + '/')) {
+      return handleAdminUsers(req, res, method, pathname);
+    }
+
     if (method === 'GET' && pathname === '/v1/whoami') {
       const rec = await requireUser(req, res);
       if (!rec) return;
@@ -125,6 +130,36 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       const ok = await revokeToken(store, id);
       if (!ok) return sendJSON(res, 404, { error: 'not-found' });
       return sendJSON(res, 200, { ok: true });
+    }
+
+    return sendJSON(res, 404, { error: 'not-found' });
+  }
+
+  // Admin: the user PROFILES themselves (a uid's `users/<uid>/` partition),
+  // distinct from the access tokens above. GET lists every stored profile;
+  // DELETE wipes one profile's data entirely (revoking a token only cuts off
+  // access — this removes the ability profile + memory). Same admin auth.
+  async function handleAdminUsers(req, res, method, pathname) {
+    if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
+      return sendJSON(res, 401, { error: 'unauthorized' });
+    }
+
+    if (method === 'GET' && pathname === ADMIN_USERS_PREFIX) {
+      const uids = await store.listUsers();
+      return sendJSON(res, 200, { users: uids });
+    }
+
+    if (method === 'DELETE' && pathname.startsWith(ADMIN_USERS_PREFIX + '/')) {
+      const uid = decodeURIComponent(pathname.slice((ADMIN_USERS_PREFIX + '/').length));
+      if (!uid) return sendJSON(res, 404, { error: 'not-found' });
+      let deleted;
+      try {
+        deleted = await store.deleteUser(uid);
+      } catch (e) {
+        return sendJSON(res, 400, { error: e.message });
+      }
+      if (!deleted) return sendJSON(res, 404, { error: 'not-found' });
+      return sendJSON(res, 200, { ok: true, uid });
     }
 
     return sendJSON(res, 404, { error: 'not-found' });

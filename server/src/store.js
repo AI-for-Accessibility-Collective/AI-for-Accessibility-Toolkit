@@ -29,6 +29,15 @@ function assertSafeKey(key) {
   }
 }
 
+// A uid names one user's profile partition (`users/<uid>/...`). Unlike document
+// keys this one CAN reach admin-listing/deletion, so keep it a single safe path
+// segment — no separators, no '..'.
+function assertSafeUid(uid) {
+  if (typeof uid !== 'string' || !uid || uid.includes('/') || uid.includes('..') || uid.includes('\\')) {
+    throw new Error(`store: unsafe uid ${JSON.stringify(uid)}`);
+  }
+}
+
 /** A store backed by one JSON file per document on disk, under `dir`. */
 export function fileStore(dir) {
   return {
@@ -48,6 +57,28 @@ export function fileStore(dir) {
       const file = path.join(dir, key);
       await fs.mkdir(path.dirname(file), { recursive: true });
       await fs.writeFile(file, JSON.stringify(value), 'utf8');
+    },
+    // Every uid that has a `users/<uid>/` directory (i.e. a stored profile).
+    async listUsers() {
+      try {
+        const entries = await fs.readdir(path.join(dir, 'users'), { withFileTypes: true });
+        return entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
+      } catch (e) {
+        if (e.code === 'ENOENT') return [];
+        throw e;
+      }
+    },
+    // Remove a user's entire profile partition. Returns false if it didn't exist.
+    async deleteUser(uid) {
+      assertSafeUid(uid);
+      const udir = path.join(dir, 'users', uid);
+      try {
+        await fs.access(udir);
+      } catch {
+        return false;
+      }
+      await fs.rm(udir, { recursive: true, force: true });
+      return true;
     },
   };
 }
@@ -97,6 +128,35 @@ export function gcsStore(bucket) {
         body: JSON.stringify(value),
       });
       if (!resp.ok) throw new Error(`gcsStore: write ${key} failed (${resp.status}): ${await resp.text()}`);
+    },
+    async listUsers() {
+      const token = await accessToken();
+      // delimiter='/' collapses each users/<uid>/... into one prefix entry.
+      const url = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o?prefix=users/&delimiter=/`;
+      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) throw new Error(`gcsStore: listUsers failed (${resp.status}): ${await resp.text()}`);
+      const data = await resp.json();
+      return (data.prefixes || [])
+        .map((p) => p.replace(/^users\//, '').replace(/\/$/, ''))
+        .filter(Boolean)
+        .sort();
+    },
+    async deleteUser(uid) {
+      assertSafeUid(uid);
+      const token = await accessToken();
+      const listUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o?prefix=${encodeURIComponent(`users/${uid}/`)}`;
+      const listResp = await fetch(listUrl, { headers: { Authorization: `Bearer ${token}` } });
+      if (!listResp.ok) throw new Error(`gcsStore: deleteUser list failed (${listResp.status}): ${await listResp.text()}`);
+      const items = (await listResp.json()).items || [];
+      if (!items.length) return false;
+      for (const it of items) {
+        const delUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(it.name)}`;
+        const delResp = await fetch(delUrl, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        if (!delResp.ok && delResp.status !== 404) {
+          throw new Error(`gcsStore: deleteUser ${it.name} failed (${delResp.status}): ${await delResp.text()}`);
+        }
+      }
+      return true;
     },
   };
 }
