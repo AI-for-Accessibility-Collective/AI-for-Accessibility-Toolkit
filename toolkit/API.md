@@ -10,6 +10,7 @@
 - [Methods by Concern](#methods-by-concern)
   - [profile/ability](#profileability)
   - [memory](#memory)
+  - [notes](#notes)
   - [proposals/consent](#proposalsconsent)
   - [skills](#skills)
   - [grants/sharing](#grantssharing)
@@ -88,6 +89,16 @@ Every method below was read off a REAL `createToolkit(...)` instance at doc-gene
 | `librarian.logObservation(obs)` | async | The single entry point for observations — and the privacy floor. |
 | `librarian.extract()` | async | Drain the episodic log behind the cursor: one Gemini call extracts candidate facts AND gates them against existing same-scope memories, returning ADD/UPDATE/SUPERSEDE/NOOP operations plus profile-tier proposal drafts. |
 | `librarian.reflect()` | async | Daily consolidation. |
+
+### notes
+
+| Method | Async | Description |
+| --- | --- | --- |
+| `librarian.addNote(text, opts)` | async | Store one note. |
+| `librarian.listNotes(filter)` | async | Browse what is stored. |
+| `librarian.updateNote(id, patch)` | async | Re-file or reword one note. |
+| `librarian.deleteNote(id)` | async | Forget one note outright. |
+| `librarian.findNotes(query, opts)` | async | Query the prose. |
 
 ### proposals/consent
 

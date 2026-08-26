@@ -1,6 +1,5 @@
-// The 36 `/v1/librarian/{method}` routes, alias-mapped exactly the way
-// a host's `librarian*` message
-// switch (lines ~1798-1929) maps message types onto Librarian methods.
+// The `/v1/librarian/{method}` routes, alias-mapped exactly the way a host's
+// `librarian*` message switch maps message types onto Librarian methods.
 //
 // `route` is the wire {method} path segment: drop the message type's
 // `librarian` prefix and lower-case the first letter — the same rule
@@ -101,6 +100,22 @@ export const LIBRARIAN_ROUTES = [
   { route: 'getScopedSetting', target: 'getScopedSetting', kind: 'librarian' },
   { route: 'removeScopedSetting', target: 'removeScopedSetting', kind: 'librarian' },
   { route: 'recordExplicitSetting', target: 'recordExplicitSetting', kind: 'librarian' },
+
+  // ---- natural-language notes --------------------------------------------
+  // Prose the person wrote about their own needs (toolkit/core/librarian.js,
+  // "Natural-language notes"). Route names match the method names — there is no
+  // librarian* message alias to mirror, because these are new.
+  //
+  // These carry the most free-form text in the system, and a hosted instance
+  // stores them under the token's uid like everything else. They are still
+  // absent from GRANT_SCOPES, so exporting one to another APP remains
+  // impossible; putting them on the wire only moves them between the person's
+  // own client and their own server.
+  { route: 'addNote', target: 'addNote', kind: 'librarian' },
+  { route: 'listNotes', target: 'listNotes', kind: 'librarian' },
+  { route: 'updateNote', target: 'updateNote', kind: 'librarian' },
+  { route: 'deleteNote', target: 'deleteNote', kind: 'librarian' },
+  { route: 'findNotes', target: 'findNotes', kind: 'librarian' },
 ];
 
 // Map for O(1) route -> entry lookup during dispatch.

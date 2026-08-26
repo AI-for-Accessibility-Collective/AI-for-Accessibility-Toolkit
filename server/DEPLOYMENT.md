@@ -70,8 +70,8 @@ Every `/v1/*` call needs `Authorization: Bearer <token>`; each token maps to a
 
 A host that uses the toolkit in "remote mode" points its Librarian facade at
 the Server URL with an access token; clearing them returns to fully-local mode.
-When configured, all librarian wire routes go to the server instead of an
-embedded core.
+When configured, all librarian wire routes — including the natural-language
+note methods — go to the server instead of an embedded core.
 
 ## Verification
 

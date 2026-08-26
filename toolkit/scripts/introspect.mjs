@@ -273,6 +273,13 @@ const CONCERN_MAP = {
   'librarian:reflect': 'memory',
   'librarian:listProcedural': 'memory',
 
+  // ---- notes (natural language) ----
+  'librarian:addNote': 'notes',
+  'librarian:listNotes': 'notes',
+  'librarian:updateNote': 'notes',
+  'librarian:deleteNote': 'notes',
+  'librarian:findNotes': 'notes',
+
   // ---- proposals / consent ----
   'librarian:listProposals': 'proposals/consent',
   'librarian:respondToProposal': 'proposals/consent',
@@ -325,7 +332,7 @@ const CONCERN_MAP = {
 
 // Stable display order for concern groups (independent of map iteration).
 const CONCERN_ORDER = [
-  'profile/ability', 'memory', 'proposals/consent', 'skills',
+  'profile/ability', 'memory', 'notes', 'proposals/consent', 'skills',
   'grants/sharing', 'blob/transport', 'acting-user/pauses', 'core', 'uncategorized',
 ];
 
