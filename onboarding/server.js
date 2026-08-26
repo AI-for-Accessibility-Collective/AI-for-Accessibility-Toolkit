@@ -113,12 +113,8 @@ async function onboard({ uid, supportAreas, freeText }) {
 // Returns {exists:false} for a uid that was never onboarded — WITHOUT creating
 // it (we check the profile list before touching getProfile, which would init a
 // default partition).
-async function profileSummary(uid) {
-  uid = String(uid || '').trim();
-  if (!uid) return { exists: false, uid: '' };
-  const exists = (await listProfiles()).includes(uid);
-  if (!exists) return { exists: false, uid };
-
+// Read a KNOWN-existing profile's configuration (supportAreas + free-text need).
+async function profileConfig(uid) {
   let profile = {};
   if (MODE === 'remote') {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-view' });
@@ -131,12 +127,15 @@ async function profileSummary(uid) {
     const { librarian } = await host.getInstance(uid);
     profile = await librarian.getProfile();
   }
-  return {
-    exists: true,
-    uid,
-    supportAreas: profile.supportAreas || [],
-    freeText: profile.freeText || '',
-  };
+  return { supportAreas: profile.supportAreas || [], freeText: profile.freeText || '' };
+}
+
+async function profileSummary(uid) {
+  uid = String(uid || '').trim();
+  if (!uid) return { exists: false, uid: '' };
+  const exists = (await listProfileIds()).includes(uid);
+  if (!exists) return { exists: false, uid };
+  return { exists: true, uid, ...(await profileConfig(uid)) };
 }
 
 // ── Admin: list + delete profiles (gated by ADMIN_PASSWORD) ─────────────────
@@ -147,7 +146,7 @@ function adminOk(req) {
   return given.length === ADMIN_PASSWORD.length && given === ADMIN_PASSWORD;
 }
 
-async function listProfiles() {
+async function listProfileIds() {
   if (MODE === 'remote') {
     const r = await remoteAdmin('GET', '/admin/users');
     if (r.status !== 200) throw new Error('remote list failed (' + r.status + ')');
@@ -155,6 +154,14 @@ async function listProfiles() {
   }
   const { store } = await localBits();
   return await store.listUsers();
+}
+
+// Each profile with its configuration — this is how the admin list renders them.
+async function listProfileSummaries() {
+  const ids = await listProfileIds();
+  const out = [];
+  for (const uid of ids) out.push({ uid, ...(await profileConfig(uid)) });
+  return out;
 }
 
 async function deleteProfile(uid) {
@@ -222,7 +229,7 @@ const server = http.createServer(async (req, res) => {
       if (!adminOk(req)) return sendJSON(res, 401, { error: ADMIN_PASSWORD ? 'unauthorized' : 'admin-not-configured' });
 
       if (method === 'GET' && pathname === '/api/profiles') {
-        try { return sendJSON(res, 200, { profiles: await listProfiles() }); }
+        try { return sendJSON(res, 200, { profiles: await listProfileSummaries() }); }
         catch (e) { return sendJSON(res, 502, { error: e.message }); }
       }
       if (method === 'DELETE' && pathname.startsWith('/api/profiles/')) {
@@ -249,4 +256,4 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
   });
 }
 
-export { server, onboard, listProfiles, deleteProfile };
+export { server, onboard, listProfileIds, listProfileSummaries, deleteProfile };

@@ -80,7 +80,7 @@
     </form>
     <div id="admin-status" class="status" role="status" aria-live="polite" hidden></div>
     <table id="profiles-table" hidden>
-      <thead><tr><th scope="col">Profile</th><th scope="col" class="row-actions">Action</th></tr></thead>
+      <thead><tr><th scope="col">Profile</th><th scope="col">Configuration</th><th scope="col" class="row-actions">Action</th></tr></thead>
       <tbody id="profiles-body"></tbody>
     </table>
   </section>
@@ -150,7 +150,9 @@ $('add-form').addEventListener('submit', async (e) => {
     const r = await fetch('/api/onboard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
     const d = await r.json();
     if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
-    setStatus($('add-status'), 'Added profile “' + d.uid + '” · areas: ' + (d.supportAreas.join(', ') || 'none'), 'ok');
+    const needs = d.freeText ? '“' + d.freeText + '”' : '(none)';
+    const areas = d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
+    setStatus($('add-status'), 'Added profile “' + d.uid + '” · Needs: ' + needs + ' · Support areas: ' + areas, 'ok');
     $('add-form').reset();
     $('uid').value = d.uid;           // keep the just-created profile as the current one
     loadCurrent();
@@ -165,19 +167,29 @@ async function refreshProfiles() {
     if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
     const body = $('profiles-body');
     body.innerHTML = '';
-    (d.profiles || []).forEach((uid) => {
+    (d.profiles || []).forEach((p) => {
+      const uid = p.uid;
       const tr = document.createElement('tr');
-      const td1 = document.createElement('td');
-      td1.innerHTML = '<code class="uid"></code>';
-      td1.querySelector('.uid').textContent = uid;
-      const td2 = document.createElement('td');
-      td2.className = 'row-actions';
+
+      const tdName = document.createElement('td');
+      const code = document.createElement('code'); code.className = 'uid';
+      code.textContent = uid; tdName.appendChild(code);
+
+      const tdCfg = document.createElement('td');
+      const bits = [];
+      if (p.freeText) bits.push('“' + p.freeText + '”');
+      if (p.supportAreas && p.supportAreas.length) bits.push(p.supportAreas.join(', '));
+      tdCfg.textContent = bits.length ? bits.join(' · ') : 'not set';  // textContent = no HTML injection
+
+      const tdAct = document.createElement('td');
+      tdAct.className = 'row-actions';
       const btn = document.createElement('button');
       btn.className = 'danger'; btn.textContent = 'Delete';
       btn.setAttribute('aria-label', 'Delete profile ' + uid);
       btn.onclick = () => del(uid);
-      td2.appendChild(btn);
-      tr.append(td1, td2);
+      tdAct.appendChild(btn);
+
+      tr.append(tdName, tdCfg, tdAct);
       body.appendChild(tr);
     });
     $('profiles-table').hidden = false;
