@@ -22,10 +22,9 @@
   .need-row { display: flex; gap: .5rem; align-items: stretch; }
   .need-row input { flex: 1; }
   .need-row button { margin-top: 0; white-space: nowrap; }
-  #mic[aria-pressed="true"] { background: #b3261e; color: #fff; border-color: #b3261e; }
-  .voice-controls { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; margin: .5rem 0 0; }
-  .voice-controls button { margin: 0; }
-  .voice-controls .inline { display: inline-flex; align-items: center; gap: .4rem; font-weight: 400; margin: 0; font-size: .9rem; }
+  .mic-btn[aria-pressed="true"] { background: #b3261e; color: #fff; border-color: #b3261e; }
+  .voice-bar { display: flex; gap: .5rem; margin: .5rem 0 .25rem; }
+  .voice-bar button { margin: 0; }
   section { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; margin: 1.25rem 0; }
   h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
   label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
@@ -55,12 +54,12 @@
 </head>
 <body>
   <h1>Accessibility Onboarding</h1>
+  <div class="voice-bar">
+    <button type="button" id="mic2" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
+    <button type="button" id="hear" class="secondary" hidden>🔊 Hear setting</button>
+  </div>
   <p class="target" id="target">Loading…</p>
   <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
-  <div class="voice-controls">
-    <button type="button" id="hear" class="secondary" hidden>🔊 Hear setting</button>
-    <label class="inline" id="readaloud-wrap" hidden><input type="checkbox" id="readaloud"> Read the setting aloud after adding</label>
-  </div>
 
   <section aria-labelledby="add-h">
     <h2 id="add-h">Add a profile</h2>
@@ -70,7 +69,7 @@
       <div class="need-row">
         <input type="text" id="need" name="need" autocomplete="off"
                placeholder="e.g. small text is hard to read; too much motion is distracting">
-        <button type="button" id="mic" class="secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
+        <button type="button" id="mic" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
       </div>
 
       <label id="areas-label">Support areas</label>
@@ -188,9 +187,6 @@ $('add-form').addEventListener('submit', async (e) => {
     $('add-form').reset();
     $('uid').value = d.uid;           // keep the just-created profile as the current one
     loadCurrent();
-    if (TTS && $('readaloud').checked) {
-      speak(settingSentence({ exists: true, uid: d.uid, supportAreas: d.supportAreas, freeText: d.freeText }));
-    }
     if (!$('profiles-table').hidden) refreshProfiles();
   } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
 });
@@ -254,9 +250,15 @@ $('admin-form').addEventListener('submit', (e) => {
 // Typing/selecting a different profile id updates the banner.
 $('uid').addEventListener('change', loadCurrent);
 
-// Voice input — dictate the need into the field (optional).
+// Voice input — dictate the need into the field (optional). Two Speak buttons
+// (one at the top, one by the field) share one recognition + listening state.
+const micBtns = ['mic', 'mic2'].map((id) => $(id)).filter(Boolean);
+function setMicState(on) {
+  listening = on;
+  micBtns.forEach((b) => { b.textContent = on ? '⏹ Stop' : '🎤 Speak'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+}
 if (SR) {
-  const mic = $('mic'); mic.hidden = false;
+  micBtns.forEach((b) => { b.hidden = false; });
   recog = new SR(); recog.lang = 'en-US'; recog.interimResults = true; recog.maxAlternatives = 1;
   recog.onresult = (e) => {
     let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
@@ -264,21 +266,19 @@ if (SR) {
   };
   recog.onerror = (e) => setStatus($('add-status'),
     'Voice input: ' + (e.error === 'not-allowed' ? 'microphone permission denied.' : e.error), 'err');
-  recog.onend = () => { listening = false; mic.textContent = '🎤 Speak'; mic.setAttribute('aria-pressed', 'false'); };
-  mic.addEventListener('click', () => {
+  recog.onend = () => setMicState(false);
+  micBtns.forEach((b) => b.addEventListener('click', () => {
     if (listening) { recog.stop(); return; }
     try {
-      recog.start(); listening = true;
-      mic.textContent = '⏹ Stop'; mic.setAttribute('aria-pressed', 'true');
+      recog.start(); setMicState(true);
       setStatus($('add-status'), 'Listening… speak your need, then press Stop.', '');
     } catch (e) {}
-  });
+  }));
 }
 
 // Voice output — hear the current setting read aloud (optional).
 if (TTS) {
   $('hear').hidden = false;
-  $('readaloud-wrap').hidden = false;
   $('hear').addEventListener('click', () => speak(settingSentence(currentProfile)));
 }
 
