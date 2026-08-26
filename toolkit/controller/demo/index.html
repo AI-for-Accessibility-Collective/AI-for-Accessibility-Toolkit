@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controller demo</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 48rem; margin: 0 auto; padding: 1.5rem; line-height: 1.55; color: #1a1a1a; background: #fff; }
+  @media (prefers-color-scheme: dark) { body { color: #eee; background: #16181c; } }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.15rem; margin-top: 1.5rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .5rem 0 1rem; }
+  .bar button { padding: .35rem .7rem; border: 1px solid #99a; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+  .muted { color: #667; font-size: .85rem; }
+  main#app { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; }
+  aside.ad { border: 1px dashed #b3261e; padding: .5rem; margin: 1rem 0; color: #b3261e; font-size: .85rem; }
+  a { color: #1f6feb; }
+</style>
+</head>
+<body>
+  <h1>Controller demo</h1>
+  <p class="muted">The floating widget (bottom-right) is the <strong>Controller</strong>. Type or say
+    things like <em>“bigger text”, “dark mode”, “high contrast”, “reduce motion”, “read this”, “undo”,
+    “scroll down”, “help”</em>. The card below is the <strong>receiving app</strong> it drives through the
+    neutral <code>ControlPort</code>.</p>
+
+  <div class="bar" role="group" aria-label="Operator profile">
+    <span class="muted">Operator profile:</span>
+    <button data-areas="" aria-pressed="true">default</button>
+    <button data-areas="vision">vision</button>
+    <button data-areas="hearing">hearing</button>
+    <button data-areas="motor">motor</button>
+    <button data-areas="cognitive">cognitive</button>
+  </div>
+  <p class="muted" id="presentation-note"></p>
+
+  <main id="app" aria-label="Demo article">
+    <h2>Getting started with the toolkit</h2>
+    <p>The AI for Accessibility Toolkit is a platform-agnostic library developers embed to add agentic
+       accessibility to any app. This page is a stand-in for a real application.</p>
+    <aside class="ad">Sponsored — a distracting advertisement block.</aside>
+    <h2>How adaptation works</h2>
+    <p>An ability model describes a person’s needs once; each surface renders it in its own terms.
+       The controller changes that model, or applies a live setting, through one neutral contract.</p>
+    <h2>Reading and motion</h2>
+    <p>You can enlarge the text, raise contrast, reduce motion, or have the page read aloud —
+       all by speaking or typing to the controller. See the <a href="#">documentation</a> for more.</p>
+  </main>
+
+<script type="module">
+  import { createController } from '../createController.js';
+  import { createDomReceiver } from '../web/dom-receiver.js';
+  import { mountController } from '../mount/index.js';
+  import { describePresentation } from '../presentation.js';
+
+  const app = document.getElementById('app');
+  const receiver = createDomReceiver(app, { scrollTarget: document.scrollingElement || document.documentElement });
+
+  let mounted = null;
+  function build(areas) {
+    if (mounted) mounted.unmount();
+    const abilityModel = { supportAreas: areas };
+    const controller = createController({ control: receiver, operator: { abilityModel } });
+    mounted = mountController(controller, { mode: 'element', corner: 'bottom-right' });
+    document.getElementById('presentation-note').textContent =
+      'Controller presents as → ' + describePresentation(controller.presentation);
+    window.__controller = controller; // handy for scripted checks
+  }
+
+  document.querySelectorAll('.bar button').forEach((b) => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.bar button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      const areas = b.dataset.areas ? b.dataset.areas.split(',') : [];
+      build(areas);
+    });
+  });
+
+  build([]); // default profile
+</script>
+</body>
+</html>

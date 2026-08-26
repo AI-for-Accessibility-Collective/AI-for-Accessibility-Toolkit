@@ -34,7 +34,7 @@
     "README.md"
   ],
   "scripts": {
-    "test": "node test/ability-model-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js && node test/codesign-scenarios-test.js && node test/scenario-test.js && node test/grants-audience-test.js && node test/notes-test.mjs && node test/phase1.test.mjs && node test/phase3.test.mjs && node test/phase3-crossapp.test.mjs && node test/package-boundary-test.js && node test/protocol-conformance-test.js && node test/cross-surface-translation-test.js && node test/api-docs-test.js && node test/controller.test.mjs",
+    "test": "node test/ability-model-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js && node test/codesign-scenarios-test.js && node test/scenario-test.js && node test/grants-audience-test.js && node test/notes-test.mjs && node test/phase1.test.mjs && node test/phase3.test.mjs && node test/phase3-crossapp.test.mjs && node test/package-boundary-test.js && node test/protocol-conformance-test.js && node test/cross-surface-translation-test.js && node test/api-docs-test.js && node test/controller.test.mjs && node test/controller-web.test.mjs",
     "docs": "node scripts/generate-api-docs.mjs && node scripts/generate-skill.mjs",
     "demo:xr": "node hosts/xr-demo/demo.js",
     "demo:skill": "node hosts/skill-demo/demo.js",
