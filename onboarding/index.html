@@ -57,7 +57,7 @@
   <div class="voice-bar">
     <button type="button" id="mic2" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
     <button type="button" id="hear" class="secondary" hidden>🔊 Hear setting</button>
-    <button type="button" id="add-top">Add profile</button>
+    <button type="button" id="add-top">Update profile</button>
   </div>
   <p class="target" id="target">Loading…</p>
   <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
@@ -73,13 +73,13 @@
         <button type="button" id="mic" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
       </div>
 
-      <label id="areas-label">Support areas</label>
+      <label id="areas-label">Specific areas of need</label>
       <div class="areas" role="group" aria-labelledby="areas-label" id="areas"></div>
 
       <label for="uid">Profile id <span class="muted">(optional — leave blank to auto-generate)</span></label>
       <input type="text" id="uid" name="uid" autocomplete="off" placeholder="auto">
 
-      <button type="submit">Add profile</button>
+      <button type="submit">Update profile</button>
     </form>
     <div id="add-status" class="status" role="status" aria-live="polite" hidden></div>
   </section>
@@ -118,7 +118,7 @@ function settingSentence(d) {
   if (d.exists === false) return 'Profile ' + d.uid + ' is not set yet.';
   const areas = (d.supportAreas && d.supportAreas.length) ? d.supportAreas.join(', ') : 'none';
   const needs = d.freeText ? ('You said: ' + d.freeText + '. ') : '';
-  return needs + 'Support areas: ' + areas + '.';
+  return needs + 'Specific areas of need: ' + areas + '.';
 }
 
 // ── Current-profile banner: the targeted uid's name + configuration ─────────
@@ -175,21 +175,20 @@ $('add-form').addEventListener('submit', async (e) => {
   const supportAreas = [...document.querySelectorAll('#areas input:checked')].map((c) => c.value);
   const payload = { uid: $('uid').value.trim() || undefined, freeText: $('need').value.trim(), supportAreas };
   if (!payload.freeText && supportAreas.length === 0) {
-    return setStatus($('add-status'), 'Enter a need or pick at least one support area.', 'err');
+    return setStatus($('add-status'), 'Enter a need or pick at least one area.', 'err');
   }
-  setStatus($('add-status'), 'Adding…', '');
+  speak('Updating the profile');    // announce the update on click / Enter
+  setStatus($('add-status'), 'Updating…', '');
   try {
     const r = await fetch('/api/onboard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
     const d = await r.json();
     if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     const needs = d.freeText ? '“' + d.freeText + '”' : '(none)';
     const areas = d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
-    setStatus($('add-status'), 'Added profile “' + d.uid + '” · Needs: ' + needs + ' · Support areas: ' + areas, 'ok');
+    setStatus($('add-status'), 'Updated profile “' + d.uid + '” · Needs: ' + needs + ' · Specific areas of need: ' + areas, 'ok');
     $('add-form').reset();
-    $('uid').value = d.uid;           // keep the just-created profile as the current one
+    $('uid').value = d.uid;           // keep the just-updated profile as the current one
     loadCurrent();
-    // Read the setting back aloud only when the need was entered by voice.
-    if (usedVoice) speak(settingSentence({ exists: true, uid: d.uid, supportAreas: d.supportAreas, freeText: d.freeText }));
     usedVoice = false;
     if (!$('profiles-table').hidden) refreshProfiles();
   } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
@@ -270,7 +269,7 @@ if (SR) {
   recog.onresult = (e) => {
     let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
     $('need').value = txt.replace(/\s+/g, ' ').trim();
-    usedVoice = true;   // the need was dictated — read the setting back after adding
+    usedVoice = true;   // the need was dictated (see onend for the read-back)
   };
   // Manual typing clears the flag (programmatic value sets above don't fire 'input').
   $('need').addEventListener('input', () => { usedVoice = false; });
@@ -278,8 +277,11 @@ if (SR) {
     'Voice input: ' + (e.error === 'not-allowed' ? 'microphone permission denied.' : e.error), 'err');
   recog.onend = () => {
     setMicState(false);
-    // After dictating, land focus on the top Add button so Enter accepts it.
-    if (usedVoice) $('add-top').focus();
+    if (usedVoice) {
+      const said = $('need').value.trim();
+      if (said) speak('You said ' + said);   // read the recognized text back
+      $('add-top').focus();                   // …then land on Update so Enter accepts
+    }
   };
   micBtns.forEach((b) => b.addEventListener('click', () => {
     if (listening) { recog.stop(); return; }
