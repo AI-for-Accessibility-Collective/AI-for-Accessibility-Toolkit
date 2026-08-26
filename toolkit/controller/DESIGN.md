@@ -1,9 +1,9 @@
 # The Controller — a platform-neutral control surface
 
 > **Status:** design + M0 (headless core) + M1 (self-presentation) + M2 (web UI,
-> mounts, DOM receiver, demo). The LLM lane and remote transports are later
-> milestones (see *Staging*). This document is the spec; the code under
-> `toolkit/controller/` implements it incrementally.
+> mounts, DOM receiver, demo) + M3 (optional LLM lane). Command intents (M4) and
+> remote transports are the remaining milestones (see *Staging*). This document
+> is the spec; the code under `toolkit/controller/` implements it incrementally.
 >
 > **Run the demo:** serve the repo statically and open the demo page —
 > `python3 -m http.server 4100` then
@@ -145,7 +145,7 @@ createController({
 | **M0** | ✅ Neutral `ControlPort` + deterministic grammar for the **adaptation + query** subset + headless router, proven against a **non-web mock receiver**. |
 | **M1** | ✅ `presentation.js` — Controller derives its own I/O from the operator's AbilityModel; richer intents (help, speech-rate). |
 | **M2** | ✅ Default web UI (`web/ui.js`, presentation-driven, reuses onboarding's voice code), DOM `ControlPort` (`web/dom-receiver.js`), `page`/`element`/`companion` mounts, runnable `demo/`. |
-| **M3** | Optional **LLM lane** for free-form phrasing. |
+| **M3** | ✅ Optional **LLM lane** (`llm-lane.js`) — `createLlmLane({complete})` turns a host text-completion fn into a resolver; runs only on a grammar miss; output validated/filtered to real+supported keys; never sees page content. |
 | **M4** | **Command** intents (`performAction`) + confirmation/consent + a receiver exposing targets. |
 
 ## Risks / open questions
