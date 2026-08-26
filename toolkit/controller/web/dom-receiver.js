@@ -60,10 +60,14 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
   const journal = []; // LIFO of { key: previousRenderedValue }
   const scroller = scrollTarget || root;
 
+  const ACTIONABLE = 'a, button, [role="button"], [role="link"], summary';
+  const nameOf = (e) => (e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
+  const listTargets = () => [...root.querySelectorAll(ACTIONABLE)].map(nameOf).filter(Boolean);
+
   const capabilities = {
     platform,
     settingKeys: Object.keys(RENDERERS),
-    actions: ['scroll'],
+    actions: ['scroll', 'activate', 'back', 'forward'],
     canReadContent: true,
   };
 
@@ -73,7 +77,7 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
 
   return {
     async describeCapabilities() {
-      return { ...capabilities, settingKeys: [...capabilities.settingKeys], actions: [...capabilities.actions] };
+      return { ...capabilities, settingKeys: [...capabilities.settingKeys], actions: [...capabilities.actions], targets: listTargets() };
     },
 
     async getContext() {
@@ -127,10 +131,29 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
     },
 
     async performAction(action, target) {
-      if (action !== 'scroll') return { ok: false, detail: `unsupported action: ${action}` };
-      const by = (scroller.clientHeight || 400) * 0.8;
-      scroller.scrollBy({ top: target === 'up' ? -by : by, behavior: 'smooth' });
-      return { ok: true, detail: `scroll ${target || 'down'}` };
+      if (action === 'scroll') {
+        if (target === 'top') scroller.scrollTo && scroller.scrollTo({ top: 0, behavior: 'smooth' });
+        else if (target === 'bottom') scroller.scrollTo && scroller.scrollTo({ top: scroller.scrollHeight || 1e6, behavior: 'smooth' });
+        else { const by = (scroller.clientHeight || 400) * 0.8; scroller.scrollBy && scroller.scrollBy({ top: target === 'up' ? -by : by, behavior: 'smooth' }); }
+        return { ok: true, detail: `scroll ${target || 'down'}` };
+      }
+      if (action === 'back' || action === 'forward') {
+        const win = (root.ownerDocument && root.ownerDocument.defaultView) || (typeof window !== 'undefined' ? window : null);
+        try { win && win.history && win.history[action](); } catch {}
+        return { ok: true, detail: action };
+      }
+      if (action === 'activate') {
+        const t = String(target || '').toLowerCase();
+        const els = [...root.querySelectorAll(ACTIONABLE)];
+        const match = els.find((e) => {
+          const n = nameOf(e).toLowerCase();
+          return n && (n.includes(t) || t.includes(n));
+        });
+        if (!match) return { ok: false, detail: `no target matching "${target}"` };
+        try { match.click(); } catch {}
+        return { ok: true, detail: `activated ${nameOf(match)}` };
+      }
+      return { ok: false, detail: `unsupported action: ${action}` };
     },
   };
 }

@@ -1,9 +1,10 @@
 # The Controller — a platform-neutral control surface
 
-> **Status:** design + M0 (headless core) + M1 (self-presentation) + M2 (web UI,
-> mounts, DOM receiver, demo) + M3 (optional LLM lane). Command intents (M4) and
-> remote transports are the remaining milestones (see *Staging*). This document
-> is the spec; the code under `toolkit/controller/` implements it incrementally.
+> **Status:** M0–M4 complete — headless core, self-presentation, web UI + mounts
+> + demo, optional LLM lane, and command intents with confirmation. The remaining
+> work is the **remote transport** (running the ControlPort over a channel so the
+> Controller is a cross-device service; see *Transport*). This document is the
+> spec; the code under `toolkit/controller/` implements it.
 >
 > **Run the demo:** serve the repo statically and open the demo page —
 > `python3 -m http.server 4100` then
@@ -146,7 +147,8 @@ createController({
 | **M1** | ✅ `presentation.js` — Controller derives its own I/O from the operator's AbilityModel; richer intents (help, speech-rate). |
 | **M2** | ✅ Default web UI (`web/ui.js`, presentation-driven, reuses onboarding's voice code), DOM `ControlPort` (`web/dom-receiver.js`), `page`/`element`/`companion` mounts, runnable `demo/`. |
 | **M3** | ✅ Optional **LLM lane** (`llm-lane.js`) — `createLlmLane({complete})` turns a host text-completion fn into a resolver; runs only on a grammar miss; output validated/filtered to real+supported keys; never sees page content. |
-| **M4** | **Command** intents (`performAction`) + confirmation/consent + a receiver exposing targets. |
+| **M4** | ✅ **Command** intents (`performAction`) — activate-by-label, scroll, back/forward; the DOM receiver exposes `targets`; presentation-driven **confirmation** (a state-changing command waits for "yes" when the operator's profile confirms). |
+| **M5** | ⬜ **Remote transport** — run the `ControlPort` over a channel (HTTP/WebSocket/postMessage) so a web Controller drives a mobile/XR/desktop receiver. |
 
 ## Risks / open questions
 

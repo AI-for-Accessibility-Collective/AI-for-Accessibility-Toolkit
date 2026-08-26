@@ -66,9 +66,17 @@ const RULES = [
   { re: /\b(large|big|bigger) cursor\b/, build: (_m, u) => adapt(u, { changes: { largeCursor: true }, say: 'Enlarging the cursor' }) },
   { re: /\b(big|large|bigger) (targets|buttons|controls)\b/, build: (_m, u) => adapt(u, { changes: { bigTargets: true }, say: 'Enlarging clickable controls' }) },
 
-  // — command seam (Stage 2 / M4) — proven end-to-end by a single scroll rule —
-  { re: /\bscroll (down|up)\b/, build: (m, u) => command(u, { action: 'scroll', target: m[1], say: `Scrolling ${m[1]}` }) },
+  // — commands (M4) — app actions through performAction —
+  { re: /\bscroll (?:to (?:the )?)?(top|bottom|up|down)\b/, build: (m, u) => command(u, { action: 'scroll', target: m[1], say: `Scrolling ${m[1]}` }) },
+  { re: /\bgo forward\b/, build: (_m, u) => command(u, { action: 'forward', say: 'Going forward' }) },
+  { re: /\bgo back\b/, build: (_m, u) => command(u, { action: 'back', say: 'Going back' }) },
+  { re: /\b(?:click|press|tap|activate|open|select) (?:the |on |a )?(.+)/, build: (m, u) => { const t = cleanTarget(m[1]); return command(u, { action: 'activate', target: t, say: `Activating ${t}` }); } },
 ];
+
+// Normalize a spoken target label: drop trailing punctuation and generic nouns.
+function cleanTarget(s) {
+  return String(s || '').replace(/["'.?!]+$/, '').replace(/\s+(link|button|tab|control|option)$/, '').trim();
+}
 
 // A handful of example phrases for the "didn't catch that" reply.
 export const SUGGESTIONS = [
