@@ -1,4 +1,1412 @@
 {
+ "amazon": {
+  "task": "buy a physical product on Amazon: search for an item, work the results list, open and assess a product page (price, rating, variant options, delivery date), add to cart, and check out; complete when the order confirmation or the final checkout review screen with the order total is on screen. Surface pinned: Amazon's own website or app — not a third-party wrapper or assistive shopping app, not a haul/unboxing video, not a deals-roundup or affiliate-listicle without a live purchase session. Variants: returns and refunds (see returns), reordering a past purchase (see reorder), leaving a review (see review), and Amazon Fresh grocery orders (see groceries) do not belong.",
+  "tree": {
+   "id": "0",
+   "label": "Buy a product on Amazon",
+   "note": "do 1. 2 before 3 when the wallet is funded up front (1sv0) - 7 reaches back into 2.3 to 2.6 when a gift card or shortfall surfaces at payment (BWIx). repeat 3 and 4 until the user settles on an item; 4.8 loops back to 3 for the next item when the order takes several (x0cE, 7wsx). then 5. 6 and 7 in the order the route dictates: cart paths meet 6 first (x0cE, 7wsx), buy-now paths land on 7 with the address riding on the same screen (bNZA, BKI3, BWIx). then 8; 8.6 to 8.8 only when the instrument demands an external authorization (x0cE, BKI3). 9 once the order exists - seven keepers do it in-video.",
+   "children": [
+    {
+     "id": "1",
+     "label": "Get into Amazon",
+     "note": "1.1 then 1.2, with 1.10 on a first run before anything else. 1.3 and 1.4 as prompts and cross-border needs arise - 1.3 can fire mid-task too, gating whatever needed the permission (DLy4). then 1.5 to 1.9 as the account state demands - three keepers arrive signed in and skip all of it, and DLy4 skips sign-in outright.",
+     "questions": [
+      {
+       "question": "Are you logged into the right account and is the shipping destination set correctly?",
+       "cluster": "facts",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "Verifying the 'Deliver to Malaysia' banner and account greeting ensures that product availability and shipping costs will be accurate for your location.",
+       "whatTheAgentLoses": "You lose the ability to verify that the agent is using your preferred account and regional settings before it starts filtering products."
+      }
+     ],
+     "children": [
+      {
+       "id": "1.1",
+       "label": "Install or update the app",
+       "questions": [
+        {
+         "question": "Which search suggestion should you select to find the Amazon app?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Typing 'am' reveals multiple suggestions like 'amazon' and 'airtel app', making it important to pick the exact match to find the correct store.",
+         "whatTheAgentLoses": "You lose the ability to verify that the agent selects the official Amazon app from the search suggestions instead of a similarly named alternative."
+        },
+        {
+         "question": "Which search result is the correct Amazon app to select?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen showed a sponsored third-party app at the top of the results, requiring you to bypass it and identify the official Amazon app to continue.",
+         "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the legitimate Amazon application rather than a sponsored ad."
+        }
+       ]
+      },
+      {
+       "id": "1.2",
+       "label": "Open the app or site",
+       "questions": [
+        {
+         "question": "How do you launch the Amazon app to begin shopping?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Play Store search results display an 'Open' button next to 'Amazon India Shop, Pay, miniTV', confirming the app is already installed and ready to launch.",
+         "whatTheAgentLoses": "The user loses the opportunity to verify that the correct regional version of the Amazon app is being opened for the purchase."
+        },
+        {
+         "question": "Which search result do you click to reach the main Amazon homepage?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the main organic title ensures you land on the general storefront instead of a specific department sitelink or a sponsored ad.",
+         "whatTheAgentLoses": "You lose the assurance that the agent is entering the authentic site through the main homepage rather than clicking a sponsored ad or a narrow category link."
+        }
+       ]
+      },
+      {
+       "id": "1.3",
+       "label": "Answer the device prompts",
+       "questions": [
+        {
+         "question": "Should you allow the browser to save your login information?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The browser prompt offers options to save, ignore, or password-protect your credentials, which dictates how securely your account is accessed in the future.",
+         "whatTheAgentLoses": "You lose the opportunity to personally decide your preferred balance between security and convenience for storing sensitive passwords."
+        },
+        {
+         "question": "Should you grant the app permission to access your camera to scan items, and do you want to save this preference?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The app requests camera access to scan barcodes or products and offers a checkbox to remember your permission choice for the future.",
+         "whatTheAgentLoses": "Delegating this step means you lose direct control over your device's privacy settings and whether the app receives temporary or permanent camera access."
+        }
+       ]
+      },
+      {
+       "id": "1.4",
+       "label": "Set the delivery region",
+       "questions": [
+        {
+         "question": "Do you want to change the delivery location to a US zip code to see all items, or keep it as your actual location?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The \"Choose your location\" popup lets you enter a US zip code or select a country, which determines whether you see the full catalog or only items that ship to your specific region.",
+         "whatTheAgentLoses": "You lose the ability to decide whether to browse the complete US inventory or strictly filter for products that can be delivered to your international address."
+        }
+       ]
+      },
+      {
+       "id": "1.5",
+       "label": "Find the sign-in entry",
+       "questions": [
+        {
+         "question": "Which icon do you tap to sign into your account from the home screen?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The bottom navigation bar contains both a Profile icon and a Menu icon that can lead to the sign-in screen.",
+         "whatTheAgentLoses": "You lose control over the navigation path used to access and verify your personal account."
+        }
+       ]
+      },
+      {
+       "id": "1.6",
+       "label": "Decide whether to sign in",
+       "questions": [
+        {
+         "question": "Which account should you log into, or should you create a new one?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The login screen displays an autocomplete dropdown with multiple saved emails and a button for new customers, requiring a choice of which profile to use for the order.",
+         "whatTheAgentLoses": "The user loses the ability to decide which specific account's payment methods and order history are used for this purchase."
+        },
+        {
+         "question": "Do you want to create a new account, or click the link to sign in to an existing one?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays a registration form for a new account along with an 'Already have an account? Sign in' link, requiring a choice between registering or logging in.",
+         "whatTheAgentLoses": "Delegating this decision means the agent might create a redundant new account instead of using your existing profile with its saved payment and shipping details."
+        }
+       ]
+      },
+      {
+       "id": "1.7",
+       "label": "Consider creating an account",
+       "questions": [
+        {
+         "question": "What name and password will you use to register your new account?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The registration form requires a name, email confirmation, and a new password to create an account and proceed with the checkout.",
+         "whatTheAgentLoses": "You lose the ability to choose the specific name and secure password associated with your new shopping account."
+        },
+        {
+         "question": "Are your registration details complete and correct before creating the account?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Verifying that the name, email, and password fields are filled correctly ensures the account can be created without errors to proceed with checkout.",
+         "whatTheAgentLoses": "The user loses the opportunity to verify that their personal information and chosen password were typed correctly for their new account."
+        }
+       ]
+      },
+      {
+       "id": "1.8",
+       "label": "Enter the sign-in identifier",
+       "questions": [
+        {
+         "question": "Will you use your mobile number or your email address to log in?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The sign-in screen requires entering either a mobile number or an email address in the text field to continue.",
+         "whatTheAgentLoses": "The user loses control over which personal contact method and associated account is used for the transaction."
+        }
+       ]
+      },
+      {
+       "id": "1.9",
+       "label": "Enter the password or code",
+       "questions": [
+        {
+         "question": "How do you authenticate your account to proceed with the purchase?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The 'Iniciar sesión' page requires you to re-enter your password to verify your identity before allowing you to continue to checkout.",
+         "whatTheAgentLoses": "You lose the security of keeping your password private, as the agent would need your exact credentials to bypass this authentication step."
+        },
+        {
+         "question": "Is the displayed email correct, and what password should you enter to sign in?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Verifying the displayed email '[email]' and entering the correct password ensures you are accessing the right account to complete the purchase.",
+         "whatTheAgentLoses": "The user loses the ability to verify that the purchase is being made under their preferred account."
+        }
+       ]
+      },
+      {
+       "id": "1.10",
+       "label": "Choose the app language"
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "Fund the balance",
+     "note": "2.1 then 2.2 on the hub route (1sv0); 7.4 enters directly at 2.3 mid-checkout (BWIx). 2.4 after any addition; 2.5 and 2.6 only when the balance falls short of the order.",
+     "children": [
+      {
+       "id": "2.1",
+       "label": "Open the Amazon Pay hub",
+       "questions": [
+        {
+         "question": "Which option should you select to redeem a new gift card?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The dashboard presents multiple gift card options, so selecting 'Add a Gift Card' is necessary to apply a new balance to your account.",
+         "whatTheAgentLoses": "The user loses the security of personally handling their gift card code and verifying that the funds are correctly added to their account balance."
+        },
+        {
+         "question": "Where do you tap to access your wallet and balance features?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The top navigation bar displays several distinct service icons like 'Pay', 'Fresh', and 'Bazaar', requiring you to identify the correct entry point for financial features.",
+         "whatTheAgentLoses": "You lose the opportunity to personally verify your available Amazon Pay balance before starting your shopping journey."
+        }
+       ]
+      },
+      {
+       "id": "2.2",
+       "label": "Read the voucher details",
+       "questions": [
+        {
+         "question": "What is the exact voucher code you need to capture for redemption?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays multiple alphanumeric strings including a transaction ID, so you must carefully isolate the specific voucher code to successfully apply the ₹500 balance.",
+         "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the correct code was identified and applied to fund your purchase."
+        }
+       ]
+      },
+      {
+       "id": "2.3",
+       "label": "Enter the gift card code",
+       "questions": [
+        {
+         "question": "Are you entering the correct gift card code to add to your balance?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Verifying the exact code ensures the funds are successfully added to your existing ₹9570.25 balance.",
+         "whatTheAgentLoses": "The user loses the chance to personally verify that the correct gift card code is being applied to their account."
+        }
+       ]
+      },
+      {
+       "id": "2.4",
+       "label": "Verify the balance moved",
+       "questions": [
+        {
+         "question": "Did the applied gift card correctly add ₹200.00 to your initial balance of ₹30.01, resulting in ₹230.01?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Confirming that the ₹200.00 gift card correctly updated the initial ₹30.01 balance to ₹230.01 ensures you are receiving the exact credit expected before paying.",
+         "whatTheAgentLoses": "The user loses the assurance of personally verifying that the gift card funds were accurately calculated and applied to their account balance."
+        },
+        {
+         "question": "Was the gift card added successfully, what is your new balance, and do you want to view the statement?",
+         "cluster": "receipts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Confirming the success message and updated balance ensures your funds were applied correctly, and checking the statement verifies the transaction details.",
+         "whatTheAgentLoses": "You lose the immediate reassurance of seeing your updated balance and the ability to personally verify the transaction history."
+        }
+       ]
+      },
+      {
+       "id": "2.5",
+       "label": "Pick the top-up amount and method",
+       "questions": [
+        {
+         "question": "How do you want to handle the insufficient balance warning to proceed with the purchase?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays an insufficient balance warning with an 'Add Now' button, requiring a decision on how to cover the remaining cost.",
+         "whatTheAgentLoses": "The user loses the ability to control exactly how much money is added to their account balance or whether to use an alternative payment method."
+        },
+        {
+         "question": "Did you verify that the requested top-up amount exactly covers the difference between the product price and your available balance?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Verifying the math ensures the ₹57.03 top-up exactly covers the shortfall between the ₹287.04 product price and the ₹230.01 available balance shown on screen.",
+         "whatTheAgentLoses": "The user loses the financial oversight of confirming that only the exact required amount is being added to their account."
+        }
+       ]
+      },
+      {
+       "id": "2.6",
+       "label": "Authorize the top-up in the payment app"
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "Find the product",
+     "note": "one of 3.1, 3.3, 3.4, or 3.5 to raise candidates - 3.2 rides on 3.1. then 3.6, with 3.7 running wherever ads sit in the list. re-entered per item on multi-item orders.",
+     "questions": [
+      {
+       "question": "Which product from the homepage recommendations should you select?",
+       "cluster": "compare",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The homepage displays several distinct items like a Galaxy phone, a water heater, and earbuds, so you must choose the specific product you intend to purchase.",
+       "whatTheAgentLoses": "You lose the opportunity to spontaneously browse and select an appealing item from the personalized homepage recommendations."
+      },
+      {
+       "question": "Are you sure this is the correct wishlist link to open?",
+       "cluster": "facts",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "Navigating directly to the specific wishlist URL ensures you are selecting the exact pre-approved items without having to search for them manually.",
+       "whatTheAgentLoses": "The user loses the guarantee that the agent is purchasing from their specifically curated wishlist rather than relying on a generic search."
+      }
+     ],
+     "children": [
+      {
+       "id": "3.1",
+       "label": "Enter the search terms",
+       "questions": [
+        {
+         "question": "Did you confirm the search parameters and filters are correct?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search bar and selected filters dictate the initial results on the screen, so incorrect parameters will hide the best options.",
+         "whatTheAgentLoses": "You lose the ability to intuitively tweak the search phrasing based on personal context that wasn't explicitly stated."
+        },
+        {
+         "question": "Which department should you select from the dropdown to narrow your search?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting a specific category from the dropdown, such as 'Electronics & Photo' or 'Books', prevents irrelevant results from other departments from cluttering your search.",
+         "whatTheAgentLoses": "The user loses the opportunity to intuitively narrow the search scope based on their personal understanding of which department best fits the desired item."
+        }
+       ]
+      },
+      {
+       "id": "3.2",
+       "label": "Pick a suggested completion",
+       "questions": [
+        {
+         "question": "Do any of these search suggestions match my intent?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The dropdown showed specific variations like 't shirts for men casual', which could save typing time and yield better-targeted results if they match your exact goal.",
+         "whatTheAgentLoses": "You lose the chance to organically discover and pivot to a more specific, helpful search term suggested by the platform's autocomplete."
+        }
+       ]
+      },
+      {
+       "id": "3.3",
+       "label": "Search with the camera",
+       "questions": [
+        {
+         "question": "Should you use text, voice, or the camera to search for the item?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search bar displays text, microphone, and camera icons, requiring you to choose the most effective input method for finding your specific product.",
+         "whatTheAgentLoses": "The user loses the ability to easily find an exact match by snapping a picture of a physical item they already have in front of them."
+        },
+        {
+         "question": "Should you upload an existing photo from your gallery or use the live camera?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Amazon Lens screen presents an 'Upload a photo' button, requiring you to decide whether you already have an image of the item or need to capture it live.",
+         "whatTheAgentLoses": "The user loses the ability to select a specific, pre-saved image from their personal gallery to ensure the visual search matches their exact desired item."
+        }
+       ]
+      },
+      {
+       "id": "3.4",
+       "label": "Browse the categories",
+       "questions": [
+        {
+         "question": "How should you navigate the site's menu to find the smartphones category?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting 'Smartphones' under the 'Mobiles & Tablets' drop-down menu efficiently filters the site's massive inventory down to the exact items you want to browse.",
+         "whatTheAgentLoses": "You lose the chance to manually explore the category hierarchy, which might reveal alternative device types or current category-wide sales you hadn't considered."
+        }
+       ]
+      },
+      {
+       "id": "3.5",
+       "label": "Reuse a recent search",
+       "questions": [
+        {
+         "question": "Should you type a new search query or select one of your recently viewed items or past searches?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search dropdown displays previously viewed categories like PC game headsets and recent searches, offering a quick shortcut to resume a past shopping session.",
+         "whatTheAgentLoses": "You lose the ability to spontaneously resume an interrupted shopping session prompted by your personalized search history."
+        }
+       ]
+      },
+      {
+       "id": "3.6",
+       "label": "Choose from the results",
+       "questions": [
+        {
+         "question": "Which t-shirt from the search results best fits your preferences for price, rating, and style?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results display a mix of sponsored items, best sellers, and combo packs with varying prices and ratings, requiring you to weigh these factors to find the right match.",
+         "whatTheAgentLoses": "An agent might default to the first sponsored result or best seller instead of scrolling to find a combo pack that better aligns with your specific style and value preferences."
+        },
+        {
+         "question": "Which search result should you select for the Apple gift card?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The top row displays multiple identical options for the Apple eGift Card, including three marked as previously viewed, requiring a choice of which listing to explore.",
+         "whatTheAgentLoses": "The user loses the opportunity to apply their own judgment when selecting among seemingly identical search results."
+        }
+       ]
+      },
+      {
+       "id": "3.7",
+       "label": "Tell the ads from the results",
+       "questions": [
+        {
+         "question": "Do you select the first sponsored result or scroll down to compare with organic listings?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The top result is a sponsored listing for the Meta Quest 3 at $499.00, and organic results might offer better prices or alternative bundles.",
+         "whatTheAgentLoses": "You lose the opportunity to find a better deal or a more suitable bundle by not reviewing all available search results."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "Vet the item",
+     "note": "4.1 to 4.6 in any order and depth - the corpus mostly reads 4.1 and skips 4.3. 4.7 whenever the item has variants; 4.8 and 4.9 where formats and fit make it matter. 4.7 re-prices the page, so 4.5 and 4.6 are re-read after it.",
+     "questions": [
+      {
+       "question": "Do you scroll down to check the price, rating, and item details, or look through the image carousel first?",
+       "cluster": "photos",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "Scrolling down reveals the exact price, offers, and detailed reviews from the 525 ratings to confirm the T-shirt combo pack meets your needs.",
+       "whatTheAgentLoses": "You lose the chance to personally evaluate the product's written specifications and customer reviews to ensure it is exactly what you want to buy."
+      },
+      {
+       "question": "Are you satisfied with the specific details of this product, such as the color, price, and delivery time?",
+       "cluster": "approve",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "This matters because you need to confirm that the selected variant, such as the Black color, and the deal price of ₹ 5,299.00 meet your preferences before proceeding.",
+       "whatTheAgentLoses": "The user loses the opportunity to personally evaluate and choose between different color variants based on their own aesthetic preferences."
+      }
+     ],
+     "children": [
+      {
+       "id": "4.1",
+       "label": "Read the item details"
+      },
+      {
+       "id": "4.2",
+       "label": "Study the pictures",
+       "questions": [
+        {
+         "question": "Which product images and angles do you want to inspect in detail?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Zooming in on the image thumbnails allows you to verify the physical appearance and design details of the phone's front and back.",
+         "whatTheAgentLoses": "You lose the personal reassurance of visually verifying the product's fine physical details and aesthetics yourself."
+        }
+       ]
+      },
+      {
+       "id": "4.3",
+       "label": "Read the reviews",
+       "questions": [
+        {
+         "question": "Do you check the customer reviews and ratings to verify the product quality?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Although the screen displays the manufacturer's material and care details, checking the reviews tab reveals actual customer experiences with the item.",
+         "whatTheAgentLoses": "You lose the opportunity to personally weigh the customer feedback and decide if the product's real-world quality meets your specific standards."
+        },
+        {
+         "question": "Are you comfortable trusting a 4-star rating that is based on only two customer reviews?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a 4-star rating but notes there are only two customer reviews, meaning the rating might not be a reliable indicator of quality.",
+         "whatTheAgentLoses": "You lose the opportunity to read the specific reviews and decide for yourself if the limited feedback justifies the purchase."
+        }
+       ]
+      },
+      {
+       "id": "4.4",
+       "label": "Check the seller and fulfillment"
+      },
+      {
+       "id": "4.5",
+       "label": "Check the price and the offers",
+       "questions": [
+        {
+         "question": "Did you check the box to apply the available $2 coupon before adding the item to your cart?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen showed a $2 coupon that required checking a box to apply the discount at checkout.",
+         "whatTheAgentLoses": "The user misses out on an available discount and ends up paying more than necessary."
+        },
+        {
+         "question": "Do you want to trade in your old phone to get a discount on this purchase?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displayed an 'Exchange Your Old Phone' option offering up to ₹25,000 in savings, which significantly impacts the final price.",
+         "whatTheAgentLoses": "Delegating this step means losing the opportunity to evaluate if the trade-in value offered for your specific old device is worth the exchange."
+        }
+       ]
+      },
+      {
+       "id": "4.6",
+       "label": "Check the delivery promise and stock",
+       "questions": [
+        {
+         "question": "Did you notice that the delivery date changed when you selected a different gift card amount?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen showed the delivery estimate shifting from April 24 to May 1-4 when the $200 denomination was selected, which could result in the gift arriving too late.",
+         "whatTheAgentLoses": "The user loses the opportunity to decide if giving a larger gift amount is worth the significantly delayed delivery."
+        },
+        {
+         "question": "Did you verify the stock status after changing the size?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Different product variations have different availability, as the screen showed the stock change from 'Only 4 left in stock' to 'In Stock' when the size was switched.",
+         "whatTheAgentLoses": "The user loses the assurance that the specific size they selected is actually available to ship without delays."
+        }
+       ]
+      },
+      {
+       "id": "4.7",
+       "label": "Pick the variant",
+       "questions": [
+        {
+         "question": "Which size should you select for this product?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The product page displays a warning that the item runs small and advises ordering a size up, which is crucial for ensuring a proper fit.",
+         "whatTheAgentLoses": "You lose the opportunity to adjust your standard size choice based on the specific fit warnings provided on the page."
+        },
+        {
+         "question": "Do you need the right-hand or left-hand side variant for your space, and should you check the reviews before deciding?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows two distinct plumbing orientations (RHS and LHS) with different prices and delivery dates, along with over 2,000 unread reviews that could inform the purchase.",
+         "whatTheAgentLoses": "You lose the ability to ensure the chosen water heater orientation actually matches your bathroom's specific plumbing layout."
+        }
+       ]
+      },
+      {
+       "id": "4.8",
+       "label": "Compare the formats on the page",
+       "questions": [
+        {
+         "question": "Which format of the book set should you examine first?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays multiple book formats with vastly different prices, from a $30.18 Kindle version to a $260.18 Audio CD, requiring a choice on which edition fits your needs.",
+         "whatTheAgentLoses": "You lose the opportunity to weigh the different formats and their respective prices against your personal reading preferences."
+        },
+        {
+         "question": "Do you prefer an eGift card or a physical gift card?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The eGift card is delivered electronically with different design options, while the physical gift card is a tangible item shipped with specific delivery dates.",
+         "whatTheAgentLoses": "You lose the opportunity to choose whether the recipient receives a tangible card in the mail or an immediate digital version."
+        }
+       ]
+      },
+      {
+       "id": "4.9",
+       "label": "Check the size guidance",
+       "questions": [
+        {
+         "question": "Do you adjust your size selection based on the fit warning?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen explicitly warns that the item runs small and advises ordering a size up, which is crucial for getting clothing that actually fits.",
+         "whatTheAgentLoses": "The user receives an item that doesn't fit because the agent ignored the specific sizing guidance provided on the product page."
+        },
+        {
+         "question": "Do the exact chest, shoulder, and length measurements for this size fit you?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The size guide table displays specific chest, shoulder, and length measurements that are necessary to verify the garment will actually fit.",
+         "whatTheAgentLoses": "An agent might select a standard size without knowing your exact body measurements, resulting in a garment that does not fit properly."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "5",
+     "label": "Stage the order",
+     "note": "5.1 forks the route. cart route: 5.2 as interstitials appear, 5.3 to 5.6 as the order needs, then 5.7. buy-now route: none of it - the next screen is 7 with the address on top (bNZA, BKI3, BWIx, QXip).",
+     "questions": [
+      {
+       "question": "Do you want to proceed to checkout now, or continue shopping for other items?",
+       "cluster": "approve",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "The screen confirms the item was added to the cart and presents a \"Proceed to checkout\" button, requiring a choice between finalizing the current order or looking for additional products.",
+       "whatTheAgentLoses": "You lose the opportunity to bundle multiple items into a single order if the agent automatically proceeds to checkout without asking if you need anything else."
+      },
+      {
+       "question": "Should you proceed directly to checkout, continue shopping, or review your cart first?",
+       "cluster": "approve",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "With seven items already in the cart and a high subtotal of $2,105.92, reviewing the cart ensures you are only buying what you actually intend to purchase.",
+       "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the accumulated items and total cost before initiating the final checkout process."
+      }
+     ],
+     "children": [
+      {
+       "id": "5.1",
+       "label": "Choose Buy Now or Add to Cart",
+       "questions": [
+        {
+         "question": "Are the product details acceptable, and should you add the item to your cart or buy it now?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a heavily discounted price of ₹ 649, delivery estimates, and 83 ratings, requiring a choice between two different purchase paths.",
+         "whatTheAgentLoses": "The user loses the opportunity to personally decide whether to investigate the reviews before committing the item to the cart."
+        },
+        {
+         "question": "Should you tap 'Buy Now' to check out immediately, or 'Add to Cart' to stage the item?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen presents both 'Buy Now' and 'Add to Cart' buttons below the price and delivery details, offering two different paths to initiate the purchase.",
+         "whatTheAgentLoses": "The user loses the ability to choose their preferred purchase flow, such as grouping items in a cart versus an instant single-item checkout."
+        }
+       ]
+      },
+      {
+       "id": "5.2",
+       "label": "Answer the add-on offers",
+       "questions": [
+        {
+         "question": "Should you add any of the recommended accessories to your order before checking out?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The cart confirmation page displays 'Frequently Bought Together' items like screen protectors and cases, offering a convenient way to bundle essential add-ons.",
+         "whatTheAgentLoses": "You lose the opportunity to spontaneously discover and bundle useful accessories that complement your main purchase."
+        },
+        {
+         "question": "Do you want to add the $19.99 3-year protection plan to your purchase?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen presents an interruptive prompt for an optional Asurion protection plan that requires an explicit choice to accept or decline before proceeding.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether the extra cost is worth the extended warranty coverage for this specific item."
+        }
+       ]
+      },
+      {
+       "id": "5.3",
+       "label": "Open the cart",
+       "questions": [
+        {
+         "question": "How do you navigate to the cart to continue the checkout process?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows an 'Added to cart' confirmation alongside a bottom navigation bar, requiring you to identify the correct icon to proceed.",
+         "whatTheAgentLoses": "You lose the opportunity to manually navigate the app's interface and verify the cart's status before initiating checkout."
+        },
+        {
+         "question": "Is the item successfully added to your cart, and how do you navigate to it?",
+         "cluster": "receipts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Confirming the 'Added to Cart' message and clicking the 'View Cart' button ensures the system registered your selection so you can proceed to checkout.",
+         "whatTheAgentLoses": "You lose the peace of mind of personally verifying the success message and reviewing the cart's contents before initiating checkout."
+        }
+       ]
+      },
+      {
+       "id": "5.4",
+       "label": "Review the cart",
+       "questions": [
+        {
+         "question": "Did you check how much more you need to spend to qualify for free delivery?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The cart displays a subtotal of ₹308.00 and explicitly notes that adding ₹292.00 more will waive the delivery fee.",
+         "whatTheAgentLoses": "The user loses the opportunity to optimize their purchase and avoid unnecessary shipping fees by reaching the minimum threshold."
+        },
+        {
+         "question": "Is the item successfully in your cart with the correct subtotal, and are you ready to proceed to checkout?",
+         "cluster": "receipts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Verifying the confirmation message and the $23.99 subtotal ensures the correct item was captured before deciding to check out or continue shopping.",
+         "whatTheAgentLoses": "You lose the opportunity to verify the cart's accuracy and decide whether to bundle additional items before initiating the checkout process."
+        }
+       ]
+      },
+      {
+       "id": "5.5",
+       "label": "Edit the cart",
+       "questions": [
+        {
+         "question": "How many of these screen protectors do you want to purchase?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The product page features a quantity dropdown with options from 1 to 10+, allowing you to easily buy multiple items at once.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether to stock up on backup screen protectors for future use or just buy a single one."
+        },
+        {
+         "question": "Should you purchase this Lenovo A6000 case now or save it for later?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen provides a 'Save for later' link for the ₹99.00 case, giving you the option to postpone buying it while keeping it easily accessible in your cart.",
+         "whatTheAgentLoses": "You lose the personal financial control of deciding exactly which items to buy immediately versus which to defer for a future purchase."
+        }
+       ]
+      },
+      {
+       "id": "5.6",
+       "label": "Add another item",
+       "questions": [
+        {
+         "question": "Do you want to add these black jogger sweatpants to the gift?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "You are viewing the Leggings Depot black jogger sweatpants in size G for $279.24 and must decide if they should be included in your order.",
+         "whatTheAgentLoses": "You lose the opportunity to personally confirm that the specific style, color, and size are appropriate for the gift recipient."
+        },
+        {
+         "question": "Do you want to search for additional items?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Clicking the search bar revealed past searches like 'cap' and 'bucket hat', offering a quick way to find more products if needed.",
+         "whatTheAgentLoses": "You lose the opportunity to spontaneously remember and add other needed items based on seeing your recent search history."
+        }
+       ]
+      },
+      {
+       "id": "5.7",
+       "label": "Proceed to checkout"
+      }
+     ]
+    },
+    {
+     "id": "6",
+     "label": "Set the address and delivery",
+     "note": "6.1 or 6.2 - or 6.6 when typing is abandoned for the map (DLy4). 6.3 and 6.4 inside 6.2 as the form asks; 6.5 where the platform offers a speed choice. on buy-now routes this whole goal is one glance at the top of the payment screen (bNZA).",
+     "questions": [
+      {
+       "question": "Should you use the existing delivery address or add a new one?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "The screen presents options to deliver to an existing address, edit it, or add a new address or pickup point.",
+       "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether to ship to a saved location or enter a new destination for a specific purpose like drop-shipping."
+      },
+      {
+       "question": "Which freight forwarding service will you use to obtain a US shipping address?",
+       "cluster": "hand over",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "Comparing the displayed options like MyUS, comGateway, and Shipito is necessary to determine the best service for forwarding your US purchases to Malaysia.",
+       "whatTheAgentLoses": "You lose the opportunity to personally vet and select the third-party forwarding service that offers the best international shipping rates and terms for your needs."
+      }
+     ],
+     "children": [
+      {
+       "id": "6.1",
+       "label": "Pick a saved address",
+       "questions": [
+        {
+         "question": "Which address do you want this order delivered to?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays a newly added address under your recently used options, requiring you to confirm the correct destination for the shipment.",
+         "whatTheAgentLoses": "You lose the ability to verify that the package is being sent to your preferred location rather than an outdated or incorrect address."
+        },
+        {
+         "question": "Which shipping address do you want to use for this order?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays multiple similar saved addresses, so choosing the correct one ensures the items are delivered to the intended recipient and location.",
+         "whatTheAgentLoses": "The user loses the ability to personally verify and select the exact delivery destination from their saved address book."
+        }
+       ]
+      },
+      {
+       "id": "6.2",
+       "label": "Add a new address",
+       "questions": [
+        {
+         "question": "What details do you enter to create the new delivery address?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The checkout process requires a valid destination, so leaving the name, mobile number, pincode, and state fields empty will trigger an error or prevent delivery.",
+         "whatTheAgentLoses": "The user loses the ability to successfully complete checkout and receive their item if the agent submits a blank address form."
+        },
+        {
+         "question": "Which state should you select for the delivery address?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays a dropdown list of Indian states, which must be accurately selected to complete the shipping address.",
+         "whatTheAgentLoses": "You lose control over specifying the correct state for your shipping address, which could result in the package being misrouted."
+        }
+       ]
+      },
+      {
+       "id": "6.3",
+       "label": "Pick the address type",
+       "questions": [
+        {
+         "question": "Are you delivering this to a home or an office address?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Selecting the correct address type ensures the package arrives during the appropriate delivery window, as the home and office options have different hours.",
+         "whatTheAgentLoses": "You lose the ability to specify the delivery window that best matches your availability at the shipping location."
+        }
+       ]
+      },
+      {
+       "id": "6.4",
+       "label": "Confirm the billing address",
+       "questions": [
+        {
+         "question": "Do you need to provide a security access code for the carrier, and is your shipping address the same as your billing address?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The checkout screen asks for any necessary security access codes for delivery and requires you to confirm if the shipping address matches the one on your credit card or bank statement.",
+         "whatTheAgentLoses": "You lose the opportunity to provide specific building access instructions for the carrier or to specify a different billing address for your payment method."
+        },
+        {
+         "question": "Does the final billing address on the review page reflect your earlier choice to provide a separate one?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "You selected 'No' to using the shipping address for billing, but the review page defaulted to 'Same as shipping address' without ever prompting for the new one.",
+         "whatTheAgentLoses": "The user loses the ability to ensure their payment details are accurate, which could cause the transaction to fail due to a billing address mismatch."
+        }
+       ]
+      },
+      {
+       "id": "6.5",
+       "label": "Pick the delivery speed",
+       "questions": [
+        {
+         "question": "Are the items and the selected delivery speed correct before proceeding?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Reviewing the listed items and delivery options ensures you receive the correct products at the expected time without incurring unwanted shipping fees.",
+         "whatTheAgentLoses": "You lose the opportunity to choose a faster delivery speed if you need the items sooner than the default free option provides."
+        },
+        {
+         "question": "Do you want to pay extra for faster shipping, or stick with the cheaper standard delivery?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen presents different delivery speeds and costs for the processor and book bundle, which directly impacts your total price and arrival date.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to weigh your urgency for the items against the extra cost of expedited shipping."
+        }
+       ]
+      },
+      {
+       "id": "6.6",
+       "label": "Set the address by map"
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "Choose how to pay",
+     "note": "7.1 then 7.2 - 7.3 rides on COD, 7.4 reaches back into 2.3 to 2.6 when a gift card or a shortfall surfaces (BWIx), 7.5 opens the card-and-installments subtree, 7.6 and 7.7 apply stored value. the defaults shift between visits as balances change (BWIx), and the picked instrument changes the total downstream four ways in this corpus - a fee (COD), a discount (EMI), a deduction (points), a zero (balance).",
+     "questions": [
+      {
+       "question": "Should I skip the store card offer and continue to the final review?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "The payment page presents an Amazon store card offer with financing benefits that you must decide to accept or ignore before proceeding.",
+       "whatTheAgentLoses": "You lose the opportunity to evaluate whether the financing offer makes sense for your financial situation before the agent bypasses it."
+      },
+      {
+       "question": "Which currency should you use for the payment?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "The checkout screen offers a choice between ZAR and USD, which determines the exchange rate and final amount charged to your payment method.",
+       "whatTheAgentLoses": "You lose the opportunity to choose the most cost-effective currency based on your specific bank's foreign transaction fees and exchange rates."
+      }
+     ],
+     "children": [
+      {
+       "id": "7.1",
+       "label": "Review the payment options",
+       "questions": [
+        {
+         "question": "Did selecting 'Pay on Delivery' automatically deselect your Amazon Pay balance?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "A message appeared stating the balance was deselected, and the previously checked option visibly changed to unchecked.",
+         "whatTheAgentLoses": "The user loses the ability to ensure their preferred payment combination is actually applied and not overridden by the system."
+        },
+        {
+         "question": "Did you notice that the Cash on Delivery option promised on the product page is unavailable at checkout?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The product page explicitly stated the item was eligible for Cash on Delivery, but this payment method was disabled and marked unavailable during checkout.",
+         "whatTheAgentLoses": "The user loses the ability to use their preferred payment method or reconsider the purchase when a promised option is unexpectedly revoked."
+        }
+       ]
+      },
+      {
+       "id": "7.2",
+       "label": "Pick the payment method",
+       "questions": [
+        {
+         "question": "Which payment method do you want to use for this order?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The checkout screen requires you to choose between digital payment methods like UPI or cards and Pay on Delivery, which automatically disables your Amazon Pay balance.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to decide exactly how the purchase is funded, such as opting to pay in cash upon delivery rather than using your linked bank accounts or digital balances."
+        },
+        {
+         "question": "Are you ready to continue with 'Pay on Delivery' selected?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Selecting this option and continuing commits you to paying for the item in person upon its arrival.",
+         "whatTheAgentLoses": "The user loses the opportunity to choose their preferred payment method and control exactly how the transaction is funded."
+        }
+       ]
+      },
+      {
+       "id": "7.3",
+       "label": "Accept the payment fee",
+       "questions": [
+        {
+         "question": "Which payment method do you prefer to use, and are you willing to accept the ₹7 convenience fee for Cash on Delivery?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen offers multiple payment options like UPI or cards, but selecting Cash on Delivery explicitly adds a ₹7 convenience fee to the order.",
+         "whatTheAgentLoses": "The user loses the ability to choose their preferred payment method and decide whether to avoid the extra convenience fee."
+        }
+       ]
+      },
+      {
+       "id": "7.4",
+       "label": "Apply a gift card at checkout",
+       "questions": [
+        {
+         "question": "Do you want to apply a gift card or promotional code to this order?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The checkout screen includes an \"Enter a gift card or promotional code\" field that can reduce the total out-of-pocket cost of the order.",
+         "whatTheAgentLoses": "The user loses the financial benefit of applying personal discounts or gift balances if the agent completes the checkout without asking for these codes."
+        },
+        {
+         "question": "Does the promotional banner correctly calculate your new order total if you apply the gift card?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The promotional banner explicitly shows that applying a $50 gift card reduces the $72.10 order total to exactly $22.10.",
+         "whatTheAgentLoses": "You lose the chance to personally verify that the promotional discount is mathematically correct for your specific order before checking out."
+        }
+       ]
+      },
+      {
+       "id": "7.5",
+       "label": "Add a card and configure the installments",
+       "note": "7.5.1, then 7.5.2; 7.5.3 to 7.5.5 only on EMI; 7.5.6 asked twice - skipped at the CVV screen, accepted later under the RBI wording.",
+       "questions": [
+        {
+         "question": "Are the card details correct, and is South African Rand the right currency to select for this payment?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The checkout screen prompts for the card's currency, and leaving the default as South African Rand (ZAR) dictates the exchange rate and conversion fees applied to the purchase.",
+         "whatTheAgentLoses": "You lose the opportunity to select the most cost-effective billing currency to avoid unnecessary foreign transaction fees from your bank."
+        }
+       ],
+       "children": [
+        {
+         "id": "7.5.1",
+         "label": "Add the card",
+         "questions": [
+          {
+           "question": "Which credit or debit card will you use to pay for this order?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The checkout screen requires you to select a payment method and enter valid card details like the name, number, and expiration date to proceed.",
+           "whatTheAgentLoses": "Delegating this step means you lose control over which specific bank account or credit line is charged for the transaction."
+          },
+          {
+           "question": "Which credit card details will you enter to pay for this order?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "Providing the correct name, card number, and expiration date in the 'Add a Card' form is necessary to successfully fund the purchase.",
+           "whatTheAgentLoses": "You lose the ability to decide exactly which financial account is used and exposed for this specific transaction."
+          }
+         ]
+        },
+        {
+         "id": "7.5.2",
+         "label": "Enter the card security code",
+         "questions": [
+          {
+           "question": "Do you need help finding the security code on your card?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The checkout screen includes a \"What's this?\" link next to the security code field to visually guide users on where to find the CVV on their specific type of credit card.",
+           "whatTheAgentLoses": "You lose the educational guidance provided by the platform that teaches you how to locate the security code on your physical card."
+          }
+         ]
+        },
+        {
+         "id": "7.5.3",
+         "label": "Open the installment options",
+         "questions": [
+          {
+           "question": "How do you want to configure your EMI options?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "Tapping 'Select EMI options' is required to specify the bank and tenure for the installment plan.",
+           "whatTheAgentLoses": "You lose control over selecting the specific installment duration and interest rate that best fits your financial situation."
+          },
+          {
+           "question": "Do you want to pay in full or select an EMI plan for this purchase?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The checkout screen requires you to enter your CVV and choose between paying the full amount upfront or selecting a No Cost EMI plan.",
+           "whatTheAgentLoses": "You lose the ability to manage your personal cash flow by deciding whether to pay the entire amount immediately or split it into monthly installments."
+          }
+         ]
+        },
+        {
+         "id": "7.5.4",
+         "label": "Pick the tenure",
+         "questions": [
+          {
+           "question": "Which EMI tenure and interest structure best fits your budget?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The screen lists multiple EMI options ranging from 3 to 24 months, requiring a choice between shorter 'No Cost' plans and longer plans that charge a 15.5% interest rate.",
+           "whatTheAgentLoses": "You lose the ability to balance your personal monthly cash flow needs against the extra cost of interest."
+          }
+         ]
+        },
+        {
+         "id": "7.5.5",
+         "label": "Verify the plan's cost",
+         "questions": [
+          {
+           "question": "Does the upfront EMI discount exactly offset the interest charged by the bank?",
+           "cluster": "facts",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "Verifying that the ₹2,712 EMI discount exactly matches the ₹2,712 interest charge ensures you are actually getting a true No Cost EMI deal without hidden financing costs.",
+           "whatTheAgentLoses": "You lose the financial peace of mind of personally verifying that the discount math perfectly cancels out the bank's interest fees before committing to the payment plan."
+          },
+          {
+           "question": "Should you proceed with the Affirm payment plan even though the order summary is showing dashes instead of the final cost?",
+           "cluster": "approve",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The order summary displayed dashes instead of actual costs, meaning you are committing to a payment plan without seeing the final total.",
+           "whatTheAgentLoses": "The user loses the ability to halt the transaction and verify the actual total cost before entering a binding financial agreement."
+          }
+         ]
+        },
+        {
+         "id": "7.5.6",
+         "label": "Decide whether to save the card",
+         "questions": [
+          {
+           "question": "Do you want to save this credit card for future purchases?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The payment screen includes a checkbox to save your card details per RBI guidelines, which affects your account's stored financial data.",
+           "whatTheAgentLoses": "You lose control over your financial privacy and security if the agent decides whether to permanently store your credit card information on the platform."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "7.6",
+       "label": "Apply the balance",
+       "questions": [
+        {
+         "question": "Do you want to use your available gift card and promotional balances to cover the entire order?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The order summary showed a total of $73.88, which could be fully covered by the selected $75.58 gift card and $7.00 promotional balances without charging your Mastercard.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether to spend your existing gift card balance now or save it for a future purchase and charge the credit card instead."
+        }
+       ]
+      },
+      {
+       "id": "7.7",
+       "label": "Apply the reward points",
+       "questions": [
+        {
+         "question": "Do you want to apply your available reward points to this purchase?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The payment screen displays an option to apply $18.88 in available reward points to reduce your order total.",
+         "whatTheAgentLoses": "You lose the choice of whether to spend your accumulated reward points now or save them for a future purchase."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "8",
+     "label": "Review and place the order",
+     "note": "8.1 with 8.2 against it; 8.3 where a code exists; 8.4 before 8.5 where the platform shows terms. 8.5 commits - except on external instruments, where 8.6 to 8.8 finish it on the bank's pages (x0cE, BKI3), and on the points detour, where the commit button lives on the payment screen itself and no recalculated total is ever shown (RJe-).",
+     "children": [
+      {
+       "id": "8.1",
+       "label": "Review the order summary",
+       "questions": [
+        {
+         "question": "Are the final price, delivery date, and product details correct before you place the order?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Verifying the ₹499.00 final price, the December 15 delivery date, and the specific t-shirt combo ensures the order is exactly as expected before finalizing the purchase.",
+         "whatTheAgentLoses": "Letting an agent click the final purchase button removes your last chance to catch unexpected charges or unacceptable delivery dates before your money is spent."
+        },
+        {
+         "question": "Are you comfortable with the delivery dates and shipping fees across all four shipments?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displayed four separate shipments arriving on different dates, including one that added a $19.99 shipping fee to the total cost.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether paying extra shipping fees or waiting longer for specific items fits your schedule and budget."
+        }
+       ]
+      },
+      {
+       "id": "8.2",
+       "label": "Check the totals and dates against the earlier screens",
+       "questions": [
+        {
+         "question": "Did you notice that the price of the Moto E dropped after you added it to the cart?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The Moto E was priced at ₹5,299.00 when added, but the final two-item subtotal of ₹11,198.00 shows it dropped to ₹4,999.00.",
+         "whatTheAgentLoses": "The user loses the ability to accurately track their expected spending if the agent ignores spontaneous price changes in the cart."
+        },
+        {
+         "question": "Does the promised delivery date stay consistent from the product page all the way through checkout?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Confirming that the delivery date promised on the product page matches the final checkout screen ensures you are not surprised by unexpected shipping delays.",
+         "whatTheAgentLoses": "The user loses the ability to catch last-minute shipping changes that might silently appear before finalizing the order."
+        }
+       ]
+      },
+      {
+       "id": "8.3",
+       "label": "Apply a promo code"
+      },
+      {
+       "id": "8.4",
+       "label": "Accept the terms"
+      },
+      {
+       "id": "8.5",
+       "label": "Place the order",
+       "questions": [
+        {
+         "question": "How do you finalize the purchase or abort the transaction from this screen?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "This matters because the screen presents the ultimate choice between committing to the purchase with the place order button or cancelling by navigating back to the homepage.",
+         "whatTheAgentLoses": "The user loses the chance to make a final go/no-go decision on the purchase if the agent proceeds without pausing to explain these ultimate options."
+        },
+        {
+         "question": "Are you sure you want to place this order given the 2026 delivery estimate?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays an estimated delivery date of '6 Jan 2026', meaning you would be waiting years for the item to arrive.",
+         "whatTheAgentLoses": "You lose the opportunity to catch and cancel an order with an unacceptable multi-year delivery delay."
+        }
+       ]
+      },
+      {
+       "id": "8.6",
+       "label": "Hand off to the bank"
+      },
+      {
+       "id": "8.7",
+       "label": "Answer the SMS-autofill prompt",
+       "questions": [
+        {
+         "question": "Do you want to grant Amazon permission to read your text messages to automatically fill the OTP?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The app explicitly requests SMS access to auto-read OTPs, requiring a choice between checkout convenience and message privacy.",
+         "whatTheAgentLoses": "The user loses the ability to decide whether to protect their SMS privacy or grant the app access for convenience."
+        }
+       ]
+      },
+      {
+       "id": "8.8",
+       "label": "Enter the bank code",
+       "questions": [
+        {
+         "question": "How do you complete the bank's two-factor authentication?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The Federal Bank authentication page requires a secret SMS OTP to securely authorize the payment.",
+         "whatTheAgentLoses": "The user loses full automation because the agent cannot access the SMS OTP sent to their personal phone to authorize the payment."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "label": "Verify the order",
+     "note": "9.1, then 9.2 as the upsells land; 9.3 to 9.5 in order. seven keepers run it; x0cE tracks an older order instead of the new one.",
+     "children": [
+      {
+       "id": "9.1",
+       "label": "Read the confirmation",
+       "questions": [
+        {
+         "question": "Did you verify the order was successfully placed and note the delivery date?",
+         "cluster": "receipts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "Confirming the 'Order placed' message and the delivery date ensures the transaction went through and the item will arrive when expected.",
+         "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the confirmation screen and knowing exactly when their item will arrive."
+        },
+        {
+         "question": "Does the video show a continuous transition to the order confirmation after you tap 'Continue'?",
+         "cluster": "receipts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "The video cuts abruptly from the payment selection to a completely different product page, failing to show if the order was actually placed.",
+         "whatTheAgentLoses": "The user loses proof that their purchase was successfully completed because the recording skips the final confirmation screen."
+        }
+       ]
+      },
+      {
+       "id": "9.2",
+       "label": "Decline the post-purchase offers",
+       "questions": [
+        {
+         "question": "Is the order fully confirmed, and should I interact with the scratch card or Prime offers before leaving?",
+         "cluster": "receipts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "The screen displays the final 'Order placed' confirmation alongside distracting upsells like a scratch card and a Prime subscription offer.",
+         "whatTheAgentLoses": "The user loses the opportunity to claim post-purchase rewards or evaluate the Prime subscription offer if the agent automatically dismisses them."
+        }
+       ]
+      },
+      {
+       "id": "9.3",
+       "label": "Open the orders list",
+       "questions": [
+        {
+         "question": "Which section do you select to verify your recent purchase?",
+         "cluster": "hand over",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "Selecting 'Your Orders' from the profile menu is necessary to confirm that the checkout process was successful and the order is officially logged.",
+         "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying that the new order successfully appears in your account history."
+        },
+        {
+         "question": "How do you access your order history to track a package?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The home screen features a bottom navigation bar with multiple options like 'You' and 'Menu', requiring you to know which tab actually contains your recent orders.",
+         "whatTheAgentLoses": "The user loses the immediate reassurance of personally navigating to their order history to verify the tracking status of their package."
+        }
+       ]
+      },
+      {
+       "id": "9.4",
+       "label": "Find the new order",
+       "questions": [
+        {
+         "question": "Do you open the newly placed order in your order history to verify its details?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "Checking the order history confirms that the purchase went through successfully and displays the current dispatch status and estimated delivery date.",
+         "whatTheAgentLoses": "You lose the immediate reassurance of seeing the order successfully logged in your account with its confirmed delivery timeline."
+        },
+        {
+         "question": "Did you apply the gift card code and actually place the order?",
+         "cluster": "receipts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "The screen shows the gift card code entered, but the video ends on the pending payment page before the code is applied or the order is finalized.",
+         "whatTheAgentLoses": "The user is left falsely believing their item was successfully purchased using the gift card when the order was never actually placed."
+        }
+       ]
+      },
+      {
+       "id": "9.5",
+       "label": "Read the tracking timeline",
+       "questions": [
+        {
+         "question": "What is the current tracking status and expected delivery date for your order?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "The screen displays the order tracking timeline, confirming the order was placed today and showing when it will arrive.",
+         "whatTheAgentLoses": "The person loses the immediate reassurance of seeing the confirmed order status and knowing exactly when it will arrive."
+        },
+        {
+         "question": "Is the order successfully placed, and do you need to cancel or update delivery instructions?",
+         "cluster": "receipts",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "The order status page displays a progress bar confirming the 'Ordered' status and provides immediate options to cancel or update delivery instructions if needed.",
+         "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the green checkmark confirming the order and the opportunity to quickly cancel or adjust delivery instructions before shipping."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
  "doctor": {
   "task": "book a doctor appointment online (Zocdoc, MyChart and other patient portals, clinic sites): search or pick a provider, filter by insurance and visit reason, pick an open slot, identify as the patient, confirm; complete when the appointment confirmation with provider, date, and time is on screen. Surface pinned: a medical booking site or patient portal on web or app. Variants: prescription refills (seeded variant), attending the telehealth visit itself, and researching providers without booking do not belong.",
   "tree": {
