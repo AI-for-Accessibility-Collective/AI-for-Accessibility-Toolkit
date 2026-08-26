@@ -1,10 +1,11 @@
 # The Controller — a platform-neutral control surface
 
-> **Status:** M0–M4 complete — headless core, self-presentation, web UI + mounts
-> + demo, optional LLM lane, and command intents with confirmation. The remaining
-> work is the **remote transport** (running the ControlPort over a channel so the
-> Controller is a cross-device service; see *Transport*). This document is the
-> spec; the code under `toolkit/controller/` implements it.
+> **Status:** M0–M5 complete — headless core, self-presentation, web UI + mounts
+> + demo, optional LLM lane, command intents with confirmation, and the remote
+> transport (the ControlPort over a channel, so the Controller is a cross-device
+> service). This document is the spec; the code under `toolkit/controller/`
+> implements it. What remains is production hardening of real transports
+> (WebSocket/postMessage/HTTP adapters to the Channel shape) and a native UI.
 >
 > **Run the demo:** serve the repo statically and open the demo page —
 > `python3 -m http.server 4100` then
@@ -148,7 +149,7 @@ createController({
 | **M2** | ✅ Default web UI (`web/ui.js`, presentation-driven, reuses onboarding's voice code), DOM `ControlPort` (`web/dom-receiver.js`), `page`/`element`/`companion` mounts, runnable `demo/`. |
 | **M3** | ✅ Optional **LLM lane** (`llm-lane.js`) — `createLlmLane({complete})` turns a host text-completion fn into a resolver; runs only on a grammar miss; output validated/filtered to real+supported keys; never sees page content. |
 | **M4** | ✅ **Command** intents (`performAction`) — activate-by-label, scroll, back/forward; the DOM receiver exposes `targets`; presentation-driven **confirmation** (a state-changing command waits for "yes" when the operator's profile confirms). |
-| **M5** | ⬜ **Remote transport** — run the `ControlPort` over a channel (HTTP/WebSocket/postMessage) so a web Controller drives a mobile/XR/desktop receiver. |
+| **M5** | ✅ **Remote transport** (`transport/remote.js`) — `serveControl(channel, port)` on the receiver, `remoteControl({channel})` proxy on the Controller; a JSON request/response over a transport-agnostic `Channel = { post, subscribe }`. `createDirectChannelPair()` for tests/same-page; WebSocket/postMessage/HTTP are thin adapters to that shape. The same core drives a remote receiver unchanged. |
 
 ## Risks / open questions
 
