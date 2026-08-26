@@ -25,7 +25,7 @@
     “scroll down”, “help”</em>. The card below is the <strong>receiving app</strong> it drives through the
     neutral <code>ControlPort</code>.</p>
 
-  <div class="bar" role="group" aria-label="Operator profile">
+  <div class="bar" id="operator-bar" role="group" aria-label="Operator profile">
     <span class="muted">Operator profile:</span>
     <button data-areas="" aria-pressed="true">default</button>
     <button data-areas="vision">vision</button>
@@ -34,6 +34,15 @@
     <button data-areas="cognitive">cognitive</button>
   </div>
   <p class="muted" id="presentation-note"></p>
+
+  <div class="bar" role="group" aria-label="What the controller drives">
+    <span class="muted">Drive:</span>
+    <input id="ws-url" type="text" placeholder="ws://127.0.0.1:9333  (a remote receiver, e.g. browser-harness)"
+           style="flex:1; min-width:16rem; padding:.35rem .5rem; border:1px solid #99a; border-radius:6px; background:transparent; color:inherit;">
+    <button id="connect">Connect remote</button>
+    <button id="disconnect" hidden>Use local app</button>
+  </div>
+  <p class="muted" id="drive-note">Driving: <strong>the local demo app</strong> below.</p>
 
   <main id="app" aria-label="Demo article">
     <h2>Getting started with the toolkit</h2>
@@ -53,31 +62,57 @@
   import { createDomReceiver } from '../web/dom-receiver.js';
   import { mountController } from '../mount/index.js';
   import { describePresentation } from '../presentation.js';
+  import { websocketChannel, remoteControl } from '../transport/remote.js';
 
   const app = document.getElementById('app');
-  const receiver = createDomReceiver(app, { scrollTarget: document.scrollingElement || document.documentElement });
+  const localReceiver = createDomReceiver(app, { scrollTarget: document.scrollingElement || document.documentElement });
 
   let mounted = null;
-  function build(areas) {
+  let currentControl = localReceiver;   // local DOM app, or a remote receiver
+  let currentAreas = [];
+  let remoteChannel = null;
+
+  function rebuild() {
     if (mounted) mounted.unmount();
-    const abilityModel = { supportAreas: areas };
-    const controller = createController({ control: receiver, operator: { abilityModel } });
+    const controller = createController({ control: currentControl, operator: { abilityModel: { supportAreas: currentAreas } } });
     mounted = mountController(controller, { mode: 'element', corner: 'bottom-right' });
     document.getElementById('presentation-note').textContent =
       'Controller presents as → ' + describePresentation(controller.presentation);
     window.__controller = controller; // handy for scripted checks
   }
 
-  document.querySelectorAll('.bar button').forEach((b) => {
+  // Operator-profile buttons (scoped to the operator bar).
+  document.querySelectorAll('#operator-bar button').forEach((b) => {
     b.addEventListener('click', () => {
-      document.querySelectorAll('.bar button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      document.querySelectorAll('#operator-bar button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
       b.setAttribute('aria-pressed', 'true');
-      const areas = b.dataset.areas ? b.dataset.areas.split(',') : [];
-      build(areas);
+      currentAreas = b.dataset.areas ? b.dataset.areas.split(',') : [];
+      rebuild();
     });
   });
 
-  build([]); // default profile
+  // Connect the controller OUT to a remote receiver over a WebSocket.
+  document.getElementById('connect').addEventListener('click', () => {
+    const url = document.getElementById('ws-url').value.trim();
+    if (!url) return;
+    if (remoteChannel) remoteChannel.close();
+    remoteChannel = websocketChannel(url);
+    currentControl = remoteControl({ channel: remoteChannel });
+    document.getElementById('drive-note').innerHTML = 'Driving: <strong>remote receiver</strong> <code>' + url + '</code>';
+    document.getElementById('connect').hidden = true;
+    document.getElementById('disconnect').hidden = false;
+    rebuild();
+  });
+  document.getElementById('disconnect').addEventListener('click', () => {
+    if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
+    currentControl = localReceiver;
+    document.getElementById('drive-note').innerHTML = 'Driving: <strong>the local demo app</strong> below.';
+    document.getElementById('disconnect').hidden = true;
+    document.getElementById('connect').hidden = false;
+    rebuild();
+  });
+
+  rebuild(); // default profile, local app
 </script>
 </body>
 </html>

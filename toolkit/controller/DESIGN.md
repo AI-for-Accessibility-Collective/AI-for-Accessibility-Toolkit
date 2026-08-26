@@ -121,6 +121,15 @@ Same contract both ways. `server/` already proves the pattern for the Librarian;
 the control channel is the analogous thing for actuation. A receiving app links
 a small client SDK that implements `ControlPort` and connects back.
 
+**For implementers:** [`PROTOCOL.md`](PROTOCOL.md) is the wire spec a remote
+receiver (e.g. `browser-harness-a11y`) builds against — the JSON message
+envelope and the seven methods. The Controller side is already built:
+`websocketChannel(url)` wraps a WebSocket into the `{ post, subscribe }` Channel,
+and `connectRemoteReceiver(url)` returns a ready `ControlPort` — so
+`createController({ control: connectRemoteReceiver('ws://…') })` drives a remote
+receiver with no other change. The receiver **hosts** the WS endpoint (it's the
+thing being driven); the Controller connects out to it.
+
 Two flows, deliberately:
 - **Durable prefs** flow model-first: Controller → AbilityModel → datastore →
   `sync/` → the app's surface re-renders (survives, follows the user's devices).

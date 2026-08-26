@@ -5,9 +5,24 @@
 //
 //   node toolkit/test/controller-remote.test.mjs
 
-import { createDirectChannelPair, serveControl, remoteControl } from '../controller/transport/remote.js';
+import { createDirectChannelPair, serveControl, remoteControl, websocketChannel, connectRemoteReceiver } from '../controller/transport/remote.js';
 import { createController } from '../controller/createController.js';
 import { createMockReceiver } from '../controller/mock-receiver.js';
+
+// A minimal linked WebSocket-like pair (opens asynchronously, like a real socket).
+class FakeSocket {
+  constructor() { this.readyState = 0; this._l = { open: [], message: [], close: [] }; this.peer = null; }
+  addEventListener(t, fn) { (this._l[t] || (this._l[t] = [])).push(fn); }
+  _emit(t, ev) { (this._l[t] || []).forEach((fn) => fn(ev)); }
+  send(data) { const p = this.peer; queueMicrotask(() => p && p._emit('message', { data })); }
+  close() { this.readyState = 3; this._emit('close', {}); }
+}
+function fakeSocketPair() {
+  const a = new FakeSocket(), b = new FakeSocket();
+  a.peer = b; b.peer = a;
+  queueMicrotask(() => { a.readyState = 1; b.readyState = 1; a._emit('open', {}); b._emit('open', {}); });
+  return [a, b];
+}
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -56,6 +71,27 @@ async function run() {
 
   detach();
   check('remote: detach returns a function', typeof detach === 'function');
+
+  // ── websocketChannel: the same thing over a (fake) WebSocket ──────────────
+  {
+    const recv = createMockReceiver({ actions: ['scroll'] });
+    const [clientSock, serverSock] = fakeSocketPair();
+    serveControl(websocketChannel(serverSock), recv);           // receiver side hosts the endpoint
+    const remoteWs = connectRemoteReceiver(clientSock);          // controller connects out (buffers until open)
+    const c = createController({ control: remoteWs });
+
+    const caps = await remoteWs.describeCapabilities();
+    check('ws-channel: request sent before open is buffered then flushed', caps.settingKeys.includes('fontScale'));
+
+    const r = await c.handle('text size 150');
+    check('ws-channel: adapt applies across a WebSocket', r.ok && recv.settings.fontScale === 150);
+
+    const rr = await c.handle('read this');
+    check('ws-channel: getContent round-trips over the socket', rr.ok && /demo document/i.test(rr.say));
+
+    clientSock.close();
+    check('ws-channel: socket exposes close()', clientSock.readyState === 3);
+  }
 
   console.log(`\nController M5 (remote transport): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);

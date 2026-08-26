@@ -78,6 +78,61 @@ export function connectControl(channel, opts = {}) {
 }
 
 /**
+ * Wrap a WebSocket into the { post, subscribe } Channel shape, so the Controller
+ * can connect OUT to a receiver that hosts a WS endpoint (e.g. a browser-harness
+ * daemon). Messages are JSON text frames — the exact wire format serveControl /
+ * remoteControl use (see PROTOCOL.md). Messages posted before the socket opens
+ * are buffered and flushed on 'open'.
+ *
+ * @param {string|WebSocket} urlOrSocket  A ws(s):// URL, or an existing
+ *   socket-like object (addEventListener/send/close/readyState) — the latter is
+ *   handy for tests and for reusing a socket the host already opened.
+ * @param {{WebSocketImpl?: any}} [opts]  A WebSocket constructor to use when a
+ *   URL is passed and no global `WebSocket` exists (e.g. Node with a ws lib).
+ * @returns {Channel & { close(): void, socket: any }}
+ */
+export function websocketChannel(urlOrSocket, { WebSocketImpl } = {}) {
+  let ws;
+  if (typeof urlOrSocket === 'string') {
+    const WS = WebSocketImpl || (typeof WebSocket !== 'undefined' ? WebSocket : null);
+    if (!WS) throw new Error('websocketChannel: no WebSocket implementation available (pass opts.WebSocketImpl)');
+    ws = new WS(urlOrSocket);
+  } else {
+    ws = urlOrSocket;
+  }
+  const handlers = new Set();
+  const outbox = [];
+  let open = ws.readyState === 1;
+  const flush = () => { open = true; while (outbox.length) ws.send(outbox.shift()); };
+  ws.addEventListener('open', flush);
+  if (open) flush();
+  ws.addEventListener('message', (ev) => {
+    let msg;
+    try { msg = JSON.parse(typeof ev.data === 'string' ? ev.data : String(ev.data)); } catch { return; }
+    for (const h of [...handlers]) h(msg);
+  });
+  return {
+    post(message) {
+      const s = JSON.stringify(message);
+      if (open && ws.readyState === 1) ws.send(s); else outbox.push(s);
+    },
+    subscribe(handler) { handlers.add(handler); return () => handlers.delete(handler); },
+    close() { try { ws.close(); } catch {} },
+    socket: ws,
+  };
+}
+
+/**
+ * Convenience: a ControlPort proxy talking to a receiver over a WebSocket.
+ *   const control = connectRemoteReceiver('ws://127.0.0.1:9333');
+ *   const c = createController({ control });
+ * @returns {import('../control-port.js').ControlPort}
+ */
+export function connectRemoteReceiver(urlOrSocket, opts = {}) {
+  return remoteControl({ channel: websocketChannel(urlOrSocket, opts), timeoutMs: opts.timeoutMs });
+}
+
+/**
  * An in-memory linked pair of channels (a ⇄ b). Deliver asynchronously so it
  * behaves like a real transport. Use for tests and same-document wiring.
  * @returns {[Channel, Channel]}
