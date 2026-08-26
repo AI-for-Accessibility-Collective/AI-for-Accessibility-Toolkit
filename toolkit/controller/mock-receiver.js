@@ -16,7 +16,7 @@
  */
 export function createMockReceiver({
   platform = 'mock',
-  settingKeys = ['fontScale', 'lineHeight', 'darkMode', 'contrastMode', 'motionReducer', 'hideDistractions', 'dyslexiaFont', 'bigTargets', 'largeCursor', 'readingGuide', 'focusMode'],
+  settingKeys = ['fontScale', 'lineHeight', 'speechRate', 'darkMode', 'contrastMode', 'motionReducer', 'hideDistractions', 'dyslexiaFont', 'bigTargets', 'largeCursor', 'readingGuide', 'focusMode'],
   actions = ['scroll'],
   content = { title: 'Demo document', outline: ['Welcome', 'Getting started', 'Details'], text: 'Welcome. This is a demo document with some readable text.' },
   initial = {},

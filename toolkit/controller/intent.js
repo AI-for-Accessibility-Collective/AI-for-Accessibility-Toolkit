@@ -24,7 +24,7 @@
  * @property {string} [say]                      Pre-action echo phrase.
  * @property {Object<string,*>} [changes]        adapt: absolute settings.
  * @property {Object<string,number>} [deltas]    adapt: relative numeric nudges (+/-).
- * @property {'context'|'content'} [ask]         query: what is being asked.
+ * @property {'context'|'content'|'help'} [ask]  query: what is being asked.
  * @property {'outline'|'text'} [mode]           query(content): read mode.
  * @property {string} [action]                   command: performAction id.
  * @property {string} [target]                   command: target hint.

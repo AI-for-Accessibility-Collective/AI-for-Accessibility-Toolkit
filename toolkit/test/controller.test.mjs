@@ -9,6 +9,7 @@ import { parse, vocabularyKeys } from '../controller/grammar.js';
 import { createController } from '../controller/createController.js';
 import { createMockReceiver } from '../controller/mock-receiver.js';
 import { noopControl } from '../controller/control-port.js';
+import { deriveControllerPresentation, describePresentation } from '../controller/presentation.js';
 import { settingsMeta } from '../registry/tools.js';
 
 let pass = 0, fail = 0;
@@ -122,7 +123,64 @@ async function run() {
     check('noop control: describeCapabilities is empty', (await noopControl.describeCapabilities()).settingKeys.length === 0);
   }
 
-  console.log(`\nController M0: ${pass} passed, ${fail} failed`);
+  // ── 8. M1: presentation — the Controller renders itself per operator ──────
+  {
+    const vision = deriveControllerPresentation({ supportAreas: ['vision'] });
+    check('presentation: vision → speech output, primary speech', vision.output.speech && vision.output.primary === 'speech');
+    check('presentation: vision → voice-primary input', vision.input.primary === 'voice');
+    check('presentation: vision → detailed verbosity', vision.verbosity === 'detailed');
+
+    const hearing = deriveControllerPresentation({ supportAreas: ['hearing'] });
+    check('presentation: hearing → captions on, text-primary output', hearing.output.captions && hearing.output.primary === 'text');
+
+    const both = deriveControllerPresentation({ supportAreas: ['vision', 'hearing'] });
+    check('presentation: vision+hearing → speak AND caption (most accommodating)', both.output.speech && both.output.captions);
+
+    const cog = deriveControllerPresentation({ supportAreas: ['cognitive'] });
+    check('presentation: cognitive → concise + plain + 1 step + confirm + text-primary',
+      cog.verbosity === 'concise' && cog.language === 'plain' && cog.stepsAtATime === 1 && cog.confirmActions && cog.input.primary === 'text');
+
+    const motor = deriveControllerPresentation({ supportAreas: ['motor'] });
+    check('presentation: motor → scan input, large targets, confirm, voice-primary',
+      motor.input.scan && motor.targetSize === 'large' && motor.confirmActions && motor.input.primary === 'voice');
+
+    const dflt = deriveControllerPresentation({});
+    check('presentation: default → voice+text in, text-primary out, normal/standard',
+      dflt.input.voice && dflt.input.text && dflt.output.primary === 'text' && dflt.verbosity === 'normal' && dflt.language === 'standard');
+
+    check('presentation: describePresentation returns a sentence', /Input:.*Output:/.test(describePresentation(cog)));
+  }
+
+  // ── 9. M1: presentation wired into createController + loadPresentation ─────
+  {
+    const c = createController({ control: createMockReceiver(), operator: { abilityModel: { supportAreas: ['motor'] } } });
+    check('createController: presentation reflects operator model', c.presentation.targetSize === 'large');
+
+    const fakeLibrarian = { async getAbilityModel() { return { supportAreas: ['vision'] }; } };
+    const c2 = createController({ control: createMockReceiver(), operator: { librarian: fakeLibrarian } });
+    check('createController: default presentation before load', c2.presentation.output.primary === 'text');
+    await c2.loadPresentation();
+    check('createController: loadPresentation pulls from the librarian', c2.presentation.output.primary === 'speech');
+
+    c2.refreshPresentation({ supportAreas: ['cognitive'] });
+    check('createController: refreshPresentation recomputes', c2.presentation.language === 'plain');
+  }
+
+  // ── 10. M1: richer intents — help + speech rate ───────────────────────────
+  {
+    check('grammar: "what can I say" → query help', (() => { const i = parse('what can i say'); return i.type === 'query' && i.ask === 'help'; })());
+    check('grammar: "speak slower" → speechRate delta -', parse('please speak slower').deltas.speechRate < 0);
+    check('grammar: "read faster" → speechRate delta +', parse('read faster').deltas.speechRate > 0);
+
+    const recv = createMockReceiver();
+    const c = createController({ control: recv });
+    const h = await c.handle('help');
+    check('dispatch: help lists example commands', h.ok && /dark mode/.test(h.say));
+    const s = await c.handle('speak slower');
+    check('dispatch: speech rate moves from baseline 1.0 and clamps to range', recv.settings.speechRate === 0.8);
+  }
+
+  console.log(`\nController M0+M1: ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }
 

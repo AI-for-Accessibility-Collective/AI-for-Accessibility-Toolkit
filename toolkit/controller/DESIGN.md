@@ -1,8 +1,8 @@
 # The Controller — a platform-neutral control surface
 
-> **Status:** design + M0 (headless core). The web UI and remote transports are
-> later milestones (see *Staging*). This document is the spec; the code under
-> `toolkit/controller/` implements it incrementally.
+> **Status:** design + M0 (headless core) + M1 (self-presentation). The web UI
+> and remote transports are later milestones (see *Staging*). This document is
+> the spec; the code under `toolkit/controller/` implements it incrementally.
 
 ## What it is
 
@@ -135,8 +135,8 @@ createController({
 
 | Stage | Deliverable |
 |---|---|
-| **M0** | Neutral `ControlPort` + deterministic grammar for the **adaptation + query** subset + headless router, proven against a **non-web mock receiver**. *(this milestone)* |
-| **M1** | `presentation.js` — Controller adapts *itself* to the operator profile; richer query intents. |
+| **M0** | ✅ Neutral `ControlPort` + deterministic grammar for the **adaptation + query** subset + headless router, proven against a **non-web mock receiver**. |
+| **M1** | ✅ `presentation.js` — Controller derives its own I/O from the operator's AbilityModel; richer intents (help, speech-rate). |
 | **M2** | `page` / `element` / `companion` mounts + default web UI (reusing onboarding's voice code). |
 | **M3** | Optional **LLM lane** for free-form phrasing. |
 | **M4** | **Command** intents (`performAction`) + confirmation/consent + a receiver exposing targets. |

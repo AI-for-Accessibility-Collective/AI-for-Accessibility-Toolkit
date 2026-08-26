@@ -12,7 +12,7 @@
 // speaks/shows; `data` carries structured detail (applied keys, content, …).
 
 import { settingsMeta } from '../registry/tools.js';
-import { parse, noMatch } from './grammar.js';
+import { parse, noMatch, SUGGESTIONS } from './grammar.js';
 
 // Baseline for a numeric key when the receiver reports no current value, so a
 // relative "bigger text" has something to move from.
@@ -111,6 +111,9 @@ export function createRouter({ control, llm = null }) {
   }
 
   async function dispatchQuery(intent) {
+    if (intent.ask === 'help') {
+      return result(true, intent, 'You can say: ' + SUGGESTIONS.join(', ') + '.', { suggestions: SUGGESTIONS });
+    }
     if (intent.ask === 'content') {
       const res = await control.getContent(intent.mode || 'outline');
       if (res && res.error) return result(false, intent, `There's nothing to read here.`, res);

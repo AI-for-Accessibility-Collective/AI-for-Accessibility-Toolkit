@@ -29,6 +29,11 @@ const RULES = [
   { re: /\bread (this|it|the page|aloud|out ?loud|to me)\b/, build: (_m, u) => query(u, { ask: 'content', mode: 'text', say: 'Reading it aloud' }) },
   { re: /\bwhat('?s| is) (on (the )?screen|here|this)\b/, build: (_m, u) => query(u, { ask: 'content', mode: 'outline', say: 'Reading what is on screen' }) },
   { re: /\b((my|current) settings|what('?s| is) set)\b/, build: (_m, u) => query(u, { ask: 'context', say: 'Checking your settings' }) },
+  { re: /\bhelp\b|\bwhat can i (say|do)\b|\b(list )?commands\b/, build: (_m, u) => query(u, { ask: 'help', say: 'Here are some things you can say' }) },
+
+  // — speech rate — (before the generic spacing/font rules)
+  { re: /\b(speak|read|talk|voice)\b.*\b(slow(er|ly)?)\b|\bslow(er)? (speech|voice|reading)\b/, build: (_m, u) => adapt(u, { deltas: { speechRate: -STEP.speechRate }, say: 'Slowing the speech down' }) },
+  { re: /\b(speak|read|talk|voice)\b.*\b(fast(er)?|quick(er|ly)?)\b|\bfast(er)? (speech|voice|reading)\b/, build: (_m, u) => adapt(u, { deltas: { speechRate: +STEP.speechRate }, say: 'Speeding the speech up' }) },
 
   // — text size — absolute wins over relative
   { re: /\b(text|font)( size)?( to)? (\d{2,3}) ?%?\b/, build: (m, u) => adapt(u, { changes: { fontScale: Number(m[4]) }, say: `Setting text size to ${m[4]} percent` }) },
