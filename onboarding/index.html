@@ -57,6 +57,7 @@
   <div class="voice-bar">
     <button type="button" id="mic2" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
     <button type="button" id="hear" class="secondary" hidden>🔊 Hear setting</button>
+    <button type="button" id="add-top">Add profile</button>
   </div>
   <p class="target" id="target">Loading…</p>
   <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
@@ -253,6 +254,9 @@ $('admin-form').addEventListener('submit', (e) => {
 // Typing/selecting a different profile id updates the banner.
 $('uid').addEventListener('change', loadCurrent);
 
+// The top Add button submits the same form as the one in the section.
+$('add-top').addEventListener('click', () => $('add-form').requestSubmit());
+
 // Voice input — dictate the need into the field (optional). Two Speak buttons
 // (one at the top, one by the field) share one recognition + listening state.
 const micBtns = ['mic', 'mic2'].map((id) => $(id)).filter(Boolean);
@@ -272,7 +276,11 @@ if (SR) {
   $('need').addEventListener('input', () => { usedVoice = false; });
   recog.onerror = (e) => setStatus($('add-status'),
     'Voice input: ' + (e.error === 'not-allowed' ? 'microphone permission denied.' : e.error), 'err');
-  recog.onend = () => setMicState(false);
+  recog.onend = () => {
+    setMicState(false);
+    // After dictating, land focus on the top Add button so Enter accepts it.
+    if (usedVoice) $('add-top').focus();
+  };
   micBtns.forEach((b) => b.addEventListener('click', () => {
     if (listening) { recog.stop(); return; }
     try {
