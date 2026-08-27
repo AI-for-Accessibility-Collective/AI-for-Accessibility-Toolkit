@@ -1,0 +1,2459 @@
+{
+ "task": "renew a driver's license or vehicle registration on a state DMV portal: verify identity and eligibility, work through the renewal form, pay the fee; complete when the renewal-submitted confirmation — receipt or temporary document — is on screen. Surface pinned: a state DMV web portal, not an in-office visit vlog. Variants: address change (seeded variant), first-time license applications, REAL ID upgrades, and driving-test booking do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Renew a DMV credential online",
+  "note": "1 and 2 in the order the venue dictates - account venues meet 3 first and reach the service from the dashboard (DeKE, w74r, _xgB); the rest run 1, then 2, then 3. 2.4 and 2.5 fire before or mid-task as the requirements demand (w74r, YWFI). then 4, with 5 interleaved wherever the wizard asks. 6 only on the carrier systems, and 7 waits for its approval (-eBX, F_2L). then 7, then 8. no keeper re-enters an earlier goal by choice - the one reach-back is 7 into 5.8 when a missing email blocks payment (DeKE).",
+  "children": [
+   {
+    "id": "1",
+    "label": "Find the renewal service",
+    "note": "1.1 or 1.2 to arrive, then one of 1.3, 1.4, or 1.5 as the venue offers. 1.5 comes after 3 on account venues - the dashboard is behind the login.",
+    "questions": [
+     {
+      "question": "Should you use the search bar, click a popular link, or scroll down to find the driving licence renewal?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The homepage displays a search bar and 'Popular on GOV.UK' links, requiring you to choose the most efficient navigation method to locate the renewal service.",
+      "whatTheAgentLoses": "You lose the chance to familiarize yourself with the portal's layout and discover other relevant government services while navigating."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the agency site",
+      "questions": [
+       {
+        "question": "Which dropdown suggestion should you select to reach the official DMV website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct official link from the browser's dropdown ensures you reach the legitimate state DMV portal instead of a third-party service.",
+        "whatTheAgentLoses": "Delegating this step means trusting the agent to correctly identify and navigate to the authentic government website."
+       },
+       {
+        "question": "Which specific website should you navigate to for the renewal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The address bar shows navigation to a specific county tax collector site (pbctax.com) rather than a general state DMV portal, which dictates where the renewal is processed.",
+        "whatTheAgentLoses": "The delegator loses the ability to ensure the agent uses their specific local county portal rather than a general state website."
+       },
+       {
+        "question": "Are you on the correct portal for finding the vehicle registration service?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Bahrain eGovernment portal, which must be verified as the correct site for the intended vehicle registration renewal.",
+        "whatTheAgentLoses": "The delegator loses the assurance that the agent is operating on the correct regional government portal for their specific vehicle registration."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Pick the official search result",
+      "questions": [
+       {
+        "question": "Which search result should you click to access the official portal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the search result URL contains the official government domain ensures you are entering the legitimate LTMS portal rather than a third-party or phishing site.",
+        "whatTheAgentLoses": "You lose the opportunity to personally inspect the URL and confirm that your sensitive identity information will be submitted to the authentic government agency."
+       },
+       {
+        "question": "Which search result should you select to access the correct renewal portal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display both specific tasks like \"Vehicle Registration Renewal\" and broader portals like \"General Directorate of Traffic Services,\" requiring you to choose the most reliable entry point.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to navigate through the comprehensive service hub or attempt a direct link that might bypass necessary portal features."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Browse the menus to the service",
+      "questions": [
+       {
+        "question": "Which top-level category should you select to find driving license services?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists 'Driving and transport' under 'Services and information' with a description that explicitly includes driving licenses.",
+        "whatTheAgentLoses": "The user loses the opportunity to see how the portal categorizes its services and what other transport-related options are available."
+       },
+       {
+        "question": "Which category do you select to renew your driving license?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal presents multiple transport categories, such as 'Vehicle tax, MOT and insurance' and 'Driving licences', requiring you to choose the correct path to start your renewal.",
+        "whatTheAgentLoses": "Delegating this navigation means you miss seeing the layout of the portal and discovering other vehicle or licensing services you might need in the future."
+       },
+       {
+        "question": "Which top navigation menu do you select to find the ID card renewal option?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The navigation bar has multiple categories like 'DRIVER LICENSE' and 'MOTOR VEHICLE', so you must know which dropdown contains the 'Renew ID Card' link.",
+        "whatTheAgentLoses": "You lose the opportunity to learn the site's navigation structure for finding other DMV services in the future."
+       },
+       {
+        "question": "Which menu category should you open to find the driver's license renewal link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal's top navigation separates vehicle and driver services, so you must open the 'Driver's Licenses & IDs' dropdown to locate the 'Renew DL/ID' option.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the portal's layout and see what other driver services are available online."
+       },
+       {
+        "question": "Which link under 'Popular services' should you select to renew your driving licence?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple driving licence services, so you must select the correct link to begin the standard renewal process.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the standard renewal option rather than a specialized one."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the service from the shortcuts",
+      "questions": [
+       {
+        "question": "Do you use the 'SHOP HERE!' quick menu to access the renewal services?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'SHOP HERE!' dropdown provides direct links to 'Renew/Replace My License' and 'Renew/Replace My Registration' under the quick services sections.",
+        "whatTheAgentLoses": "You lose the opportunity to learn the fastest navigation shortcuts for future visits to the DMV portal."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Start from the dashboard reminder",
+      "questions": [
+       {
+        "question": "Which service category should you select to renew your vehicle registration?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays a specific vehicle renewal reminder alongside multiple menu options like 'LICENSING' and 'VEHICLE'.",
+        "whatTheAgentLoses": "The user loses the visibility of their dashboard reminders and the ability to personally confirm exactly which vehicle is currently due for renewal."
+       },
+       {
+        "question": "How do you initiate the renewal process for this period?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Period Alerts' section with a warning icon and a specific hyperlink to renew the registration for that date.",
+        "whatTheAgentLoses": "The user loses the ability to personally review the period alerts and manually select the correct registration period to renew."
+       },
+       {
+        "question": "How do you access the navigation menu to start the renewal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main dashboard area is filled with alerts, so you must use the hamburger menu in the top right to access the actual renewal links.",
+        "whatTheAgentLoses": "You miss the opportunity to review the important state alerts and legislative updates displayed on your dashboard before proceeding."
+       },
+       {
+        "question": "Does your account dashboard show an existing balance that you need to address?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard displays an account balance upon login (e.g., \"Balance: ($82.20)\"), which could indicate a credit to apply or past due fees to settle before you can successfully renew.",
+        "whatTheAgentLoses": "You lose the opportunity to realize you have a credit on your account or owe back taxes before initiating a new transaction."
+       },
+       {
+        "question": "Which registration period do you want to select to initiate the renewal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard lists multiple periods, such as '30-Apr-2019' and '30-Apr-2018', and requires you to select one to proceed with the vehicle renewal.",
+        "whatTheAgentLoses": "You lose the ability to ensure the correct registration year and associated balance is chosen for your account."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Confirm eligibility and requirements",
+    "note": "2.1 where a notice exists - it can be the map for everything after (hI3L, 7b3U). 2.2, 2.3, and 2.6 in the order the pages present them. 2.4 and 2.5 whenever the requirements reach into the physical world, mid-task included (w74r, YWFI). then 2.7, with 2.8 wherever a terms gate blocks the path.",
+    "questions": [
+     {
+      "question": "Do you want to schedule an in-person appointment if the online system cannot process your renewal?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The page displayed a banner stating online processing was unavailable due to the expiration date and provided a link to make an appointment.",
+      "whatTheAgentLoses": "You lose the ability to decide whether to abandon the online task or proceed with scheduling an in-office visit."
+     },
+     {
+      "question": "Does the portal indicate any active holds, such as unpaid parking tickets, tolls, or property taxes, that block the renewal?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "If the system flags a hold, the renewal cannot proceed until it is cleared, which often requires navigating to a different local agency's site to pay the outstanding fine first.",
+      "whatTheAgentLoses": "The user loses the opportunity to find out exactly which agency they owe money to and resolve the hold, instead just receiving a generic failure from the agent."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Read the renewal notice",
+      "questions": [
+       {
+        "question": "Do you need to complete a smog check before renewing, and which renewal method will you choose?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The renewal notice explicitly states that a smog certification is required and provides the website URL and identification number needed to renew online.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify prerequisites like a required smog check before initiating the online renewal."
+       },
+       {
+        "question": "Which link should I select from the IRP Menu to start gathering the information needed for my renewal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The IRP Menu displays multiple similar options like 'Process Renewal' and 'Print Renewal Notice', making it important to know which specific link actually initiates the information-gathering step.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the printed renewal notice and verify your vehicle details before the renewal is processed."
+       },
+       {
+        "question": "What specific date ranges do I need to report for my mileage and heavy vehicle use tax?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The [name] IRP Application PDF explicitly highlights the required 2021 to 2022 reporting periods for mileage and HVUT that must be used to complete the renewal.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify the exact historical reporting periods required for your vehicle's tax and mileage records."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Check the eligibility rules",
+      "questions": [
+       {
+        "question": "Do the conditions for a first provisional license apply to my situation?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific criteria for a first provisional license, such as never having applied before or applying before March 1973, which dictates whether you must complete this section or skip it.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify your driving history against the portal's specific criteria to ensure the correct application path is chosen."
+       },
+       {
+        "question": "Do any of these conditions apply to me that would prevent me from renewing online?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific conditions, such as needing a road test or an updated medical report, that mandate an in-person visit instead of an online renewal.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly assume you are eligible to renew online without knowing your personal medical status or testing requirements."
+       },
+       {
+        "question": "What are the conditions for renewing, and where do you initiate the online process?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays important prerequisites like renewal timeframes, penalties for expired licenses, and vision test requirements that must be understood before starting.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the specific timeframes, penalties, and vision test requirements that apply to your renewal."
+       },
+       {
+        "question": "Do I meet all the prerequisites and conditions listed here before starting my renewal?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Failing to review these conditions could lead to a rejected renewal if you need a valid eye exam, have an outdated address, or hold a restricted license type like a CDL.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that your specific circumstances, such as needing an eye exam or updating your address, meet the state's online renewal requirements."
+       },
+       {
+        "question": "Should you wait to renew so your new license doesn't say 'UNDER 21'?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal warns that renewing more than 40 days before your 21st birthday results in an 'UNDER 21' license, which might make you want to delay the process.",
+        "whatTheAgentLoses": "The user loses the opportunity to delay their renewal to ensure their new ID does not have underage markings."
+       },
+       {
+        "question": "Are you willing to lose the remaining validity on your current license by renewing it today?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal explicitly warns that the new license will be valid from the date the application is approved, not from the expiry date of the current license, meaning early renewals sacrifice existing validity time.",
+        "whatTheAgentLoses": "The user loses the opportunity to delay the renewal until closer to the expiration date to maximize the validity period of their license."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Pick the renewal route",
+      "questions": [
+       {
+        "question": "Do any special renewal conditions, like being 70 or over, apply to you?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists alternative renewal links for specific situations like being 70 or over, driving a bus, or having a medical license, which dictate whether you can use the standard process.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify if your specific age, vehicle type, or medical status requires a specialized renewal path."
+       },
+       {
+        "question": "Which remote renewal method do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The notice provides three different options for renewing—by phone, mail, or online—each with specific requirements like a 14-digit authorization number or a check.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the requirements for each method and select the one most convenient for your situation."
+       },
+       {
+        "question": "Do you want to proceed with a standard renewal, or do you need to convert to a REAL ID?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between a standard renewal and a REAL ID conversion, which dictates the steps and documentation needed.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to upgrade your standard license to a federally compliant REAL ID during this renewal cycle."
+       },
+       {
+        "question": "Do you need to review the specific instructions for renewing while out of state?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The page includes a dedicated \"If You are Out of State\" section, which may contain different procedures, mailing requirements, or vision test exemptions for residents currently living elsewhere.",
+        "whatTheAgentLoses": "You lose the opportunity to discover special procedures that apply to your situation if you are temporarily living outside the state during your renewal period."
+       },
+       {
+        "question": "Does the portal display a warning that a REAL ID is now required to fly within the U.S.?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal displays a prominent alert banner warning about the REAL ID requirement for domestic flights, which is crucial context when deciding whether to renew a standard license online or upgrade in person.",
+        "whatTheAgentLoses": "The user loses the critical warning that renewing their standard license online might leave them without the necessary identification to board domestic flights."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Meet the offline prerequisites",
+      "questions": [
+       {
+        "question": "Did you provide the required vision test results to continue with the renewal?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal explicitly states that an eye test from an approved provider is required, but the session ends without resolving this step.",
+        "whatTheAgentLoses": "The user loses the ability to successfully complete the renewal because a mandatory eligibility requirement was ignored."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Fetch the physical documents",
+      "questions": [
+       {
+        "question": "Do you have the addresses of where you have lived over the past three years readily available?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Before you start' section explicitly requires you to provide a three-year address history to complete the driving licence renewal.",
+        "whatTheAgentLoses": "The user loses the chance to gather their complete address history before starting, potentially causing the session to time out while they search for past residential details."
+       },
+       {
+        "question": "Do you have the physical renewal letter sent in the mail to retrieve your required PIN?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly states that the PIN required to access your vehicle registration record is located on the physical renewal letter sent to you in the mail.",
+        "whatTheAgentLoses": "The user loses the ability to personally locate and provide the specific PIN from their private physical mail, which is necessary to proceed with the search."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Read the fee and time quotes",
+      "questions": [
+       {
+        "question": "Do you understand the cost and basic requirements for renewing your license online?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the £14 fee and the 10-year renewal requirement, which are essential facts to confirm before starting the application.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the exact cost and eligibility rules before committing to the renewal process."
+       },
+       {
+        "question": "How long will it take to receive your new license?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states the license should arrive within a week, which sets expectations for when you will receive the physical document.",
+        "whatTheAgentLoses": "You lose the direct reassurance of knowing exactly when to expect your new physical license in the mail."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Start the application",
+      "questions": [
+       {
+        "question": "Do you have access to your personal email and Texas driver's license or state ID?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Before you start' screen explicitly states that these items are required to create an account and proceed with the renewal.",
+        "whatTheAgentLoses": "You lose the ability to personally confirm that you have the required email access and identification documents ready before initiating the state portal process."
+       },
+       {
+        "question": "Where should you click to begin the online renewal process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features a 'Renew online' section with a green 'Start now >' button that must be clicked to access the renewal form.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the official starting point and any preliminary instructions provided on the DMV portal."
+       },
+       {
+        "question": "Are you ready to proceed past the initial application instructions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays important navigation rules, such as not using browser buttons, which are necessary to prevent errors during the application.",
+        "whatTheAgentLoses": "The user misses the opportunity to read the specific navigation rules or select their preferred language for the process."
+       },
+       {
+        "question": "Do you have your license plate number, the last 5 digits of your VIN, and your renewal notice ready to begin?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page explicitly lists these specific vehicle details and documents as prerequisites under the 'Before you begin' section.",
+        "whatTheAgentLoses": "Letting an agent start the process means you miss the chance to personally ensure you have gathered the required vehicle details and physical renewal notice."
+       },
+       {
+        "question": "Do you have the required information, like your license plate and the last four characters of your VIN, ready before starting?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly lists the required items, such as the last four characters of the VIN and the license plate number, needed to successfully complete the renewal.",
+        "whatTheAgentLoses": "You lose the chance to personally verify your eligibility and ensure you have the exact vehicle details on hand before initiating the process."
+       },
+       {
+        "question": "Do you want to accept or reject analytics cookies before continuing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose your privacy preferences regarding analytics cookies before you can proceed with the renewal.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to control your privacy preferences regarding how the DMV tracks your usage of the service."
+       },
+       {
+        "question": "Do you want to open the link to read more about how your online transactions are kept secure before clicking 'Next'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a specific link about ensuring your online transactions are safe and secure, which contains the agency's data protection policies.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the agency's data security practices before submitting your sensitive information."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Agree to the entry terms",
+      "questions": [
+       {
+        "question": "Do you agree to the LTMS Terms of Use to continue with the application?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a mandatory terms of use modal that must be accepted to access the renewal system.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally review and consent to the legal terms governing your use of the DMV portal."
+       },
+       {
+        "question": "Do you meet the eligibility requirements and agree to the terms to begin the renewal?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific timeframes and prerequisites for renewal, so you must confirm you meet them before starting the process.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify they meet the legal timeframes and requirements before legally agreeing to the state's terms."
+       },
+       {
+        "question": "What required checkbox must you select to fix the form error and proceed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a red 'Required' error next to the Driver Privacy Protection Act Warning, meaning the form cannot advance until this agreement is checked.",
+        "whatTheAgentLoses": "The user loses the opportunity to read and understand the legal privacy warnings being accepted on their behalf."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Pass the identity gate",
+    "note": "one route per venue: 3.1 then 3.2 on account systems; 3.3 then 3.4 on record-search systems; 3.5 on knowledge-field systems; 3.6 where the mailed letter is the credential. iV8P switches mid-flow from 3.5 to 3.1. two keepers never get past this goal (7t4w, iV8P).",
+    "questions": [
+     {
+      "question": "Do the visual steps match the narrator's instructions to log in, fill out the details, and pay?",
+      "cluster": "compare",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The video ends on the login screen while the narrator merely describes the remaining steps, leaving the actual form and payment process completely unseen.",
+      "whatTheAgentLoses": "An agent relying on this video would not know what the actual renewal form or payment screens look like, leaving them unable to complete the task."
+     },
+     {
+      "question": "Should you allow this Epson software update to proceed, or cancel it to focus on your renewal?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows an unrelated Epson Software Updater pop-up that could delay or disrupt the vehicle registration process if allowed to download.",
+      "whatTheAgentLoses": "Delegating this means an agent might accept the unrelated software update, wasting time and risking system changes instead of completing the DMV renewal."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Decide to log in or register",
+      "questions": [
+       {
+        "question": "Should I register for a new account or log in to an existing one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal homepage requires you to choose between 'REGISTER NOW' and 'LOG IN' to access the system based on your prior account status.",
+        "whatTheAgentLoses": "Delegating this choice means the agent must know whether you already have an established account with the DMV to avoid creating duplicate profiles."
+       },
+       {
+        "question": "Do you want to sign in to your MyDMV account instead of continuing as a guest?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a note at the top offering a link to sign in to MyDMV, which may be faster if you already have an established account.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to use their saved account credentials or proceed manually as a guest."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Enter the account credentials",
+      "questions": [
+       {
+        "question": "What credentials do I need to log into my account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen requires either an email address or an LTO client number along with a password to access the renewal portal.",
+        "whatTheAgentLoses": "The user must share their private login credentials with the agent, compromising their account security."
+       },
+       {
+        "question": "Did the portal require solving a visual CAPTCHA or image puzzle to access the login screen?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "DMV portals frequently use visual security checks to prevent automated access, which must be passed before any credentials can be entered.",
+        "whatTheAgentLoses": "The delegator cannot see if the agent is stuck on a silent visual security barrier rather than a broken link or system outage."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Pick the lookup method",
+      "questions": [
+       {
+        "question": "How do you want to search for your vehicle registration?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires you to select a search type from a dropdown menu, which dictates whether you need to provide a PIN or other identifying details.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a search method that requires specific numbers or documents you do not have readily available."
+       },
+       {
+        "question": "Is this vehicle registered under a personal number or a commercial registration number?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu requires you to specify whether the vehicle is registered to a company or an individual to locate the correct records.",
+        "whatTheAgentLoses": "The user loses the guarantee that the vehicle is being renewed under the correct legal ownership classification."
+       },
+       {
+        "question": "Which type of ID will you use, and what is the ID number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires you to select an ID type from the dropdown and enter the corresponding number to locate your DMV records.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over which form of identification is used to access your personal DMV records."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Enter the record identifiers",
+      "questions": [
+       {
+        "question": "What are your vehicle's plate number, category, and code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Plate details' search form requires your exact plate number, category, and code to locate your specific vehicle registration record.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct vehicle plate details are entered to pull up your registration."
+       },
+       {
+        "question": "Where do you find the correct vehicle identifiers to proceed to the verification step?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a graphic of a physical renewal notice to help you locate your license plate and the last five digits of your VIN.",
+        "whatTheAgentLoses": "You lose the assurance of personally cross-referencing your physical renewal notice to ensure the correct vehicle is being renewed."
+       },
+       {
+        "question": "Does the form ask for the exact information the site told you to prepare?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site listed the license plate number and the last five digits of the VIN as prerequisites, which matched the exact fields required on the subsequent form.",
+        "whatTheAgentLoses": "You lose the ability to verify that the portal's stated prerequisites match the actual information submitted."
+       },
+       {
+        "question": "Have you entered the required vehicle details and agreed to the privacy warning?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires the license plate, owner's date of birth, and a checked agreement to the Driver Privacy Protection Act Warning before allowing you to continue.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally read and understand the privacy terms you are legally agreeing to."
+       },
+       {
+        "question": "Should I read the instructions for formatting rules before selecting my identity type?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The red banner offers instructions that reveal specific formatting rules for entering a Commercial Registration number.",
+        "whatTheAgentLoses": "The user loses the chance to understand the exact formatting requirements for their specific registration type."
+       },
+       {
+        "question": "What plate number and partial VIN do you want to enter to locate your vehicle?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Vehicle Identifiers' form requires the last four digits of the VIN and the plate number to pull up the correct registration record.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the agent is pulling up the exact vehicle you intend to renew, which is especially important if you own multiple vehicles."
+       },
+       {
+        "question": "Do I need help locating my VIN or HIN?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a 'Show Me How' link next to the required VIN/HIN field to assist in finding this specific identifying number.",
+        "whatTheAgentLoses": "The user loses the opportunity to view the visual guide showing exactly where to find their VIN or HIN on their physical documents or vehicle."
+       },
+       {
+        "question": "Will the system let you continue if you leave the required personal and vehicle number fields blank?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows asterisks next to the personal and vehicle number fields, indicating they are mandatory to proceed with the renewal form.",
+        "whatTheAgentLoses": "The user loses the ability to keep their sensitive personal and vehicle identification numbers private from the agent completing the form."
+       },
+       {
+        "question": "Does the video show a continuous, logical transition immediately after you click 'Continue' on the vehicle details form?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The video shows the cursor on the 'Continue' button, but the transition to the subsequent registration details page appears disjointed and does not show the expected submission result.",
+        "whatTheAgentLoses": "You lose the ability to confirm that the portal successfully processed and accepted the vehicle details exactly as entered without throwing an error."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Enter the knowledge fields",
+      "questions": [
+       {
+        "question": "What information must you provide to renew as a guest, and where is the continue button?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires specific personal details like your DMV ID, date of birth, and the last four digits of your SSN to verify your identity before you can click continue.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their sensitive personal information is entered correctly and securely before proceeding."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Enter the mailed authorization number",
+      "questions": [
+       {
+        "question": "Where do you find your license and authorization numbers, and what should you do if you lack the PIN?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a Driver's License Number and Authorization Number from your physical documents or renewal letter to proceed, and provides a phone number to call if the PIN is missing.",
+        "whatTheAgentLoses": "An agent would need access to your physical ID card and private renewal letter to find the required numbers, or they would have to call the DMV on your behalf."
+       },
+       {
+        "question": "Am I approved for the renewal, and what are the base and processing fees before I proceed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen confirms your approval for Safe Driver Renewal and discloses the $30.00 base fee alongside a warning about an additional payment processor fee.",
+        "whatTheAgentLoses": "You lose the opportunity to verify your approval status and acknowledge the upcoming processing fees before committing to the payment phase."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Verify and complete the record",
+    "note": "4.1 where the account lists vehicles; 4.2 on the fleet systems. then 4.3 against the notice, the insurance, and the inspection. 4.4 to 4.7 as the venue's record demands - document validation on LTMS, insurance on OkCARS, mileage on the carrier systems. 4.8 where the wizard asks for addresses; 4.9 only on licence renewals, where the person is the record.",
+    "questions": [
+     {
+      "question": "Should you click the application or payment links in the navigation menu to proceed?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays a left navigation menu with upcoming steps like '2. Application' and '3. Payment', indicating the sequence of the renewal process.",
+      "whatTheAgentLoses": "The user loses the opportunity to preview the overall structure and upcoming requirements of the renewal process before proceeding."
+     },
+     {
+      "question": "Do you click to review the application summary before final submission?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The left navigation menu shows a '4. Summary' tab, indicating an opportunity to verify all entered renewal details before finalizing the process.",
+      "whatTheAgentLoses": "The user loses the chance to personally verify their information and catch any potential errors before the renewal is officially submitted."
+     },
+     {
+      "question": "Did any red error text or warning icons silently appear next to a field when you tried to advance?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Form validation errors often appear visually next to the offending field without an audible alert or a change in screen focus.",
+      "whatTheAgentLoses": "The delegator cannot see the in-line visual cues indicating exactly which field is formatted incorrectly and blocking the submission."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Pick the vehicle to renew",
+      "questions": [
+       {
+        "question": "Did the search return your correct vehicle, and is it selected for renewal?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays registrations matching your search criteria, so you must verify the correct vehicle is checked before moving on to select the renewal type.",
+        "whatTheAgentLoses": "You lose the ability to personally confirm that the correct vehicle from your profile or search was selected for renewal."
+       },
+       {
+        "question": "Are you viewing the registration search results rather than an itemized fee breakdown?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Registration Search Results page with instructions, contradicting the claim that an itemized fee breakdown is visible.",
+        "whatTheAgentLoses": "The user loses the ability to confirm the correct vehicle was found if the agent falsely claims to be at the payment step."
+       },
+       {
+        "question": "Is your physical ORCR document the latest white version rather than the older blue one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The speaker explicitly warns that if your physical ORCR document is still the old blue version, you are not eligible to use the online renewal system.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize their physical document makes them ineligible for online renewal before wasting time attempting the process."
+       },
+       {
+        "question": "Which of your listed vehicles do you want to renew, or is your vehicle missing from the list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select a specific registered vehicle to renew or indicate if it is not listed, which determines if you can proceed online.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the correct vehicle is selected for renewal or to learn that unlisted vehicles require an in-person visit."
+       },
+       {
+        "question": "Do you want to renew all active vehicles from your previous registration?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A modal dialog requires you to confirm whether you want to carry over all previously registered vehicles into this renewal session before making individual changes.",
+        "whatTheAgentLoses": "Delegating this step means the agent decides whether to bulk-import your previous vehicles for renewal, potentially complicating the process if you only intended to renew a single specific vehicle."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Review the fleet vehicles",
+      "questions": [
+       {
+        "question": "Do you need to update or review the information for this vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal provides an update button to review and modify specific vehicle details like the unit number and unladen weight before finalizing the renewal.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify or correct specific vehicle details on file, potentially resulting in an inaccurate registration."
+       },
+       {
+        "question": "What is the current status of the vehicles you are renewing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Vehicles' tab displays the vehicle's status as 'Pending', confirming it is correctly queued in the renewal supplement before you enter reported distances.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct vehicles and VINs are included in the renewal process before moving forward."
+       },
+       {
+        "question": "Do you want to remove this specific vehicle from your fleet renewal application?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides a 'Remove vehicle' checkbox next to each unit, allowing you to exclude specific vehicles from the fleet renewal if they are no longer in service.",
+        "whatTheAgentLoses": "The user loses the ability to prune their fleet roster, potentially paying registration fees for a vehicle they no longer operate."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Verify the pulled record",
+      "questions": [
+       {
+        "question": "Are your retrieved vehicle, insurance, and test details accurate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your specific vehicle model, insurance policy, and test results, which dictate whether you are eligible to proceed with the renewal.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that your insurance and inspection records were correctly reported to the DMV before submitting the application."
+       },
+       {
+        "question": "Are the displayed vehicle details and renewal period correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the vehicle details, such as the HONDA make and the displayed renewal period, ensures you are applying to renew the correct registration.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that the correct vehicle is being renewed."
+       },
+       {
+        "question": "Are the vehicle registration details correct before you proceed to payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the specific plate number and application type, which must be verified to ensure you are paying to renew the right vehicle.",
+        "whatTheAgentLoses": "You lose the chance to verify the vehicle's plate number and application details before the agent initiates the payment."
+       },
+       {
+        "question": "Are your application details correct before proceeding to the next step?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the information on the 'Create Application' screen ensures your renewal is processed with accurate details.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify your application details and catch any errors before advancing the form."
+       },
+       {
+        "question": "Is your fleet account information accurate, and how many power units are you renewing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must verify that your fleet details, such as the physical address and expiration date, are correct before entering the number of power units to renew.",
+        "whatTheAgentLoses": "You lose the opportunity to catch outdated account information or incorrect mileage reporting status before the renewal is processed."
+       },
+       {
+        "question": "Are the displayed fleet details accurate before you continue?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specific fleet details like the physical address, mailing address, and expiration date that must be verified to ensure the correct registration is being renewed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to catch errors in your fleet's registered addresses or status before submitting the renewal."
+       },
+       {
+        "question": "Are the vehicle details correct and do you accept the total amount due?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the vehicle model, registration number, and total amount due, which must be verified before proceeding to payment.",
+        "whatTheAgentLoses": "The user loses the chance to verify their vehicle details and the exact renewal fee before the agent initiates the payment process."
+       },
+       {
+        "question": "Is all the information for your new license correct before proceeding?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that the displayed details will be printed on your new driver's license, so you must verify they are accurate.",
+        "whatTheAgentLoses": "An agent might not know if your address or endorsements have recently changed, potentially resulting in an inaccurate license being printed."
+       },
+       {
+        "question": "Does the printed address on the license preview match your residential address?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The license preview shows a Tallahassee address instead of the Fort Myers residential address you entered, contradicting the rule that the residential address must be printed on the license.",
+        "whatTheAgentLoses": "The user risks receiving a non-compliant driver's license with the wrong address printed on it."
+       },
+       {
+        "question": "Does the residential address shown later in the form match the one displayed earlier?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The residential address shown at 2:15 contradicts the address shown at 0:58 without any visible modification.",
+        "whatTheAgentLoses": "The user loses the assurance that their official DMV documents will be mailed to the correct location and reflect accurate information."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Validate the inspection and insurance documents",
+      "questions": [
+       {
+        "question": "Which document should you verify first, and what reference number is required?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to provide your documents, specifically requiring the MVISR number to validate the PMVIC Inspection Report.",
+        "whatTheAgentLoses": "You lose the assurance that the correct inspection report number is being submitted to validate your vehicle's eligibility for renewal."
+       },
+       {
+        "question": "Which required document will you verify first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a table of mandatory reference documents, such as the PMVIC Inspection Report and Certificate of Coverage, that must be verified to proceed.",
+        "whatTheAgentLoses": "The user loses direct control over handling and verifying their specific vehicle inspection and insurance records."
+       },
+       {
+        "question": "Does the pre-filled MVISR number match your inspection report?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an auto-populated MVISR number that must be validated to ensure the correct emission test results are attached to your renewal.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the system pulled the correct inspection report for your specific vehicle."
+       },
+       {
+        "question": "What do you enter in the LTMS Documentary Requirement dialog?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a dialog requiring an MVISR number to be entered and validated to proceed with the vehicle registration renewal.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their specific Motor Vehicle Inspection System Report number is accurately submitted."
+       },
+       {
+        "question": "Is the pre-filled Certificate of Coverage number correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the automatically populated COC number ensures that the correct emission test results are linked to your renewal application.",
+        "whatTheAgentLoses": "You lose the chance to verify that the system pulled the correct emission certificate for your specific vehicle before proceeding."
+       },
+       {
+        "question": "Are your required documents showing a successful validation status?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays yellow refresh icons next to the inspection report and certificate of coverage, indicating their validation is still pending.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure your mandatory vehicle documents are fully accepted by the system before proceeding."
+       },
+       {
+        "question": "Which documentary requirement should you verify next, and what details must you provide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an LTMS Documentary Requirement popup that requires you to select a document, such as the Certificate of Coverage, and enter its number to validate your insurance.",
+        "whatTheAgentLoses": "You lose control over ensuring your specific insurance certificate number is accurately entered and validated for the renewal."
+       },
+       {
+        "question": "If the system fails to locate your electronically reported smog check or insurance, does it offer a manual upload alternative?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "External data syncs between inspection stations, insurance providers, and the DMV often fail. If the electronic record is missing, you need to know if you can upload a PDF certificate or if you are forced to visit an office.",
+        "whatTheAgentLoses": "The user loses the chance to intervene and upload their physical proof of insurance or smog check, resulting in an unnecessarily abandoned task."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Enter the insurance details",
+      "questions": [
+       {
+        "question": "Which specific insurance company and NAIC number should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown lists multiple subsidiaries for major providers like GEICO, requiring you to match the exact NAIC number to your policy to provide valid proof of insurance.",
+        "whatTheAgentLoses": "Delegating this means the agent might select the wrong subsidiary if they only know the parent company name, potentially causing the renewal to be rejected."
+       },
+       {
+        "question": "What is your insurance policy number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a policy number for your State Farm insurance to verify active coverage before proceeding.",
+        "whatTheAgentLoses": "The user loses the ability to provide their actual insurance policy number, risking a rejected renewal due to unverified coverage."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Enter the mileage by jurisdiction",
+      "questions": [
+       {
+        "question": "What were your actual miles traveled in each jurisdiction during the previous registration year?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to enter the actual miles traveled in each jurisdiction to complete this section of the renewal form.",
+        "whatTheAgentLoses": "Delegating this means the agent might enter incorrect mileage data, potentially leading to inaccurate registration fees or compliance issues."
+       },
+       {
+        "question": "What information must you add to resolve the incomplete registration alert?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning that the registration is incomplete because reported distances or vehicles must be added to proceed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify the exact distance or vehicle details being submitted for your registration."
+       },
+       {
+        "question": "How do you initiate adding the distances for your registered jurisdictions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that distances can only be changed during the first supplement of the registration period and currently shows no registered jurisdictions.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify and enter the correct distance data before the strict system deadline locks it in."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Verify the apportionment and computed fees",
+      "questions": [
+       {
+        "question": "Is the calculated mileage apportionment correct and ready to be confirmed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a detailed breakdown of actual miles and apportioned percentages across multiple jurisdictions like Colorado and Illinois, which must be verified before proceeding.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that your specific fleet mileage data was entered and calculated correctly for each state."
+       },
+       {
+        "question": "Are you ready to confirm the distance changes you entered?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a confirmation dialog asking if you are sure you want to submit the distance changes, requiring a final check of your entry.",
+        "whatTheAgentLoses": "Delegating this step means losing the final opportunity to personally verify that the vehicle's mileage or distance information is accurate before it becomes part of the official state record."
+       },
+       {
+        "question": "Do the reported distances for your jurisdictions look correct before you proceed to the open supplement?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the reported distance table ensures your apportioned mileage for states like Alabama is accurate before you submit the supplement.",
+        "whatTheAgentLoses": "You lose the chance to verify that your actual mileage for each jurisdiction was entered correctly before the supplement is submitted."
+       },
+       {
+        "question": "Did you verify that the renewal fee updated correctly after submitting your distances?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen initially displayed a fee of $0.00, but it updated to $1,438.42 after the distance information was entered and submitted.",
+        "whatTheAgentLoses": "The user loses the chance to dispute or correct a massive fee increase before payment is finalized if the agent blindly accepts the new total."
+       },
+       {
+        "question": "Do the individual state distances you entered mathematically align with the apportionment percentages calculated later?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Verifying that the entered state mileages sum correctly to match the generated apportionment percentages ensures accurate commercial registration billing.",
+        "whatTheAgentLoses": "The user loses the ability to audit their fleet's mileage data for data entry errors that could trigger compliance penalties or incorrect fee assessments."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Confirm the addresses on file",
+      "note": "4.8.1 where addresses are on file; 4.8.2 where one must be typed; 4.8.3 where the system verifies before allowing progress.",
+      "children": [
+       {
+        "id": "4.8.1",
+        "label": "Review the addresses the record holds",
+        "questions": [
+         {
+          "question": "Is your current mailing address still correct, or do you need to update it?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal displays your current mailing address and provides optional radio buttons to either confirm it or enter a new permanent or temporary address.",
+          "whatTheAgentLoses": "Delegating this means the agent might proceed with an outdated address, causing your renewed physical document to be mailed to the wrong location."
+         },
+         {
+          "question": "Is my residential address correct, and do any military exemptions apply to me?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to confirm your residential address for the printed card and check if any active military exemptions apply.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that your current residential address and military status are accurately recorded on your new license."
+         },
+         {
+          "question": "Are your residential, mailing, and shipping addresses correct as shown?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to verify your residential and mailing addresses and instructs you to use the Edit Address button if they are incorrect before proceeding.",
+          "whatTheAgentLoses": "You lose the opportunity to catch and correct an outdated address, which could result in your renewed documents being mailed to the wrong location."
+         },
+         {
+          "question": "Do you need your mailing address printed on your ID instead of your residential address?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The portal explicitly states that if you want your mailing address printed on the card, you cannot complete the transaction online and must visit an office in person.",
+          "whatTheAgentLoses": "The user loses the opportunity to realize they are ineligible for online renewal if they require their mailing address to appear on the physical card."
+         }
+        ]
+       },
+       {
+        "id": "4.8.2",
+        "label": "Enter the delivery address",
+        "questions": [
+         {
+          "question": "Where should your new registration sticker be mailed?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to select either a home or business address and provide the exact mailing details for your sticker and notices.",
+          "whatTheAgentLoses": "You lose the ability to ensure your registration documents are sent to your preferred, secure location."
+         },
+         {
+          "question": "How do I search for my address?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires entering a house name or number and a postcode to locate the correct address for the new driving licence.",
+          "whatTheAgentLoses": "The user loses control over providing the exact search parameters needed to accurately locate their residential address."
+         },
+         {
+          "question": "Do you enter your new address during the renewal flow despite the earlier warning that changes require three days' notice?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The site explicitly states address changes must be made three days before renewal, but the form still allows you to input a new address and successfully submit the order.",
+          "whatTheAgentLoses": "The user loses the chance to decide whether to risk a potentially invalid or rejected renewal by bypassing the stated three-day address change rule."
+         }
+        ]
+       },
+       {
+        "id": "4.8.3",
+        "label": "Verify the address with the system",
+        "questions": [
+         {
+          "question": "Does your entered mailing address pass the system's verification check?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen displays an 'Address Verified*' message and updates the zip code to a nine-digit format to confirm the address is valid for shipping.",
+          "whatTheAgentLoses": "You lose the chance to personally confirm that your physical documents will be mailed to your exact, correctly formatted address."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Fill the identity form",
+      "note": "4.9.1 to 4.9.4 in the wizard's own page order; the optional fields in 4.9.2 are skippable, and the corpus mostly narrates rather than fills.",
+      "children": [
+       {
+        "id": "4.9.1",
+        "label": "Enter the personal details",
+        "questions": [
+         {
+          "question": "What personal information must I enter on this form?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "You need to know which fields, such as your surname and date of birth, are mandatory to successfully complete the renewal application.",
+          "whatTheAgentLoses": "You lose the ability to personally ensure that sensitive details like your name and date of birth are entered accurately into the state's system."
+         },
+         {
+          "question": "What title should you select and enter for your personal details?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires a title and explicitly instructs you to only use the custom text field if you selected 'Other' from the dropdown menu.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to specify your preferred title and ensure it matches your official legal documents."
+         },
+         {
+          "question": "Did you only fill out the 'other title' field if you selected 'Other' in the title dropdown?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The on-screen instructions explicitly state to use the '...or other title' field only if you selected 'Other' in the preceding dropdown.",
+          "whatTheAgentLoses": "The user loses the assurance that their application follows the strict data entry rules required to avoid processing errors or rejections."
+         },
+         {
+          "question": "Are any of your personal details, such as your name or date of birth, displayed as greyed-out or locked fields?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Portals often pre-fill and lock identity fields based on the database record, requiring an in-person visit to correct any typos.",
+          "whatTheAgentLoses": "The delegator cannot visually distinguish between an editable text field and a locked field, missing the chance to realize their official record contains an unchangeable error."
+         }
+        ]
+       },
+       {
+        "id": "4.9.2",
+        "label": "Enter the security and history details",
+        "questions": [
+         {
+          "question": "Are you comfortable consenting to third-party identity checks to process your application?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly states that providing your information means you consent to the agency checking your identity and details with third parties.",
+          "whatTheAgentLoses": "The user loses the opportunity to evaluate the privacy implications and personally decide whether to consent to this external data sharing."
+         },
+         {
+          "question": "Should I provide my National Insurance number?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen states that providing a National Insurance number helps process the application but explicitly notes it can be left blank.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to share this sensitive personal identifier or withhold it to protect their privacy."
+         },
+         {
+          "question": "Will you provide your UK passport number to allow the DVLA to use your passport photo and signature?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen states that entering your UK passport number allows the DVLA to attempt using your existing passport photo and signature for your renewed license.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to link your passport data to your driver's license to reuse the existing photo and signature."
+         }
+        ]
+       },
+       {
+        "id": "4.9.3",
+        "label": "Enter the licence document numbers",
+        "questions": [
+         {
+          "question": "What details from your current driving license do you need to provide, and where can you find them?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires entering the two-digit issue number and the 10 or 12-digit photocard number from your physical license to prove you possess it.",
+          "whatTheAgentLoses": "Delegating this step requires sharing sensitive numbers from your physical identification document with a third party, increasing your exposure to identity theft."
+         },
+         {
+          "question": "Should I provide my driver number?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form states that entering your driver number makes it easier to find your driver record, even if it is not strictly required.",
+          "whatTheAgentLoses": "The user loses the choice of whether to supply this optional identifier to speed up the process or skip it if they do not have it handy."
+         }
+        ]
+       },
+       {
+        "id": "4.9.4",
+        "label": "Answer the disqualification declaration",
+        "questions": [
+         {
+          "question": "Do you need to declare any current driving disqualifications?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires you to accurately declare whether you are currently disqualified from driving before you can proceed.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to personally ensure your legal driving status is reported accurately, which could lead to application rejection or legal issues."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Set the options and answer the questions",
+    "note": "5.1 first where the venue offers types or terms; 5.2 to 5.7 in the order the wizard presents them - none of it is sought out, all of it is answered when asked. 5.8 when contact details are demanded; 7 reaches back here when a missing email blocks payment (DeKE).",
+    "questions": [
+     {
+      "question": "Do you want the state to process your transaction automatically, or should it be routed to a local tag agency?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen asks if the Oklahoma Tax Commission should process the transaction, noting that selecting no allows you to choose a local tag agency for manual processing.",
+      "whatTheAgentLoses": "The user loses the ability to select a preferred local tag agency for easier troubleshooting if problems arise with the renewal."
+     },
+     {
+      "question": "Which tag agency do you want to process your transaction?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The portal requires you to select a specific local tag agency from the provided list to handle your renewal.",
+      "whatTheAgentLoses": "You lose the opportunity to choose the most convenient or preferred local agency to process your paperwork."
+     },
+     {
+      "question": "Are any optional donation or voter registration checkboxes pre-selected by default on the form?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Visual design often nudges users by pre-checking boxes for optional programs, meaning you must actively uncheck them to opt out.",
+      "whatTheAgentLoses": "The agent might submit the form with default selections, inadvertently registering you for unwanted lists or adding unexpected donation fees."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Pick the service and term",
+      "questions": [
+       {
+        "question": "Which registration renewal type should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form requires you to specify if the renewal is personal or commercial to locate the correct vehicle records.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the vehicle is being renewed under the correct personal or business classification."
+       },
+       {
+        "question": "Which eligible driver license or ID service do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal displays multiple renewal and replacement options, explicitly marking which specific services are currently eligible for selection.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to proceed with a replacement when standard renewal options are marked as not eligible."
+       },
+       {
+        "question": "Are you selecting the correct application type for your vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'RENEWAL OF REGISTRATION' and 'PRIVATE MV (ONLINE)' selected, which must accurately reflect your transaction to avoid processing errors.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that the correct legal classification is applied to your vehicle registration."
+       },
+       {
+        "question": "Are the vehicle details and fees correct, and do you need to file for Planned Non-Operation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the displayed vehicle details and fees ensures you are renewing the correct registration, while the PNO option lets you declare if the vehicle will not be driven.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the vehicle's fee details and decide whether to file for Planned Non-Operation status."
+       },
+       {
+        "question": "Should you select a one-year or two-year renewal period?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options for the renewal duration, which directly affects the total fee charged.",
+        "whatTheAgentLoses": "You lose the opportunity to save money by choosing a shorter renewal period if you plan to sell the vehicle soon."
+       },
+       {
+        "question": "Which registration type should you select for your vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu requires you to specify the exact classification of your vehicle, such as private or motorcycle, to ensure the correct renewal process.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select an incorrect registration type, potentially invalidating your registration or causing you to pay the wrong fee."
+       },
+       {
+        "question": "Do you want to complete a Declaration of Non-Use for an inoperable vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form includes a toggle to request a distinctive non-use registration decal if the vehicle is currently uninsured due to inoperability.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to declare the vehicle inoperable and avoid standard insurance requirements."
+       },
+       {
+        "question": "Do you want to proceed with a standard renewal or file for planned non-operation for this vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to confirm the summarized vehicle details and select whether you plan to drive it normally or file for planned non-operation.",
+        "whatTheAgentLoses": "You lose the chance to verify your vehicle's information and legally declare your intended use for the upcoming registration year."
+       },
+       {
+        "question": "Does the previewed expiration date confirm that your license validity is actually being extended?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal may only allow a replacement rather than a true renewal if you are outside the eligibility window, meaning your expiration date will remain exactly the same.",
+        "whatTheAgentLoses": "The user loses the ability to realize the agent is merely purchasing a duplicate card rather than actually renewing their expiring driving privileges."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set the plate options",
+      "questions": [
+       {
+        "question": "Do you want to pay an additional fee to change your vehicle's plate number or design?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal offers an optional extra to change your plate number or design, which adds an additional cost to your registration fee.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to customize your vehicle's license plate design or number during the renewal process."
+       },
+       {
+        "question": "Do you need to request a replacement license plate for this vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features an 'Issue plate' checkbox next to the vehicle details to let you order a new physical license plate if your current one needs replacing.",
+        "whatTheAgentLoses": "The user loses the opportunity to evaluate the physical condition of their current license plate and decide if a replacement should be ordered."
+       },
+       {
+        "question": "Do you want to make an optional donation, request a replacement plate, or update your vehicle color?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to donate to an organ donor fund, request a new metal plate for an additional $4.00 fee, and specify the vehicle's color.",
+        "whatTheAgentLoses": "Delegating this step means an agent might make an unwanted donation, incur an extra fee for an unnecessary replacement plate, or incorrectly list your vehicle's color."
+       },
+       {
+        "question": "What color should you select for your vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown only provides basic color options, so you must decide which one best approximates your vehicle's actual color.",
+        "whatTheAgentLoses": "An agent might not know your vehicle's actual color or how you prefer to categorize a unique shade using the limited options."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Answer the voter registration question",
+      "questions": [
+       {
+        "question": "Do you need to update your voter registration information?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates you are already registered to vote at your current address and provides an opportunity to make changes before continuing.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify or update your voter registration status for upcoming elections."
+       },
+       {
+        "question": "Did you select a response for the required voter registration question before clicking 'Continue'?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The frames contradict the claim that the form advanced while the mandatory voter registration radio buttons were left unselected.",
+        "whatTheAgentLoses": "The user loses the ability to accurately manage their voter registration status if the agent misrepresents how mandatory civic fields were completed."
+       },
+       {
+        "question": "Are you legally eligible to affirm the voter registration declarations regarding felony convictions and mental capacity?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form requires legal attestations under oath about your criminal history and mental capacity to vote, which carry severe legal penalties if answered falsely.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent doesn't commit voter fraud on their behalf by blindly accepting legal declarations about their felony status or mental capacity."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Answer the donor and service questions",
+      "questions": [
+       {
+        "question": "Do you want to register as an organ donor during this application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a choice to join the NHS Organ Donor Register before continuing with the driving licence application.",
+        "whatTheAgentLoses": "The user loses control over a deeply personal medical and ethical decision regarding their own body."
+       },
+       {
+        "question": "How should I answer the mandatory questions regarding insulin dependence, organ donation, and veteran status?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The renewal form requires you to answer specific personal questions about your medical and veteran status in order to proceed with the application.",
+        "whatTheAgentLoses": "You lose control over whether you are registered as an organ donor or have your veteran status displayed on your new ID."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Decline the donations",
+      "questions": [
+       {
+        "question": "Do you want to add a 1 AED donation to your total payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts you to choose whether to donate 1 AED for the \"Year of Giving\" before proceeding with the payment.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to make a charitable donation or avoid an extra charge on your transaction."
+       },
+       {
+        "question": "Do you want to proceed to checkout now, add more items, or make a donation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts you to either continue to checkout or add additional items or a donation to your cart before paying.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to add a charitable donation or bundle other DMV services into a single transaction."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Choose the notice delivery",
+      "questions": [
+       {
+        "question": "How do you want to receive your future renewal notices?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires you to choose whether you want to receive future renewal notices via email, mail, or both.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select a notification method that causes you to miss your next renewal reminder."
+       },
+       {
+        "question": "What email address do you want to use for future renewal notices?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen notes that providing an email address automatically changes your future renewal notice preference to email.",
+        "whatTheAgentLoses": "Delegating this means the agent might provide an email address you do not monitor, causing you to miss future renewal notices."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Choose the fulfillment method",
+      "questions": [
+       {
+        "question": "Which delivery method should you choose for receiving your new registration card?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents delivery options like a courier to your door for 25 Dhs or a free kiosk pickup, directly impacting your total cost and wait time.",
+        "whatTheAgentLoses": "Delegating this choice means losing the opportunity to personally weigh the convenience of home delivery against the extra fee."
+       },
+       {
+        "question": "Which kiosk location is most convenient for you to pick up your registration card?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu requires you to select a specific smart teller kiosk, such as Shamil Al Qusais, where you will physically collect your renewed registration card.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a pickup location that is far away or inconvenient for your daily commute."
+       },
+       {
+        "question": "How do you want to receive your new plate and decals?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal presents a choice between picking up your plate and decals in the office or receiving them by mail.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether the convenience of mail delivery outweighs the immediacy of an in-office pickup."
+       },
+       {
+        "question": "Do you want your renewed document shipped to the address on file, or should I enter a different one-time shipping address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal gives you the option to change the shipping destination for your credential before it processes the transaction.",
+        "whatTheAgentLoses": "You lose the opportunity to intercept the delivery and have your renewed credential mailed to a temporary or alternate address."
+       },
+       {
+        "question": "Can you change the shipping address at checkout as promised earlier?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal promised earlier that a one-time shipping address could be entered, which is fulfilled by the 'CHANGE' link in the Shipping Confirmation section.",
+        "whatTheAgentLoses": "Delegating this task means you lose the ability to personally ensure your renewed document is sent to a specific temporary address."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Enter the contact details",
+      "questions": [
+       {
+        "question": "Does the portal display a masked version of your email or phone number to confirm where the receipt will be sent?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Portals often mask contact info (e.g., `j***@email.com`) for security, requiring you to recognize the pattern to ensure it is your current address.",
+        "whatTheAgentLoses": "The agent might blindly click past a masked email they assume is correct, causing you to never receive your official digital receipt."
+       },
+       {
+        "question": "Which email address and phone number should I provide to receive the renewal receipt?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The \"Delivery Contact Information\" section requires a valid email address and mobile number so the DMV can send your transaction receipt.",
+        "whatTheAgentLoses": "You lose control over which specific personal email address or phone number receives your official DMV confirmation."
+       },
+       {
+        "question": "Do you need to update your profile with an email address to proceed to payment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal displays an error message stating that an email address must be configured in your profile to allow online payments and receive the receipt.",
+        "whatTheAgentLoses": "The user loses the ability to choose which personal email address is attached to their account for receiving official registration documents."
+       },
+       {
+        "question": "Is the order summary correct, and which email and phone number should receive the payment receipt?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a $79.00 total and requires an email address, phone number, and agreement to the terms to complete the payment.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to verify the final charges and choose where your payment confirmation is sent."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Submit for agency approval",
+    "note": "carrier systems only (-eBX, F_2L). 6.1 before 6.2 - submit stays disabled until a file is attached. 6.3 anywhere before 6.2 to save and resume. 6.4 before 6.2 where offered, knowing it completes nothing. then 6.5, and 7 waits for the approval it reports.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Upload the required documents",
+      "questions": [
+       {
+        "question": "Which files will you select to fulfill the HVUT and lease document requirements?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to upload specific IRP renewal documents, such as the HVUT or [id] Lease Agreement, before you can submit the application for approval.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the correct, most recent tax and lease agreements are attached to your renewal application."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Submit for approval",
+      "questions": [
+       {
+        "question": "Have you attached the correct file, and are you ready to submit the application for approval?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the uploaded file name 'ACPT-IrpSu...eReport.pdf' before clicking the active 'Submit for Approval' button ensures the DMV receives the correct supporting document.",
+        "whatTheAgentLoses": "Delegating this step means losing the peace of mind that comes from personally confirming the exact file being sent to the state."
+       },
+       {
+        "question": "Should I submit the renewal supplement even though there is an alert about documents pending verification?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Documents Pending Verification' alert, making it unclear if you must wait for the Department of Revenue to verify them before submitting the form.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to delay the submission until your pending documents are fully verified by the state."
+       },
+       {
+        "question": "How do you handle the contradiction between the alert requiring documents and the tooltip stating none are needed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a system alert demanding document verification followed by a tooltip claiming no documents are required, leaving the actual requirements unclear.",
+        "whatTheAgentLoses": "The user loses the ability to personally clarify conflicting system instructions to ensure their renewal application is complete and accepted."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Pend and resume the application",
+      "questions": [
+       {
+        "question": "Should I proceed with renewing the vehicles now or pend the application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal offers the choice to either renew the vehicles immediately or pend the application, noting that fleets with 200 or more vehicles cannot use the pend option.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to pause the application or proceed immediately based on your specific fleet size and administrative workflow."
+       },
+       {
+        "question": "How do you resume a pending renewal application?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The WisCRS IRP Home page displays several menu options, making it important to know that 'Process Renewal' is the specific link used to retrieve a saved draft.",
+        "whatTheAgentLoses": "You lose the knowledge of how to navigate the portal's menus to retrieve and resume your own pending applications."
+       },
+       {
+        "question": "What comment should you enter to advance your pended renewal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires text in the 'Comments' area before you can click 'Continue' to resume a pended application.",
+        "whatTheAgentLoses": "You lose the opportunity to provide your own specific context or notes regarding why the renewal was pended."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Preview the billing notice",
+      "questions": [
+       {
+        "question": "Do you want to preview your billing notice or add additional vehicles before completing the supplement?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to add more vehicles or preview the billing notice before you officially submit the renewal for approval.",
+        "whatTheAgentLoses": "You lose the opportunity to review your expected costs or consolidate multiple vehicle renewals into a single transaction before submission."
+       },
+       {
+        "question": "What are the estimated fees for your renewal?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the preliminary billing notice lets you see the estimated costs, like the $14,175.27 total amount due, before the final bill is generated.",
+        "whatTheAgentLoses": "You lose the chance to review the estimated breakdown of fees across jurisdictions before committing to the renewal."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Read the approval outcome",
+      "questions": [
+       {
+        "question": "Did your renewal submit successfully, and what happens next?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a status message confirming the renewal was submitted for approval and notes that a billing notice will follow.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the exact confirmation details and understanding the review process for your renewal."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Pay the fees",
+    "note": "7.1 with 7.2 against it; 7.3 where the venue offers a choice; 7.4 commits the application on the systems that say so. then 7.5 on gateway venues, or straight to 7.6 where the agency takes the card itself. carriers enter this goal only after 6.5 approves.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the fee breakdown",
+      "questions": [
+       {
+        "question": "Are the plate number, VIN, and total fee correct before you add the renewal to your cart?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the vehicle details and fee amount ensures you are renewing the correct registration before initiating the checkout process.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the correct vehicle was selected and that the fee is accurate before committing to the payment."
+       },
+       {
+        "question": "Are the transaction details and the final fee breakdown correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final total, including a legal research fee and a GCash convenience fee, which must be reviewed before submitting payment.",
+        "whatTheAgentLoses": "You lose the opportunity to review and approve the specific convenience fees and total charges applied to your chosen payment method before the funds are deducted."
+       },
+       {
+        "question": "Do you want to review the full breakdown of the fees before paying?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a total of 405 AED, and viewing the breakdown ensures you understand exactly what individual charges make up that amount.",
+        "whatTheAgentLoses": "You lose the chance to verify the individual line items and ensure no unexpected surcharges were added to your renewal."
+       },
+       {
+        "question": "Are the items and total in your shopping cart correct before you proceed to payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying the 'Shopping Cart Item' and 'Total' ensures you are paying the correct amount for the right vehicle's registration.",
+        "whatTheAgentLoses": "Delegating this step means you lose the final chance to review the specific plate number and fee total before the payment is initiated."
+       },
+       {
+        "question": "Are you confirming the final total, including any processing fees, before entering your payment details?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the payment information entry form rather than a final review screen with the fee breakdown.",
+        "whatTheAgentLoses": "You lose the opportunity to review and approve the exact processing fees added to your renewal cost before the payment is submitted."
+       },
+       {
+        "question": "Are the individual fees and the total amount correct and acceptable?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a detailed fee breakdown, including mandatory mail and insurance verification fees, that must be reviewed before proceeding to payment.",
+        "whatTheAgentLoses": "You lose the chance to review the itemized charges and understand exactly what administrative fees are being added to your base renewal cost."
+       },
+       {
+        "question": "Should you remove any items from your cart before proceeding to payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The shopping cart displays 'Remove item' and 'Remove all items' options, making it important to verify that no unwanted or duplicate fees are included before paying.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the cart contents and remove any accidental charges before the final payment is processed."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Check the totals against the earlier screens",
+      "questions": [
+       {
+        "question": "Does the final renewal fee match the cost stated earlier?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming that the £14 fee in the cost section matches the £14 stated at the top of the page ensures you are not being overcharged with hidden fees.",
+        "whatTheAgentLoses": "You lose the chance to spot unexpected fee discrepancies before the payment is finalized."
+       },
+       {
+        "question": "Does the final order summary correctly apply the 2.1% credit card service fee warned about on the checkout page?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout page explicitly warns of a 2.1% fee for card payments, so the final order summary must accurately reflect this specific percentage to ensure you are not overcharged.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the state portal calculated your payment processing fees correctly before the transaction is finalized."
+       },
+       {
+        "question": "Do you verify the itemized costs and fees on the payment review screen before submitting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the $77.00 line item and $2.00 fee on the payment review page ensures you are being charged the correct $79.00 total before finalizing the transaction.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch and dispute unexpected processing fees or incorrect renewal charges before the payment is processed."
+       },
+       {
+        "question": "Did you notice the eCheck fee is $0.00 despite the letter stating a fee would be assessed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The renewal letter warned of an online payment fee, but the payment screen showed a $0.00 projected fee for an eCheck.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize that selecting an eCheck avoids the extra processing fees mentioned in their renewal letter."
+       },
+       {
+        "question": "Does the final payment processing fee accurately reflect the flat service fee and percentage warning given earlier?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking that the $4.05 processing fee exactly matches the earlier warning of a $2.00 flat fee plus a 2.25% online fee ensures the portal is billing you correctly.",
+        "whatTheAgentLoses": "You lose the chance to verify that the portal's fee math is correct and avoid paying miscalculated surcharges."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Pick the payment method",
+      "questions": [
+       {
+        "question": "Which payment method do you prefer to use given the different convenience fees?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple payment options like GCash, VISA, and BPI, each with different convenience fees such as a flat 65 PHP or an additional percentage of the total.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a payment method with higher fees or one that is less convenient for you to fund."
+       },
+       {
+        "question": "Are the itemized fees correct, and which payment method should you select?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a total amount due of 405 AED, including specific charges like late fees and a knowledge fee, and requires selecting a payment method to continue.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to review the itemized charges, such as unexpected late fees, before committing your funds."
+       },
+       {
+        "question": "Do you want to pay the $2,572.71 fee in full or use the installment plan, and which payment method will you use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents a large amount due with options to pay via ACH or card, as well as an installment plan that directly affects your immediate cash flow.",
+        "whatTheAgentLoses": "You lose the ability to manage your finances by deciding whether to spread out the large fee or pay it all at once."
+       },
+       {
+        "question": "Which payment method do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents a mandatory 'Payment Type' dropdown requiring a choice between a credit card and an electronic check to proceed with the transaction.",
+        "whatTheAgentLoses": "You lose the ability to decide which of your financial accounts will be charged for the renewal fee."
+       },
+       {
+        "question": "Do you accept the total amount and the potential service fees for your payment method?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final renewal amount of $293.00 and warns of a 1.95% service fee if paying by credit card.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to review the final cost and decide whether to avoid the credit card service fee by using a direct bank payment."
+       },
+       {
+        "question": "Are you aware that paying directly from a bank account is only allowed if you are renewing a single item?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The shopping cart notes that direct bank payments are restricted to single-item purchases, which dictates whether you must use a credit card and incur its associated fee if renewing multiple vehicles.",
+        "whatTheAgentLoses": "The user loses the opportunity to split their renewals into separate transactions to avoid credit card fees if they are renewing multiple vehicles."
+       },
+       {
+        "question": "Did the total fee visually update the moment you clicked the radio button for a specific payment method?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many state portals dynamically add a percentage-based convenience fee to the total only after a credit card is selected, without a page reload.",
+        "whatTheAgentLoses": "The delegator cannot monitor the live, silent price change to decide if switching to an eCheck is worth the savings before submitting."
+       },
+       {
+        "question": "Do you want to print the confirmation or pay the fee now?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen provides options to print the submission receipt and select a payment method, which can be skipped to return to the account.",
+        "whatTheAgentLoses": "The user loses the opportunity to secure a printed record of the transaction or decide when and how to settle the payment."
+       },
+       {
+        "question": "Should you pay the 1.95% service fee with a credit card to earn cash back instead of using a direct bank account transfer?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly advises that paying directly from a bank account is a bad idea because the 1.95% credit card fee can be offset or exceeded by cash back rewards.",
+        "whatTheAgentLoses": "The user loses the opportunity to strategically choose a payment method that maximizes their financial rewards while navigating the state's processing fees."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Accept the payment terms",
+      "questions": [
+       {
+        "question": "Will you check the boxes to confirm the legal declarations?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a mandatory declaration warning that making a false statement is a criminal offense, which must be acknowledged to proceed.",
+        "whatTheAgentLoses": "Letting an agent check these boxes means you lose the chance to personally review and attest to the legal terms under threat of prosecution."
+       },
+       {
+        "question": "Do you accept the terms and conditions to proceed with the payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen warns that once you accept these conditions, your application is processed and can no longer be altered.",
+        "whatTheAgentLoses": "You lose the opportunity to read the final disclaimer and decide if you are truly ready to permanently lock in your application details."
+       },
+       {
+        "question": "Do you accept the total charges, including the service fee, and the terms and conditions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This ensures you agree to the final total, including the 2.1% service fee, and the terms and conditions before your card is charged.",
+        "whatTheAgentLoses": "You lose the opportunity to review the exact service fee and final total charged to your payment card."
+       },
+       {
+        "question": "Do you accept the uncalculated service and credit card fees that will be added to your total?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an amount due of $89.05 but explicitly warns that a $2.00 service fee and a 2.25% credit card fee will be added at checkout.",
+        "whatTheAgentLoses": "You lose the opportunity to consent to the true final charge, as the agent will accept the uncalculated extra fees on your behalf."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Pay at the gateway",
+      "note": "7.5.1, then 7.5.2 before anything is typed. 7.5.3 on card rails; 7.5.4 then 7.5.5 on wallet rails. 7.5.6 closes the loop back to the agency.",
+      "children": [
+       {
+        "id": "7.5.1",
+        "label": "Hand off to the payment gateway",
+        "questions": [
+         {
+          "question": "Which payment method do you want to use, and what contact information should be entered for the transaction?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires selecting a payment method like Credit Card or Direct Debit and providing an email and mobile number to process the 405.00 AED fee.",
+          "whatTheAgentLoses": "You lose the ability to choose your preferred payment gateway and ensure the transaction receipt goes to your preferred email and phone number."
+         },
+         {
+          "question": "Do you have to re-enter your email and mobile number on the payment page?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The contact fields on the DubaiPay screen appear blank even though they were just filled out on the delivery form.",
+          "whatTheAgentLoses": "The user loses the seamless experience of having their contact details automatically carry over to the payment gateway."
+         },
+         {
+          "question": "How do you proceed to the partner payment site?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen explicitly warns that you are being redirected to a third-party payment site and that no further changes to your cart can be made once you proceed.",
+          "whatTheAgentLoses": "You lose the final opportunity to review or alter your cart before the agent locks in the transaction on the external payment gateway."
+         }
+        ]
+       },
+       {
+        "id": "7.5.2",
+        "label": "Verify the gateway amount",
+        "questions": [
+         {
+          "question": "Do you need to verify the information under the billing details tab before paying?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "Checking the billing details ensures the payment is associated with the correct address and contact information before finalizing the transaction.",
+          "whatTheAgentLoses": "You lose the chance to verify that the billing address matches your payment method, which could lead to a declined transaction if the agent uses outdated information."
+         },
+         {
+          "question": "Are you willing to pay the additional processing fee for using a card?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows a transaction summary with a $4.05 payment processing fee added to the $89.05 base amount.",
+          "whatTheAgentLoses": "The user loses the opportunity to review the final total and consent to the extra processing fee."
+         }
+        ]
+       },
+       {
+        "id": "7.5.3",
+        "label": "Enter the card details",
+        "questions": [
+         {
+          "question": "What are your payment card details?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires a card type, credit card number, expiration date, and CVV to process the 405.00 AED renewal fee.",
+          "whatTheAgentLoses": "Delegating this step requires sharing highly sensitive financial information, such as your credit card number and CVV, with the agent."
+         },
+         {
+          "question": "Which authorized credit or debit card will you use to pay the renewal fee?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The portal requires you to enter details for an authorized MasterCard or Visa to pay the displayed fee.",
+          "whatTheAgentLoses": "The user loses control over which specific payment card is charged for the renewal transaction."
+         },
+         {
+          "question": "What credit card and billing information will you enter to complete the payment?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires a card number, expiration date, security code, and full billing address to process the $298.71 total charge.",
+          "whatTheAgentLoses": "Delegating this step requires sharing highly sensitive credit card details and your personal billing address with the agent."
+         },
+         {
+          "question": "Does the payment decline error stem from the form auto-filling your vehicle's mailing address into the credit card billing address fields?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Payment gateways often decline transactions if the billing address doesn't match the card, which frequently happens when the DMV form silently auto-fills the vehicle's mailing address.",
+          "whatTheAgentLoses": "You lose the ability to quickly spot the address mismatch and correct it, whereas an agent might just report a generic payment decline and abandon the task."
+         },
+         {
+          "question": "Is the billing address section visually hidden behind a 'Same as residential address' toggle that is turned on by default?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Payment forms often hide billing address fields to save space if a toggle is checked, meaning the address being submitted is not actually visible on screen.",
+          "whatTheAgentLoses": "The agent might fail to notice the toggle and submit the payment with a mismatched billing address, causing the transaction to decline."
+         }
+        ]
+       },
+       {
+        "id": "7.5.4",
+        "label": "Log in to the wallet",
+        "questions": [
+         {
+          "question": "Which GCash mobile number should you enter to pay the displayed amount?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows a PHP 331.42 fee for the Land Transportation Office and requires a valid GCash mobile number to process the payment.",
+          "whatTheAgentLoses": "Delegating this step requires sharing your personal GCash mobile number with the agent to authorize the transaction."
+         },
+         {
+          "question": "What is the 6-digit authentication code sent to your mobile number?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen prompts for a 6-digit authentication code sent to your registered mobile number to log in and pay with GCash.",
+          "whatTheAgentLoses": "The user loses the security of their mobile payment account by having to share a time-sensitive, personal SMS authentication code with the agent."
+         },
+         {
+          "question": "What is your 4-digit GCash MPIN to authorize the login?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires your 4-digit MPIN to log into your GCash account and process the renewal payment.",
+          "whatTheAgentLoses": "Delegating this step requires sharing a highly sensitive financial PIN, which compromises the security of your payment account."
+         },
+         {
+          "question": "Did you enter the exact authentication code shown in the GCash push notification?",
+          "cluster": "compare",
+          "moment": "After",
+          "moneyMoving": true,
+          "why": "The push notification displayed the authentication code as [number], but [number] was entered into the verification field, which will cause the payment to fail.",
+          "whatTheAgentLoses": "The user loses the ability to successfully process the payment and complete the renewal because the agent entered an invalid authentication code."
+         }
+        ]
+       },
+       {
+        "id": "7.5.5",
+        "label": "Confirm the wallet payment",
+        "questions": [
+         {
+          "question": "Is the final total correct and do you have enough GCash balance to authorize the payment?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "Verifying the PHP 331.42 total against your PHP 22,420.20 available balance ensures you are paying the correct amount to the Land Transportation Office.",
+          "whatTheAgentLoses": "You lose the ability to personally verify the exact fee being deducted from your digital wallet and monitor your remaining funds."
+         }
+        ]
+       },
+       {
+        "id": "7.5.6",
+        "label": "Return to the agency site",
+        "questions": [
+         {
+          "question": "Is the payment complete, and should you click proceed or wait for the auto-redirect?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": true,
+          "why": "The screen displays a successful GCash payment with a reference number, a ten-second auto-redirect countdown, and a proceed button.",
+          "whatTheAgentLoses": "You lose the chance to note the third-party payment reference number before manually returning to the merchant portal."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Submit the payment",
+      "questions": [
+       {
+        "question": "Are you ready to submit your billing information to process the payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the Customer/Payment Billing Information page with a Submit button, which serves as the final authorization for the transaction.",
+        "whatTheAgentLoses": "The user loses the final opportunity to review or correct their billing details before the payment is processed."
+       },
+       {
+        "question": "Did you actually see the payment submission step before the success screen appeared?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Confirming the payment submission step is visible ensures the transaction was actually processed and not just edited to show a success screen.",
+        "whatTheAgentLoses": "The user loses the certainty that their payment was securely and properly executed if the actual submission step is missing from the record."
+       },
+       {
+        "question": "Do you proceed to pay the fee and submit the application?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The portal states a £14 fee is required, but the recording ends on the 'Before you continue' page before any payment is made.",
+        "whatTheAgentLoses": "You lose confirmation that the renewal was successfully submitted and paid for, leaving your registration status uncertain."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Keep the proof",
+    "note": "8.1 with 8.2 against it; 8.3 in whatever form the venue allows - print, PDF, or a screenshot. 8.4 where a temporary licence bridges the wait; 8.5 where the receipt can be checked for authenticity; 8.6 and 8.7 where an account or status tool lets the user confirm the state changed. the mailed card or sticker arrives days later, off camera in every keeper.",
+    "questions": [
+     {
+      "question": "If the portal crashes before displaying the receipt, did you receive a payment confirmation email or bank alert indicating the charge went through?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "DMV portals are notoriously unstable. If the site errors out on the final redirect, you must check your bank or email to know if the renewal actually processed before attempting it again and risking a double charge.",
+      "whatTheAgentLoses": "The user loses the ability to cross-reference external financial alerts to prevent double-paying for a renewal when the government site fails to load the success page."
+     }
+    ],
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Did you review the confirmation details and save a copy for your records?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen displays the trace number, fee breakdown, and expected delivery time for the physical sticker.",
+        "whatTheAgentLoses": "The user misses the chance to personally verify the mailing address and save the receipt for their own records."
+       },
+       {
+        "question": "How do you verify that your renewal has been successfully submitted?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Although the navigation menu lists a confirmation step, the cursor remains idle at the margin, leaving it ambiguous whether further action is required to finalize the renewal.",
+        "whatTheAgentLoses": "You lose the guarantee that the agent actually completed the submission and secured your receipt or temporary document."
+       },
+       {
+        "question": "Do you see the final confirmation screen proving the application was submitted?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The site states the license should arrive within a week, but the video ends before submission, leaving the actual completion unresolved.",
+        "whatTheAgentLoses": "The user loses the guarantee that their renewal was successfully processed and their new document is actually on the way."
+       },
+       {
+        "question": "Did you complete the transaction to see if the expired license penalties were applied?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The page listed penalties for an expired license, but the video ended at the login screen without showing a completed transaction.",
+        "whatTheAgentLoses": "The user loses the ability to verify if the renewal was successful and what the final fee actually was."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Check the confirmation against the promises",
+      "questions": [
+       {
+        "question": "Does the final summary overlay accurately reflect the convenience fee shown on the billing summary?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The final summary text overlay claims a GCASH charge of 65 PHP, which contradicts the actual convenience fee of 72.42 PHP shown earlier on the billing summary.",
+        "whatTheAgentLoses": "The user loses an accurate record of their expenses if the agent provides a final summary that contradicts the actual amount billed."
+       },
+       {
+        "question": "Do the confirmation text and the summary table agree on whether you will receive a mail notice?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation page text states you will receive a notice through the mail, but the summary table directly below it contradicts this by displaying 'Mail Notice No'.",
+        "whatTheAgentLoses": "You lose the opportunity to spot this discrepancy and contact the DMV to confirm whether your physical documents will actually be mailed."
+       },
+       {
+        "question": "Do the different moments of this task agree with each other regarding the renewal status?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "This matters because an analyst claimed the dashboard still showed an active 'Start renewal' button, but the screen actually only displayed the confirmation-page fees table.",
+        "whatTheAgentLoses": "A person delegating to an agent loses the ability to personally verify that the system's final state accurately reflects a completed transaction without contradictions."
+       },
+       {
+        "question": "Does the transaction number from the payment gateway match the reference number on your final receipt?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the ePay transaction number matches the E-Gov reference on the final PDF ensures your payment was successfully linked to your renewal.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the payment gateway and the DMV system successfully synced your transaction data."
+       },
+       {
+        "question": "Did you verify that the final total on the receipt matches the payment method you selected?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The temporary license displays a $30.00 total, confirming that the $0.00 eCheck fee was applied rather than the $1.00 credit card fee.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent avoided unnecessary processing fees by selecting the correct payment method."
+       },
+       {
+        "question": "Does the total on the final receipt match the exact amount you authorized at checkout?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The checkout screen displayed a total of $298.71 including a service fee, but the final receipt only documents the $293.00 DMV fee.",
+        "whatTheAgentLoses": "You lose the ability to accurately track your expenses or dispute hidden charges if the agent accepts a receipt that fails to document the full amount billed to your account."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Save the proof",
+      "questions": [
+       {
+        "question": "Which confirmation document do you want to download for your records?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The portal displays a 'DONE' status alongside buttons for the transaction confirmation and official receipt, which you need as proof of your completed renewal.",
+        "whatTheAgentLoses": "You lose the ability to immediately download and securely store the official receipt directly to your own personal device."
+       },
+       {
+        "question": "How do you view the downloaded official receipt?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The print dialog displays a PDF file named 'f' and an 'Open' button that must be clicked to verify the receipt.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to immediately inspect the official receipt and ensure it is saved to your preferred personal records."
+       },
+       {
+        "question": "Did you successfully download the official receipt from the transaction details page as promised earlier?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The disclaimer at 06:38 stated the Official Receipt would be available in the Transaction Details page, making it essential to verify the file actually downloads and opens at 09:24.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of personally saving and verifying the official receipt file for your own records."
+       },
+       {
+        "question": "Do you want to download the confirmation receipt?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen presents a download dialog with 'Download' and 'Cancel' buttons for saving the receipt file.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether to save a local copy of the receipt, which you might need for immediate proof of your renewal."
+       },
+       {
+        "question": "How do you want to handle this downloaded PDF document?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The PDF viewer displays a 3-dot menu that reveals options for saving, printing, or sharing the temporary document.",
+        "whatTheAgentLoses": "You lose the ability to choose exactly where and how to save or share your temporary driving document."
+       },
+       {
+        "question": "How do I save my receipt and reference number for the next steps?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays your payment confirmation and request reference number, which you must save to obtain your physical document at a kiosk.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the fee breakdown and securing the reference number needed to print your physical registration."
+       },
+       {
+        "question": "Are the vehicle and payment details on the generated receipt correct?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the specific plate number, name, and transaction IDs on the generated PDF receipt ensures the renewal was successfully applied to your account.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify the receipt details and immediately spot any discrepancies."
+       },
+       {
+        "question": "Do you want to receive a copy of your payment confirmation via email?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The transaction confirmation page includes an optional section to enter your email address and send a digital copy of the receipt for your records.",
+        "whatTheAgentLoses": "Delegating this to an agent means you lose the choice to have a convenient digital backup of the renewal receipt sent directly to your personal inbox."
+       },
+       {
+        "question": "Has my payment processed, and how do I want to save my receipt?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen confirms the payment processed and provides specific links to either view and print the receipt or have it sent via email.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to choose your preferred method for saving the temporary proof of registration for your personal records."
+       },
+       {
+        "question": "Did you print or save a copy of this receipt to keep in your vehicle?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The success screen explicitly states that the receipt itself serves as the 'Vehicle Registration Certificate' and a copy must be kept in the vehicle at all times.",
+        "whatTheAgentLoses": "The user loses the crucial legal instruction that they must keep this specific receipt in their car to prove their registration status to law enforcement."
+       },
+       {
+        "question": "Did a pop-up blocker icon appear in the address bar when the receipt attempted to generate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "DMV receipts often open in a new window or as a PDF, which browsers frequently block silently, displaying only a small icon.",
+        "whatTheAgentLoses": "The delegator cannot see the tiny visual indicator that their receipt was blocked, potentially leaving the session without saving the mandatory proof of renewal."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Print the temporary license",
+      "questions": [
+       {
+        "question": "Do you want to print or save your temporary driver's license?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The receipt page provides an option to print a temporary driver's license to use while waiting for the physical copy to arrive in the mail.",
+        "whatTheAgentLoses": "The user loses immediate possession of their temporary proof of driving privileges."
+       },
+       {
+        "question": "When will your permanent card arrive and how do you check its status?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The temporary receipt indicates the card should arrive within 15 business days and provides specific instructions for tracking it online.",
+        "whatTheAgentLoses": "You lose the immediate awareness of the expected delivery timeline and the exact steps needed to track your physical card."
+       },
+       {
+        "question": "Does the video actually show the payment and temporary document download as promised?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The 'Before You Begin' page states you can download a temporary document after paying, but the video ends at the login screen without showing this resolution.",
+        "whatTheAgentLoses": "The user misses the crucial final steps of paying the fee and securing their temporary proof of renewal."
+       },
+       {
+        "question": "Does the temporary license PDF actually load when clicked, or do you need to immediately check your email for a backup receipt because the pop-up failed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Portal pop-up blockers or server timeouts frequently cause the temporary PDF generation to fail, meaning you must immediately verify if a backup copy was emailed to you before closing the session.",
+        "whatTheAgentLoses": "An agent might assume the task is complete after clicking 'Print', failing to notice the document didn't actually generate and leaving you without proof of registration."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Verify the receipt is genuine",
+      "questions": [
+       {
+        "question": "How do you verify the official receipt's authenticity and review the final cost breakdown?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The digital official receipt displays a QR code that links to a verification system to prove its legitimacy, along with a detailed breakdown of the final out-of-pocket costs.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally scan the QR code to ensure the receipt is legitimate and review the exact breakdown of the fees paid."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Check the record updated",
+      "questions": [
+       {
+        "question": "Is the completed renewal transaction successfully logged in your account history?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the activity tab confirms that the DMV system has officially recorded the $73.75 vehicle registration renewal.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind of seeing the transaction officially logged in your personal dashboard."
+       },
+       {
+        "question": "How do you confirm your submission was successful when an outstanding balance warning appears?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The main screen showed a warning for an outstanding balance of $1,438.42, making it necessary to check the 'All Supplements' tab to verify the status was actually 'Submitted'.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying that the system successfully recorded your submission despite the alarming balance warning."
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Check the mailing status",
+      "questions": [
+       {
+        "question": "Should you check the mailing status of your card instead of starting a new renewal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a link to check the mailing status under the 'What to Expect' section, which is important if you recently renewed and are just waiting for the physical document to arrive.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover that their previously renewed card is already in the mail, potentially resulting in an unnecessary duplicate transaction and fee."
+       },
+       {
+        "question": "How do you find the tool to check the status of your newly renewed license?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Using the 'Search ilsos.gov' bar to look up 'dl status' provides a direct way to find the tracking tool without navigating through complex menus.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact processing status of your newly issued document in the state system."
+       },
+       {
+        "question": "What information do you enter to check the mailing status of your card?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen instructs you to enter your Driver's License, ID, or CLP Number and Date of Issuance to check the status.",
+        "whatTheAgentLoses": "The user loses the ability to track the delivery status of their renewed card."
+       },
+       {
+        "question": "Do you follow through on checking the mailing status of the card?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows navigation to the mailing status form, but the video ends before any information is entered to actually check it.",
+        "whatTheAgentLoses": "You lose the ability to track the physical document and know when it will arrive in the mail."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,2204 @@
+{
+ "task": "get a ride with a rideshare app (Uber, Lyft; paratransit and access services count as sites): set pickup and destination, compare ride options and price, request, get matched with a driver, track the approach on the map, and verify the car and driver at pickup; complete when the ride is in progress or finished with the fare screen — at minimum, the matched-driver tracking screen after the request commits. Surface pinned: a rideshare app. Variants: driving for the platform (driver side), food delivery, and renting a car do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Book a ride",
+  "note": "do 1 - twelve keepers walk sign-in or sign-up on camera, eleven arrive signed in. 2 up front where the tutorial treats a payment method as a prerequisite (D8HI, Jztl, HobC, r4Od, m5Hh) - 4.6 opens the same method list from the booking screen. then 3 and 4, re-entered freely: jl57 re-enters the destination, k9El and n84z restart the whole spec. 4.8 where the ride is for later. on inDrive and inDriver, 5 replaces 6 - accepting one driver's offer is the commit (D4bI, KJnu, xBw0); everywhere else, 6. then 7 once a driver is assigned. 8 whenever letting go is the point - six keepers cancel on purpose, and 8.1 reaches scheduled rides through the trip history (r4Od). 9 in the five keepers that reach in-ride or post-ride screens (D8HI and HobC are produced tutorials, m5Hh a mockup).",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the app",
+    "note": "1.1 then 1.2 to 1.5 on a fresh account; 1.6 fires as the OS asks, any time - k9El's contacts wall arrives mid-task when he picks a passenger. 1.7 where the narrator checks it. 1.8 where an upsell blocks the path. then 1.9. eleven keepers arrive signed in and start at 1.9.",
+    "questions": [
+     {
+      "question": "Do you need to adjust any account settings or profile options before starting your ride request?",
+      "cluster": "hand over",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "The Account screen displays options like safety checkups, family settings, and business profiles that might affect how your ride is managed.",
+      "whatTheAgentLoses": "You lose the chance to review and configure personal account features like safety preferences or family settings."
+     },
+     {
+      "question": "Do you need to review your past or upcoming trips?",
+      "cluster": "facts",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "The screen displays empty lists for both upcoming and past trips, confirming there is no recent activity to manage before moving to the account settings.",
+      "whatTheAgentLoses": "You lose direct visibility into your account's ride history and the personal assurance that no unexpected trips are scheduled."
+     },
+     {
+      "question": "Do you want to switch to driver mode?",
+      "cluster": "hand over",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "The side menu contains a prominent 'Driver mode' button that changes the app's functionality from requesting rides to providing them.",
+      "whatTheAgentLoses": "The user loses the opportunity to choose whether they want to use the app as a passenger or a driver."
+     },
+     {
+      "question": "What is your current loyalty tier and how close are you to your next reward?",
+      "cluster": "facts",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "Reviewing this screen allows you to see your Gold status, your progress toward a $5 Uber Cash reward, and current perks like flexible cancellations.",
+      "whatTheAgentLoses": "You lose the personal satisfaction of tracking your loyalty progress and directly understanding the benefits currently available to your account."
+     },
+     {
+      "question": "Which account setting or feature do you want to access from the main menu?",
+      "cluster": "hand over",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "The side menu displays various account management options like payment, ride history, and settings that you might need to configure before requesting a ride.",
+      "whatTheAgentLoses": "Delegating this means you lose the chance to personally review your account settings, check rewards, or update payment methods."
+     },
+     {
+      "question": "Do you see the promised app setup tutorial at the end of the video?",
+      "cluster": "facts",
+      "moment": "Completion",
+      "moneyMoving": false,
+      "why": "The narrator promised at 0:29 to include an app setup guide at the end, but the video finishes at 5:56 without showing it.",
+      "whatTheAgentLoses": "The user loses the promised instructions for setting up the app from scratch."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Install or open the app",
+      "questions": [
+       {
+        "question": "Are you opening the correct rideshare app to request your ride?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App Store page confirms this is the official Uber app, and the Open button indicates it is already installed and ready to launch.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is launching the official, trusted rideshare application rather than a counterfeit or incorrect one."
+       },
+       {
+        "question": "Should you install the Ola app to book your ride?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the app's developer, rating, and size, which are important details to verify to ensure you are downloading a legitimate and safe application.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred rideshare service or verify the app's legitimacy and storage requirements before it is downloaded to your device."
+       },
+       {
+        "question": "Is the rideshare app installed and ready to open?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Ola app page with an 'Open' button, confirming it is downloaded and ready to launch.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct rideshare app is installed before starting the task."
+       },
+       {
+        "question": "Which app should you download from the search results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple rideshare options like SOCAR, Uber, and maxim, requiring you to select the correct service to use for your trip.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred rideshare brand or utilize an existing account ecosystem."
+       },
+       {
+        "question": "Do you want to update the Lyft app before opening it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App Store page shows an available update with speed improvements, which you might want to install before trying to book a ride.",
+        "whatTheAgentLoses": "The user loses the choice to skip the update to save time and data when they just want to quickly request a ride."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Pick a sign-in method",
+      "questions": [
+       {
+        "question": "How do you want to sign in or create your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple sign-in options like a mobile number, Apple, Google, or Email, which determines how your account is accessed and linked.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a sign-in method that doesn't link to your existing ride history or preferred payment methods."
+       },
+       {
+        "question": "Should you allow Bolt to use google.com to sign in?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The prompt warns that continuing allows the app and website to share information about you.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to link your Google account and share your personal information with the rideshare app."
+       },
+       {
+        "question": "How do you proceed from the animated welcome screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Get started' button that must be tapped to initiate the login or account creation process.",
+        "whatTheAgentLoses": "The user loses direct control over entering their personal credentials to access their rideshare account."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Enter the phone or email",
+      "questions": [
+       {
+        "question": "Which email address do you want to associate with this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires an email address to proceed with account setup or login.",
+        "whatTheAgentLoses": "You lose control over which email inbox receives your ride receipts and account notifications."
+       },
+       {
+        "question": "Is this the correct phone number to receive the verification code?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that this number will receive an SMS code for verification and be used for all ride-related communication.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the OTP is sent to a device they currently have access to."
+       },
+       {
+        "question": "Should you use the saved phone number from Google Smart Lock?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen displayed a Google Smart Lock prompt with a saved phone number and a 'NONE OF THE ABOVE' option, requiring a choice on how to provide your contact information.",
+        "whatTheAgentLoses": "A person delegating to an agent loses the ability to decide whether to use their saved phone number or manually enter a different one for this account."
+       },
+       {
+        "question": "Are you comfortable accepting the Terms of Use and Privacy Policy to log in?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping 'Next' to verify your phone number automatically constitutes agreement to the app's Terms of Use and Privacy Policy displayed on the screen.",
+        "whatTheAgentLoses": "You lose the chance to review how your personal data and phone number will be handled before committing to the service."
+       },
+       {
+        "question": "Which phone number will you use to sign in, and do you agree to the terms and conditions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a phone number to proceed and states that doing so applies the Terms & Conditions and Privacy Policy to new accounts.",
+        "whatTheAgentLoses": "Delegating this step means the agent chooses which phone number to link and accepts binding legal terms on your behalf without your review."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Enter the verification code",
+      "questions": [
+       {
+        "question": "What is the 4-digit verification code sent to your email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for a 4-digit code sent to your email address to verify your identity before you can proceed.",
+        "whatTheAgentLoses": "An agent cannot access your personal email inbox to retrieve the required verification code."
+       },
+       {
+        "question": "Should I wait for the app to auto-verify the OTP or enter it manually?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a countdown for auto-verifying the OTP sent to your phone, offering a hands-free alternative to typing it.",
+        "whatTheAgentLoses": "The user loses the choice to either let the app seamlessly read the SMS or manually intervene to speed up the verification process."
+       },
+       {
+        "question": "What is the verification code sent to your phone?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a one-time password sent via SMS to verify your identity before you can proceed with using the app.",
+        "whatTheAgentLoses": "You lose the security of keeping your authentication codes private and directly controlling access to your account."
+       },
+       {
+        "question": "Did you skip showing the entry of the SMS verification code?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts directly from the empty verification boxes to the home screen without showing the code being entered or the 'Next' button being pressed.",
+        "whatTheAgentLoses": "An agent would not learn how to successfully complete the SMS verification step because the actual input and submission process is missing from the demonstration."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Fill the profile basics",
+      "questions": [
+       {
+        "question": "Should you enter your real name as requested, or try to skip this step?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for your first and last name to properly address you, which determines how drivers will identify you at pickup.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to share your real identity with the rideshare platform and its drivers."
+       },
+       {
+        "question": "Are the account details consistent between the sign-up process and the profile screen?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Account screen displays the name 'Bo P' despite the first and last name fields being left visibly blank during sign-up.",
+        "whatTheAgentLoses": "An agent might ignore this discrepancy, leaving you unaware that the app is using unexpected or incorrect profile information."
+       },
+       {
+        "question": "How do you set your current city?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming or editing the detected city ensures the app searches for rides and maps in your actual location.",
+        "whatTheAgentLoses": "The user loses the ability to manually correct an inaccurate default city, which could prevent the app from finding local rides."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Answer the permission prompts",
+      "questions": [
+       {
+        "question": "Which permissions should you grant the app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests location access to find available rides and phone access for account security, offering options like precise or approximate location.",
+        "whatTheAgentLoses": "Delegating this means the agent decides whether to share your precise location and phone access with the app."
+       },
+       {
+        "question": "Should you allow the app to access your contacts?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system permission dialog asks for contact access to use the 'Switch rider' feature, requiring a choice between privacy and convenience.",
+        "whatTheAgentLoses": "An agent might automatically grant access to your entire address book instead of manually entering a single phone number as you prefer."
+       },
+       {
+        "question": "Should you allow the app to access your device details for account protection?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app presents a modal stating it needs access to device details to protect your account, requiring you to choose 'DONT ALLOW' or 'OK'.",
+        "whatTheAgentLoses": "Delegating this means an agent decides whether to grant the app access to your device's unique identifiers and security details."
+       },
+       {
+        "question": "Do you want to allow the app to send you push notifications for trip updates and promotions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests permission to send push notifications to provide real-time trip status, driver updates, and promotional offers.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether your personal device will receive potentially unwanted promotional alerts alongside essential ride updates."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Turn on device location",
+      "questions": [
+       {
+        "question": "Is your device's location service turned on?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The blue Location toggle in the quick settings panel confirms the GPS is active, ensuring the app can accurately pinpoint the pickup spot.",
+        "whatTheAgentLoses": "Delegating this means you lose the peace of mind of personally verifying your device's privacy and location settings before sharing your whereabouts."
+       },
+       {
+        "question": "Should you turn on device location services?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app prompts you to turn on device location using Google's location service in order to continue.",
+        "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to decide whether to share your precise physical location with the app and Google's services."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Dismiss the sign-up offers",
+      "questions": [
+       {
+        "question": "Do you want to receive promotional notifications from partner companies?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers discounts on shopping and coffee from trusted partners in exchange for opting into notifications.",
+        "whatTheAgentLoses": "If an agent makes this choice, you lose the ability to control your personal marketing preferences and inbox."
+       },
+       {
+        "question": "Should you subscribe to Ola Select for ride benefits?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app presents an Ola Select subscription offer with benefits like no peak pricing and priority booking that you must accept or dismiss to continue.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might accept an unwanted subscription fee or dismiss an offer that could save you money on frequent rides."
+       }
+      ]
+     },
+     {
+      "id": "1.9",
+      "label": "Find the ride entry",
+      "questions": [
+       {
+        "question": "Which service option should you select from the home screen?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displays a grid of multiple services like Food and Package, so you must specifically choose the Ride icon to begin booking a car.",
+        "whatTheAgentLoses": "You lose the opportunity to discover other potentially useful services like hourly rentals or package delivery."
+       },
+       {
+        "question": "Do you want to select a saved destination like 'Work' or 'Home', or scroll down to explore other ride planning options?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main screen offers immediate shortcuts to saved locations, but scrolling down reveals additional services like reserving a ride in advance.",
+        "whatTheAgentLoses": "An agent might immediately click the search bar or a saved destination, bypassing the opportunity to discover alternative services or promotions."
+       },
+       {
+        "question": "Do you want to explore other services like rentals, transit, or reserving ahead before starting your ride request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen offers alternative travel options like reserving ahead, rental cars, and transit that might better fit your plans than a standard on-demand ride.",
+        "whatTheAgentLoses": "An agent might immediately start a standard ride request, skipping over alternative options like transit or reserving ahead that you might have preferred."
+       },
+       {
+        "question": "Which section of the app do you want to navigate to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The bottom navigation bar presents options like 'Home', 'Services', 'Activity', and 'Account' to route you to different features.",
+        "whatTheAgentLoses": "You lose the opportunity to browse alternative transportation or delivery options available in the services section."
+       },
+       {
+        "question": "Which service category do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen offers multiple options like standard trips, carpools, and two-wheelers, so you must choose the correct category to begin booking your ride.",
+        "whatTheAgentLoses": "You lose the opportunity to discover alternative transport options like hourly rentals or scooters that might better suit your current needs."
+       },
+       {
+        "question": "Where do you tap to start entering your destination?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen offers multiple services like rentals and outstation rides, so you need to identify the correct field to initiate a standard ride.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose alternative services like rentals or outstation rides if the agent automatically proceeds with a standard booking."
+       },
+       {
+        "question": "Which type of service do you want to request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen requires you to choose a primary service category, such as Moto for motorbikes, Ride for cars, or Delivery for items, before proceeding.",
+        "whatTheAgentLoses": "Delegating this step means an agent might select a service category that doesn't match your specific need, like booking a car when you wanted a faster motorbike."
+       },
+       {
+        "question": "Where do you enter your destination to start a booking in this new layout?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app's new interface introduces tabs like 'Daily' and 'Rentals' alongside the 'Search destination' field, requiring you to locate the correct starting point.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the updated layout and manually select from your recent destinations."
+       },
+       {
+        "question": "Where do you tap to start entering your pickup point?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen offers multiple services like delivery and packages, so you must specifically select the search bar to initiate a ride request.",
+        "whatTheAgentLoses": "You lose the opportunity to quickly select a suggested location or adjust the pickup time using the dropdown menu before starting the search."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Set up payment",
+    "note": "2.1 then 2.2; 2.3 where adding is actually attempted; 2.4 where a code exists. four keepers do this before any trip is specified, and 4.6 opens the same list from the booking screen. no keeper completes a card entry on camera.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Open the wallet",
+      "questions": [
+       {
+        "question": "How do you access your account settings to add a payment method?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Tapping the hamburger menu icon in the top left corner opens your account settings so you can manage payment options before booking a ride.",
+        "whatTheAgentLoses": "You lose the ability to personally verify and control which specific payment method is added to your account."
+       },
+       {
+        "question": "Which menu option do you choose to manage payments or add a promo code?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The side menu displays various account options, and selecting 'Payment' is required to update billing details or apply discounts before booking.",
+        "whatTheAgentLoses": "You lose direct control over verifying which specific payment method or promo code is being applied to your account."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Review the saved methods",
+      "questions": [
+       {
+        "question": "How do you check your current payment methods or add a new one?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The Wallet screen displays your Uber Cash balance, existing credit cards, and Apple Pay, allowing you to confirm you have a valid payment method ready before booking.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify or choose exactly which credit card or account will be billed for the trip."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Add a payment method",
+      "questions": [
+       {
+        "question": "What type of payment method do you want to add?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options like 'Credit or debit card' to set up funding for the ride.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific financial account or service is charged for the trip."
+       },
+       {
+        "question": "What credit card details should you enter?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Add card' form requiring a card number, expiration date, and CVV to link a payment method to the account.",
+        "whatTheAgentLoses": "Delegating this step requires sharing sensitive financial information, such as your credit card number and CVV, with the agent."
+       },
+       {
+        "question": "Did you verify that the payment method was successfully added and saved?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the transition into the 'Add card' form, making it necessary to confirm the details were actually entered and saved to fund the ride.",
+        "whatTheAgentLoses": "The user loses the certainty that their preferred payment method was successfully attached to the account before requesting the ride."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Enter a promo code",
+      "questions": [
+       {
+        "question": "Do you want to enter a promotional code?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The side menu displays a 'Promos' option where a discount code can be applied.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply a discount code and save money on their fare."
+       },
+       {
+        "question": "Did the promo code 'VANTUCK' actually apply to the fare?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen did not show a confirmation or an updated price after tapping 'Apply', making it unclear if the discount was accepted.",
+        "whatTheAgentLoses": "You lose the ability to verify that your discount was honored before committing to the final ride cost."
+       },
+       {
+        "question": "Should you tap 'ADD' to submit the entered promo code?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an active 'ADD' button after a code is typed, which will attempt to apply the discount to your account if pressed.",
+        "whatTheAgentLoses": "The user loses the ability to back out and avoid submitting a redundant code if they realize it is already active on their account."
+       },
+       {
+        "question": "Are there any suitable promo codes you can apply to this ride?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The rewards screen displayed options like 'RM3 off GrabExpress' alongside your available points, which determines if you can discount the fare.",
+        "whatTheAgentLoses": "An agent might skip applying a voucher or fail to check your point balance, causing you to miss out on savings and pay full price."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Specify the trip",
+    "note": "3.1, then 3.2 or 3.3 or 3.4 for the pickup and again for the drop-off - the two ends take different methods inside one keeper (r4Od pins both, j_9Y types both, 8dEE drags a pin then takes a saved place). 3.5 when the rider is someone else - then the pickup must be re-pointed at them, the step bgfw warns about in a caption and never performs. 3.6 and 3.7 where the platform interposes them. re-entered whole in k9El and n84z.",
+    "questions": [
+     {
+      "question": "Should you type the destination address or drop a pin on the map?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers both a 'Where to?' text input and a 'Set location on map' option, letting you choose the most accurate way to specify your drop-off point.",
+      "whatTheAgentLoses": "Delegating this means you lose the ability to visually pinpoint and adjust the exact drop-off location on the map."
+     },
+     {
+      "question": "Where do you want to be picked up and dropped off?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The 'Plan your ride' screen requires you to enter your 'Pickup location' and 'Where to?' destination to determine the route.",
+      "whatTheAgentLoses": "You lose the ability to specify your exact starting point and destination, which could result in the agent booking a ride to or from the wrong place."
+     },
+     {
+      "question": "Should you select a suggested location or type a new destination into the search bar?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen suggests saved locations like 'Home' and 'Work', but you need to use the search bar to enter a specific address that isn't listed.",
+      "whatTheAgentLoses": "You lose the opportunity to decide whether a suggested shortcut is correct or if a new, specific address needs to be manually entered."
+     },
+     {
+      "question": "How do you want to specify your exact pickup location?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen provides options to use your device's current location, search for an address by text, or manually drop a pin on the map to set where the driver will arrive.",
+      "whatTheAgentLoses": "Delegating this step means you lose the ability to manually adjust the map pin to ensure the driver meets you at the most convenient or safe exact spot."
+     },
+     {
+      "question": "Can you see available drivers on the map before entering your destination?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The map displays multiple car icons around the user's location, indicating that drivers are nearby and available.",
+      "whatTheAgentLoses": "The user loses the visual reassurance of knowing drivers are nearby before starting the ride request process."
+     },
+     {
+      "question": "Should you select one of the suggested search results, or set a pin directly on the map?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The text suggestions for 'subway' may not match your exact intended spot, whereas choosing 'Set location on map' allows for precise visual placement.",
+      "whatTheAgentLoses": "The user loses the ability to bypass inaccurate text suggestions and manually pinpoint their exact physical location on the map."
+     },
+     {
+      "question": "Are the pickup and destination addresses correct?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Confirming that the pickup at Watford and the destination at 6 Royal Cl are accurate ensures the driver will go to the right places.",
+      "whatTheAgentLoses": "You lose the ability to verify that the exact pickup and drop-off locations match your intended route before proceeding."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Check the auto-set pickup",
+      "questions": [
+       {
+        "question": "Is my current location accurate before I enter my destination?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the auto-detected address at the top of the screen ensures the driver will arrive at your actual location before you tap the search bar to set a drop-off point.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the app's GPS accurately pinpointed your exact physical whereabouts."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Type and pick a place",
+      "questions": [
+       {
+        "question": "Which of the suggested search results is your intended destination?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search for '40 ch' returned multiple similar locations at varying distances, such as 'Chak No 40 Nb' and '40 Chak 33 N.B. Road', so you must identify the correct one.",
+        "whatTheAgentLoses": "You lose the peace of mind of confirming the exact local address you meant to travel to instead of a similarly named location."
+       },
+       {
+        "question": "Which specific entrance or landmark from the search results should you select for your pickup?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show multiple specific spots like \"Lift 4\" and \"Gate No. 7\", so choosing the exact entrance ensures the driver can find you easily at a busy station.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact, most convenient physical meeting point based on where you are actually standing at the station."
+       },
+       {
+        "question": "Did you select a specific Tesco location from the search results?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts away after typing 'Tesco' into the destination field, leaving the exact store location unconfirmed.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent selected the correct, intended store branch rather than a distant or incorrect one."
+       },
+       {
+        "question": "What is your pickup location?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an active 'Enter pickup point' field where you must specify your exact starting point for the ride.",
+        "whatTheAgentLoses": "You lose the ability to choose a specific, convenient pickup spot or nearby landmark that might be easier for the driver to find."
+       },
+       {
+        "question": "Which of these search suggestions matches my intended location?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing 'sofo' brings up multiple similar options like 'Sofoline Interchange' and 'Sofoline Lorry Station', requiring you to identify the exact correct spot.",
+        "whatTheAgentLoses": "An agent might select a similarly named but incorrect suggestion, resulting in the driver going to the wrong place."
+       },
+       {
+        "question": "Did your entered text yield a valid destination?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed 'No results' for the typed text, meaning you must correct the spelling or use the map to proceed.",
+        "whatTheAgentLoses": "You lose the ability to notice the search failed and decide whether to try a different spelling, use the map, or cancel the request."
+       },
+       {
+        "question": "Which destination from the suggestions matches your intended drop-off location?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct address from the dropdown suggestions ensures the driver navigates to your exact intended location.",
+        "whatTheAgentLoses": "An agent might select a similarly named but incorrect destination from the list, resulting in a drop-off at the wrong place."
+       },
+       {
+        "question": "Where do you enter your destination?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must tap the destination field to open the search screen and specify where you want the ride to go.",
+        "whatTheAgentLoses": "You lose the ability to manually type in or select a specific saved address for your drop-off location."
+       },
+       {
+        "question": "Did the app auto-complete your destination to a similarly named street in the wrong city or state?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search bars often prioritize exact street name matches over local proximity, which can result in setting a destination hundreds of miles away if not carefully checked.",
+        "whatTheAgentLoses": "The ability to catch a catastrophic routing error before committing to a massive fare or being driven to the wrong city."
+       },
+       {
+        "question": "Is the full address of the suggested search result fully visible, or is it truncated with an ellipsis?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Dropdown search results often truncate long addresses to fit the screen, meaning the visible text might look correct while the hidden portion specifies the wrong city or street type.",
+        "whatTheAgentLoses": "An agent might confidently select a truncated address that looks right at a glance, inadvertently sending you to a similarly named but completely wrong location."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Drop a pin on the map",
+      "questions": [
+       {
+        "question": "Is the destination pin exactly where you want to be dropped off?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the map pin ensures the drop-off address accurately matches the intended destination.",
+        "whatTheAgentLoses": "The ability to visually fine-tune the drop-off location on the map to ensure it points to the exact building or entrance."
+       },
+       {
+        "question": "Do you want to set your pickup location using the map, and is the pin positioned correctly?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Dragging the pin on the map ensures the driver arrives at your exact physical location, like 'Kaplan International College London', rather than a general nearby address.",
+        "whatTheAgentLoses": "An agent might just select a nearby text suggestion like 'The Globe Tavern' instead of knowing the precise physical spot where you are waiting."
+       },
+       {
+        "question": "Do you want to pan the map to explore the surrounding area?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Panning the map showing the Canadian provinces allows you to visually explore the area and find potential destinations instead of just tapping the location arrow.",
+        "whatTheAgentLoses": "You lose the opportunity to visually browse the map and gain a spatial understanding of the surrounding area before choosing a destination."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Take a suggested place",
+      "questions": [
+       {
+        "question": "What is your destination?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts 'Where to?' and offers options like a saved airport location, searching for an address, or setting a point on the map to establish the ride's endpoint.",
+        "whatTheAgentLoses": "You lose the control to specify your exact drop-off point or utilize your customized saved places."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Switch who is riding",
+      "questions": [
+       {
+        "question": "How will you identify the friend you are ordering the ride for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to either manually enter a mobile number or grant the app permission to access your phone contacts.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to protect your privacy by typing the number manually or to share your device's contact list for convenience."
+       },
+       {
+        "question": "Are you booking this ride for yourself or someone else?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks if someone else is taking the ride so it can send the driver number, vehicle details, and OTP directly to their phone via SMS.",
+        "whatTheAgentLoses": "An agent might default to booking the ride under your name, preventing the actual passenger from receiving the necessary tracking and verification details."
+       },
+       {
+        "question": "Is the correct contact selected for this ride?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The popup displays the chosen contact's name and phone number so you can confirm the driver will connect with the right passenger.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct person will receive the ride updates and driver communications."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Add or remove a stop",
+      "questions": [
+       {
+        "question": "Do you want to add another stop to your trip?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features a '+ Add a stop' button below your current pickup and destination, allowing you to include multiple locations in a single ride.",
+        "whatTheAgentLoses": "You lose the opportunity to customize your route by adding extra stops for errands or picking up friends along the way."
+       },
+       {
+        "question": "Which address do you want to add as a stop?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a search bar and a list of suggested locations like 'Home' or '[address]' to set as your new stop.",
+        "whatTheAgentLoses": "You lose the ability to quickly pick a personalized or recently visited location from the app's suggestions."
+       },
+       {
+        "question": "Do you need to make any stops during this ride, or is it a one-way trip?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to choose between a 'One way' ride or a ride 'With stops' to properly set up your route.",
+        "whatTheAgentLoses": "An agent might default to a one-way trip, preventing you from adding necessary errands or picking up friends along the route."
+       },
+       {
+        "question": "Are your multiple stops listed in the correct geographical order for your route?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app allows you to drag and reorder stops, which is important because visiting locations out of order will unnecessarily increase your travel time and total fare.",
+        "whatTheAgentLoses": "An agent might just input the stops in the order you provided them, failing to reorder them into the most logical and cost-effective route."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Pick the airport terminal",
+      "questions": [
+       {
+        "question": "Which airline terminal do you need to be dropped off at?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app prompts for your specific airline, such as American Airlines or Delta, to ensure the driver navigates to the correct drop-off terminal.",
+        "whatTheAgentLoses": "You lose the guarantee that the driver will drop you off at the exact terminal for your specific flight."
+       },
+       {
+        "question": "Are you at an airport or large venue that forces you to select from a list of designated rideshare pickup zones rather than dropping a custom pin?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many airports and stadiums use geofencing to ban custom pins, requiring you to select a specific designated zone (e.g., 'Terminal 2, Arrivals, Door D') to successfully request a car.",
+        "whatTheAgentLoses": "An agent might fail to navigate the venue's specific zone-selection menus, leaving you unable to request a ride or directing the driver to an illegal pickup spot."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Choose the ride",
+    "note": "4.1 first and throughout - the list is re-read after every sheet closes, and the quotes drift while it is open. 4.2 to 4.4 as depth demands. 4.5 settles it; the button renames itself after the chosen tier. 4.6 before or after 4.5 - Bolt forces it before the list exists (gqpe); 4.6 can reach into 2.3 for a new method. 4.7 rides on a corporate account. 4.8 where the ride is for later - it re-prices the list and hands the commit to 6.",
+    "questions": [
+     {
+      "question": "Is the map displaying a colored heat map or 'busy area' cloud around your current location?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Rideshare apps often use background map colors to visually indicate surge pricing zones or high demand areas before you even enter a destination.",
+      "whatTheAgentLoses": "You lose the early visual warning that you are in a surge zone, missing the chance to walk a few blocks to a normal pricing area before starting the booking process."
+     },
+     {
+      "question": "Which ride option will you choose and should you request it now or schedule it for later?",
+      "cluster": "compare",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows heavily discounted fares like $0.00 for uberX due to an applied promo, requiring you to choose a vehicle type and decide whether to ride immediately or tap the schedule icon.",
+      "whatTheAgentLoses": "You lose the ability to personally weigh the promotional pricing against your own schedule to decide exactly when and in what type of vehicle you want to ride."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Compare the ride tiers",
+      "questions": [
+       {
+        "question": "Which ride option should you select based on the current prices, wait times, and your group size?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays varying prices, passenger capacities, and pickup times for UberX, UberXL, and Black under surge pricing conditions, requiring you to weigh cost against your specific needs.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide whether a surprisingly cheaper premium option or a larger vehicle is worth the specific price and wait time for your current situation."
+       },
+       {
+        "question": "Did you notice that the premium ride option is currently cheaper than the standard one?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed Uber Black priced at $15.87, which is unusually lower than the $17.38 price for UberX.",
+        "whatTheAgentLoses": "You lose the chance to spot pricing anomalies and book a premium ride for less money than the standard option."
+       },
+       {
+        "question": "Did you verify how the promo code affects the final out-of-pocket cost for each ride option?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'up to $15' promo fully covers the $10.42 XL fare but leaves a $3.39 balance for the $18.39 SELECT option, making the cheaper ride completely free.",
+        "whatTheAgentLoses": "You lose the chance to decide whether upgrading to a premium ride is worth paying the remaining balance out of pocket."
+       },
+       {
+        "question": "Are the quoted prices for UberX and Uber Green identical?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Noticing that both ride options cost exactly $73.92 allows you to choose the more eco-friendly ride without paying a premium.",
+        "whatTheAgentLoses": "You lose the opportunity to make a cost-free environmentally conscious choice if the agent defaults to the standard ride."
+       },
+       {
+        "question": "Which vehicle type and estimated fare should you select?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple vehicle options like Mini, Auto, and Sedan along with their estimated fares, allowing you to balance cost and comfort.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between a cheaper Auto and a more comfortable Sedan based on your immediate needs."
+       },
+       {
+        "question": "Which ride option offers the best balance of price and arrival time, and is the payment method correct?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Both Uber Go and Connect cost GHS 19.00, but Uber Go has a 'Faster' badge and arrives sooner, making it the optimal choice.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh the trade-offs between ride tiers, prices, and arrival times to select their preferred option."
+       },
+       {
+        "question": "Which ride category should you select from the bottom bar?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple vehicle options like Prime, Mini, and Auto, which dictate the price and type of ride you will request.",
+        "whatTheAgentLoses": "You lose the chance to manually browse the specific vehicle types and decide which option best fits your immediate comfort and budget needs."
+       },
+       {
+        "question": "Does the price for the flexible booking option accurately reflect the individual ride prices it includes?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The \"Book Any\" option initially displays a price range matching the Micro and Mini rides, and later updates to match the discounted Mini price.",
+        "whatTheAgentLoses": "You lose the chance to verify that the flexible booking option's pricing accurately reflects the individual ride tiers and applied discounts."
+       },
+       {
+        "question": "Which ride tier fits your budget and wait time, and is the payment method set correctly?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple ride options like Bolt, Business, and Economy with varying prices and wait times, alongside a Cash payment setting that must be confirmed.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally weigh the trade-offs between a cheaper fare and a shorter wait time based on your immediate needs and cash on hand."
+       },
+       {
+        "question": "Are you ready to select one of these ride options, or do you want to go back to add extra features?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays updated prices and arrival times for various ride tiers like UberX and Wait & Save, but you must decide if you need to return to the previous screen to add extra features before booking.",
+        "whatTheAgentLoses": "An agent might immediately select a ride option based on the current prices without realizing you wanted to go back and add extra features to your trip."
+       },
+       {
+        "question": "Which updated ride option and payment method do you want to select?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays new prices and arrival times for options like UberX and Wait & Save after adding a stop, requiring you to balance cost and speed.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide if the faster arrival time of UberX is worth the extra cost compared to the Wait & Save option."
+       },
+       {
+        "question": "Do you need a specialized ride type for a larger group, extra luggage, or a pet?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specialized options like UberXL for groups, UberXXL for extra luggage, and Pet rides, requiring you to determine if your trip needs specific accommodations.",
+        "whatTheAgentLoses": "An agent might default to a standard ride without knowing you are traveling with a pet, extra luggage, or a large group, which could result in the driver refusing the trip."
+       },
+       {
+        "question": "Are you willing to arrive 8 minutes later to save $4.03 by choosing the Line option?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a trade-off where the Line option costs $4.09 and arrives at 4:53 pm, while the standard Lyft costs $8.12 and arrives at 4:45 pm.",
+        "whatTheAgentLoses": "You lose the ability to weigh whether the financial savings are worth the later drop-off time based on your current schedule and urgency."
+       },
+       {
+        "question": "Should you choose one of the suggested rides, or tap 'View All' to explore other options?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a few suggested rides like JustGrab and GrabCar Plus with their prices, but viewing all options might reveal a better fit for your needs or budget.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the convenience of the immediately suggested rides against potentially cheaper or more comfortable alternatives hidden in the full list."
+       },
+       {
+        "question": "Does the selected ride include a fast arrival guarantee that compensates you if the driver is late?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Certain ride tiers, like UberX, sometimes include a 'Fast arrival guarantee' offering Uber Cash if the driver arrives later than promised, which adds financial protection to your choice.",
+        "whatTheAgentLoses": "You lose the awareness of this guarantee, meaning you might not know to expect or claim the compensation if the driver actually arrives late."
+       },
+       {
+        "question": "Which ride option offers the best rewards points multiplier for your loyalty account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays '2x pts' for UberX and Black, and '3x pts' for UberXL, which accelerates your progress toward loyalty rewards.",
+        "whatTheAgentLoses": "You lose the opportunity to factor in loyalty point multipliers when choosing a ride, potentially missing out on faster reward accumulation."
+       },
+       {
+        "question": "Is the quoted price a fixed fare or an estimated range that could change based on traffic?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a price range like ₦[number] for some ride options, meaning the final cost is not locked in and depends on the actual trip duration and route.",
+        "whatTheAgentLoses": "You lose the ability to decide if you are comfortable with the upper limit of the estimated price range before committing to the ride."
+       },
+       {
+        "question": "Does the selected ride option display the correct passenger silhouette and luggage icons for your group?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Vehicle capacity and trunk space are often communicated solely through tiny visual icons (like a person silhouette with a '4' or a briefcase) rather than explicit text descriptions.",
+        "whatTheAgentLoses": "An agent might select a standard car based on name or price, missing the visual icon indicating it lacks the seats or trunk space your specific group needs."
+       },
+       {
+        "question": "Is the specific ride category you want currently available, or is it showing as unavailable?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app might show a placeholder like '...' instead of a price if no drivers are currently available for that specific vehicle tier, meaning you must choose a different option.",
+        "whatTheAgentLoses": "You lose the ability to recognize that a preferred cheaper option is temporarily unavailable and decide whether to wait or select a different ride tier."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Open a tier's details",
+      "questions": [
+       {
+        "question": "Which type of transport option best fits your needs for this trip?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app offers distinct services like motorcycles, autorickshaws, and standard rides where you can offer your own price, which drastically change the cost and comfort of the trip.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the trade-offs between a cheaper motorcycle or autorickshaw and a standard car where you can negotiate the fare yourself."
+       },
+       {
+        "question": "Which car models are included in this ride option's fleet?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Viewing the fleet details reveals specific car models like the Maruti Swift Dzire and Toyota Etios, which helps you confirm if the vehicle has enough seats for your group.",
+        "whatTheAgentLoses": "You lose the chance to check the specific car models in the fleet to ensure they can comfortably accommodate your passenger count."
+       },
+       {
+        "question": "Are taxes and tolls included in the quoted fare?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The ride details screen explicitly states that the fare includes specific taxes, confirming what is covered in the upfront price and what might be charged extra.",
+        "whatTheAgentLoses": "You lose the ability to verify if the quoted price is the true final cost or if additional taxes and fees will be added to your bill later."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Weigh the wait-and-save option",
+      "questions": [
+       {
+        "question": "Should you wait up to 10 minutes to save $1.00 on the ride?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu offers a 'Wait & Save' option that reduces the fare by $1.00 in exchange for a longer pickup time.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh your current urgency against the financial savings of a delayed pickup."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Consider the accessibility tiers",
+      "questions": [
+       {
+        "question": "Do you want to explore the premium or specialized ride options?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specialized options like SELECT for high-end cars or ASSIST and WAV for accessibility, which might better suit your specific needs.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate if a premium vehicle or an accessibility-focused ride is necessary for your current trip."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Select the tier",
+      "questions": [
+       {
+        "question": "Which ride option accommodates your group size, and how do you proceed to book it?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays ride options like Prime SUV along with their prices, making it crucial to select the vehicle type that actually fits your group before tapping the booking button.",
+        "whatTheAgentLoses": "You lose the assurance that the requested vehicle actually accommodates your entire group and that your preferred payment method is applied."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Check the payment method",
+      "questions": [
+       {
+        "question": "Do the currencies for the ride fare and your payment balance match?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The ride prices are displayed in British Pounds, but the Uber Cash balance is shown in US Dollars, indicating a potential account or location mismatch.",
+        "whatTheAgentLoses": "You lose the opportunity to catch a currency mismatch that could result in unexpected foreign transaction fees or payment errors."
+       },
+       {
+        "question": "Should you change the payment method or apply a discount code before booking?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed multiple payment options including cash, digital wallets, and UPI, alongside an option to apply a coupon code before confirming the ride.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to select your preferred payment account or save money by applying a specific promotional code."
+       },
+       {
+        "question": "Which payment method should you use for this ride?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple payment options like a personal Mastercard, Apple Pay, and Lyft Pass, requiring a choice on how to fund the trip.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific card or account is charged, potentially missing out on credit card rewards or proper business expense tracking."
+       },
+       {
+        "question": "Which payment method do you want to use for this ride?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists various payment options including a corporate ride toggle, digital wallets, and cash, which determines how the fare is funded.",
+        "whatTheAgentLoses": "The user loses the opportunity to expense the trip directly by selecting their corporate account instead of a personal payment method."
+       },
+       {
+        "question": "Do you want to change your payment method before confirming the ride?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation screen shows 'Cash' as the currently selected payment method for the PKR 586.00 fare, which you can tap to change.",
+        "whatTheAgentLoses": "You lose the ability to choose how you pay for the fare, potentially forcing you to use cash when you preferred a card."
+       },
+       {
+        "question": "How will you pay for this ride?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to choose between paying with cash or adding a debit or credit card before it will process your ride request.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to pay the driver directly with cash or use a card for this specific trip."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Mark the ride corporate",
+      "questions": [
+       {
+        "question": "What reason should you select for this corporate ride?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for an expense code and a corporate ride reason, such as 'Office to/from Home' or 'Customer/Partner Visit', to justify the business expense.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report the specific business purpose of their trip for company expense tracking and compliance."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Schedule the pickup",
+      "note": "4.8.1 from the clock icon on the tier list. 4.8.2, or 4.8.3 to aim at an arrival instead. 4.8.4 where the platform states terms. the re-priced list and the commit continue in 6; r4Od cancels his from the trip history later, 8dEE backs out before committing.",
+      "questions": [
+       {
+        "question": "Do you want to schedule the ride based on when you leave or when you need to arrive?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The scheduling screen provides tabs for 'Pickup at' and 'Dropoff by', letting you either set a specific departure time or have the app calculate when you should leave to arrive on time.",
+        "whatTheAgentLoses": "You lose the ability to guarantee you reach your destination by a strict deadline, as an agent might just guess a departure time instead of using the app's 'Dropoff by' calculation."
+       }
+      ],
+      "children": [
+       {
+        "id": "4.8.1",
+        "label": "Open the scheduler",
+        "questions": [
+         {
+          "question": "Do you need a ride right now, or should you schedule it for later?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The home screen features a 'Now' dropdown and a 'Schedule a Ride' modal, requiring you to decide between an immediate pickup or a specific future time window.",
+          "whatTheAgentLoses": "Delegating this step means the agent might request an immediate pickup when you actually needed to secure a ride for a specific time later in the day."
+         },
+         {
+          "question": "Do you want to request the ride for right now or schedule it for later?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The app presents a modal asking whether to request an immediate pickup or reserve a ride for a future time.",
+          "whatTheAgentLoses": "Letting an agent decide means it might request a ride immediately when you actually intended to schedule it in advance for a specific appointment."
+         },
+         {
+          "question": "Do you want to request a ride for right now, or schedule it for later?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays immediate ride options with current prices and ETAs alongside a schedule button, requiring a choice about your departure time.",
+          "whatTheAgentLoses": "You lose the ability to decide whether an immediate departure or a scheduled future pickup best fits your personal itinerary."
+         },
+         {
+          "question": "How do you schedule a ride for later instead of booking it now?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a clock icon next to the choose button that lets you set a future pickup time rather than requesting a car immediately.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to decide exactly when you want the ride to arrive for a future plan."
+         }
+        ]
+       },
+       {
+        "id": "4.8.2",
+        "label": "Pick the date and time",
+        "questions": [
+         {
+          "question": "What date and time do you want to schedule the pickup for?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting the specific date and time ensures the ride fits your schedule, keeping in mind the app's warning that drop-off times are estimates based on traffic.",
+          "whatTheAgentLoses": "Delegating this step means trusting an agent to guess your preferred buffer times and exact scheduling needs for the trip."
+         },
+         {
+          "question": "Are the default date and time correct for your scheduled ride, or should you cancel the scheduling process?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a default pickup window of 12:50 to 1:00 PM on Sunday, September 9, so you must decide whether to confirm this schedule or back out.",
+          "whatTheAgentLoses": "You lose the opportunity to manually verify the default scheduling details and decide whether to proceed or cancel."
+         },
+         {
+          "question": "Is the app providing an exact pickup minute or a short pickup window for your scheduled ride?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Depending on the city, the app may give a time window rather than an exact minute to account for traffic, which affects exactly when you need to be ready outside.",
+          "whatTheAgentLoses": "An agent might expect the driver at an exact minute, failing to prepare you for the broader pickup window and potentially making you miss the ride."
+         }
+        ]
+       },
+       {
+        "id": "4.8.3",
+        "label": "Schedule by drop-off time"
+       },
+       {
+        "id": "4.8.4",
+        "label": "Accept the reserve terms",
+        "questions": [
+         {
+          "question": "Are the scheduled pickup time, local time zone, and cancellation policy acceptable?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a specific 3:00 AM pickup time, a GMT dropoff estimate, and a cancellation policy that must be verified to avoid scheduling errors or unexpected fees.",
+          "whatTheAgentLoses": "The user loses the ability to personally verify that the scheduled time aligns with their actual travel plans across time zones and to decide if they are comfortable with the cancellation terms."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Bid for a driver",
+    "note": "5.1; 5.2 where the rider haggles; 5.3 before broadcasting. 5.4, then 5.5 repeats as offers arrive, expire, and re-bid until 5.6 accepts one - or the request ends in 8. xBw0 rides the loop twice; only D4bI ever accepts.",
+    "questions": [
+     {
+      "question": "Should you adjust the recommended fare or enable automatic driver acceptance?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows an 'Offer your fare' popup with a numeric keypad and an auto-accept toggle, which determines your final price and how a driver is chosen.",
+      "whatTheAgentLoses": "Delegating this step means an agent might overpay or automatically accept a driver you would have preferred to screen manually."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the recommended fare",
+      "questions": [
+       {
+        "question": "Are the route and recommended fare acceptable before you make an offer?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the route, travel time, and recommended fare of PKR 364 ensures you are paying a fair price before submitting your ride request.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to negotiate the fare or decide if the recommended price is worth the estimated travel time."
+       },
+       {
+        "question": "Does the fare update correctly when you switch to the 'Ride Mini' option?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the fare dropping from PKR 410 to PKR 350, confirming that the app registered your choice of a cheaper ride.",
+        "whatTheAgentLoses": "You lose the chance to manually compare the exact price difference between ride tiers to decide if the savings are worth the change in vehicle type."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Adjust the fare offer",
+      "questions": [
+       {
+        "question": "Is the fare I am offering reasonable enough for a driver to accept?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a suggested fare of PKR 300, and submitting an offer that is too low means drivers will likely reject the request.",
+        "whatTheAgentLoses": "You lose the ability to use your own judgment to balance cost savings with the likelihood of getting a driver quickly."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Decide on auto-accept"
+     },
+     {
+      "id": "5.4",
+      "label": "Broadcast the request"
+     },
+     {
+      "id": "5.5",
+      "label": "Review the driver offers",
+      "questions": [
+       {
+        "question": "Which driver offer should you accept based on the fare, rating, and estimated arrival time?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple driver offers with varying fares, ratings, and arrival times, requiring a careful trade-off between cost, quality, and speed.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might prioritize the cheapest or fastest ride over your personal preference for a higher-rated driver or specific vehicle."
+       },
+       {
+        "question": "Which driver's offer should you accept?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of incoming driver offers with individual accept and decline buttons, allowing you to fulfill the app's promise of choosing your own driver.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate and select a driver based on their specific rating, vehicle, or price."
+       },
+       {
+        "question": "Did you notice the driver's offer is higher than the recommended fare?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Driver Sujan's offer of NPR 180 at 2:01 is higher than the recommended fare of NPR 163 shown at 1:33.",
+        "whatTheAgentLoses": "A person delegating this task loses the chance to negotiate or wait for a driver willing to accept the lower recommended fare."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Accept an offer",
+      "questions": [
+       {
+        "question": "Does the final accepted fare match the initial estimate and the driver's offer?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Checking the fare consistency ensures you pay the expected Rs364 instead of a higher countered amount like Rs500.",
+        "whatTheAgentLoses": "You lose the ability to personally negotiate and verify that the final matched fare aligns with your budget rather than a driver's higher counteroffer."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Request the ride",
+    "note": "6.1 with 6.2 against it. then 6.3 - the wording runs Request, Book, Choose, Confirm and pay, and on UK reserves the money commits with no driver yet assigned (S9jF). 6.4 only under surge. 6.5 after the price is already committed. 6.6 wherever an upsell wedges in - UMl_'s lands after the Book tap. 6.7 on reservations.",
+    "questions": [
+     {
+      "question": "Did the ride request time out because no drivers were available?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "In remote areas or during extreme demand, the app may spin and eventually fail to find a match, requiring you to try a different tier or service.",
+      "whatTheAgentLoses": "The awareness that the booking failed and they are still stranded without a ride."
+     },
+     {
+      "question": "Was the selected payment method declined, blocking the ride request?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "If the default card is expired or lacks sufficient funds for the authorization hold, the app will halt the request and prompt for a new payment method.",
+      "whatTheAgentLoses": "The ability to know the booking is blocked and manually provide a working payment method to secure the ride."
+     },
+     {
+      "question": "If no drivers accept your request or the search times out, do you want to upgrade your ride class, increase your fare offer, or cancel the attempt?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "When demand is high or drivers are scarce, the initial request might fail, forcing a choice between paying more for a premium ride, waiting longer, or finding alternative transportation.",
+      "whatTheAgentLoses": "An agent might automatically cancel the ride or blindly accept a much more expensive upgrade without consulting your budget or urgency."
+     },
+     {
+      "question": "Did the app return to the ride selection screen without assigning a driver?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "During high demand or poor connectivity, a ride request can time out and silently fail, meaning you do not actually have a car on the way.",
+      "whatTheAgentLoses": "An agent might assume the request was successful just because the button was pressed, leaving you stranded waiting for a ride that was never booked."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Review the trip summary",
+      "questions": [
+       {
+        "question": "Are the locations, ride option, and price correct before you confirm the request?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the $9.95 UberX ride from Juneshine to The Bungalow commits you to the fare and pickup location.",
+        "whatTheAgentLoses": "You lose the final opportunity to verify the exact pickup spot, drop-off destination, and fare before the ride is officially requested."
+       },
+       {
+        "question": "Are the selected ride type, fare, and payment method correct before you book?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the final RM15.00 fare for a JustGrab and the selected Visa payment method before you confirm the booking.",
+        "whatTheAgentLoses": "You lose the final chance to review the exact price, vehicle type, and payment account before the request is sent and charged."
+       },
+       {
+        "question": "Does the visual route line drawn on the map take a logical path to your destination without unnecessary detours?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app displays a route line on the map behind the ride options, allowing you to visually verify that the navigation isn't planning a massive detour or routing you to the wrong side of a physical barrier like a river or train tracks.",
+        "whatTheAgentLoses": "You lose the ability to visually catch routing errors or inefficient paths that the app's algorithm might have generated before you agree to the fare."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Check the quote against earlier screens",
+      "questions": [
+       {
+        "question": "Did the estimated arrival time change from what was originally shown?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The estimated arrival time for a ride option can fluctuate between the initial selection and the final confirmation screen.",
+        "whatTheAgentLoses": "An agent might proceed with a ride request even if the wait time has unexpectedly increased, potentially making you late."
+       },
+       {
+        "question": "Is the crossed-out original price for the Share ride consistent across the different screens?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The original crossed-out price for the Share ride inexplicably changed from ₹171 to ₹134 for the exact same route, suggesting a misleading discount display or app glitch.",
+        "whatTheAgentLoses": "The user loses the ability to spot deceptive pricing tactics or app errors that alter the perceived value of the ride."
+       },
+       {
+        "question": "Did you notice the fare increase when scheduling the ride for a future date?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows that the base fare for both uberX and XL options increases when switching from an immediate request to a scheduled pickup.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the convenience of a scheduled pickup against the higher base fare."
+       },
+       {
+        "question": "Do you accept the updated price for this scheduled ride now that the promo code is removed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a higher fare of $11.36 for the scheduled uberX because the promo code no longer applies to scheduled trips.",
+        "whatTheAgentLoses": "An agent might automatically accept the higher fare without checking if you would prefer to ride immediately to keep the discount."
+       },
+       {
+        "question": "Does the final total fare exactly match the sum of the selected ride price and any chosen add-on fees?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The opt-in screen displays a total fare of RM21.35, which leaves RM6.00 unaccounted for when adding the RM15.00 JustGrab fare and the RM0.35 Ride Cover fee.",
+        "whatTheAgentLoses": "The user loses the chance to catch and reject unexplained price jumps or hidden fees before financially committing to the ride request."
+       },
+       {
+        "question": "Does the matched driver's wait time match the estimate you saw when selecting the ride?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The initial ride selection screen estimated a 7-minute wait, but the tracking screen shows the matched driver is actually 10 minutes away.",
+        "whatTheAgentLoses": "You lose the opportunity to cancel the ride and find a faster alternative if the actual wait time significantly exceeds the original estimate."
+       },
+       {
+        "question": "Does the estimated arrival time during the trip match the dropoff time shown when you selected the ride?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The estimated dropoff time changed from 2:03pm to 2:06pm after the ride was requested.",
+        "whatTheAgentLoses": "The user loses the ability to monitor and adjust their plans based on unexpected delays to their arrival time."
+       },
+       {
+        "question": "Are the final trip details and fixed price correct now that a driver is assigned?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays the final fixed price of ₦4400 and the route details, which need to be verified before the driver arrives.",
+        "whatTheAgentLoses": "You lose the ability to review the final fixed price and trip details before the ride begins, potentially leading to unexpected costs."
+       },
+       {
+        "question": "Did you verify that the final fare honored the original quote despite the vehicle upgrade?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The app announced a free upgrade to a Prime Sedan, making it important to confirm the final fare remained at the ₹169 quoted for a Mini.",
+        "whatTheAgentLoses": "You lose the satisfaction of personally confirming you received a premium ride while saving money."
+       },
+       {
+        "question": "Does the final fare fall within the initially estimated price range?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Verifying that the final price of ₦4400 matches the initial ₦[number] estimate ensures you are billed correctly for the ride.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to immediately notice and dispute an unexpected overcharge."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Confirm the ride request",
+      "questions": [
+       {
+        "question": "Which ride option do you want to select, and are you ready to confirm the request with the applied promo?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because you need to verify the selected vehicle tier and ensure the promotional discount is correctly applied before hitting the request button.",
+        "whatTheAgentLoses": "You lose the ability to verify that your promo code successfully reduced the fare or to choose a different vehicle tier before committing to the ride."
+       },
+       {
+        "question": "Do you want to proceed with requesting this ride, or should you cancel and back out?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the final ride options and prices alongside a request button, making this the last chance to back out before committing to the booking.",
+        "whatTheAgentLoses": "An agent might automatically tap the request button, preventing you from changing your mind and canceling the ride before it is booked."
+       },
+       {
+        "question": "Are you ready to book the highlighted ride option?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed multiple ride tiers with different prices and wait times, with Prime Exec currently selected for booking.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh the trade-offs between cost, wait time, and comfort for this specific trip."
+       },
+       {
+        "question": "Did you actually request the ride?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The video ends before the request button is ever pressed, meaning the ride was never actually ordered.",
+        "whatTheAgentLoses": "The user is left stranded because the agent failed to actually book the transportation."
+       },
+       {
+        "question": "Do you want to confirm this UberX for £7.93 using Apple Pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation screen displays the £7.93 fare and Apple Pay as the payment method, which are locked in once you press confirm.",
+        "whatTheAgentLoses": "You lose the opportunity to change the payment method or verify the final fare before the ride is requested."
+       },
+       {
+        "question": "Should I tap 'Book Mini' to request the ride for ₹169?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the selected Mini option for ₹169, and tapping the book button will officially submit your ride request.",
+        "whatTheAgentLoses": "If an agent clicks this for you, you lose the final chance to review the exact fare and car type before committing to the booking."
+       },
+       {
+        "question": "Are you ready to confirm the booking for the selected Auto ride?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the payment method and passenger options at the bottom edge, indicating the user is reviewing final details before scrolling down to find the actual booking button.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the payment method and passenger details before the agent commits to the ride request."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Accept the surge fare",
+      "questions": [
+       {
+        "question": "Are you willing to accept the higher fare due to surge pricing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning that fares are higher than normal due to increased demand, requiring you to explicitly confirm the $17.38 price.",
+        "whatTheAgentLoses": "You lose the ability to decide if the surge price is too expensive and whether you would rather wait or find an alternative mode of transportation."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Confirm the pickup spot",
+      "questions": [
+       {
+        "question": "Is the suggested pickup spot exactly where you want to be picked up?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app automatically placed your pickup pin at 'The JakeWalk', and you need to ensure this is exactly where you are waiting before confirming.",
+        "whatTheAgentLoses": "An agent might blindly accept the default GPS pin without knowing if it is a safe or convenient spot for you to actually wait."
+       },
+       {
+        "question": "Is the pickup pin exactly where you are, and do you want to add a note or walk a short distance to save time?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires final confirmation of the exact pickup spot and provides options to add instructions for the driver or allow a short walk to expedite the ride.",
+        "whatTheAgentLoses": "An agent might not know your precise physical surroundings to adjust the pin accurately or leave a helpful note for the driver."
+       },
+       {
+        "question": "Is the pickup pin exactly where you want to be picked up, and are you ready to pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a map with a pin on Bedale Street, and confirming now will lock in this location and charge your payment method.",
+        "whatTheAgentLoses": "You lose the ability to visually verify on the map that the pin matches your exact physical location before committing to the ride and payment."
+       },
+       {
+        "question": "Does the pickup location on the confirmation screen match the one you originally entered?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The confirmation screen displays 'Bedale Street' instead of 'Kaplan International College London', indicating the app may have altered the requested pickup spot.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch an incorrect pickup address before the driver is dispatched to the wrong location."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Answer the commit upsells",
+      "questions": [
+       {
+        "question": "Do you want to add ride insurance for an extra ₹3?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The app offers optional ride insurance for ₹3 per ride covering accidents, hospital expenses, and missed flights, which you must accept or decline to proceed.",
+        "whatTheAgentLoses": "Letting an agent decide means you might end up paying for unwanted insurance or missing out on coverage you would have preferred for a small fee."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Read the reservation confirmation",
+      "questions": [
+       {
+        "question": "Is the scheduled time you selected actually confirmed and reflected in the final ride request?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts away before the 'Next' button is pressed, meaning there is no visual proof that the scheduled time was successfully applied to the ride.",
+        "whatTheAgentLoses": "The user loses the assurance that the ride was successfully booked for their intended future time rather than for immediate pickup."
+       },
+       {
+        "question": "Is your reservation confirmed with the correct pickup time and price?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Your reservation is confirmed' message along with the scheduled 3:00 AM GMT pickup time and £129.97 fare, which you need to verify to ensure your future ride is set.",
+        "whatTheAgentLoses": "Delegating this step means you miss the peace of mind of personally verifying the exact date, time, and cost of your scheduled ride."
+       },
+       {
+        "question": "Do you want to immediately schedule a return trip for your future ride?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The reservation confirmation screen includes a 'Plan your return ride' button, offering a quick way to book your round trip while your itinerary is fresh.",
+        "whatTheAgentLoses": "You lose the convenience of booking your return trip in the same flow, which could lead to forgetting to schedule it later and being stranded."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Meet the driver",
+    "note": "7.1 the moment assignment lands, then 7.2 to 7.5 in any order while the car approaches - j_9Y runs message then call back to back. 7.6 at the curb. 7.7 in the Ola keepers, whose pickup needs a code. 7.8 where safety or sharing gets toured.",
+    "questions": [
+     {
+      "question": "Will you be charged a wait time fee if you are not ready at the exact pickup spot when the driver arrives?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Once the driver reaches the pickup location, a grace period countdown typically starts, after which you are charged a per-minute penalty for keeping them waiting.",
+      "whatTheAgentLoses": "You lose the awareness of exactly when the free grace period ends and wait time fees begin, which might cost you extra money if you are running late."
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the assigned driver",
+      "questions": [
+       {
+        "question": "Is the assigned vehicle actually included in the fleet description of the ride category you selected?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The app assigned a White Xylo, which was not listed among the vehicles promised for the Prime Exec category you booked.",
+        "whatTheAgentLoses": "The user loses the chance to cancel the ride upon realizing they are paying for a premium category but receiving an unlisted vehicle."
+       },
+       {
+        "question": "What are the details of my matched driver, and how can I track or contact them?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Reviewing the driver's name, vehicle details, and ETA ensures you know exactly who to look for and when they will arrive.",
+        "whatTheAgentLoses": "Letting an agent handle this means you miss seeing the driver's photo, license plate, and live map location, which are crucial for your personal safety when boarding."
+       },
+       {
+        "question": "Have you noted the driver's details, ETA, and the OTP required to start the ride?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Reviewing the driver's name, vehicle number, ETA, and OTP ensures you are ready to identify the correct vehicle and board safely.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the specific vehicle details and the OTP required to verify your ride in person."
+       },
+       {
+        "question": "When is the driver arriving, where exactly should I wait, and what car am I looking for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Noting the 5-minute ETA, the 2-minute walk to the Bedale St pickup spot, and the silver Honda Civic's license plate ensures you are ready and waiting for the correct vehicle.",
+        "whatTheAgentLoses": "An agent cannot physically walk to the designated pickup spot or visually identify the specific car and driver when they arrive."
+       },
+       {
+        "question": "What are the driver and vehicle details, and when will they arrive?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Reviewing the driver's name, blue Toyota Corolla, plate number, and arrival time is essential for safely identifying the correct ride when it pulls up.",
+        "whatTheAgentLoses": "Delegating this means you miss the chance to memorize the specific car details and plate number needed to safely verify your ride in person."
+       },
+       {
+        "question": "What are the details of my matched vehicle, and where are the options to contact the driver or cancel the ride?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Noting the vehicle details and ETA helps you prepare for the approaching ride, while identifying the call and cancel buttons gives you control if issues arise.",
+        "whatTheAgentLoses": "Delegating this means you lose immediate awareness of the specific car to look for and the ability to quickly contact the driver yourself."
+       },
+       {
+        "question": "Did the driver cancel the trip, forcing the app to search for a new ride?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Drivers can cancel after accepting, which silently resets your progress and might assign you a new driver with a much longer wait time.",
+        "whatTheAgentLoses": "An agent might automatically accept the newly assigned driver without realizing the wait time has reset and you are now going to be late."
+       },
+       {
+        "question": "Did the driver details or ETA suddenly change while you were waiting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A matched driver can cancel the trip at any time, causing the app to silently reassign you to a new driver who might be much further away.",
+        "whatTheAgentLoses": "An agent might not notice that the driver identity and ETA swapped, leaving you unaware that your wait time has drastically increased."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Message the driver",
+      "questions": [
+       {
+        "question": "How do I leave instructions for the driver?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The app displays a popup explaining that any notes for the driver must be sent via GrabChat after the ride is booked.",
+        "whatTheAgentLoses": "The user loses the ability to personally communicate specific pickup details or special requirements to the driver."
+       },
+       {
+        "question": "Should I use a quick reply or type a custom message to the driver?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The chat interface offers quick reply chips like 'I'm here' for convenience, but typing a custom message allows you to ask specific questions about the driver's location.",
+        "whatTheAgentLoses": "An agent might send a generic quick reply instead of asking the specific question you want to communicate to the driver."
+       },
+       {
+        "question": "How will you contact the driver to coordinate your pickup?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The screen displays a chat interface with quick replies and a phone icon, giving you the choice to either message or call the driver.",
+        "whatTheAgentLoses": "You lose the ability to personally communicate specific pickup details or directly clarify your exact location with the driver."
+       },
+       {
+        "question": "Did the driver message you asking you to cancel the trip?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Drivers sometimes ask passengers to cancel so the driver avoids a penalty, which can result in the passenger being unfairly charged a cancellation fee.",
+        "whatTheAgentLoses": "The ability to refuse the driver's request and avoid paying an unwarranted cancellation fee."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Call the driver",
+      "questions": [
+       {
+        "question": "How do you contact the driver before they arrive?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "Locating the phone icon on the tracking screen ensures you can communicate important pickup details while the driver is still ten minutes away.",
+        "whatTheAgentLoses": "An agent cannot make a live phone call to the driver to coordinate complex physical pickup instructions."
+       },
+       {
+        "question": "Should you call the driver using the provided phone number?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The screen displays a contact sheet with the driver's phone number, offering a direct way to coordinate the pickup.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally speak with the driver to clarify your exact location."
+       },
+       {
+        "question": "Which SIM card do you want to use to call the driver?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The device prompts you to choose between your available SIM cards, such as '1 MTN GH' or '2 MTN GH', to initiate the phone call.",
+        "whatTheAgentLoses": "An agent might select the wrong SIM card, potentially using a line with fewer minutes or incurring unexpected charges."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Track the approach",
+      "questions": [
+       {
+        "question": "How do you track the live status of your newly booked ride?",
+        "cluster": "watch",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displayed a banner with the estimated pickup time and a 'Track Ride' button to open the live map.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of personally monitoring the driver's exact location on the map."
+       },
+       {
+        "question": "Where is the driver currently, and what is the OTP for the ride?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Tracking the car's approach on the map and noting the OTP ensures you are ready to meet the driver and securely start the ride.",
+        "whatTheAgentLoses": "Delegating this means you lose real-time awareness of the driver's exact location and the security code needed to board the vehicle."
+       },
+       {
+        "question": "Is the driver's arrival status consistent across the tracking screens?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The live app indicated the driver had arrived, but a subsequent screenshot for the same ride contradicted this by stating she was still three minutes away.",
+        "whatTheAgentLoses": "An agent might fail to notice the conflicting arrival statuses, leaving you unsure whether to go outside immediately or wait."
+       },
+       {
+        "question": "Is the driver's car actually moving towards your pickup location on the live map?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Even if the app displays a short ETA, the live map might show the driver's car is stationary or heading in the wrong direction, indicating they are stuck in traffic or ignoring the request.",
+        "whatTheAgentLoses": "An agent might just read the text ETA and wait indefinitely, whereas a person watching the map would notice the lack of physical movement and cancel to find a more responsive driver."
+       },
+       {
+        "question": "What is the guaranteed latest arrival time for your driver?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The tracking screen displays a 'Latest arrival by 12:50 PM' guarantee alongside the standard ETA, giving you a hard deadline for when the car will be there.",
+        "whatTheAgentLoses": "You lose the peace of mind of knowing the absolute latest time your driver will arrive, which helps you manage your waiting time."
+       },
+       {
+        "question": "Did an ephemeral banner appear stating the driver is currently completing another trip nearby?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Apps frequently display a brief, temporary banner if the assigned driver has to drop off another passenger first, which significantly alters the reliability of the ETA.",
+        "whatTheAgentLoses": "An agent might miss this fleeting visual warning, leaving you unaware that your driver is tied up and the ETA is highly subject to change."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Share the trip status",
+      "questions": [
+       {
+        "question": "How do you want to share your ride details?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The safety tools menu provides options to add contacts or send a link so someone else can track your ride's progress.",
+        "whatTheAgentLoses": "Delegating this step means the agent might share your live location with the wrong contact or fail to notify someone who expects to track your safety."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Match the arriving car",
+      "questions": [
+       {
+        "question": "Does the arriving vehicle match the make and license plate shown in the app?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Checking the physical vehicle against the app's display of a Jeep Cherokee with license plate 201KJJ ensures you are getting into the correct ride.",
+        "whatTheAgentLoses": "An agent cannot physically look at the approaching car in the real world to verify its license plate and make before you board."
+       },
+       {
+        "question": "Does the driver's face match the photo provided in the app?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app displays a photo of the driver so you can visually verify their identity before getting into the vehicle, ensuring your personal safety.",
+        "whatTheAgentLoses": "An agent cannot physically look at the driver in the real world to ensure they are the authorized person registered with the rideshare platform."
+       },
+       {
+        "question": "Is the car physically present at the pickup spot now that the app says it has arrived?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Drivers sometimes mark themselves as arrived early, or GPS inaccuracies place them around the corner, meaning you have to physically look for them or initiate contact.",
+        "whatTheAgentLoses": "An agent only sees the app's 'arrived' status and cannot physically scan the street to locate a car that is hiding just out of sight."
+       },
+       {
+        "question": "Does the color of the arriving car match the color displayed or implied by the app's vehicle details?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "While the license plate is the primary identifier, the app often shows a colored car icon or lists the color, which is the first visual cue you use to spot the car from a distance in a busy street.",
+        "whatTheAgentLoses": "An agent cannot visually scan the street for a specific car color, forcing you to rely solely on reading license plates of every passing vehicle."
+       },
+       {
+        "question": "Did the app screen change to show the ride is in progress before you have actually entered the vehicle?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A driver might start the trip prematurely or pick up the wrong person, which starts the billing cycle before you are safely in the car.",
+        "whatTheAgentLoses": "An agent cannot physically know if you have boarded the car and might allow a ghost trip to be billed to your account."
+       },
+       {
+        "question": "What is the specific color of the vehicle or the assigned color of the app's dashboard beacon (e.g., Lyft Amp)?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app displays the car's color visually and sometimes assigns a specific glowing beacon color to help you instantly spot the vehicle in a busy pickup zone or at night.",
+        "whatTheAgentLoses": "You lose the primary visual shorthand for identifying the car from a distance, forcing you to rely solely on reading small license plates in moving traffic."
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Share the start code"
+     },
+     {
+      "id": "7.8",
+      "label": "Open the safety tools",
+      "questions": [
+       {
+        "question": "How do you access safety tools during the trip?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The trip details menu displays a blue shield icon that opens a Safety Toolkit with options to contact 911, report issues, or share your ride with trusted contacts.",
+        "whatTheAgentLoses": "Delegating this means you miss the opportunity to personally familiarize yourself with emergency features that could be critical if you feel unsafe during the ride."
+       },
+       {
+        "question": "Do you want to use any safety tools, like sharing your ride details or getting emergency help?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The app presents a 'Safety tools' menu with options to share your location and car info with friends or access emergency assistance.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally decide if and with whom you want to share your live trip status for your own peace of mind."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Cancel the ride",
+    "note": "8.1 from whichever state holds the ride - the active trip's sheet, the trip history for scheduled rides, or the searching bid. the platform pushes back: 8.2 fields the counter-offers, 8.3 the reason list. then 8.4. six keepers cancel on purpose; xBw0's cancel never takes and the search resumes.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Find the cancel control",
+      "questions": [
+       {
+        "question": "Do you need to cancel the requested ride?",
+        "cluster": "undo",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The screen displays the total fare and a cancel button at the bottom of the details sheet in case you need to abort the trip.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to make a last-minute decision to cancel the ride if your plans suddenly change."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Turn down the counter-offer",
+      "questions": [
+       {
+        "question": "Should you wait for more offers or cancel the request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displays a popup asking if you want to get more offers or cancel, which determines whether you keep searching for a driver or abort the ride.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep waiting for a driver or to cancel the request based on your current needs."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Pick a cancellation reason",
+      "questions": [
+       {
+        "question": "Which reason should you select for canceling the ride?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The app requires you to choose from a list of specific reasons, such as getting a faster ride or the driver being unresponsive, to finalize the cancellation.",
+        "whatTheAgentLoses": "You lose the opportunity to accurately communicate your specific reason for canceling the ride to the platform."
+       },
+       {
+        "question": "Does the driver's arrival status in the cancellation prompt match the ETA you just saw on the map?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cancellation screen claims the driver is already here, which contradicts the map that just showed them as still being a minute away.",
+        "whatTheAgentLoses": "An agent might blindly accept a cancellation penalty without realizing the app's arrival claim contradicts its own tracking data."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Confirm the cancellation",
+      "questions": [
+       {
+        "question": "Are you ready to dismiss the cancellation confirmation?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Booking Cancelled' dialog with a green checkmark that must be dismissed to return to the map.",
+        "whatTheAgentLoses": "You lose the reassurance of seeing the green checkmark and specific confirmation number verifying that your ride was successfully cancelled."
+       },
+       {
+        "question": "Should you cancel this scheduled ride?",
+        "cluster": "undo",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the upcoming trip details and a cancellation prompt, requiring a decision on whether to keep or abandon the future booking.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might cancel a trip you still need or fail to cancel one you no longer want."
+       },
+       {
+        "question": "Are you sure you want to confirm the cancellation of this ride?",
+        "cluster": "undo",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Tapping the cancel button finalizes the decision to abort the trip and dismiss the driver, which may also incur a cancellation fee.",
+        "whatTheAgentLoses": "You lose the opportunity to change your mind and keep your current driver if the agent finalizes the cancellation on your behalf."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Ride and settle up",
+    "note": "9.1 and 9.2 during the trip - only the two produced tutorials tour them. then 9.3 with 9.4 and 9.5 in the order the closing screen dictates: 8dEE tips before rating, UMl_ rates before tipping, D8HI reaches the stars through the trip history.",
+    "questions": [
+     {
+      "question": "How do you handle payment, tipping, and rating the driver after the ride is finished?",
+      "cluster": "hand over",
+      "moment": "Completion",
+      "moneyMoving": true,
+      "why": "Although the screen currently shows the initial 'Where to?' input and nearby cars for a new ride, understanding the app's cashless payment and rating system is necessary before initiating the request.",
+      "whatTheAgentLoses": "The user loses the ability to apply human empathy and social norms when deciding whether to leave a cash tip or how to rate the driver's service."
+     },
+     {
+      "question": "How do you monitor your trip's progress and estimated arrival time?",
+      "cluster": "watch",
+      "moment": "After",
+      "moneyMoving": true,
+      "why": "The map displays a live route to the destination pin alongside an updated ETA badge, letting you confirm you are on track.",
+      "whatTheAgentLoses": "You lose the real-time peace of mind of watching your physical progress on the map and knowing exactly when you will arrive."
+     },
+     {
+      "question": "Did the driver ask for payment in cash or via a direct transfer outside the app?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Drivers sometimes attempt to take the ride off-app to avoid platform fees, which voids the app's safety tracking, insurance, and fixed pricing.",
+      "whatTheAgentLoses": "The ability to recognize a safety and policy violation and refuse an off-app ride."
+     }
+    ],
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Edit the ride mid-trip",
+      "questions": [
+       {
+        "question": "Do you want to cancel the ride, add a stop, or change the drop-off location?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The screen shows an edit menu with options to cancel the ride, add a stop, or edit the drop-off, which will directly alter the trip's route and fare.",
+        "whatTheAgentLoses": "The user loses the ability to make last-minute adjustments to their destination or cancel the trip if their plans suddenly change."
+       },
+       {
+        "question": "Do you need to change your destination, share your trip status, or split the fare?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The trip details menu displays options to modify the drop-off location, share your live status, switch payment methods, and split the fare.",
+        "whatTheAgentLoses": "The user loses the ability to dynamically adjust their destination, share their ETA with contacts, or split the cost of the ride."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Answer the in-ride prompts"
+     },
+     {
+      "id": "9.3",
+      "label": "Check the final charge",
+      "questions": [
+       {
+        "question": "Does the final charged amount match the $7.30 quoted for the standard 4-seater Lyft ride?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen at the time of selection showed a promised price of $7.30, which needs to be consistent with the final receipt to ensure accurate billing.",
+        "whatTheAgentLoses": "The user loses the ability to monitor their actual spending and catch any discrepancies between the initially agreed-upon price and the final charge."
+       },
+       {
+        "question": "Does the final amount paid match the total fare quoted when you selected the ride?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The total fare shown when opting into Ride Cover was RM21.35, but the final rating screen shows a total paid of RM21.00, indicating a discrepancy in the billing.",
+        "whatTheAgentLoses": "The user loses the ability to audit their final receipt to ensure they were accurately charged for the specific ride options and add-ons they selected."
+       },
+       {
+        "question": "Do you need to physically hand cash to the driver to complete this trip?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the ride was booked with 'Cash' as the payment method, the app will display the final total fare at the end of the trip that you must settle in person before leaving the vehicle.",
+        "whatTheAgentLoses": "An agent cannot physically hand money to the driver, so you must be aware of the final cash amount required to settle the fare and whether you need to ask for change."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Rate the driver",
+      "questions": [
+       {
+        "question": "How do you access your past rides to provide feedback?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The hamburger menu reveals a side panel with a 'Your Trips' option for reviewing previous rides.",
+        "whatTheAgentLoses": "The user loses the ability to privately review their ride history and manage their own feedback."
+       },
+       {
+        "question": "How do you rate the driver for this completed trip?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The trip details screen displays a row of empty stars next to the driver's name, prompting you to evaluate the finished ride.",
+        "whatTheAgentLoses": "Delegating this step means the agent submits the rating, preventing you from providing authentic feedback based on your actual experience in the car."
+       },
+       {
+        "question": "How do you rate the ride and provide specific feedback on what went wrong?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen allows you to assign a star rating and select specific tags like 'Too many pickups' to explain any issues with the trip.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to share your personal assessment and specific feedback about the ride experience."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Tip the driver",
+      "questions": [
+       {
+        "question": "How much should you tip the driver for this completed ride?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The 'Complete ride' screen includes an 'Add a tip' section with preset amounts to reward the driver.",
+        "whatTheAgentLoses": "The user loses the ability to decide the tip amount based on their personal experience during the ride."
+       },
+       {
+        "question": "How much do you want to tip Nelson and how would you rate the ride?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen prompts you to rate the ride out of five stars and offers specific tip amounts ranging from no tip to $5 or a custom amount.",
+        "whatTheAgentLoses": "You lose the opportunity to reward the driver based on your personal experience of the ride's quality."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
