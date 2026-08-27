@@ -92,12 +92,16 @@ function genUid() {
 // ability.js) — so without this, every onboarded profile contributes NO
 // baseline settings. We seed `fields.needs` with sensible defaults keyed to the
 // neutral dimensions the surfaces understand (toolkit WEB_DERIVATION: textSize,
-// contrast, lineSpacing, dyslexiaFont, simplify, reduceMotion, captions,
-// readAloudRate, …). Strength is 'preference' (a soft baseline a later explicit
-// user edit — 'floor' — overrides). Motor has no neutral web dimension in the
-// current vocabulary, so it seeds nothing.
+// contrast, lineSpacing, dyslexiaFont, simplify, reduceMotion, captions, …).
+// Strength is 'preference' (a soft baseline a later explicit user edit —
+// 'floor' — overrides). Motor has no neutral web dimension in the current
+// vocabulary, so it seeds nothing.
+//
+// `vision` is handled specially (see deriveDefaultNeeds): it spans two OPPOSITE
+// populations — low vision (wants magnification) and blindness (wants
+// screen-reader structure, and for whom magnification is the WRONG modality) —
+// so it cannot be one static row; we disambiguate from the free text.
 const DEFAULT_NEEDS_BY_AREA = {
-  vision:    [{ dimension: 'textSize', value: 1.5 }, { dimension: 'contrast', value: 'yellow-black' }, { dimension: 'readAloudRate', value: 1.0 }],
   reading:   [{ dimension: 'lineSpacing', value: 1.8 }, { dimension: 'dyslexiaFont', value: true }, { dimension: 'simplify', value: true }],
   cognitive: [{ dimension: 'simplify', value: true }, { dimension: 'reduceMotion', value: true }],
   hearing:   [{ dimension: 'captions', value: true }],
@@ -106,13 +110,41 @@ const DEFAULT_NEEDS_BY_AREA = {
   motor:     [],
 };
 
-// Derive a de-duplicated `fields.needs` array from the selected support areas.
-function deriveDefaultNeeds(areas) {
-  const byDimension = new Map(); // dimension → need (last area wins, stable de-dupe)
+// The low-vision baseline (magnification + high contrast). NOT applied to a
+// blind screen-reader user.
+const LOW_VISION_NEEDS = [{ dimension: 'textSize', value: 1.5 }, { dimension: 'contrast', value: 'yellow-black' }];
+
+// Which visual population does the free text describe? A blind screen-reader
+// user needs the OPPOSITE of magnification, so we must not treat "vision" as one
+// answer. Heuristic only (a keyword read beats shipping the wrong modality;
+// interpreting the sentence with the LLM as a *proposal* is the principled next
+// step). Excludes "colour blind" (a colour-vision deficiency, not blindness) and
+// "legally blind" (often retains usable vision → magnification can still help).
+function isBlindText(freeText) {
+  const t = String(freeText || '').toLowerCase();
+  if (/colou?r[- ]?blind/.test(t)) return false;
+  if (/\bscreen[- ]?reader\b|\bvoice ?over\b|\bnvda\b|\bjaws\b|\btalkback\b/.test(t)) return true;
+  if (/\bcan'?t see\b|\bcannot see\b|\bunable to see\b|\bno (usable |functional )?vision\b|\b(totally|completely|fully) blind\b/.test(t)) return true;
+  return /\bblind\b/.test(t) && !/\blegally blind\b/.test(t);
+}
+
+// Derive a de-duplicated `fields.needs` array from the support areas + free text.
+function deriveDefaultNeeds(areas, freeText) {
+  const byDimension = new Map(); // dimension → need (last writer wins, stable de-dupe)
+  const add = (n) => byDimension.set(n.dimension, { dimension: n.dimension, value: n.value, strength: 'preference', source: 'onboarding-derived' });
+
   for (const area of areas) {
-    for (const n of DEFAULT_NEEDS_BY_AREA[area] || []) {
-      byDimension.set(n.dimension, { dimension: n.dimension, value: n.value, strength: 'preference', source: 'onboarding-derived' });
+    if (area === 'vision') {
+      // Blind → derive NO visual settings. The neutral vocabulary cannot yet
+      // express screen-reader needs (structure/landmarks/descriptions/live
+      // regions), so an empty visual baseline is the honest state — far better
+      // than pushing magnification a blind person can't use. Low vision (and
+      // an unspecified "vision" pick) → the magnification baseline.
+      if (isBlindText(freeText)) continue;
+      for (const n of LOW_VISION_NEEDS) add(n);
+      continue;
     }
+    for (const n of DEFAULT_NEEDS_BY_AREA[area] || []) add(n);
   }
   return [...byDimension.values()];
 }
@@ -125,14 +157,17 @@ async function onboard({ uid, supportAreas, freeText }) {
   const areas = (Array.isArray(supportAreas) ? supportAreas : []).filter((a) => SUPPORT_AREAS.includes(a));
   const text = (freeText || '').toString().trim();
   // Structured baseline the surfaces can render — without this, needs[] is empty.
-  const needs = deriveDefaultNeeds(areas);
+  // Free text disambiguates the vision area (blind vs low vision).
+  const needs = deriveDefaultNeeds(areas, text);
 
   if (MODE === 'remote') {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
     const token = t.body.token;
     if (areas.length) await remoteLibrarian(token, 'setProfileField', ['supportAreas', areas]);
-    if (needs.length) await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
+    // Always write (even []) so a re-onboard clears stale needs — e.g. a profile
+    // corrected from low-vision to blind must drop the old magnification needs.
+    await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
     if (text) {
       await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
       await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit' }]);
@@ -141,7 +176,7 @@ async function onboard({ uid, supportAreas, freeText }) {
     const { host } = await localBits();
     const { librarian } = await host.getInstance(uid);
     if (areas.length) await librarian.setProfileField('supportAreas', areas);
-    if (needs.length) await librarian.setProfileField('fields.needs', needs);
+    await librarian.setProfileField('fields.needs', needs); // always write — clears stale needs on re-onboard
     if (text) {
       await librarian.setProfileField('freeText', text);
       await librarian.addNote(text, { source: 'user-explicit' });
