@@ -87,6 +87,36 @@ function genUid() {
   return 'user-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 }
 
+// Default STRUCTURED needs per support area. The toolkit deliberately projects
+// an empty `needs[]` from supportAreas/freeText alone (see toolkit/core/
+// ability.js) — so without this, every onboarded profile contributes NO
+// baseline settings. We seed `fields.needs` with sensible defaults keyed to the
+// neutral dimensions the surfaces understand (toolkit WEB_DERIVATION: textSize,
+// contrast, lineSpacing, dyslexiaFont, simplify, reduceMotion, captions,
+// readAloudRate, …). Strength is 'preference' (a soft baseline a later explicit
+// user edit — 'floor' — overrides). Motor has no neutral web dimension in the
+// current vocabulary, so it seeds nothing.
+const DEFAULT_NEEDS_BY_AREA = {
+  vision:    [{ dimension: 'textSize', value: 1.5 }, { dimension: 'contrast', value: 'yellow-black' }, { dimension: 'readAloudRate', value: 1.0 }],
+  reading:   [{ dimension: 'lineSpacing', value: 1.8 }, { dimension: 'dyslexiaFont', value: true }, { dimension: 'simplify', value: true }],
+  cognitive: [{ dimension: 'simplify', value: true }, { dimension: 'reduceMotion', value: true }],
+  hearing:   [{ dimension: 'captions', value: true }],
+  sensory:   [{ dimension: 'reduceMotion', value: true }],
+  attention: [{ dimension: 'simplify', value: true }, { dimension: 'reduceMotion', value: true }],
+  motor:     [],
+};
+
+// Derive a de-duplicated `fields.needs` array from the selected support areas.
+function deriveDefaultNeeds(areas) {
+  const byDimension = new Map(); // dimension → need (last area wins, stable de-dupe)
+  for (const area of areas) {
+    for (const n of DEFAULT_NEEDS_BY_AREA[area] || []) {
+      byDimension.set(n.dimension, { dimension: n.dimension, value: n.value, strength: 'preference', source: 'onboarding-derived' });
+    }
+  }
+  return [...byDimension.values()];
+}
+
 async function onboard({ uid, supportAreas, freeText }) {
   uid = (uid && String(uid).trim()) || genUid();
   if (/[/\\.]/.test(uid) && (uid.includes('/') || uid.includes('\\') || uid.includes('..'))) {
@@ -94,12 +124,15 @@ async function onboard({ uid, supportAreas, freeText }) {
   }
   const areas = (Array.isArray(supportAreas) ? supportAreas : []).filter((a) => SUPPORT_AREAS.includes(a));
   const text = (freeText || '').toString().trim();
+  // Structured baseline the surfaces can render — without this, needs[] is empty.
+  const needs = deriveDefaultNeeds(areas);
 
   if (MODE === 'remote') {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
     const token = t.body.token;
     if (areas.length) await remoteLibrarian(token, 'setProfileField', ['supportAreas', areas]);
+    if (needs.length) await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
     if (text) {
       await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
       await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit' }]);
@@ -108,12 +141,13 @@ async function onboard({ uid, supportAreas, freeText }) {
     const { host } = await localBits();
     const { librarian } = await host.getInstance(uid);
     if (areas.length) await librarian.setProfileField('supportAreas', areas);
+    if (needs.length) await librarian.setProfileField('fields.needs', needs);
     if (text) {
       await librarian.setProfileField('freeText', text);
       await librarian.addNote(text, { source: 'user-explicit' });
     }
   }
-  return { uid, supportAreas: areas, freeText: text };
+  return { uid, supportAreas: areas, freeText: text, needs };
 }
 
 // ── Read one profile's current configuration (for the "current profile" banner)
