@@ -575,30 +575,6 @@
       "moneyMoving": false,
       "why": "The screen asks if you have used TaxSlayer before to determine whether to route you to the login page or the new account creation flow.",
       "whatTheAgentLoses": "Delegating this choice means the agent might create a new account, causing you to lose access to your prior year's tax history and easy data import."
-     },
-     {
-      "question": "Should I acknowledge these unlocked account features and continue?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "This matters because the screen highlights available platform benefits, like the option to pay with your refund, that you may want to know about.",
-      "whatTheAgentLoses": "You lose direct awareness of these newly unlocked platform features and the opportunity to understand how they might benefit your filing process."
-     },
-     {
-      "question": "Do you want to bookmark this summary page with a custom note to easily return to it later?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The 'Add Bookmark' modal includes a 'Note:' field, allowing you to label specific pages for quick reference before navigating to other sections of your return.",
-      "whatTheAgentLoses": "The user loses the opportunity to create personalized navigational shortcuts and notes that help them track their own progress through the tax filing process."
-     },
-     {
-      "question": "Do you need to use any of the options in the Tools Center, such as saving your return or viewing the tax summary?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The Tools Center popup displays various utility links, including options to save your return to your computer, view your tax summary, or delete a form.",
-      "whatTheAgentLoses": "You lose the ability to decide whether to save a local copy of your return, check your current fees, or utilize other specific tax tools before proceeding."
      }
     ],
     "children": [
@@ -629,14 +605,6 @@
         "moneyMoving": false,
         "why": "Checking that the developer is Intuit Inc. and seeing the high number of ratings ensures you are downloading the legitimate tax software.",
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the app's authenticity and understand its pay-when-you-file pricing model."
-       },
-       {
-        "question": "Should you access the tax service through this promotional search banner, or navigate back to find the primary link?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The Discover screen features a prominent purple banner to start Cash App Taxes, which serves as an alternative entry point if the main link is not immediately visible.",
-        "whatTheAgentLoses": "You lose the opportunity to decide which navigation path to use when initially accessing the tax filing service."
        }
       ]
      },
@@ -781,14 +749,6 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to salvage your previous data entry work or ensure a completely clean slate for this tax year."
        },
        {
-        "question": "Are you ready to dismiss the welcome screen and begin the tax questionnaire?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "This screen sets expectations for the filing process and highlights the availability of expert help before you start.",
-        "whatTheAgentLoses": "You miss the opportunity to review the platform's introductory guidance and assurances about accessing expert support."
-       },
-       {
         "question": "Do you want to estimate your refund first, or start filing right away?",
         "cluster": "",
         "moment": null,
@@ -803,14 +763,6 @@
         "moneyMoving": false,
         "why": "The dashboard presents a 'Resume filing' button alongside other tools like a refund estimator, requiring a choice to continue your existing progress.",
         "whatTheAgentLoses": "The user loses the ability to decide whether to pick up where they left off or start a completely new return."
-       },
-       {
-        "question": "Should I pick up where you left off in Wages & Income, or start working on other income?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides options to either resume your previous progress in the Wages & Income section or start entering different income sources.",
-        "whatTheAgentLoses": "The user loses the ability to dictate the order in which their various income documents are processed."
        }
       ]
      },
@@ -865,14 +817,6 @@
       "label": "Pick the next section",
       "questions": [
        {
-        "question": "Should you start your tax profile now?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard highlights the tax profile as the recommended next step to begin updating your $0.00 refund.",
-        "whatTheAgentLoses": "You lose the chance to see the initial dashboard overview and verify the software's recommended starting point."
-       },
-       {
         "question": "Which tax sections are currently available to complete, and what is their status?",
         "cluster": "",
         "moment": null,
@@ -889,28 +833,12 @@
         "whatTheAgentLoses": "You lose the immediate awareness that the IRS is not yet accepting e-files and visibility into your current estimated refund."
        },
        {
-        "question": "Where do you want to navigate next from the main dashboard?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen presents a primary 'CONTINUE' button to resume the return alongside a left navigation menu for jumping to specific sections.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to follow the guided flow or jump directly to a specific section like Basic Information."
-       },
-       {
         "question": "Should you complete the required personal information fields now or skip ahead to the Federal section?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen displays required personal fields like your SSN and Date of Birth, but also provides a navigation menu to jump directly to the Federal section.",
         "whatTheAgentLoses": "You lose the ability to decide whether to verify and complete your sensitive personal details before moving on to enter your tax data."
-       },
-       {
-        "question": "Should you proceed to the Federal section or explore other sidebar options first?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The sidebar menu lists both tax-specific sections like 'Federal' and administrative options like 'Settings', meaning you must select the right category to advance your return.",
-        "whatTheAgentLoses": "You lose the chance to verify your account settings or understand the full layout of the tax software before starting your federal return."
        },
        {
         "question": "Which income source do you want to add or review next?",
@@ -929,14 +857,6 @@
         "whatTheAgentLoses": "You lose the ability to choose the order in which your income documents are entered into the tax software."
        },
        {
-        "question": "Which type of investment income do you want to enter first?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen asks you to select one investment type to start with, such as Interest or Dividends, before returning to add the others later.",
-        "whatTheAgentLoses": "The user loses the ability to dictate the order in which their various investment documents are entered and organized."
-       },
-       {
         "question": "Are you ready to start answering questions about your taxes?",
         "cluster": "",
         "moment": null,
@@ -945,36 +865,12 @@
         "whatTheAgentLoses": "You lose the opportunity to pause and verify that you have all your financial documents on hand before the interview begins."
        },
        {
-        "question": "Which income or expense topic should you complete next?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays a list of income categories like T4 and Employment Expenses, requiring you to select which specific section to edit.",
-        "whatTheAgentLoses": "You lose the ability to dictate the order in which your specific financial documents and expenses are entered into the return."
-       },
-       {
-        "question": "Do you want to proceed with the saved 1099-INT information, since the system prevents skipping ahead to deductions?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The interface displays tooltips indicating that future tabs like Deductions and Credits are locked until the current Income section is fully completed.",
-        "whatTheAgentLoses": "You lose the firsthand realization that the tax software enforces a strict linear progression, preventing you from jumping around to review other sections."
-       },
-       {
         "question": "Which income document should you enter next?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The dashboard shows that self-employment income is already entered, but a W-2 still needs to be added.",
         "whatTheAgentLoses": "You lose the ability to personally verify which income sources have been recorded and which documents are still missing from your return."
-       },
-       {
-        "question": "Do you want to use the Quick File feature to jump directly to specific tax forms?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen asks if you want to use Quick File to search for and navigate directly to the forms you need.",
-        "whatTheAgentLoses": "You lose the choice of whether to speed up the process by searching for specific forms directly or relying on the standard step-by-step interview."
        },
        {
         "question": "Do you want to be guided through entering your income or select the forms yourself?",
@@ -993,22 +889,6 @@
         "whatTheAgentLoses": "The user loses the opportunity to verify or correct their previously entered personal and income details before moving forward with the return."
        },
        {
-        "question": "Do you want to review your basic information summary first or proceed directly to the Income tab?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard displays your current tax estimates and basic household info, with navigation tabs available to start entering your W-2s.",
-        "whatTheAgentLoses": "The user loses the chance to double-check their filing status and dependent count before the agent begins entering income documents."
-       },
-       {
-        "question": "Now that your gross total income is confirmed, which section should you complete next?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The summary screen shows your gross total income is confirmed but total deductions are at zero, indicating it is time to enter your deduction details.",
-        "whatTheAgentLoses": "You lose the chance to verify your confirmed income amount before moving on to claim your specific tax deductions."
-       },
-       {
         "question": "Which deduction categories have you completed so far?",
         "cluster": "",
         "moment": null,
@@ -1017,28 +897,12 @@
         "whatTheAgentLoses": "You lose the reassurance of visually verifying exactly which deduction categories have been successfully filled out and which remain."
        },
        {
-        "question": "Do you want to leave the Quick File process?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen showed a confirmation modal with options to either go back or leave the Quick File process.",
-        "whatTheAgentLoses": "The user loses the choice of whether to use the guided Quick File process or navigate the tax forms manually."
-       },
-       {
         "question": "Do you want to follow the guided deduction process or jump straight to other taxes?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen offers a choice between a guided deduction walkthrough and selecting specific forms, but you can also bypass this entirely using the side menu.",
         "whatTheAgentLoses": "You lose the ability to decide whether to thoroughly explore potential tax savings through the guided process or prioritize entering specific other tax liabilities."
-       },
-       {
-        "question": "Which section of the tax menu should you navigate to next?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The side navigation menu displays several available tax sections, such as 'Federal' and 'Health Insurance', requiring you to decide the best order to complete your return.",
-        "whatTheAgentLoses": "You lose the ability to control the sequence in which your personal tax topics are addressed and completed."
        },
        {
         "question": "Which specific 1098 form do you need to add?",
@@ -1057,44 +921,12 @@
         "whatTheAgentLoses": "Delegating this choice means you lose control over whether to rely on the software's comprehensive guidance to catch obscure tax breaks or to save time by navigating directly to known deductions."
        },
        {
-        "question": "Which section of the tax return should you work on next?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The menu displays several tax sections with 'Review/Edit' buttons for previously visited areas, requiring a choice on what to update or complete next.",
-        "whatTheAgentLoses": "You lose the ability to decide which parts of your tax return need further review or modification before filing."
-       },
-       {
         "question": "Do you need to navigate back to the Wages & Income section to enter a missing form?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen shows the tax breaks page and a navigation menu, requiring you to decide if your remaining documents belong in deductions or a different section.",
         "whatTheAgentLoses": "The user loses the ability to ensure all their income and deduction documents are accurately categorized and entered."
-       },
-       {
-        "question": "Which section of your tax return should you review or edit next?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard displays completed sections with their calculated totals and 'Edit/Review' buttons, letting you choose which specific area needs verification.",
-        "whatTheAgentLoses": "You lose the ability to personally verify the summarized totals and decide which specific sections require a closer manual review."
-       },
-       {
-        "question": "Do you want to search for specific forms or proceed to the final review?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen provides options to either search for specific forms or proceed to the final review to check for errors and missed opportunities.",
-        "whatTheAgentLoses": "You lose the ability to manually search for specific tax situations or forms before initiating the automated review process."
-       },
-       {
-        "question": "Are you ready to navigate to the E-file section?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Selecting the E-file menu item moves the interface away from data entry and into the final submission steps.",
-        "whatTheAgentLoses": "You lose the control to decide exactly when you are finished reviewing your return and ready to begin the final filing process."
        }
       ]
      },
@@ -1103,108 +935,12 @@
       "label": "Open the help",
       "questions": [
        {
-        "question": "Do you want to open the 'Live tax advice' panel to search for help articles?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows a help panel with suggested topics like finding last year's AGI, providing immediate answers to common tax questions.",
-        "whatTheAgentLoses": "The user loses the chance to personally browse the suggested help articles and learn more about their specific tax situation."
-       },
-       {
-        "question": "Do you want to review the available support topics in the help center?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays the Cash App Taxes Support center with search options and trending articles.",
-        "whatTheAgentLoses": "The user loses the opportunity to familiarize themselves with the available support resources and knowledge base articles."
-       },
-       {
-        "question": "Do you want to click the info icon to clarify what the 'TIN' field requires?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen features a green info icon that opens a modal explaining the TIN is the taxpayer identification number found on Form 1099-INT.",
-        "whatTheAgentLoses": "You lose the chance to read the platform's built-in guidance on exactly where to find the required identification number on your tax documents."
-       },
-       {
-        "question": "How should you handle the help dialog regarding missing 1099-SA forms?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displayed a tooltip advising you to contact your bank if you are missing a 1099-SA form, requiring a choice to rate its helpfulness or dismiss it.",
-        "whatTheAgentLoses": "You lose the opportunity to read specific guidance on missing HSA documents and provide feedback on the platform's help resources."
-       },
-       {
-        "question": "Do you want to read the tax help definitions before starting the income section marked 'Needs info'?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The 'Needs info' badge on the 1099-DIV row indicates missing data, and checking the help icon clarifies exactly what documentation is required before you begin.",
-        "whatTheAgentLoses": "You lose the opportunity to educate yourself on tax terminology and understand exactly why the system is flagging your dividend income."
-       },
-       {
-        "question": "Do you want to review the updated tax brackets before entering your income?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen provides a link explaining how tax brackets for Single filers changed from last year, which helps you understand how your income might be taxed differently.",
-        "whatTheAgentLoses": "You lose the opportunity to educate yourself on the current tax rates and understand how your final tax liability will be calculated."
-       },
-       {
-        "question": "How do you want to access help or search for information?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The top navigation bar displays a search field, a question mark icon for help, and a live tax advice option to assist you if you get stuck.",
-        "whatTheAgentLoses": "You lose the ability to personally browse the help panel or decide when to consult a live tax expert about your specific situation."
-       },
-       {
         "question": "Do you need to click the info icon to understand what interest belongs to someone else?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen provides a green 'i' icon next to the field to explain exactly what information is required for that specific box.",
         "whatTheAgentLoses": "Delegating this means you miss the opportunity to learn the specific tax rules regarding shared or nominee interest income."
-       },
-       {
-        "question": "Do you want to open the automated AI help assistant?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows the Intuit Assist chat interface with suggested prompts like 'Help with a form', offering immediate automated guidance.",
-        "whatTheAgentLoses": "You lose the opportunity to directly ask the AI assistant specific questions about your unique tax situation."
-       },
-       {
-        "question": "Do you want to review which recent tax changes might affect your deductions this year?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen offers a dropdown of recent tax law changes, such as a bigger Child Tax Credit, to help you understand what might improve your overall tax outcome.",
-        "whatTheAgentLoses": "You lose the opportunity to educate yourself on specific new tax laws that could benefit your personal financial situation."
-       },
-       {
-        "question": "Do you need to search the help panel for guidance on your deductions or credits?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The help panel provides a search bar and FAQs that can clarify confusing tax situations before you finalize your credits.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review the platform's tax guidance to better understand your specific tax situation."
-       },
-       {
-        "question": "Do you want to watch the tutorial video on self-employment expenses?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen offers a short educational video explaining how reporting self-employment expenses can lower your taxes.",
-        "whatTheAgentLoses": "You lose the opportunity to personally learn tax-saving strategies from the provided educational video."
-       },
-       {
-        "question": "Do you want to review any of the educational articles or videos about tax benefits?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays various educational resources like videos on disaster benefits and articles on child tax credits that could help optimize your return.",
-        "whatTheAgentLoses": "You lose the opportunity to learn about specific tax strategies and benefits that might apply to your unique financial situation."
        }
       ]
      }
@@ -1840,14 +1576,6 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that your family members and filing status are correctly recorded before proceeding."
        },
        {
-        "question": "Which section of your personal information do you want to view?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dropdown menu offers the choice to navigate to specific details like your filing status and dependents, or to jump straight to a high-level summary.",
-        "whatTheAgentLoses": "You lose the ability to choose whether to review your personal details section by section or all at once in the summary screen."
-       },
-       {
         "question": "Is your personal and dependent information accurate, and do you need to enter an IP PIN?",
         "cluster": "",
         "moment": null,
@@ -1870,22 +1598,6 @@
         "moneyMoving": false,
         "why": "The screen displays an 'Add missing info.' warning and a 'NEEDS REVIEW' badge under your household section, indicating incomplete data that could affect your tax calculations.",
         "whatTheAgentLoses": "You lose the ability to ensure your household profile is fully accurate and complete before moving on to the financial sections of your return."
-       },
-       {
-        "question": "Are you ready to move on to the income section of your tax return?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen indicates a transition from personal details to earnings, requiring you to confirm you are ready to proceed by clicking 'Let's Go'.",
-        "whatTheAgentLoses": "You lose the natural pausing point to double-check that your personal information is completely accurate before the interview shifts focus to your finances."
-       },
-       {
-        "question": "Do you want to review the upcoming steps in the tax filing process?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen outlines the roadmap for gathering income, finding tax breaks, and double-checking the return while displaying a current federal refund estimate of $1,903.",
-        "whatTheAgentLoses": "The user misses the high-level overview of how the software plans to process their income and deductions to maximize their refund."
        },
        {
         "question": "Are your Social Security number and date of birth correct?",
@@ -2287,14 +1999,6 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify that all your specific freelance or business income sources are accounted for before returning to the main menu."
        },
        {
-        "question": "Where do you navigate to enter your 1099-B stock sale information?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Stock sales and investment income must be accurately reported under the 'Investments and Savings' section of the 'Wages & Income' page to ensure proper tax calculation.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review your investment categories and ensure all specific stock or crypto transactions are accounted for."
-       },
-       {
         "question": "Do you have any W-2 income to report?",
         "cluster": "",
         "moment": null,
@@ -2359,28 +2063,12 @@
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying that every specific source of your income has been accurately categorized and reported."
        },
        {
-        "question": "Do you want to use the general self-employment section or scroll down to find a specific entry point for your 1099-NEC?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen offers a general 'Self-employment income and expenses' start button, but scrolling might reveal a more precise category for your specific form.",
-        "whatTheAgentLoses": "You lose the ability to choose the exact navigation path and categorization method used to enter your specific tax documents."
-       },
-       {
         "question": "Which income category should you expand to enter a 1099-NEC?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen lists multiple categories that mention the 1099-NEC, so you must select the correct one to ensure your earnings are properly filed on Schedule C.",
         "whatTheAgentLoses": "You lose the ability to verify that your independent contractor income is correctly categorized as self-employment rather than miscellaneous income."
-       },
-       {
-        "question": "Where do you enter information for a 1099-OID form?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The income and expenses page lists multiple categories, requiring you to locate the specific section for 1099-OID and foreign accounts.",
-        "whatTheAgentLoses": "The user loses the ability to verify that their specific and potentially complex tax documents are being reported in the correct section."
        }
       ]
      },
@@ -2451,14 +2139,6 @@
         "moneyMoving": false,
         "why": "The screen provides empty fields for manual entry but also displays a green banner offering to speed up the process by uploading a file or photo of the W-2.",
         "whatTheAgentLoses": "Delegating this choice means you lose control over whether your sensitive tax document is directly uploaded to the platform or manually transcribed."
-       },
-       {
-        "question": "How do the current year's software updates affect your document entry?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displayed new capabilities like W-2 PDF imports and limitations like unsupported 1099 auto-filling, which dictate how you must input your data.",
-        "whatTheAgentLoses": "You lose the opportunity to understand the software's current capabilities and limitations, which sets expectations for the manual effort required during the filing process."
        },
        {
         "question": "How do you want to enter your W-2 information?",
@@ -3347,14 +3027,6 @@
         "whatTheAgentLoses": "You lose the opportunity to personally review the final income tally and ensure no stray or missing documents will cause issues with your return."
        },
        {
-        "question": "Are you ready to proceed to the deductions section?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen is caught mid-navigation with the Income tab still active and the current Federal Refund figure displayed, marking the transition out of the income entry phase.",
-        "whatTheAgentLoses": "You lose the opportunity to confirm that all your income documents have been completely and accurately entered before the system moves on to calculating your deductions."
-       },
-       {
         "question": "Is your income summary accurate before moving on to deductions?",
         "cluster": "",
         "moment": null,
@@ -3456,14 +3128,6 @@
         "moneyMoving": false,
         "why": "The screen asks if you need to report business meals, expanding to show specific categories like general or DOT meals if you select yes.",
         "whatTheAgentLoses": "You lose the opportunity to claim eligible business meal deductions that could reduce your overall tax liability."
-       },
-       {
-        "question": "Which expense or miscellaneous section should you proceed with next?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays summary sections for expenses, assets, and miscellaneous items, requiring you to choose which specific area needs further review or data entry.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that all your specific expenses and miscellaneous deductions are accurately accounted for before moving forward."
        },
        {
         "question": "Which specific retirement section do you want to edit?",
@@ -3960,14 +3624,6 @@
         "moneyMoving": false,
         "why": "Confirming that the $2,800 calculated credit matches the $2,800 you already received ensures your tax return accurately reflects your stimulus payments.",
         "whatTheAgentLoses": "You lose the opportunity to personally verify that the software's record of your received stimulus payments matches your actual bank deposits."
-       },
-       {
-        "question": "Which credit section should you complete next?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows the Recovery Rebate Credit is already completed with a green checkmark, leaving the Saver's Credit as the next section to start.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review which specific tax credits are being claimed on your behalf."
        },
        {
         "question": "Do you meet the income and contribution requirements to claim the Saver's Credit?",
@@ -5058,14 +4714,6 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify that no unexpected fees were added to your tax preparation before moving to the final filing steps."
        },
        {
-        "question": "Are you ready to begin the final steps to review your order and file your returns?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows three final steps to complete, starting with reviewing your order, before the return is actually filed.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify your final order and refund details before the official submission."
-       },
-       {
         "question": "Are you okay paying the final total of $16.32, which includes an unexpected $1.33 sales tax?",
         "cluster": "",
         "moment": null,
@@ -5168,14 +4816,6 @@
         "whatTheAgentLoses": "Delegating this step means an agent might skip tax protections you actually want or spend your money on unnecessary premium services."
        },
        {
-        "question": "Do you want to share a referral link with friends to earn a $25 gift card?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen offers a referral link that gives your friends a 20% discount and earns you a $25 gift card for each friend who files.",
-        "whatTheAgentLoses": "You lose the opportunity to earn up to $500 in gift cards by sharing the promotional link with your personal network."
-       },
-       {
         "question": "Do you want to add the 'Will Builder' service for $39 to your order?",
         "cluster": "",
         "moment": null,
@@ -5250,14 +4890,6 @@
         "moneyMoving": false,
         "why": "The screen confirms you selected to pay your $22,623 federal tax bill by mail instead of direct debit, which requires you to manually send a payment later.",
         "whatTheAgentLoses": "The user loses the ability to decide exactly how they want to pay their tax bill, potentially missing out on the convenience of an automatic direct debit."
-       },
-       {
-        "question": "Did you explain how to mail the Form 1040-V payment voucher as promised?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The promise made earlier to explain how to mail in the Form 1040-V payment voucher is left unresolved when the video ends.",
-        "whatTheAgentLoses": "You lose the necessary instructions to complete your tax payment by mail."
        },
        {
         "question": "If your tax bill is larger than you can pay today, do you want to apply for an IRS installment agreement or pay a partial amount?",
@@ -5526,14 +5158,6 @@
         "whatTheAgentLoses": "The user loses the certainty of knowing whether their tax return was successfully paid for and submitted to the IRS."
        },
        {
-        "question": "Do you want to rate your experience with the tax service now, or close the prompt to provide feedback later?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen presents an optional feedback overlay with a star rating and comment field that can be submitted or dismissed.",
-        "whatTheAgentLoses": "You lose the ability to withhold your rating until you are certain the entire tax filing and refund process has gone smoothly."
-       },
-       {
         "question": "Did my tax return submit successfully, and what is its current status?",
         "cluster": "",
         "moment": null,
@@ -5562,14 +5186,6 @@
         "moneyMoving": false,
         "why": "The screen displays options to manage your filed taxes, including downloading a PDF of your return, viewing your AGI, or amending a past return.",
         "whatTheAgentLoses": "Delegating this step means you lose direct control over securing your personal tax records for your own files or deciding to initiate an amendment."
-       },
-       {
-        "question": "How do you access your tax information from the main app?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The Money tab displays various financial balances like cash and savings, requiring you to scroll down to find the specific Taxes section to view your filed return.",
-        "whatTheAgentLoses": "The user loses the opportunity to see their overall financial snapshot, including cash, savings, and investment balances, alongside their tax status."
        },
        {
         "question": "Can you verify the final account balances against the initial Money tab?",

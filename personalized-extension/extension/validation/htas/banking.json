@@ -205,22 +205,6 @@
       "whatTheAgentLoses": "You lose the opportunity to read the bank's specific security rules and terms of service before legally agreeing to them."
      },
      {
-      "question": "Do the button labels on the actual login screen match the ones shown in the preview?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The preview displayed a 'Scan & Pay' button, but the actual login screen changed this label to 'Scan QR', creating a visual inconsistency.",
-      "whatTheAgentLoses": "You lose the assurance that the interface is stable and consistent, which might make you question if the agent is interacting with the correct version of the app."
-     },
-     {
-      "question": "Do you want to display an educational disclaimer before starting the banking task?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen shows a prominent text warning stating the video is strictly for educational purposes and does not promote illegal activity.",
-      "whatTheAgentLoses": "You lose the opportunity to explicitly frame the session as an educational demonstration to protect against platform strikes or liability."
-     },
-     {
       "question": "How long must you wait before you can access the app on this new device?",
       "cluster": "",
       "moment": null,
@@ -251,14 +235,6 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent will correctly distinguish between a third-party payment service and their actual bank's official application."
        },
        {
-        "question": "Should you use a quick-access shortcut from the app icon menu or open the main dashboard?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The context menu offers direct links to specific accounts like '[address]', but tapping the app icon itself opens the main overview.",
-        "whatTheAgentLoses": "You lose the opportunity to bypass the main dashboard and jump directly into a specific account using the app's quick-access shortcuts."
-       },
-       {
         "question": "Which search suggestion should you select to find the bank's official login page?",
         "cluster": "",
         "moment": null,
@@ -283,14 +259,6 @@
         "whatTheAgentLoses": "The user loses the ability to verify that the correct, official banking app is being launched from the app store."
        },
        {
-        "question": "Which app should you open to begin the banking task?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The Play Store screen shows the IDFC FIRST Bank app is installed and provides an 'Open' button to launch it.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that the official, secure banking app is being launched instead of a potentially malicious lookalike."
-       },
-       {
         "question": "Are you sure this is the official bank app to install?",
         "cluster": "",
         "moment": null,
@@ -305,14 +273,6 @@
         "moneyMoving": false,
         "why": "The Play Store listing explicitly labels the app as 'Old', indicating there is likely a newer, more secure version available.",
         "whatTheAgentLoses": "You lose the ability to decide whether to proceed with a potentially outdated app or search for the current, fully supported version."
-       },
-       {
-        "question": "How do you launch the banking app to start the task?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Opening the official RBL MyCard app directly from the Play Store ensures you are accessing the correct, verified platform to manage your account.",
-        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying they are launching the official, trusted bank app rather than a fraudulent one."
        },
        {
         "question": "Which app store should you open to download the bank's application?",
@@ -345,14 +305,6 @@
         "moneyMoving": false,
         "why": "Selecting the official PNB ONE app from the search results ensures you are accessing the bank's legitimate platform to safely conduct your banking task.",
         "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the app's authenticity and developer credentials before opening it."
-       },
-       {
-        "question": "How do you locate the banking app on this device?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen contains multiple pages of apps and folders, requiring navigation to the App Library to reliably find the bank's app.",
-        "whatTheAgentLoses": "You lose the spatial awareness of how your personal device is organized and where your financial apps are stored."
        }
       ]
      },
@@ -679,14 +631,6 @@
         "whatTheAgentLoses": "The user loses the chance to verify the phone number being used and to consent to any potential SMS charges."
        },
        {
-        "question": "Which option should you select to access your bank details?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen presents various financial tools like 'Scan any UPI QR' and 'Check balance', requiring you to identify the correct path for your specific task.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to see your other available quick actions or check your balance before starting the task."
-       },
-       {
         "question": "Did you select the correct country for your current location?",
         "cluster": "",
         "moment": null,
@@ -774,14 +718,6 @@
       "moneyMoving": false,
       "why": "The screen displays separate tabs for 'Debit Cards' and 'Digital Cards', requiring you to select the correct category to find the specific card you want to manage.",
       "whatTheAgentLoses": "You lose the opportunity to actively discover and monitor your virtual card options if the agent automatically defaults to the standard physical debit card view."
-     },
-     {
-      "question": "How do you switch back to viewing your physical debit cards?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen currently displays digital card options, requiring you to locate and click the 'Debit Cards' tab to access your physical card details.",
-      "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with how your bank organizes digital versus physical card management."
      }
     ],
     "children": [
@@ -812,14 +748,6 @@
         "moneyMoving": false,
         "why": "Verifying the \"CASH REWARDS 2017\" title and the \"$0.00\" balance ensures you have selected the correct account before proceeding with a transaction.",
         "whatTheAgentLoses": "You lose the immediate reassurance and situational awareness of seeing your current balance and available credit firsthand."
-       },
-       {
-        "question": "How do you want to navigate the home screen to find your intended banking task?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen presents a mix of promotional banners like '24K gold' alongside functional 'Quick actions', requiring you to sift through these options to locate the correct starting point.",
-        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to discover new financial products or promotions that might be relevant to your banking needs."
        },
        {
         "question": "Do you have sufficient funds in your checking account, and which menu option initiates the transfer?",
@@ -870,14 +798,6 @@
       "label": "Open the feature",
       "questions": [
        {
-        "question": "Where do you tap to initiate a transfer from the home screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays various informational widgets like spending summaries and mortgage insights, requiring you to locate the correct navigation button to start moving money.",
-        "whatTheAgentLoses": "You lose the chance to review your overall financial dashboard, including spending summaries and targeted offers, before jumping straight into the transfer."
-       },
-       {
         "question": "Which option do you select to start the check deposit process?",
         "cluster": "select",
         "moment": "Now",
@@ -894,100 +814,12 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally inspect your recent transactions for unexpected or unauthorized activity."
        },
        {
-        "question": "Which menu option should you choose to request a cheque book?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The top navigation menu presents multiple categories like 'Services' and 'Request', requiring a choice to locate the cheque book feature.",
-        "whatTheAgentLoses": "The user loses the opportunity to learn how the bank categorizes its service requests and account management features."
-       },
-       {
-        "question": "Which menu category should you select to transfer your account to a different branch?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The top navigation bar lists several broad categories like 'Payments / Transfers' and 'e-Services', so you must identify the correct one to find the branch transfer option.",
-        "whatTheAgentLoses": "You lose the chance to learn how your bank categorizes administrative account services in its navigation menu."
-       },
-       {
-        "question": "Which menu option should you tap to locate your desired banking task?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard displays several quick options like 'Payments' and 'Savings', requiring you to decide if your specific task is visible or located inside the hamburger menu.",
-        "whatTheAgentLoses": "Letting an agent navigate the dashboard means you lose the opportunity to familiarize yourself with the app's layout and where your specific account tools are located."
-       },
-       {
-        "question": "Which menu option should you select to access customer support?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays multiple account management categories like 'Manage Profile' and 'Accounts & UPI', requiring you to locate the specific 'Customer Service' option to get help.",
-        "whatTheAgentLoses": "You lose the opportunity to discover other self-service options or membership benefits available in the main menu while navigating to the support section."
-       },
-       {
-        "question": "Which quick link do you select to manage your active loans?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen presents multiple quick links such as 'Investments', 'Credit Cards', and 'Loans', requiring you to identify the correct category for your task.",
-        "whatTheAgentLoses": "The user loses visibility into the other available quick link services and how the bank categorizes their financial products."
-       },
-       {
         "question": "Which option should I select to manage my fixed deposits?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The home screen's 'Invest' section offers multiple financial products like stocks and pensions, so you must specifically select the fixed or recurring deposit option to proceed.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to verify that the agent selects the correct investment vehicle rather than accidentally navigating into stocks or pension schemes."
-       },
-       {
-        "question": "Which financial product category should you select from the home screen?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen organizes services into tabs like Cards, Deposits, and Loans, so choosing the correct category determines how quickly you can access your specific banking task.",
-        "whatTheAgentLoses": "Delegating this step means you miss out on discovering personalized offers and new financial products like fixed deposits or loan rates surfaced in these tabs."
-       },
-       {
-        "question": "Which section should you select to view your linked accounts?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen presents multiple profile options like 'My Relationships' and 'Manage Limits', requiring you to choose the correct path to access your account details.",
-        "whatTheAgentLoses": "You lose the chance to review or adjust other important profile settings like transfer limits or security locks while navigating to your accounts."
-       },
-       {
-        "question": "Do you tap the dedicated 'Credit cards' tab or select the card directly from the 'Overview' screen?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard presents multiple paths to access your account, as the credit card is visible on the 'Overview' tab but also has its own dedicated tab.",
-        "whatTheAgentLoses": "You lose the opportunity to learn the app's navigation structure and discover which path provides the best access to specific card management tools."
-       },
-       {
-        "question": "Which section of the app do you want to navigate to from the bottom menu?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The bottom navigation bar offers distinct financial services like 'Bank', 'Pay', and 'Invest', so selecting the correct category is necessary to locate your specific banking task.",
-        "whatTheAgentLoses": "Delegating this step means the agent chooses which broad financial category to explore, potentially exposing other financial products or missing the intended banking feature."
-       },
-       {
-        "question": "Where do you tap to see more account options?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen only displayed a few quick action icons like 'Add money' and 'Send money', so expanding the menu is necessary to find your specific banking task.",
-        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the bank's full menu of features and discover other available account management tools."
-       },
-       {
-        "question": "Which navigation tab do you select to initiate a bill payment?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The top navigation menu presents multiple distinct banking features like 'Transfers' and 'Bill Pay', requiring you to choose the correct path for your intended task.",
-        "whatTheAgentLoses": "You lose the opportunity to glance at your checking and savings account balances on the summary page before deciding to initiate a payment."
        },
        {
         "question": "Which transfer option should you select to send money to another bank?",
@@ -1004,38 +836,6 @@
         "moneyMoving": false,
         "why": "The dashboard presents both 'Add money' and 'Send / Transfer' buttons, which may trigger different workflows for moving money.",
         "whatTheAgentLoses": "You lose the opportunity to decide exactly which banking workflow to use to fund your account."
-       },
-       {
-        "question": "Which option lets you manage your ATM card?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The main dashboard presents numerous service icons like 'Send Money' and 'Bills & Top up', so you must specifically locate the 'Debit Card' button to proceed with card management.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to glance at your account balances and familiarize yourself with the other banking services available on the main menu."
-       },
-       {
-        "question": "Which feature will you select from the home screen?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard displays a wide array of services, including transfers, bill payments, and new integrations like Payoneer, requiring you to locate the specific tool for your current need.",
-        "whatTheAgentLoses": "You miss out on discovering newly added features and integrations on your bank's dashboard that could offer better ways to manage your finances."
-       },
-       {
-        "question": "Which option do you want to select from the side menu?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The side menu presents several navigation paths, including My Accounts, Settings, and Deals and Discounts, which dictate your next step in the app.",
-        "whatTheAgentLoses": "You lose the opportunity to explore secondary features like discounts or to explicitly choose how to manage your multiple accounts."
-       },
-       {
-        "question": "Which banking service do you want to select from the main menu?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen presents multiple distinct services like mobile topups, bill payments, and QR payments, requiring you to choose the correct path for your specific goal.",
-        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to discover other convenient features your bank offers, such as mobile topups, mutual funds, or QR payments."
        }
       ]
      },
@@ -1052,44 +852,12 @@
         "whatTheAgentLoses": "You lose the situational awareness of casually reviewing your automated financial commitments while navigating the menu."
        },
        {
-        "question": "Should you preview the wire transfer setup page before clicking?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Hovering over the option lets you see what information the wire transfer form will require before you commit to starting it.",
-        "whatTheAgentLoses": "You lose the chance to familiarize yourself with the required fields and layout of the wire transfer form before initiating the task."
-       },
-       {
-        "question": "Do you want to preview the option to transfer an outside account to Fidelity?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Hovering over the 'Transfer an account to Fidelity' option allows you to preview the process for moving an old retirement account before committing to the workflow.",
-        "whatTheAgentLoses": "You lose the opportunity to organically discover and evaluate long-term account consolidation options while navigating your everyday banking tasks."
-       },
-       {
-        "question": "Should you preview the 'Other transfer options' menu?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Hovering over this option reveals alternative, less frequently used transfer methods that might be necessary for your specific transaction.",
-        "whatTheAgentLoses": "You miss the chance to discover the full range of alternative transfer services your bank offers."
-       },
-       {
         "question": "Which specific statement or document category do you want to open for this account and year?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen displays multiple document types, including recent statements, tax documents, and notices, which can be filtered by account and year.",
         "whatTheAgentLoses": "You lose the ability to browse and select specific historical documents or tax forms if the agent automatically defaults to opening the most recent statement."
-       },
-       {
-        "question": "Should you preview the 'Link a bank' option before clicking it?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Hovering over the link reveals a preview of the page, letting you see the requirements for adding an external account without leaving your current screen.",
-        "whatTheAgentLoses": "You lose the ability to preview the account linking process to ensure you have the necessary information ready before starting."
        }
       ]
      }
@@ -1207,22 +975,6 @@
         "moneyMoving": false,
         "why": "The screen requires you to choose between an HDFC account and a non-HDFC account to determine how the transfer will be routed.",
         "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct banking network for your specific payee, which could cause the transfer to fail if categorized incorrectly."
-       },
-       {
-        "question": "How do you search for or enter the recipient's IFSC code?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen provides fields like 'IFSC Code', 'Bank Name', and 'Branch Name / City' to locate the correct routing information for the transfer.",
-        "whatTheAgentLoses": "The person loses the assurance that the correct bank branch is identified, which is critical for the money to reach the intended recipient."
-       },
-       {
-        "question": "Where should you paste the SWIFT code for the recipient's bank?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Entering the correct identifier into the 'Swift/IFSC Code' field ensures the international transfer is routed to the right institution.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct international bank identifier was pasted into the transfer form without errors."
        },
        {
         "question": "Do you want to accept the automatically selected bank branch for this SWIFT code?",
@@ -1666,14 +1418,6 @@
       "whatTheAgentLoses": "If an agent makes this selection, you lose the opportunity to review your current outstanding balances, interest rates, and EMI amounts before proceeding."
      },
      {
-      "question": "Where do you tap to find the option to make a part payment on this loan?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The current Details tab only displays your outstanding balance and EMI, so you must navigate to the Services tab to actually initiate a payment.",
-      "whatTheAgentLoses": "You lose the opportunity to review your exact outstanding balance and current interest rate before proceeding to make a payment."
-     },
-     {
       "question": "Which type of bill do you want to pay?",
       "cluster": "",
       "moment": null,
@@ -1820,14 +1564,6 @@
         "moneyMoving": false,
         "why": "The screen requires selecting a specific bank from the netbanking dropdown to route the ₹5,650.21 payment to the correct portal.",
         "whatTheAgentLoses": "The user loses the ability to decide which specific bank account will be used to fund the transaction."
-       },
-       {
-        "question": "How do you proceed after selecting the source account?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Clicking the 'Continue' button under the 'From' account selection is necessary to reveal the destination account options.",
-        "whatTheAgentLoses": "You lose the opportunity to manually verify that the correct funding source is locked in before moving to the next step."
        }
       ]
      },
@@ -1842,14 +1578,6 @@
         "moneyMoving": false,
         "why": "The screen lists both internal and external options, including a pre-linked 'Anthony Well...' account, so you must specify exactly where the funds should go.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the correct external or internal account is chosen to receive your funds."
-       },
-       {
-        "question": "How do you proceed after selecting the destination account?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Clicking 'Continue' confirms the 'To' account selection and opens the section to enter transfer details.",
-        "whatTheAgentLoses": "The user loses the chance to manually verify the chosen destination account before proceeding to enter the transfer amount."
        }
       ]
      },
@@ -2082,14 +1810,6 @@
         "whatTheAgentLoses": "The user loses the ability to personally double-check the exact recipient and amount details before moving to the review step."
        },
        {
-        "question": "How do you proceed to review the scheduled payment?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Clicking the continue button is necessary to submit the entered scheduling details and move to the final review step before the transaction is executed.",
-        "whatTheAgentLoses": "The user loses the opportunity to manually double-check the entered payment amount and date before advancing to the final submission screen."
-       },
-       {
         "question": "Are the exchange rate and the 9.50 GBP fee acceptable for this transfer?",
         "cluster": "",
         "moment": null,
@@ -2238,14 +1958,6 @@
       "label": "Confirm the transfer",
       "questions": [
        {
-        "question": "How do you submit the one-time transfer?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Clicking the 'Continue' button at the bottom of the form is required to process the entered transfer details and move forward.",
-        "whatTheAgentLoses": "You lose the manual control of deciding exactly when to proceed with the entered transfer details."
-       },
-       {
         "question": "Are the recurring transfer details correct and are you ready to proceed?",
         "cluster": "",
         "moment": null,
@@ -2371,14 +2083,6 @@
       "moneyMoving": false,
       "why": "The screen explicitly instructs using a dark background so the app can detect the edges of the check for auto-capture.",
       "whatTheAgentLoses": "Delegating this step means losing the ability to physically arrange the paper check in an optimal environment for scanning."
-     },
-     {
-      "question": "Which side of the check should you photograph first?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen presents a 'TAKE PHOTOS' section with distinct buttons for the front and back of the check, requiring you to select the correct side to capture.",
-      "whatTheAgentLoses": "Delegating this step means losing physical control over handling the paper check and ensuring the correct side is properly framed for the camera."
      },
      {
       "question": "Was the front of the check accepted, and what are the specific instructions for endorsing the back?",
@@ -2882,28 +2586,12 @@
       "label": "Open the transaction history",
       "questions": [
        {
-        "question": "How do you locate the transaction history option within the Services slider?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen groups various features into a horizontal 'Services' slider, requiring you to swipe through the icons to reveal the 'Transaction History' option.",
-        "whatTheAgentLoses": "You lose the opportunity to discover other available banking features, like bill pay or mobile top-ups, hidden within the horizontal menu."
-       },
-       {
         "question": "Do you want to review your recent transactions before initiating the statement download?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The passbook screen displays your recent transaction history, which you may want to verify before generating a formal document.",
         "whatTheAgentLoses": "The user loses the opportunity to visually inspect their recent account activity for accuracy before committing to a download."
-       },
-       {
-        "question": "Which option should you select from the menu to view your transaction history?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The bottom sheet presents multiple account-related options, and you must identify that 'Passbook' is the specific choice for viewing past transactions.",
-        "whatTheAgentLoses": "You lose the chance to learn your specific bank's terminology and navigation structure for finding your transaction records."
        },
        {
         "question": "How far back in the transaction history do you want to scroll?",
@@ -2919,14 +2607,6 @@
       "id": "6.2",
       "label": "Page through the months",
       "questions": [
-       {
-        "question": "How do you view transactions from the previous month?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows a month indicator with a left arrow next to 'April' that allows you to navigate to older transactions.",
-        "whatTheAgentLoses": "You lose the opportunity to manually browse and review your past spending activity while navigating between months."
-       },
        {
         "question": "Have you finished reviewing this month's transactions?",
         "cluster": "",
@@ -2960,28 +2640,12 @@
       "label": "Find the statement entry",
       "questions": [
        {
-        "question": "Where do you tap to access your statements?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The top navigation menu requires scrolling past options like Zelle and check deposits to reveal the statements link.",
-        "whatTheAgentLoses": "You lose the chance to discover other quick-access features available on your bank's home screen."
-       },
-       {
         "question": "Which type of document do you want to view?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple document categories like tax documents and branch receipts, requiring you to select the specific type of record you need.",
         "whatTheAgentLoses": "You lose the ability to decide exactly which financial record to review, risking the retrieval of a tax document or notice instead of your monthly statement."
-       },
-       {
-        "question": "How do you access a full statement of these transactions?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows a red 'Get Statement' button at the bottom of the recent transactions list, which is the necessary step to download full account details.",
-        "whatTheAgentLoses": "The user loses familiarity with the app's layout and the specific location of the statement download feature."
        },
        {
         "question": "Where do you look to find your recent transactions and statements?",
@@ -3152,14 +2816,6 @@
         "whatTheAgentLoses": "Delegating this step means you lose the final chance to verify the statement parameters before the document is created."
        },
        {
-        "question": "How do you confirm the statement request?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays an 'Email PDF' button to finalize the action and send the document directly to your inbox.",
-        "whatTheAgentLoses": "You lose the chance to decide exactly how the statement is delivered and saved for your personal records."
-       },
-       {
         "question": "Are you ready to dismiss the success message?",
         "cluster": "approve",
         "moment": "Completion",
@@ -3205,14 +2861,6 @@
       "id": "6.10",
       "label": "Download or share the record",
       "questions": [
-       {
-        "question": "How do you initiate the download of the statement?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays a 'Download' button next to the format dropdown that must be clicked to retrieve the file.",
-        "whatTheAgentLoses": "You lose the direct control of executing the download and verifying that the file is safely saved to your personal device."
-       },
        {
         "question": "Do you want to save or share this statement using the export options?",
         "cluster": "select",
@@ -3349,14 +2997,6 @@
           "moneyMoving": false,
           "why": "The screen shows the App Library with the Gmail icon visible, indicating the user is navigating to their email client to retrieve the document.",
           "whatTheAgentLoses": "The user loses the ability to keep their personal email inbox private from the agent while retrieving the statement."
-         },
-         {
-          "question": "How will you access the statement that just arrived?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "A Gmail push notification appeared on screen with the requested statement attached, offering a direct shortcut to the document.",
-          "whatTheAgentLoses": "The user loses the convenience of using their personal device notifications to instantly jump to the requested document."
          },
          {
           "question": "Is the expected 'AccountStatement.pdf' attachment visible at the bottom of the email?",
@@ -3671,14 +3311,6 @@
         "whatTheAgentLoses": "You lose the direct confirmation of the deposit's success and the specific instructions on how long to retain the physical paper check."
        },
        {
-        "question": "How do you return to the main menu?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The 'You're all set!' screen provides a back arrow at the top left to exit the confirmation and resume your other banking tasks.",
-        "whatTheAgentLoses": "You lose the final closure of manually dismissing the success message and verifying your return to the account overview."
-       },
-       {
         "question": "Has the check been successfully deposited, and should I finish the task or deposit another?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -3725,14 +3357,6 @@
         "moneyMoving": false,
         "why": "The screen displayed a success alert and a reference number indicating the request is under process, which confirms the bank received the order.",
         "whatTheAgentLoses": "The user loses the immediate confirmation and the specific reference number needed to track the status of their new cheque book."
-       },
-       {
-        "question": "Do you explain how many days the delivery will take, as promised?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The video concludes on the confirmation screen without the narrator or the interface providing the promised explanation of delivery times.",
-        "whatTheAgentLoses": "The user is left uncertain about when their funds will actually arrive or be processed."
        },
        {
         "question": "Does the screen confirm your transfer was successful and show the correct branch details?",
@@ -4191,14 +3815,6 @@
       "label": "Revisit the created record",
       "questions": [
        {
-        "question": "Which tab should you select to view your fixed deposits?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard separates your accounts into 'Savings' and 'Deposits' tabs, requiring you to choose the correct category to find your fixed deposit.",
-        "whatTheAgentLoses": "You lose the opportunity to learn how your bank categorizes and displays your different account types on the main dashboard."
-       },
-       {
         "question": "Do you want to scroll down to view the details of your individual fixed deposit accounts?",
         "cluster": "",
         "moment": null,
@@ -4215,14 +3831,6 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally review their fixed deposit's maturity and interest details before initiating a task."
        },
        {
-        "question": "Where should you look to verify the transaction?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The dashboard lists your accounts under 'CHECKING & SAVINGS', requiring you to select the specific account involved to confirm the transaction posted.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying the updated balance or transaction history in your account."
-       },
-       {
         "question": "Do you see the deposited check listed in your pending transactions?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -4237,14 +3845,6 @@
         "moneyMoving": false,
         "why": "Checking the history tab for the reference number and date confirms that the bank's system has officially recorded your transaction.",
         "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying the official reference number and timestamp of your completed transfer."
-       },
-       {
-        "question": "How do you track the status of a submitted service request?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Checking the active requests tab allows you to monitor the exact timeline and current progress of your No Objection Certificate.",
-        "whatTheAgentLoses": "Delegating this step means you lose direct visibility into the bank's processing timeline and real-time updates for your request."
        },
        {
         "question": "What is the exact status of your request and the expected timeline for resolution?",

@@ -71,14 +71,6 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally evaluate whether this specific platform aligns with their payment flexibility preferences before initiating the search."
        },
        {
-        "question": "Which type of booking do you want to make?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The homepage features navigation tabs for flights, hotels, and car hire, requiring you to choose the correct service before starting a search.",
-        "whatTheAgentLoses": "The user loses the awareness that they could also use this platform to conveniently book a hotel or rental car for their trip."
-       },
-       {
         "question": "Which app should you open to book the flight?",
         "cluster": "hand over",
         "moment": "Now",
@@ -208,14 +200,6 @@
       "moneyMoving": false,
       "why": "The search form defaults to a round-trip economy ticket for one adult, which dictates the initial results unless adjusted.",
       "whatTheAgentLoses": "You lose the chance to specify upfront if you need a one-way ticket, a multi-city route, or a different cabin class."
-     },
-     {
-      "question": "Will you enter your route and dates to search for a flight, or are you just showing the interface to discuss a past booking?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows the Qatar Airways flight search form, but you are only talking about a previous booking without interacting with the fields.",
-      "whatTheAgentLoses": "The user loses the ability to clarify whether the agent should initiate a new flight search or just note the platform used previously."
      },
      {
       "question": "How many passengers are traveling, and which cabin class do you prefer?",
@@ -1083,14 +1067,6 @@
         "moneyMoving": false,
         "why": "The screen presents multiple fare tiers like Basic, Regular, and Plus, each with different costs and allowances for overhead bags and seat reservations.",
         "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide if paying extra for priority boarding and overhead baggage space is worth the cost for this specific trip."
-       },
-       {
-        "question": "Do you proceed to the payment screen, or do you navigate back to edit your checked baggage?",
-        "cluster": "undo",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The audio suggests moving to payment, but the screen shows a return to the flights tab to modify baggage, leaving the booking incomplete.",
-        "whatTheAgentLoses": "The user fails to secure their flight because the agent abandons the checkout process to modify baggage settings."
        }
       ]
      },
@@ -1140,14 +1116,6 @@
         "moneyMoving": false,
         "why": "The screen requires your exact name, date of birth, and gender to issue a valid ticket, while offering optional fields for frequent flyer numbers and special requests.",
         "whatTheAgentLoses": "The user loses the ability to ensure their name matches their passport exactly and the opportunity to attach their frequent flyer account to the booking."
-       },
-       {
-        "question": "Do you show the actual entry of passenger details instead of skipping it?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The video cuts from the empty Guest Details form straight to the bottom of the page, hiding the actual process of filling out the required personal information.",
-        "whatTheAgentLoses": "An agent misses seeing exactly which personal details are required and how to format them in the form."
        },
        {
         "question": "What passenger information is required and which baggage option will you select?",
@@ -2020,17 +1988,7 @@
      },
      {
       "id": "8.6",
-      "label": "Complete the booking",
-      "questions": [
-       {
-        "question": "Do you actually complete the purchase and show the confirmation screen?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The video promises to show a complete booking process but ends before the final purchase button is clicked, leaving the actual confirmation unseen.",
-        "whatTheAgentLoses": "An agent trained on this incomplete demonstration might stop at the review screen instead of actually finalizing the transaction."
-       }
-      ]
+      "label": "Complete the booking"
      },
      {
       "id": "8.7",

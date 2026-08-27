@@ -3,22 +3,12 @@
  "tree": {
   "id": "0",
   "label": "Renew a DMV credential online",
-  "note": "1 and 2 in the order the venue dictates - account venues meet 3 first and reach the service from the dashboard (DeKE, w74r, _xgB); the rest run 1, then 2, then 3. 2.4 and 2.5 fire before or mid-task as the requirements demand (w74r, YWFI). then 4, with 5 interleaved wherever the wizard asks. 6 only on the carrier systems, and 7 waits for its approval (-eBX, F_2L). then 7, then 8. no keeper re-enters an earlier goal by choice - the one reach-back is 7 into 5.8 when a missing email blocks payment (DeKE).",
+  "note": "1 and 2 in the order the venue dictates - account venues meet 3 first and reach the service from the dashboard (DeKE, w74r, _xgB); the rest run 1, then 2, then 3. 2.4 and 2.5 fire before or mid-task as the requirements demand (w74r, YWFI). then 4, with 5 interleaved wherever the wizard asks. 6 only on the carrier systems, then 7 once the approval lands (-eBX, F_2L), then 8. no keeper re-enters an earlier goal by choice - the one reach-back is 7 into 5.8 when a missing email blocks payment (DeKE).",
   "children": [
    {
     "id": "1",
     "label": "Find the renewal service",
     "note": "1.1 or 1.2 to arrive, then one of 1.3, 1.4, or 1.5 as the venue offers. 1.5 comes after 3 on account venues - the dashboard is behind the login.",
-    "questions": [
-     {
-      "question": "Should you use the search bar, click a popular link, or scroll down to find the driving licence renewal?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The homepage displays a search bar and 'Popular on GOV.UK' links, requiring you to choose the most efficient navigation method to locate the renewal service.",
-      "whatTheAgentLoses": "You lose the chance to familiarize yourself with the portal's layout and discover other relevant government services while navigating."
-     }
-    ],
     "children": [
      {
       "id": "1.1",
@@ -77,38 +67,6 @@
       "label": "Browse the menus to the service",
       "questions": [
        {
-        "question": "Which top-level category should you select to find driving license services?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists 'Driving and transport' under 'Services and information' with a description that explicitly includes driving licenses.",
-        "whatTheAgentLoses": "The user loses the opportunity to see how the portal categorizes its services and what other transport-related options are available."
-       },
-       {
-        "question": "Which category do you select to renew your driving license?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal presents multiple transport categories, such as 'Vehicle tax, MOT and insurance' and 'Driving licences', requiring you to choose the correct path to start your renewal.",
-        "whatTheAgentLoses": "Delegating this navigation means you miss seeing the layout of the portal and discovering other vehicle or licensing services you might need in the future."
-       },
-       {
-        "question": "Which top navigation menu do you select to find the ID card renewal option?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The navigation bar has multiple categories like 'DRIVER LICENSE' and 'MOTOR VEHICLE', so you must know which dropdown contains the 'Renew ID Card' link.",
-        "whatTheAgentLoses": "You lose the opportunity to learn the site's navigation structure for finding other DMV services in the future."
-       },
-       {
-        "question": "Which menu category should you open to find the driver's license renewal link?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal's top navigation separates vehicle and driver services, so you must open the 'Driver's Licenses & IDs' dropdown to locate the 'Renew DL/ID' option.",
-        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the portal's layout and see what other driver services are available online."
-       },
-       {
         "question": "Which link under 'Popular services' should you select to renew your driving licence?",
         "cluster": "select",
         "moment": "Now",
@@ -120,17 +78,7 @@
      },
      {
       "id": "1.4",
-      "label": "Pick the service from the shortcuts",
-      "questions": [
-       {
-        "question": "Do you use the 'SHOP HERE!' quick menu to access the renewal services?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'SHOP HERE!' dropdown provides direct links to 'Renew/Replace My License' and 'Renew/Replace My Registration' under the quick services sections.",
-        "whatTheAgentLoses": "You lose the opportunity to learn the fastest navigation shortcuts for future visits to the DMV portal."
-       }
-      ]
+      "label": "Pick the service from the shortcuts"
      },
      {
       "id": "1.5",
@@ -143,22 +91,6 @@
         "moneyMoving": false,
         "why": "The dashboard displays a specific vehicle renewal reminder alongside multiple menu options like 'LICENSING' and 'VEHICLE'.",
         "whatTheAgentLoses": "The user loses the visibility of their dashboard reminders and the ability to personally confirm exactly which vehicle is currently due for renewal."
-       },
-       {
-        "question": "How do you initiate the renewal process for this period?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Period Alerts' section with a warning icon and a specific hyperlink to renew the registration for that date.",
-        "whatTheAgentLoses": "The user loses the ability to personally review the period alerts and manually select the correct registration period to renew."
-       },
-       {
-        "question": "How do you access the navigation menu to start the renewal?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main dashboard area is filled with alerts, so you must use the hamburger menu in the top right to access the actual renewal links.",
-        "whatTheAgentLoses": "You miss the opportunity to review the important state alerts and legislative updates displayed on your dashboard before proceeding."
        },
        {
         "question": "Does your account dashboard show an existing balance that you need to address?",
@@ -183,7 +115,7 @@
    {
     "id": "2",
     "label": "Confirm eligibility and requirements",
-    "note": "2.1 where a notice exists - it can be the map for everything after (hI3L, 7b3U). 2.2, 2.3, and 2.6 in the order the pages present them. 2.4 and 2.5 whenever the requirements reach into the physical world, mid-task included (w74r, YWFI). then 2.7, with 2.8 wherever a terms gate blocks the path.",
+    "note": "2.1 where a notice exists - the pages after it repeat what the notice already said (hI3L, 7b3U). 2.2, 2.3, and 2.6 in the order the pages present them. 2.4 and 2.5 whenever the requirements reach into the physical world, mid-task included (w74r, YWFI). then 2.7, with 2.8 wherever a terms gate blocks the path.",
     "questions": [
      {
       "question": "Do you want to schedule an in-person appointment if the online system cannot process your renewal?",
@@ -404,14 +336,6 @@
         "whatTheAgentLoses": "You lose the ability to personally confirm that you have the required email access and identification documents ready before initiating the state portal process."
        },
        {
-        "question": "Where should you click to begin the online renewal process?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen features a 'Renew online' section with a green 'Start now >' button that must be clicked to access the renewal form.",
-        "whatTheAgentLoses": "Delegating this step means you miss seeing the official starting point and any preliminary instructions provided on the DMV portal."
-       },
-       {
         "question": "Are you ready to proceed past the initial application instructions?",
         "cluster": "approve",
         "moment": "Now",
@@ -488,25 +412,7 @@
    {
     "id": "3",
     "label": "Pass the identity gate",
-    "note": "one route per venue: 3.1 then 3.2 on account systems; 3.3 then 3.4 on record-search systems; 3.5 on knowledge-field systems; 3.6 where the mailed letter is the credential. iV8P switches mid-flow from 3.5 to 3.1. two keepers never get past this goal (7t4w, iV8P).",
-    "questions": [
-     {
-      "question": "Do the visual steps match the narrator's instructions to log in, fill out the details, and pay?",
-      "cluster": "compare",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The video ends on the login screen while the narrator merely describes the remaining steps, leaving the actual form and payment process completely unseen.",
-      "whatTheAgentLoses": "An agent relying on this video would not know what the actual renewal form or payment screens look like, leaving them unable to complete the task."
-     },
-     {
-      "question": "Should you allow this Epson software update to proceed, or cancel it to focus on your renewal?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows an unrelated Epson Software Updater pop-up that could delay or disrupt the vehicle registration process if allowed to download.",
-      "whatTheAgentLoses": "Delegating this means an agent might accept the unrelated software update, wasting time and risking system changes instead of completing the DMV renewal."
-     }
-    ],
+    "note": "one route per venue: 3.1 then 3.2 on account systems; 3.3 then 3.4 on record-search systems; 3.5 on knowledge-field systems; 3.6 where the authorization number comes off a mailed letter. iV8P switches mid-flow from 3.5 to 3.1. two keepers never get past this goal (7t4w, iV8P).",
     "children": [
      {
       "id": "3.1",
@@ -595,14 +501,6 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the correct vehicle plate details are entered to pull up your registration."
        },
        {
-        "question": "Where do you find the correct vehicle identifiers to proceed to the verification step?",
-        "cluster": "photos",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a graphic of a physical renewal notice to help you locate your license plate and the last five digits of your VIN.",
-        "whatTheAgentLoses": "You lose the assurance of personally cross-referencing your physical renewal notice to ensure the correct vehicle is being renewed."
-       },
-       {
         "question": "Does the form ask for the exact information the site told you to prepare?",
         "cluster": "compare",
         "moment": "Now",
@@ -641,22 +539,6 @@
         "moneyMoving": false,
         "why": "The screen offers a 'Show Me How' link next to the required VIN/HIN field to assist in finding this specific identifying number.",
         "whatTheAgentLoses": "The user loses the opportunity to view the visual guide showing exactly where to find their VIN or HIN on their physical documents or vehicle."
-       },
-       {
-        "question": "Will the system let you continue if you leave the required personal and vehicle number fields blank?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows asterisks next to the personal and vehicle number fields, indicating they are mandatory to proceed with the renewal form.",
-        "whatTheAgentLoses": "The user loses the ability to keep their sensitive personal and vehicle identification numbers private from the agent completing the form."
-       },
-       {
-        "question": "Does the video show a continuous, logical transition immediately after you click 'Continue' on the vehicle details form?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The video shows the cursor on the 'Continue' button, but the transition to the subsequent registration details page appears disjointed and does not show the expected submission result.",
-        "whatTheAgentLoses": "You lose the ability to confirm that the portal successfully processed and accepted the vehicle details exactly as entered without throwing an error."
        }
       ]
      },
@@ -701,16 +583,8 @@
    {
     "id": "4",
     "label": "Verify and complete the record",
-    "note": "4.1 where the account lists vehicles; 4.2 on the fleet systems. then 4.3 against the notice, the insurance, and the inspection. 4.4 to 4.7 as the venue's record demands - document validation on LTMS, insurance on OkCARS, mileage on the carrier systems. 4.8 where the wizard asks for addresses; 4.9 only on licence renewals, where the person is the record.",
+    "note": "4.1 where the account lists vehicles; 4.2 on the fleet systems. then 4.3 against the notice, the insurance, and the inspection. 4.4 to 4.7 as the venue's record demands - document validation on LTMS, insurance on OkCARS, mileage on the carrier systems. 4.8 where the wizard asks for addresses; 4.9 only on licence renewals, where the form asks about the person rather than a vehicle.",
     "questions": [
-     {
-      "question": "Should you click the application or payment links in the navigation menu to proceed?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays a left navigation menu with upcoming steps like '2. Application' and '3. Payment', indicating the sequence of the renewal process.",
-      "whatTheAgentLoses": "The user loses the opportunity to preview the overall structure and upcoming requirements of the renewal process before proceeding."
-     },
      {
       "question": "Do you click to review the application summary before final submission?",
       "cluster": "approve",
@@ -902,14 +776,6 @@
         "moneyMoving": false,
         "why": "The screen prompts you to provide your documents, specifically requiring the MVISR number to validate the PMVIC Inspection Report.",
         "whatTheAgentLoses": "You lose the assurance that the correct inspection report number is being submitted to validate your vehicle's eligibility for renewal."
-       },
-       {
-        "question": "Which required document will you verify first?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a table of mandatory reference documents, such as the PMVIC Inspection Report and Certificate of Coverage, that must be verified to proceed.",
-        "whatTheAgentLoses": "The user loses direct control over handling and verifying their specific vehicle inspection and insurance records."
        },
        {
         "question": "Does the pre-filled MVISR number match your inspection report?",
@@ -1652,14 +1518,6 @@
         "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to pause the application or proceed immediately based on your specific fleet size and administrative workflow."
        },
        {
-        "question": "How do you resume a pending renewal application?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The WisCRS IRP Home page displays several menu options, making it important to know that 'Process Renewal' is the specific link used to retrieve a saved draft.",
-        "whatTheAgentLoses": "You lose the knowledge of how to navigate the portal's menus to retrieve and resume your own pending applications."
-       },
-       {
         "question": "What comment should you enter to advance your pended renewal?",
         "cluster": "hand over",
         "moment": "Now",
@@ -2120,14 +1978,6 @@
         "whatTheAgentLoses": "The user loses the final opportunity to review or correct their billing details before the payment is processed."
        },
        {
-        "question": "Did you actually see the payment submission step before the success screen appeared?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "Confirming the payment submission step is visible ensures the transaction was actually processed and not just edited to show a success screen.",
-        "whatTheAgentLoses": "The user loses the certainty that their payment was securely and properly executed if the actual submission step is missing from the record."
-       },
-       {
         "question": "Do you proceed to pay the fee and submit the application?",
         "cluster": "approve",
         "moment": "Now",
@@ -2213,14 +2063,6 @@
         "whatTheAgentLoses": "You lose the opportunity to spot this discrepancy and contact the DMV to confirm whether your physical documents will actually be mailed."
        },
        {
-        "question": "Do the different moments of this task agree with each other regarding the renewal status?",
-        "cluster": "compare",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "This matters because an analyst claimed the dashboard still showed an active 'Start renewal' button, but the screen actually only displayed the confirmation-page fees table.",
-        "whatTheAgentLoses": "A person delegating to an agent loses the ability to personally verify that the system's final state accurately reflects a completed transaction without contradictions."
-       },
-       {
         "question": "Does the transaction number from the payment gateway match the reference number on your final receipt?",
         "cluster": "compare",
         "moment": "Completion",
@@ -2257,14 +2099,6 @@
         "moneyMoving": true,
         "why": "The portal displays a 'DONE' status alongside buttons for the transaction confirmation and official receipt, which you need as proof of your completed renewal.",
         "whatTheAgentLoses": "You lose the ability to immediately download and securely store the official receipt directly to your own personal device."
-       },
-       {
-        "question": "How do you view the downloaded official receipt?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The print dialog displays a PDF file named 'f' and an 'Open' button that must be clicked to verify the receipt.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to immediately inspect the official receipt and ensure it is saved to your preferred personal records."
        },
        {
         "question": "Did you successfully download the official receipt from the transaction details page as promised earlier?",
@@ -2361,14 +2195,6 @@
         "whatTheAgentLoses": "You lose the immediate awareness of the expected delivery timeline and the exact steps needed to track your physical card."
        },
        {
-        "question": "Does the video actually show the payment and temporary document download as promised?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The 'Before You Begin' page states you can download a temporary document after paying, but the video ends at the login screen without showing this resolution.",
-        "whatTheAgentLoses": "The user misses the crucial final steps of paying the fee and securing their temporary proof of renewal."
-       },
-       {
         "question": "Does the temporary license PDF actually load when clicked, or do you need to immediately check your email for a backup receipt because the pop-up failed?",
         "cluster": "",
         "moment": null,
@@ -2425,14 +2251,6 @@
         "moneyMoving": false,
         "why": "The screen provides a link to check the mailing status under the 'What to Expect' section, which is important if you recently renewed and are just waiting for the physical document to arrive.",
         "whatTheAgentLoses": "The user loses the opportunity to discover that their previously renewed card is already in the mail, potentially resulting in an unnecessary duplicate transaction and fee."
-       },
-       {
-        "question": "How do you find the tool to check the status of your newly renewed license?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Using the 'Search ilsos.gov' bar to look up 'dl status' provides a direct way to find the tracking tool without navigating through complex menus.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact processing status of your newly issued document in the state system."
        },
        {
         "question": "What information do you enter to check the mailing status of your card?",

@@ -357,16 +357,6 @@
     "id": "3",
     "label": "Stock the pantry",
     "note": "3.1 fills it - or the app seeds it unasked (xSqA). 3.2 when an item runs out. 3.3 hands the pantry to 4 as a query. 7.2 reaches back: list items carry In Pantry labels (9ChE).",
-    "questions": [
-     {
-      "question": "How do I check which ingredients I already have?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen currently displays an empty Shopping List, so you need to switch to the Pantry tab to view your existing inventory before deciding what to cook.",
-      "whatTheAgentLoses": "The user loses the ability to base their recipe search on the ingredients they already own, potentially leading to unnecessary grocery purchases."
-     }
-    ],
     "children": [
      {
       "id": "3.1",
@@ -417,14 +407,6 @@
         "moneyMoving": false,
         "why": "The popup menu for the ingredient displays a 'SHOPPING' option, allowing you to quickly mark items you have run out of.",
         "whatTheAgentLoses": "You lose the convenience of seamlessly updating your personal grocery list while reviewing recipe ingredients."
-       },
-       {
-        "question": "How do you manage or edit this specific pantry item?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The three dots menu next to the 'Black Pepper' item provides access to management options like the 'Edit Item' tooltip.",
-        "whatTheAgentLoses": "You lose the ability to precisely track or update your actual real-world pantry inventory for this ingredient."
        }
       ]
      },
@@ -550,14 +532,6 @@
         "whatTheAgentLoses": "Letting an agent pick the search terms means you lose the chance to base the recipe on the specific ingredients you want to use up."
        },
        {
-        "question": "Where do you enter the main search term for the dish?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Locating the 'Recipe or keyword' text field is essential to begin searching for the specific meal you want to cook.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly which dish or primary ingredient to base your recipe search around."
-       },
-       {
         "question": "How do you verify the exact text entered in the search field?",
         "cluster": "facts",
         "moment": "Now",
@@ -587,14 +561,6 @@
       "id": "4.3",
       "label": "Require or exclude the ingredients",
       "questions": [
-       {
-        "question": "How do you ensure the recipes specifically include sugar?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Typing into the 'With Ingredients' field and selecting the exact match from the autocomplete dropdown guarantees the search results will contain that specific item.",
-        "whatTheAgentLoses": "You lose the ability to manually verify that the correct ingredient variant was selected from the autocomplete suggestions."
-       },
        {
         "question": "Do you want to specify any ingredients to include?",
         "cluster": "hand over",
@@ -888,14 +854,6 @@
         "whatTheAgentLoses": "You lose the chance to visually browse the filtered options and select a recipe that sounds the most appetizing to your personal taste."
        },
        {
-        "question": "How do you efficiently scan the search results?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Because the screen actually shows a 'Find a Recipe' prompt instead of the expected search results, you must determine how to navigate this specific interface to proceed.",
-        "whatTheAgentLoses": "You lose the ability to personally use screen reader features like the VoiceOver rotor to quickly navigate headings and evaluate the available options."
-       },
-       {
         "question": "Does this recipe have enough good reviews to be worth opening?",
         "cluster": "facts",
         "moment": "Now",
@@ -1065,14 +1023,6 @@
       "label": "Read the ingredients",
       "questions": [
        {
-        "question": "How do you quickly jump to the ingredients list?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Using heading navigation allows you to bypass the image gallery and hidden summary text to reach the ingredients directly.",
-        "whatTheAgentLoses": "You lose the efficiency of using screen reader heading shortcuts to bypass visual clutter and find specific sections."
-       },
-       {
         "question": "How do you navigate the ingredient list structure?",
         "cluster": "hand over",
         "moment": "Now",
@@ -1122,14 +1072,6 @@
       "id": "5.5",
       "label": "Read the directions",
       "questions": [
-       {
-        "question": "Should you review the cooking instructions and test the built-in timer feature?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the 'Method' tab with numbered steps and a 'Timer' button in the top right corner.",
-        "whatTheAgentLoses": "You miss out on understanding the preparation process and discovering interactive features like the shake-to-add timer."
-       },
        {
         "question": "Do you want to read through the cooking instructions?",
         "cluster": "hand over",
@@ -1248,14 +1190,6 @@
       "label": "Create the board or collection",
       "questions": [
        {
-        "question": "Where do you click to manage or create your recipe boards?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The profile icon in the top right navigation bar provides direct access to your personal account space where collections are organized.",
-        "whatTheAgentLoses": "You lose the ability to personally structure your profile and decide exactly how your saved recipes should be categorized."
-       },
-       {
         "question": "What name and privacy settings should you choose for the new board?",
         "cluster": "hand over",
         "moment": "Now",
@@ -1284,14 +1218,6 @@
         "moneyMoving": true,
         "why": "The save dialog presented multiple existing boards like 'Pinterest Recipe Board Test' and 'Adult Crafts', requiring a choice of where to organize the new recipe.",
         "whatTheAgentLoses": "The user loses the ability to organize the recipe into their preferred personal collection."
-       },
-       {
-        "question": "How do you save this recipe to your collection?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The plus button opens the action menu required to bookmark the recipe or add it to a specific folder.",
-        "whatTheAgentLoses": "You lose the opportunity to organize the recipe into a specific, personalized collection of your choosing."
        }
       ]
      },
@@ -1409,14 +1335,6 @@
           "moneyMoving": false,
           "why": "The recipe page displays a link to print a shopping list right next to the preparation text.",
           "whatTheAgentLoses": "You lose the opportunity to have a convenient, printable list of ingredients generated for your next grocery trip."
-         },
-         {
-          "question": "How do you print the shopping list from this position?",
-          "cluster": "hand over",
-          "moment": "Completion",
-          "moneyMoving": true,
-          "why": "The screen shows the bottom of the shopping list, meaning you must scroll back to the top to access the Options menu.",
-          "whatTheAgentLoses": "The user loses the convenience of generating a formatted, physical copy of the ingredients for offline grocery shopping."
          },
          {
           "question": "Does the printable view of the menu display all text clearly without cutting off the edges?",
@@ -1547,14 +1465,6 @@
           "moneyMoving": true,
           "why": "The screen presents a promotional overview of the Yummly Meal Planner, highlighting tools like nutrition monitoring and custom recipe entry.",
           "whatTheAgentLoses": "You lose the opportunity to evaluate and opt into additional organizational tools that could enhance how you manage your saved recipes."
-         },
-         {
-          "question": "How do you access the navigation tabs to save this recipe or add it to a menu?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows the recipe detail page scrolled down, hiding the top navigation tabs like 'MY MENUS' and 'RECIPE BOX'.",
-          "whatTheAgentLoses": "The user loses the ability to organize the recipe into a specific menu or collection if the agent cannot find the navigation."
          }
         ]
        },
@@ -1696,14 +1606,6 @@
           "moneyMoving": true,
           "why": "The grocery list displays editable fields with orange 'x' buttons next to items like honey and sea salt, letting you delete things you already have at home.",
           "whatTheAgentLoses": "The user loses the ability to apply their personal knowledge of their current pantry inventory to customize the final shopping list."
-         },
-         {
-          "question": "How do you mark off and clear purchased ingredients from the shopping list?",
-          "cluster": "hand over",
-          "moment": "Completion",
-          "moneyMoving": true,
-          "why": "The screen shows a shopping list with empty circles next to items and a 'CLEAR' button that appears when items are checked.",
-          "whatTheAgentLoses": "The user loses the ability to manually track their real-world grocery shopping progress and clear obtained items from their list."
          }
         ]
        },
@@ -1734,14 +1636,6 @@
           "moneyMoving": true,
           "why": "The screen displayed specific pairings in the dropdown that could clarify the shopping list, but a generic entry is faster.",
           "whatTheAgentLoses": "The user loses the spontaneous freedom to add an extra, generic snack item to their list just because it came to mind."
-         },
-         {
-          "question": "How do you manually add a custom ingredient to the correct category on your grocery list?",
-          "cluster": "hand over",
-          "moment": "Completion",
-          "moneyMoving": true,
-          "why": "Adding custom items is necessary for a complete shopping trip, but the screen currently shows a non-editable saved list with an empty right panel instead of the expected input fields.",
-          "whatTheAgentLoses": "The user loses the ability to seamlessly append extra household items or side dish ingredients to the recipe's auto-generated grocery list."
          }
         ]
        },
@@ -1760,39 +1654,11 @@
     "children": [
      {
       "id": "8.1",
-      "label": "Open the cooking mode",
-      "questions": [
-       {
-        "question": "Do I understand how the hands-free cooking mode works, and am I ready to start?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides specific gesture instructions for advancing recipe steps without touching the device and requires acknowledgment to proceed.",
-        "whatTheAgentLoses": "The user loses the opportunity to learn a touch-free navigation method designed to keep their screen clean while cooking."
-       },
-       {
-        "question": "Should you read the instructions on this screen or tap 'OPEN COOKING MODE'?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the recipe's written instructions alongside an 'OPEN COOKING MODE' button, offering two different ways to view the preparation steps.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether they want to read all instructions at once or use the guided step-by-step cooking view."
-       }
-      ]
+      "label": "Open the cooking mode"
      },
      {
       "id": "8.2",
-      "label": "Step through the directions",
-      "questions": [
-       {
-        "question": "Should I navigate the recipe steps using the on-screen arrows or the hands-free swipe gesture?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The interface displays step-by-step cooking instructions with on-screen arrows, but also supports a hands-free swiping feature for navigation.",
-        "whatTheAgentLoses": "The user loses the opportunity to utilize the hands-free navigation mode, which is a key convenience feature designed for cooking with messy hands."
-       }
-      ]
+      "label": "Step through the directions"
      },
      {
       "id": "8.3",
@@ -1818,16 +1684,6 @@
     "id": "9",
     "label": "Verify the saves and settings",
     "note": "re-entered after every commit rather than once at the end: 9.1 after each save batch - four refresh cycles in uCtL alone. 9.2 after setup claims to have stuck. 9.3 wherever a derived number can be checked against its inputs, which the corpus almost never does.",
-    "questions": [
-     {
-      "question": "Do you fulfill your initial promise to evaluate the website using the POUR principles?",
-      "cluster": "facts",
-      "moment": "Completion",
-      "moneyMoving": true,
-      "why": "The narrator sets a clear expectation at the beginning of the video to use a specific accessibility framework, making it essential that the final moments actually deliver those insights to remain consistent.",
-      "whatTheAgentLoses": "The user loses the structured accessibility evaluation they expected if the agent abandons the promised framework by the end of the task."
-     }
-    ],
     "children": [
      {
       "id": "9.1",
@@ -1858,14 +1714,6 @@
         "whatTheAgentLoses": "The user loses confirmation that the recipe was actually saved to their collection if the agent fails to check the list."
        },
        {
-        "question": "Do the moments across the task consistently show that your ingredient deletions were successfully saved?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The analyst asserted that deleted items reappeared on the list despite a success message, but the actual frames contradict this claim.",
-        "whatTheAgentLoses": "A person loses an accurate shopping list and trust in the process if the agent hallucinates a system error that did not actually occur."
-       },
-       {
         "question": "Are the recipes you selected successfully saved to your new board?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -1888,14 +1736,6 @@
         "moneyMoving": true,
         "why": "While the temporary banner and updated text indicate 'Cinnamon' was added, navigating to the shopping list tab verifies the item is actually there.",
         "whatTheAgentLoses": "You lose the peace of mind that comes from visually confirming the ingredient is on your actual list before you go shopping."
-       },
-       {
-        "question": "How do you view the items added to your shopping list?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Tapping the Shopping tab reveals the shopping list view where you can verify the added ingredients like cinnamon.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review the shopping list and ensure the correct ingredients were added."
        },
        {
         "question": "Are you viewing the correct tab to confirm the recipe was saved?",
@@ -1942,14 +1782,6 @@
         "moneyMoving": false,
         "why": "Verifying the selected menu types and allergy checkboxes ensures the app will automatically filter out unsafe or unwanted recipes.",
         "whatTheAgentLoses": "You lose the peace of mind of personally confirming that your specific health and allergy constraints are strictly applied to your account."
-       },
-       {
-        "question": "Do the moments of your task agree with each other regarding the dietary preferences?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The claim that the preferences screen shows 'Low Carb' is incorrect because the screen at 03:57 actually displays a full-screen promotional card.",
-        "whatTheAgentLoses": "You lose the assurance that your specific dietary constraints are being correctly tracked if the agent misinterprets a promotional pop-up as a settings menu."
        }
       ]
      },

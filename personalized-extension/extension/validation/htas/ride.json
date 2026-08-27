@@ -3,7 +3,7 @@
  "tree": {
   "id": "0",
   "label": "Book a ride",
-  "note": "do 1 - twelve keepers walk sign-in or sign-up on camera, eleven arrive signed in. 2 up front where the tutorial treats a payment method as a prerequisite (D8HI, Jztl, HobC, r4Od, m5Hh) - 4.6 opens the same method list from the booking screen. then 3 and 4, re-entered freely: jl57 re-enters the destination, k9El and n84z restart the whole spec. 4.8 where the ride is for later. on inDrive and inDriver, 5 replaces 6 - accepting one driver's offer is the commit (D4bI, KJnu, xBw0); everywhere else, 6. then 7 once a driver is assigned. 8 whenever letting go is the point - six keepers cancel on purpose, and 8.1 reaches scheduled rides through the trip history (r4Od). 9 in the five keepers that reach in-ride or post-ride screens (D8HI and HobC are produced tutorials, m5Hh a mockup).",
+  "note": "do 1 - twelve keepers walk sign-in or sign-up on camera, eleven arrive signed in. 2 up front where the tutorial treats a payment method as a prerequisite (D8HI, Jztl, HobC, r4Od, m5Hh) - 4.6 opens the same method list from the booking screen. then 3 and 4, re-entered freely: jl57 re-enters the destination, k9El and n84z restart the whole spec. 4.8 where the ride is for later. on inDrive and inDriver, 5 replaces 6 - accepting one driver's offer is the commit (D4bI, KJnu, xBw0); everywhere else, 6. then 7 once a driver is assigned. 8 whenever the ride is cancelled - six keepers cancel on purpose, and 8.1 reaches scheduled rides through the trip history (r4Od). 9 in the five keepers that reach in-ride or post-ride screens (D8HI and HobC are produced tutorials, m5Hh a mockup).",
   "children": [
    {
     "id": "1",
@@ -25,38 +25,6 @@
       "moneyMoving": false,
       "why": "The screen displays empty lists for both upcoming and past trips, confirming there is no recent activity to manage before moving to the account settings.",
       "whatTheAgentLoses": "You lose direct visibility into your account's ride history and the personal assurance that no unexpected trips are scheduled."
-     },
-     {
-      "question": "Do you want to switch to driver mode?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The side menu contains a prominent 'Driver mode' button that changes the app's functionality from requesting rides to providing them.",
-      "whatTheAgentLoses": "The user loses the opportunity to choose whether they want to use the app as a passenger or a driver."
-     },
-     {
-      "question": "What is your current loyalty tier and how close are you to your next reward?",
-      "cluster": "facts",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "Reviewing this screen allows you to see your Gold status, your progress toward a $5 Uber Cash reward, and current perks like flexible cancellations.",
-      "whatTheAgentLoses": "You lose the personal satisfaction of tracking your loyalty progress and directly understanding the benefits currently available to your account."
-     },
-     {
-      "question": "Which account setting or feature do you want to access from the main menu?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The side menu displays various account management options like payment, ride history, and settings that you might need to configure before requesting a ride.",
-      "whatTheAgentLoses": "Delegating this means you lose the chance to personally review your account settings, check rewards, or update payment methods."
-     },
-     {
-      "question": "Do you see the promised app setup tutorial at the end of the video?",
-      "cluster": "facts",
-      "moment": "Completion",
-      "moneyMoving": false,
-      "why": "The narrator promised at 0:29 to include an app setup guide at the end, but the video finishes at 5:56 without showing it.",
-      "whatTheAgentLoses": "The user loses the promised instructions for setting up the app from scratch."
      }
     ],
     "children": [
@@ -125,14 +93,6 @@
         "moneyMoving": false,
         "why": "The prompt warns that continuing allows the app and website to share information about you.",
         "whatTheAgentLoses": "You lose the opportunity to decide whether to link your Google account and share your personal information with the rideshare app."
-       },
-       {
-        "question": "How do you proceed from the animated welcome screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Get started' button that must be tapped to initiate the login or account creation process.",
-        "whatTheAgentLoses": "The user loses direct control over entering their personal credentials to access their rideshare account."
        }
       ]
      },
@@ -195,28 +155,12 @@
         "whatTheAgentLoses": "An agent cannot access your personal email inbox to retrieve the required verification code."
        },
        {
-        "question": "Should I wait for the app to auto-verify the OTP or enter it manually?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a countdown for auto-verifying the OTP sent to your phone, offering a hands-free alternative to typing it.",
-        "whatTheAgentLoses": "The user loses the choice to either let the app seamlessly read the SMS or manually intervene to speed up the verification process."
-       },
-       {
         "question": "What is the verification code sent to your phone?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen requires a one-time password sent via SMS to verify your identity before you can proceed with using the app.",
         "whatTheAgentLoses": "You lose the security of keeping your authentication codes private and directly controlling access to your account."
-       },
-       {
-        "question": "Did you skip showing the entry of the SMS verification code?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The video cuts directly from the empty verification boxes to the home screen without showing the code being entered or the 'Next' button being pressed.",
-        "whatTheAgentLoses": "An agent would not learn how to successfully complete the SMS verification step because the actual input and submission process is missing from the demonstration."
        }
       ]
      },
@@ -361,28 +305,12 @@
         "whatTheAgentLoses": "An agent might immediately start a standard ride request, skipping over alternative options like transit or reserving ahead that you might have preferred."
        },
        {
-        "question": "Which section of the app do you want to navigate to?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The bottom navigation bar presents options like 'Home', 'Services', 'Activity', and 'Account' to route you to different features.",
-        "whatTheAgentLoses": "You lose the opportunity to browse alternative transportation or delivery options available in the services section."
-       },
-       {
         "question": "Which service category do you want to select?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The home screen offers multiple options like standard trips, carpools, and two-wheelers, so you must choose the correct category to begin booking your ride.",
         "whatTheAgentLoses": "You lose the opportunity to discover alternative transport options like hourly rentals or scooters that might better suit your current needs."
-       },
-       {
-        "question": "Where do you tap to start entering your destination?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen offers multiple services like rentals and outstation rides, so you need to identify the correct field to initiate a standard ride.",
-        "whatTheAgentLoses": "The user loses the opportunity to choose alternative services like rentals or outstation rides if the agent automatically proceeds with a standard booking."
        },
        {
         "question": "Which type of service do you want to request?",
@@ -399,14 +327,6 @@
         "moneyMoving": false,
         "why": "The app's new interface introduces tabs like 'Daily' and 'Rentals' alongside the 'Search destination' field, requiring you to locate the correct starting point.",
         "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the updated layout and manually select from your recent destinations."
-       },
-       {
-        "question": "Where do you tap to start entering your pickup point?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen offers multiple services like delivery and packages, so you must specifically select the search bar to initiate a ride request.",
-        "whatTheAgentLoses": "You lose the opportunity to quickly select a suggested location or adjust the pickup time using the dropdown menu before starting the search."
        }
       ]
      }
@@ -661,14 +581,6 @@
         "whatTheAgentLoses": "An agent might select a similarly named but incorrect destination from the list, resulting in a drop-off at the wrong place."
        },
        {
-        "question": "Where do you enter your destination?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "You must tap the destination field to open the search screen and specify where you want the ride to go.",
-        "whatTheAgentLoses": "You lose the ability to manually type in or select a specific saved address for your drop-off location."
-       },
-       {
         "question": "Did the app auto-complete your destination to a similarly named street in the wrong city or state?",
         "cluster": "",
         "moment": null,
@@ -705,14 +617,6 @@
         "moneyMoving": false,
         "why": "Dragging the pin on the map ensures the driver arrives at your exact physical location, like 'Kaplan International College London', rather than a general nearby address.",
         "whatTheAgentLoses": "An agent might just select a nearby text suggestion like 'The Globe Tavern' instead of knowing the precise physical spot where you are waiting."
-       },
-       {
-        "question": "Do you want to pan the map to explore the surrounding area?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Panning the map showing the Canadian provinces allows you to visually explore the area and find potential destinations instead of just tapping the location arrow.",
-        "whatTheAgentLoses": "You lose the opportunity to visually browse the map and gain a spatial understanding of the surrounding area before choosing a destination."
        }
       ]
      },
@@ -1185,14 +1089,6 @@
           "moneyMoving": false,
           "why": "The screen displays immediate ride options with current prices and ETAs alongside a schedule button, requiring a choice about your departure time.",
           "whatTheAgentLoses": "You lose the ability to decide whether an immediate departure or a scheduled future pickup best fits your personal itinerary."
-         },
-         {
-          "question": "How do you schedule a ride for later instead of booking it now?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows a clock icon next to the choose button that lets you set a future pickup time rather than requesting a car immediately.",
-          "whatTheAgentLoses": "Delegating this means you lose the ability to decide exactly when you want the ride to arrive for a future plan."
          }
         ]
        },
@@ -1952,14 +1848,6 @@
       "label": "Open the safety tools",
       "questions": [
        {
-        "question": "How do you access safety tools during the trip?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": true,
-        "why": "The trip details menu displays a blue shield icon that opens a Safety Toolkit with options to contact 911, report issues, or share your ride with trusted contacts.",
-        "whatTheAgentLoses": "Delegating this means you miss the opportunity to personally familiarize yourself with emergency features that could be critical if you feel unsafe during the ride."
-       },
-       {
         "question": "Do you want to use any safety tools, like sharing your ride details or getting emergency help?",
         "cluster": "hand over",
         "moment": "On demand",
@@ -2064,14 +1952,6 @@
     "note": "9.1 and 9.2 during the trip - only the two produced tutorials tour them. then 9.3 with 9.4 and 9.5 in the order the closing screen dictates: 8dEE tips before rating, UMl_ rates before tipping, D8HI reaches the stars through the trip history.",
     "questions": [
      {
-      "question": "How do you handle payment, tipping, and rating the driver after the ride is finished?",
-      "cluster": "hand over",
-      "moment": "Completion",
-      "moneyMoving": true,
-      "why": "Although the screen currently shows the initial 'Where to?' input and nearby cars for a new ride, understanding the app's cashless payment and rating system is necessary before initiating the request.",
-      "whatTheAgentLoses": "The user loses the ability to apply human empathy and social norms when deciding whether to leave a cash tip or how to rate the driver's service."
-     },
-     {
       "question": "How do you monitor your trip's progress and estimated arrival time?",
       "cluster": "watch",
       "moment": "After",
@@ -2149,14 +2029,6 @@
       "id": "9.4",
       "label": "Rate the driver",
       "questions": [
-       {
-        "question": "How do you access your past rides to provide feedback?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The hamburger menu reveals a side panel with a 'Your Trips' option for reviewing previous rides.",
-        "whatTheAgentLoses": "The user loses the ability to privately review their ride history and manage their own feedback."
-       },
        {
         "question": "How do you rate the driver for this completed trip?",
         "cluster": "hand over",

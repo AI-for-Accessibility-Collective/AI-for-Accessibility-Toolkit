@@ -4,55 +4,11 @@
   "id": "0",
   "label": "Navigate to a destination",
   "note": "do 1 - five keepers start in the phone's settings and two install the app first. 2 floats: before any destination when the preference is the point (zJVt, HrMd, 4AhB, mo0Q), through the per-route door from inside 4 (obk4, bQbE, kIU1, lYnD), or never. then 3, then 4 - except on desktop, where 4.1's form comes first and 3 happens inside it (7EYu, bQbE, 60tT). rework 4 until the route reads right. then one of three endings: 5 (sixteen keepers start guidance, none arrives on camera), 6 (keep or hand off the route instead - 7EYu, 60tT, ETAP, VO5N, sWXu), or nothing (bQbE, FfFy, HrMd, kIU1, PjID). 7 and 8 are excursions from the main map (PjID, QULM, aGGT); 7.5 reruns 3 and 4 offline.",
-  "questions": [
-   {
-    "question": "What is your final advice for using the app effectively?",
-    "cluster": "facts",
-    "moment": "Completion",
-    "moneyMoving": false,
-    "why": "The narrator speaks directly to the camera to provide a final takeaway about practicing with the app before traveling.",
-    "whatTheAgentLoses": "A person delegating to an agent misses the narrator's personal advice on reducing travel stress by familiarizing themselves with the app beforehand."
-   },
-   {
-    "question": "Where can you find the creator online?",
-    "cluster": "facts",
-    "moment": "Completion",
-    "moneyMoving": false,
-    "why": "The outro screen displays the creator's websites, social media handles, and email address for viewers who want to follow or contact them.",
-    "whatTheAgentLoses": "Delegating this to an agent means missing out on discovering the creator's other travel content and direct contact information."
-   }
-  ],
   "children": [
    {
     "id": "1",
     "label": "Ready the device and app",
     "note": "1.1 then 1.2 on a fresh install (1KTk, VO5N), with 1.3 where the store offers an update (QULM). 1.4 or 1.5 before the app ever opens - five keepers start at the OS level - and permission asks recur mid-task (5.2, 8.5). then 1.6, 1.7 where the platform asks, and 1.8 once the map is up. most keepers arrive with all of this already done and start at 1.6.",
-    "questions": [
-     {
-      "question": "Do you want to edit the items in the Control Center?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The screen shows the Control Center with various toggles and a '+' symbol in the top left corner, which is used to enter edit mode.",
-      "whatTheAgentLoses": "The user loses the ability to personalize their quick-access settings and toggles to fit their own preferences."
-     },
-     {
-      "question": "Where do you tap to add a new control to the panel?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The Control Center is in edit mode, and the '+ Add a Control' button at the bottom must be selected to customize the available shortcuts.",
-      "whatTheAgentLoses": "The user loses the ability to personally decide which quick-access tools or shortcuts are added to their device's control panel."
-     },
-     {
-      "question": "How should you find the Quick Note control?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displayed a 'Search Controls' bar where typing 'Quick' filtered the suggestions to reveal the Quick Note icon.",
-      "whatTheAgentLoses": "The user relinquishes the ability to manually search the control interface and verify the exact tool being selected."
-     }
-    ],
     "children": [
      {
       "id": "1.1",
@@ -209,14 +165,6 @@
         "whatTheAgentLoses": "You lose the ability to choose your preferred navigation app from the ones installed on your device."
        },
        {
-        "question": "How do you want to locate the map application?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The app drawer displays numerous icons, making the search bar a more efficient choice than manually scrolling through pages.",
-        "whatTheAgentLoses": "The user loses the opportunity to visually browse their installed apps or organize their app drawer."
-       },
-       {
         "question": "Should you close the active app to start from a clean home screen?",
         "cluster": "undo",
         "moment": "Now",
@@ -268,14 +216,6 @@
       "id": "1.8",
       "label": "Find yourself on the map",
       "questions": [
-       {
-        "question": "How do you center the map on your current location?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The crosshairs button in the bottom right corner allows you to quickly snap the map back to your exact current location before searching.",
-        "whatTheAgentLoses": "You lose the visual confirmation of your exact starting location relative to your immediate surroundings."
-       },
        {
         "question": "Is my current location accurate on the map before I get directions?",
         "cluster": "facts",
@@ -364,14 +304,6 @@
       "label": "Open the global settings",
       "questions": [
        {
-        "question": "Which menu option do you select to access the application settings?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The account menu displays several options, and selecting 'Settings' allows you to configure app preferences before getting directions.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review and customize your navigation and privacy preferences."
-       },
-       {
         "question": "Do you want to adjust your routing preferences?",
         "cluster": "hand over",
         "moment": "On demand",
@@ -380,28 +312,12 @@
         "whatTheAgentLoses": "You lose the ability to set global navigation defaults, such as your preferred travel mode or avoiding highways."
        },
        {
-        "question": "Which setting do you select to adjust route preferences like tolls and ferries?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a long list of general app settings, so you must specifically locate and select Navigation settings to adjust how routes are calculated.",
-        "whatTheAgentLoses": "The user loses the ability to ensure their personal driving preferences, such as avoiding tolls or ferries, are applied to the navigation."
-       },
-       {
         "question": "How do you return to the map view from the settings menu?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The settings menu covers the screen, requiring a tap on the top-left back arrow to resume planning the route.",
         "whatTheAgentLoses": "The user loses the chance to verify exactly which navigation setting was enabled before the agent navigates away."
-       },
-       {
-        "question": "Which settings category do you open to configure your routing options?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The settings menu contains multiple sections like 'GETTING AROUND' and 'USING MAPS', requiring you to locate the specific 'Navigation' option to adjust your trip preferences.",
-        "whatTheAgentLoses": "You lose the ability to personally explore and adjust other map features, such as distance units or dark mode, available in the broader settings menu."
        }
       ]
      },
@@ -409,14 +325,6 @@
       "id": "2.2",
       "label": "Open the per-route options",
       "questions": [
-       {
-        "question": "How do you access additional settings to modify preferences like toll avoidance?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays 'Avoiding tolls' and a three-dot menu icon that opens a dropdown menu for route settings.",
-        "whatTheAgentLoses": "The user loses the ability to manually customize specific route preferences, such as avoiding tolls or highways, before starting navigation."
-       },
        {
         "question": "Should you start navigation with the current route or open the menu to modify your route settings?",
         "cluster": "select",
@@ -596,7 +504,7 @@
    {
     "id": "3",
     "label": "Pick the destination",
-    "note": "one of 3.1, 3.3, 3.4, 3.5, 3.6, or 3.7 raises candidates - 3.2 rides on 3.1, and 3.8 rides wherever ads sit in the results. then 3.9 and 3.10 to make sure it is the right place. 3.11 where the trip starts somewhere other than here - mandatory on desktop, where both endpoints are typed fields.",
+    "note": "one of 3.1, 3.3, 3.4, 3.5, 3.6, or 3.7 raises candidates - 3.2 only happens after 3.1, and 3.8 happens wherever ads sit in the results. then 3.9 and 3.10 to make sure it is the right place. 3.11 where the trip starts somewhere other than here - mandatory on desktop, where both endpoints are typed fields.",
     "questions": [
      {
       "question": "Do you need to select an option from this side menu to find your destination?",
@@ -650,17 +558,7 @@
     "children": [
      {
       "id": "3.1",
-      "label": "Type the search terms",
-      "questions": [
-       {
-        "question": "Where do you tap to search for a destination?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search icon in the bottom left corner must be tapped to open the text field for entering your target address.",
-        "whatTheAgentLoses": "Delegating this step means you miss seeing the quick-access list of recent searches and saved locations that typically appears when the search menu opens."
-       }
-      ]
+      "label": "Type the search terms"
      },
      {
       "id": "3.2",
@@ -904,14 +802,6 @@
         "moneyMoving": false,
         "why": "The screen shows the destination's information card with options to get directions, start navigation immediately, save, or share the location.",
         "whatTheAgentLoses": "The user loses the chance to decide whether they want to review different route options first or jump straight into active navigation."
-       },
-       {
-        "question": "Where do you tap to start getting directions to a new place?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the blue 'GO' button on the main map screen opens the interface to search for your destination.",
-        "whatTheAgentLoses": "You lose the chance to visually confirm that the blue dot accurately reflects your current starting location before requesting directions."
        },
        {
         "question": "What are your starting and destination locations, and how are you traveling?",
@@ -1361,14 +1251,6 @@
           "moneyMoving": false,
           "why": "The screen shows options for 'Best route', 'Fewer transfers', and 'Less walking', which significantly alter the suggested transit itinerary based on your physical needs.",
           "whatTheAgentLoses": "An agent might just select the default best route, missing your personal need to minimize physical exertion or complex connections."
-         },
-         {
-          "question": "How do you exit the route options menu?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays the route options menu with preference toggles, which must be closed to view the updated route choices.",
-          "whatTheAgentLoses": "The user loses visual confirmation of how to navigate back to the main route overview after adjusting their preferences."
          }
         ]
        },
@@ -1626,14 +1508,6 @@
         "moneyMoving": false,
         "why": "The screen displays a nearly seven-hour trip with border crossings, hazards, and pass requirements that might dictate whether you should leave right away or delay your departure.",
         "whatTheAgentLoses": "An agent might automatically start the navigation right away, depriving you of the chance to schedule a better departure time to prepare for a long and complex drive."
-       },
-       {
-        "question": "Does the video show the active navigation screen after you tap start?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The video cuts to an outro graphic before the active navigation screen loads, leaving the final step unverified.",
-        "whatTheAgentLoses": "You lose visual confirmation that the app successfully transitioned into active turn-by-turn navigation."
        }
       ]
      },
@@ -1830,14 +1704,6 @@
       "label": "Explore the in-drive menu",
       "questions": [
        {
-        "question": "How will you adjust the map view to explore the area?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen displays a map with zoom buttons and a recenter icon, offering multiple ways to adjust your view.",
-        "whatTheAgentLoses": "You lose the tactile experience of manually panning and zooming to build your own mental model of the surrounding geography."
-       },
-       {
         "question": "Do you want to access other apps like media or messages from the navigation dashboard?",
         "cluster": "hand over",
         "moment": "On demand",
@@ -1860,14 +1726,6 @@
         "moneyMoving": false,
         "why": "The screen shows options like 'Send ETA' and 'Overview', which allow you to communicate your status or check the full path while navigating.",
         "whatTheAgentLoses": "You lose the ability to decide whether to share your arrival time with someone or review the entire route map yourself."
-       },
-       {
-        "question": "How do you return to the standard turn-by-turn navigation view?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the 'Re-center' button is necessary to snap the map back to your current location and resume active tracking after panning around the route.",
-        "whatTheAgentLoses": "You lose the ability to manually inspect the upcoming route and decide exactly when to snap back to the live navigation view."
        }
       ]
      },
@@ -1912,14 +1770,6 @@
         "moneyMoving": false,
         "why": "The arrival screen displays a feedback prompt with smiley face icons to rate the trip before tapping 'Done'.",
         "whatTheAgentLoses": "Delegating this means the agent might skip the rating or submit feedback that does not reflect your actual travel experience."
-       },
-       {
-        "question": "Are you sure these moments belong to the same continuous trip?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The device clock and battery level reveal that the video splices together different recording sessions with completely different destinations.",
-        "whatTheAgentLoses": "The user loses the ability to trust the agent's route planning if it pieces together disjointed trips instead of providing a single, coherent set of directions."
        }
       ]
      },
@@ -1951,16 +1801,6 @@
     "id": "6",
     "label": "Keep or hand off the route",
     "note": "any one of 6.1 to 6.6, each its own ending: print on desktop (7EYu, 60tT), a note link where the app has no save-route feature (ETAP), a planned drive (VO5N), a calendar entry left uncommitted (sWXu), a send-to-phone (sWXu). 6.6 is the save that bites back - Set home and go starts navigating by itself.",
-    "questions": [
-     {
-      "question": "Do you see the Quick Note icon added to the bottom right of your Control Center?",
-      "cluster": "receipts",
-      "moment": "After",
-      "moneyMoving": false,
-      "why": "The screen displays the Control Center in edit mode with the Quick Note icon now visible in the bottom right corner, confirming the shortcut was successfully added.",
-      "whatTheAgentLoses": "You lose the opportunity to verify the exact placement of the shortcut, which might cause confusion when you try to quickly access your notes."
-     }
-    ],
     "children": [
      {
       "id": "6.1",
@@ -2092,14 +1932,6 @@
       "id": "6.6",
       "label": "Save home and the favorites",
       "questions": [
-       {
-        "question": "Which option do you tap to set up your home address?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Home Set once and go' shortcut that allows you to configure a permanent home location for future routing.",
-        "whatTheAgentLoses": "Letting an agent handle this step means you lose the opportunity to personally verify the exact address being permanently saved as your home."
-       },
        {
         "question": "Is this the correct location to save as your home?",
         "cluster": "approve",

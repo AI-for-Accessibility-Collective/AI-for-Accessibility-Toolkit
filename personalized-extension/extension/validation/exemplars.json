@@ -1440,14 +1440,6 @@
          "moneyMoving": false,
          "why": "The screen displays a 'Finance' folder containing both P2P services like Venmo and traditional bank apps like Chase, requiring a choice that fits the strict task constraints.",
          "whatTheAgentLoses": "The user loses the assurance that the agent will correctly distinguish between a third-party payment service and their actual bank's official application."
-        },
-        {
-         "question": "Should you use a quick-access shortcut from the app icon menu or open the main dashboard?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The context menu offers direct links to specific accounts like '[address]', but tapping the app icon itself opens the main overview.",
-         "whatTheAgentLoses": "You lose the opportunity to bypass the main dashboard and jump directly into a specific account using the app's quick-access shortcuts."
         }
        ]
       },
@@ -1546,14 +1538,6 @@
        "id": "2.4",
        "label": "Open the feature",
        "questions": [
-        {
-         "question": "Where do you tap to initiate a transfer from the home screen?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The home screen displays various informational widgets like spending summaries and mortgage insights, requiring you to locate the correct navigation button to start moving money.",
-         "whatTheAgentLoses": "You lose the chance to review your overall financial dashboard, including spending summaries and targeted offers, before jumping straight into the transfer."
-        },
         {
          "question": "Which option do you select to start the check deposit process?",
          "cluster": "select",
@@ -2127,20 +2111,20 @@
        "label": "Find the statement entry",
        "questions": [
         {
-         "question": "Where do you tap to access your statements?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The top navigation menu requires scrolling past options like Zelle and check deposits to reveal the statements link.",
-         "whatTheAgentLoses": "You lose the chance to discover other quick-access features available on your bank's home screen."
-        },
-        {
          "question": "Which type of document do you want to view?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The screen displays multiple document categories like tax documents and branch receipts, requiring you to select the specific type of record you need.",
          "whatTheAgentLoses": "You lose the ability to decide exactly which financial record to review, risking the retrieval of a tax document or notice instead of your monthly statement."
+        },
+        {
+         "question": "Which account do you want to view statements for?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen lists multiple accounts like checking, savings, and credit cards, so you must specify which one has the statement you need.",
+         "whatTheAgentLoses": "The user loses the ability to specify the exact account, meaning the agent might retrieve a statement for the wrong account."
         }
        ]
       },
@@ -2392,14 +2376,6 @@
        "label": "Revisit the created record",
        "questions": [
         {
-         "question": "Where should you look to verify the transaction?",
-         "cluster": "hand over",
-         "moment": "Completion",
-         "moneyMoving": true,
-         "why": "The dashboard lists your accounts under 'CHECKING & SAVINGS', requiring you to select the specific account involved to confirm the transaction posted.",
-         "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying the updated balance or transaction history in your account."
-        },
-        {
          "question": "Do you see the deposited check listed in your pending transactions?",
          "cluster": "receipts",
          "moment": "Completion",
@@ -2419,22 +2395,12 @@
   "tree": {
    "id": "0",
    "label": "Renew a DMV credential online",
-   "note": "1 and 2 in the order the venue dictates - account venues meet 3 first and reach the service from the dashboard (DeKE, w74r, _xgB); the rest run 1, then 2, then 3. 2.4 and 2.5 fire before or mid-task as the requirements demand (w74r, YWFI). then 4, with 5 interleaved wherever the wizard asks. 6 only on the carrier systems, and 7 waits for its approval (-eBX, F_2L). then 7, then 8. no keeper re-enters an earlier goal by choice - the one reach-back is 7 into 5.8 when a missing email blocks payment (DeKE).",
+   "note": "1 and 2 in the order the venue dictates - account venues meet 3 first and reach the service from the dashboard (DeKE, w74r, _xgB); the rest run 1, then 2, then 3. 2.4 and 2.5 fire before or mid-task as the requirements demand (w74r, YWFI). then 4, with 5 interleaved wherever the wizard asks. 6 only on the carrier systems, then 7 once the approval lands (-eBX, F_2L), then 8. no keeper re-enters an earlier goal by choice - the one reach-back is 7 into 5.8 when a missing email blocks payment (DeKE).",
    "children": [
     {
      "id": "1",
      "label": "Find the renewal service",
      "note": "1.1 or 1.2 to arrive, then one of 1.3, 1.4, or 1.5 as the venue offers. 1.5 comes after 3 on account venues - the dashboard is behind the login.",
-     "questions": [
-      {
-       "question": "Should you use the search bar, click a popular link, or scroll down to find the driving licence renewal?",
-       "cluster": "select",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The homepage displays a search bar and 'Popular on GOV.UK' links, requiring you to choose the most efficient navigation method to locate the renewal service.",
-       "whatTheAgentLoses": "You lose the chance to familiarize yourself with the portal's layout and discover other relevant government services while navigating."
-      }
-     ],
      "children": [
       {
        "id": "1.1",
@@ -2485,36 +2451,18 @@
        "label": "Browse the menus to the service",
        "questions": [
         {
-         "question": "Which top-level category should you select to find driving license services?",
+         "question": "Which link under 'Popular services' should you select to renew your driving licence?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen lists 'Driving and transport' under 'Services and information' with a description that explicitly includes driving licenses.",
-         "whatTheAgentLoses": "The user loses the opportunity to see how the portal categorizes its services and what other transport-related options are available."
-        },
-        {
-         "question": "Which category do you select to renew your driving license?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The portal presents multiple transport categories, such as 'Vehicle tax, MOT and insurance' and 'Driving licences', requiring you to choose the correct path to start your renewal.",
-         "whatTheAgentLoses": "Delegating this navigation means you miss seeing the layout of the portal and discovering other vehicle or licensing services you might need in the future."
+         "why": "The screen lists multiple driving licence services, so you must select the correct link to begin the standard renewal process.",
+         "whatTheAgentLoses": "You lose the ability to ensure the agent selects the standard renewal option rather than a specialized one."
         }
        ]
       },
       {
        "id": "1.4",
-       "label": "Pick the service from the shortcuts",
-       "questions": [
-        {
-         "question": "Do you use the 'SHOP HERE!' quick menu to access the renewal services?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The 'SHOP HERE!' dropdown provides direct links to 'Renew/Replace My License' and 'Renew/Replace My Registration' under the quick services sections.",
-         "whatTheAgentLoses": "You lose the opportunity to learn the fastest navigation shortcuts for future visits to the DMV portal."
-        }
-       ]
+       "label": "Pick the service from the shortcuts"
       },
       {
        "id": "1.5",
@@ -2529,12 +2477,12 @@
          "whatTheAgentLoses": "The user loses the visibility of their dashboard reminders and the ability to personally confirm exactly which vehicle is currently due for renewal."
         },
         {
-         "question": "How do you initiate the renewal process for this period?",
-         "cluster": "hand over",
+         "question": "Which registration period do you want to select to initiate the renewal?",
+         "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen displays a 'Period Alerts' section with a warning icon and a specific hyperlink to renew the registration for that date.",
-         "whatTheAgentLoses": "The user loses the ability to personally review the period alerts and manually select the correct registration period to renew."
+         "why": "The dashboard lists multiple periods, such as '30-Apr-2019' and '30-Apr-2018', and requires you to select one to proceed with the vehicle renewal.",
+         "whatTheAgentLoses": "You lose the ability to ensure the correct registration year and associated balance is chosen for your account."
         }
        ]
       }
@@ -2543,7 +2491,7 @@
     {
      "id": "2",
      "label": "Confirm eligibility and requirements",
-     "note": "2.1 where a notice exists - it can be the map for everything after (hI3L, 7b3U). 2.2, 2.3, and 2.6 in the order the pages present them. 2.4 and 2.5 whenever the requirements reach into the physical world, mid-task included (w74r, YWFI). then 2.7, with 2.8 wherever a terms gate blocks the path.",
+     "note": "2.1 where a notice exists - the pages after it repeat what the notice already said (hI3L, 7b3U). 2.2, 2.3, and 2.6 in the order the pages present them. 2.4 and 2.5 whenever the requirements reach into the physical world, mid-task included (w74r, YWFI). then 2.7, with 2.8 wherever a terms gate blocks the path.",
      "questions": [
       {
        "question": "Do you want to schedule an in-person appointment if the online system cannot process your renewal?",
@@ -2674,12 +2622,12 @@
          "whatTheAgentLoses": "You lose the ability to personally confirm that you have the required email access and identification documents ready before initiating the state portal process."
         },
         {
-         "question": "Where should you click to begin the online renewal process?",
-         "cluster": "hand over",
+         "question": "Are you ready to proceed past the initial application instructions?",
+         "cluster": "approve",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen features a 'Renew online' section with a green 'Start now >' button that must be clicked to access the renewal form.",
-         "whatTheAgentLoses": "Delegating this step means you miss seeing the official starting point and any preliminary instructions provided on the DMV portal."
+         "why": "The screen displays important navigation rules, such as not using browser buttons, which are necessary to prevent errors during the application.",
+         "whatTheAgentLoses": "The user misses the opportunity to read the specific navigation rules or select their preferred language for the process."
         }
        ]
       },
@@ -2710,25 +2658,7 @@
     {
      "id": "3",
      "label": "Pass the identity gate",
-     "note": "one route per venue: 3.1 then 3.2 on account systems; 3.3 then 3.4 on record-search systems; 3.5 on knowledge-field systems; 3.6 where the mailed letter is the credential. iV8P switches mid-flow from 3.5 to 3.1. two keepers never get past this goal (7t4w, iV8P).",
-     "questions": [
-      {
-       "question": "Do the visual steps match the narrator's instructions to log in, fill out the details, and pay?",
-       "cluster": "compare",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The video ends on the login screen while the narrator merely describes the remaining steps, leaving the actual form and payment process completely unseen.",
-       "whatTheAgentLoses": "An agent relying on this video would not know what the actual renewal form or payment screens look like, leaving them unable to complete the task."
-      },
-      {
-       "question": "Should you allow this Epson software update to proceed, or cancel it to focus on your renewal?",
-       "cluster": "hand over",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The screen shows an unrelated Epson Software Updater pop-up that could delay or disrupt the vehicle registration process if allowed to download.",
-       "whatTheAgentLoses": "Delegating this means an agent might accept the unrelated software update, wasting time and risking system changes instead of completing the DMV renewal."
-      }
-     ],
+     "note": "one route per venue: 3.1 then 3.2 on account systems; 3.3 then 3.4 on record-search systems; 3.5 on knowledge-field systems; 3.6 where the authorization number comes off a mailed letter. iV8P switches mid-flow from 3.5 to 3.1. two keepers never get past this goal (7t4w, iV8P).",
      "children": [
       {
        "id": "3.1",
@@ -2801,12 +2731,12 @@
          "whatTheAgentLoses": "You lose the ability to personally verify that the correct vehicle plate details are entered to pull up your registration."
         },
         {
-         "question": "Where do you find the correct vehicle identifiers to proceed to the verification step?",
-         "cluster": "photos",
+         "question": "Does the form ask for the exact information the site told you to prepare?",
+         "cluster": "compare",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen provides a graphic of a physical renewal notice to help you locate your license plate and the last five digits of your VIN.",
-         "whatTheAgentLoses": "You lose the assurance of personally cross-referencing your physical renewal notice to ensure the correct vehicle is being renewed."
+         "why": "The site listed the license plate number and the last five digits of the VIN as prerequisites, which matched the exact fields required on the subsequent form.",
+         "whatTheAgentLoses": "You lose the ability to verify that the portal's stated prerequisites match the actual information submitted."
         }
        ]
       },
@@ -2851,16 +2781,8 @@
     {
      "id": "4",
      "label": "Verify and complete the record",
-     "note": "4.1 where the account lists vehicles; 4.2 on the fleet systems. then 4.3 against the notice, the insurance, and the inspection. 4.4 to 4.7 as the venue's record demands - document validation on LTMS, insurance on OkCARS, mileage on the carrier systems. 4.8 where the wizard asks for addresses; 4.9 only on licence renewals, where the person is the record.",
+     "note": "4.1 where the account lists vehicles; 4.2 on the fleet systems. then 4.3 against the notice, the insurance, and the inspection. 4.4 to 4.7 as the venue's record demands - document validation on LTMS, insurance on OkCARS, mileage on the carrier systems. 4.8 where the wizard asks for addresses; 4.9 only on licence renewals, where the form asks about the person rather than a vehicle.",
      "questions": [
-      {
-       "question": "Should you click the application or payment links in the navigation menu to proceed?",
-       "cluster": "select",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The screen displays a left navigation menu with upcoming steps like '2. Application' and '3. Payment', indicating the sequence of the renewal process.",
-       "whatTheAgentLoses": "The user loses the opportunity to preview the overall structure and upcoming requirements of the renewal process before proceeding."
-      },
       {
        "question": "Do you click to review the application summary before final submission?",
        "cluster": "approve",
@@ -2950,12 +2872,12 @@
          "whatTheAgentLoses": "You lose the assurance that the correct inspection report number is being submitted to validate your vehicle's eligibility for renewal."
         },
         {
-         "question": "Which required document will you verify first?",
-         "cluster": "select",
+         "question": "Does the pre-filled MVISR number match your inspection report?",
+         "cluster": "approve",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen displays a table of mandatory reference documents, such as the PMVIC Inspection Report and Certificate of Coverage, that must be verified to proceed.",
-         "whatTheAgentLoses": "The user loses direct control over handling and verifying their specific vehicle inspection and insurance records."
+         "why": "The screen displays an auto-populated MVISR number that must be validated to ensure the correct emission test results are attached to your renewal.",
+         "whatTheAgentLoses": "You lose the opportunity to personally verify that the system pulled the correct inspection report for your specific vehicle."
         }
        ]
       },
@@ -3434,12 +3356,12 @@
          "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to pause the application or proceed immediately based on your specific fleet size and administrative workflow."
         },
         {
-         "question": "How do you resume a pending renewal application?",
+         "question": "What comment should you enter to advance your pended renewal?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The WisCRS IRP Home page displays several menu options, making it important to know that 'Process Renewal' is the specific link used to retrieve a saved draft.",
-         "whatTheAgentLoses": "You lose the knowledge of how to navigate the portal's menus to retrieve and resume your own pending applications."
+         "why": "The screen requires text in the 'Comments' area before you can click 'Continue' to resume a pended application.",
+         "whatTheAgentLoses": "You lose the opportunity to provide your own specific context or notes regarding why the renewal was pended."
         }
        ]
       },
@@ -3710,12 +3632,12 @@
          "whatTheAgentLoses": "The user loses the final opportunity to review or correct their billing details before the payment is processed."
         },
         {
-         "question": "Did you actually see the payment submission step before the success screen appeared?",
-         "cluster": "facts",
-         "moment": "After",
+         "question": "Do you proceed to pay the fee and submit the application?",
+         "cluster": "approve",
+         "moment": "Now",
          "moneyMoving": true,
-         "why": "Confirming the payment submission step is visible ensures the transaction was actually processed and not just edited to show a success screen.",
-         "whatTheAgentLoses": "The user loses the certainty that their payment was securely and properly executed if the actual submission step is missing from the record."
+         "why": "The portal states a £14 fee is required, but the recording ends on the 'Before you continue' page before any payment is made.",
+         "whatTheAgentLoses": "You lose confirmation that the renewal was successfully submitted and paid for, leaving your registration status uncertain."
         }
        ]
       }
@@ -3783,12 +3705,12 @@
          "whatTheAgentLoses": "You lose the ability to immediately download and securely store the official receipt directly to your own personal device."
         },
         {
-         "question": "How do you view the downloaded official receipt?",
-         "cluster": "hand over",
+         "question": "Did you successfully download the official receipt from the transaction details page as promised earlier?",
+         "cluster": "receipts",
          "moment": "Completion",
          "moneyMoving": true,
-         "why": "The print dialog displays a PDF file named 'f' and an 'Open' button that must be clicked to verify the receipt.",
-         "whatTheAgentLoses": "Delegating this step means you lose the ability to immediately inspect the official receipt and ensure it is saved to your preferred personal records."
+         "why": "The disclaimer at 06:38 stated the Official Receipt would be available in the Transaction Details page, making it essential to verify the file actually downloads and opens at 09:24.",
+         "whatTheAgentLoses": "You lose the immediate reassurance of personally saving and verifying the official receipt file for your own records."
         }
        ]
       },
@@ -3855,20 +3777,20 @@
        "label": "Check the mailing status",
        "questions": [
         {
-         "question": "How do you find the tool to check the status of your newly renewed license?",
-         "cluster": "hand over",
-         "moment": "Completion",
-         "moneyMoving": true,
-         "why": "Using the 'Search ilsos.gov' bar to look up 'dl status' provides a direct way to find the tracking tool without navigating through complex menus.",
-         "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact processing status of your newly issued document in the state system."
-        },
-        {
          "question": "What information do you enter to check the mailing status of your card?",
          "cluster": "hand over",
          "moment": "Completion",
          "moneyMoving": true,
          "why": "The screen instructs you to enter your Driver's License, ID, or CLP Number and Date of Issuance to check the status.",
          "whatTheAgentLoses": "The user loses the ability to track the delivery status of their renewed card."
+        },
+        {
+         "question": "Do you follow through on checking the mailing status of the card?",
+         "cluster": "hand over",
+         "moment": "Completion",
+         "moneyMoving": true,
+         "why": "The screen shows navigation to the mailing status form, but the video ends before any information is entered to actually check it.",
+         "whatTheAgentLoses": "You lose the ability to track the physical document and know when it will arrive in the mail."
         }
        ]
       }
@@ -6463,12 +6385,12 @@
        "whatTheAgentLoses": "You lose the chance to specify upfront if you need a one-way ticket, a multi-city route, or a different cabin class."
       },
       {
-       "question": "Will you enter your route and dates to search for a flight, or are you just showing the interface to discuss a past booking?",
+       "question": "How many passengers are traveling, and which cabin class do you prefer?",
        "cluster": "hand over",
        "moment": "Now",
        "moneyMoving": false,
-       "why": "The screen shows the Qatar Airways flight search form, but you are only talking about a previous booking without interacting with the fields.",
-       "whatTheAgentLoses": "The user loses the ability to clarify whether the agent should initiate a new flight search or just note the platform used previously."
+       "why": "The search menu requires you to specify the number of adults and children and select a cabin class like Economy or Business to find accurate fares.",
+       "whatTheAgentLoses": "Delegating this step means you lose the chance to quickly toggle passenger counts or cabin classes to see how they impact your initial flight options."
       }
      ],
      "children": [
@@ -7027,12 +6949,12 @@
          "whatTheAgentLoses": "The user loses the ability to ensure their name matches their passport exactly and the opportunity to attach their frequent flyer account to the booking."
         },
         {
-         "question": "Do you show the actual entry of passenger details instead of skipping it?",
+         "question": "What passenger information is required and which baggage option will you select?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The video cuts from the empty Guest Details form straight to the bottom of the page, hiding the actual process of filling out the required personal information.",
-         "whatTheAgentLoses": "An agent misses seeing exactly which personal details are required and how to format them in the form."
+         "why": "The screen requires specific personal details like nationality and date of birth, and presents a choice between a free personal item or a 98 € carry-on bundle that significantly affects the final price.",
+         "whatTheAgentLoses": "Delegating this step means the agent might select an expensive baggage bundle you do not need or incorrectly enter sensitive personal information."
         }
        ]
       },
@@ -7441,17 +7363,7 @@
       },
       {
        "id": "8.6",
-       "label": "Complete the booking",
-       "questions": [
-        {
-         "question": "Do you actually complete the purchase and show the confirmation screen?",
-         "cluster": "approve",
-         "moment": "Now",
-         "moneyMoving": true,
-         "why": "The video promises to show a complete booking process but ends before the final purchase button is clicked, leaving the actual confirmation unseen.",
-         "whatTheAgentLoses": "An agent trained on this incomplete demonstration might stop at the review screen instead of actually finalizing the transaction."
-        }
-       ]
+       "label": "Complete the booking"
       },
       {
        "id": "8.7",
@@ -10546,47 +10458,11 @@
    "id": "0",
    "label": "Navigate to a destination",
    "note": "do 1 - five keepers start in the phone's settings and two install the app first. 2 floats: before any destination when the preference is the point (zJVt, HrMd, 4AhB, mo0Q), through the per-route door from inside 4 (obk4, bQbE, kIU1, lYnD), or never. then 3, then 4 - except on desktop, where 4.1's form comes first and 3 happens inside it (7EYu, bQbE, 60tT). rework 4 until the route reads right. then one of three endings: 5 (sixteen keepers start guidance, none arrives on camera), 6 (keep or hand off the route instead - 7EYu, 60tT, ETAP, VO5N, sWXu), or nothing (bQbE, FfFy, HrMd, kIU1, PjID). 7 and 8 are excursions from the main map (PjID, QULM, aGGT); 7.5 reruns 3 and 4 offline.",
-   "questions": [
-    {
-     "question": "What is your final advice for using the app effectively?",
-     "cluster": "facts",
-     "moment": "Completion",
-     "moneyMoving": false,
-     "why": "The narrator speaks directly to the camera to provide a final takeaway about practicing with the app before traveling.",
-     "whatTheAgentLoses": "A person delegating to an agent misses the narrator's personal advice on reducing travel stress by familiarizing themselves with the app beforehand."
-    },
-    {
-     "question": "Where can you find the creator online?",
-     "cluster": "facts",
-     "moment": "Completion",
-     "moneyMoving": false,
-     "why": "The outro screen displays the creator's websites, social media handles, and email address for viewers who want to follow or contact them.",
-     "whatTheAgentLoses": "Delegating this to an agent means missing out on discovering the creator's other travel content and direct contact information."
-    }
-   ],
    "children": [
     {
      "id": "1",
      "label": "Ready the device and app",
      "note": "1.1 then 1.2 on a fresh install (1KTk, VO5N), with 1.3 where the store offers an update (QULM). 1.4 or 1.5 before the app ever opens - five keepers start at the OS level - and permission asks recur mid-task (5.2, 8.5). then 1.6, 1.7 where the platform asks, and 1.8 once the map is up. most keepers arrive with all of this already done and start at 1.6.",
-     "questions": [
-      {
-       "question": "Do you want to edit the items in the Control Center?",
-       "cluster": "hand over",
-       "moment": "On demand",
-       "moneyMoving": false,
-       "why": "The screen shows the Control Center with various toggles and a '+' symbol in the top left corner, which is used to enter edit mode.",
-       "whatTheAgentLoses": "The user loses the ability to personalize their quick-access settings and toggles to fit their own preferences."
-      },
-      {
-       "question": "Where do you tap to add a new control to the panel?",
-       "cluster": "hand over",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The Control Center is in edit mode, and the '+ Add a Control' button at the bottom must be selected to customize the available shortcuts.",
-       "whatTheAgentLoses": "The user loses the ability to personally decide which quick-access tools or shortcuts are added to their device's control panel."
-      }
-     ],
      "children": [
       {
        "id": "1.1",
@@ -10703,12 +10579,12 @@
          "whatTheAgentLoses": "You lose the ability to choose your preferred navigation app from the ones installed on your device."
         },
         {
-         "question": "How do you want to locate the map application?",
-         "cluster": "hand over",
+         "question": "Should you close the active app to start from a clean home screen?",
+         "cluster": "undo",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The app drawer displays numerous icons, making the search bar a more efficient choice than manually scrolling through pages.",
-         "whatTheAgentLoses": "The user loses the opportunity to visually browse their installed apps or organize their app drawer."
+         "why": "Returning to the home screen ensures the demonstration starts from a neutral state rather than an already open map.",
+         "whatTheAgentLoses": "You lose the assurance that the agent will begin the task from a predictable home screen instead of an unknown app state."
         }
        ]
       },
@@ -10739,20 +10615,20 @@
        "label": "Find yourself on the map",
        "questions": [
         {
-         "question": "How do you center the map on your current location?",
-         "cluster": "hand over",
-         "moment": "On demand",
-         "moneyMoving": false,
-         "why": "The crosshairs button in the bottom right corner allows you to quickly snap the map back to your exact current location before searching.",
-         "whatTheAgentLoses": "You lose the visual confirmation of your exact starting location relative to your immediate surroundings."
-        },
-        {
          "question": "Is my current location accurate on the map before I get directions?",
          "cluster": "facts",
          "moment": "Now",
          "moneyMoving": false,
          "why": "Checking that the blue dot matches your actual surroundings ensures the app calculates the route from the correct starting point.",
          "whatTheAgentLoses": "You lose the physical awareness required to notice if the GPS has pinpointed the wrong starting location."
+        },
+        {
+         "question": "Should you center the map on your current location before tapping Go?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Tapping the target icon ensures the blue dot accurately reflects your starting point before you hit the blue 'GO' button to enter the routing screen.",
+         "whatTheAgentLoses": "You lose the ability to visually verify that the GPS has correctly pinpointed your exact physical location before requesting directions."
         }
        ]
       }
@@ -10786,20 +10662,20 @@
        "label": "Open the global settings",
        "questions": [
         {
-         "question": "Which menu option do you select to access the application settings?",
-         "cluster": "hand over",
-         "moment": "On demand",
-         "moneyMoving": false,
-         "why": "The account menu displays several options, and selecting 'Settings' allows you to configure app preferences before getting directions.",
-         "whatTheAgentLoses": "You lose the opportunity to personally review and customize your navigation and privacy preferences."
-        },
-        {
          "question": "Do you want to adjust your routing preferences?",
          "cluster": "hand over",
          "moment": "On demand",
          "moneyMoving": false,
          "why": "The profile menu displays a Preferences option currently set to Driving, which dictates how the app calculates your routes.",
          "whatTheAgentLoses": "You lose the ability to set global navigation defaults, such as your preferred travel mode or avoiding highways."
+        },
+        {
+         "question": "How do you return to the map view from the settings menu?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The settings menu covers the screen, requiring a tap on the top-left back arrow to resume planning the route.",
+         "whatTheAgentLoses": "The user loses the chance to verify exactly which navigation setting was enabled before the agent navigates away."
         }
        ]
       },
@@ -10807,14 +10683,6 @@
        "id": "2.2",
        "label": "Open the per-route options",
        "questions": [
-        {
-         "question": "How do you access additional settings to modify preferences like toll avoidance?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen displays 'Avoiding tolls' and a three-dot menu icon that opens a dropdown menu for route settings.",
-         "whatTheAgentLoses": "The user loses the ability to manually customize specific route preferences, such as avoiding tolls or highways, before starting navigation."
-        },
         {
          "question": "Should you start navigation with the current route or open the menu to modify your route settings?",
          "cluster": "select",
@@ -10914,7 +10782,7 @@
     {
      "id": "3",
      "label": "Pick the destination",
-     "note": "one of 3.1, 3.3, 3.4, 3.5, 3.6, or 3.7 raises candidates - 3.2 rides on 3.1, and 3.8 rides wherever ads sit in the results. then 3.9 and 3.10 to make sure it is the right place. 3.11 where the trip starts somewhere other than here - mandatory on desktop, where both endpoints are typed fields.",
+     "note": "one of 3.1, 3.3, 3.4, 3.5, 3.6, or 3.7 raises candidates - 3.2 only happens after 3.1, and 3.8 happens wherever ads sit in the results. then 3.9 and 3.10 to make sure it is the right place. 3.11 where the trip starts somewhere other than here - mandatory on desktop, where both endpoints are typed fields.",
      "questions": [
       {
        "question": "Do you need to select an option from this side menu to find your destination?",
@@ -10936,17 +10804,7 @@
      "children": [
       {
        "id": "3.1",
-       "label": "Type the search terms",
-       "questions": [
-        {
-         "question": "Where do you tap to search for a destination?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The search icon in the bottom left corner must be tapped to open the text field for entering your target address.",
-         "whatTheAgentLoses": "Delegating this step means you miss seeing the quick-access list of recent searches and saved locations that typically appears when the search menu opens."
-        }
-       ]
+       "label": "Type the search terms"
       },
       {
        "id": "3.2",
@@ -11116,12 +10974,12 @@
          "whatTheAgentLoses": "The user loses the chance to decide whether they want to review different route options first or jump straight into active navigation."
         },
         {
-         "question": "Where do you tap to start getting directions to a new place?",
-         "cluster": "hand over",
+         "question": "What are your starting and destination locations, and how are you traveling?",
+         "cluster": "facts",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "Tapping the blue 'GO' button on the main map screen opens the interface to search for your destination.",
-         "whatTheAgentLoses": "You lose the chance to visually confirm that the blue dot accurately reflects your current starting location before requesting directions."
+         "why": "The form requires entering a starting point in field A and a destination in field B, along with selecting a travel mode from the dropdown, to calculate the route.",
+         "whatTheAgentLoses": "You lose the ability to specify your exact starting point, add intermediate stops, or ensure your preferred mode of transportation is selected."
         }
        ]
       },
@@ -11560,20 +11418,20 @@
        "label": "Explore the in-drive menu",
        "questions": [
         {
-         "question": "How will you adjust the map view to explore the area?",
-         "cluster": "hand over",
-         "moment": "On demand",
-         "moneyMoving": false,
-         "why": "The screen displays a map with zoom buttons and a recenter icon, offering multiple ways to adjust your view.",
-         "whatTheAgentLoses": "You lose the tactile experience of manually panning and zooming to build your own mental model of the surrounding geography."
-        },
-        {
          "question": "Do you want to access other apps like media or messages from the navigation dashboard?",
          "cluster": "hand over",
          "moment": "On demand",
          "moneyMoving": false,
          "why": "The driving mode dashboard displays icons for Calls, Messages, and Media, allowing you to use other phone features without leaving the navigation interface.",
          "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to seamlessly queue up your preferred media or check messages while the navigation runs."
+        },
+        {
+         "question": "Do you want to answer or decline the incoming call?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "An incoming call banner with green and red buttons has appeared on the screen, requiring a choice that might interrupt your navigation.",
+         "whatTheAgentLoses": "You lose the ability to decide whether this specific caller is important enough to speak with while you are driving."
         }
        ]
       },
@@ -11649,16 +11507,6 @@
      "id": "6",
      "label": "Keep or hand off the route",
      "note": "any one of 6.1 to 6.6, each its own ending: print on desktop (7EYu, 60tT), a note link where the app has no save-route feature (ETAP), a planned drive (VO5N), a calendar entry left uncommitted (sWXu), a send-to-phone (sWXu). 6.6 is the save that bites back - Set home and go starts navigating by itself.",
-     "questions": [
-      {
-       "question": "Do you see the Quick Note icon added to the bottom right of your Control Center?",
-       "cluster": "receipts",
-       "moment": "After",
-       "moneyMoving": false,
-       "why": "The screen displays the Control Center in edit mode with the Quick Note icon now visible in the bottom right corner, confirming the shortcut was successfully added.",
-       "whatTheAgentLoses": "You lose the opportunity to verify the exact placement of the shortcut, which might cause confusion when you try to quickly access your notes."
-      }
-     ],
      "children": [
       {
        "id": "6.1",
@@ -11759,20 +11607,20 @@
        "label": "Save home and the favorites",
        "questions": [
         {
-         "question": "Which option do you tap to set up your home address?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen displays a 'Home Set once and go' shortcut that allows you to configure a permanent home location for future routing.",
-         "whatTheAgentLoses": "Letting an agent handle this step means you lose the opportunity to personally verify the exact address being permanently saved as your home."
-        },
-        {
          "question": "Is this the correct location to save as your home?",
          "cluster": "approve",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The screen shows a location pin and a 'Set home and go' button, making it important to verify the address before saving it as a permanent shortcut.",
          "whatTheAgentLoses": "An agent might save an inaccurate location as your home, which would permanently affect the routing for any future trips to this destination."
+        },
+        {
+         "question": "Do you want to save this location to your favorites?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a 'Favorites' menu with an 'Add new favorite' option, which lets you save frequently visited places for quicker access in the future.",
+         "whatTheAgentLoses": "The agent might clutter your saved places with a one-time destination or miss the opportunity to save a place you visit often."
         }
        ]
       }
@@ -12258,20 +12106,20 @@
      "note": "2.1, then 2.2 past whatever the feed stacks on top, then 2.3 for visit tasks - the other destinations open from the nav or a widget, and their entry ops sit in their own goals. re-entered between tasks: FE1_ returns here after each subtask, g18A comes back through Home to reach the inbox.",
      "questions": [
       {
-       "question": "Where do you click to access the data the patient entered?",
-       "cluster": "select",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The screen displayed a blue healow sticky note with a red down arrow that must be clicked to open the Healow Hub.",
-       "whatTheAgentLoses": "The delegator loses the hands-on familiarity of navigating this specific interface to retrieve patient-submitted information."
-      },
-      {
        "question": "Which section of the portal do you want to navigate to?",
        "cluster": "select",
        "moment": "Now",
        "moneyMoving": false,
        "why": "The dashboard menu offers multiple paths like Health Record, Messaging, and Appointments, requiring you to select the one that matches your current goal.",
        "whatTheAgentLoses": "Delegating this navigation means you lose the ability to personally browse your available health categories and prioritize what information to review."
+      },
+      {
+       "question": "Do you want to view your upcoming appointments or request a new one?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The expanded Appointments menu offers distinct paths for checking your existing schedule versus initiating a new visit request.",
+       "whatTheAgentLoses": "Delegating this choice prevents you from deciding whether to review your current schedule or initiate a request for a new visit."
       }
      ],
      "children": [
@@ -12332,12 +12180,12 @@
          "whatTheAgentLoses": "You miss seeing the layout of your health dashboard and any notification badges that indicate items needing your attention."
         },
         {
-         "question": "Where do you go to find your upcoming appointments?",
+         "question": "Which appointment are you selecting to start your televisit?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The dashboard presents multiple navigation categories like 'Health' and 'Visits', so you must identify the correct menu to access your schedule.",
-         "whatTheAgentLoses": "Letting an agent navigate the dashboard means you miss the chance to familiarize yourself with the portal's layout and discover other available features like pending tasks or quick links."
+         "why": "The screen lists your upcoming appointments, requiring you to identify the correct provider, date, and time to ensure you join the right session.",
+         "whatTheAgentLoses": "Delegating this means you miss the chance to personally verify the provider and schedule details before entering the virtual waiting room."
         }
        ]
       }
@@ -12796,20 +12644,20 @@
        "label": "Read a received message",
        "questions": [
         {
-         "question": "Which menu option should you select to access your messages?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The left navigation menu displays multiple distinct areas of your chart, such as 'Health Record' and 'Messages', requiring you to identify the correct path for your specific task.",
-         "whatTheAgentLoses": "Delegating this navigation step means you lose the peripheral awareness of other available portal features, like lab results or medication lists, that you might also want to check."
-        },
-        {
          "question": "Which message do you want to open?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The inbox displays a new message from Betty Larson regarding a referral appointment, requiring you to select which communication to review.",
          "whatTheAgentLoses": "Delegating this step means you lose the ability to prioritize which provider communications to read first based on your current health concerns."
+        },
+        {
+         "question": "Do you need to reply to this message from your care team?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The message asks if you have scheduled your cardiology referral appointment, requiring you to decide whether to respond or simply close the panel.",
+         "whatTheAgentLoses": "Delegating this means an agent decides whether to update your care team about the status of your personal medical appointments."
         }
        ]
       },
@@ -13044,20 +12892,20 @@
        "label": "Open a record section",
        "questions": [
         {
-         "question": "How do you navigate to a specific section of your health record?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Expanding the 'Health Record' menu on the left reveals specific sub-categories like allergies and appointments that aren't fully detailed in the main dashboard widgets.",
-         "whatTheAgentLoses": "You lose the chance to browse the full list of available health record categories and see exactly how your medical data is organized in the portal."
-        },
-        {
          "question": "Which section of your health record do you want to view?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The left navigation menu lists multiple health record categories, such as allergies, immunizations, and vital signs, to explore.",
          "whatTheAgentLoses": "Delegating this choice prevents you from prioritizing which specific health information you want to review first."
+        },
+        {
+         "question": "How do you access all of your available documents?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The dashboard displayed a limited list of recent files, so clicking 'View All Files' ensures you can find older or specific documents not immediately visible.",
+         "whatTheAgentLoses": "You lose the chance to see which specific files the portal highlights on the dashboard before opening the full document repository."
         }
        ]
       },
@@ -13185,20 +13033,20 @@
      "note": "after any commit: 7.1, then 7.2 where a list can show the result, 7.3 for the asynchronous replies. 7.4 checks the details against the earlier screens - no keeper performs it, and this corpus fails it in all seven videos. 7.5 for what the confirmation says is still open.",
      "questions": [
       {
-       "question": "How do you refresh the chart to see the imported data?",
-       "cluster": "hand over",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The system requires navigating out to the Office Visits menu and back into the patient's chart to force the newly imported information to display on the screen.",
-       "whatTheAgentLoses": "You lose the ability to personally verify that your imported health data successfully loaded and appears correctly in the final record."
-      },
-      {
        "question": "Did you verify that the imported questionnaire data populated the progress note?",
        "cluster": "receipts",
        "moment": "After",
        "moneyMoving": false,
        "why": "The screen showed the patient's portal responses appearing in the 'Subjective' section of the chart after refreshing.",
        "whatTheAgentLoses": "The user loses the assurance that the patient's submitted history was accurately recorded in the clinical documentation."
+      },
+      {
+       "question": "Has your demographic information been updated in the system?",
+       "cluster": "receipts",
+       "moment": "After",
+       "moneyMoving": false,
+       "why": "The screen showed a 'Patient Entered Data' window indicating that your phone number change was already imported.",
+       "whatTheAgentLoses": "You lose the chance to verify that your personal information was accurately updated and imported into your record."
       }
      ],
      "children": [
@@ -15286,16 +15134,6 @@
      "id": "3",
      "label": "Stock the pantry",
      "note": "3.1 fills it - or the app seeds it unasked (xSqA). 3.2 when an item runs out. 3.3 hands the pantry to 4 as a query. 7.2 reaches back: list items carry In Pantry labels (9ChE).",
-     "questions": [
-      {
-       "question": "How do I check which ingredients I already have?",
-       "cluster": "hand over",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The screen currently displays an empty Shopping List, so you need to switch to the Pantry tab to view your existing inventory before deciding what to cook.",
-       "whatTheAgentLoses": "The user loses the ability to base their recipe search on the ingredients they already own, potentially leading to unnecessary grocery purchases."
-      }
-     ],
      "children": [
       {
        "id": "3.1",
@@ -15429,20 +15267,20 @@
        "label": "Require or exclude the ingredients",
        "questions": [
         {
-         "question": "How do you ensure the recipes specifically include sugar?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Typing into the 'With Ingredients' field and selecting the exact match from the autocomplete dropdown guarantees the search results will contain that specific item.",
-         "whatTheAgentLoses": "You lose the ability to manually verify that the correct ingredient variant was selected from the autocomplete suggestions."
-        },
-        {
          "question": "Do you want to specify any ingredients to include?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The screen showed an 'Include these ingredients' field, allowing the user to filter recipes by specific ingredients.",
          "whatTheAgentLoses": "The person loses the ability to prioritize recipes that use up specific ingredients they already have on hand."
+        },
+        {
+         "question": "How do you confirm the ingredient to exclude?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Activating the minus button actually applies the restriction to the search, which is confirmed by the '- cheese' tag appearing below the field.",
+         "whatTheAgentLoses": "The user loses the immediate visual reassurance of seeing the exclusion tag appear to guarantee their specific dietary restriction was registered by the system."
         }
        ]
       },
@@ -15618,20 +15456,20 @@
        "label": "Read the ingredients",
        "questions": [
         {
-         "question": "How do you quickly jump to the ingredients list?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Using heading navigation allows you to bypass the image gallery and hidden summary text to reach the ingredients directly.",
-         "whatTheAgentLoses": "You lose the efficiency of using screen reader heading shortcuts to bypass visual clutter and find specific sections."
-        },
-        {
          "question": "How do you navigate the ingredient list structure?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The screen reader announces the ingredients within a form checklist where items are confusingly listed twice, requiring careful navigation to verify them.",
          "whatTheAgentLoses": "You lose the assurance that a confusingly formatted ingredient list was accurately parsed and verified against your dietary restrictions."
+        },
+        {
+         "question": "Do you want to use the sponsored brands shown for these ingredients?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displayed sponsored links for specific brands like Horizon Organic alongside the generic ingredients, which could influence your shopping list.",
+         "whatTheAgentLoses": "The user loses the ability to decide whether to stick to generic ingredients or opt for the specific sponsored brands presented."
         }
        ]
       },
@@ -15644,20 +15482,20 @@
        "label": "Read the directions",
        "questions": [
         {
-         "question": "Should you review the cooking instructions and test the built-in timer feature?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen shows the 'Method' tab with numbered steps and a 'Timer' button in the top right corner.",
-         "whatTheAgentLoses": "You miss out on understanding the preparation process and discovering interactive features like the shake-to-add timer."
-        },
-        {
          "question": "Do you want to read through the cooking instructions?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The screen displayed a step-by-step Directions section, which matters for ensuring the recipe is actually easy to follow.",
          "whatTheAgentLoses": "The user loses the ability to personally assess whether the cooking steps are clear and manageable for their skill level."
+        },
+        {
+         "question": "Do the preparation steps and total time fit your constraints?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a total ready time of 25 minutes along with specific cooking instructions, which must be reviewed to ensure the recipe meets your time limit.",
+         "whatTheAgentLoses": "You lose the opportunity to personally evaluate if the required cooking techniques and active prep time are actually manageable for your schedule and skill level."
         }
        ]
       },
@@ -15736,14 +15574,6 @@
        "id": "6.1",
        "label": "Create the board or collection",
        "questions": [
-        {
-         "question": "Where do you click to manage or create your recipe boards?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": true,
-         "why": "The profile icon in the top right navigation bar provides direct access to your personal account space where collections are organized.",
-         "whatTheAgentLoses": "You lose the ability to personally structure your profile and decide exactly how your saved recipes should be categorized."
-        },
         {
          "question": "What name and privacy settings should you choose for the new board?",
          "cluster": "hand over",
@@ -15876,20 +15706,20 @@
          "label": "Open the print dialog",
          "questions": [
           {
-           "question": "How do you print the shopping list from this position?",
-           "cluster": "hand over",
-           "moment": "Completion",
-           "moneyMoving": true,
-           "why": "The screen shows the bottom of the shopping list, meaning you must scroll back to the top to access the Options menu.",
-           "whatTheAgentLoses": "The user loses the convenience of generating a formatted, physical copy of the ingredients for offline grocery shopping."
-          },
-          {
            "question": "Does the printable view of the menu display all text clearly without cutting off the edges?",
            "cluster": "facts",
            "moment": "Completion",
            "moneyMoving": true,
            "why": "The screen shows an inline printable view of a menu where the left edge is cut off, obscuring the first letters of the title and date.",
            "whatTheAgentLoses": "The user loses the chance to notice and correct formatting issues before printing or relying on the document."
+          },
+          {
+           "question": "Should you print the recipe ingredients as a shopping list?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The recipe page displays a link to print a shopping list right next to the preparation text.",
+           "whatTheAgentLoses": "You lose the opportunity to have a convenient, printable list of ingredients generated for your next grocery trip."
           }
          ]
         },
@@ -15996,14 +15826,6 @@
            "moneyMoving": true,
            "why": "The screen presents a promotional overview of the Yummly Meal Planner, highlighting tools like nutrition monitoring and custom recipe entry.",
            "whatTheAgentLoses": "You lose the opportunity to evaluate and opt into additional organizational tools that could enhance how you manage your saved recipes."
-          },
-          {
-           "question": "How do you access the navigation tabs to save this recipe or add it to a menu?",
-           "cluster": "hand over",
-           "moment": "Now",
-           "moneyMoving": true,
-           "why": "The screen shows the recipe detail page scrolled down, hiding the top navigation tabs like 'MY MENUS' and 'RECIPE BOX'.",
-           "whatTheAgentLoses": "The user loses the ability to organize the recipe into a specific menu or collection if the agent cannot find the navigation."
           }
          ]
         },
@@ -16123,12 +15945,12 @@
            "whatTheAgentLoses": "The user loses the ability to apply their personal knowledge of their current pantry inventory to customize the final shopping list."
           },
           {
-           "question": "How do you mark off and clear purchased ingredients from the shopping list?",
+           "question": "How do you mark off the ingredients you already have on hand?",
            "cluster": "hand over",
-           "moment": "Completion",
-           "moneyMoving": true,
-           "why": "The screen shows a shopping list with empty circles next to items and a 'CLEAR' button that appears when items are checked.",
-           "whatTheAgentLoses": "The user loses the ability to manually track their real-world grocery shopping progress and clear obtained items from their list."
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows a shopping list with categorized items and an 'Order Ingredients' button, requiring a decision on how to track what you already own.",
+           "whatTheAgentLoses": "The user loses the ability to accurately reflect their physical pantry inventory because the agent does not know which ingredients they already possess."
           }
          ]
         },
@@ -16169,39 +15991,11 @@
      "children": [
       {
        "id": "8.1",
-       "label": "Open the cooking mode",
-       "questions": [
-        {
-         "question": "Do I understand how the hands-free cooking mode works, and am I ready to start?",
-         "cluster": "approve",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen provides specific gesture instructions for advancing recipe steps without touching the device and requires acknowledgment to proceed.",
-         "whatTheAgentLoses": "The user loses the opportunity to learn a touch-free navigation method designed to keep their screen clean while cooking."
-        },
-        {
-         "question": "Should you read the instructions on this screen or tap 'OPEN COOKING MODE'?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen shows the recipe's written instructions alongside an 'OPEN COOKING MODE' button, offering two different ways to view the preparation steps.",
-         "whatTheAgentLoses": "The user loses the opportunity to decide whether they want to read all instructions at once or use the guided step-by-step cooking view."
-        }
-       ]
+       "label": "Open the cooking mode"
       },
       {
        "id": "8.2",
-       "label": "Step through the directions",
-       "questions": [
-        {
-         "question": "Should I navigate the recipe steps using the on-screen arrows or the hands-free swipe gesture?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The interface displays step-by-step cooking instructions with on-screen arrows, but also supports a hands-free swiping feature for navigation.",
-         "whatTheAgentLoses": "The user loses the opportunity to utilize the hands-free navigation mode, which is a key convenience feature designed for cooking with messy hands."
-        }
-       ]
+       "label": "Step through the directions"
       },
       {
        "id": "8.3",
@@ -16227,16 +16021,6 @@
      "id": "9",
      "label": "Verify the saves and settings",
      "note": "re-entered after every commit rather than once at the end: 9.1 after each save batch - four refresh cycles in uCtL alone. 9.2 after setup claims to have stuck. 9.3 wherever a derived number can be checked against its inputs, which the corpus almost never does.",
-     "questions": [
-      {
-       "question": "Do you fulfill your initial promise to evaluate the website using the POUR principles?",
-       "cluster": "facts",
-       "moment": "Completion",
-       "moneyMoving": true,
-       "why": "The narrator sets a clear expectation at the beginning of the video to use a specific accessibility framework, making it essential that the final moments actually deliver those insights to remain consistent.",
-       "whatTheAgentLoses": "The user loses the structured accessibility evaluation they expected if the agent abandons the promised framework by the end of the task."
-      }
-     ],
      "children": [
       {
        "id": "9.1",
@@ -16271,14 +16055,6 @@
          "moneyMoving": false,
          "why": "Verifying the selected menu types and allergy checkboxes ensures the app will automatically filter out unsafe or unwanted recipes.",
          "whatTheAgentLoses": "You lose the peace of mind of personally confirming that your specific health and allergy constraints are strictly applied to your account."
-        },
-        {
-         "question": "Do the moments of your task agree with each other regarding the dietary preferences?",
-         "cluster": "facts",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The claim that the preferences screen shows 'Low Carb' is incorrect because the screen at 03:57 actually displays a full-screen promotional card.",
-         "whatTheAgentLoses": "You lose the assurance that your specific dietary constraints are being correctly tracked if the agent misinterprets a promotional pop-up as a settings menu."
         }
        ]
       },
@@ -16314,7 +16090,7 @@
   "tree": {
    "id": "0",
    "label": "Book a ride",
-   "note": "do 1 - twelve keepers walk sign-in or sign-up on camera, eleven arrive signed in. 2 up front where the tutorial treats a payment method as a prerequisite (D8HI, Jztl, HobC, r4Od, m5Hh) - 4.6 opens the same method list from the booking screen. then 3 and 4, re-entered freely: jl57 re-enters the destination, k9El and n84z restart the whole spec. 4.8 where the ride is for later. on inDrive and inDriver, 5 replaces 6 - accepting one driver's offer is the commit (D4bI, KJnu, xBw0); everywhere else, 6. then 7 once a driver is assigned. 8 whenever letting go is the point - six keepers cancel on purpose, and 8.1 reaches scheduled rides through the trip history (r4Od). 9 in the five keepers that reach in-ride or post-ride screens (D8HI and HobC are produced tutorials, m5Hh a mockup).",
+   "note": "do 1 - twelve keepers walk sign-in or sign-up on camera, eleven arrive signed in. 2 up front where the tutorial treats a payment method as a prerequisite (D8HI, Jztl, HobC, r4Od, m5Hh) - 4.6 opens the same method list from the booking screen. then 3 and 4, re-entered freely: jl57 re-enters the destination, k9El and n84z restart the whole spec. 4.8 where the ride is for later. on inDrive and inDriver, 5 replaces 6 - accepting one driver's offer is the commit (D4bI, KJnu, xBw0); everywhere else, 6. then 7 once a driver is assigned. 8 whenever the ride is cancelled - six keepers cancel on purpose, and 8.1 reaches scheduled rides through the trip history (r4Od). 9 in the five keepers that reach in-ride or post-ride screens (D8HI and HobC are produced tutorials, m5Hh a mockup).",
    "children": [
     {
      "id": "1",
@@ -16418,12 +16194,12 @@
          "whatTheAgentLoses": "An agent cannot access your personal email inbox to retrieve the required verification code."
         },
         {
-         "question": "Should I wait for the app to auto-verify the OTP or enter it manually?",
+         "question": "What is the verification code sent to your phone?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen displays a countdown for auto-verifying the OTP sent to your phone, offering a hands-free alternative to typing it.",
-         "whatTheAgentLoses": "The user loses the choice to either let the app seamlessly read the SMS or manually intervene to speed up the verification process."
+         "why": "The screen requires a one-time password sent via SMS to verify your identity before you can proceed with using the app.",
+         "whatTheAgentLoses": "You lose the security of keeping your authentication codes private and directly controlling access to your account."
         }
        ]
       },
@@ -17361,14 +17137,6 @@
        "label": "Open the safety tools",
        "questions": [
         {
-         "question": "How do you access safety tools during the trip?",
-         "cluster": "hand over",
-         "moment": "On demand",
-         "moneyMoving": true,
-         "why": "The trip details menu displays a blue shield icon that opens a Safety Toolkit with options to contact 911, report issues, or share your ride with trusted contacts.",
-         "whatTheAgentLoses": "Delegating this means you miss the opportunity to personally familiarize yourself with emergency features that could be critical if you feel unsafe during the ride."
-        },
-        {
          "question": "Do you want to use any safety tools, like sharing your ride details or getting emergency help?",
          "cluster": "hand over",
          "moment": "On demand",
@@ -17464,14 +17232,6 @@
      "label": "Ride and settle up",
      "note": "9.1 and 9.2 during the trip - only the two produced tutorials tour them. then 9.3 with 9.4 and 9.5 in the order the closing screen dictates: 8dEE tips before rating, UMl_ rates before tipping, D8HI reaches the stars through the trip history.",
      "questions": [
-      {
-       "question": "How do you handle payment, tipping, and rating the driver after the ride is finished?",
-       "cluster": "hand over",
-       "moment": "Completion",
-       "moneyMoving": true,
-       "why": "Although the screen currently shows the initial 'Where to?' input and nearby cars for a new ride, understanding the app's cashless payment and rating system is necessary before initiating the request.",
-       "whatTheAgentLoses": "The user loses the ability to apply human empathy and social norms when deciding whether to leave a cash tip or how to rate the driver's service."
-      },
       {
        "question": "How do you monitor your trip's progress and estimated arrival time?",
        "cluster": "watch",
@@ -17698,16 +17458,6 @@
      "id": "3",
      "label": "Get into the account",
      "note": "3.1 then 3.2 and 3.3 on a first run, or 3.4 - TG2o defers the account at entry and meets it again as the wall that ends its run. 3.5 where signup and filing live on different devices. 3.6 on any returning account. 3.7 as the agreements interpose. 3.8 and 3.9 recur for the rest of the session.",
-     "questions": [
-      {
-       "question": "Do you want to bookmark this summary page with a custom note to easily return to it later?",
-       "cluster": "select",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The 'Add Bookmark' modal includes a 'Note:' field, allowing you to label specific pages for quick reference before navigating to other sections of your return.",
-       "whatTheAgentLoses": "The user loses the opportunity to create personalized navigational shortcuts and notes that help them track their own progress through the tax filing process."
-      }
-     ],
      "children": [
       {
        "id": "3.1",
