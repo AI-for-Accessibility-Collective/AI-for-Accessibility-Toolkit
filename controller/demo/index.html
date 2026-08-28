@@ -26,12 +26,16 @@
     neutral <code>ControlPort</code>.</p>
 
   <div class="bar" id="operator-bar" role="group" aria-label="Operator profile">
-    <span class="muted">Operator profile:</span>
-    <button data-areas="" aria-pressed="true">default</button>
-    <button data-areas="vision">vision</button>
-    <button data-areas="hearing">hearing</button>
-    <button data-areas="motor">motor</button>
-    <button data-areas="cognitive">cognitive</button>
+    <span class="muted">Operator:</span>
+    <input id="profile-uid" type="text" placeholder="profile id (from /onboarding)"
+           style="width:14rem; padding:.35rem .5rem; border:1px solid #99a; border-radius:6px; background:transparent; color:inherit;">
+    <button id="load-profile">Load profile</button>
+    <span class="muted">· or a demo profile:</span>
+    <button data-areas="" data-demo aria-pressed="true">default</button>
+    <button data-areas="vision" data-demo>vision</button>
+    <button data-areas="hearing" data-demo>hearing</button>
+    <button data-areas="motor" data-demo>motor</button>
+    <button data-areas="cognitive" data-demo>cognitive</button>
   </div>
   <p class="muted" id="presentation-note"></p>
 
@@ -70,28 +74,49 @@
 
   let mounted = null;
   let currentControl = localReceiver;   // local DOM app, or a remote receiver
-  let currentAreas = [];
+  let currentModel = { supportAreas: [] };   // the operator's AbilityModel
+  let currentLabel = 'default';               // what to call the operator in the note
   let remoteChannel = null;
 
   function rebuild() {
     if (mounted) mounted.unmount();
     // Driving a URL (a remote receiver) → send all input as tasks, no grammar.
-    const controller = createController({ control: currentControl, operator: { abilityModel: { supportAreas: currentAreas } }, rawToTask: !!remoteChannel });
+    const controller = createController({ control: currentControl, operator: { abilityModel: currentModel }, rawToTask: !!remoteChannel });
     mounted = mountController(controller, { mode: 'element', corner: 'bottom-right' });
     document.getElementById('presentation-note').textContent =
-      'Controller presents as → ' + describePresentation(controller.presentation);
+      `Operator: ${currentLabel} → ` + describePresentation(controller.presentation);
     window.__controller = controller; // handy for scripted checks
   }
+  const note = (t) => { document.getElementById('presentation-note').textContent = t; };
 
-  // Operator-profile buttons (scoped to the operator bar).
-  document.querySelectorAll('#operator-bar button').forEach((b) => {
+  // Demo-profile buttons: a synthetic AbilityModel from support areas.
+  document.querySelectorAll('#operator-bar button[data-demo]').forEach((b) => {
     b.addEventListener('click', () => {
-      document.querySelectorAll('#operator-bar button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      document.querySelectorAll('#operator-bar button[data-demo]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
       b.setAttribute('aria-pressed', 'true');
-      currentAreas = b.dataset.areas ? b.dataset.areas.split(',') : [];
+      currentModel = { supportAreas: b.dataset.areas ? b.dataset.areas.split(',') : [] };
+      currentLabel = 'demo · ' + (b.textContent || 'default');
       rebuild();
     });
   });
+
+  // Load a REAL onboarded profile by id: the Controller reads that person's
+  // AbilityModel (incl. structured needs) and presents itself accordingly.
+  async function loadProfile(uid) {
+    uid = (uid || '').trim();
+    if (!uid) return;
+    try {
+      const d = await (await fetch('/api/ability-model?uid=' + encodeURIComponent(uid))).json();
+      if (!d.exists) { note(`No profile "${uid}" — onboard at /onboarding first.`); return; }
+      currentModel = d.model || { supportAreas: [] };
+      currentLabel = uid;
+      try { localStorage.setItem('onb-uid', uid); } catch {}
+      document.querySelectorAll('#operator-bar button[data-demo]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      rebuild();
+    } catch (e) { note('Could not load profile: ' + e.message); }
+  }
+  document.getElementById('load-profile').addEventListener('click', () => loadProfile(document.getElementById('profile-uid').value));
+  document.getElementById('profile-uid').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadProfile(e.target.value); });
 
   // Connect the controller OUT to a remote receiver over a WebSocket.
   // One-click: fill the default local-harness URL and connect. The text field
@@ -120,7 +145,12 @@
     rebuild();
   });
 
-  rebuild(); // default profile, local app
+  // Pick up the profile you just onboarded with (same-origin localStorage key
+  // that /onboarding writes). Otherwise start on the default demo profile.
+  let savedUid = null;
+  try { savedUid = localStorage.getItem('onb-uid'); } catch {}
+  if (savedUid) { document.getElementById('profile-uid').value = savedUid; loadProfile(savedUid); }
+  else rebuild();
 </script>
 </body>
 </html>

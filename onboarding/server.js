@@ -245,6 +245,28 @@ async function profileSummary(uid) {
   return { exists: true, uid, ...(await profileConfig(uid)) };
 }
 
+// The full AbilityModel (incl. structured needs[]) for a uid — this is what the
+// Controller reads as its `operator` to render itself and derive settings.
+async function abilityModelFor(uid) {
+  uid = String(uid || '').trim();
+  if (!uid) return { exists: false, uid: '' };
+  const exists = (await listProfileIds()).includes(uid);
+  if (!exists) return { exists: false, uid };
+  let model = {};
+  if (MODE === 'remote') {
+    const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-view' });
+    if (t.body?.token) {
+      const r = await remoteLibrarian(t.body.token, 'getAbilityModel', []);
+      model = r.body?.result || {};
+    }
+  } else {
+    const { host } = await localBits();
+    const { librarian } = await host.getInstance(uid);
+    model = await librarian.getAbilityModel();
+  }
+  return { exists: true, uid, model };
+}
+
 // ── Admin: list + delete profiles (gated by ADMIN_PASSWORD) ─────────────────
 function adminOk(req) {
   if (!ADMIN_PASSWORD) return false;
@@ -359,6 +381,12 @@ const server = http.createServer(async (req, res) => {
     if (method === 'GET' && pathname === '/api/profile') {
       const uid = new URL(req.url, 'http://localhost').searchParams.get('uid') || '';
       try { return sendJSON(res, 200, await profileSummary(uid)); }
+      catch (e) { return sendJSON(res, 502, { error: e.message }); }
+    }
+
+    if (method === 'GET' && pathname === '/api/ability-model') {
+      const uid = new URL(req.url, 'http://localhost').searchParams.get('uid') || '';
+      try { return sendJSON(res, 200, await abilityModelFor(uid)); }
       catch (e) { return sendJSON(res, 502, { error: e.message }); }
     }
 
