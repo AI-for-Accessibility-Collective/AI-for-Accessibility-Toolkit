@@ -463,8 +463,8 @@ export const skillRegistry = [
   },
   {
     id: 'voice-commands',
-    name: 'Voice Commands',
-    description: 'Web Speech API fallback for hands-free browsing when voice mode is not available. Voice mode (Gemini Live) provides better speech understanding including for non-standard speech. Fixes: word-boundary command matching, mic-denied loop prevention, mutual exclusion with voice mode.',
+    name: 'Hands-Free Navigation',
+    description: 'Fixed spatial voice commands for MOTOR users browsing without a keyboard or mouse — movement only (scroll/page/top/bottom/back/forward) plus "click" on the focused element, with visual feedback. This is NOT voice access for blind users: it can only say WHERE to move, not WHAT you want, and shows recognized text visually. For semantic voice control ("read me the third result") use voice mode in a host with a real microphone. (Web Speech API fallback when voice mode is unavailable.)',
     supportAreas: ['motor'],
     siteRelevance: ['all'],
     requiresAI: false,

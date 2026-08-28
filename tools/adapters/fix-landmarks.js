@@ -61,6 +61,48 @@ export function ensureMainLandmark() {
  * <footer>, and <nav> map to these roles implicitly — this only helps
  * div-soup pages.
  */
+// "navbar" is intentionally NOT here — it's a navigation region, not a page
+// banner, and matching it mislabels nav components. `\bheader\b` already covers
+// site-header / page-header (word boundaries at the hyphen).
+const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
+const COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
+const hint = (re, el) => re.test(el.className || '') || re.test(el.id || '');
+
+// Mark a page banner (site header) when none exists. Class/id-hinted, in
+// document order (earliest wins), size-capped, and never a block that already
+// contains the main content — so we tag the masthead, not the whole page.
+export function ensureBanner() {
+  if (document.querySelector('header, [role="banner"]')) return false;
+  const el = Array.from(document.querySelectorAll('div, section, td, aside'))
+    .filter((e) => !e.getAttribute('role') && hint(HEADER_HINT, e))
+    .filter((e) => !e.querySelector('main, [role="main"]'))
+    .filter((e) => (e.textContent?.trim().length || 0) < 2000)[0];
+  if (!el) return false;
+  el.setAttribute('role', 'banner');
+  incrementStat('wcag');
+  logFix('landmark', el, '(unmarked header)', 'role="banner"');
+  return true;
+}
+
+// Mark a page contentinfo (footer) when none exists. Class/id-hinted OR carrying
+// copyright text near its end; last match in document order (closest to the
+// bottom), size-capped, and not a wrapper that contains other landmarks.
+export function ensureContentinfo() {
+  if (document.querySelector('footer, [role="contentinfo"]')) return false;
+  const cands = Array.from(document.querySelectorAll('div, section, td, aside'))
+    .filter((e) => !e.getAttribute('role'))
+    .filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || '').slice(-400)))
+    .filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]'))
+    .filter((e) => (e.textContent?.trim().length || 0) < 1500);
+  const el = cands[cands.length - 1];
+  if (!el) return false;
+  el.setAttribute('role', 'contentinfo');
+  incrementStat('wcag');
+  logFix('landmark', el, '(unmarked footer)', 'role="contentinfo"');
+  return true;
+}
+
 export function ensureStructuralLandmarks() {
   let fixed = 0;
 
@@ -77,6 +119,9 @@ export function ensureStructuralLandmarks() {
       fixed++;
     }
   });
+
+  if (ensureBanner()) fixed++;
+  if (ensureContentinfo()) fixed++;
 
   return fixed;
 }

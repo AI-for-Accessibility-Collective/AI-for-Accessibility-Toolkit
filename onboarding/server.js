@@ -194,7 +194,9 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
     if (kind) await remoteLibrarian(token, 'setProfileField', ['fields.visionKind', kind]);
     if (text) {
       await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
-      await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit' }]);
+      // Stable topic so a re-onboard UPSERTS this note (addNote upserts by
+      // topic) instead of appending a duplicate every run.
+      await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit', topic: 'self-description' }]);
     }
   } else {
     const { host } = await localBits();
@@ -204,7 +206,8 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
     if (kind) await librarian.setProfileField('fields.visionKind', kind);
     if (text) {
       await librarian.setProfileField('freeText', text);
-      await librarian.addNote(text, { source: 'user-explicit' });
+      // Stable topic → re-onboard upserts (not appends) this note.
+      await librarian.addNote(text, { source: 'user-explicit', topic: 'self-description' });
     }
   }
   return { uid, supportAreas: areas, freeText: text, visionKind: kind, needs };
