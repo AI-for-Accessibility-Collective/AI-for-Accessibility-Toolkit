@@ -114,6 +114,24 @@ const DEFAULT_NEEDS_BY_AREA = {
 // blind screen-reader user.
 const LOW_VISION_NEEDS = [{ dimension: 'textSize', value: 1.5 }, { dimension: 'contrast', value: 'yellow-black' }];
 
+// The blind / screen-reader baseline: STRUCTURE and announcements, not looks.
+// These neutral dimensions render (via toolkit WEB_DERIVATION) to already-wired
+// catalog adapters — image descriptions, form labels, landmark repair, live
+// regions, SPA announcements, skip links, a heading outline, keyboard access —
+// mirroring the catalog's `blind` preset. NO magnification and NO read-aloud (a
+// screen reader owns the voice). Strength 'floor': these are hard requirements
+// for a screen-reader user, not soft preferences.
+const BLIND_NEEDS = [
+  { dimension: 'describeImages', value: true },
+  { dimension: 'labelControls', value: true },
+  { dimension: 'repairLandmarks', value: true },
+  { dimension: 'announceUpdates', value: true },
+  { dimension: 'spaAnnounce', value: true },
+  { dimension: 'skipLinks', value: true },
+  { dimension: 'pageStructure', value: true },
+  { dimension: 'keyboardAccess', value: true },
+];
+
 // Which visual population does the free text describe? A blind screen-reader
 // user needs the OPPOSITE of magnification, so we must not treat "vision" as one
 // answer. Heuristic only (a keyword read beats shipping the wrong modality;
@@ -131,16 +149,15 @@ function isBlindText(freeText) {
 // Derive a de-duplicated `fields.needs` array from the support areas + free text.
 function deriveDefaultNeeds(areas, freeText) {
   const byDimension = new Map(); // dimension → need (last writer wins, stable de-dupe)
-  const add = (n) => byDimension.set(n.dimension, { dimension: n.dimension, value: n.value, strength: 'preference', source: 'onboarding-derived' });
+  const add = (n, strength = 'preference') => byDimension.set(n.dimension, { dimension: n.dimension, value: n.value, strength, source: 'onboarding-derived' });
 
   for (const area of areas) {
     if (area === 'vision') {
-      // Blind → derive NO visual settings. The neutral vocabulary cannot yet
-      // express screen-reader needs (structure/landmarks/descriptions/live
-      // regions), so an empty visual baseline is the honest state — far better
-      // than pushing magnification a blind person can't use. Low vision (and
-      // an unspecified "vision" pick) → the magnification baseline.
-      if (isBlindText(freeText)) continue;
+      // "vision" spans two OPPOSITE populations. A blind screen-reader user gets
+      // the STRUCTURE baseline (floor strength); low vision (or an unspecified
+      // "vision" pick) gets magnification. Magnification for a blind user is the
+      // wrong modality entirely, so the free text disambiguates.
+      if (isBlindText(freeText)) { for (const n of BLIND_NEEDS) add(n, 'floor'); continue; }
       for (const n of LOW_VISION_NEEDS) add(n);
       continue;
     }

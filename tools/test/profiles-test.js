@@ -20,7 +20,7 @@ const RECOGNIZED = new Set([
   'announceUpdates', 'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'confirmActions', 'contrastMode', 'darkMode',
   'defineWords', 'describeOnDemand', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
   'colorFilter', 'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
-  'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
+  'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'fixLandmarks', 'readAloud', 'mathAccessible', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
   'fixContrast',
 ]);
 const NUMERIC_RANGE = { fontScale: [50, 300], lineHeight: [1, 3], letterSpacing: [0, 1], speechRate: [0.3, 4] };
@@ -44,6 +44,10 @@ for (const id of EXPECTED_PROFILES) {
     }
   }
 }
+
+// Reachability: the blind preset's landmark repair must resolve to the adapter
+// (regression guard for the fixLandmarks → fix-landmarks wiring).
+check('blind preset enables fix-landmarks (landmark repair is reachable)', getEnabledAdapters('blind').includes('fix-landmarks'));
 
 check('defaults exists and is an object', defaults && typeof defaults === 'object');
 check('getAllProfiles lists all 12 with id/name', getAllProfiles().length === 12 && getAllProfiles().every(p => p.id && p.name));

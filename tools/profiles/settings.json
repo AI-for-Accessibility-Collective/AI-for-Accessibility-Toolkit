@@ -9,6 +9,7 @@
         "autoFixLabels": true,
         "autoDescribe": true,
         "autoVideoDescribe": true,
+        "fixLandmarks": true,
         "keyboardNav": true,
         "pageOutline": true,
         "announceUpdates": true,

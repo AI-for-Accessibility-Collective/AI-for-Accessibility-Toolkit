@@ -57,6 +57,19 @@ export const WEB_DERIVATION = {
   contrast:      (v) => ({ contrastMode: v === true ? 'light' : v }),
   dyslexiaFont:  (v) => ({ dyslexiaFont: !!v }),
   readAloudRate: (v) => ({ speechRate: Number(v) }),
+  readAloud:     (v) => ({ readAloud: !!v }),
+  // Screen-reader (non-visual) dimensions — how a page is STRUCTURED and
+  // announced, not how it looks. These are what a blind user's profile needs;
+  // each maps to an already-wired catalog adapter (see tools/profiles/
+  // settings.js getEnabledAdapters).
+  describeImages:  (v) => ({ autoDescribe: !!v }),
+  labelControls:   (v) => ({ autoFixLabels: !!v }),
+  repairLandmarks: (v) => ({ fixLandmarks: !!v }),
+  announceUpdates: (v) => ({ announceUpdates: !!v }),
+  spaAnnounce:     (v) => ({ spaFocus: !!v }),
+  skipLinks:       (v) => ({ skipLinks: !!v }),
+  pageStructure:   (v) => ({ pageOutline: !!v }),
+  keyboardAccess:  (v) => ({ keyboardNav: !!v }),
 };
 
 /**

@@ -93,3 +93,18 @@ export function fixLandmarks() {
 export const axeHandlers = {
   'landmark-one-main': () => ensureMainLandmark(),
 };
+
+// Toggle-style adapter so the catalog can enable landmark repair by id
+// (settings.js maps `fixLandmarks: true` → 'fix-landmarks'). Landmark roles are
+// additive and safe to leave in place, so disable() is a no-op beyond flipping
+// the flag — a full revert would need per-element tracking and is not worth the
+// risk of stripping a role the page actually had.
+export const FixLandmarks = {
+  id: 'fix-landmarks',
+  enabled: false,
+  enable() { if (this.enabled) return; this.enabled = true; try { fixLandmarks(); } catch { /* detached */ } },
+  disable() { this.enabled = false; },
+  toggle() { this.enabled ? this.disable() : this.enable(); },
+};
+
+if (typeof window !== 'undefined') window.__ai4a11yFixLandmarks = FixLandmarks;

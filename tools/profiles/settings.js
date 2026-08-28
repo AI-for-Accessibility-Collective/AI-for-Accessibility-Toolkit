@@ -167,6 +167,8 @@ export function getEnabledAdapters(profileId) {
   if (tools.exploreChart) enabled.push('explore-a-chart');
   if (tools.spaFocus) enabled.push('spa-focus');
   if (tools.skipLinks) enabled.push('skip-links');
+  if (tools.fixLandmarks) enabled.push('fix-landmarks');
+  if (tools.readAloud) enabled.push('read-aloud');
   if (tools.mathAccessible) enabled.push('math-a11y');
   if (tools.readerMode) enabled.push('reader-mode');
   if (tools.focusMode) enabled.push('focus-mode');
