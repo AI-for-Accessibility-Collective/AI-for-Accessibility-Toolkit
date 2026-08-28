@@ -69,12 +69,12 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
     return noMatch(utterance);
   }
 
-  async function dispatch(intent) {
+  async function dispatch(intent, opts = {}) {
     switch (intent.type) {
       case 'adapt':   return dispatchAdapt(intent);
       case 'undo':    return dispatchUndo(intent);
       case 'query':   return dispatchQuery(intent);
-      case 'command': return dispatchCommand(intent);
+      case 'command': return dispatchCommand(intent, opts);
       default:        return result(false, intent, "I didn't catch that. Try: " + (intent.suggestions || []).join(', ') + '.');
     }
   }
@@ -147,7 +147,7 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
     return result(true, intent, say, ctx);
   }
 
-  async function dispatchCommand(intent) {
+  async function dispatchCommand(intent, opts = {}) {
     const caps = await control.describeCapabilities();
     // Under rawToTask the host asserted the receiver takes tasks, so send a
     // 'task' even if it isn't advertised — let the receiver decide, rather than
@@ -156,7 +156,10 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
     if (!exempt && !(caps.actions || []).includes(intent.action)) {
       return result(false, intent, `This app can't ${intent.action}.`, { unsupported: [intent.action] });
     }
-    const res = await control.performAction(intent.action, intent.target, intent.text);
+    // `meta` (4th arg) carries per-run flags the app should honor — e.g.
+    // returnToController: activate the Controller's tab again when done.
+    const meta = { returnToController: opts.returnToController !== false };
+    const res = await control.performAction(intent.action, intent.target, intent.text, meta);
     if (!res || !res.ok) return result(false, intent, `That didn't work${res && res.detail ? ': ' + res.detail : ''}.`, res);
     return result(true, intent, (intent.say || 'Done') + '.', res);
   }

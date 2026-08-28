@@ -83,6 +83,25 @@ async function run() {
   fire3('Here is a lasagna recipe');
   check('waiting: dots hidden when the result note arrives', w.hidden === true);
 
+  // The "Return to controller after running" checkbox flows to the app (meta).
+  let lastMeta = null;
+  const metaControl = Object.assign({}, createMockReceiver({ actions: ['task'] }), {
+    async performAction(a, t, x, meta) { lastMeta = meta; return { ok: true }; },
+    onNote() { return () => {}; },
+  });
+  const c5 = createController({ control: metaControl, rawToTask: true });
+  const ui5 = renderControllerUI(c5, { doc: document });
+  document.body.appendChild(ui5.root);
+  const retCb = [...ui5.root.querySelectorAll('.aa-toggle')].find((l) => /Return to controller/.test(l.textContent))?.querySelector('input');
+  check('return-to-controller checkbox present and default ON', !!retCb && retCb.checked === true);
+  ui5.root.querySelector('.aa-input').value = 'do a task'; ui5.root.querySelector('.aa-go').click();
+  await tick(); await tick();
+  check('checkbox value flows to the app (default true)', lastMeta && lastMeta.returnToController === true);
+  retCb.checked = false; retCb.dispatchEvent(new dom.window.Event('change'));
+  ui5.root.querySelector('.aa-input').value = 'do another'; ui5.root.querySelector('.aa-go').click();
+  await tick(); await tick();
+  check('unchecking flows to the app (false)', lastMeta && lastMeta.returnToController === false);
+
   // A note arriving while the tab is HIDDEN posts a notification (whose click
   // returns focus — a background tab can't self-activate).
   const notes = [];

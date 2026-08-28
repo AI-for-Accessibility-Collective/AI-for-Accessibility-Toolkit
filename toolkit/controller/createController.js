@@ -64,20 +64,20 @@ export function createController({ control = noopControl, llm = null, operator =
     /** Resolve AND act. Returns a normalized `{ ok, intent, say, data }` result.
      *  When a confirmation is pending, a "yes"/"no" resolves it; any other input
      *  abandons the pending action and is handled fresh. */
-    async handle(utterance) {
+    async handle(utterance, opts = {}) {
       const u = String(utterance == null ? '' : utterance).trim();
       if (pending) {
         const lower = u.toLowerCase();
-        if (AFFIRM.test(lower)) { const it = pending; pending = null; return router.dispatch(it); }
+        if (AFFIRM.test(lower)) { const p = pending; pending = null; return router.dispatch(p.intent, p.opts); }
         if (DENY.test(lower)) { pending = null; return { ok: true, intent: { type: 'cancel' }, say: 'Okay, cancelled.', data: null }; }
         pending = null; // neither yes nor no — drop it and treat as a new request
       }
       const intent = await router.resolve(u);
       if (needsConfirm(intent)) {
-        pending = intent;
+        pending = { intent, opts };
         return { ok: true, pending: true, intent, say: `${intent.say || 'Do that'}? Say yes to confirm.`, data: null };
       }
-      return router.dispatch(intent);
+      return router.dispatch(intent, opts);
     },
   };
 }

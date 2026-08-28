@@ -146,6 +146,21 @@ async function run() {
     check('rawToTask: unadvertised task still routed as a task (no grammar fallback)', r3.intent.type === 'command' && r3.intent.action === 'task');
   }
 
+  // ── 10. returnToController flag reaches the app via performAction meta ─────
+  {
+    let lastMeta;
+    const recv = Object.assign({}, createMockReceiver({ actions: ['task'] }), {
+      async performAction(action, target, text, meta) { lastMeta = meta; return { ok: true }; },
+    });
+    const c = createController({ control: recv, rawToTask: true });
+    await c.handle('do a thing', { returnToController: true });
+    check('meta.returnToController=true is passed to performAction', lastMeta && lastMeta.returnToController === true);
+    await c.handle('do a thing', { returnToController: false });
+    check('meta.returnToController=false is respected', lastMeta && lastMeta.returnToController === false);
+    await c.handle('do a thing'); // no opts → default on
+    check('meta.returnToController defaults to true', lastMeta && lastMeta.returnToController === true);
+  }
+
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }

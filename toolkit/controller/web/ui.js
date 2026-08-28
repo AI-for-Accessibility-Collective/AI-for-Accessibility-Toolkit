@@ -71,6 +71,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   let speakResults = true; // default ON; the toggle + localStorage let anyone turn it off
   if (TTS) { try { const v = localStorage.getItem(SPEAK_KEY); if (v !== null) speakResults = v === '1'; } catch { /* storage blocked */ } }
 
+  // Whether to ask the app to bring focus back to the Controller when a task
+  // finishes (passed to the receiver as meta.returnToController). Default ON,
+  // persisted per browser.
+  const RETURN_KEY = 'aa-controller-return';
+  let returnToController = true;
+  try { const v = localStorage.getItem(RETURN_KEY); if (v !== null) returnToController = v === '1'; } catch { /* storage blocked */ }
+
   const root = el(doc, 'div', { class: 'aa-controller' + (p.targetSize === 'large' ? ' aa-large' : '') });
   root.setAttribute('role', 'region');
   root.setAttribute('aria-label', 'Accessibility controller');
@@ -111,6 +118,17 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     toggle.append(cb, doc.createTextNode(' Speak results aloud'));
     cb.addEventListener('change', () => { speakResults = cb.checked; try { localStorage.setItem(SPEAK_KEY, speakResults ? '1' : '0'); } catch { /* storage blocked */ } });
     root.append(toggle);
+  }
+
+  // "Return to controller after running" — passed to the app so it can bring
+  // focus back to this Controller when a task finishes.
+  {
+    const rtoggle = el(doc, 'label', { class: 'aa-toggle' });
+    const rcb = el(doc, 'input', { type: 'checkbox' });
+    rcb.checked = returnToController;
+    rtoggle.append(rcb, doc.createTextNode(' Return to controller after running'));
+    rcb.addEventListener('change', () => { returnToController = rcb.checked; try { localStorage.setItem(RETURN_KEY, returnToController ? '1' : '0'); } catch { /* storage blocked */ } });
+    root.append(rtoggle);
   }
 
   // ── behavior ──
@@ -169,7 +187,7 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     stopWaiting();
     show('…');
     try {
-      const res = await controller.handle(u);
+      const res = await controller.handle(u, { returnToController });
       // A content read (query → getContent) is a RESULT → polite; everything
       // else (adaptations, task acks, errors) is an acknowledgement → assertive.
       const contentRead = res.intent && res.intent.type === 'query' && res.intent.ask === 'content';

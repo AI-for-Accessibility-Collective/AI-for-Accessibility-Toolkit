@@ -133,8 +133,15 @@ Return readable text for "read this / what's on screen". `mode` is `"outline"`
   instructions. (Matters if the Controller has the LLM lane on.)
 - No readable surface → `{ "error": "no readable content" }`.
 
-### `performAction(actionId, target?, text?) → ActionResult`
-One app action.
+### `performAction(actionId, target?, text?, meta?) → ActionResult`
+One app action. `meta` (4th arg) carries per-run flags:
+- `meta.returnToController` (boolean, default `true`) — when a `task` drove the
+  browser away (another tab/window), the receiver should **activate the
+  Controller's tab again** when the task finishes (e.g. CDP
+  `Target.activateTarget` / `Page.bringToFront`), so focus returns to where the
+  operator is waiting. A background web page can't do this itself; the receiver
+  that drives the browser is the only one that can. Respect `false` (the operator
+  unchecked "Return to controller after running").
 ```json
 { "ok": true, "detail": "activated Documentation" }
 ```
