@@ -27244,29 +27244,11 @@
      "id": "1",
      "label": "Reach the lookup service",
      "note": "1.1 then 1.2, or 1.3 straight to the site; 1.5 instead when the tool is an app (gzY4, 3jrQ, L4Ik). 1.4 whenever banners and prompts interrupt - da1o hits two cookie walls on two subdomains. 1.6 only on the one account-gated service (ECzU); everything else runs signed out.",
-     "questions": [
-      {
-       "question": "Which app should you open to look up the information?",
-       "cluster": "select",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The home screen displays several apps, including Chrome, requiring a choice of which one to use to access the internet.",
-       "whatTheAgentLoses": "The user loses the opportunity to specify their preferred browser or dedicated app for this task."
-      }
-     ],
      "children": [
       {
        "id": "1.1",
        "label": "Search for the service",
        "questions": [
-        {
-         "question": "Which search suggestion best matches the airline you want to find?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The search bar shows multiple suggestions for 'air india', including general search terms and direct links to the official website.",
-         "whatTheAgentLoses": "The user loses the ability to choose the most direct or relevant search suggestion to quickly access the desired airline's website."
-        },
         {
          "question": "What search query should you use to find the flight status?",
          "cluster": "hand over",
@@ -27334,12 +27316,12 @@
          "whatTheAgentLoses": "The user loses the chance to read the privacy policy and manage their cookie preferences before the banner is dismissed."
         },
         {
-         "question": "How should you handle the unexpected text selection menu that just appeared?",
+         "question": "Should you cancel or try again on the screen overlay permission error?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "An accidental tap brought up a menu with options like 'Select All' and 'Paste' that interrupts the process of entering the location parameters.",
-         "whatTheAgentLoses": "The user loses the human intuition to recognize an accidental tap and safely dismiss the resulting popup to keep the search on track."
+         "why": "The screen showed an error preventing the site from asking for permissions due to active overlays, requiring a choice to proceed.",
+         "whatTheAgentLoses": "The user loses the choice to simply cancel the blocked permission request, which could lead to the agent getting stuck trying to resolve a system error."
         }
        ]
       },
@@ -27361,12 +27343,12 @@
            "whatTheAgentLoses": "The user loses the ability to ensure the agent searches for the exact application needed rather than settling for an irrelevant autocomplete suggestion."
           },
           {
-           "question": "What app should you search for?",
-           "cluster": "hand over",
+           "question": "Which world clock app should you select from the search results?",
+           "cluster": "select",
            "moment": "Now",
            "moneyMoving": false,
-           "why": "The screen showed the Google Play Store search bar, requiring a specific query to find a suitable app.",
-           "whatTheAgentLoses": "The user loses the ability to specify which app they trust or prefer to use for this information."
+           "why": "The search results display multiple highly-rated free options, such as 'World Clock & Widget' and 'World Clock', requiring a decision on which specific app to use.",
+           "whatTheAgentLoses": "You lose the opportunity to select your preferred app based on specific features, developer trust, or interface design."
           }
          ]
         },
@@ -27425,14 +27407,6 @@
            "moneyMoving": false,
            "why": "The screen outlines data collection policies for analytics, crash reports, and personalized ads that apply when using the app.",
            "whatTheAgentLoses": "The user loses the opportunity to review the full terms of service or decide whether to opt out of data tracking."
-          },
-          {
-           "question": "Do I want to accept the terms of service?",
-           "cluster": "approve",
-           "moment": "Now",
-           "moneyMoving": false,
-           "why": "The screen displays an 'Our terms of service' prompt with a CONTINUE button that must be acknowledged to access the app.",
-           "whatTheAgentLoses": "The user loses the opportunity to review, evaluate, or decline the legal terms and conditions required to use the application."
           }
          ]
         },
@@ -27538,12 +27512,12 @@
          "whatTheAgentLoses": "The user loses the ability to ensure the agent navigates to the correct specialized tool for their specific query."
         },
         {
-         "question": "Can you see the top navigation menu with the 'PAST WEATHER' tab?",
-         "cluster": "facts",
+         "question": "Which tab should you select to find the specific climate data or forecast you need?",
+         "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The frame is entirely black, meaning no browser or navigation menu is visible to confirm the action.",
-         "whatTheAgentLoses": "The user loses the ability to verify that the agent successfully navigated to the past weather section."
+         "why": "The screen displayed multiple tabs such as 'Local Data/Records' and 'Climate Prediction and Variability', each offering different sets of links.",
+         "whatTheAgentLoses": "The user loses the ability to specify which category of climate information the agent should explore to find the requested data."
         }
        ]
       },
@@ -27566,20 +27540,12 @@
        "label": "Pick the lookup mode",
        "questions": [
         {
-         "question": "Which method should you use to search for the flight?",
+         "question": "Which type of data access do you need from the sidebar menu?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen offers tabs to search by flight number, route, or airport, and choosing the flight number provides the most accurate result.",
-         "whatTheAgentLoses": "You lose the opportunity to choose the most convenient search method based on the specific flight details you currently have available."
-        },
-        {
-         "question": "How should you search for the flight if you don't have the flight number?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen offers 'ORIGIN' and 'DESTINATION' input fields as an alternative way to find a flight when the exact flight number is unknown.",
-         "whatTheAgentLoses": "The user loses the ability to pivot to an alternative search strategy using the specific departure and arrival airports they know."
+         "why": "The sidebar offers multiple data scopes like 'Single Point', 'Regional', and 'Global', which determines the format and breadth of the information retrieved.",
+         "whatTheAgentLoses": "You lose the ability to decide whether a single point of data is sufficient or if a broader regional or global dataset would better serve your needs."
         }
        ]
       }
@@ -27605,14 +27571,6 @@
          "moneyMoving": false,
          "why": "The PDF displays various details like times, cities, and booking classes, so you must isolate just the flight number 'CA 430' to perform an accurate search.",
          "whatTheAgentLoses": "You lose the ability to ensure the agent correctly identifies the exact flight code rather than mistakenly using the airline name or booking class."
-        },
-        {
-         "question": "Have you confirmed the exact parameters you need to search for?",
-         "cluster": "facts",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Verifying the specific details like the city, date, or flight number before typing ensures you enter the correct information into the search fields.",
-         "whatTheAgentLoses": "The user loses the ability to verify that the agent correctly understood the specific details of their request before it begins searching."
         }
        ]
       },
@@ -27976,14 +27934,6 @@
        "label": "Filter the map",
        "questions": [
         {
-         "question": "Which filter should you add to narrow down the flights?",
-         "cluster": "refine",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The popup menu offers several filter options like 'Call sign (Airline)' and 'Airport', so you must choose the most effective one to isolate the desired flight.",
-         "whatTheAgentLoses": "You lose the chance to rely on your own experience to select the most efficient filter, such as the airline call sign, to quickly find the flight."
-        },
-        {
          "question": "Did the map update to show the correct aircraft type?",
          "cluster": "facts",
          "moment": "After",
@@ -28006,12 +27956,12 @@
          "whatTheAgentLoses": "The user loses the opportunity to visually explore the air traffic map and verify the flight's current geographic location before selecting it."
         },
         {
-         "question": "Which specific flights do you want to select on the map to view their details?",
-         "cluster": "select",
+         "question": "Does this flight match the parameters you are looking for?",
+         "cluster": "facts",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen shows a map with multiple flight icons like CSN383 and [id], and clicking them populates the left panel with their specific routes and aircraft information.",
-         "whatTheAgentLoses": "You lose the ability to hand-pick exactly which flights are selected and grouped together in the details panel for comparison."
+         "why": "The screen showed the details for easyJet flight [id] from Bristol to Paris, but you chose to zoom out and select a different airplane.",
+         "whatTheAgentLoses": "The delegator loses the assurance that the agent has found the correct flight to read the requested value from."
         }
        ]
       }
@@ -28037,20 +27987,20 @@
        "label": "Read the status and times",
        "questions": [
         {
-         "question": "Do you see the specific details, route, and status of the currently selected flight?",
-         "cluster": "facts",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen displayed the flight number, route, and scheduled times for a British Airways flight from New York to London.",
-         "whatTheAgentLoses": "The user loses the ability to review the details of the currently selected flight before deciding to search for their specific target flight."
-        },
-        {
          "question": "Are you reading the current status and schedule of the searched flight directly from the search results?",
          "cluster": "facts",
          "moment": "Completion",
          "moneyMoving": false,
          "why": "The Google search results page displayed a flight status card showing the delay and schedule for Emirates EK 204, providing the requested value directly.",
          "whatTheAgentLoses": "The user loses the ability to directly see and verify the flight's delay and schedule information presented on the search results page."
+        },
+        {
+         "question": "Did you locate and read the correct departure and estimated arrival times for the flight?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "The screen displays the exact departure time from JFK and the estimated arrival time at DXB, which are the specific facts needed to complete the task.",
+         "whatTheAgentLoses": "The user loses the direct visual confirmation of the flight's exact departure and arrival times on the official tracking page."
         }
        ]
       },
@@ -28067,12 +28017,12 @@
          "whatTheAgentLoses": "You lose the opportunity to quickly catch a search mistake and correct it before wasting time loading or reading data for the wrong flight."
         },
         {
-         "question": "Are these the correct flight details for the airplane you are looking up?",
+         "question": "Are you reading the flight details for the specific aircraft?",
          "cluster": "facts",
-         "moment": "Now",
+         "moment": "Completion",
          "moneyMoving": false,
-         "why": "Verifying the flight number, airline, origin, and destination on the information panel ensures you are tracking the correct aircraft before exploring its flight path.",
-         "whatTheAgentLoses": "The user loses the ability to personally confirm that the agent has pulled up the exact flight they intended to track."
+         "why": "The screen displays an info panel for 'SXN24' by 'Thunder Aviation' at 870 ft, confirming the details of the specific aircraft being queried.",
+         "whatTheAgentLoses": "The user misses out on seeing the specific details and photo of the aircraft, relying entirely on the agent's summary."
         }
        ]
       },
@@ -28177,12 +28127,12 @@
          "whatTheAgentLoses": "The user loses the ability to decide if a quick summary is sufficient or if they need to investigate deeper for live tracking details."
         },
         {
-         "question": "Do you want to click 'More weather details' to see the full forecast, or is the summary sufficient?",
+         "question": "Do you want to check the current location of the incoming aircraft using the 'Where is my plane right now?' button?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
-         "why": "The screen showed a brief weather summary with a link to view more detailed information.",
-         "whatTheAgentLoses": "The user loses the ability to decide whether the brief summary is enough or if they need to view the comprehensive weather details."
+         "why": "The screen displays the assigned gates and offers a 'Where is my plane right now?' button to track the physical aircraft before departure.",
+         "whatTheAgentLoses": "The user loses the opportunity to proactively track the incoming aircraft to anticipate any potential delays not yet reflected in the schedule."
         }
        ]
       },
@@ -28318,6 +28268,14 @@
          "moneyMoving": false,
          "why": "The screen explicitly states that the displayed data is preliminary and provides a link to access the complete, finalized climate record.",
          "whatTheAgentLoses": "The user loses the opportunity to decide whether preliminary data is sufficient for their needs or if they require the official, finalized records."
+        },
+        {
+         "question": "What is the difference between the yellow and blue aircraft icons on the map?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays both yellow and blue aircraft icons, which indicate whether the flight is being tracked by terrestrial or satellite receivers.",
+         "whatTheAgentLoses": "You lose the technical context of how the flight's location data is being sourced, which can affect the expected accuracy and update frequency of the tracking."
         }
        ]
       }
