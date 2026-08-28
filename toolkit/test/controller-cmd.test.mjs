@@ -21,6 +21,12 @@ function check(name, cond) {
   check('cmd grammar: "scroll to bottom" → scroll bottom', (() => { const i = parse('scroll to bottom'); return i.action === 'scroll' && i.target === 'bottom'; })());
   check('cmd grammar: "go back" → back', parse('go back').action === 'back');
   check('cmd grammar: adaptation still wins ("dark mode" is not a command)', parse('dark mode').type === 'adapt');
+
+  // navigation & search (#2)
+  check('nav grammar: "open wikipedia.org" → navigate', (() => { const i = parse('open wikipedia.org'); return i.action === 'navigate' && i.target === 'wikipedia.org'; })());
+  check('nav grammar: "go to https://example.com/x" → navigate', (() => { const i = parse('go to https://example.com/x'); return i.action === 'navigate' && /example\.com/.test(i.target); })());
+  check('nav grammar: "open the menu" → activate (not navigate)', parse('open the menu').action === 'activate');
+  check('nav grammar: "search for braille music books" → search', (() => { const i = parse('search for braille music books'); return i.action === 'search' && i.target === 'braille music books'; })());
 }
 
 async function run() {
@@ -90,6 +96,30 @@ async function run() {
 
     const r3 = await c.handle('click checkout'); // no such target
     check('web cmd: no match is refused honestly', r3.ok === false);
+  }
+
+  // ── 7. Router 'task' fallback (#1): unparsed utterances go to the app ──────
+  {
+    const recv = createMockReceiver({ actions: ['task'] });
+    const c = createController({ control: recv });
+    const r = await c.handle('find a good recipe for lasagna and add it to my shopping list');
+    check('task fallback: unparsed utterance → performed as a task', r.ok && recv.focus === 'task');
+
+    const noTask = createMockReceiver({ actions: ['scroll'] }); // no 'task'
+    const c2 = createController({ control: noTask });
+    const r2 = await c2.handle('do a somersault');
+    check('task fallback: no task action → still unrecognized (not faked)', r2.ok === false);
+  }
+
+  // ── 8. navigate/search dispatch gated on receiver capability (#2) ──────────
+  {
+    const recv = createMockReceiver({ actions: ['navigate', 'search'] });
+    const c = createController({ control: recv });
+    check('navigate performs when supported', (await c.handle('open wikipedia.org')).ok && recv.focus === 'navigate:wikipedia.org');
+    check('search performs when supported', (await c.handle('search for tactile maps')).ok && recv.focus === 'search:tactile maps');
+
+    const noNav = createController({ control: createMockReceiver({ actions: [] }) });
+    check('navigate refused when receiver lacks it', (await noNav.handle('open wikipedia.org')).ok === false);
   }
 
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);

@@ -70,6 +70,12 @@ const RULES = [
   { re: /\bscroll (?:to (?:the )?)?(top|bottom|up|down)\b/, build: (m, u) => command(u, { action: 'scroll', target: m[1], say: `Scrolling ${m[1]}` }) },
   { re: /\bgo forward\b/, build: (_m, u) => command(u, { action: 'forward', say: 'Going forward' }) },
   { re: /\bgo back\b/, build: (_m, u) => command(u, { action: 'back', say: 'Going back' }) },
+  // Navigation & search (before the generic activate rule, since "open" is
+  // shared). navigate only fires when the target looks like a URL/domain, so
+  // "open the menu" still falls through to activate. Both are gated at dispatch
+  // on the receiver declaring the action.
+  { re: /\b(?:go to|open|navigate to|visit|load)\s+((?:https?:\/\/)?[^\s]+\.[^\s]+)/, build: (m, u) => { const url = m[1].replace(/[.,!?]+$/, ''); return command(u, { action: 'navigate', target: url, text: url, say: `Opening ${url}` }); } },
+  { re: /\bsearch(?:\s+for)?\s+(.+)/, build: (m, u) => { const q = m[1].replace(/[.?!]+$/, '').trim(); return command(u, { action: 'search', target: q, text: q, say: `Searching for ${q}` }); } },
   { re: /\b(?:click|press|tap|activate|open|select) (?:the |on |a )?(.+)/, build: (m, u) => { const t = cleanTarget(m[1]); return command(u, { action: 'activate', target: t, say: `Activating ${t}` }); } },
 ];
 

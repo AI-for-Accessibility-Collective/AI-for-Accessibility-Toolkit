@@ -13,6 +13,7 @@
 
 import { settingsMeta } from '../registry/tools.js';
 import { parse, noMatch, SUGGESTIONS } from './grammar.js';
+import { command } from './intent.js';
 
 // Baseline for a numeric key when the receiver reports no current value, so a
 // relative "bigger text" has something to move from.
@@ -44,12 +45,20 @@ export function createRouter({ control, llm = null }) {
   async function resolve(utterance) {
     const det = parse(utterance);
     if (det) return det;
+    const caps = await control.describeCapabilities();
     if (llm) {
       try {
-        const caps = await control.describeCapabilities();
         const it = await llm.resolve(utterance, caps);
         if (it && it.type) return it;
-      } catch { /* fall through to unrecognized — the LLM lane is best-effort */ }
+      } catch { /* fall through — the LLM lane is best-effort */ }
+    }
+    // Catch-all: hand the raw utterance to a receiver that declares a 'task'
+    // action ("give me anything you couldn't parse"). This routes everything the
+    // grammar/LLM didn't claim to an app that can act on free instructions (e.g.
+    // an agent), instead of dying in the Controller — the grammar stays
+    // deterministic for the settings vocabulary; the rest goes to the app.
+    if ((caps.actions || []).includes('task')) {
+      return command(utterance, { action: 'task', text: utterance, say: 'Passing that to the app' });
     }
     return noMatch(utterance);
   }

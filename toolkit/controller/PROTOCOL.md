@@ -126,6 +126,15 @@ One app action.
 - `activate` — `target` is a label; resolve it to an element (accessible-name
   match) and click it. No match → `{ "ok": false, "detail": "no target matching \"…\"" }`.
 - `back` / `forward` — history navigation.
+- `navigate` — go to a URL/domain (`target`/`text` is the url, e.g. from "open
+  wikipedia.org"). Declare it in `actions` to receive it.
+- `search` — run a query (`target`/`text` is the query, from "search for X").
+- `task` — the **catch-all**. If you declare `"task"` in `actions`, the
+  Controller routes ANY utterance the grammar and LLM lane didn't claim to
+  `performAction("task", undefined, "<the raw utterance>")`. This is how a
+  receiver that can act on free instructions (e.g. an agent) gets offered
+  everything the deterministic grammar can't express — without a model in the
+  Controller. Without it, unparsed utterances are reported as "didn't catch that".
 - Unsupported action → `{ "ok": false, "detail": "unsupported action: …" }`.
 
 ## 4. Reference receiver skeleton (Python-ish pseudocode)
