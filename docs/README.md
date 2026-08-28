@@ -31,7 +31,7 @@ and independent of the core.
 ## Consumer / feature references
 
 - [artinsight-integration.md](artinsight-integration.md) — A second, non-web consumer of the toolkit (Swift conformer, profile blob, insight outbox) — a worked example of embedding the core in another host.
-- [voice-mode.md](voice-mode.md) — The original pattern for a host controlling the toolkit by voice via the actuation port (consent invariants, reversible undo). The [Controller](#controller-optional-control-surface) now packages this as a reusable, host-agnostic surface over the neutral `ControlPort`.
+- [voice-mode.md](voice-mode.md) — How voice mode works **now**: the Controller's speech input, the hybrid intent engine, per-operator delivery (live region vs TTS), earcons, confirmation, and driving a remote app. (The old Gemini-Live / extension implementation is retired.)
 
 ## Community
 
