@@ -22,6 +22,9 @@ import { deriveControllerPresentation } from './presentation.js';
  *   Who is operating the Controller — drives how the Controller presents ITSELF
  *   (see presentation.js / M1). Pass `abilityModel` directly, or a `librarian`
  *   to fetch it via `loadPresentation()`. Omit for the default presentation.
+ * @param {boolean} [opts.rawToTask]  When the Controller is driving a URL (a
+ *   task-capable remote app), send ALL input straight through as a `task` and
+ *   skip the local settings grammar. Default false (grammar first, task fallback).
  */
 // State-changing commands that are worth a confirmation step when the operator's
 // profile asks for it (motor/cognitive → presentation.confirmActions). Benign
@@ -30,8 +33,8 @@ const CONFIRMABLE_ACTIONS = new Set(['activate', 'submit', 'navigate']);
 const AFFIRM = /^(yes|yeah|yep|yup|confirm|do it|ok|okay|sure|go ahead|please do)\b/;
 const DENY = /^(no|nope|cancel|stop|never ?mind|don'?t)\b/;
 
-export function createController({ control = noopControl, llm = null, operator = null } = {}) {
-  const router = createRouter({ control, llm });
+export function createController({ control = noopControl, llm = null, operator = null, rawToTask = false } = {}) {
+  const router = createRouter({ control, llm, rawToTask });
   let presentation = deriveControllerPresentation((operator && operator.abilityModel) || {});
   let pending = null; // an Intent awaiting yes/no confirmation
 

@@ -41,8 +41,18 @@ function validate(key, value) {
  * @param {{resolve:(utterance:string, capabilities:object)=>Promise<import('./intent.js').Intent|null>}} [opts.llm]
  *   Optional NL lane; runs only when the grammar returns null.
  */
-export function createRouter({ control, llm = null }) {
+export function createRouter({ control, llm = null, rawToTask = false }) {
   async function resolve(utterance) {
+    // rawToTask (the Controller is driving a URL — a task-capable app): send the
+    // raw input straight through as a task, no local grammar. Everything the
+    // person types/says is an instruction for the app, which interprets it —
+    // including phrasing the settings grammar would otherwise have claimed.
+    if (rawToTask) {
+      const caps = await control.describeCapabilities();
+      if ((caps.actions || []).includes('task')) return taskCommand(utterance);
+      // rawToTask but the receiver can't take tasks: fall through to grammar.
+    }
+
     const det = parse(utterance);
     if (det) return det;
     const caps = await control.describeCapabilities();
@@ -57,14 +67,7 @@ export function createRouter({ control, llm = null }) {
     // grammar/LLM didn't claim to an app that can act on free instructions (e.g.
     // an agent), instead of dying in the Controller — the grammar stays
     // deterministic for the settings vocabulary; the rest goes to the app.
-    if ((caps.actions || []).includes('task')) {
-      // Read the utterance back — for spoken input this is the only chance to
-      // catch a mis-recognition ("braille music" heard as "braille moozik")
-      // before the app spends a minute on it.
-      const heard = String(utterance).trim();
-      const shown = heard.length > 80 ? heard.slice(0, 79) + '…' : heard;
-      return command(utterance, { action: 'task', text: utterance, say: `Ok, running: ${shown}` });
-    }
+    if ((caps.actions || []).includes('task')) return taskCommand(utterance);
     return noMatch(utterance);
   }
 
@@ -161,4 +164,12 @@ export function createRouter({ control, llm = null }) {
 
 function result(ok, intent, say, data = null) {
   return { ok, intent, say, data };
+}
+
+// Send the raw utterance to the app as a task, reading it back so spoken input
+// can be caught if mis-recognized before the app spends a minute on it.
+function taskCommand(utterance) {
+  const heard = String(utterance).trim();
+  const shown = heard.length > 80 ? heard.slice(0, 79) + '…' : heard;
+  return command(utterance, { action: 'task', text: utterance, say: `Ok, running: ${shown}` });
 }

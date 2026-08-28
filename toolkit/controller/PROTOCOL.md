@@ -151,6 +151,11 @@ One app action.
   receiver that can act on free instructions (e.g. an agent) gets offered
   everything the deterministic grammar can't express — without a model in the
   Controller. Without it, unparsed utterances are reported as "didn't catch that".
+  When the Controller is **driving your app over a URL** it runs in a raw mode
+  (`createController({ rawToTask: true })`) where it sends **all** input to
+  `task` and skips the local grammar entirely — so a task receiver should expect
+  the full range of instructions, including ones the settings grammar could
+  itself have parsed (`"make text bigger"`): the app interprets them.
 - Unsupported action → `{ "ok": false, "detail": "unsupported action: …" }`.
 
 ## 4. Reference receiver skeleton (Python-ish pseudocode)

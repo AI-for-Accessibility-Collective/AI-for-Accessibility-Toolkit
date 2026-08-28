@@ -124,6 +124,23 @@ async function run() {
     check('navigate refused when receiver lacks it', (await noNav.handle('open wikipedia.org')).ok === false);
   }
 
+  // ── 9. rawToTask (driving a URL): all input → task, no grammar ────────────
+  {
+    const recv = createMockReceiver({ actions: ['task', 'scroll'] });
+    const c = createController({ control: recv, rawToTask: true });
+    const r = await c.handle('bigger text'); // a grammar phrase — must NOT be adapted here
+    check('rawToTask: a grammar phrase is sent as a task, not adapted', r.ok && recv.focus === 'task' && r.intent.type === 'command' && r.intent.action === 'task');
+    check('rawToTask: even a bare word goes to the app', (await c.handle('undo')).intent.action === 'task');
+
+    // Sanity: the SAME receiver without rawToTask still runs the grammar.
+    const c2 = createController({ control: createMockReceiver({ actions: ['task'] }) });
+    check('no rawToTask: a grammar phrase still adapts locally', (await c2.handle('bigger text')).intent.type === 'adapt');
+
+    // rawToTask but the receiver can't take tasks → fall through to grammar.
+    const c3 = createController({ control: createMockReceiver({ actions: [] }), rawToTask: true });
+    check('rawToTask + no task action → falls back to grammar', (await c3.handle('dark mode')).intent.type === 'adapt');
+  }
+
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }

@@ -75,7 +75,8 @@
 
   function rebuild() {
     if (mounted) mounted.unmount();
-    const controller = createController({ control: currentControl, operator: { abilityModel: { supportAreas: currentAreas } } });
+    // Driving a URL (a remote receiver) → send all input as tasks, no grammar.
+    const controller = createController({ control: currentControl, operator: { abilityModel: { supportAreas: currentAreas } }, rawToTask: !!remoteChannel });
     mounted = mountController(controller, { mode: 'element', corner: 'bottom-right' });
     document.getElementById('presentation-note').textContent =
       'Controller presents as → ' + describePresentation(controller.presentation);
@@ -105,7 +106,7 @@
     if (remoteChannel) remoteChannel.close();
     remoteChannel = websocketChannel(url);
     currentControl = remoteControl({ channel: remoteChannel });
-    document.getElementById('drive-note').innerHTML = 'Driving: <strong>remote receiver</strong> <code>' + url + '</code>';
+    document.getElementById('drive-note').innerHTML = 'Driving: <strong>remote receiver</strong> <code>' + url + '</code> — input is sent straight through as a task (no grammar).';
     document.getElementById('connect').hidden = true;
     document.getElementById('disconnect').hidden = false;
     rebuild();
