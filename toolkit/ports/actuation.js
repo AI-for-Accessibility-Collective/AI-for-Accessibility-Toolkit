@@ -106,8 +106,17 @@
  * @property {() => Promise<{ok:true}>} resetUndo
  *   Clear the undo journal (a fresh control-session starting).
  * @property {(mode?: 'outline'|'text', chunk?: number) => Promise<ReadPageResult>} readPage
- *   Extract page text for TTS/Q&A. 'outline' (default) = headings + opening
- *   text; 'text' = the full text in fixed-size chunks (pass chunk to continue).
+ *   Extract page text. 'outline' (default) = headings + opening text; 'text' =
+ *   the full text in fixed-size chunks (pass chunk to continue).
+ *   NOTE (issue #7): despite the name, this RETURNS text for the caller to
+ *   deliver — it must NOT itself speak. Delivery is the caller's choice of
+ *   channel: an ARIA live region on web (so it arrives in the person's OWN
+ *   screen-reader voice, at their rate), UIAccessibility on iOS, spatial audio
+ *   on XR, real TTS only where there is no AT. Reaching for speechSynthesis is
+ *   the failure mode for exactly the users this serves. The neutral, go-forward
+ *   ControlPort (toolkit/controller/control-port.js) names this `getContent`
+ *   precisely to drop the "read aloud" implication; this web-shaped port is
+ *   superseded by it.
  * @property {(action: string, target?: string, text?: string) => Promise<PageActionResult>} pageAction
  *   Perform one page interaction (scroll/click/type/focus-nav/navigate/etc).
  */

@@ -22,8 +22,6 @@ const blindModel = {
     { dimension: 'announceUpdates', value: true, strength: 'floor' },
     { dimension: 'spaAnnounce', value: true, strength: 'floor' },
     { dimension: 'skipLinks', value: true, strength: 'floor' },
-    { dimension: 'pageStructure', value: true, strength: 'floor' },
-    { dimension: 'keyboardAccess', value: true, strength: 'floor' },
   ],
 };
 
@@ -36,13 +34,19 @@ check('repairLandmarks → fixLandmarks', s.fixLandmarks === true);
 check('announceUpdates → announceUpdates', s.announceUpdates === true);
 check('spaAnnounce → spaFocus', s.spaFocus === true);
 check('skipLinks → skipLinks', s.skipLinks === true);
-check('pageStructure → pageOutline', s.pageOutline === true);
-check('keyboardAccess → keyboardNav', s.keyboardNav === true);
 
 // ── It must NOT be low-vision magnification (the whole point) ──
 check('blind baseline has NO fontScale', !('fontScale' in s));
 check('blind baseline has NO contrastMode', !('contrastMode' in s));
 check('blind baseline has NO readAloud (screen reader owns the voice)', !('readAloud' in s));
+// #9: an on-page heading navigator and keyboard-nav shortcuts are NOT in the
+// blind baseline (a screen reader has its own heading nav; shortcuts can collide).
+check('blind baseline has NO pageOutline (#9)', !('pageOutline' in s));
+check('blind baseline has NO keyboardNav (#9)', !('keyboardNav' in s));
+
+// The pageStructure/keyboardAccess dimensions still exist for OTHER profiles.
+check('pageStructure → pageOutline dimension still available', renderWebSettings({ needs: [{ dimension: 'pageStructure', value: true }] }).pageOutline === true);
+check('keyboardAccess → keyboardNav dimension still available', renderWebSettings({ needs: [{ dimension: 'keyboardAccess', value: true }] }).keyboardNav === true);
 
 // ── The previously-unreachable settings now exist in the vocabulary ──
 check('settingsMeta has fixLandmarks', !!settingsMeta.fixLandmarks && settingsMeta.fixLandmarks.type === 'boolean');

@@ -130,6 +130,11 @@ async function run() {
     check('presentation: vision → voice-primary input', vision.input.primary === 'voice');
     check('presentation: vision → detailed verbosity', vision.verbosity === 'detailed');
 
+    // A screen-reader operator (profile carries screen-reader needs): feedback
+    // goes to the live region in their own voice — never a second TTS voice (#7).
+    const sr = deriveControllerPresentation({ supportAreas: ['vision'], needs: [{ dimension: 'repairLandmarks', value: true }] });
+    check('presentation: screen-reader → assistiveTech, no speech, text primary', sr.output.assistiveTech === true && sr.output.speech === false && sr.output.primary === 'text');
+
     const hearing = deriveControllerPresentation({ supportAreas: ['hearing'] });
     check('presentation: hearing → captions on, text-primary output', hearing.output.captions && hearing.output.primary === 'text');
 

@@ -28,17 +28,31 @@
  * @param {{supportAreas?: string[]}} [model]  the needs AbilityModel.
  * @returns {ControllerPresentation}
  */
+// Neutral needs dimensions that mean "this operator uses a screen reader" (from
+// a blind profile). Their AT owns the voice.
+const SCREEN_READER_DIMS = new Set([
+  'describeImages', 'labelControls', 'repairLandmarks', 'announceUpdates',
+  'spaAnnounce', 'skipLinks', 'pageStructure', 'keyboardAccess',
+]);
+
 export function deriveControllerPresentation(model = {}) {
   const areas = new Set(Array.isArray(model && model.supportAreas) ? model.supportAreas : []);
   const has = (a) => areas.has(a);
+  // A screen-reader operator (their profile carries screen-reader needs). Their
+  // own AT announces the live region in their voice — so the Controller must
+  // NEVER speak feedback with a second speechSynthesis voice over it (issue #7).
+  const needs = Array.isArray(model && model.needs) ? model.needs : [];
+  const assistiveTech = needs.some((n) => n && SCREEN_READER_DIMS.has(n.dimension));
 
   // ── Output ──
-  // Speak feedback when it helps (vision, reading); ALWAYS show text; caption
-  // (force-show text) for hearing. Both vision+hearing ⇒ speak AND caption.
-  const speech = has('vision') || has('reading');
+  // Speak feedback when it helps (vision, reading) — but NOT for a screen-reader
+  // user (assistiveTech), who gets it via the live region in their own voice.
+  // ALWAYS show text; caption (force-show text) for hearing.
+  const speech = !assistiveTech && (has('vision') || has('reading'));
   const captions = has('hearing');
   let outPrimary = 'text';
-  if (has('vision')) outPrimary = 'speech';
+  if (has('vision') && !assistiveTech) outPrimary = 'speech';
+  if (assistiveTech) outPrimary = 'text'; // deliver via the ARIA live region, not TTS
   if (has('hearing')) outPrimary = 'text'; // hearing pulls the primary channel back to text
 
   // ── Input ──
@@ -62,7 +76,9 @@ export function deriveControllerPresentation(model = {}) {
 
   return {
     input: { voice: true, text: true, scan, primary: inPrimary },
-    output: { speech, text: true, captions, primary: outPrimary },
+    // assistiveTech: the operator runs a screen reader — always show text in the
+    // live region and never speak over their AT.
+    output: { speech, text: true, captions, assistiveTech, primary: outPrimary },
     verbosity,
     language: plain ? 'plain' : 'standard',
     targetSize,

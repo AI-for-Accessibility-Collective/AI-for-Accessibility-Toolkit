@@ -128,8 +128,10 @@ const BLIND_NEEDS = [
   { dimension: 'announceUpdates', value: true },
   { dimension: 'spaAnnounce', value: true },
   { dimension: 'skipLinks', value: true },
-  { dimension: 'pageStructure', value: true },
-  { dimension: 'keyboardAccess', value: true },
+  // NOTE: pageStructure (on-page heading navigator) and keyboardAccess (visual
+  // focus overlay + Alt-shortcuts) are intentionally NOT here — a screen reader
+  // already has heading navigation, and keyboard-nav shortcuts risk colliding
+  // with NVDA/JAWS. They remain in the motor/low-vision profiles. (issue #9)
 ];
 
 // Which visual population does the free text describe? A blind screen-reader
