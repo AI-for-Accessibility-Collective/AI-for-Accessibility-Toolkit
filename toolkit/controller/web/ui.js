@@ -144,6 +144,23 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     if (waitGuard) { clearTimeout(waitGuard); waitGuard = null; }
   }
 
+  // A background tab can't make itself active (browsers block that), but it CAN
+  // post a system notification whose click returns focus here — so a result that
+  // arrives while the operator switched away (e.g. the app drove another tab)
+  // isn't missed. For a true auto-switch, the receiver (which drives the browser)
+  // should activate the Controller's tab when it emits the note.
+  function ensureNotifyPermission() {
+    try { if (typeof Notification !== 'undefined' && Notification.permission === 'default') Notification.requestPermission(); } catch {}
+  }
+  function notifyIfBackground(text) {
+    try {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') return; // already on this tab
+      const n = new Notification('Result ready', { body: String(text).slice(0, 200), tag: 'aa-controller-result' });
+      n.onclick = () => { try { window.focus(); } catch {} try { n.close(); } catch {} };
+    } catch { /* notifications unavailable */ }
+  }
+
   let busy = false;
   async function submit(utterance) {
     const u = (utterance || '').trim();
@@ -159,8 +176,10 @@ export function renderControllerUI(controller, { doc = document } = {}) {
       deliver(res.say, { assertive: !(res.ok && contentRead) });
       speak(res.say);
       // A dispatched task runs in the background (its result arrives via a note).
-      // Show the waiting dots + play the thinking earcon until it does.
-      if (res.ok && res.intent && res.intent.action === 'task') startWaiting();
+      // Show the waiting dots + play the thinking earcon until it does, and ask
+      // (once) for notification permission so a background result can call the
+      // operator back to this tab.
+      if (res.ok && res.intent && res.intent.action === 'task') { startWaiting(); ensureNotifyPermission(); }
       else if (!res.ok) earconError();
     } catch (e) {
       deliver('Sorry, something went wrong.', { assertive: true });
@@ -203,7 +222,7 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     unNote = controller.control.onNote((text) => {
       stopWaiting();          // the task finished — stop the dots + thinking earcon
       earconDone();
-      if (text) { show(String(text)); speak(String(text)); }
+      if (text) { show(String(text)); speak(String(text)); notifyIfBackground(String(text)); }
     });
   }
 

@@ -83,6 +83,20 @@ async function run() {
   fire3('Here is a lasagna recipe');
   check('waiting: dots hidden when the result note arrives', w.hidden === true);
 
+  // A note arriving while the tab is HIDDEN posts a notification (whose click
+  // returns focus — a background tab can't self-activate).
+  const notes = [];
+  global.Notification = class { constructor(title, opts) { notes.push({ title, body: opts && opts.body }); } };
+  global.Notification.permission = 'granted';
+  Object.defineProperty(dom.window.document, 'visibilityState', { value: 'hidden', configurable: true });
+  let fire4 = null;
+  const tc4 = Object.assign({}, createMockReceiver({ actions: ['task'] }), { onNote(fn) { fire4 = fn; return () => {}; } });
+  const c4 = createController({ control: tc4, rawToTask: true });
+  const ui4 = renderControllerUI(c4, { doc: document });
+  document.body.appendChild(ui4.root);
+  fire4('The answer is 42');
+  check('background note posts a notification', notes.length === 1 && /42/.test(notes[0].body));
+
   console.log(`\nController UI: ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }
