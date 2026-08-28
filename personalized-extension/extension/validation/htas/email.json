@@ -1,0 +1,1619 @@
+{
+ "task": "compose and send an email in a mail client (Gmail, Outlook, Yahoo Mail, Apple Mail): open compose, address the recipient, write the subject and body, optionally attach a file, send it, and verify it in Sent; complete when the message shows as sent. Surface pinned: the mail client's compose-and-send flow — not inbox-organizing tours, not newsletter/marketing tools, not email-etiquette advice videos.",
+ "tree": {
+  "id": "0",
+  "label": "Send an email",
+  "note": "1 when the client is not already open and signed in - most keepers start authenticated and skip most of it. then 2: a new message, or a reply or forward entered from 8.1 (DFXu, ycKB, 6rzA, 0D7H, zCsj), which decides how much of 3 is left to do. 3 and 4 in either order - HnFK writes the subject and body before the recipient. 5 where the message carries a file; 5.4 only when the client refuses the file, and it returns into 5.2 or 5.5 once the file is ready (UehN never gets back). then 6, one of 6.2 to 6.5; 6.6 and 6.7 where the client interrupts. then 7 - in this corpus that's where the task actually completes, and 7 is skipped by seven keepers. 8 at any point.",
+  "questions": [
+   {
+    "question": "What information should you enter into the recipient, subject, and body fields?",
+    "cluster": "hand over",
+    "moment": "Now",
+    "moneyMoving": false,
+    "why": "The New Message screen contains blank fields that must be filled with the correct contact and message content to ensure the email reaches the right person and conveys your intent.",
+    "whatTheAgentLoses": "Delegating this step means you lose control over the exact wording, tone, and specific recipient of your communication."
+   }
+  ],
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the mailbox",
+    "note": "1.1 then 1.2. 1.3 only from a logged-out start - two keepers. 1.4 where more than one account is signed in. 1.5 and 1.6 as orientation before any composing, and only on the videos that tour the client.",
+    "questions": [
+     {
+      "question": "Should you enable high priority notifications or dismiss the prompt by tapping 'No thanks'?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The inbox displays a banner offering to 'Try notifications for only your high priority emails' with options to 'Turn on' or say 'No thanks', which must be navigated or ignored to continue.",
+      "whatTheAgentLoses": "The user loses the chance to opt into or permanently dismiss a system-level notification preference for their inbox."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Find the mail client",
+      "questions": [
+       {
+        "question": "Which email app should I select from the share sheet?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Android share sheet displays multiple options like 'Gmail' and 'Email', requiring a choice of which specific client to use for composing the message.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific email client and associated account is used to send the attachment."
+       },
+       {
+        "question": "Which app do you open to access your email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple applications, so you must select the specific mail client you want to use to send the message.",
+        "whatTheAgentLoses": "You lose the ability to choose which specific email client or account is used to send the message."
+       },
+       {
+        "question": "Which application should you open to access your email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a desktop with multiple icons, requiring you to identify the correct web browser to begin the task.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose your preferred web browser or specific user profile for sending the email."
+       },
+       {
+        "question": "Which email provider should I use to send this message?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser address bar requires a specific URL to load the correct email platform, such as Gmail or Yahoo.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific email service and associated account is used as the sender."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Open the mailbox"
+     },
+     {
+      "id": "1.3",
+      "label": "Sign in to the account",
+      "questions": [
+       {
+        "question": "How should you enter your sign-in credentials?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sign-in screen requires an email and password, which can be typed manually or autofilled using a password manager.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to securely autofill your credentials using a specific password manager or type them manually."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the account",
+      "questions": [
+       {
+        "question": "Which email account are you currently sending from?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Opening the profile pop-up reveals the active email address, '[email]', ensuring the message is sent from the correct account.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify or switch their sender identity before composing the message."
+       },
+       {
+        "question": "Do you need to verify your current email address before composing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the profile pop-up confirms the exact email address and storage status you are currently using.",
+        "whatTheAgentLoses": "You lose the opportunity to confirm you are sending the email from the correct account."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Read the mailbox layout"
+     },
+     {
+      "id": "1.6",
+      "label": "Set the inbox display"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Open a compose surface",
+    "note": "2.1 for a new message. 2.2 and 2.3 instead when the message answers one that arrived, entered from 8.1 - and that choice sets what 3 has left to do: reply-all arrives with To and Cc filled, forward arrives with To empty and quoted history attached. 2.4 after the draft exists. 2.5 where the compose surface is a panel that can be resized. 2.6 before typing, on the two keepers that tour the surface first.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Start a new message",
+      "questions": [
+       {
+        "question": "Do you need to click the trash can icon to discard a restored draft before starting your new email?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the user clicking the 'Discard draft' trash can icon before clicking 'Compose' again, which is necessary to clear the stale state if the mail client automatically restores a previous, unfinished message.",
+        "whatTheAgentLoses": "The user loses the ability to ensure they are starting with a clean slate, risking the agent accidentally appending the new message to an old, irrelevant draft."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Open the message actions"
+     },
+     {
+      "id": "2.3",
+      "label": "Choose reply or forward",
+      "questions": [
+       {
+        "question": "How do you forward this message to someone else?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the 'Forward' link below the thread automatically populates a new compose window with the original message and a 'Fwd:' subject line.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to forward the existing thread or summarize the information in a brand new email."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Switch the response type",
+      "questions": [
+       {
+        "question": "Should you change the response type to Reply, Reply All, or Forward?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a dropdown menu that lets you switch the current draft between a direct reply, a reply to all, or a forward.",
+        "whatTheAgentLoses": "You lose the ability to manually control exactly which participants from the original email thread will receive your message."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Resize the compose window"
+     },
+     {
+      "id": "2.6",
+      "label": "Survey the compose fields"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Set the recipients",
+    "note": "3.1 in nearly every keeper - typing resolved by a suggestion is close to universal here. 3.2 where the address is not in the list. 3.3 to reach the copy fields, then 3.4 and 3.5 where the message needs them. 3.6 replaces all of it on a bulk send, and rules 3.3 to 3.5 out. 3.7 whenever a chip is wrong. 3.8 before trusting a group. reply-all routes arrive with this goal already done (DFXu).",
+    "questions": [
+     {
+      "question": "Did the email client display a visual warning or color change indicating that the recipient is outside your organization?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Many corporate email clients visually flag external addresses (e.g., with a yellow banner or red text) to prevent accidental data leaks, a cue that must be explicitly read if not looking at the screen.",
+      "whatTheAgentLoses": "The user loses the immediate visual alert that they are about to send potentially sensitive information to an external contact."
+     },
+     {
+      "question": "Should you send this generic draft or use a different method to personalize the greeting for each recipient?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows a single draft addressed to multiple recipients with a generic 'Hey' greeting, which prevents addressing each person by their actual name.",
+      "whatTheAgentLoses": "The user loses the personal touch of addressing each recipient by name, which makes the mass invitation feel less genuine."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Pick a suggested address",
+      "questions": [
+       {
+        "question": "Which email address should you select as the recipient?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of multiple available email accounts, so you must select the correct one to ensure the message reaches the intended person.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong recipient from the list, potentially sending your message to an unintended contact."
+       },
+       {
+        "question": "Which specific email address do you select from the autocomplete dropdown?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple contact suggestions as you type the recipient's name, meaning you must click the correct one to proceed.",
+        "whatTheAgentLoses": "You lose the personal oversight of ensuring your message isn't accidentally routed to a similarly named but incorrect contact."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Type the full address",
+      "questions": [
+       {
+        "question": "What exact email address are you entering in the 'To' field?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the precise email address in the 'To' field ensures the message reaches the correct person instead of bouncing or going to a stranger.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify that the recipient's address is typed perfectly to avoid sending the message to the wrong person."
+       },
+       {
+        "question": "Who are you sending this email to, and what are the constraints for entering their address?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email address must be typed perfectly without any spaces or errors, otherwise the message will fail to reach the intended recipient.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify the exact spelling and formatting of the recipient's address to ensure successful delivery."
+       },
+       {
+        "question": "Who are you forwarding this email to?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'To' field is empty with a blinking cursor above the forwarded content, meaning a new recipient must be specified to route the message.",
+        "whatTheAgentLoses": "The user loses the ability to decide exactly which new recipient needs to receive this forwarded information."
+       },
+       {
+        "question": "Does the email client flag the recipient's address in red to indicate it is improperly formatted or invalid?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If an email address is missing an '@' symbol or a valid domain, the client usually flags it immediately with a visual error, preventing a failed send later.",
+        "whatTheAgentLoses": "The user loses the chance to catch and correct a structural typo in the email address before attempting to send the message."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Open the copy fields",
+      "questions": [
+       {
+        "question": "How do you ensure recipients cannot see each other's email addresses?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Revealing the Bcc field through the Options tab is necessary to keep the email addresses of all recipients private.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your contacts' sensitive email addresses are properly hidden from one another."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Add a Cc recipient",
+      "questions": [
+       {
+        "question": "Who should you add as a Cc recipient?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown suggests contacts like 'Woggle Spy Lucinda' based on your typing, requiring you to select the correct person to keep in the loop.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to decide exactly who needs visibility into the conversation without being the primary recipient."
+       },
+       {
+        "question": "Does the Cc field accurately reflect all original recipients, including those hidden behind the '+1' indicator?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming that the visible names and the '+1' indicator match the three original Cc recipients ensures no one is accidentally dropped from the thread.",
+        "whatTheAgentLoses": "The user loses the assurance that all necessary stakeholders are kept in the loop on the communication."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Add a Bcc recipient",
+      "questions": [
+       {
+        "question": "Who should you blind carbon copy on this email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an autocomplete dropdown with multiple contacts like Woggle Spy Cynthia and Woggle Spy Cuthbert for the Bcc field, requiring a choice of who should secretly receive the message.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might blind copy the wrong contact, potentially failing to keep the right person confidentially informed."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Build a bulk recipient list",
+      "note": "3.6.2 first - the feature has to be switched on before anything else changes. then 3.6.1, and one of 3.6.3 or the pair 3.6.4 and 3.6.5. 3.6.6 is read after the fact in this keeper, not before.",
+      "children": [
+       {
+        "id": "3.6.1",
+        "label": "Choose the recipient source",
+        "questions": [
+         {
+          "question": "Should you use the mail merge option to add recipients from a spreadsheet?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Clicking the mail merge icon revealed a dropdown to add recipients from a spreadsheet, which fundamentally changes how the email is addressed.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide whether to automate addressing a mass email using a spreadsheet or to enter recipients manually."
+         }
+        ]
+       },
+       {
+        "id": "3.6.2",
+        "label": "Turn on mail merge",
+        "questions": [
+         {
+          "question": "Do you want to enable mail merge to send personalized, individual copies to your recipients?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed a mail merge menu and a banner explaining that this feature lets you personalize messages with tags and sends a separate copy to each recipient.",
+          "whatTheAgentLoses": "You lose the ability to choose whether to send a standard group email or utilize mail merge for personalized, individual messages."
+         }
+        ]
+       },
+       {
+        "id": "3.6.3",
+        "label": "Select the contacts",
+        "questions": [
+         {
+          "question": "Which contacts do you want to include in this mail merge?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Select contacts' modal offers individual selection or a 'Select All' option for the three available contacts.",
+          "whatTheAgentLoses": "You lose the ability to hand-pick exactly which of your contacts should receive the message."
+         }
+        ]
+       },
+       {
+        "id": "3.6.4",
+        "label": "Link the spreadsheet",
+        "questions": [
+         {
+          "question": "Which spreadsheet contains the recipient data?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed a 'Link a spreadsheet for recipient info' dialog displaying recent files like 'School Fees', requiring a choice of data source.",
+          "whatTheAgentLoses": "The user loses control over which contact list is used, risking sending the email to the wrong group of people."
+         }
+        ]
+       },
+       {
+        "id": "3.6.5",
+        "label": "Map the columns to fields",
+        "questions": [
+         {
+          "question": "Which columns from the spreadsheet will you use to personalize the email?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Reviewing the 'School Fees' sheet ensures you know exactly which fields, like 'Amount Due' and 'Account Number', are available to insert into the message.",
+          "whatTheAgentLoses": "Delegating this means you lose the opportunity to manually verify that the data source contains all the necessary and correct fields before generating the emails."
+         }
+        ]
+       },
+       {
+        "id": "3.6.6",
+        "label": "Check the send limits",
+        "questions": [
+         {
+          "question": "Do you need to verify your account's daily send limits before adding a large number of recipients?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Gmail restricts standard accounts to 500 outgoing messages and mail merge to 1,500 recipients per day, meaning exceeding these limits will block your emails from sending.",
+          "whatTheAgentLoses": "You lose the awareness of your account's specific sending thresholds, which could result in a blocked campaign if the agent blindly exceeds the limit."
+         },
+         {
+          "question": "Are you aware of the Cc, Bcc, and scheduling limitations when using a spreadsheet to add recipients?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The help page explicitly states that using a spreadsheet for mail merge prevents you from adding Cc or Bcc recipients and disables features like schedule send and confidential mode.",
+          "whatTheAgentLoses": "You lose the ability to weigh whether the convenience of a spreadsheet outweighs the need to copy other recipients or schedule the email."
+         },
+         {
+          "question": "Do you need to use features like schedule send or confidential mode that aren't supported by mail merge?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The expanded limitations section explicitly states that mail merge cannot be used with replies, forwards, scheduled sends, or confidential mode.",
+          "whatTheAgentLoses": "You lose the awareness of specific feature incompatibilities that might prevent your email from being sent exactly as you intended."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Remove a recipient"
+     },
+     {
+      "id": "3.8",
+      "label": "Check the group members",
+      "questions": [
+       {
+        "question": "Is the intended contact group available to select in the dropdown?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing the 'Test Group' entry with its member count in the autocomplete dropdown confirms the mail client recognizes your pre-made distribution list.",
+        "whatTheAgentLoses": "Delegating this means you cannot visually verify the group's member count to ensure the exact right list of people will receive your message."
+       },
+       {
+        "question": "How do you verify who is included in a contact group?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the details pane for 'Test Group' ensures you know exactly which email addresses, like Christian and Dad, will receive the message.",
+        "whatTheAgentLoses": "You lose the peace of mind of manually reviewing and confirming the exact individuals included in a group alias before the email goes out."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Write the message",
+    "note": "4.1 then 4.2 - HnFK does both before the recipient. 4.3 where the client suggests text mid-typing. 4.4 only where the content comes from another application. 4.5 on a forward, before the quoted history travels with it. 4.6 once per field the spreadsheet supplies. 4.7 is opened in three keepers and applied in one.",
+    "questions": [
+     {
+      "question": "What date, time, and duration should you set for the scheduled meeting?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The 'Schedule Meeting' window requires you to configure the 'Topic', 'Start' date and time, and 'Duration' to generate the correct invitation details.",
+      "whatTheAgentLoses": "You lose the control to pick a specific date and time that perfectly aligns with your unwritten scheduling preferences."
+     },
+     {
+      "question": "Should I use your Personal Meeting ID or generate one automatically, and do you want to require a password?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows options to either generate a meeting ID automatically or use a Personal Meeting ID, along with a checkbox to require a meeting password.",
+      "whatTheAgentLoses": "The user loses the ability to balance convenience and security for their specific meeting participants."
+     },
+     {
+      "question": "Should I enable video for the host and participants?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen showed radio buttons to toggle video on or off for the host and participants, which sets the default camera behavior for the integrated meeting.",
+      "whatTheAgentLoses": "The user loses the ability to dictate the meeting's visual engagement and privacy boundaries based on their relationship with the attendees."
+     },
+     {
+      "question": "Which audio options do you want to allow for the meeting?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displayed radio buttons to choose between Telephone, Computer Audio, or both for the meeting details being added to the email.",
+      "whatTheAgentLoses": "The delegator loses the ability to specify how recipients are allowed to dial into or connect to the meeting."
+     },
+     {
+      "question": "Which calendar system should you select for scheduling?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen presents radio buttons for Outlook, Google Calendar, and Other Calendars, requiring a choice for the scheduling integration.",
+      "whatTheAgentLoses": "The user loses the ability to ensure the scheduling tool aligns with their preferred personal or corporate calendar ecosystem."
+     },
+     {
+      "question": "Do you want to enable any advanced meeting settings, such as allowing participants to join before the host?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen showed a collapsed 'Advanced Options' menu containing specific settings for waiting rooms, early joining, and automatic recording.",
+      "whatTheAgentLoses": "The user loses the ability to control the specific entry and recording behaviors for their meeting attendees."
+     },
+     {
+      "question": "What should you enter as the subject and body of the email?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays empty 'Subject' and 'Compose email' fields that require the actual content of your message.",
+      "whatTheAgentLoses": "Delegating this step means you lose control over the exact wording, tone, and personal touch of the message sent on your behalf."
+     },
+     {
+      "question": "Do you need to edit or delete the auto-inserted email signature for this specific message?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Mail clients often automatically append a default signature to the bottom of the message body, which you might want to remove for casual replies or edit to hide a phone number.",
+      "whatTheAgentLoses": "The user loses the ability to tailor their sign-off and control what personal contact information is shared in the specific context of this email."
+     },
+     {
+      "question": "Should you mark the message with 'High Importance' or flag it for 'Follow Up'?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The Outlook message ribbon contains explicit buttons for 'High Importance' and 'Follow Up' that alter how the email is presented and tracked.",
+      "whatTheAgentLoses": "The user loses the ability to explicitly signal the urgency of the message to the recipient or set a reminder for themselves."
+     },
+     {
+      "question": "Is your default email signature correctly positioned at the bottom of the draft without being accidentally deleted or duplicated?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Automated agents or careless pasting can easily overwrite the pre-filled default signature or paste a second one, making the email look unprofessional.",
+      "whatTheAgentLoses": "The user loses the assurance that their standard professional sign-off and contact information are intact and properly formatted."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Write the subject",
+      "questions": [
+       {
+        "question": "What should you write in the subject line to grab the recipient's attention?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A relevant and compelling subject line ensures the recipient prioritizes the email in a crowded inbox.",
+        "whatTheAgentLoses": "You lose the opportunity to personally gauge the recipient's priorities and craft a subject line tailored to catch their specific attention."
+       },
+       {
+        "question": "What should you enter as the subject of the email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an empty 'Subject:' field that requires a concise summary of the email's purpose.",
+        "whatTheAgentLoses": "You lose the ability to craft a specific subject line that sets the right tone and context for your recipient."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Write the body",
+      "questions": [
+       {
+        "question": "What do you want to write in the message body?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Compose email' field is where the actual content and details of your message must be entered.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over the exact wording, tone, and specific details communicated to the recipient."
+       },
+       {
+        "question": "Is the auto-filled recipient correct, and what should you type in your reply before sending?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The compose interface automatically populates the 'To:' field with the original sender's address and quotes their message, requiring you to confirm the recipient and add your own text.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to verify exactly who the reply is going to and to craft the specific wording of your response."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Handle the writing suggestions",
+      "questions": [
+       {
+        "question": "Should you interact with the Smart Compose tooltip or ignore it and type your message manually?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a Smart Compose tooltip offering writing suggestions that can be acknowledged, disabled, or simply ignored while drafting.",
+        "whatTheAgentLoses": "Delegating this means you lose the choice of whether to utilize, dismiss, or permanently disable the AI writing suggestions for your account."
+       },
+       {
+        "question": "Do you want to use the 'Help me write' AI options to formalize, elaborate, or shorten your draft?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The compose window displays a 'Help me write' menu with options like 'Formalize', 'Elaborate', and 'Shorten' that can automatically rewrite the text you entered.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to rely on AI to adjust the tone and length of their message or to send their own exact words."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Paste in outside content",
+      "questions": [
+       {
+        "question": "Should you include instructions on how to open the attached zip file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the user copying tutorial links from a Google Doc into the email body to ensure the recipient can successfully access the zipped attachment.",
+        "whatTheAgentLoses": "You lose the ability to proactively anticipate the recipient's technical limitations and provide helpful context alongside your attachments."
+       },
+       {
+        "question": "How do you retrieve the meeting invitation details?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Zoom - Schedule Meeting' dialog offers options to open with a default calendar or copy to the clipboard.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the meeting details before they are copied and sent."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Trim the quoted history",
+      "questions": [
+       {
+        "question": "Should you keep or delete the forwarded email history below your new message?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the previous email thread appended below the new message, which might clutter the email or include unnecessary context.",
+        "whatTheAgentLoses": "You lose the ability to curate the email's context and ensure the recipient only sees the relevant information you intended to share."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Insert the merge tags",
+      "questions": [
+       {
+        "question": "Which merge tag do you want to use for the greeting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a menu of mail merge tags like '@ firstname' and '@ lastname', which determines how the recipient's name will be formatted in the automated greeting.",
+        "whatTheAgentLoses": "The delegator loses control over the tone of the email by not being able to choose between a casual first name or a more formal full name greeting."
+       },
+       {
+        "question": "Which merge tag do you select to replace the date placeholder?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing the '@' symbol brings up the mail merge tags dropdown, requiring you to choose the exact variable that will correctly populate the recipient's payment deadline.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the correct dynamic data tag is used for sensitive information like a payment due date."
+       },
+       {
+        "question": "Which mail merge tags do you select for the account number and amount due?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The draft includes placeholders for billing details, requiring you to select the correct dynamic fields from the mail merge menu to populate them accurately.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to verify that the correct data fields are mapped to the sensitive billing information in your email template."
+       },
+       {
+        "question": "Are all the purple placeholder tags correctly positioned in your draft?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the purple highlight tags like '@firstname' and '@amountdue' ensures the mail merge will populate the correct data for each recipient before you click Continue.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that sensitive merge fields like account numbers and amounts due are placed in the correct context within the message."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Format the text",
+      "questions": [
+       {
+        "question": "Does the pasted text contain broken formatting or unreadable background colors that need to be cleared?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Pasting content from external documents or websites often imports incompatible HTML formatting, making the email look broken or unprofessional.",
+        "whatTheAgentLoses": "The ability to notice and strip out corrupted rich-text formatting before the recipient sees a garbled message."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Attach a file",
+    "note": "5.1 opens the source list, and which sources exist is the client's decision, not the user's. then 5.2, or 5.3 where the file is dragged in instead, or 5.5 where it lives in cloud storage. 5.4 fires when the client refuses what was picked, and returns into 5.2 or 5.5 once the file is ready. 5.6 where the upload has to finish before anything else. three keepers open 5.1 and attach nothing at all.",
+    "questions": [
+     {
+      "question": "Do you need to attach any files or Drive links to this email?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The compose toolbar displays icons for attaching local files or inserting from Google Drive, prompting a choice about including supplementary documents.",
+      "whatTheAgentLoses": "Delegating this step means you lose the ability to judge whether additional context or specific documents should accompany your message."
+     },
+     {
+      "question": "Do you want to attach the file directly, or share it by generating a link?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The file's context menu offers options like 'Get link' and 'Download', meaning you must choose whether to send a cloud link or a physical attachment.",
+      "whatTheAgentLoses": "You lose the ability to decide the file sharing method, which affects whether the recipient needs specific cloud permissions to view the document."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Open the attachment menu",
+      "questions": [
+       {
+        "question": "Which source should you select from the Attach File dropdown?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers recent items, web locations, and the local PC, so you must specify where the intended file is currently stored.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which storage location to pull the attachment from, risking the selection of an incorrect or outdated version of the file."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Pick the file from storage",
+      "questions": [
+       {
+        "question": "Which file do you select to attach to the email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing the correct file from the Downloads folder ensures the intended image, such as 'Cool Guy.jpg', is attached to the email.",
+        "whatTheAgentLoses": "You lose the opportunity to manually browse your folders and visually verify you are attaching the exact file you intended."
+       },
+       {
+        "question": "Which file do you select from the opened folder to attach?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The file picker displays various files like 'man-152231_1280.png' and 'Spreadsheet.xlsx', requiring you to choose the exact item to include.",
+        "whatTheAgentLoses": "You lose control over exactly which specific file from your local folder is shared with the recipient."
+       },
+       {
+        "question": "Which folder contains the image you want to attach?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The file manager displays multiple image directories like Camera, Downloads, and Canva, so you must know exactly where the intended attachment is saved.",
+        "whatTheAgentLoses": "Delegating this means losing the ability to visually browse your personal folders to find the exact image you intended to share."
+       },
+       {
+        "question": "Which files do you want to attach from this folder?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The file explorer shows several audio and document files like 'Script.docx' and 'Google Maps Spanish.m4a', so the exact files to include must be specified.",
+        "whatTheAgentLoses": "You lose the ability to browse the folder's contents and manually select the specific combination of files to share."
+       },
+       {
+        "question": "Have I selected the correct files, and how do I confirm the selection?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top bar explicitly shows '3 selected', requiring a tap on the 'Select' button to finalize adding them to the email.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct documents or images are being attached before they are added to the draft."
+       },
+       {
+        "question": "Where do you navigate to find the file you want to attach?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Navigating directly to the specific drive avoids accidentally selecting the wrong file from the recent files list, which displayed sensitive data.",
+        "whatTheAgentLoses": "You lose the peace of mind that the agent won't accidentally select and attach a sensitive file from the recent files list."
+       },
+       {
+        "question": "Should you grant the app permission to access all your photos?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system dialog requires you to choose whether to give the app access to all your photos, select specific ones, or deny access entirely.",
+        "whatTheAgentLoses": "You lose the opportunity to protect your privacy by restricting the app's access to only specific photos rather than your entire library."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Drag the file in",
+      "questions": [
+       {
+        "question": "Which file are you dragging into the compose window to attach?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Drop files here' overlay in Gmail as a file from the Downloads folder is dragged over it, which dictates exactly what attachment the recipient will receive.",
+        "whatTheAgentLoses": "You lose the chance to manually verify the specific file being dragged from your local directory before it is attached to the message."
+       },
+       {
+        "question": "Do you want to resize the inline image?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options like 'Small' and 'Best fit' to control how the inline image appears within the email body.",
+        "whatTheAgentLoses": "You lose the chance to visually verify the image's layout and choose the best fit for the recipient's reading experience."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Prepare the file elsewhere",
+      "note": "5.4.1 names what stopped it. then whichever of 5.4.2 to 5.4.5 the block calls for: a folder gets compressed, an oversized file gets uploaded, a cloud file gets its sharing set, a cloud file that has to travel as bytes gets downloaded first. 5.4.6 where the client is not connected to the storage service at all. 5.4.3 after any compression. then back into 5.2 or 5.5 - UehN is the one keeper that never gets back.",
+      "children": [
+       {
+        "id": "5.4.1",
+        "label": "Find out what blocked it",
+        "questions": [
+         {
+          "question": "Can you attach an entire folder directly to the email?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "Selecting a folder and clicking 'Open' in the file browser merely opens it to reveal contents like 'road-259815_1280.jpg' rather than attaching the folder itself.",
+          "whatTheAgentLoses": "The user loses the awareness that folders cannot be attached directly and must either be zipped or have their individual files selected."
+         },
+         {
+          "question": "Did the email client reject the attachment and display a security warning about a restricted file type?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Mail clients actively block certain file extensions (like .exe, .bat, or scripts) for security, requiring the user to find an alternative sharing method like a cloud link.",
+          "whatTheAgentLoses": "The user loses the awareness that their specific file type is prohibited and will fail to attach, requiring a change in delivery strategy."
+         },
+         {
+          "question": "Do you want to use Mail Drop to send this oversized attachment?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The attachment is 56.3 MB, which exceeds the 52.4 MB limit, prompting Apple Mail to offer iCloud delivery.",
+          "whatTheAgentLoses": "You lose the opportunity to choose whether your file is temporarily hosted on iCloud or sent directly through your email provider."
+         }
+        ]
+       },
+       {
+        "id": "5.4.2",
+        "label": "Compress the folder",
+        "questions": [
+         {
+          "question": "Which folder needs to be compressed?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a File Explorer window with 'Folder To Be Emailed', which must be selected and compressed before it can be attached.",
+          "whatTheAgentLoses": "The user loses the ability to specify exactly which folder should be prepared and attached to the email."
+         },
+         {
+          "question": "Is the option to compress the folder available in this context menu?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The context menu for the Zoom folder lacks a compress or zip option, which is necessary because most email clients require folders to be zipped before attaching.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to troubleshoot the missing compression tool or simply abandon this folder and attach a different one."
+         },
+         {
+          "question": "What do you do when you get a 'Compressed (zipped) Folders Error' stating the folder is empty?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows an error dialog because the system cannot zip an empty directory, halting your attempt to prepare the attachment.",
+          "whatTheAgentLoses": "The user loses the chance to realize they forgot to put their intended files into the folder before trying to attach it to the email."
+         }
+        ]
+       },
+       {
+        "id": "5.4.3",
+        "label": "Check the archive contents",
+        "questions": [
+         {
+          "question": "Are these the correct files to compress and attach?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed the contents of 'Folder To Be Emailed', allowing verification of the files before zipping them for the email.",
+          "whatTheAgentLoses": "The user loses the visual confirmation that all intended files are present in the folder before it gets compressed and sent."
+         },
+         {
+          "question": "Did you verify the folder successfully compressed into a .zip file?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Confirming the completion notification and locating the new .zip file in the directory ensures the folder is actually ready to be attached.",
+          "whatTheAgentLoses": "You lose the visual reassurance of seeing the newly created .zip file appear in your directory before it gets attached."
+         },
+         {
+          "question": "Do you want to rename the newly created ZIP file?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The text 'Folder To Be Emailed' is highlighted in an editable text box, giving you the immediate option to customize the file name before attaching it.",
+          "whatTheAgentLoses": "You lose the opportunity to apply a specific or more professional naming convention to the attachment that the recipient will see."
+         }
+        ]
+       },
+       {
+        "id": "5.4.4",
+        "label": "Upload the file to storage",
+        "questions": [
+         {
+          "question": "Do you confirm the browser's security warning to upload the entire folder?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The browser explicitly asks if you trust the site before allowing the upload of all 10 files from the selected folder.",
+          "whatTheAgentLoses": "You lose the opportunity to personally assess the security warning and explicitly grant the site access to your local files."
+         },
+         {
+          "question": "Is the file you want to attach already uploaded to your Google Drive?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Google Drive file picker displayed 'No files found,' indicating that the file must be uploaded to Drive first before it can be attached.",
+          "whatTheAgentLoses": "The user loses the ability to manually locate their local file and upload it to Drive when the agent gets stuck on an empty file picker."
+         }
+        ]
+       },
+       {
+        "id": "5.4.5",
+        "label": "Set who can open it",
+        "questions": [
+         {
+          "question": "Do you want the recipient to be able to download the attached file?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Google Drive preview window shows a 'Download' button, indicating the current permissions allow the recipient to save the file locally.",
+          "whatTheAgentLoses": "The user loses the ability to control the specific access and download permissions for the file they are sharing."
+         },
+         {
+          "question": "Which file do you want to share, and where should you manage its permissions?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Although the insert dialog displays available documents like 'word to docs', managing the file directly in the Google Drive tab ensures the recipient will have the correct access permissions before sending.",
+          "whatTheAgentLoses": "You lose the ability to proactively verify and adjust the exact sharing permissions of the document in Google Drive before attaching it to the email."
+         }
+        ]
+       },
+       {
+        "id": "5.4.6",
+        "label": "Connect the storage account",
+        "questions": [
+         {
+          "question": "Which Google account do you want to use to sign in to Yahoo Mail?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts you to \"Choose an account\" to \"continue to Yahoo!\", which determines the sender identity for your email.",
+          "whatTheAgentLoses": "You lose the ability to ensure the email is sent from your preferred primary account rather than an alternate or work account."
+         },
+         {
+          "question": "Which cloud service do you want to connect to share this large attachment?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dialog box indicates the file exceeds the 25MB limit and requires you to choose between connecting Google Drive or Dropbox to send it.",
+          "whatTheAgentLoses": "You lose the ability to choose which of your personal cloud storage accounts to link to your email client for handling large files."
+         },
+         {
+          "question": "Should you connect your Google Drive account to attach files?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts you to connect your Google Drive account to browse and share files in the mail you send.",
+          "whatTheAgentLoses": "Delegating this means you lose control over whether to grant the email client access to your external cloud storage account."
+         },
+         {
+          "question": "Should I grant Yahoo permission to access and modify my Google Drive files?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The authorization screen warns that Yahoo will be able to see, edit, create, and delete all of your Google Drive files.",
+          "whatTheAgentLoses": "The user loses the chance to evaluate whether they trust the email client with extensive access to their personal cloud storage."
+         }
+        ]
+       },
+       {
+        "id": "5.4.7",
+        "label": "Download the file locally"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Insert a cloud file",
+      "questions": [
+       {
+        "question": "Which file from your Google Drive should you attach?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google Drive picker displays multiple options like \"Cool Guy.jpg\" and \"Pond.jpg\", requiring you to select the specific file meant for the recipient.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct file is selected, risking the attachment of an irrelevant or private document."
+       },
+       {
+        "question": "Should I insert the file as a Drive link or as a direct attachment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The file selection modal provides 'Insert as' options at the bottom right to send either a Drive link or an actual Attachment.",
+        "whatTheAgentLoses": "You lose the ability to choose the most accessible file delivery method for your specific recipient."
+       },
+       {
+        "question": "Which file should you select from Drive, and should it be inserted as a link or an attachment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog displays multiple files like 'Cool Guy.jpg' and requires choosing whether to insert the selection as a 'Drive link' or an 'Attachment'.",
+        "whatTheAgentLoses": "You lose the ability to decide whether the recipient receives a standalone file or a dynamic link to your Google Drive."
+       },
+       {
+        "question": "Which file from the search suggestions should you attach?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown shows multiple files containing the search term, and the correct one must be selected to attach to the email.",
+        "whatTheAgentLoses": "The delegator loses the ability to ensure the correct file is chosen when multiple search results appear."
+       },
+       {
+        "question": "Is 'word file 2' the correct file to attach?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed an attachment chip for 'word file 2', and checking this prevents sending the wrong document to the recipient.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the attachment chip and catch a mistakenly attached file before the email is sent."
+       },
+       {
+        "question": "Which file from the Drive search results do you select to insert?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a grid of Google Drive search results, requiring a choice of which file to attach.",
+        "whatTheAgentLoses": "The user loses control over which specific file from their Drive is attached to the email."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Wait for the upload",
+      "questions": [
+       {
+        "question": "Has the file finished uploading to the email draft?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Sending the email before the progress bar for the zip file disappears could result in the message going out without the attachment.",
+        "whatTheAgentLoses": "You lose the visual confirmation that your specific file successfully uploaded without errors before the message was sent."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Send or save the message",
+    "note": "6.1 first in the keepers that check anything. then exactly one of 6.2 to 6.5 - the four ways a draft ends here. 6.6 where the client refuses to proceed as-is. 6.7 when a cloud attachment forces a second commit before delivery. 6.8 to read whatever comes back. eight keepers produce no evidenced commit at all.",
+    "questions": [
+     {
+      "question": "Should you send the message immediately, save it as a draft, or discard it?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The bottom of the compose window displays 'Send', 'Save Now', and 'Discard' buttons, offering different ways to handle the drafted email.",
+      "whatTheAgentLoses": "The user loses the opportunity to save the email as a draft for later review before it is permanently sent."
+     },
+     {
+      "question": "Are you ready to send the email immediately, or do you need to open the overflow menu for options like scheduling?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The compose screen is fully populated with the message details and attachment, but the overflow menu is opening instead of the send button being tapped.",
+      "whatTheAgentLoses": "You lose the ability to decide whether to dispatch the email immediately or use advanced options like scheduling it for later."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Check the draft before sending",
+      "questions": [
+       {
+        "question": "Do the YouTube links in your email draft exactly match the ones provided in the source document?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed different video IDs in the final Gmail draft compared to the original Google Doc.",
+        "whatTheAgentLoses": "The user loses the assurance that the correct information is being sent to the recipient when the agent alters or miscopies the provided links."
+       },
+       {
+        "question": "Are the recipient, subject, and body correct before you proceed to attach a file?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the filled fields for the recipient, subject, and body ensures your message is accurate before adding attachments.",
+        "whatTheAgentLoses": "You lose the opportunity to review the exact wording and recipient of the email before the agent proceeds to the next step."
+       },
+       {
+        "question": "Are there any red squiggly lines or visual spell-check indicators under the text you just pasted or typed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Email clients visually flag typos and grammar errors in real-time, allowing quick corrections before the message is sent.",
+        "whatTheAgentLoses": "The user loses the passive visual safety net of native spell-check indicators, risking sending an unprofessional email if the agent ignores them."
+       },
+       {
+        "question": "Is the correct file attached before you fill in the recipient and message details?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an attachment card for 'Pond.jpg' with a thumbnail and file size that needs verification before addressing the email.",
+        "whatTheAgentLoses": "The user loses the ability to visually verify the attachment thumbnail and file size before the agent proceeds to draft and send the email."
+       },
+       {
+        "question": "Do you see the same file size for the attachment in your draft as you did in the file browser?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming that the '36 KB' size of the attached 'Main Resume.docx' matches the iOS file browser ensures the correct document was successfully uploaded.",
+        "whatTheAgentLoses": "The user loses the opportunity to manually cross-reference file metadata to guarantee the right document is being sent."
+       },
+       {
+        "question": "Is the attachment size acceptable?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The attachment chip displays a size of 3.3 MB, prompting a check against standard email attachment limits.",
+        "whatTheAgentLoses": "The user loses the ability to judge if the file size is appropriate for the recipient or if it should be sent via a cloud link instead."
+       },
+       {
+        "question": "Are the recipient, subject, and message body correct before you click send?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the entered email address, subject line, and body text ensures the message is accurate and going to the right person before clicking the Send button.",
+        "whatTheAgentLoses": "Delegating this step removes your final chance to personally proofread the message and verify the recipient before the email is permanently dispatched."
+       },
+       {
+        "question": "Does the greeting in the email body match the recipient's email address?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The recipient field shows [email], but the message body addresses 'James', indicating a mismatch before sending.",
+        "whatTheAgentLoses": "The user risks sending an email to the wrong person or confusing the recipient with an incorrect greeting."
+       },
+       {
+        "question": "Are you ready to send the email, and is the attachment file size acceptable?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming the 3.3 MB attachment size is acceptable ensures the email will not be rejected by the server when you tap send.",
+        "whatTheAgentLoses": "The user loses the ability to manually judge whether the attachment size is appropriate for their recipient before committing to send the message."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Press send",
+      "questions": [
+       {
+        "question": "Are you ready to send the email with the attached file?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The compose window shows 'Cool Guy.jpg' successfully attached at the bottom, indicating the message is complete and ready for dispatch.",
+        "whatTheAgentLoses": "The user loses the final opportunity to verify that the correct file was attached before the email is irreversibly sent."
+       },
+       {
+        "question": "Are you ready to tap the paper airplane icon to send the email?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying the recipient, subject, body, and attachment are correct before tapping the paper airplane icon prevents sending an incomplete or erroneous message.",
+        "whatTheAgentLoses": "You lose the final opportunity to manually review the email's content and attachments before it is irreversibly sent."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Schedule the delivery",
+      "questions": [
+       {
+        "question": "What date and time should I schedule this email to send?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'Pick date & time' dialog requires a specific calendar day and time to ensure the message arrives exactly when intended.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to strategically time the email's arrival, such as right before a scheduled meeting."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Save it as a draft"
+     },
+     {
+      "id": "6.5",
+      "label": "Send the batch",
+      "questions": [
+       {
+        "question": "Should you check 'Don't show again' before clicking 'Got it' on the junk mail warning?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dialog box offers a choice to permanently dismiss future warnings about email best practices by checking a box before proceeding.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether they want to be reminded of email best practices in the future."
+       },
+       {
+        "question": "Should you send a preview email to yourself before sending it to the whole list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'Ready to send' dialog offers a 'Send preview' option to verify the formatting before dispatching the separate emails to your recipients.",
+        "whatTheAgentLoses": "Letting an agent automatically skip the preview removes your final chance to catch formatting errors or mistakes before the emails reach your recipients."
+       },
+       {
+        "question": "Does the number of selected contacts match the number of emails shown in the send confirmation?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the '3 selected' contacts matches the '3 separate emails will be sent' message ensures the system correctly registered your intended recipients.",
+        "whatTheAgentLoses": "The user loses the final safety check that prevents accidentally emailing the wrong number of people before the messages actually go out."
+       },
+       {
+        "question": "Should you review the email for confidential data after seeing the external recipient warning?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Ready to send' dialog displays a yellow banner warning that some recipients are outside your organization, prompting a final security check before dispatching the message.",
+        "whatTheAgentLoses": "The user loses the critical opportunity to halt the email and verify they aren't accidentally leaking internal or sensitive company information to external parties."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Answer the send warning",
+      "questions": [
+       {
+        "question": "Do you want to send this email without a subject?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The mail client displayed a 'Missing subject' warning, requiring a choice between sending the email as-is or returning to the draft to add one.",
+        "whatTheAgentLoses": "Delegating this choice means losing the opportunity to decide whether a blank subject line is acceptable for this specific recipient or if it looks too unprofessional."
+       },
+       {
+        "question": "Did the mail client display a 'forgot attachment' warning when you clicked send?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If you typed words like 'attached' in the body but haven't actually attached a file, mail clients often catch the error and ask for confirmation before sending.",
+        "whatTheAgentLoses": "The user loses the safety net of the system's attachment reminder, risking the agent blindly clicking 'Send anyway' and delivering an incomplete message."
+       },
+       {
+        "question": "Did the send action fail with an error message stating that a recipient address is improperly formatted?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a recipient's email address contains a syntax error, such as a missing '@' or invalid characters, the mail client will halt the send process and display an alert requiring you to fix the typo.",
+        "whatTheAgentLoses": "You lose the opportunity to realize a typo is actively blocking the email from being dispatched and to correct the specific address causing the failure."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Grant access to the file",
+      "questions": [
+       {
+        "question": "How should you set the access permissions for the linked Google Drive file?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dialog requires choosing between restricting access to specific people or allowing anyone with the link to view the file.",
+        "whatTheAgentLoses": "You lose control over balancing file security against the recipient's convenience when accessing the attachment."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Read the send confirmation",
+      "questions": [
+       {
+        "question": "Do you see a 'Sending...' notification confirming the action is in progress?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The black 'Sending...' toast at the bottom of the inbox screen confirms the app registered the send command and is actively processing the email.",
+        "whatTheAgentLoses": "An agent might close the app immediately after clicking send rather than waiting for completion, which could interrupt the process and leave the email stuck in the outbox."
+       },
+       {
+        "question": "Is the 'Undo Send' button currently visible on the screen, and is the timer still active?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The undo toast is a transient visual element that offers a brief, time-sensitive window to cancel the action if a mistake is suddenly realized.",
+        "whatTheAgentLoses": "The user loses the awareness of their exact window of opportunity to reverse the send action before the email is permanently dispatched."
+       },
+       {
+        "question": "Did you see the 'Message sent' confirmation banner?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The bottom-left banner changing from 'Sending...' to 'Message sent' confirms the email was successfully dispatched.",
+        "whatTheAgentLoses": "Delegating this means you miss the brief window to click 'Undo' if you suddenly realize you made a mistake in the email."
+       },
+       {
+        "question": "Do you see the 'Sent' confirmation and your new reply in the thread?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the 'Sent' toast and the new reply in the thread confirms the message was successfully delivered before you navigate away.",
+        "whatTheAgentLoses": "You lose the immediate visual reassurance that your specific message actually went through and was appended to the correct conversation."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Confirm the message went",
+    "note": "7.1 first - the toast is not treated as sufficient, and three keepers open the folder straight after seeing one. 7.2 when the message is not where it should be. 7.3 where the client filed it somewhere else. 7.4 in the six keepers that go and look at the receiving end. seven keepers stop at the toast or before it.",
+    "questions": [
+     {
+      "question": "Do you monitor your inbox for a few moments after sending to ensure you don't receive a 'Message not delivered' bounce-back?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "If an email address is mistyped or the recipient's inbox is full, the mail server will immediately return a failure notification, meaning the email must be corrected and resent.",
+      "whatTheAgentLoses": "The user loses the immediate feedback loop of catching a delivery failure, potentially believing a critical email was received when it actually bounced."
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Open the sent folder",
+      "questions": [
+       {
+        "question": "Did you verify the email successfully sent and appeared in the sent history?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the Sent folder after seeing the 'Message sent' notification confirms that the message and its attachments were actually dispatched.",
+        "whatTheAgentLoses": "You lose the peace of mind of visually confirming that the exact message and its attachments are safely logged in your sent history."
+       },
+       {
+        "question": "Are the recipient, subject, body, and attachment correct in the sent message?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the sent message details, including the recipient, text, and image thumbnail, confirms the email was transmitted exactly as intended.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally confirming that the correct message and file actually went to the right person."
+       },
+       {
+        "question": "Are you verifying the sent email in the same account you used to draft it?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The email was drafted from [email], but the Sent folder shown later belongs to [email] and does not contain the drafted message.",
+        "whatTheAgentLoses": "The user cannot confirm if their email was actually sent because the agent checked the wrong account's Sent folder."
+       },
+       {
+        "question": "Does the email in the Sent folder list view display a paperclip icon next to the subject?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The paperclip icon provides immediate visual confirmation from the folder view that the email was transmitted with an attachment, without needing to open the message.",
+        "whatTheAgentLoses": "The user loses the ability to quickly and cheaply verify the presence of the attachment using standard list-view visual cues."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Find the stuck message",
+      "questions": [
+       {
+        "question": "Is there an 'Offline' or 'Working Offline' indicator visible in the mail client interface?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the device or client has lost connection, the email will be queued in the outbox rather than sent immediately, changing whether the user should expect an immediate reply.",
+        "whatTheAgentLoses": "The user loses the awareness that their message will be delayed until the connection is restored, falsely believing it was sent instantly."
+       },
+       {
+        "question": "Did your email send successfully, or is it stuck in the outbox?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The Sent folder did not show the recent email and instead displayed a banner for unsent messages in the Outbox, indicating a delivery issue that needs to be investigated.",
+        "whatTheAgentLoses": "You lose the certainty of knowing whether your message actually reached the recipient or if it silently failed to send."
+       },
+       {
+        "question": "Has the email finished uploading and left the outbox?",
+        "cluster": "watch",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The outbox displays an 'Uploading' status for the attachment, which must change to 'Sending' and disappear to confirm successful delivery.",
+        "whatTheAgentLoses": "You lose the certainty of personally monitoring the outbox to ensure a large attachment doesn't cause the email to get stuck."
+       },
+       {
+        "question": "Does the outbox status confirm the earlier 'Sending...' notification?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen showed a 'Sending...' toast earlier, but the outbox now says 'Uploading,' meaning the message hasn't actually left the device yet.",
+        "whatTheAgentLoses": "You lose the assurance that the email was successfully delivered if the agent trusts the initial toast notification without verifying the final outbox status."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Check the other folders",
+      "questions": [
+       {
+        "question": "Is your email correctly queued in the Scheduled folder with the right contents?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the Scheduled folder and the banner inside the email confirms your message is queued to go out at the exact time you intended.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the scheduled time and contents before the delayed send occurs."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Check the receiving end",
+      "note": "7.4.1, then 7.4.2 where it has not landed yet, then 7.4.3. 7.4.4 where the point of the message was the file.",
+      "questions": [
+       {
+        "question": "How do you verify the email was actually received?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Switching to the recipient's inbox tab and refreshing confirms the message successfully arrived and didn't get caught in a spam filter.",
+        "whatTheAgentLoses": "The user loses the peace of mind that comes from visually confirming the email arrived in the destination inbox."
+       }
+      ],
+      "children": [
+       {
+        "id": "7.4.1",
+        "label": "Get to the other mailbox"
+       },
+       {
+        "id": "7.4.2",
+        "label": "Wait for it to arrive",
+        "questions": [
+         {
+          "question": "Do you see the new email in the inbox?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The screen shows a new email from 'me' with the subject 'Leave letter', confirming the message was delivered.",
+          "whatTheAgentLoses": "The user loses the immediate reassurance of personally verifying that the email successfully reached its destination."
+         }
+        ]
+       },
+       {
+        "id": "7.4.3",
+        "label": "Open the received copy",
+        "questions": [
+         {
+          "question": "How do you want to verify that the recipient can access the shared file?",
+          "cluster": "hand over",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The screen shows the recipient clicking the Google Drive link in the email to confirm the file opens successfully without requiring a login.",
+          "whatTheAgentLoses": "The user loses the peace of mind of manually testing the link to ensure the recipient will not face permission errors."
+         },
+         {
+          "question": "Should you expand the recipient details to verify the exact email addresses?",
+          "cluster": "hand over",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "Expanding the 'to me' section reveals the full sender and recipient addresses to confirm the message was routed correctly.",
+          "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the email was delivered to the exact intended address rather than a similar-looking contact."
+         },
+         {
+          "question": "Did the mail merge correctly populate the recipient's name in the greeting?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "Checking that the email body starts with the actual name confirms the mail merge tag successfully pulled the recipient's information instead of sending a broken placeholder.",
+          "whatTheAgentLoses": "Delegating this check means you lose the peace of mind of confirming your automated greetings look professional rather than exposing raw merge tags to your recipients."
+         },
+         {
+          "question": "Did you confirm the mail merge pulled the correct spreadsheet data into the sent email?",
+          "cluster": "compare",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "Comparing the sent email to the Google Sheet on a split screen confirms the automated tags correctly populated the specific account details.",
+          "whatTheAgentLoses": "You lose the visual confirmation that the automated mail merge accurately transferred the financial data into the final message."
+         },
+         {
+          "question": "Does the attachment size in the received email match the size shown when you attached it?",
+          "cluster": "compare",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The attached 'Password 123.txt' file displays a size of 1K in the Gmail compose window but 59B in the received Yahoo email, suggesting a potential inconsistency.",
+          "whatTheAgentLoses": "The user loses confidence that the exact file they attached was transmitted without alteration or data loss."
+         },
+         {
+          "question": "Did the forwarded email arrive with only your new message and no previous history?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The recipient's inbox shows the email from 'Woggle Guides', and opening it confirms the body only contains 'My goofy cat!' and the image without the original email trail.",
+          "whatTheAgentLoses": "You lose the peace of mind of personally verifying that unnecessary email history was successfully scrubbed before the recipient saw it."
+         }
+        ]
+       },
+       {
+        "id": "7.4.4",
+        "label": "Save the attachment",
+        "questions": [
+         {
+          "question": "Did you open the notification shade to verify the download initiated?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen shows the notification shade pulled down over a received email to check for a download confirmation.",
+          "whatTheAgentLoses": "The user loses the ability to confirm that the required file was successfully saved to the device before attempting to attach it."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Handle a received message",
+    "note": "8.1 to open it - and on the reply and forward routes this is where the task begins, running straight into 2.2. 8.2 where the thread hides part of itself. 8.3 to see who else is on it. 8.4 to 8.8 in any order and almost entirely in one keeper, which files, stars, snoozes and un-reads a single message and then puts every one of them back.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Open a received message",
+      "questions": [
+       {
+        "question": "Which email thread should you open to forward?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox displays numerous messages, and clicking the 'Welcome to the weekend!' thread dictates the specific content to be forwarded.",
+        "whatTheAgentLoses": "The user loses control over selecting the exact historical context or conversation to share with the new recipient."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Expand the hidden messages",
+      "questions": [
+       {
+        "question": "Which specific email in the thread do you want to forward?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The expanded thread shows multiple messages, such as the ones from Ted Harland at 6:14 AM and Woggle Guides at 6:20 AM, and you must select the exact one containing the picture you want to share.",
+        "whatTheAgentLoses": "You lose the ability to personally select which specific message and context from the ongoing conversation gets forwarded to your friend."
+       },
+       {
+        "question": "How do you reveal the messages hidden in the middle of the thread?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a numbered circle between two emails, indicating that some messages in the conversation are currently collapsed.",
+        "whatTheAgentLoses": "The user loses the ability to review the complete history and context of the email exchange."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Read who else got it",
+      "questions": [
+       {
+        "question": "Who exactly is included in the To and Cc fields on this thread?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Expanding the collapsed header reveals the specific sender and all Cc'd parties, ensuring you know exactly who will receive your message if you reply all.",
+        "whatTheAgentLoses": "The delegator loses direct visibility into the specific individuals included in the conversation, risking unintended sharing of information with hidden recipients."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Label the message"
+     },
+     {
+      "id": "8.5",
+      "label": "Archive the message"
+     },
+     {
+      "id": "8.6",
+      "label": "Star the message"
+     },
+     {
+      "id": "8.7",
+      "label": "Snooze the message"
+     },
+     {
+      "id": "8.8",
+      "label": "Mark the message unread"
+     }
+    ]
+   }
+  ]
+ }
+}

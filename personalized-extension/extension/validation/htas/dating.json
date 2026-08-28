@@ -1,0 +1,2698 @@
+{
+ "task": "set up and use a dating app or site (Tinder, Bumble, Hinge, Match, OkCupid): create or edit the profile with photos and prompts, set preferences and filters, browse candidates and act on them, and reach a match or send a first message where the flow allows; complete when the match screen or the sent first message is shown. Surface pinned: the dating product itself — not dating-advice talking-head content, not story-time videos about dates.",
+ "tree": {
+  "id": "0",
+  "label": "Meet someone through an app",
+  "note": "do 1, then 2 and 3 - the signup wizards run them interleaved as one screen sequence (3ltT, 17j1, MpoY), and five keepers arrive with all of it already done (Nmjb, 2Xie, FWwo, AOCl, Jzez). then 4. 2 is re-entered from 4 whenever the app nags for photos, gates content on completeness, or the profile is itself the thing being tested (Nmjb, FWwo, 3yWz). 5 is entered from 4.6, 6.2 and 7.1, never on its own. 6 after time passes with the app closed - 8 hours in Nmjb, 24 in 1D06, 48 twice in MpoY. then 7, then back to 4 or 6 for another round. 8 when a conversation moves to a phone number, or when the app comes off the phone.",
+  "questions": [
+   {
+    "question": "Should you evaluate the suggested profile or navigate to your own profile first?",
+    "cluster": "select",
+    "moment": "Now",
+    "moneyMoving": false,
+    "why": "The screen presents a candidate profile ready for swiping, but the bottom navigation bar allows switching to other sections like your own profile.",
+    "whatTheAgentLoses": "The user loses the ability to prioritize reviewing their own profile before engaging with potential matches."
+   }
+  ],
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the app",
+    "note": "1.1 then 1.2 on the store route; 1.3 instead when the app is already on the phone (Jzez, AOCl, FWwo). 1.4 as the prompts arrive - notifications fire at launch in four keepers and at the end of the wizard in 3ltT. then 1.5, with 1.6 to 1.8 as the method demands: a phone number gets an SMS code, Apple sign-in gets neither. 1.9 and 1.10 where the platform shows them.",
+    "questions": [
+     {
+      "question": "How do you dismiss the alert confirming the app icon change?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays a system alert confirming the new app icon, which blocks the interface until it is acknowledged.",
+      "whatTheAgentLoses": "The user misses the direct confirmation that their home screen icon for the app has been successfully updated."
+     },
+     {
+      "question": "What password do you want to set for your new account?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires you to create a password of at least six characters to secure your profile and complete the sign-up process.",
+      "whatTheAgentLoses": "Delegating this step means the agent chooses the password, leaving you without the credentials needed to log in to your own account later."
+     },
+     {
+      "question": "How do you want to proceed since the OkCupid app is unavailable in your region?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The Play Store displays a warning that the app is not available in your region, requiring a choice of an alternative access method like a web browser.",
+      "whatTheAgentLoses": "The user loses the opportunity to decide whether to switch to the web version, use a VPN, or try one of the alternative dating apps suggested on the screen."
+     },
+     {
+      "question": "Do you want to check the box to opt out of promotional emails and discounts?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The sign-up screen includes a checkbox that is unchecked by default, meaning you will receive marketing emails unless you explicitly opt out.",
+      "whatTheAgentLoses": "Delegating this means the agent might leave the box unchecked, resulting in unwanted promotional spam in your personal inbox."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Read the store listing",
+      "questions": [
+       {
+        "question": "Is this the correct dating app to open?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the developer name and app details on the Play Store ensures you are opening the legitimate Tinder app rather than a copycat.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify the authenticity and safety of the app being installed and opened."
+       },
+       {
+        "question": "Should you read the user reviews before downloading this dating app?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The App Store page shows a 4.4 rating from 82K users, but reading the actual reviews could reveal common issues or confirm if the app truly fits your needs.",
+        "whatTheAgentLoses": "You lose the opportunity to vet the app's actual community quality and usability through real user feedback before committing time to it."
+       },
+       {
+        "question": "Do you want to investigate the Datefit app being advertised?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The TikTok ad for Datefit shows high engagement and claims it is better than other dating apps, prompting a decision on whether to explore it.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to organically discover and choose a niche dating app that aligns with your specific interests."
+       },
+       {
+        "question": "Does this app's specific focus on fitness align with the type of dating pool you want?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The App Store description explicitly states the app is for finding dates through fitness, meaning it caters to a niche audience rather than a general dating pool.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might download a niche fitness app that doesn't match your actual lifestyle or dating preferences."
+       },
+       {
+        "question": "Do you want to review the app's features, costs, and user reviews before opening it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The App Store page displays the app's description, in-app purchase tags, and a reviews tab, which helps you understand the free features and premium costs before committing.",
+        "whatTheAgentLoses": "You lose the chance to evaluate if the app's premium costs and user feedback align with your expectations before starting the onboarding process."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Install the app",
+      "questions": [
+       {
+        "question": "Do you want to download Datefit despite its mediocre ratings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a 3.5-star rating from only 367 users, which might indicate a small dating pool or a subpar experience.",
+        "whatTheAgentLoses": "You lose the ability to vet the app's credibility and popularity before committing your personal data to it."
+       },
+       {
+        "question": "Do you want to install 'Wild: Adult Casual Dating App' using this Apple ID?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen prompts to confirm the installation of a specific adult dating app under a specific email address, which determines the platform you will use for the task.",
+        "whatTheAgentLoses": "The user loses the opportunity to select which specific dating app to try and which Apple ID is used for the download."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Find the app icon",
+      "questions": [
+       {
+        "question": "Which dating app do you want to open?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The App Library displays multiple applications, requiring a choice of which specific dating platform to launch.",
+        "whatTheAgentLoses": "The delegator loses the choice of which specific dating platform they want to use for the task."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Answer the launch prompts",
+      "questions": [
+       {
+        "question": "Do you want to allow the app to send you notifications?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app is requesting permission to send alerts, sounds, and icon badges to your device.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether this app is allowed to interrupt your daily life with alerts and badges."
+       },
+       {
+        "question": "Should you link an external account for easier login?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app suggests connecting an external account like Apple to help you log in and update your profile if your phone number or email changes.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether to link your external accounts, which impacts your privacy and account recovery options."
+       },
+       {
+        "question": "Do you want to invite friends to use the Double Date feature?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a pop-up introducing a Double Date feature with options to invite friends or dismiss it.",
+        "whatTheAgentLoses": "The user loses the opportunity to involve their friends in their dating experience if the agent dismisses this feature."
+       },
+       {
+        "question": "Should you grant the app access to your location, and if so, should it be precise or approximate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests your location to show you potential matches in your area, requiring you to balance matchmaking accuracy with your physical privacy.",
+        "whatTheAgentLoses": "Delegating this decision means an agent might share your precise, real-time physical location without your explicit consent."
+       },
+       {
+        "question": "Do you want to set up multi-device support now, or cancel to proceed to the main app?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app offers the option to link your account to Facebook or email for cross-device access, which you can configure immediately or skip to access your chats.",
+        "whatTheAgentLoses": "The agent might skip this setup when you actually wanted to use the app on your computer, or it might link a social account you prefer to keep private."
+       },
+       {
+        "question": "Do you want to grant the app access to your camera?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests camera access to enable features like taking profile photos and video chatting.",
+        "whatTheAgentLoses": "You lose the ability to control your device's privacy settings and decide whether this specific app can access your camera hardware."
+       },
+       {
+        "question": "Grant the app permission to access your device's photos?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app explicitly requests access to your device's photos in order to upload pictures for your profile.",
+        "whatTheAgentLoses": "Letting an agent handle this bypasses your direct control over granting a third-party app access to your personal photo library."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Choose a sign-up method",
+      "questions": [
+       {
+        "question": "Do you want to sign in to an existing account or create a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The launch screen requires you to choose between 'SIGN IN' for returning users and 'JOIN OKCUPID' to start a fresh profile.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might create a duplicate account instead of recovering your existing profile and match history."
+       },
+       {
+        "question": "How do you want to sign up or log in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers options to continue with Facebook or use a cell phone number, which determines how your account is linked and verified.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose control over which of your personal accounts or phone numbers is permanently linked to your dating profile."
+       },
+       {
+        "question": "Are you linking the correct Facebook or Apple account, knowing it will permanently lock in the name and age associated with that specific login?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the browser session is currently authenticated to a secondary, shared, or old social media account, the dating app will pull that account's name and birthdate, which usually cannot be changed later.",
+        "whatTheAgentLoses": "The agent might permanently ruin the dating account by locking in a fake name or incorrect age pulled from a burner or shared social media login."
+       },
+       {
+        "question": "Do you want to hide your email address when signing in with Apple?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Apple ID sign-in sheet provides an option to 'Hide My Email', which creates a proxy address to protect your personal information from the app developer.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might share your real email address, exposing your primary inbox to potential spam or data sharing."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Enter the phone number",
+      "questions": [
+       {
+        "question": "Is the default country code correct for your phone number?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct country code ensures you can successfully receive the SMS verification codes and account alerts mentioned on the screen.",
+        "whatTheAgentLoses": "You lose the ability to ensure the correct international dialing code is selected for your specific mobile device."
+       },
+       {
+        "question": "Which phone number should I enter, and do you agree to the terms for receiving SMS alerts?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that entering your number means you agree to receive text messages about your account, including verification codes and match updates.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which phone number is linked to your dating profile and exposed to potentially frequent SMS notifications."
+       },
+       {
+        "question": "Will you provide your phone number to verify and secure your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires phone number verification to secure your account and allow you to use it for future sign-ins.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose which personal phone number is linked to your dating profile for authentication."
+       },
+       {
+        "question": "Should you provide your email and phone number to secure your profile, or try to skip it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requests an active email ID and mobile number to secure the profile, but tapping submit without filling them might bypass the requirement.",
+        "whatTheAgentLoses": "Delegating this means the agent decides whether to link your personal contact information to the dating app or attempt to skip the step."
+       },
+       {
+        "question": "Does the app indicate that your phone number is already tied to an existing account, or worse, banned from the platform?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Entering a phone number might trigger an error if you previously used it for an account you forgot about, or if a previous owner was banned, completely halting the onboarding process.",
+        "whatTheAgentLoses": "The agent might get stuck on an error screen without knowing whether to attempt an account recovery, appeal a ban, or ask you for an alternative phone number."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Enter the verification code",
+      "questions": [
+       {
+        "question": "What is the 6-digit verification code sent to your phone?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires the six-digit code sent via text message to verify the phone number and continue the login process.",
+        "whatTheAgentLoses": "Delegating this step requires granting the agent access to your personal text messages to retrieve the security code."
+       },
+       {
+        "question": "Should you verify your phone number with the OTP now, or skip this step for later?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides a choice to either verify the auto-read OTP immediately or skip the process by clicking the \"I'll do this later\" link.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide whether to link your phone number immediately or delay it for privacy reasons."
+       },
+       {
+        "question": "Did the app successfully auto-read the OTP as promised, or did you have to enter it manually?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen claims to be 'Auto-reading OTP,' but if it silently fails, you must manually retrieve and enter the code before the timer expires.",
+        "whatTheAgentLoses": "An agent might wait indefinitely for the auto-read to work, failing to realize it needs to manually input the code to proceed."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Add a recovery email",
+      "questions": [
+       {
+        "question": "Which email address do you want to link to your account for recovery purposes?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app requests an email address to verify your account and ensure you do not lose access to it.",
+        "whatTheAgentLoses": "Letting an agent choose the email means they might use an inbox you do not monitor, which could lock you out of future account recovery."
+       }
+      ]
+     },
+     {
+      "id": "1.9",
+      "label": "Accept the community rules",
+      "questions": [
+       {
+        "question": "Do you agree to Tinder's House Rules?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to accept its community guidelines regarding authenticity, safety, and respect before allowing you to proceed with account creation.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review and commit to the platform's behavioral expectations and safety guidelines."
+       },
+       {
+        "question": "Do you agree to the terms and data usage policies to finalize your profile?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen explicitly warns that your dating activity may be used to personalize your experience and ads across other Facebook products.",
+        "whatTheAgentLoses": "The user loses the chance to read the specific privacy terms and make an informed choice about how their dating data is shared."
+       },
+       {
+        "question": "Do you want to accept the default data processing terms or change your privacy settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks if you allow it and its partners to store and process your device information for marketing and app features.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to reject data sharing with third-party partners for marketing purposes."
+       }
+      ]
+     },
+     {
+      "id": "1.10",
+      "label": "Choose the display name",
+      "questions": [
+       {
+        "question": "What first name do you want to display on your profile, knowing it cannot be changed later?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app explicitly warns that the first name you enter will be displayed on your profile and cannot be changed later.",
+        "whatTheAgentLoses": "The user loses the ability to choose how they are permanently identified to potential matches on the platform."
+       },
+       {
+        "question": "What username do you want to use for your profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app requires you to enter a valid username between 3 and 12 characters to proceed with the account setup.",
+        "whatTheAgentLoses": "You lose the opportunity to choose a personalized username that reflects your identity or preferred online persona."
+       },
+       {
+        "question": "What first name do you want displayed on your profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app explicitly warns that this name will appear on your profile and cannot be changed later.",
+        "whatTheAgentLoses": "You lose control over the permanent first name that potential matches will see."
+       },
+       {
+        "question": "Should I keep your pre-filled Facebook name and gender identity, or edit them for your dating profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen pulls your first name and gender identity from Facebook, noting that changes made here won't affect your main profile.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to present a different name or gender identity specifically for your dating profile."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Build the profile",
+    "note": "2.1 and 2.2 first - every wizard opens on them, and 5ZLp's warning that the age can never be changed sits on the same screen. 2.3 to 2.7 in the order the wizard sets, most skippable: 5ZLp skips six screens in seven seconds, 17j1 leaves both college fields blank after narrating that you have to fill them, MpoY skips the school question and the relationship-intent question. 2.8 to 2.10 where the app asks for words. 2.11 is required in every app - every app blocks the next button until its photo minimum is met. 2.12 and 2.13 after the profile exists. 2.14 and 2.15 are how 4 re-enters this goal: Nmjb runs the whole goal on an account that already had one, FWwo opens it and changes nothing, 3yWz comes back for tags and four more photos mid-browse.",
+    "questions": [
+     {
+      "question": "Do you want to adjust any account settings, like notifications or privacy?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The settings menu includes options to manage your privacy, notifications, and account details like your email and password.",
+      "whatTheAgentLoses": "Delegating this means the agent might leave default notification and privacy settings in place that do not align with your personal boundaries."
+     },
+     {
+      "question": "What name do you want to provide for the support request?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The form requires a name to submit the support ticket, which determines how customer service will address the inquiry.",
+      "whatTheAgentLoses": "The user loses control over whether to use their real name, a pseudonym, or their profile name when interacting with customer support."
+     },
+     {
+      "question": "Which email address should you provide for the support request?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires an email address to submit the support request, which determines where the platform will send updates regarding your issue.",
+      "whatTheAgentLoses": "Delegating this choice means the agent might use an unmonitored or incorrect email address, causing you to miss important communications from support."
+     },
+     {
+      "question": "Which mode do you want to use: Bumble Date, Bumble BFF, or Bumble Bizz?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen presents a dropdown requiring you to choose between dating, friendship, or business networking, which dictates the entire purpose of the account.",
+      "whatTheAgentLoses": "Delegating this choice means the agent might set up a profile for professional networking or friendship instead of your intended goal of romantic dating."
+     },
+     {
+      "question": "Which platform are you using?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires you to select between Android, iOS, and Bumble Web to proceed with the correct platform-specific flow.",
+      "whatTheAgentLoses": "Delegating this means the agent might select the wrong operating system, leading to incompatible instructions or support."
+     },
+     {
+      "question": "Should you attach proof of your age before submitting the support form?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen marks the screenshot as optional, but submitting without an ID or driver's license might cause support to reject the age verification request.",
+      "whatTheAgentLoses": "The user loses the ability to guarantee their age update is processed quickly by providing the required proof upfront."
+     },
+     {
+      "question": "Do you want to purchase any premium upgrades or adjust your safety settings?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The profile screen presents paid features like Spotlight and SuperSwipe starting at ₱39.00, alongside important safety and wellbeing configurations.",
+      "whatTheAgentLoses": "Delegating this step means giving up personal control over financial spending on app upgrades and the configuration of your safety boundaries."
+     },
+     {
+      "question": "Do you want to add the languages you know or connect your Instagram and Spotify accounts?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Connecting these accounts enriches your profile by automatically displaying your latest photos and top music artists to potential matches.",
+      "whatTheAgentLoses": "You lose the ability to decide whether your personal social media feeds and music preferences are linked to your dating profile."
+     },
+     {
+      "question": "Which help article should you select to correct your age?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The first search result explicitly addresses how to fix an incorrect age display by contacting support, whereas the second result is about profile badges.",
+      "whatTheAgentLoses": "The user loses the opportunity to independently verify the support team's requirements for correcting their date of birth."
+     },
+     {
+      "question": "Do you want to find your user ID first or click the contact link immediately?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The help article explicitly states that you will need your user ID ready when reaching out to correct your date of birth.",
+      "whatTheAgentLoses": "You lose the chance to decide whether to gather the required information before initiating the support request."
+     },
+     {
+      "question": "Which subject category should you select to request an age change on your profile?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The contact form requires you to pick the most suitable category for your issue so that support can properly route your request to change your age.",
+      "whatTheAgentLoses": "Delegating this choice prevents you from deciding how to frame your profile correction request to customer support."
+     },
+     {
+      "question": "Which specific part of the app is your issue related to?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires you to categorize your request by choosing a service area like 'Profile + Photos' or 'Swipe Queue'.",
+      "whatTheAgentLoses": "Delegating this choice prevents you from accurately specifying the exact feature you need help with."
+     },
+     {
+      "question": "How should you explain the problem to support?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The text area asks what you were doing when the problem happened, requiring a clear description so the support team can understand and fix the incorrect age on the profile.",
+      "whatTheAgentLoses": "The user loses the ability to articulate the exact nature of their issue in their own words to ensure customer service understands the specific mistake."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Answer the gender questions",
+      "questions": [
+       {
+        "question": "What is your gender, and who are you looking to meet?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks you to select your own gender identity and the gender of the people you want to see in order to set up your initial matching pool.",
+        "whatTheAgentLoses": "Delegating this choice means the agent could select the wrong gender identity or preference, resulting in an entirely incompatible pool of candidates."
+       },
+       {
+        "question": "Which gender should be selected, and do you want it shown on your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting a gender and provides a checkbox to control whether it is displayed publicly.",
+        "whatTheAgentLoses": "The user loses control over how their gender identity is recorded and whether it is visible to potential matches."
+       },
+       {
+        "question": "Who do you want to date?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting your dating preference among Women, Men, or Everyone to establish your initial match pool.",
+        "whatTheAgentLoses": "The user loses the ability to determine the gender of the candidates they will be shown."
+       },
+       {
+        "question": "Which gender do you want to identify as on your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to choose between woman, man, or nonbinary to describe your gender identity during onboarding.",
+        "whatTheAgentLoses": "You lose the ability to personally and accurately define your own gender identity for your dating profile."
+       },
+       {
+        "question": "What gender are you seeking to match with, and do you acknowledge the safety disclaimer?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "This choice dictates the gender of the candidates you will be shown, and the fine print explicitly warns that the platform does not conduct criminal background checks.",
+        "whatTheAgentLoses": "You lose the ability to specify your own dating preferences and personally acknowledge the platform's safety limitations before proceeding."
+       },
+       {
+        "question": "What is your sexual orientation, and do you want it displayed on your profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen asks you to select your sexual orientation and provides a checkbox to make this information visible on your public profile.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might misrepresent your sexual identity or make it public without your consent."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Enter the birthday",
+      "questions": [
+       {
+        "question": "What is your date of birth?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires your birthday to verify that you are old enough to use the service and to calculate the age displayed on your profile.",
+        "whatTheAgentLoses": "Delegating this step risks the agent entering an incorrect birthdate, which could permanently misrepresent your age to potential matches or violate the app's age policies."
+       },
+       {
+        "question": "Are you comfortable entering your real birthdate knowing it will be permanently visible to others?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that the age derived from this birthdate will be visible on your profile and cannot be changed later.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to share their actual age or protect their privacy with a fake one, which is a permanent account choice."
+       },
+       {
+        "question": "What first name and date of birth should I enter for your profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires a first name and birthday to start the introduction, explicitly warning that your calculated age cannot be changed later.",
+        "whatTheAgentLoses": "You lose the opportunity to choose a preferred display name or to slightly obscure your exact birth date for privacy before it is permanently locked."
+       },
+       {
+        "question": "What is your date of birth, and is the calculated age correct?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displays your calculated age to potential matches and explicitly warns that you cannot change it later.",
+        "whatTheAgentLoses": "You lose the ability to ensure your age is entered accurately, which permanently affects how you are presented to potential matches."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Say whose profile this is",
+      "questions": [
+       {
+        "question": "Who are you creating this profile for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires you to specify whether the account is for yourself, a family member, or a friend to properly categorize the profile.",
+        "whatTheAgentLoses": "You lose the ability to accurately represent your relationship to the person seeking a match."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Give the background details",
+      "questions": [
+       {
+        "question": "Do you want to explore non-monogamy options or stick to traditional monogamous relationship settings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app explicitly asks you to define your relationship structure (monogamous, non-monogamous, or open to either), which fundamentally alters the pool of users you will see and be seen by.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a relationship structure that completely contradicts your ethical boundaries and dating goals."
+       },
+       {
+        "question": "Which personal details should I share and which should I skip?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for specific demographic details like height, body type, and education to build your profile, but allows you to skip questions you prefer not to answer.",
+        "whatTheAgentLoses": "The user loses the agency to decide exactly which personal background details to reveal and which to keep private."
+       },
+       {
+        "question": "What type of relationship are you seeking?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select a relationship goal, ranging from a long-term partner to just new friends, to display on your profile.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a relationship intent that completely misrepresents your actual dating goals to potential matches."
+       },
+       {
+        "question": "Do you want to disclose your height on your profile, and if so, what value should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for your height and notes it will be visible on your profile, but provides options to skip or select 'Prefer Not to Say'.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip the question or input an incorrect height, misrepresenting your physical traits to potential matches."
+       },
+       {
+        "question": "Do you want to disclose whether you have children on your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you have kids and provides options to answer, prefer not to say, or skip the question entirely.",
+        "whatTheAgentLoses": "The agent might publicly disclose your parental status when you would have preferred to skip the question and keep it private."
+       },
+       {
+        "question": "Do you want to include your education level on your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app prompts for your education level with options ranging from high school to grad school, but provides a skip button if you prefer not to share.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might disclose your educational background when you would have preferred to keep it private."
+       },
+       {
+        "question": "How long do you want your next relationship to last?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks you to select your desired relationship length from options ranging from one night to the rest of your life to help find compatible matches.",
+        "whatTheAgentLoses": "An agent cannot know your true relationship intentions and might select an option that attracts matches with incompatible goals."
+       },
+       {
+        "question": "How do you want to answer the prompt about being ready to settle down and get married right now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a multiple-choice question about your readiness for marriage and settling down as part of your profile.",
+        "whatTheAgentLoses": "The user loses the ability to accurately reflect their true long-term relationship goals to potential matches."
+       },
+       {
+        "question": "What is your marital status?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile creation screen requires selecting a marital status from a dropdown menu, such as 'Never Married' or 'Divorced'.",
+        "whatTheAgentLoses": "If the agent guesses your marital status, it will misrepresent your background to potential matches."
+       },
+       {
+        "question": "Which diet should I select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting a diet from options like Veg, Non-Veg, and Jain to complete the profile details.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a diet that misrepresents your lifestyle and attracts incompatible matches."
+       },
+       {
+        "question": "What is your highest educational qualification?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to select your highest educational qualification from specific options like B.E / B.Tech or M.E / M.Tech to display on your profile.",
+        "whatTheAgentLoses": "Delegating this means the agent might select an incorrect degree, misrepresenting your academic background to potential matches."
+       },
+       {
+        "question": "Should I enter the name of the college I attended?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a text field under the heading 'College' to add this educational detail to the profile before continuing.",
+        "whatTheAgentLoses": "The user loses the choice of whether to disclose their specific educational background to potential matches."
+       },
+       {
+        "question": "Do you want to specify your body type from the provided options, or should I skip this?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app offers specific descriptors like \"Slim\", \"Athletic\", and \"Curvy / Voluptuous\" for your profile, but allows you to skip the question entirely.",
+        "whatTheAgentLoses": "The agent might skip this detail when you wanted to be upfront about your appearance, or choose a descriptor that you do not feel accurately represents you."
+       },
+       {
+        "question": "How do you want to describe your ethnicity, or would you prefer to skip this?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides specific ethnicity options like 'Asian', 'Caucasian / White', and 'Mixed Race', but allows skipping this detail if you prefer not to share it.",
+        "whatTheAgentLoses": "The user loses control over whether and how their racial identity is disclosed to potential matches on their public profile."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Declare faith and community",
+      "questions": [
+       {
+        "question": "How important is religion or God in your life?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a multiple-choice profile question about the importance of religion, offering options ranging from 'Extremely important' to 'Not important at all' alongside a skip button.",
+        "whatTheAgentLoses": "Delegating this choice means an agent could misrepresent your actual spiritual values and core beliefs to potential matches."
+       },
+       {
+        "question": "What religion and community should be set for your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to specify your religion and select a cultural community from a list including Gujarati, Hindi, and Tamil.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might misrepresent your cultural background and identity to potential matches."
+       },
+       {
+        "question": "Which state, city, and sub-community should you select for your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires specifying your state, city, and sub-community, along with a checkbox for whether caste matters in a partner, to accurately reflect your background.",
+        "whatTheAgentLoses": "Delegating this means the agent might select the wrong location or community details, misrepresenting your cultural background to potential matches."
+       },
+       {
+        "question": "Which specific caste or sub-community do you want to select for the profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose a specific sub-community from a list like Soni, Patel, or Brahmin, and offers a 'Caste no bar' option for partner preferences.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong sub-community or misconfigure your caste preferences, misrepresenting your cultural background to potential matches."
+       },
+       {
+        "question": "Which Christian denomination do you affiliate with?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen prompts you to select a specific denomination from a list to let others know your religious affiliation.",
+        "whatTheAgentLoses": "Delegating this means the agent might select the wrong denomination, misrepresenting your religious beliefs to potential matches."
+       },
+       {
+        "question": "Which community do you belong to?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app provides a list of cultural and linguistic communities like Gujarati, Punjabi, and Marwari to add to your profile.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to accurately represent your specific cultural background to potential matches."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "State income and occupation",
+      "questions": [
+       {
+        "question": "Which annual income bracket should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing a specific income range from the dropdown to complete this mandatory profile detail.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might misrepresent your financial situation, potentially leading to mismatched expectations with future matches."
+       },
+       {
+        "question": "Which work sector should I select for your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing an employment sector from options like private company, government, or self-employed to display on your profile.",
+        "whatTheAgentLoses": "Delegating this means the agent might select an inaccurate employment sector, misrepresenting your professional background to potential matches."
+       },
+       {
+        "question": "What business name do you want to list on your profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen contains a 'His Business' text field for entering your company name, which adds professional context to your dating profile.",
+        "whatTheAgentLoses": "Delegating this means the agent might leave the field blank or invent a business name, misrepresenting your professional background to potential matches."
+       },
+       {
+        "question": "What family details do you want to share about your parents and siblings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for your parents' occupations and the number of brothers and sisters you have to help find common connections.",
+        "whatTheAgentLoses": "Delegating this means the agent might provide incorrect information about your family background, misrepresenting you to potential matches."
+       },
+       {
+        "question": "What is your father's occupation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting an option from a dropdown menu to describe your father's employment status, such as 'Employed' or 'Businessman'.",
+        "whatTheAgentLoses": "The user loses the ability to accurately represent their family background to potential matches."
+       },
+       {
+        "question": "How do you want to describe your family's living situation and financial status?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Providing details about whether you live with your family and their financial tier helps the app find common connections.",
+        "whatTheAgentLoses": "You lose the ability to accurately and comfortably represent your family's socioeconomic background to potential matches."
+       },
+       {
+        "question": "Are these work and income details accurate for your profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays the selected work sector, job title, and annual income before finalizing the profile creation.",
+        "whatTheAgentLoses": "The user loses the ability to accurately represent their professional and financial status on their dating profile."
+       },
+       {
+        "question": "How should I describe my occupation?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen asks for a general industry field from a dropdown and a specific typed role, which shapes how potential matches perceive your career.",
+        "whatTheAgentLoses": "You lose the ability to carefully frame your professional life and manage your privacy, as an agent might select an inaccurate field or overshare your exact job title."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Set the home location",
+      "questions": [
+       {
+        "question": "What location should I set for my dating profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that the app uses Location Services to suggest nearby matches and that this location will be visible on the profile.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to use their current physical location or set a different one for privacy or travel purposes."
+       },
+       {
+        "question": "Do you want to enable location services or enter your location manually?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks whether to fill out your location automatically by enabling location services or to enter it manually, noting that this information will be visible to others.",
+        "whatTheAgentLoses": "The user loses the ability to control their device privacy by deciding whether to grant automatic location tracking or manually input their city."
+       },
+       {
+        "question": "Which country do you live in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting a country from a dropdown list to establish your location for the dating profile.",
+        "whatTheAgentLoses": "The user loses the ability to specify their actual country of residence, which dictates the geographic pool of potential matches."
+       },
+       {
+        "question": "Which city do you live in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to select the city you live in from a list of frequently used or all cities to establish your location.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong city, resulting in potential matches from an area where you do not actually reside."
+       },
+       {
+        "question": "Which state do you live in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen requires selecting your state of residence from a list to establish your location for finding matches.",
+        "whatTheAgentLoses": "The user loses the ability to accurately set their geographic location, which determines the local dating pool they will be shown."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Write the profile text",
+      "questions": [
+       {
+        "question": "Which three profile prompts should you choose, and what custom text should you write for each?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select three topics from a list of prompt starters and write custom answers to show off your real personality.",
+        "whatTheAgentLoses": "Delegating this to an agent means losing the opportunity to express your authentic voice and unique sense of humor to potential matches."
+       },
+       {
+        "question": "Should you write a bio and answer prompts now, or skip this step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that adding a short intro could lead to 25% more matches, making this a direct trade-off between profile strength and setup speed.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether to skip adding personal details that could significantly increase your match rate."
+       },
+       {
+        "question": "What should you write for your short summary?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to introduce yourself with a short summary, which acts as your first impression to potential matches.",
+        "whatTheAgentLoses": "Delegating this step means an agent writes your bio, stripping away your authentic voice and personal charm."
+       },
+       {
+        "question": "Which profile prompt do you want to add?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers various prompts like \"The quickest way to my heart is...\" to help your personality stand out from the crowd.",
+        "whatTheAgentLoses": "Delegating this choice means losing the opportunity to authentically express your unique personality and interests to potential matches."
+       },
+       {
+        "question": "Do you expand your headline to meet the stated 100-character minimum, or proceed since the app accepts your shorter entry?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A tooltip warns that 100 characters are required, but the interface actually allows you to continue with an 83-character entry.",
+        "whatTheAgentLoses": "An agent might unnecessarily pad your headline with filler text to meet the stated minimum, losing your preferred concise tone."
+       },
+       {
+        "question": "What should you write as your number one life goal?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app will display this text on your profile for potential matches to see, making it a key part of your personal presentation.",
+        "whatTheAgentLoses": "Letting an agent answer this means losing the opportunity to share a genuine personal aspiration that reflects your true values."
+       },
+       {
+        "question": "Did you ensure your bio does not contain any contact information?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app explicitly prohibits including contact info in your bio, which could lead to moderation actions or account suspension if violated.",
+        "whatTheAgentLoses": "An agent might write a bio that includes your Instagram handle or phone number, unknowingly violating the app's specific rules and risking a ban."
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Accept the generated bio",
+      "questions": [
+       {
+        "question": "Should you personalize the auto-generated profile description and opt out of affiliated matchmaking services?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a generic pre-filled description about the relative's education and career, along with a checkbox to prevent the profile from being shared with affiliated Shaadi.com services.",
+        "whatTheAgentLoses": "Delegating this means losing the chance to add personal nuances to the generic profile description and control over whether the profile is shared with other matchmaking networks."
+       }
+      ]
+     },
+     {
+      "id": "2.10",
+      "label": "Pick interests and values",
+      "questions": [
+       {
+        "question": "Which three core values best represent you?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting three core values to display on your profile helps potential matches understand what guides your everyday life.",
+        "whatTheAgentLoses": "Letting an agent choose your core values risks presenting an inaccurate picture of your guiding principles to potential matches."
+       },
+       {
+        "question": "Should I select specific interests to add to my profile, or skip this step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to choose at least three interests to help find like-minded people, but provides an option to skip this step entirely.",
+        "whatTheAgentLoses": "Delegating this means the agent decides which of your personal hobbies to highlight, potentially misrepresenting your lifestyle or leaving your profile less engaging."
+       },
+       {
+        "question": "Which specific interests or hobbies do you want to highlight on your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app allows you to choose up to five specific tags from categories like 'Self care' and 'Sports' to showcase your personality.",
+        "whatTheAgentLoses": "You lose the chance to authentically express your unique lifestyle and attract matches who share your specific passions."
+       },
+       {
+        "question": "Should you answer the presented profile question or skip it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates that answering more questions will get your profile shown in the Questions Pro Stack, increasing your visibility.",
+        "whatTheAgentLoses": "The user loses the ability to provide their genuine personal stance on relationship values, which is crucial for finding a compatible match."
+       },
+       {
+        "question": "Which specific dietary and lifestyle interests do you want to select?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app allows you to specify 'Dietary interests' (like 'Dine out +3x/week') and 'Way of life interests' (like 'Success Driven'), which helps potential matches understand your daily habits beyond just fitness.",
+        "whatTheAgentLoses": "Delegating this means the agent might select lifestyle or dietary habits that misrepresent your actual routine, leading to incompatible matches."
+       }
+      ]
+     },
+     {
+      "id": "2.11",
+      "label": "Add the photos",
+      "note": "2.11.1 then 2.11.2 until the app's minimum is met - the continue button does not activate before it. 2.11.3 whenever the app asks for more, which it does during signup (MpoY, 17j1 twice) and again from inside the feed (FWwo, 3yWz).",
+      "children": [
+       {
+        "id": "2.11.1",
+        "label": "Pick the main photo",
+        "questions": [
+         {
+          "question": "Which photo should I select as my primary profile picture?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The app explicitly asks for your best, unfiltered smile for the primary slot to inspire stronger matches, making this choice critical for your first impression.",
+          "whatTheAgentLoses": "An agent cannot subjectively judge which of your photos captures your most authentic smile or presents you in the most flattering light."
+         },
+         {
+          "question": "Do you want to take a new photo now or select an existing one from your gallery?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts you to choose the source for your profile picture by displaying options for the camera or the device gallery.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to capture a spontaneous live picture or carefully select a flattering existing photo from their device."
+         },
+         {
+          "question": "Are you ready to capture the photo now?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a live camera interface with a capture button, requiring a decision on exactly when to snap the picture.",
+          "whatTheAgentLoses": "You lose the ability to control your pose, expression, and lighting at the exact moment the photo is taken."
+         },
+         {
+          "question": "Are you satisfied with how this photo is cropped and positioned?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Move and Scale' screen determines exactly how your image will be framed and presented to potential matches before it is added to your profile.",
+          "whatTheAgentLoses": "Delegating this means losing your personal judgment on how to best frame your features to make the most attractive first impression."
+         },
+         {
+          "question": "Which photos of yourself should you upload to follow the rules and get more dates?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly warns that uploading photos with hidden faces or nudity will get you banned, while showing your face and activities gets you more dates.",
+          "whatTheAgentLoses": "Delegating this step means you lose the personal choice of which photos best represent your face and lifestyle to potential matches."
+         },
+         {
+          "question": "Do you want to use the AI photo selector or manually upload from your library?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers a choice between using an AI tool to quickly find photos or manually choosing them from your device.",
+          "whatTheAgentLoses": "Delegating this choice means you lose control over whether an AI scans your camera roll or if you hand-pick the images yourself."
+         },
+         {
+          "question": "How should I handle the photo moderation warning?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The app displayed a warning stating that your photo goes against Bumble's guidelines and was moderated.",
+          "whatTheAgentLoses": "You lose the opportunity to decide whether to upload a replacement photo or simply dismiss the warning."
+         }
+        ]
+       },
+       {
+        "id": "2.11.2",
+        "label": "Meet the photo minimum",
+        "questions": [
+         {
+          "question": "Should I add another photo to my profile?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly prompts to \"Add 1 more\" photo and shows \"1/6\" uploaded, indicating a minimum requirement to continue.",
+          "whatTheAgentLoses": "The user loses the opportunity to personally select which photos best represent their appearance and personality to potential matches."
+         },
+         {
+          "question": "Should you add more photos as the app suggests, or proceed with the minimum required?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen notes that adding four or more photos increases your chances of getting liked, but the 'Next' button is already active with just two.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to optimize their profile's success rate with more photos or save time by proceeding with the bare minimum."
+         },
+         {
+          "question": "Have you uploaded and arranged your photos before proceeding?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows six empty photo slots, meaning clicking next right now will leave your profile without any pictures.",
+          "whatTheAgentLoses": "The user loses the ability to personally curate and arrange the photos that best represent them to potential matches."
+         },
+         {
+          "question": "Which photos should you upload to your profile?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts you to add your first two photos and suggests showing your personality, such as with a pet or favorite food.",
+          "whatTheAgentLoses": "An agent might select photos that do not accurately represent your personality or fail to upload the recommended amount."
+         },
+         {
+          "question": "Which photos and how many should you upload to optimize your profile's match rate?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen explicitly states that adding two or more photos increases matches by 50%, making the quantity and variety of your pictures critical for success.",
+          "whatTheAgentLoses": "An agent cannot curate the specific personal image you want to project, such as carefully balancing a formal suit picture with a single edgy photo."
+         }
+        ]
+       },
+       {
+        "id": "2.11.3",
+        "label": "Answer the photo nag",
+        "questions": [
+         {
+          "question": "Should you upload more than three photos right now to increase your chances of getting a match?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly states that profiles with more than three photos are more likely to get a match.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to optimize their profile immediately or skip ahead to start browsing candidates."
+         },
+         {
+          "question": "Which photos will you upload to increase your profile strength?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows your profile is only 10% complete and prompts you to add photos that show the true you.",
+          "whatTheAgentLoses": "You lose the personal control over curating the specific images that best represent your authentic self to potential matches."
+         },
+         {
+          "question": "Do you want to add a profile photo now or skip it for later?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts you to add photos using the gallery or camera, but also provides an 'Add Photos Later' option if you are not ready to grant file permissions or choose a picture.",
+          "whatTheAgentLoses": "Delegating this means the agent decides whether to access your personal gallery to upload a photo immediately or skip the step, potentially leaving your profile incomplete."
+         },
+         {
+          "question": "Do you want to upload more photos of yourself to unlock the rest of this candidate's pictures?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The app restricts viewing all of a candidate's photos until you upload at least four photos to your own profile.",
+          "whatTheAgentLoses": "You lose the ability to decide whether sharing more personal photos is worth seeing the rest of this specific candidate's profile."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "2.12",
+      "label": "Verify your identity",
+      "questions": [
+       {
+        "question": "Do you want to complete the biometric face verification now?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that your profile will not be visible to other users until you complete the biometric Face Check.",
+        "whatTheAgentLoses": "An agent cannot perform a live biometric video selfie on your behalf, meaning your profile will remain invisible to potential matches until you complete this step yourself."
+       },
+       {
+        "question": "Do you want to skip face verification even though it makes your profile invisible?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The prompt explicitly warns that skipping the face check prevents your profile from being visible to others.",
+        "whatTheAgentLoses": "Letting an agent make this choice means you lose the opportunity to verify your identity immediately and ensure your profile can actually be seen by potential matches."
+       },
+       {
+        "question": "Should you skip the face verification step for now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that a biometric face check is required but contradicts this by offering a 'Maybe later' button to bypass it.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to verify their identity immediately for better profile credibility or delay it for convenience."
+       },
+       {
+        "question": "Which government ID do you want to use to verify your profile, or should I skip this step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks for a PAN Card, Driving license, or Voter ID to establish authenticity, but also provides a button to skip this verification.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might skip verification and reduce your profile's credibility, or provide sensitive ID details you would rather keep private."
+       },
+       {
+        "question": "Should you skip the government ID verification step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that government ID verification is required but provides a skip button to bypass it.",
+        "whatTheAgentLoses": "The user loses the choice to verify their identity immediately, which could impact their profile's credibility and match rate."
+       }
+      ]
+     },
+     {
+      "id": "2.13",
+      "label": "Control who sees you",
+      "questions": [
+       {
+        "question": "Are you comfortable with the privacy assurances regarding your current Facebook friends before getting started?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The welcome screen explicitly states that current Facebook friends will not be notified or suggested, addressing a major privacy concern before onboarding.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally review and accept the platform's specific privacy assurances regarding your existing social network."
+       },
+       {
+        "question": "Do you want to import your contacts to block people you know from seeing your profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides an option to import your contact list so you can select specific people to avoid seeing on the app.",
+        "whatTheAgentLoses": "An agent would not know which personal contacts you want to avoid, potentially exposing your dating profile to family, coworkers, or exes."
+       },
+       {
+        "question": "Do you want your gender to be visible on your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks if you feel comfortable sharing this information and provides a toggle to display your gender on your profile.",
+        "whatTheAgentLoses": "You lose the ability to control your privacy and comfort level regarding whether your gender identity is publicly displayed to potential matches."
+       },
+       {
+        "question": "Do you want to connect your Instagram account to your dating profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Linking your Instagram allows potential matches to see your latest posts without revealing your username, which adds more visual content to your profile but requires connecting an external account.",
+        "whatTheAgentLoses": "The user loses the privacy-related choice of whether to expose their external social media photos to potential matches on the dating app."
+       },
+       {
+        "question": "Do you want friends of your friends to be suggested as potential matches?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the privacy settings allow you to control whether your dating profile is visible to people who share mutual Facebook friends with you.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to decide your personal comfort level regarding dating within your extended social circle."
+       },
+       {
+        "question": "Do you want to turn on Incognito mode so only people you have liked can see your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app presents a modal offering Incognito Mode, which hides your profile from everyone except those you have explicitly liked.",
+        "whatTheAgentLoses": "The user loses the opportunity to control their public visibility and protect their privacy from acquaintances like coworkers or exes."
+       },
+       {
+        "question": "Should you adjust any visibility or location settings, like Auto-Spotlight or Travel mode?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays account controls like Incognito mode, Auto-Spotlight, and Location, which dictate how and where your profile is shown to potential matches.",
+        "whatTheAgentLoses": "Delegating this step means you lose the personal choice of managing your profile's visibility and deciding whether to explore matches in different cities."
+       },
+       {
+        "question": "Are you ready to make your profile public and start swiping?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that your profile will become visible to other users the moment you start swiping.",
+        "whatTheAgentLoses": "The user loses the opportunity to delay their entry into the public dating pool if they wanted to double-check their profile first."
+       }
+      ]
+     },
+     {
+      "id": "2.14",
+      "label": "Check the profile completeness",
+      "questions": [
+       {
+        "question": "Do you want to preview how your profile appears to others?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a 'Preview' tab next to 'Edit', allowing you to verify that your photos and prompts are displayed exactly as intended before potential matches see them.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review the final look and feel of your profile to ensure it accurately represents you."
+       },
+       {
+        "question": "Is your profile complete enough at 80% to start swiping, or should you add more details?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows your profile is 80% complete with recent edits successfully saved, meaning you must decide whether to fill out the remaining details or begin browsing candidates immediately.",
+        "whatTheAgentLoses": "Letting an agent decide when the profile is good enough means you lose control over how fully fleshed out your public dating persona is before potential matches see it."
+       },
+       {
+        "question": "Is the information currently visible on my profile accurate and complete?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking your displayed bio, languages, and dating preferences ensures your profile accurately reflects your identity before you start filtering candidates.",
+        "whatTheAgentLoses": "Delegating this review means you lose the chance to personally ensure your bio and listed traits capture your authentic voice."
+       }
+      ]
+     },
+     {
+      "id": "2.15",
+      "label": "Edit an existing field",
+      "questions": [
+       {
+        "question": "Do you want to review or update your basic account details like name, email, or location?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the 'My account' page with options to view and edit personal information such as name, email, birthday, and location.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify or correct their fundamental account information."
+       },
+       {
+        "question": "Do you want to edit any of your current profile details, such as your photos, bio, or interests?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your current photos, bio, interests, and relationship goals, giving you the chance to update how you present yourself to potential matches.",
+        "whatTheAgentLoses": "You lose the ability to personally review and curate your self-presentation to ensure it accurately reflects your personality and dating goals."
+       },
+       {
+        "question": "Should you add more photos to the empty slots or delete any existing ones before leaving this screen?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows two current photos alongside six empty slots and a '+' button, offering a clear opportunity to update your profile's visual appeal.",
+        "whatTheAgentLoses": "You lose the ability to personally curate exactly which images represent you to potential matches."
+       },
+       {
+        "question": "Which photos should you select to highlight your strengths while minimizing height comparisons?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The \"Edit Info\" screen displays your six selected photos, which must be carefully chosen to emphasize your face and fashion rather than full-body shots that invite height comparisons.",
+        "whatTheAgentLoses": "An agent might select standard full-body photos, missing the strategic curation required to minimize height comparisons and emphasize your specific physical strengths."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Set who the app shows",
+    "note": "3.1 where the wizard asks - 17j1 gets the whole preference set written for him and confirms it unread. 3.2 and 3.3 from a settings screen, entered before browsing (3yWz) or from inside it (3yWz again, mid-feed). 3.4 whenever a filter turns out to cost money. every keeper that opens this goal leaves at least one default standing, and three change nothing at all (Jzez, 2Xie, MpoY).",
+    "questions": [
+     {
+      "question": "Do you want to use the app for dating, making friends, or networking?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The app requires you to choose a specific mode like Date, BFF, or Bizz, as you will only be shown to people in the same mode.",
+      "whatTheAgentLoses": "You lose the ability to choose whether your primary goal on the platform is romantic, social, or professional."
+     },
+     {
+      "question": "Which of your ideal match preferences, such as age range or distance, do you want to adjust?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The settings screen lists your current criteria for distance, gender, and age range, which directly determine the profiles you will be shown.",
+      "whatTheAgentLoses": "Delegating this step means you lose the chance to personally fine-tune the exact demographic and lifestyle boundaries you want in a potential partner."
+     },
+     {
+      "question": "Do you want to turn off Date mode?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Turning off Date mode will permanently delete all of your current chats, messages, and matches.",
+      "whatTheAgentLoses": "The user loses the safeguard against an agent accidentally wiping out all of their existing dating connections and conversations."
+     },
+     {
+      "question": "Which app mode do you want to use?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen allows you to switch between modes like Date, BFF, or Bizz, warning that leaving Date mode deletes your current connections.",
+      "whatTheAgentLoses": "The user loses control over their primary intent on the app and risks losing their existing dating connections if the agent switches modes."
+     },
+     {
+      "question": "Should you view one of the displayed profiles, or tap 'Filter' to adjust your search parameters?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The screen displays a grid of profiles with varying match percentages, requiring a choice between evaluating these specific candidates or refining the overall search criteria.",
+      "whatTheAgentLoses": "An agent might just select the profile with the highest match percentage instead of realizing that the search filters need to be adjusted to better fit your preferences."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Set the partner preferences",
+      "questions": [
+       {
+        "question": "Are you open to dating someone who has children?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks if you would date someone with kids, offering choices ranging from a strict 'No' to 'No preference' or specific living arrangements.",
+        "whatTheAgentLoses": "Delegating this means the agent might set a boundary that either filters out compatible matches or includes candidates with family dynamics you are not prepared for."
+       },
+       {
+        "question": "Do you have a preference for whether your ideal partner wants children?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks if your ideal partner wants kids, offering specific choices or a 'No preference' option that dictates how your potential matches are filtered.",
+        "whatTheAgentLoses": "An agent might select your honest preference and drastically reduce your match pool, whereas you might strategically choose 'No preference' to keep your options open."
+       },
+       {
+        "question": "Is a potential match's astrological sign important to you?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to indicate whether astrological signs matter in a match, which the algorithm uses to curate your potential candidates.",
+        "whatTheAgentLoses": "The agent might misrepresent your beliefs about astrology, leading to matches that do not align with your actual relationship priorities."
+       },
+       {
+        "question": "Do you want to accept the automatically set partner preferences or edit them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen allows you to review and edit the automatically generated basic preferences before confirming them.",
+        "whatTheAgentLoses": "You lose the chance to customize the specific details of your ideal match before the app starts showing you candidates."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Set distance and age",
+      "questions": [
+       {
+        "question": "What maximum distance should you set for potential matches?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a slider to set the maximum distance for potential matches, which directly controls how far away the candidates you see will be located.",
+        "whatTheAgentLoses": "Delegating this means the agent might set a search radius that requires more travel time for dates than you are comfortable with."
+       },
+       {
+        "question": "What should your preferred age range be, and should I tap Save to apply it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features scroll wheels for minimum and maximum ages, a strong preference toggle, and a specific 'Save' button that might be required to keep changes.",
+        "whatTheAgentLoses": "You lose control over the exact age boundaries of the potential matches you will be shown."
+       },
+       {
+        "question": "Should you activate Travel Mode to change your location?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displays a modal offering Travel Mode to let you change your location and find matches in a new city before you arrive.",
+        "whatTheAgentLoses": "Delegating this decision means you lose the opportunity to decide whether to focus on local matches or connect with people in an upcoming travel destination."
+       },
+       {
+        "question": "Is the hidden toggle to 'show people slightly outside my preferences' turned on or off?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many apps default to automatically expanding your age and distance filters when you run out of local matches, which can lead to swiping on people you consider fundamentally incompatible.",
+        "whatTheAgentLoses": "You lose the ability to enforce strict dealbreakers, as the agent might leave the default expansion toggle on, wasting your likes on people too far away or outside your age limits."
+       },
+       {
+        "question": "What exact numbers did the age and distance sliders actually snap to?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Touch sliders are imprecise, and the exact values they land on dictate the hard boundaries of your match pool.",
+        "whatTheAgentLoses": "The user loses the certainty that their intended boundaries (e.g., exactly 35 years old, not 36) were accurately captured by the visual slider interface."
+       },
+       {
+        "question": "Should I expand my search settings or check my likes now that I've run out of profiles?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to expand your age and distance settings to see more people, but you also have the option to navigate to the Likes tab.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to compromise on your age and distance dealbreakers or simply review the people who have already liked you."
+       },
+       {
+        "question": "Should I adjust my filters before reviewing this profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a candidate who is 744 miles away alongside a tooltip about filtering, indicating your current search parameters might be too broad.",
+        "whatTheAgentLoses": "The user loses the chance to immediately refine their search criteria based on their actual dating preferences before evaluating candidates."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Restrict who appears",
+      "questions": [
+       {
+        "question": "Who is your feed currently set to show, and how do you change it to only show women?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The filter popup explicitly lets you choose to see everyone, only men, or only women, which dictates the gender of the candidates in your feed.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a gender preference that does not align with your actual dating interests."
+       },
+       {
+        "question": "Which ethnicities do you want to include in your search results?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen allows filtering potential matches by ethnicity, with all options selected by default.",
+        "whatTheAgentLoses": "The user loses the ability to specify their personal dating preferences regarding the ethnicity of potential matches."
+       },
+       {
+        "question": "Which advanced filters do you want to apply?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The filter screen offers advanced options like pets, relationship type, and offspring that help narrow down potential matches to your specific lifestyle preferences.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip or incorrectly guess your dealbreakers regarding children or pets, leading to fundamentally incompatible matches."
+       },
+       {
+        "question": "Do you want to filter matches based on whether they currently have or want kids?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides specific options like 'Has a kid' or 'Doesn't want kids' to help narrow down candidates based on family planning preferences.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might apply a family planning filter that excludes your ideal matches or fails to enforce a personal dealbreaker."
+       },
+       {
+        "question": "How recently should the users you see have been online?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows options for filtering users by their last active time, ranging from 'Online now' to 'Online Within 3 hours'.",
+        "whatTheAgentLoses": "The user loses the ability to prioritize highly active users or cast a wider net for potential matches."
+       },
+       {
+        "question": "Do you want to filter your matches based on whether they are monogamous or non-monogamous?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app asks you to define your relationship style as monogamous, non-monogamous, or open to either, which fundamentally changes the pool of candidates you will be shown.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might include candidates whose fundamental relationship boundaries completely contradict your own."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Find the paid filters"
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Work the candidate feed",
+    "note": "4.1 where the app explains itself. 4.2 picks the surface - a swipe deck (MpoY, 1D06, Nmjb, 3ltT, FWwo), a grid (2Xie, AOCl, 17j1), a proximity list (Jzez), a map (MpoY), or a scroll that the tutorial calls a swipe (3yWz). then 4.3 and 4.4 repeat, roughly forty times in MpoY and more in Nmjb, until the pool runs dry or the session ends. 4.5 only in Nmjb. 4.6 to 4.9 fire on top of the loop rather than inside it - the post-like popup, the daily allowance, the bulk-like screen and the report menu all interrupt it. 4.6 reaches into 5. 4.10 and 4.11 run continuously and are only visible where a keeper stops to name them.",
+    "questions": [
+     {
+      "question": "Does this profile exhibit common signs of being a bot or scammer, such as having only one professional photo and a bio pushing an external social media handle?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Dating apps are heavily populated with fake profiles designed to funnel users to premium accounts, crypto scams, or phishing links, which requires a critical eye to avoid.",
+      "whatTheAgentLoses": "An agent might blindly swipe right on bots based on surface-level keyword matches, cluttering your match queue with scammers and potentially exposing you to phishing."
+     },
+     {
+      "question": "Does this candidate's profile display a visual 'verified' badge?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The verified badge is often a purely visual icon (like a blue checkmark) that confirms the platform has checked their identity, which is critical for avoiding bots.",
+      "whatTheAgentLoses": "The user loses the ability to filter out potentially fake profiles based on a visual trust signal that isn't written in the text bio."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Learn how matching works"
+     },
+     {
+      "id": "4.2",
+      "label": "Choose where to browse",
+      "questions": [
+       {
+        "question": "Should you review your incoming likes and curated highlights, or proceed to the general browsing pool?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to view \"Members who like you\" and daily curated \"Highlights,\" which offer a potentially faster or higher-quality path to a match than standard browsing.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to prioritize guaranteed mutual matches and curated standouts over standard swiping based on their current time and interest."
+       },
+       {
+        "question": "Do you want to opt into the '72 Hours' weekend dating event?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app offers a special '72 Hours' mode starting Thursday where all chats vanish after Sunday to encourage immediate in-person meetings.",
+        "whatTheAgentLoses": "You lose the ability to decide if you are actually available this specific weekend to participate in a time-sensitive dating event."
+       },
+       {
+        "question": "When can you start discovering members?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen states that you must wait until Thursday at 5 PM to begin discovering other members.",
+        "whatTheAgentLoses": "Delegating this means you miss knowing the exact day and time you need to return to the app to start browsing candidates."
+       },
+       {
+        "question": "Should you initiate a conversation with any of the nearby users shown on the 'Meet' map?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map interface displays a few nearby users matching your age and distance filters, offering an immediate opportunity to start a new conversation.",
+        "whatTheAgentLoses": "An agent cannot judge whether these specific nearby users are appealing enough to message instead of focusing on your existing matches."
+       },
+       {
+        "question": "Do you want to pass or like this current profile, or explore alternative matching pools like 'Second Look' or 'Events in Common'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a candidate's profile with pass and like buttons directly above a 'More to Explore' section that offers alternative ways to find matches.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether to focus on the current candidate or explore specialized match categories based on your past activity or shared interests."
+       },
+       {
+        "question": "Do you want to check out the 'For You' recommendations or close this dialog?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app is introducing a daily curated feed of recommended profiles, and you must decide whether to view them or dismiss the prompt.",
+        "whatTheAgentLoses": "Delegating this means the agent decides whether to explore the app's curated daily recommendations or skip them, potentially missing out on highly compatible matches."
+       },
+       {
+        "question": "Do you want to view your curated 'Best Bees' recommendations?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app offers a daily selection of highly compatible profiles called Best Bees, providing a curated alternative to the standard swiping feed.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to prioritize algorithmically curated daily matches over browsing the general user pool."
+       },
+       {
+        "question": "Do you want to evaluate candidates who answered the most compatibility questions, or switch to browsing nearby profiles?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a profile in the 'Most Questions Answered' category, offering a choice between prioritizing algorithmic compatibility or geographic proximity.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether they value deep compatibility metrics over finding matches who are physically closer to them."
+       },
+       {
+        "question": "Which Discover category should we explore, or should we switch to the main People feed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Discover screen organizes candidates into thematic categories like 'Recommended for you' and 'Similar interests' based on shared tags, offering different strategies for finding matches.",
+        "whatTheAgentLoses": "The user loses the opportunity to organically explore curated categories and decide which thematic grouping of candidates feels most appealing to browse."
+       },
+       {
+        "question": "Should you interact with the recent posts on your wall?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The wall displays recent activity from other users, such as the post from 'rog2199', offering an alternative way to discover and engage with potential candidates.",
+        "whatTheAgentLoses": "You lose the opportunity to organically discover and connect with users based on their spontaneous posts rather than their standard profiles."
+       },
+       {
+        "question": "Do you want to interact with any of these nearby profiles, or switch to viewing your own?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Near' feed shows local users like 'babycake' and 'Melissa', presenting immediate options for browsing and matching.",
+        "whatTheAgentLoses": "The user loses the ability to personally judge if the current local candidates are appealing enough to pursue immediately."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Size up a profile",
+      "note": "4.3.1 first and always - every keeper opens on the photos. 4.3.2 to 4.3.5 in any order and to any depth: MpoY reads the stats block, 1D06 reads the distance line before anything else, 3yWz reads the distance and stops there, Nmjb reads what she is asking for. the whole goal takes two seconds in the rapid runs and thirty in the deliberate ones.",
+      "questions": [
+       {
+        "question": "Do you want to expand this profile to see more details before swiping?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Expanding the profile for 'Amaan, 28' reveals their bio and additional photos beyond just the initial picture and 'New here' badge.",
+        "whatTheAgentLoses": "You lose the chance to personally weigh the nuances of a candidate's full profile to see if their personality truly aligns with your preferences."
+       },
+       {
+        "question": "Which nearby profile should you select to view more details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a list of nearby candidates in Manhattan along with their match percentages, requiring you to decide who merits a closer look.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to rely on your own intuition and initial attraction when scanning a grid of potential matches."
+       },
+       {
+        "question": "Does this candidate align with your lifestyle preferences and acceptable distance?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a candidate who is over 200 miles away, prompting an evaluation of whether they actually fit your intended demographic.",
+        "whatTheAgentLoses": "Delegating this means an agent might swipe right on candidates who are impractically far away or fail to meet your subjective lifestyle standards."
+       },
+       {
+        "question": "Which of these profiles should you explore further, or should you keep scrolling?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search grid presents multiple candidates with varying match percentages and locations, requiring you to decide if any warrant a closer look or if you should view more options.",
+        "whatTheAgentLoses": "Delegating this means an agent might select profiles based strictly on the displayed match percentages rather than your subjective reaction to their photos and usernames."
+       },
+       {
+        "question": "Which profile from the 'Matches' grid do you want to explore first?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a grid of user profile pictures, some marked with VIP badges, presenting the initial set of candidates to evaluate.",
+        "whatTheAgentLoses": "The user's subjective visual preferences and intuition when deciding which candidate's photo stands out enough to click."
+       },
+       {
+        "question": "Do you want to review this user's photos and profile details, or take an action like adding them as a friend?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The profile displays specific details like age, location, and relationship goals alongside a photo carousel, helping you decide if this person is a good match.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally evaluate the candidate's photos and bio to determine if you feel a genuine connection."
+       }
+      ],
+      "children": [
+       {
+        "id": "4.3.1",
+        "label": "Look at the photos",
+        "questions": [
+         {
+          "question": "How do you evaluate a candidate whose primary profile picture is a screenshot of their lifting stats?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen displays a Notes app screenshot of gym maxes instead of a face, which is an unconventional choice that shapes your impression of the person.",
+          "whatTheAgentLoses": "An agent might simply reject the profile for lacking a face, missing the humor and nuanced personal judgment you apply to such an unusual dating strategy."
+         },
+         {
+          "question": "Do you need to see more photos to make a swiping decision?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The profile lists fitness-related tags like 'Body Building' and 'Kick Boxing', but you might need visual confirmation of physical attraction before deciding.",
+          "whatTheAgentLoses": "An agent might swipe based purely on matching text tags, missing your subjective visual criteria for physical attraction."
+         },
+         {
+          "question": "Is the candidate clearly identifiable in their primary photo, or is it a group shot, a landscape, or obscured by sunglasses?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "A non-visual user cannot tell if a photo actually shows the person clearly, and an agent might just report that a photo exists without judging its clarity.",
+          "whatTheAgentLoses": "The user loses the ability to instantly reject profiles that hide what the person looks like, wasting time on ambiguous candidates."
+         }
+        ]
+       },
+       {
+        "id": "4.3.2",
+        "label": "Read the bio"
+       },
+       {
+        "id": "4.3.3",
+        "label": "Check distance and activity",
+        "questions": [
+         {
+          "question": "Is this candidate located within a convenient distance for you?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The profile displays the candidate's distance as 80 miles away, which directly impacts the practical feasibility of meeting in person.",
+          "whatTheAgentLoses": "Delegating this to an agent means losing the ability to weigh your personal willingness to travel against the specific appeal of a distant candidate's profile."
+         },
+         {
+          "question": "Are you willing to consider candidates who are thousands of miles away?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen shows potential matches located anywhere from 998 to over 2500 miles away, which likely exceeds a standard local dating radius.",
+          "whatTheAgentLoses": "An agent might waste your likes on extremely distant profiles without knowing if you are actually open to long-distance dating."
+         }
+        ]
+       },
+       {
+        "id": "4.3.4",
+        "label": "Read the stats and tags"
+       },
+       {
+        "id": "4.3.5",
+        "label": "Check their stated requirements",
+        "questions": [
+         {
+          "question": "Do you meet the explicit height requirement stated in her bio?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The candidate's bio explicitly requests someone taller than 5'8\" and instructs users to swipe left if they do not meet this criteria.",
+          "whatTheAgentLoses": "You lose the agency to decide whether to respect the candidate's strict physical requirements or attempt to match regardless."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Like or pass a profile",
+      "questions": [
+       {
+        "question": "Do you want to like or pass on this candidate based on her profile details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a detailed profile for Heather, including her age, location, body type, religion, and interests like video games and fishing, which you must evaluate to determine compatibility.",
+        "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to apply your subjective romantic preferences to a candidate's specific combination of traits and interests."
+       },
+       {
+        "question": "Do I want to confirm my right swipe on this profile?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an \"Interested?\" confirmation prompt explaining that a right swipe means wanting to connect, with options to cancel or confirm.",
+        "whatTheAgentLoses": "The user loses the chance to reconsider and cancel a right swipe before it is finalized."
+       },
+       {
+        "question": "Do you want to confirm that you are not interested in this profile?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displays a confirmation prompt explaining that swiping left means you are not interested, requiring a choice between canceling or confirming the pass.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to reconsider a candidate before permanently passing on them."
+       },
+       {
+        "question": "Do you want to swipe left on Ana to pass on her profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows Ana's profile on top of the stack, and swiping left rejects her to reveal Loraine underneath.",
+        "whatTheAgentLoses": "The user loses the ability to personally evaluate Ana and decide whether to express interest or pass."
+       },
+       {
+        "question": "Should you use your one free weekly like on any of these recommended 'For You' profiles?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tooltip warns that you can only like one person for free each week in this section, making it a highly limited action.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate these curated profiles and decide who is worth spending your single free weekly like on."
+       },
+       {
+        "question": "Do you want to use your single free weekly like on any of these Best Bees?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates you only get one free like per week for these highly compatible profiles, meaning you must decide if any of the current options are worth spending that scarce resource on.",
+        "whatTheAgentLoses": "Delegating this means an agent might waste your one free weekly like on someone you don't actually find attractive, or skip a candidate you would have genuinely wanted to match with."
+       },
+       {
+        "question": "Should you swipe right on these specific profiles?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Swiping right on profiles like Kauane, Alex, Elizabeth, and Jocxi dictates who you might connect with, as demonstrated when the rapid swiping resulted in a match with Jocxi.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate each candidate's photos and details to determine genuine attraction before a match is made."
+       },
+       {
+        "question": "Are these candidates close enough and appealing enough to swipe right on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows candidates located hundreds or thousands of miles away, making them impractical matches for local dating.",
+        "whatTheAgentLoses": "An agent might blindly swipe right on these distant profiles, wasting your limited likes on people you cannot realistically meet."
+       },
+       {
+        "question": "Which profile should I connect with?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a list of profiles on the 'Matches' tab, each with a 'Connect Now' button, requiring a choice of who to contact.",
+        "whatTheAgentLoses": "The user's subjective judgment and personal preference in deciding who they find most appealing to contact."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Undo a swipe",
+      "questions": [
+       {
+        "question": "Should you rewind to correct your accidental left swipe and swipe right on Mia based on her bio?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Mia's bio explicitly states she is looking for a hookup and new experiences, which requires a deliberate choice on whether she aligns with your dating goals.",
+        "whatTheAgentLoses": "You lose the ability to personally evaluate a candidate's explicit intentions in their bio and the spontaneous judgment to correct an accidental swipe."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Clear the post-like popup",
+      "questions": [
+       {
+        "question": "Do you want to like this profile and use your daily intro?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states you can only send one intro each day, meaning you must decide if this specific profile is worth spending that limited resource on.",
+        "whatTheAgentLoses": "An agent cannot gauge your subjective attraction to a candidate to determine if they warrant using your single daily intro."
+       },
+       {
+        "question": "Do I want to send a Super Like to this candidate based on our shared passions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displayed a pop-up offering to send a Super Like to a candidate with shared passions, providing buttons to either send it or decline.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might waste a limited premium feature like a Super Like on a candidate the user would not have prioritized."
+       },
+       {
+        "question": "Should I upgrade to prioritize my likes?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app offers a premium feature to match faster by putting your profile in front of the people you like.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might spend your money on an upgrade or skip a feature you wanted to use to increase your match rate."
+       },
+       {
+        "question": "Should you send a message to this new match right now or dismiss the screen to keep swiping?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen announces 'IT'S A MATCH!' and prompts you to 'Say something nice', requiring a choice between starting a conversation immediately or returning to the browsing queue.",
+        "whatTheAgentLoses": "Delegating this decision means losing control over your personal dating strategy, such as whether you prefer to capitalize on the immediate momentum of a new match or build a larger queue of candidates first."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Watch the daily allowance"
+     },
+     {
+      "id": "4.8",
+      "label": "Answer a bulk-like screen",
+      "questions": [
+       {
+        "question": "Which of these initially suggested profiles do you want to send a like to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app pre-selects a grid of profiles for your first batch of likes, requiring you to uncheck anyone you do not actually want to match with.",
+        "whatTheAgentLoses": "An agent would likely just accept the default selection, stripping you of the chance to visually filter your very first potential matches based on your actual preferences."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Open the report menu",
+      "questions": [
+       {
+        "question": "Does this match's opening message violate your boundaries or the app's guidelines, requiring you to unmatch or report them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Matches sometimes immediately send inappropriate content, harassment, or scam links, requiring swift use of the safety tools rather than a conversational reply.",
+        "whatTheAgentLoses": "An agent might try to politely reply to or ignore a hostile or scam message instead of properly utilizing the unmatch and report features to protect your account."
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Teach the feed your taste",
+      "questions": [
+       {
+        "question": "Do you want to leave the 'Smart Photos' feature enabled?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "This feature is toggled on by default and allows the app's algorithm to continuously test and reorder your profile photos to show the best one first.",
+        "whatTheAgentLoses": "Delegating this means you lose the choice of whether to manually curate the exact order of your photos or let the app's algorithm dictate your first impression."
+       },
+       {
+        "question": "How long do you want to linger on this photo before swiping?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app tracks how much time you spend looking at specific details in Amal's photos to learn your preferences and adjust future recommendations.",
+        "whatTheAgentLoses": "You lose the ability to subtly train the algorithm based on your genuine, spontaneous interest in specific visual details."
+       }
+      ]
+     },
+     {
+      "id": "4.11",
+      "label": "Tell ads from profiles",
+      "questions": [
+       {
+        "question": "How do you avoid tapping the ad banner at the bottom of the profile page?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows an ad banner for 'japancupid.com' at the bottom of the profile page, which can easily be tapped by mistake and disrupt the task.",
+        "whatTheAgentLoses": "The user loses the physical control needed to carefully tap around disruptive ads without accidentally leaving the app."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Decide what to pay for",
+    "note": "no entrance of its own. 4.6 reaches it when a like hits the intro limit (MpoY), 6.2 when the incoming likes are blurred (MpoY, 1D06), 7.1 when the message itself is what is gated (3yWz, 17j1). 5.1 then 5.2 where plans are shown. 5.3 is what every keeper does at every on-camera moment. 5.4 happens once, off-camera, on day three. 5.5 where the app runs on credits instead of a subscription. 5.6 is what users do instead of paying.",
+    "questions": [
+     {
+      "question": "Do you want to upgrade to a premium subscription or continue with the free version?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen presents recurring pricing tiers for Tinder Plus, requiring a decision on whether the premium features like unlimited likes are worth the financial commitment.",
+      "whatTheAgentLoses": "Delegating this choice means losing control over your financial spending and the personal decision of whether premium dating features justify the cost."
+     },
+     {
+      "question": "Do you want to pay to upgrade and reveal the blurred profiles that liked you?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The screen displays six blurred profile pictures and an 'Upgrade' button, prompting a choice on whether to spend money to see who is interested.",
+      "whatTheAgentLoses": "The user loses control over their budget and dating strategy, as an agent might autonomously purchase the premium upgrade or ignore the accumulated likes entirely."
+     },
+     {
+      "question": "Do you want to purchase Super Likes to stand out to this candidate?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The app presents a paywall offering packages of Super Likes that claim to triple your chances of getting a match.",
+      "whatTheAgentLoses": "Letting an agent decide could result in unexpected financial charges if it purchases a premium package on your behalf."
+     },
+     {
+      "question": "Do you want to purchase a premium subscription to see who already liked you?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The screen displays multiple premium subscription tiers and prices required to unlock restricted features like the Beeline.",
+      "whatTheAgentLoses": "Delegating this choice means you lose control over your financial spending and whether to invest real money into the dating app."
+     },
+     {
+      "question": "Do you want to pay for a premium subscription to get unlimited likes now, or wait for the timer to reset?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The app displays an 'Out of daily likes' popup with a countdown timer and options to purchase an A-List subscription to continue swiping immediately.",
+      "whatTheAgentLoses": "You lose the ability to decide whether to spend real money on a premium subscription or simply wait for the free likes to replenish."
+     },
+     {
+      "question": "Do you want to pay to unlock premium profile categories like New People or Popular?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The screen shows that accessing specific discovery categories like New People and Popular requires a $1.99 payment.",
+      "whatTheAgentLoses": "The user loses the financial discretion to decide if unlocking these premium profile categories is worth the extra cost."
+     },
+     {
+      "question": "Do you want to upgrade to VIP to see who visited your profile?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The Visitors tab hides the identity of your visitor behind a paywall, requiring a decision on whether to purchase a premium subscription or continue for free.",
+      "whatTheAgentLoses": "You lose the ability to weigh your personal budget against your curiosity to see who is already interested in your profile."
+     },
+     {
+      "question": "Do you want to pay to upgrade your account to chat with this person, or skip to the next profile?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The screen indicates you have zero free intros left and must purchase an upgrade to start a conversation.",
+      "whatTheAgentLoses": "The user loses control over their financial spending and the subjective decision of whether a specific profile is worth paying real money to contact."
+     },
+     {
+      "question": "Should you pay to upgrade your account to reveal your hidden likes?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The Likes tab displays two blurred profiles with a banner prompting you to upgrade to see who is interested, requiring a financial decision.",
+      "whatTheAgentLoses": "Delegating this decision means an agent might spend your money on a premium subscription without your consent or ignore potential matches hidden behind the paywall."
+     },
+     {
+      "question": "Do you want to purchase a Boost to increase your visibility, or return to browsing profiles?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The screen shows your inbox is empty and offers a paid 30-minute Boost to get more attention on your profile.",
+      "whatTheAgentLoses": "Delegating this choice means an agent might spend your money on a promotional feature rather than just continuing to browse for free."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read what premium unlocks"
+     },
+     {
+      "id": "5.2",
+      "label": "Compare the plans",
+      "questions": [
+       {
+        "question": "Which premium subscription tier do you want to explore or purchase?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple paid upgrade options like Platinum, Gold, and Plus, each offering different features such as unlimited likes or seeing who likes you.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which premium features are worth your money based on your personal budget and dating goals."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Decline the upgrade"
+     },
+     {
+      "id": "5.4",
+      "label": "Buy the subscription",
+      "questions": [
+       {
+        "question": "Do you want to purchase the Silver premium plan and leave the default ₹17 donation checked?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The order summary presents a ₹2,999 subscription fee and automatically adds a ₹17 donation to the total unless manually unchecked.",
+        "whatTheAgentLoses": "Delegating this step means an agent might commit your funds to an unwanted subscription or a default charitable donation without your explicit consent."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Spend the in-app credits",
+      "questions": [
+       {
+        "question": "Do you want to share your invite link with friends to earn credits?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen offers specific credit rewards for inviting friends, such as 350 credits for female friends and 200 for others, which could be useful for in-app features.",
+        "whatTheAgentLoses": "The user loses control over whether to expose their personal contacts to a dating app referral link in exchange for in-app currency."
+       },
+       {
+        "question": "Which app do you want to use to share the invite link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The iOS share sheet presents multiple communication options like Messages, Mail, and Copy for distributing the link.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred communication channel and specific recipient for the invitation."
+       },
+       {
+        "question": "Should you send this pre-filled invite message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a pre-filled email draft promoting the dating app that would be sent from your personal email address.",
+        "whatTheAgentLoses": "The user loses the ability to protect their personal contacts from receiving unsolicited promotional emails sent on their behalf."
+       },
+       {
+        "question": "Should you redeem your current credits for a premium perk like a Boost or VIP status, or close the menu to save them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a balance of 18 credits alongside options to spend them on premium features like VIP status or profile boosts.",
+        "whatTheAgentLoses": "The user loses the strategic choice of whether to spend their accumulated app credits on premium features or save them for later."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Get round the paywall",
+      "questions": [
+       {
+        "question": "Do you want to search her bio for an Instagram handle to bypass the messaging paywall?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "In-app messaging requires a premium subscription, making external contact info in her bio the only free way to reach out.",
+        "whatTheAgentLoses": "You lose the choice of whether to pursue a candidate on external social media platforms when blocked by an in-app paywall."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Check the results",
+    "note": "entered after time passes with the app closed - 8 hours in Nmjb, 24 in 1D06, 48 twice in MpoY. 6.1 first, then 6.2 to 6.4 as the app offers them; 6.2 reaches into 5. 6.4 is the whole of this goal for the keepers that never matched (3yWz, 5ZLp, 2Xie, AOCl). 6.5 is where the corpus's disagreements land, and no keeper acts on any of them.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Count matches and likes",
+      "questions": [
+       {
+        "question": "Are there any incoming likes, intros, or outgoing likes to review?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen provides tabs for 'Likes You', 'Intros', and 'You Like' to check for any existing interest or pending connections.",
+        "whatTheAgentLoses": "The user misses the opportunity to see who has already expressed interest in them or to review their own outgoing likes."
+       },
+       {
+        "question": "Do you have any new messages or matches to interact with?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen explicitly states whether you have pending conversations or new matches, which dictates if you should reply to someone or move on to other tasks.",
+        "whatTheAgentLoses": "Delegating this means you lose the personal excitement of discovering a new match and the ability to prioritize which conversations to engage with first."
+       },
+       {
+        "question": "How many likes and matches have you received so far?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly displays 44 likes and 10 new matches, providing a clear summary of your profile's initial performance.",
+        "whatTheAgentLoses": "You lose the personal satisfaction of seeing your profile's popularity and the excitement of discovering exactly who liked you."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "See who liked you",
+      "questions": [
+       {
+        "question": "Should you edit your profile from the 'Liked You' screen or return to browsing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to edit your profile to attract more attention, but viewing the actual likes typically requires a premium subscription.",
+        "whatTheAgentLoses": "The user loses the agency to decide whether to ignore this premium-gated section and continue browsing for free."
+       },
+       {
+        "question": "Which of the people who already liked you do you want to review further?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a grid of users who have already liked your profile along with their ages and relationship goals, letting you prioritize reviewing guaranteed matches.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally evaluate the physical attractiveness and vibe of the candidates who have already shown interest in you."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check the visitors",
+      "questions": [
+       {
+        "question": "Do you want to inspect the profiles of the people who visited you?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen reveals a list of users like 'ElleTz' and 'gann32' who viewed your profile, presenting an opportunity to evaluate them or navigate away.",
+        "whatTheAgentLoses": "The user loses the chance to personally decide whether to pursue a connection with someone who has already shown interest by visiting their profile."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Read the empty states",
+      "questions": [
+       {
+        "question": "Do you have any pending messages that require a reply?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The 'Your turn' tab shows \"You're all caught up,\" confirming there are no real matches waiting for a response, making the automated introductory message safe to ignore.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to quickly distinguish between automated system greetings and genuine messages from potential matches."
+       },
+       {
+        "question": "Are there any pending interactions or alerts?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displayed empty states for matches, messages, and likes under the 'SINGLES' tab.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to check the 'FRIENDS' tab or follow the prompt to update their profile."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Check the counts and claims",
+      "questions": [
+       {
+        "question": "Do you notice the contradiction between the 'Can't change it later' warning and the subsequent 'Edit name' button?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The interface contradicts itself by warning that your name cannot be changed later, only to immediately offer an edit button on the confirmation pop-up.",
+        "whatTheAgentLoses": "You lose the awareness of this unexpected final grace period to correct a typo in your permanent profile name."
+       },
+       {
+        "question": "Are you okay with the contradictory privacy terms regarding how your dating activity is shared across Facebook?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The initial setup screen claims your activity will not be shared outside of Dating, but the final confirmation states it will be used to personalize ads across other Facebook products.",
+        "whatTheAgentLoses": "Delegating to an agent means you lose the opportunity to catch this privacy contradiction and decide if you are truly comfortable with your dating data being used for Facebook ads."
+       },
+       {
+        "question": "Are you actually getting the exact discount advertised on the subscription plan?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The Tinder Plus 6-month plan claims a 50% discount off the 1-month price, but the listed price of NPR 1,948.90 is slightly higher than a true 50% discount.",
+        "whatTheAgentLoses": "The user loses the opportunity to notice minor pricing discrepancies and make a fully informed financial decision before subscribing."
+       },
+       {
+        "question": "Did you notice that you can proceed without entering the supposedly required email and phone number?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that an email and phone number are required to secure the profile, yet the form allows submission with both fields left completely blank.",
+        "whatTheAgentLoses": "The user loses the intended account security and recovery options if the agent skips providing contact details that the platform claims are necessary."
+       },
+       {
+        "question": "Do you submit the contact form without providing the user ID that the help article requested?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The help article explicitly stated a user ID was needed, but the contact form did not actually require it for submission.",
+        "whatTheAgentLoses": "The user loses the assurance that their support ticket will be successfully processed without delays caused by missing information."
+       },
+       {
+        "question": "Does the profile completion percentage decrease after you add photos and interests?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The completion indicator drops to 25% after adding information, contradicting the 45% shown before editing began.",
+        "whatTheAgentLoses": "The user loses certainty that their profile updates were actually saved and recognized by the platform."
+       },
+       {
+        "question": "Can you successfully switch to BFF or Bizz mode in the settings after completing the initial setup?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The onboarding screen explicitly states that mode switching is locked until setup is complete, making it important to verify that the settings menu later allows this change.",
+        "whatTheAgentLoses": "You miss the direct confirmation that your new account is fully unlocked and capable of toggling between dating, friendship, and business modes."
+       },
+       {
+        "question": "Does the 'Save 24%' discount on the 15 Super Likes package mathematically align with the base price of the 3-pack?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Verifying the math ensures you are actually getting the advertised 24% discount on the ₹226.60/ea rate compared to the ₹296.60/ea base price before making a purchase.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify the pricing logic and ensure you aren't falling for misleading marketing tactics."
+       },
+       {
+        "question": "Do you notice the discrepancy between the 'All 3' tab count and the four blurred profile cards shown in the grid?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Recognizing this mismatch helps you realize the app is likely displaying a generic loading skeleton rather than an accurate grid of your actual likes.",
+        "whatTheAgentLoses": "An agent might misinterpret the generic placeholder grid as actual profiles, leading to confusion about exactly how many people have liked your account."
+       },
+       {
+        "question": "Did you calculate the actual total cost for the multi-month subscription tiers since the screen only shows the monthly rate?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen highlights the monthly cost for longer tiers like '$12.49/mo' for 6 months, obscuring the fact that a much larger total amount is billed upfront.",
+        "whatTheAgentLoses": "An agent might authorize a multi-month subscription based on the appealing monthly rate without warning you about the large immediate charge."
+       },
+       {
+        "question": "Did the discovery feed completely ignore the maximum distance filter you just set?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user explicitly restricted the distance to 49 miles, but the very first profile shown is 744 miles away, indicating the app's location filtering silently failed.",
+        "whatTheAgentLoses": "An agent might trust the app's settings and waste time evaluating candidates who are geographically impossible to meet because the filter didn't actually apply."
+       },
+       {
+        "question": "Are the profiles you liked appearing in the 'Intros' tab as the app claims?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The 'Intros' tab states that liked profiles will appear there, but it remains empty even though the 'You Like' tab confirms two profiles were liked.",
+        "whatTheAgentLoses": "The user loses clarity on the status of their outgoing likes if the agent ignores the discrepancy between the two tabs."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Start a conversation",
+    "note": "7.1 where the app makes you pick a channel or pay for one; it reaches into 5 when the message is what is gated. 7.2 then 7.3, repeated per match - MpoY writes four openers in one sitting, 1D06 four across two. 7.4 instead of 7.3 where the platform writes it. 7.5 and 7.6 once replies arrive, which needs another pass through 6. 7.7 only after the message has already gone.",
+    "questions": [
+     {
+      "question": "How does the revelation in her bio that she has a child affect your interest, and what do you want to message her?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The profile text reveals at the end that she is a mother, which introduces a major lifestyle factor that often acts as a personal dealbreaker.",
+      "whatTheAgentLoses": "An agent would likely process the profile based on surface-level stats and send a generic message, failing to apply your nuanced personal boundaries regarding dating someone with children."
+     },
+     {
+      "question": "Do you want to acknowledge that chat is restricted until your profile is screened?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The app displays a pop-up stating that your profile must be screened by the platform before you can use the chat feature.",
+      "whatTheAgentLoses": "The user loses the direct notification that their messaging capabilities are temporarily delayed pending platform approval."
+     },
+     {
+      "question": "What message do you want to send to start the conversation with this candidate?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The screen displays a suggested message alongside the candidate's basic details, requiring a choice on whether to use the automated prompt or write a custom opener.",
+      "whatTheAgentLoses": "You lose the ability to notice missing profile details that might be important to you and craft an opening message that reflects your actual personality."
+     },
+     {
+      "question": "Did the message actually deliver successfully, or is there a 'failed to send' error requiring a retry?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Dating apps frequently experience server hiccups or shadowbans that cause messages to fail silently or display a small error icon, meaning your match never received your opener.",
+      "whatTheAgentLoses": "An agent might assume the task is complete the moment it clicks send, failing to notice the error state and leaving you thinking the match simply ignored you."
+     },
+     {
+      "question": "Did the match disappear from your queue right as you went to message them?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "A match can disappear instantly if the other person accidentally swiped right and immediately unmatched, or if the platform's automated moderation suddenly banned their account as a bot.",
+      "whatTheAgentLoses": "The agent might fail the task trying to message a phantom profile, when a human would recognize the unmatch and simply return to the swiping queue."
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Choose the contact channel",
+      "questions": [
+       {
+        "question": "Which option should you choose to initiate contact with this user?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The profile page presents multiple contact methods, such as an envelope icon, a chat bubble, and an add friend button, which may trigger different communication flows.",
+        "whatTheAgentLoses": "Delegating this step means losing the personal choice of how formally or casually you want to approach a potential match."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Pick who to message",
+      "questions": [
+       {
+        "question": "Which of these recent matches will you initiate a conversation with?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing details like their ages, locations, and whether they are currently online helps you prioritize who to message and how to break the ice.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate their photos and craft an opening message based on your genuine, subjective attraction."
+       },
+       {
+        "question": "Which of your current matches or active conversations do you want to message?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the Messages tab displays your mutual matches like Isha and active conversations like Cristeena, requiring you to decide who to interact with next.",
+        "whatTheAgentLoses": "An agent might prioritize the wrong match or ignore an ongoing conversation, losing your personal intuition on who you actually want to talk to right now."
+       },
+       {
+        "question": "Which of these initial messages should you open and reply to first?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows multiple matches like Courtney and Brie have already reached out with opening lines, requiring a decision on who to engage with.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the opening lines and decide which match sparks their genuine interest."
+       },
+       {
+        "question": "Do you want to open any of these received messages to read them in full?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays previews, senders, and dates for received messages, letting you decide if any are worth your time to open and engage with.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate the tone of the message previews and decide which senders actually pique your interest."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Write the opener",
+      "questions": [
+       {
+        "question": "Should you set an Opening Move now or skip it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app offers the option to choose or write a default first message for new matches to reply to, or to skip this step entirely.",
+        "whatTheAgentLoses": "If an agent makes this choice, you lose the opportunity to personalize the icebreaker that all your new matches will see."
+       },
+       {
+        "question": "Should you use your single daily intro on this profile, and what should you say?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that you can only send one intro each day, making this a highly limited resource that requires careful consideration.",
+        "whatTheAgentLoses": "Delegating this means an agent might waste your limited daily intro on the wrong profile or send a generic message that lacks your personal voice."
+       },
+       {
+        "question": "What should you say in your first message to a match?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat interface requires an opening message, and personalizing it with the match's name or specific profile details can make a stronger first impression.",
+        "whatTheAgentLoses": "An agent might send generic greetings instead of crafting personalized openers that reflect your unique conversational style and charm."
+       },
+       {
+        "question": "What do you want to send as your first message before the match expires?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 24-hour countdown to make the first move, meaning you must initiate the conversation now or lose the match.",
+        "whatTheAgentLoses": "Letting an agent send the first message strips away your personal voice and the authenticity of your own opening line."
+       },
+       {
+        "question": "Which detail from Emily's profile should you use to craft your opening message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Her profile lists specific details like her faith, major, and distance, offering multiple angles for a personalized icebreaker.",
+        "whatTheAgentLoses": "Delegating this means an AI chooses the conversational hook, stripping away your personal sense of humor and authentic voice."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Send the canned message",
+      "questions": [
+       {
+        "question": "Are you okay sending the default connection message, or do you want to upgrade to customize it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app displays a generic default message for all connect requests and requires a paid upgrade to write your own.",
+        "whatTheAgentLoses": "You lose the ability to decide whether a personalized first impression is worth paying for."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Reread their profile",
+      "questions": [
+       {
+        "question": "How should you respond to her opening message, and does her profile list her height?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Scanning her profile for specific details like height helps you decide how to appropriately tailor your response.",
+        "whatTheAgentLoses": "The user loses the personal touch of evaluating her specific profile details and crafting a uniquely flirty reply that matches their own personality."
+       },
+       {
+        "question": "Should you review her profile photos to confirm your interest before escalating the chat to get her number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat interface shows an active conversation with Briana, making it the right time to review her photos and decide if you want to continue the banter.",
+        "whatTheAgentLoses": "You lose the ability to personally evaluate your physical attraction to the match and control the conversational chemistry."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Reply to their message",
+      "questions": [
+       {
+        "question": "How should you reply to Alisha's story about her dog?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat history shows Alisha sharing a personal detail about her dog being scared of fireworks, presenting a clear opportunity to build rapport.",
+        "whatTheAgentLoses": "Delegating this reply means losing the chance to share a genuine personal anecdote and naturally steer the conversation toward a personalized date."
+       },
+       {
+        "question": "How should you reply to her message about feeling old and the Harry Potter books?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat history shows her joking about feeling old because she was 15 when the fifth book came out, and her profile overlay confirms she is 35, requiring a tactful or playful response to the age gap.",
+        "whatTheAgentLoses": "You lose the opportunity to use your own personal flirting style and sense of humor to navigate the conversation about your age difference."
+       },
+       {
+        "question": "How do you want to reply to Kierin's question about which church you attend?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat screen shows Kierin asking about your church, which requires a believable and engaging answer to keep the conversation flowing toward a date.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally craft a clever response that matches your own dating style and successfully secures her phone number."
+       },
+       {
+        "question": "How do you reply to Lindsey to keep the conversation going?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat screen shows a playful exchange about wine and past relationships, so your next message determines if the banter successfully leads to getting her phone number.",
+        "whatTheAgentLoses": "Delegating this means an agent might fail to match your specific sense of humor, potentially ruining the natural chemistry needed to secure a date."
+       },
+       {
+        "question": "How do you want to reply to Starlette's question?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat history shows Starlette just asked 'You?' after stating she is in town for 'Some fun :)', which requires a response to maintain the conversation.",
+        "whatTheAgentLoses": "An agent might send a generic or mismatched reply that fails to capitalize on the playful tone established in the chat."
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Correct a sent message"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Leave the app",
+    "note": "8.1 is how every conversation that goes anywhere in this corpus ends - the other person offers a number or an Instagram handle, on the app's own screen, and the rest happens somewhere else. 8.2 then 8.3 on the one keeper that quits; 3yWz turns discovery off before deleting anything. no keeper does both.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Trade contact details",
+      "questions": [
+       {
+        "question": "Is this conversation progressing well enough to ask for her phone number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Reading her detailed response about climbing with her brothers helps you gauge her interest level and determine the success of your opening line.",
+        "whatTheAgentLoses": "An agent might lack the social intuition to read the natural rhythm of this exchange and know exactly when to transition from casual banter to asking for contact information."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Hide the profile",
+      "questions": [
+       {
+        "question": "Do you want to disable location-based discovery to hide your profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The profile settings screen includes options to disable location tracking and hide your profile from other people's searches.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might leave your profile publicly visible to nearby users when you want to remain hidden."
+       },
+       {
+        "question": "How long do you want your profile to be invisible?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides specific duration options like 24 hours, 72 hours, a week, or indefinitely for pausing your account.",
+        "whatTheAgentLoses": "You lose the ability to control exactly when your profile will become visible to other users again."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Stop using the app",
+      "questions": [
+       {
+        "question": "Do you want to continue setting up your profile, or abandon the app because of its clunky interface and heavy monetization?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen is dominated by aggressive premium banners and confusing navigation, forcing a decision on whether the platform is worth your time.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate if the app's user experience and paywalls are acceptable before investing effort into building a profile."
+       },
+       {
+        "question": "Did you exit the app after creating the profile instead of continuing to browse and match?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen transitions to the phone's home screen right after the profile is created, indicating the task was stopped before interacting with any candidates.",
+        "whatTheAgentLoses": "The user receives a completed profile but no actual connections because the agent stopped before browsing or messaging anyone."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,2889 @@
+{
+ "task": "apply for a government benefit online or manage an existing claim (unemployment insurance, SNAP/food stamps, disability, Medicaid, housing assistance — state portals and agency sites): work through the eligibility screens and application form and submit, or certify/check an existing claim; complete when the submission confirmation or the claim-status screen is shown. Surface pinned: the government benefits portal itself — not benefit-explainer talking heads without a portal session.",
+ "tree": {
+  "id": "0",
+  "label": "Claim a government benefit",
+  "note": "1 then 2 every session. then the session's job: 3 once per claim, 4 every week the claim lives, 5 when certifying lapses, 8 once benefits flow onto the card. 6 closes 3, 4, and 5; 7 follows 6. the jobs chain across sessions - 3's confirmation starts the clock on 4, and 4 stays blocked while 5 processes (76Pa).",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the right program",
+    "note": "1.1 and 1.2 in either order; 1.3 and 1.4 before committing to the session - 1.4 can end it before it starts (iVa7's outage window). then 1.5. certifiers re-enter here every week.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Find the entry point",
+      "questions": [
+       {
+        "question": "Where do you click to log in or register for the benefits portal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must locate the correct button to access the Employment Development Department's online benefit services.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that you are accessing the official state portal before handing over your credentials."
+       },
+       {
+        "question": "What web address should you enter to access the individual services portal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing the exact URL in the address bar ensures you navigate directly to the official New York State Department of Labor portal.",
+        "whatTheAgentLoses": "You lose the ability to verify firsthand that your sensitive information is being submitted to the official government web address."
+       },
+       {
+        "question": "Are you starting a new application or checking the status of an existing one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides distinct options to either begin a new application or check the status of an already submitted claim.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to specify whether you need to apply for new benefits or just check your current status."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Read the rules and requirements",
+      "questions": [
+       {
+        "question": "Do you have a smartphone ready to take a picture of your ID and a selfie?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Before You Start' screen explicitly states that a smartphone is required to capture images of your ID and a selfie for identity verification.",
+        "whatTheAgentLoses": "An AI agent cannot physically use a smartphone to take a live selfie or photograph your physical ID card."
+       },
+       {
+        "question": "Do you want to review the tips and document requirements before starting the application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides optional dropdowns with details on required documents and interview expectations that can help prepare you for the process.",
+        "whatTheAgentLoses": "You lose the opportunity to learn exactly what documents to gather beforehand and what to expect during the interview phase."
+       },
+       {
+        "question": "Does the name on my ID exactly match my Social Security Administration records?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "If the name on your ID does not perfectly match how it is listed with the SSA, it can cause identity verification issues.",
+        "whatTheAgentLoses": "An agent might just copy your provided ID without knowing if it matches your official SSA records, risking a verification failure."
+       },
+       {
+        "question": "Do I have the required employer information and meet the timing rules to file my claim?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen specifies that claims should be filed in the first week of job loss and requires specific details like the last employer's name and address.",
+        "whatTheAgentLoses": "The user loses the chance to personally ensure they are filing at the correct time and have gathered all necessary information before beginning the application."
+       },
+       {
+        "question": "Do you want to read the filing instructions and terms before acknowledging them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page contains important details about award calculations, cancellation policies, and required information that you must acknowledge reading before proceeding.",
+        "whatTheAgentLoses": "You lose the opportunity to understand the rules, calculations, and requirements of your unemployment claim before legally acknowledging them."
+       },
+       {
+        "question": "Do you have all the required information ready to start the application?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a checklist of specific details and documents you need to gather before beginning the application process.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the prerequisite checklist and ensure your records are fully prepared before the application begins."
+       },
+       {
+        "question": "Did the form actually ask for the employer phone numbers I was told to gather?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The initial instructions explicitly told you to prepare employer phone numbers, but the actual employment history form lacked a field for them.",
+        "whatTheAgentLoses": "You lose the chance to notice this discrepancy and decide if you need to include the phone numbers in an additional notes section to prevent processing delays."
+       },
+       {
+        "question": "Does the employment history date range match the 18-month requirement stated earlier?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Verifying that the system's requested start date of December 1, 2022, aligns with the 18-month rule ensures you provide the exact work history required.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the system's automated date calculations correctly align with the stated application requirements."
+       },
+       {
+        "question": "Under what conditions can you cancel your unemployment claim once it has been filed?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The instructions page includes a specific section explaining whether and how you can cancel your claim after submitting it.",
+        "whatTheAgentLoses": "The user loses the opportunity to learn the strict rules and deadlines for reversing their claim submission if they change their mind or find a job immediately."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Choose the filing channel",
+      "questions": [
+       {
+        "question": "Which method will you choose to file your claim given the online system's restricted hours?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists online, phone, and mail options, but specifies that the online portal is only open during certain days and times.",
+        "whatTheAgentLoses": "You lose the chance to choose an alternative filing method like phone or mail if the online system is currently unavailable."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Check the system is open",
+      "questions": [
+       {
+        "question": "Have you noted the system's availability hours and upcoming downtime before continuing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specific deadlines for weekly certifications and upcoming system downtime that could affect your ability to file on time.",
+        "whatTheAgentLoses": "Delegating this step means you might miss critical information about system outages and strict deadlines for your weekly certification."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Pick the program portal",
+      "questions": [
+       {
+        "question": "Which service portal should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers distinct portals for individuals, businesses, and government entities, so you must choose the one that matches your account type.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is accessing the correct portal for your personal Social Security record."
+       },
+       {
+        "question": "Which benefit program portal should I access?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays different benefit systems like UI Online, so you must select the one that matches your specific claim.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent is entering the correct portal for your specific type of benefit."
+       },
+       {
+        "question": "Do you need to apply for July flood assistance or hot food benefits instead of the standard programs?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage features a specific banner directing users affected by the July floods to a different information page, which might bypass or alter the standard application process.",
+        "whatTheAgentLoses": "An agent might ignore the banner and proceed with a standard SNAP application, causing the user to miss out on expedited or specific disaster relief funds."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Establish the account",
+    "note": "2.1 decides the wall: sign in (2.4), register (2.2, sometimes on the agency, sometimes on Login.gov or ID.me - the evidence notes say which), or guest past a CAPTCHA (q2an; 8v-j allows guest for one program only). 2.3 where the agency demands proofing - D3uH and o9iF are entire sessions inside this goal, and CA and AZ interpose it mid-application (a0_z, 5P67).",
+    "questions": [
+     {
+      "question": "Did your account creation succeed, and are you now viewing the main dashboard?",
+      "cluster": "receipts",
+      "moment": "After",
+      "moneyMoving": false,
+      "why": "Confirming the 'my Social Security' dashboard loads ensures your account was created properly and displays your initial eligibility and work credits.",
+      "whatTheAgentLoses": "You miss seeing your immediate eligibility status, work credits summary, and any urgent unread messages upon first logging in."
+     },
+     {
+      "question": "Is my account activation complete, and how do I proceed?",
+      "cluster": "receipts",
+      "moment": "After",
+      "moneyMoving": false,
+      "why": "Confirming the 'Congratulations!' message ensures your secure account is active before you click 'Next' to access the actual benefits portal.",
+      "whatTheAgentLoses": "You lose the opportunity to personally review the security guidelines and ensure your new login credentials are safely recorded before moving forward."
+     },
+     {
+      "question": "Did the portal block account creation because it detected that an active claim already exists for your Social Security Number?",
+      "cluster": "facts",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "If someone else fraudulently used your SSN, or if you have an old forgotten account, the system will hard-stop the process.",
+      "whatTheAgentLoses": "An agent cannot resolve an SSN conflict, and you miss the immediate red flag that your identity may have been compromised."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose how to enter",
+      "questions": [
+       {
+        "question": "Do you want to log in, create an account, or apply without an account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login page provides options to enter existing credentials, create a new profile, or use the link to apply without an account.",
+        "whatTheAgentLoses": "You lose the choice of whether to link this application to a permanent account for easier tracking or to proceed immediately as a guest."
+       },
+       {
+        "question": "Do you want to create an account to save your progress and get updates?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site recommends creating an account so you can save your application, receive alerts, check your status, and upload documents later.",
+        "whatTheAgentLoses": "If the agent continues without an account, you lose the ability to easily track your application status, receive automated updates, or resume the process later."
+       },
+       {
+        "question": "Are you signing in with an existing account or creating a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen provides options to log in with existing credentials, use third-party services like LOGIN.GOV, or start a new registration.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose control over whether to link an existing identity service like ID.me or create a brand new account."
+       },
+       {
+        "question": "Should you apply as a guest or create an account first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although creating an account is optional for SNAP, doing so allows you to easily check your application status, report changes, and complete renewals online.",
+        "whatTheAgentLoses": "You lose the chance to establish a permanent account for managing your benefits, as an agent might choose the faster guest application option."
+       },
+       {
+        "question": "Are you applying for a program other than SNAP that requires creating a new MyAccess account?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The narrator clarifies that while a new account is optional for SNAP, it is strictly required if you are applying for any other program, even if you have an account in another portal.",
+        "whatTheAgentLoses": "An agent might try to proceed as a guest for a non-SNAP program, which would violate the system's rules and prevent the application from being completed."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Register a new account",
+      "note": "2.2.1 then 2.2.2; 2.2.3 and 2.2.4 where the portal uses them; 2.2.5 where a confirmation email closes the loop; 2.2.6 wherever the form plants one. Or9Z fills everything and deliberately never submits - the narrator already has an account.",
+      "questions": [
+       {
+        "question": "What email, password, and security questions do you want to use to register your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The registration page requires you to set up login credentials, four security questions, and a personal image with a caption to secure your new profile.",
+        "whatTheAgentLoses": "You lose the ability to choose memorable security answers and a personal caption that you can easily recall for future account recovery."
+       },
+       {
+        "question": "Are you ready to submit this registration form?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking 'Next' officially submits the entered personal details to the government system to create a record.",
+        "whatTheAgentLoses": "The user loses the ability to halt the process before a permanent, official government record is created with their personal data."
+       }
+      ],
+      "children": [
+       {
+        "id": "2.2.1",
+        "label": "Accept the terms",
+        "questions": [
+         {
+          "question": "Do you agree to the terms and conditions required to establish an online account?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen states that you must check the agreement box and click 'I Agree' to accept the Terms and Conditions in order to create your EDD account.",
+          "whatTheAgentLoses": "You lose the opportunity to review the specific legal terms and conditions you are binding yourself to by creating the account."
+         },
+         {
+          "question": "Do you meet the strict age and residency prerequisites required by the Terms of Service to create this account?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The Terms of Service explicitly state you must have a U.S. mailing address and be at least 18 years of age to legally proceed with account creation.",
+          "whatTheAgentLoses": "The user loses the opportunity to personally review the legal prerequisites and ensure they are not violating the Terms of Service by creating an account they are ineligible for."
+         },
+         {
+          "question": "Do you agree to the Terms of Service stating that you are personally operating the account and not using one created by another person, even with their permission?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Terms of Service explicitly forbid using an account created by another person or operating it on someone else's behalf, even with written permission.",
+          "whatTheAgentLoses": "An AI agent operating the account on your behalf directly violates this specific legal agreement, potentially resulting in the account being banned or fraud charges."
+         },
+         {
+          "question": "Do you accept the Login.gov Rules of Use before submitting your email?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The registration screen requires you to explicitly check a box agreeing to the identity provider's terms of service before it will provision your account.",
+          "whatTheAgentLoses": "The user loses the opportunity to review the legal terms governing how the federal identity provider stores and uses their personal data."
+         },
+         {
+          "question": "Do you agree to the release of information and confirm your employment history allows you to file in this state?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires your legal agreement to proceed and warns that you cannot use this application if your employment in the past 18 months was entirely outside of Ohio.",
+          "whatTheAgentLoses": "You lose the chance to review the legal release and verify that your recent employment history makes you eligible to use this specific state portal."
+         }
+        ]
+       },
+       {
+        "id": "2.2.2",
+        "label": "Create the credentials",
+        "questions": [
+         {
+          "question": "Can I use a shared email address for this account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The instructions explicitly state that you must use your own personal email address and not one shared with a spouse or family member.",
+          "whatTheAgentLoses": "Delegating this step means the agent might use a proxy email address, depriving you of direct, private access to critical communications regarding your benefits."
+         },
+         {
+          "question": "What password will you create to meet the 12-character requirement and achieve a strong rating?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires a password of at least 12 characters without common phrases and provides a real-time strength indicator to confirm it is acceptable.",
+          "whatTheAgentLoses": "You lose the ability to choose a personal, memorable password that you can easily recall for future access to your benefits account."
+         },
+         {
+          "question": "Did you write down your temporary PIN before proceeding to the login screen?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly instructs you to write down the temporary PIN before leaving, as it is required alongside your social security number for your initial login.",
+          "whatTheAgentLoses": "Delegating this step means you will not know the temporary PIN required to access your newly registered account."
+         },
+         {
+          "question": "What new 8-digit numeric PIN do you want to set?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The system requires you to replace your expired temporary PIN with a new 8-digit numeric PIN for all future account access.",
+          "whatTheAgentLoses": "Delegating this means the agent chooses your permanent login credentials, leaving you unable to access your own benefits account in the future."
+         },
+         {
+          "question": "What email and password will you use to register?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires an email address and a secure password to set up your government benefits account.",
+          "whatTheAgentLoses": "Delegating this step means you lose direct control over the login credentials used to access your sensitive government benefits."
+         },
+         {
+          "question": "Which email address and language preference do you want to use for your account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The account creation screen requires an email address and a language preference to establish your login credentials and send you updates.",
+          "whatTheAgentLoses": "Delegating this step means the agent chooses the email address and language for your government account communications, which might not match your primary contact preferences."
+         },
+         {
+          "question": "Are you supposed to log in with an email address or a username?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The account creation screen at 01:24 only asked for an email address, making the later instruction at 06:09 to save a username confusing for future logins.",
+          "whatTheAgentLoses": "The user loses certainty about their exact login credentials, which could lead to being locked out of their benefits account in the future."
+         },
+         {
+          "question": "What username and password will you create to secure your account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires a username and a strong password that meet specific length and character requirements to protect your benefits.",
+          "whatTheAgentLoses": "Letting an agent create these credentials means they will know the password to your government benefits account, compromising your personal security."
+         }
+        ]
+       },
+       {
+        "id": "2.2.3",
+        "label": "Set the security questions",
+        "questions": [
+         {
+          "question": "What PIN hint question and answer should you choose to secure your new account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The registration screen requires selecting a PIN hint question and providing an answer so the system can securely assign your PIN and User Name.",
+          "whatTheAgentLoses": "Delegating this step means the agent selects your security question and answer, which could prevent you from recovering your account if you forget your login details."
+         }
+        ]
+       },
+       {
+        "id": "2.2.4",
+        "label": "Set the anti-phishing image",
+        "questions": [
+         {
+          "question": "Which personal image and caption should you select for your security check?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The image and caption you choose will be displayed during future logins to confirm you are on the authentic EDD website before entering your password.",
+          "whatTheAgentLoses": "If an agent selects these security features, you will not know the specific image and caption combination needed to verify the site's authenticity yourself."
+         }
+        ]
+       },
+       {
+        "id": "2.2.5",
+        "label": "Confirm the email",
+        "questions": [
+         {
+          "question": "How do you confirm your email address to proceed with account creation?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Clicking the 'Confirm email address' button in the Login.gov email is required to verify your address before the link expires in 24 hours.",
+          "whatTheAgentLoses": "Delegating this step requires granting the agent access to your personal email inbox to click the confirmation link, which compromises your private communications."
+         },
+         {
+          "question": "Which link should you click in the registration confirmation email to proceed?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The email provides a direct 'Benefit Programs Online' link that safely routes you back to the official portal to log in.",
+          "whatTheAgentLoses": "Delegating this step requires granting the agent access to your personal email inbox to retrieve the continuation link."
+         },
+         {
+          "question": "Did the confirmation email from Login.gov arrive in your inbox?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Seeing the unread email from Login.gov in your Yahoo Mail inbox means you can now verify your address to continue accessing the benefits portal.",
+          "whatTheAgentLoses": "Delegating this step means giving an agent access to your personal email inbox, exposing private communications unrelated to your benefits claim."
+         }
+        ]
+       },
+       {
+        "id": "2.2.6",
+        "label": "Pass the human check",
+        "questions": [
+         {
+          "question": "What characters do you need to enter from the CAPTCHA image?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Getting Started' page requires you to enter the exact text shown in the CAPTCHA image to verify you are human before proceeding.",
+          "whatTheAgentLoses": "Delegating this step means relying on the agent's ability to accurately read and solve visual CAPTCHAs, which often block automated systems."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Prove the identity",
+      "note": "2.3.1 first where a provider fork exists; then 2.3.2 and 2.3.3. one of 2.3.4 or 2.3.5 proves the person - documents and a selfie (D3uH), or typed details against credit records (o9iF), or a bare typed SSN (VNaP, 5P67 - CA and OH ask for nothing more than that plus a license number). 2.3.6 and 2.3.7 where the agency stacks its own layer on top.",
+      "questions": [
+       {
+        "question": "Are you ready to verify your identity using your driver's license and Social Security number?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that a driver's license or state ID and your Social Security number are strictly required to prove your identity to the SSA.",
+        "whatTheAgentLoses": "Delegating this step requires handing over highly sensitive physical identification documents and your Social Security number to a third-party agent."
+       }
+      ],
+      "children": [
+       {
+        "id": "2.3.1",
+        "label": "Choose the identity provider",
+        "questions": [
+         {
+          "question": "Which identity provider should you use to sign in or create your account?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires choosing between third-party identity services like Login.gov or ID.me because the legacy Social Security username option is no longer available.",
+          "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to select the identity provider that best accommodates your specific residency status or existing account history."
+         },
+         {
+          "question": "Do you want to use ID.me to verify your identity?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to verify your identity using the third-party ID.me service before you can access your benefits.",
+          "whatTheAgentLoses": "You lose direct control over sharing your highly sensitive personal and biometric data with a third-party verification service."
+         },
+         {
+          "question": "Do you need to create a new ID.me account to proceed?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Clicking this link initiates the third-party identity verification process required to securely access the government benefits portal.",
+          "whatTheAgentLoses": "You lose direct control over setting up your personal identity verification credentials and managing the sensitive data required by ID.me."
+         },
+         {
+          "question": "Which document do you want to use to verify your identity?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The ID.me screen requires you to choose between a driver's license, state ID, passport, or passport card to proceed with identity verification.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might select an ID type that you do not have readily available to photograph."
+         },
+         {
+          "question": "Was my account created before September 18, 2021, and should I use the legacy username login?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen explicitly states that accounts created before this specific date must use the legacy Username and Password fields rather than the newer Login.gov or ID.me options.",
+          "whatTheAgentLoses": "An agent might try to force a new Login.gov creation or use the wrong login path if it doesn't know the exact date the user originally created their account."
+         }
+        ]
+       },
+       {
+        "id": "2.3.2",
+        "label": "Set up the second factor",
+        "questions": [
+         {
+          "question": "Which multi-factor authentication method do you want to use?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires setting up an additional layer of protection for your account and offers options like text messages, authenticator apps, or security keys.",
+          "whatTheAgentLoses": "Delegating this setup means the agent could link the authentication to its own phone or app, potentially locking you out of your government benefits account."
+         },
+         {
+          "question": "Which phone number will you use, and how do you want to receive the login code?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires a non-VOIP phone number to receive a one-time code via text or call every time you sign in.",
+          "whatTheAgentLoses": "Letting an agent handle this means they might use their own phone number, complicating your ability to log in independently later."
+         },
+         {
+          "question": "Do you want to remember this browser when entering your one-time code?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen includes a 'Remember this browser' checkbox that determines whether you will need to complete two-factor authentication on future logins from this device.",
+          "whatTheAgentLoses": "Letting an agent make this choice means losing personal control over the security and convenience settings for future access to your government benefits account."
+         },
+         {
+          "question": "Do you want to set up face or touch unlock for a more secure sign-in?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal offers a phishing-resistant biometric unlock option to keep your account safer, but you can choose to skip it.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to secure your account using your personal biometric data."
+         },
+         {
+          "question": "What is the one-time code sent to my phone?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to enter the time-sensitive verification code sent via SMS to confirm your identity before proceeding.",
+          "whatTheAgentLoses": "The user must actively monitor their personal device and relay the time-sensitive SMS code to the agent, bypassing the intended security of two-factor authentication."
+         },
+         {
+          "question": "Should I generate a recovery code before continuing?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Generating a recovery code provides a backup way to access your benefits account if you lose your primary authentication method.",
+          "whatTheAgentLoses": "You lose the ability to personally secure and store the backup recovery code for your account."
+         },
+         {
+          "question": "What is the security code, and should I check the box to remember this browser?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires a one-time code sent to your phone to verify your identity and offers a checkbox to remember the browser for future logins.",
+          "whatTheAgentLoses": "Delegating this step means the agent cannot receive the one-time code sent to your personal device and might make an unwanted security choice about remembering the browser."
+         },
+         {
+          "question": "Should you add a backup authentication method now to prevent getting locked out?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen warns that adding another authentication method prevents you from getting locked out of your account if you lose your primary method.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to secure your account with a backup method immediately or skip it for convenience."
+         },
+         {
+          "question": "What should you do if you realize you entered the wrong phone number for your security code?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides a specific 'Use another phone number' link to restart the two-factor authentication setup if you made a mistake and the one-time code is not arriving.",
+          "whatTheAgentLoses": "The user loses the ability to independently catch their own typo in the phone number and use the provided link to correct it so they can receive the security code."
+         },
+         {
+          "question": "Are you willing to accept potential message and data charges for receiving login codes via text?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly warns that 'Message and data rates may apply' when you choose to receive your one-time authentication code via SMS.",
+          "whatTheAgentLoses": "The agent cannot know if your mobile plan charges for incoming texts, which might make the voice call or an authenticator app a better financial choice."
+         }
+        ]
+       },
+       {
+        "id": "2.3.3",
+        "label": "Consent to the data sharing",
+        "questions": [
+         {
+          "question": "Should you agree to share your information with the SSA and proceed without adding a second authentication method?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen warns that if you lose your only authentication method, you will have to delete your account and start over.",
+          "whatTheAgentLoses": "You lose the opportunity to decide whether to secure your account with a backup authentication method before proceeding."
+         },
+         {
+          "question": "Do you consent to the identity verification process and its privacy terms?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to agree to share your ID and personal information to verify your identity against public records.",
+          "whatTheAgentLoses": "You lose the chance to personally review the privacy and security measures explaining how your sensitive data is protected."
+         },
+         {
+          "question": "Do you authorize ID.me to share your verified identity information with the state agency?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "You must explicitly grant permission to share sensitive details like your SSN and date of birth with the state agency to continue your claim.",
+          "whatTheAgentLoses": "You lose the ability to personally review and consent to the exact pieces of sensitive information being transferred to the state agency."
+         }
+        ]
+       },
+       {
+        "id": "2.3.4",
+        "label": "Photograph the ID and face",
+        "questions": [
+         {
+          "question": "What should you do with this browser window while verifying your ID on your phone?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly warns you not to close the window because it will automatically load the next step once the mobile verification is complete.",
+          "whatTheAgentLoses": "The agent cannot physically access your smartphone to take a picture of your ID, requiring you to step in and complete this out-of-band verification yourself."
+         },
+         {
+          "question": "How do you proceed with the mobile identity verification?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays an SMS from Login.gov containing both a one-time code and a document capture link, requiring a choice on how to complete the security check.",
+          "whatTheAgentLoses": "You lose the ability to personally handle the secure verification link and identity document capture sent directly to your mobile device."
+         },
+         {
+          "question": "Did the mobile verification succeed, and is the desktop screen now asking for your Social Security number?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "You must confirm that your identity document was successfully verified on your phone before switching back to your computer to enter your Social Security number.",
+          "whatTheAgentLoses": "You lose direct oversight of the cross-device security handoff and the personal entry of your highly sensitive Social Security number."
+         },
+         {
+          "question": "Do the actual ID verification options match the requirements stated at the beginning?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The introductory slide claims a smartphone is required, but the later verification screen offers an in-person Post Office option that does not need one.",
+          "whatTheAgentLoses": "The user loses the ability to choose an offline verification method if they are misled by the initial requirements."
+         },
+         {
+          "question": "How do you want to verify your identity?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to choose between receiving a link on your phone to take photos of your ID or verifying your identity in person at a participating Post Office.",
+          "whatTheAgentLoses": "Letting an agent make this choice means they might select a verification method that is inconvenient or impossible for you to complete."
+         },
+         {
+          "question": "How do you capture clear photos of your ID and proceed?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Following the screen's instructions to use a dark surface and avoid glare ensures your ID photos are legible and accepted for verification.",
+          "whatTheAgentLoses": "You lose the physical control over positioning your ID and taking clear, glare-free photos of it yourself."
+         },
+         {
+          "question": "How should you prepare for and capture the required selfie to verify your identity?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen lists specific requirements like removing glasses, finding good lighting, and keeping a neutral expression so the system can successfully match your face to your ID.",
+          "whatTheAgentLoses": "An agent cannot physically take a live selfie of your face to pass the biometric identity check."
+         },
+         {
+          "question": "Did the automated system accept your ID photos, or did it reject them for glare and force you to try again?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Automated document checks frequently fail on the first attempt due to lighting or blur, requiring you to notice the error and physically reposition the camera.",
+          "whatTheAgentLoses": "The user loses the ability to instantly react to a system rejection by adjusting the physical lighting and retaking the photo."
+         }
+        ]
+       },
+       {
+        "id": "2.3.5",
+        "label": "Enter the identity details",
+        "questions": [
+         {
+          "question": "How do you resolve the identity verification mismatch error?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal blocks access until you resolve the identity mismatch by updating your personal information with the Social Security Administration or Login.gov.",
+          "whatTheAgentLoses": "An agent cannot resolve this identity mismatch because it requires updating your personal records directly with the Social Security Administration or Login.gov."
+         },
+         {
+          "question": "Do you want to add an extra level of security to your account right now?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "You must decide whether to secure your account further by providing photos of a valid ID or to skip this step for now.",
+          "whatTheAgentLoses": "You lose the ability to decide your preferred balance between account security and the convenience of not having to scan your ID right now."
+         },
+         {
+          "question": "Will you provide your Social Security number to verify your identity?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly states that your Social Security number is required to verify your name, date of birth, and address before you can proceed.",
+          "whatTheAgentLoses": "You lose the security of entering your highly sensitive Social Security number yourself, requiring you to expose it to a third-party agent."
+         },
+         {
+          "question": "Do your current or past employers know you by a different name?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to declare any aliases used with employers so your work history can be accurately verified, and selecting 'Yes' makes the specific name fields mandatory.",
+          "whatTheAgentLoses": "Delegating this means the agent might not know your maiden name or other aliases, which are crucial for linking your past employment records to your claim."
+         },
+         {
+          "question": "How must you format your Social Security Number to proceed with the eligibility check?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly instructs you to enter your Social Security Number without dashes to verify if you are already in the system.",
+          "whatTheAgentLoses": "You lose direct control over the secure entry and exact formatting of your highly sensitive Social Security Number."
+         },
+         {
+          "question": "Did the system accurately extract your name, date of birth, and address from your ID photos?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Verify your information' screen pre-fills your personal details based on the ID photos you uploaded, and any OCR errors here will cause the verification against public records to fail.",
+          "whatTheAgentLoses": "The user loses the opportunity to catch and correct transcription errors made by the automated ID scanner before submitting their identity for official verification."
+         },
+         {
+          "question": "How do you resolve the validation error preventing you from advancing past the Other Names screen?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The system displays an 'Errors Exist' modal because a required radio button about using different names was left blank, blocking progress until it is answered.",
+          "whatTheAgentLoses": "The user loses the ability to personally understand and correct the specific form validation error that is preventing their application from moving forward."
+         },
+         {
+          "question": "Do you need to unmask your Social Security number to verify it before submitting?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays your Social Security number masked by default, providing a checkbox to reveal it so you can ensure it matches your records exactly before the system checks it.",
+          "whatTheAgentLoses": "You lose the chance to visually confirm your sensitive identifying number is typed correctly, which could cause verification failures and delay your benefits if there is a typo."
+         }
+        ]
+       },
+       {
+        "id": "2.3.6",
+        "label": "Enter the activation code",
+        "questions": [
+         {
+          "question": "Do you have an activation code to enter?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal needs to know if you received a specific activation code via mail, text, or in person to properly verify and link your account.",
+          "whatTheAgentLoses": "The agent would not know if you previously received a specific activation code in the mail or at an office, which could delay your access."
+         },
+         {
+          "question": "How do you want to receive your activation code?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to choose between a text message or a phone call to receive an activation code that verifies your identity.",
+          "whatTheAgentLoses": "An agent cannot access the text message or phone call sent to your personal device to retrieve the required activation code."
+         },
+         {
+          "question": "What should you do if the activation code hasn't arrived?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen warns that the code expires in 10 minutes, so you need to know how to use the \"Having trouble?\" dropdown if the text message is delayed.",
+          "whatTheAgentLoses": "You lose the ability to personally troubleshoot or request an alternative verification method if the text message fails to reach your device."
+         },
+         {
+          "question": "What is the activation code sent to my phone?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires the activation code sent via text message to proceed, warning that it will expire in 10 minutes.",
+          "whatTheAgentLoses": "The user loses the ability to directly receive and input the time-sensitive security code sent to their personal device."
+         }
+        ]
+       },
+       {
+        "id": "2.3.7",
+        "label": "Save the personal key",
+        "questions": [
+         {
+          "question": "What is your Login.gov password to encrypt your information?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Re-entering your password finalizes the encryption process, ensuring your sensitive data is secure and accessible only to you.",
+          "whatTheAgentLoses": "Sharing your Login.gov password with an agent compromises the core security guarantee that only you can access or change your encrypted information."
+         },
+         {
+          "question": "Did you actually save your personal key before confirming that you did?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "If you forget your password and do not have this key, you will be forced to verify your identity all over again.",
+          "whatTheAgentLoses": "The user loses direct possession of their account recovery key, making them reliant on the agent to securely store and provide it to them later."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "How do you log in using your SSN and temporary PIN?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Claimant Login section requires your Social Security Number and the newly generated temporary PIN to access the unemployment portal.",
+        "whatTheAgentLoses": "The user must share highly sensitive personal credentials, including their Social Security Number, with the agent to proceed."
+       },
+       {
+        "question": "Which email address do you enter to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your registered email address and a reCAPTCHA verification to initiate the login process.",
+        "whatTheAgentLoses": "You lose control over which personal email address is used to access your government benefits account."
+       },
+       {
+        "question": "What is your password for this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen requires a password to authenticate your identity and grant access to your benefits account.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your highly sensitive government portal password with a third-party agent, which compromises your account's security."
+       },
+       {
+        "question": "Do the displayed personal image and caption match what you set up?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to verify your chosen image and caption to confirm the site's authenticity before entering your password.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify your unique security image and caption, which protects your password from being entered on a phishing site."
+       },
+       {
+        "question": "What username and password do you enter to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login box requires your specific username and password to grant access to your benefits account.",
+        "whatTheAgentLoses": "You lose the security of keeping your government benefits login credentials private."
+       },
+       {
+        "question": "Does this security image and caption match your account, and what is your password?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the personal image of a yellow object and the 'Smooth Sailing 52' caption ensures you are on the authentic login page before entering your password.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify your unique security image and caption to confirm the site's authenticity before granting access."
+       },
+       {
+        "question": "Do you need to enable the Web Accessibility Mode for Visually Impaired before logging in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen provides a specific toggle to enable accessibility features for visually impaired users, which changes how the portal is navigated.",
+        "whatTheAgentLoses": "If an agent logs in without enabling this mode, a visually impaired user taking over the session later will struggle to navigate the portal."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Apply for the benefit",
+    "note": "3.1 first - a Yes there can end the online path before it starts. 3.2 only on multi-program portals. 3.3 to 3.5 as the form asks; 3.6 per employer, repeated where the base period holds several. then 3.7; 3.8 where the state pays this way; 3.9 and 3.10 where offered, both skippable and both skipped. 6 closes it.",
+    "questions": [
+     {
+      "question": "Which sections of the application do I need to complete, and what is their current status?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The application summary page lists all required categories like income, expenses, and assets, allowing you to track your progress and see what information is still needed.",
+      "whatTheAgentLoses": "You lose the high-level overview of the application's complexity and the specific categories of personal information that will be required."
+     },
+     {
+      "question": "Do you want to submit an incomplete application immediately to secure your filing date?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The popup explains that you have the right to file immediately with just your name, address, and signature to establish your application date, though it warns this might delay processing.",
+      "whatTheAgentLoses": "The user loses the strategic choice to secure an earlier benefit start date by submitting a minimal application today rather than waiting until they have all their information gathered."
+     },
+     {
+      "question": "Has the session timeout warning appeared, requiring you to extend the session before the system deletes your unsaved application data?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Government portals often have aggressive security timeouts (e.g., 15 minutes) that will abruptly wipe out all unsaved progress if you are busy looking up employment dates or tax numbers.",
+      "whatTheAgentLoses": "The user loses the ability to intervene and save their progress, risking the agent silently timing out, losing the data, and having to restart the entire form."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Answer the routing gates",
+      "questions": [
+       {
+        "question": "How should you answer the eligibility questions regarding prior claims, recent work history, and tax withholding?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Accurately reporting your prior unemployment claims, out-of-state work, and military service is required to determine your legal eligibility for benefits.",
+        "whatTheAgentLoses": "You lose the ability to ensure your specific work history, prior claims, and tax withholding preferences are reported accurately to the state."
+       },
+       {
+        "question": "How should I answer the initial eligibility questions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "These first five questions determine if you meet the basic legal requirements to proceed with the unemployment insurance application.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to ensure your specific employment circumstances are accurately represented in the critical first eligibility check."
+       },
+       {
+        "question": "Have you recently filed for or collected unemployment, disability, or family leave benefits?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application explicitly asks if you filed or collected UI, DI, or PFL benefits during a specific two-year window to determine your current eligibility.",
+        "whatTheAgentLoses": "You lose the ability to ensure your personal claim history is reported accurately, which could lead to a denied application or fraud investigation if an agent guesses incorrectly."
+       },
+       {
+        "question": "Did I work out of state, for the federal government, or in the military?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Answering these wage type questions accurately determines if your application requires special processing outside the standard in-state system.",
+        "whatTheAgentLoses": "You lose the ability to personally verify your recent employment categories, risking a misrouted or delayed claim if an agent answers incorrectly."
+       },
+       {
+        "question": "Have you worked in two or more states or claimed unemployment benefits in the last 12 months?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to disclose if you worked in multiple states between 1/1/2024 and 12/31/2024 or claimed unemployment within the last year.",
+        "whatTheAgentLoses": "Letting an agent answer this risks inaccurate reporting of your out-of-state work history and recent claims, which could delay or invalidate your application."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Pick the programs",
+      "questions": [
+       {
+        "question": "Which benefit programs do you want to apply for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Pick programs' screen requires you to select specific options like SNAP, TANF, or Health Care to determine the correct application path.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong assistance program, potentially delaying or misdirecting your access to crucial benefits."
+       },
+       {
+        "question": "Which health care category best describes your situation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific demographic categories like 'Pregnant women' or 'Adults caring for a child', and selecting the correct one determines your eligibility for Medicaid or CHIP.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select a category that doesn't accurately reflect your life circumstances, potentially leading to an incorrect application or denial of benefits."
+       },
+       {
+        "question": "Which category of Cash Assistance best describes your situation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify who the cash assistance is for, such as your family or a child in your care, to ensure you are routed to the correct eligibility questions.",
+        "whatTheAgentLoses": "You lose the ability to accurately specify your household's unique circumstances, which could lead to applying for the wrong type of assistance."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Enter the identity details",
+      "questions": [
+       {
+        "question": "Are you filling out this form for yourself or someone else?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to specify if you are applying for yourself and your household or on behalf of someone else.",
+        "whatTheAgentLoses": "You lose the ability to personally ensure the application correctly identifies whether it is for your own household or another individual."
+       },
+       {
+        "question": "Do you want to designate an authorized representative to act on your behalf?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines whether you want to grant another person the legal right to manage your benefits application and communicate with the agency for you.",
+        "whatTheAgentLoses": "The agent cannot know if you have a trusted individual you want to designate to handle your benefits or if you prefer to manage them yourself."
+       },
+       {
+        "question": "Will you provide the contact details for your authorized representative?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requests the name, address, contact information, and relationship of the person authorized to act on your behalf.",
+        "whatTheAgentLoses": "You lose the ability to personally select and authorize a trusted individual or organization to manage your benefits claim."
+       },
+       {
+        "question": "Are you receiving help from a certified application counselor or navigator?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to indicate whether an official counselor or navigator is assisting you with the form.",
+        "whatTheAgentLoses": "An agent might incorrectly report your assistance status, potentially complicating the authorized representative details on your application."
+       },
+       {
+        "question": "Should I indicate whether a certified application counselor or navigator is helping me apply?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application includes an expanded section specifically asking if a counselor or navigator is assisting you, which may need to be answered before you can mark the section as done.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report and authorize a specific certified counselor or navigator who might be assisting them with their case."
+       },
+       {
+        "question": "What are your personal identification details?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the application requires exact matches for your Social Security number, date of birth, and gender to verify your identity.",
+        "whatTheAgentLoses": "Delegating this step requires sharing highly sensitive personal data, like your Social Security number and date of birth, with a third-party agent."
+       },
+       {
+        "question": "Which state-issued Driver License or ID card will you provide?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify if you have a state-issued ID and provide the issuing state and ID number to verify your identity.",
+        "whatTheAgentLoses": "You lose control over securely providing your exact state-issued identification details, which an agent would not inherently know."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Confirm the contact details",
+      "questions": [
+       {
+        "question": "Which address and contact details should I provide here?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your residence address, an optional mailing address, phone numbers, and email to ensure the agency can reach you about your claim.",
+        "whatTheAgentLoses": "You lose control over specifying your preferred contact methods, such as enabling text messages or choosing a separate mailing address."
+       },
+       {
+        "question": "Have you verified that your personal information is correct before clicking next?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Proceeding past this screen confirms that your contact and demographic details are accurate, which is essential for the agency to process your claim.",
+        "whatTheAgentLoses": "You lose the chance to personally spot-check your identifying details for typos or outdated information that could delay your benefits."
+       },
+       {
+        "question": "Do you need to provide contact person or head of household details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form includes an expandable section for a contact person, requiring a decision on whether to provide this optional information.",
+        "whatTheAgentLoses": "The user loses the opportunity to designate a trusted contact person to handle communications regarding their benefit application."
+       },
+       {
+        "question": "Do you want to specify a language preference for your letters and forms?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application provides fields to select your preferred language for official communications.",
+        "whatTheAgentLoses": "An agent might skip this section or choose the wrong language, resulting in important benefit notices being sent in a language you cannot easily read."
+       },
+       {
+        "question": "Have you completed all required contact and language preference fields before clicking next?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Proceeding without filling out the active contact person and language fields will likely trigger a validation error and halt your progress.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that their preferred language and contact details are accurately recorded for official government communications."
+       },
+       {
+        "question": "How should you resolve the missing first and last name validation errors?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen highlighted the first and last name fields in red with 'You must fill this out,' meaning you cannot advance the application without providing this contact information.",
+        "whatTheAgentLoses": "Delegating this step means the agent might input inaccurate contact details to bypass the errors, which could misdirect critical communications about the benefit claim."
+       },
+       {
+        "question": "Should you use the standardized address format suggested by the system?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system formatted your entered address to meet U.S. Postal Service standards and requires you to choose whether to accept it, keep your original entry, or modify it.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the system's standardized address accurately reflects your actual mailing location before it is saved to your application."
+       },
+       {
+        "question": "What is your contact information, and do you consent to receiving voicemails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Providing your email, primary phone number, and voicemail consent ensures the agency can reach you regarding your claim.",
+        "whatTheAgentLoses": "Letting an agent handle this means they might provide incorrect contact details or make assumptions about your voicemail preferences, potentially causing you to miss important agency updates."
+       },
+       {
+        "question": "Are your physical and mailing addresses correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to verify your physical address and confirm if your mailing address is the same so that you receive important benefit correspondence.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify that the agency has your current living and mailing addresses on file."
+       },
+       {
+        "question": "Are your displayed mail delivery options and language preferences correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming these settings ensures that important physical notices about your benefits are sent to the right place in your preferred language.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that your current mailing address and language needs are accurately recorded for future agency communications."
+       },
+       {
+        "question": "What is your legal name?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires your first and last name, along with any former names, to properly identify you for the benefit claim.",
+        "whatTheAgentLoses": "You lose the ability to ensure your name is entered exactly as it appears on your official government documents to avoid processing delays."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Answer the demographics pages",
+      "questions": [
+       {
+        "question": "What demographic information do you want to provide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for personal details like race, ethnicity, gender, and disability status, which you may prefer not to answer.",
+        "whatTheAgentLoses": "The user loses the choice of whether to disclose or withhold sensitive demographic information."
+       },
+       {
+        "question": "Are the default language settings correct, and do you need an interpreter?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for your preferred reading language and whether you need an interpreter, which dictates how the agency will communicate with you.",
+        "whatTheAgentLoses": "You lose the opportunity to specify a non-English language preference or request an interpreter for your case."
+       },
+       {
+        "question": "Do you need to declare whether you have a visual or hearing impairment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form explicitly marks the questions about visual and hearing impairments as required, meaning skipping them will likely trigger an error and block your application.",
+        "whatTheAgentLoses": "You might face application delays or miss out on necessary accessibility accommodations if the agent fails to answer these required questions on your behalf."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Report the work history",
+      "note": "3.6.1, then 3.6.2 and 3.6.3 per employer; 3.6.4 loops back into 3.6.1 for each further base-period employer (Or9Z adds one, then flips the gate answer to No). 3.6.5 wherever a free-typed occupation is refused; 3.6.6 where the claim doubles as a job-search profile. 5.4 is this goal's reopen twin, built on the state's wage records instead.",
+      "children": [
+       {
+        "id": "3.6.1",
+        "label": "Identify the employer",
+        "questions": [
+         {
+          "question": "Did you work for an employer within the last 18 months?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Accurately reporting your employment history over the specified timeframe is required to determine your benefit eligibility.",
+          "whatTheAgentLoses": "Delegating this means an agent might incorrectly report your recent work history, potentially resulting in a denied or delayed claim."
+         },
+         {
+          "question": "Is my last employer's information completely accurate before I proceed?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a summary of your most recent employment details, which must be correct to prevent delays or denials in processing your claim.",
+          "whatTheAgentLoses": "You lose the opportunity to personally verify that your previous employment dates and employer contact details were entered correctly before advancing the application."
+         },
+         {
+          "question": "Is your physical worksite address different from your employer's mailing address?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires the specific physical address and phone number of your last worksite if it differs from the employer's main mailing address.",
+          "whatTheAgentLoses": "You lose the ability to ensure the agency receives the exact physical location and contact number where you actually performed your work."
+         },
+         {
+          "question": "Which employer should you search for and select?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Select a Claim' modal requires you to search for your employer by name to accurately link your work history to your claim.",
+          "whatTheAgentLoses": "You lose the ability to verify that the exact, correct employer record is selected from the search results."
+         },
+         {
+          "question": "Is the employer you just added listed correctly before you move on?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Checking the displayed employer name, such as 'ROSE MINT TEA', ensures your employment history is accurate before you click next.",
+          "whatTheAgentLoses": "You lose the opportunity to catch any typos or errors in the employer name the agent entered on your behalf."
+         },
+         {
+          "question": "Does anyone in your household have a job?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to declare if anyone in your household is currently employed to accurately determine your eligibility.",
+          "whatTheAgentLoses": "Delegating this means the agent might incorrectly report your household's employment status, potentially leading to denied benefits or fraud charges."
+         },
+         {
+          "question": "Which household member is employed?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires you to identify which household members currently have a job to accurately assess your eligibility.",
+          "whatTheAgentLoses": "You lose the ability to ensure the correct household member's employment status is reported, which could affect your benefit calculation."
+         },
+         {
+          "question": "Are you reporting that Lily is self-employed?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires you to disclose if the applicant earns money through a business, delivery driving, or other services.",
+          "whatTheAgentLoses": "You lose the ability to ensure your specific gig work or business income is accurately reported to the government agency."
+         },
+         {
+          "question": "What are the details of your previous employer and position?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires specific contact information and employment details, such as full-time or part-time status, to verify your work history for the claim.",
+          "whatTheAgentLoses": "Delegating this step means losing the ability to ensure your past employer's contact information and your exact job classification are reported accurately."
+         }
+        ]
+       },
+       {
+        "id": "3.6.2",
+        "label": "Enter the dates and separation",
+        "questions": [
+         {
+          "question": "Are your employment details, specifically the reason for separation, correct?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires selecting a reason for separation, such as 'Laid Off' or 'Discharge/Fired', which directly determines your eligibility for unemployment benefits.",
+          "whatTheAgentLoses": "Delegating this step means losing the ability to accurately report why your employment ended, risking a denied claim or penalties if the wrong reason is selected."
+         },
+         {
+          "question": "What are the details of your employment separation and did you receive any additional payments?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires your supervisor's name, last date worked, separation reason, and any additional payments like holiday pay to accurately process your claim.",
+          "whatTheAgentLoses": "Letting an agent fill this out means losing control over the exact separation reasons and payment declarations submitted to the government on your behalf."
+         },
+         {
+          "question": "How should I report my employment details and separation reason for this employer?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Providing accurate dates, pay amounts, and the exact reason for your separation is critical for determining your benefit eligibility.",
+          "whatTheAgentLoses": "Delegating this step means you lose control over how the specific circumstances of your termination and your job duties are presented to the agency."
+         }
+        ]
+       },
+       {
+        "id": "3.6.3",
+        "label": "Report the wages",
+        "questions": [
+         {
+          "question": "How do you calculate your gross wages for each past quarter if you don't have exact pay stubs?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires you to enter gross wages for six specific past quarters, which directly impacts your benefit calculation.",
+          "whatTheAgentLoses": "You lose the ability to ensure the estimated quarterly wages accurately reflect your actual past work hours and pay rate."
+         },
+         {
+          "question": "Are the gross wages you entered consistent with your last day worked?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Entering a full quarter's worth of wages contradicts your earlier entry showing your last day worked was weeks before the quarter ended, which could trigger a fraud flag or delay your claim.",
+          "whatTheAgentLoses": "You lose the ability to ensure your reported income mathematically aligns with your actual employment dates to prevent your application from being rejected or audited."
+         },
+         {
+          "question": "Does the salary displayed on the summary screen accurately reflect the shorthand value you entered previously?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The system automatically converted your input of '45' into '$45,000.00 per Year' on the summary screen, so you must verify this auto-formatting is correct.",
+          "whatTheAgentLoses": "You lose the ability to catch a potentially critical income misreporting error if the agent accepts the system's automatic conversion without knowing your actual salary."
+         }
+        ]
+       },
+       {
+        "id": "3.6.4",
+        "label": "Add the other employers",
+        "questions": [
+         {
+          "question": "Did you have any regular employment outside of Ohio since October 1, 2018?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to list all regular out-of-state employment since October 1, 2018, excluding military or federal civilian jobs already provided.",
+          "whatTheAgentLoses": "Delegating this step means an agent might omit or incorrectly report your out-of-state work history, which could delay or jeopardize your benefit claim."
+         },
+         {
+          "question": "Were you provided with a Mass Layoff or Buyout Identification Number by your employer?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "This determines if your unemployment claim is tied to a specific company-wide event, which requires entering the provided ID number and confirming recent work history.",
+          "whatTheAgentLoses": "Delegating this means the agent might not know if you received a specific layoff ID from your employer or if you had other recent jobs, potentially delaying your claim."
+         },
+         {
+          "question": "Did you work for more than one employer since October 1, 2018?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Accurately reporting your employment history for the specified period is required to properly calculate your benefit eligibility.",
+          "whatTheAgentLoses": "An agent might not know your complete work history, leading to inaccurate reporting that could delay or jeopardize your claim."
+         },
+         {
+          "question": "Did you work for any other employers during the specified timeframe?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to declare all employment between specific dates to accurately determine your benefit eligibility.",
+          "whatTheAgentLoses": "An agent might not know your complete work history for those exact dates, risking an incomplete application or a penalty for omitting a past employer."
+         },
+         {
+          "question": "Should you leave the second employment history question blank before clicking Next?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Skipping fields on the employment history page might lead to an incomplete application or a denial of benefits if that information is required.",
+          "whatTheAgentLoses": "You lose the chance to decide whether omitting specific employment details might negatively impact your benefit eligibility."
+         },
+         {
+          "question": "Did you work for any employers during the specified base period?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to report any employers you worked for between October 2018 and December 2019 to accurately calculate your benefit eligibility.",
+          "whatTheAgentLoses": "Letting an agent handle this means you lose the chance to ensure all past employers, exact dates, and wage details are accurately reported for your claim."
+         },
+         {
+          "question": "How should you report the exact duration and industry type for your longest-held job?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to calculate the exact years and months worked for your longest employer and select their specific industry category from a dropdown.",
+          "whatTheAgentLoses": "Delegating this step means losing the ability to ensure your employment timeline is calculated accurately and categorized correctly."
+         },
+         {
+          "question": "Which business category and specific type best describe your employer?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to classify your employer by selecting a broad business category and a specific business type from the provided lists.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to choose the most accurate industry classification for your specific employer."
+         },
+         {
+          "question": "Do you have more employers to add, or should you close the modal?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The modal confirms 'ROSE MINT TEA' was added, requiring you to decide whether to input another employer or close the window to continue.",
+          "whatTheAgentLoses": "You lose the opportunity to ensure your complete work history is accurately reported before moving to the next step."
+         },
+         {
+          "question": "Do you need to add another employer to your work history?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the completed entry for \"ROSE MINT TEA\", requiring you to decide if your employment history is complete before moving to the next step.",
+          "whatTheAgentLoses": "An agent might not know your complete recent work history and could omit a past employer, potentially delaying or jeopardizing your benefit claim."
+         }
+        ]
+       },
+       {
+        "id": "3.6.5",
+        "label": "Find the occupation code",
+        "questions": [
+         {
+          "question": "How do you find and select the correct occupation codes for your job profile?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Using the 'Occupation Lookup' button ensures your work history is accurately categorized with the standard codes required for the application.",
+          "whatTheAgentLoses": "You lose the ability to personally search the lookup tool to ensure the selected occupation code perfectly matches your specific job duties."
+         },
+         {
+          "question": "Do you need to select two occupations since both fields are marked as required?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The page instructions say to select 'up to 2 occupations', but both occupation fields have asterisks indicating they are mandatory.",
+          "whatTheAgentLoses": "An agent might arbitrarily select a second occupation just to satisfy the form validation, potentially misrepresenting your actual job search preferences."
+         },
+         {
+          "question": "Which alternative type of work do you want to list?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application asks for other types of work you can perform but only allows a single alternative to be added.",
+          "whatTheAgentLoses": "You lose the ability to choose which of your secondary skills is the most appropriate to list for your claim."
+         },
+         {
+          "question": "Did the occupation code you selected in the lookup window actually populate into the main form after the popup closed?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Popup windows used for lookups sometimes fail to pass their selection back to the main form, leaving the required field blank and causing a validation error later.",
+          "whatTheAgentLoses": "The user loses the immediate visual check that the handoff between the search popup and the main application form worked correctly."
+         }
+        ]
+       },
+       {
+        "id": "3.6.6",
+        "label": "Build the job-matching profile",
+        "questions": [
+         {
+          "question": "How many months of experience and which specific skills should you list for your selected occupations?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to input your months of experience for two specific occupation codes and describe the skills that qualify you for those roles.",
+          "whatTheAgentLoses": "An agent might guess your experience level or list generic skills that do not accurately reflect your actual work history and qualifications."
+         },
+         {
+          "question": "What is the lowest acceptable hourly wage and shift schedule you will declare you are willing to work?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The state uses your minimum acceptable wage and shift availability to determine if you are genuinely available for work; setting the wage too high or restricting shifts can automatically disqualify you from receiving benefits.",
+          "whatTheAgentLoses": "An agent might guess a minimum wage or shift preference that either disqualifies you for being too restrictive or legally commits you to accepting jobs you cannot actually take."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Answer the eligibility questions",
+      "questions": [
+       {
+        "question": "How do you answer the eligibility questions about other income, recall dates, and school or union status?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires details on pensions, severance pay, and recall dates, which directly determine your eligibility and benefit amount.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that your specific financial details and employment status are reported accurately."
+       },
+       {
+        "question": "Did you work for an educational institution during the specified timeframe?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because recent employment with an educational institution can trigger specific eligibility rules or restrictions for your benefit claim.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly report your employment history, potentially leading to wrongful denial or delays in receiving benefits."
+       },
+       {
+        "question": "Should you answer the required availability questions before clicking Next?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Skipping required fields on the Availability Information page will trigger an error and prevent you from advancing to the next step.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their specific work availability, which is critical for determining their benefit eligibility."
+       },
+       {
+        "question": "Do any of these additional circumstances apply to you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Accurately answering these specific circumstance questions ensures your eligibility and benefit amount are calculated correctly.",
+        "whatTheAgentLoses": "Delegating this means an agent might incorrectly guess your specific life circumstances, potentially delaying or disqualifying your claim."
+       },
+       {
+        "question": "Is your unemployment the direct result of a recent disaster?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify if your unemployment was caused by a recent disaster like COVID-19, an earthquake, or a fire to determine your eligibility for specific disaster relief programs.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly state the cause of your unemployment, potentially causing you to miss out on specialized disaster relief or inadvertently commit fraud."
+       },
+       {
+        "question": "How will you answer the eligibility questions, and do you need to specify a primary occupation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for an occupation search and requires answers to a series of yes/no eligibility questions that determine your qualification for benefits.",
+        "whatTheAgentLoses": "You lose the ability to ensure your specific employment details and personal eligibility circumstances are reported accurately to the agency."
+       },
+       {
+        "question": "How should you answer these situational and background questions for your claim?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents an additional questions section with various yes/no prompts that directly impact your eligibility.",
+        "whatTheAgentLoses": "An agent might not know the exact details of your recent job-seeking activities or background situations to answer these questions accurately."
+       },
+       {
+        "question": "Do any of these specific employment situations apply to you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form asks if you are working on commission, attending school, refusing job offers, or affected by foreign trade.",
+        "whatTheAgentLoses": "You lose the chance to accurately report your specific employment circumstances, which directly impacts your eligibility for benefits."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Choose how benefits arrive",
+      "note": "3.8.1, with 3.8.2 read where the card is chosen or is the default; 3.8.3 and 3.8.4 where the form offers them. applications only - certifications touch withholding through 4.7, and D3uH sets 3.8.4 from inside account setup.",
+      "children": [
+       {
+        "id": "3.8.1",
+        "label": "Choose the payment method",
+        "questions": [
+         {
+          "question": "How would you like to receive your benefit payments?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to choose between receiving your funds via direct deposit to a bank account or automatically receiving a prepaid debit card.",
+          "whatTheAgentLoses": "Letting an agent decide means you lose control over the specific financial account or method used to access your benefit funds."
+         },
+         {
+          "question": "How do you want to receive your benefit payments?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to choose between direct deposit and a ReliaCard debit card for receiving your funds and to acknowledge the associated terms.",
+          "whatTheAgentLoses": "You lose the opportunity to choose your preferred payment method and personally review the terms and conditions of the prepaid debit card."
+         },
+         {
+          "question": "Did the system reject your bank's routing number, forcing you to either provide a different account or accept a fee-heavy prepaid debit card?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Legacy state systems frequently reject routing numbers from smaller credit unions or newer online banks, which can automatically default your payment method to a state-issued debit card.",
+          "whatTheAgentLoses": "The user loses the opportunity to provide an alternative bank account, potentially getting locked into a prepaid card that charges ATM and maintenance fees."
+         }
+        ]
+       },
+       {
+        "id": "3.8.2",
+        "label": "Acknowledge the card fees",
+        "questions": [
+         {
+          "question": "Are you comfortable with the fees and terms associated with the debit card payment option?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays the U.S. Bank ReliaCard fee disclosure, detailing potential costs like out-of-network ATM and inactivity fees that will affect your benefit funds.",
+          "whatTheAgentLoses": "You lose the chance to personally evaluate the debit card's fee structure and decide if another payment method might save you money."
+         }
+        ]
+       },
+       {
+        "id": "3.8.3",
+        "label": "Set the tax withholding",
+        "questions": [
+         {
+          "question": "Do you want federal and state taxes withheld from your benefit payments?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "This determines whether taxes are deducted directly from your benefits, which affects both your immediate payout amount and your end-of-year tax liability.",
+          "whatTheAgentLoses": "Letting an agent make this choice means losing control over your personal tax strategy and the net amount of your immediate benefit payments."
+         },
+         {
+          "question": "Do you want taxes withheld from your payments, and how should your 1099G form be delivered?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to choose whether to withhold 10% for federal and state taxes, and whether to receive your 1099G tax form electronically or by mail.",
+          "whatTheAgentLoses": "You lose control over managing your immediate tax liabilities on the benefit income and your preference for receiving annual tax documents."
+         }
+        ]
+       },
+       {
+        "id": "3.8.4",
+        "label": "Choose the notice delivery",
+        "questions": [
+         {
+          "question": "How do I access my homepage after updating my preferences?",
+          "cluster": "hand over",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen confirms your preferences were successfully updated and provides a button to continue to your my Social Security homepage.",
+          "whatTheAgentLoses": "You lose the immediate visual confirmation that your account preferences were saved correctly before entering the main portal."
+         },
+         {
+          "question": "How do you want to receive notices from Social Security?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "You must choose whether to receive only secure online notices or both paper and online notices before saving and continuing.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether you receive important physical mail or only digital communications from Social Security."
+         },
+         {
+          "question": "What email address and preferred notification method do you want to use?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to enter a primary email address and select from options like email, text message, or postal mail for receiving claim updates.",
+          "whatTheAgentLoses": "You lose the ability to ensure important government notices are sent to the communication channel you check most frequently."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Request a backdate",
+      "questions": [
+       {
+        "question": "Do you want to backdate this claim, and if so, to what date and for what reason?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system requires a specific effective date and a written explanation if you choose to backdate your unemployment claim.",
+        "whatTheAgentLoses": "The user loses the ability to provide their specific personal justification for the delayed filing, which is required to process the backdate request."
+       },
+       {
+        "question": "Did the application let you proceed to the next screen without filling in the required reason for backdating?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system advanced to the Employer screen even though the field marked with an asterisk for backdating the claim was left blank.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure their application is fully complete, risking a delay or denial if the agency later flags the missing explanation."
+       }
+      ]
+     },
+     {
+      "id": "3.10",
+      "label": "Upload the documents",
+      "questions": [
+       {
+        "question": "Which of the suggested documents do you want to upload now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists suggested documents like proof of income that you can upload now, though it notes you can still submit the application without them.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to gather and provide these documents immediately or wait for the eligibility worker to require them."
+       },
+       {
+        "question": "Do you want to upload your proof of income now or skip this step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to upload proof of income, but you have the option to bypass this step and submit the application if your documents are not ready.",
+        "whatTheAgentLoses": "The agent might skip the document upload to finish the application quickly, which could delay your benefit processing if you actually had the files ready."
+       },
+       {
+        "question": "Did the system reject your document upload due to a file size or format error, allowing you to proceed but guaranteeing a manual review delay?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "State portals often have archaic file constraints (e.g., 2MB PDF only). If an upload fails, the system may still let you click 'Next', but your claim will be delayed for missing evidence.",
+        "whatTheAgentLoses": "The user loses the awareness that their critical proof of income or ID was never actually attached, leading to a surprise denial or weeks of delay."
+       },
+       {
+        "question": "Does the visual thumbnail preview of the uploaded document show that the image is legible and not cut off?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "After selecting a file, the portal usually displays a small visual preview to confirm what was attached before you submit the form.",
+        "whatTheAgentLoses": "The agent might attach a file, but without seeing the visual preview, the user cannot verify if the image is blurry, cropped, or the wrong document entirely, which would lead to a rejected claim."
+       },
+       {
+        "question": "Which specific employment documents, such as recent pay stubs or a separation letter, is the portal asking you to upload to prove your claim?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Depending on your specific answers about your separation reason or income, the agency often requires the immediate upload of supporting evidence like a layoff notice to process the claim.",
+        "whatTheAgentLoses": "The agent cannot physically dig through your personal files to find and scan your paper pay stubs, forcing you to step in and provide the correct digital documents."
+       },
+       {
+        "question": "Did the portal display a success icon or thumbnail confirming the document was fully uploaded?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The only way to know a file attached correctly before submitting is often a visual indicator like a green checkmark, a completed progress bar, or a small preview image.",
+        "whatTheAgentLoses": "The agent might click 'next' without verifying the visual success state, potentially submitting a blank or corrupted file that will cause the claim to be delayed or denied."
+       },
+       {
+        "question": "Should you upload more documents or proceed with submitting your application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen warns that you are about to submit and recommends uploading as many documents as possible beforehand.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if providing additional optional documents might strengthen or speed up your specific claim."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Certify a claim week",
+    "note": "4.1, then 4.2 and 4.3 as the portal interposes them. 4.4, with 4.5 where a No on earnings spawns it; 4.6 as the state requires. repeat 4.4 to 4.6 once per claim week in the session - lVpW and urAf each run two. 4.7 rides on the final week only. 6 closes it.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Find the week to certify",
+      "questions": [
+       {
+        "question": "Are there weeks available to certify for benefits, and what is the deadline?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard notification indicates you have weeks available to certify and warns that missing the specified deadline could affect your eligibility.",
+        "whatTheAgentLoses": "You lose direct visibility into your current claim balance and the exact deadline required to keep your benefits active."
+       },
+       {
+        "question": "Should you read the detailed eligibility text before clicking the 'Certify for Benefits' button?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays detailed eligibility information below the notification box that could contain important requirements or updates for your claim.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the specific eligibility criteria presented on the screen before initiating the certification process."
+       },
+       {
+        "question": "Is my claim active, and which specific week is currently awaiting certification?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming your active status and the exact week awaiting certification ensures you are filing for the correct benefit period.",
+        "whatTheAgentLoses": "You lose direct visibility into how many benefit weeks you have remaining and the current standing of your claim."
+       },
+       {
+        "question": "Do you need to file a new weekly certification to continue your claim?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your previously submitted weeks as 'In Progress' and provides a button to file for the next week to maintain your benefits.",
+        "whatTheAgentLoses": "You lose the chance to personally review the status of your recent payouts before initiating the next weekly claim."
+       },
+       {
+        "question": "Which specific time period am I answering these certification questions for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a slight date discrepancy between the week header and the instruction text, so you must confirm the exact dates you are certifying for before answering.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the exact dates of the certification week and catch the minor date discrepancy on the form."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Acknowledge the rules",
+      "questions": [
+       {
+        "question": "Do you understand the weekly certification rules and want to proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that unemployment payments are based on a Sunday through Saturday period and require a weekly certification to receive benefits.",
+        "whatTheAgentLoses": "Delegating this step means you miss reviewing the specific rules and timeframes required to maintain your unemployment benefits."
+       },
+       {
+        "question": "What fraud rules must I acknowledge to proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must check the box to confirm you understand the penalties for fraud, such as failing to report new earnings, before you can continue.",
+        "whatTheAgentLoses": "You lose the chance to personally review the specific legal obligations and fraud penalties you are being held accountable for."
+       },
+       {
+        "question": "Should you read the payment processing details before clicking continue?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page contains important details about direct deposit and processing times, such as a five-day wait, that affect how and when you receive your benefits.",
+        "whatTheAgentLoses": "You lose the opportunity to understand the timeline for receiving your funds and the rules for updating your banking information."
+       },
+       {
+        "question": "Do you have the required information ready to complete your weekly certification?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the 'What You Will Need' and 'Important To Know' sections ensures you have the correct details ready before starting the questionnaire.",
+        "whatTheAgentLoses": "You miss reading the specific requirements and important rules that govern your weekly claim."
+       },
+       {
+        "question": "Are you filing this certification within the strict Sunday to Saturday timeframe required by the guidelines?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The guidelines explicitly state that weekly claim certifications must be filed between 12:01 am Sunday and 11:59 pm on Saturday to be accepted.",
+        "whatTheAgentLoses": "The user loses the awareness of the strict weekly filing window, which could result in them missing the deadline and losing their benefits for that week if the agent delays the submission."
+       },
+       {
+        "question": "Do you understand that you must report new earnings for the week you start work, regardless of whether you have actually been paid yet?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The fraud rules explicitly state that earnings must be reported based on when the work was performed, not when the paycheck is received, which is a common point of confusion that leads to overpayments.",
+        "whatTheAgentLoses": "The user misses this critical distinction about the timing of income reporting, risking accidental fraud if they wait until their first paycheck arrives to report the earnings."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Confirm the contact information",
+      "questions": [
+       {
+        "question": "Is your contact information correct, or do you need to update it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that you must keep your contact information current, requiring you to verify the displayed address, phone, and email before continuing.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agency has your most up-to-date address and phone number for critical benefit communications."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Answer the week's questions",
+      "questions": [
+       {
+        "question": "Were you too sick or injured to work for reasons other than COVID-19?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to declare if a non-COVID illness or injury prevented you from working in order to determine your ongoing eligibility for benefits.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to accurately and truthfully report your specific health status and availability for work during the claim period."
+       },
+       {
+        "question": "Was there any other reason preventing you from working full-time?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This question determines your ongoing eligibility by confirming you were available to accept full-time work during the certification period.",
+        "whatTheAgentLoses": "Delegating this step means you risk an agent incorrectly reporting your personal availability, which could lead to denied benefits or fraud penalties."
+       },
+       {
+        "question": "Did you look for work or attempt to resume self-employment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to declare whether you actively sought employment or tried to resume self-employment to maintain your benefit eligibility.",
+        "whatTheAgentLoses": "You lose the ability to accurately attest to your specific job search or self-employment efforts for that certification period."
+       },
+       {
+        "question": "Did you indicate whether you refused any work?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to state if you turned down any job offers to verify your continued eligibility for benefits.",
+        "whatTheAgentLoses": "An agent might answer this incorrectly, which could either jeopardize your benefits or constitute fraud."
+       },
+       {
+        "question": "Did you receive disability, private income insurance, or supplemental unemployment benefits?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to declare if you received specific types of supplemental income or disability benefits to accurately calculate your eligibility.",
+        "whatTheAgentLoses": "You lose the ability to personally verify your supplemental income status, which could lead to inaccurate reporting and potential benefit denial or fraud flags."
+       },
+       {
+        "question": "Did you work or earn any money during this week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Accurately reporting any work or earnings during the certification week ensures your benefits are calculated correctly and prevents future tax liabilities.",
+        "whatTheAgentLoses": "Delegating this means an agent might incorrectly report your weekly earnings, potentially causing benefit overpayments or legal penalties."
+       },
+       {
+        "question": "Which COVID-19 related reason best describes why you are unemployed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify the exact COVID-19 related circumstance that caused your unemployment, such as your workplace closing, to determine your eligibility.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select an inaccurate reason for your job loss, which could result in a denied claim or penalties for providing false information."
+       },
+       {
+        "question": "Are you ready to submit your answers for Week 1 and proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking next commits your responses for the first week's certification, which directly impacts your benefit eligibility for that period.",
+        "whatTheAgentLoses": "You lose the opportunity to verify the accuracy of your weekly income and work search activities before moving forward."
+       },
+       {
+        "question": "How should I answer the weekly certification questions about my availability, work search, and earnings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Accurately answering these specific questions about sickness, work search, and earnings is required to determine your continued eligibility for weekly benefits.",
+        "whatTheAgentLoses": "Delegating this step means the agent might incorrectly report your personal work search efforts or earnings for the week, potentially risking your benefits or triggering fraud flags."
+       },
+       {
+        "question": "Are the pre-filled answers to the weekly eligibility questions correct for your situation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must verify that the answers regarding whether you worked, refused work, or received a pension during the specified week are accurate before proceeding.",
+        "whatTheAgentLoses": "You lose the chance to personally verify your weekly activities and income, risking an inaccurate claim being submitted on your behalf."
+       },
+       {
+        "question": "Which option matches the number of hours you worked during the specified week?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because you must accurately select the range of hours you worked from the dropdown to determine your benefit eligibility for that specific week.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify their exact work hours, risking incorrect benefit calculations or potential fraud flags if the agent reports inaccurate information."
+       },
+       {
+        "question": "Did you earn more than $504, including self-employment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must accurately report if your earnings exceeded the $504 threshold by selecting Yes, No, or NA to ensure your claim is processed correctly.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify their exact income status against the specific $504 threshold, risking incorrect benefit calculations or compliance issues."
+       },
+       {
+        "question": "How many days were you not ready, willing, and able to work?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines your continued eligibility for unemployment benefits, as you must accurately report any days you were unavailable to accept employment.",
+        "whatTheAgentLoses": "You lose the ability to truthfully report your exact personal availability for that week, risking benefit denial or fraud penalties if the agent answers incorrectly."
+       },
+       {
+        "question": "How many days of sick leave or other paid leave did you receive during this claim week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to select the exact number of paid leave days received from a dropdown menu to accurately process your claim.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure your paid leave is reported accurately, which could result in incorrect benefit payments or compliance issues."
+       },
+       {
+        "question": "How should I answer the Disaster Unemployment Assistance certification questions for this specific week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to answer six eligibility questions for the week of June 21 to June 27 to determine your continued qualification for disaster unemployment assistance.",
+        "whatTheAgentLoses": "You lose the ability to accurately report your specific circumstances for that week, which could result in denied benefits or penalties for incorrect information."
+       },
+       {
+        "question": "Have you answered all required questions to proceed to the next step?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Leaving any mandatory radio buttons blank will trigger an error and prevent you from advancing to the work search record.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that your specific answers accurately reflect your situation for the certification week."
+       },
+       {
+        "question": "Did you intend to return to work at your attached employer during the specified week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to confirm whether you intended to return to work at your listed employer during the specified week to determine your ongoing eligibility.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly report your intent to return to work, potentially jeopardizing your unemployment benefits."
+       },
+       {
+        "question": "Were you ready, willing, and able to work during the specified week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because you must accurately report your availability to work for the week of November 30 to December 6, 2025, to maintain your eligibility for unemployment benefits.",
+        "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to truthfully attest to your actual work availability for that specific week, which could result in fraudulent claims or denied benefits."
+       },
+       {
+        "question": "Did you begin receiving employer-paid pension or retirement payments during the specified week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system needs to know if you started receiving a 100% employer-paid pension or retirement fund during the certification week to accurately determine your ongoing eligibility.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly report your recent pension or retirement income, which could lead to improper benefit payments or fraud charges."
+       },
+       {
+        "question": "Were you an inmate in a correctional facility for three or more days during the specified week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This question determines your weekly benefit eligibility based on whether you were incarcerated for three or more days.",
+        "whatTheAgentLoses": "Delegating this step means the agent might incorrectly report your incarceration status, which could lead to denied claims or fraud penalties."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Answer the clarification page",
+      "questions": [
+       {
+        "question": "Did you receive any of the listed types of alternative income during this week?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to clarify if you received alternative income like a pension, vacation pay, or bonus during the specified week to ensure accurate benefit calculation.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly report your alternative income sources, potentially leading to a fraudulent claim or denied benefits."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Prove the work search",
+      "note": "the state sets the shape: 4.6.1 where the rules need reading; repeat 4.6.2 until the quota holds (iVa7 needs three that count, 2mL- three when the activities are applications); 4.6.3 where the log arrives pre-filled; 4.6.4 where the page invites its own bypassing. absent entirely for some claim types - Jt5q answers a question instead, and xoKC has no log step yet certifies work-search activities at 6.4.",
+      "questions": [
+       {
+        "question": "Do you need to add more job contacts to meet the weekly minimum?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that you must report at least three job contacts per week or your unemployment benefit payment may be denied.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to accurately report your specific job search efforts to ensure your benefits are approved."
+       }
+      ],
+      "children": [
+       {
+        "id": "4.6.1",
+        "label": "Learn what counts",
+        "questions": [
+         {
+          "question": "Do you need to review the help text to understand what qualifies as looking for work?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'UI Online Help' window provides specific definitions for what counts as looking for work, ensuring you answer the eligibility question accurately.",
+          "whatTheAgentLoses": "You lose the chance to personally review the agency's specific definitions to ensure your recent activities actually qualify."
+         },
+         {
+          "question": "Why does my second job search entry show a red X under 'Contacted Employer'?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": true,
+          "why": "The screen shows a red X because simply viewing a job without actually contacting the employer does not satisfy the active work search requirement.",
+          "whatTheAgentLoses": "You lose the direct feedback on why a specific job search activity was rejected, which is crucial for adjusting your habits to maintain benefit eligibility."
+         }
+        ]
+       },
+       {
+        "id": "4.6.2",
+        "label": "Log a work-search contact",
+        "questions": [
+         {
+          "question": "What details will you provide for the contact person?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form asks for a contact title, first name, and last name, while leaving the phone, email, and website fields optional.",
+          "whatTheAgentLoses": "The user loses the ability to choose who is listed as the contact and whether to share optional communication methods."
+         },
+         {
+          "question": "What was the title of the job you applied for?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The system requires you to select a job title from its standardized dropdown list to properly categorize and record your offline job application.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to ensure the auto-populated occupation title accurately reflects the specific role you actually applied for."
+         },
+         {
+          "question": "What are the application details for this job contact?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to specify your interest level, whether you contacted the employer, the date, and the contact method to log your work search activity.",
+          "whatTheAgentLoses": "You lose the ability to accurately report the specific dates and methods of your personal job search efforts."
+         },
+         {
+          "question": "How do you record a job you looked at but didn't apply to?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting 'Not Interested' and 'No' for contacting the employer while leaving the employer name blank demonstrates how to document a job lead you viewed but did not pursue.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to choose which specific unpursued job leads are logged to satisfy your weekly work search requirements."
+         }
+        ]
+       },
+       {
+        "id": "4.6.3",
+        "label": "Review the pre-filled log",
+        "questions": [
+         {
+          "question": "Are your logged work search methods valid despite the warning to only use the Reemployment Exchange?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "An on-screen caption explicitly requires using the Reemployment Exchange, but the system's log shows that 'In Person' and 'EMail' contacts were accepted.",
+          "whatTheAgentLoses": "The user loses the opportunity to clarify if their alternative work search methods will ultimately be rejected and cause a claim denial despite appearing accepted in the log."
+         }
+        ]
+       },
+       {
+        "id": "4.6.4",
+        "label": "Bypass the work-search page",
+        "questions": [
+         {
+          "question": "Do you need to provide work search details for this week?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides an option to bypass the work search entry by clicking 'Next', which is important to notice if your specific employment status exempts you from this requirement.",
+          "whatTheAgentLoses": "Delegating this step means an agent might incorrectly skip or fabricate work search records without knowing your actual exemption status or weekly activities."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Set the final-week options",
+      "questions": [
+       {
+        "question": "Do you want to withhold taxes from this week's payment or update your contact information?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The weekly certification form includes optional questions asking if you want federal taxes withheld from your payment or if you need to update your mailing address.",
+        "whatTheAgentLoses": "Delegating this step means you lose direct control over your tax withholding preferences and the opportunity to ensure your contact details are current."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Reopen the claim",
+    "note": "5.1 - an expired claim exits to a new application through 3, and employer-issued claim forms exit to the phone. then 5.2, 5.3, 5.4; 6 closes it. 4 stays blocked until the request processes.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the claim status and choose the path",
+      "questions": [
+       {
+        "question": "Do I need to reopen my claim based on my current notifications?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a notification that you haven't certified recently and must click the button to reopen your claim.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the specific reason your claim was paused and the special instructions regarding employer or union claim forms."
+       },
+       {
+        "question": "Has your claim expired, requiring you to file a new claim instead of reopening the old one?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard notification explicitly states the claim has expired, which changes the required action from simply certifying or reopening to filing a completely new claim.",
+        "whatTheAgentLoses": "An agent might try to certify for weeks on an expired claim, wasting time or causing confusion, instead of realizing a new application is required."
+       },
+       {
+        "question": "Did your employer or union issue you one of the listed unemployment insurance claim forms?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines if you can proceed online, as having one of these specific forms requires you to contact the EDD directly to reopen your claim.",
+        "whatTheAgentLoses": "You lose the ability to accurately report whether you received these specific documents, which dictates if your claim must be handled over the phone instead of online."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Verify the contact details"
+     },
+     {
+      "id": "5.3",
+      "label": "Answer the reopen questions",
+      "questions": [
+       {
+        "question": "How should you answer the eligibility questions regarding other income and specific employment situations?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to declare any expected Workers' Compensation or other employer income and clarify if your unemployment is due to a trade dispute to determine your benefit eligibility.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly report your other income sources or mischaracterize the exact reason for your unemployment, potentially jeopardizing your claim."
+       },
+       {
+        "question": "Should you save your application as a draft to finish later?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator explains that clicking the 'Save as Draft' button preserves your progress until Saturday at 11:59 pm PST if you need to step away to gather more information.",
+        "whatTheAgentLoses": "You lose the ability to decide when to pause the application and the awareness of the strict Saturday deadline to resume before your data is deleted."
+       },
+       {
+        "question": "Is a confirmation message visible indicating that the draft was saved?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The narrator mentions saving progress, but the video skips directly to a login screen without showing the button being clicked or a success message.",
+        "whatTheAgentLoses": "The user loses the certainty that their application progress was actually saved before the session was interrupted."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Identify the last employer from the records",
+      "questions": [
+       {
+        "question": "Which employer from the provided list should I select as my last employer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The agency requires you to accurately identify the very last employer you performed work for, regardless of whether the job was full-time, part-time, or temporary.",
+        "whatTheAgentLoses": "You lose the ability to ensure the exact final employer is selected, which is critical if you recently juggled multiple temporary or part-time jobs that an agent might confuse."
+       },
+       {
+        "question": "What should you do if your last employer is not in the list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a specific checkbox to indicate your employer is missing so you can proceed with the application.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a similarly named but incorrect employer instead of properly flagging yours as unlisted."
+       },
+       {
+        "question": "What is your last employer's state ID number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system requires the 8-digit state ID number from box 15 of your W-2 to search for and link your last employer to your claim.",
+        "whatTheAgentLoses": "You lose the ability to directly provide the exact state ID number from your personal W-2, which ensures the correct employer is linked to your claim."
+       },
+       {
+        "question": "Are the Last Employer Details entered?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The tutorial states that information will be entered on the Last Employer Details page, but the footage cuts directly to the Review and Submit page.",
+        "whatTheAgentLoses": "The user loses the ability to see exactly which fields are required for the employer details and how to fill them out correctly."
+       },
+       {
+        "question": "Have you listed your absolute most recent employer, even if you only worked there for a very short period?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The form explicitly requires the name of the employer you worked for most recently 'regardless of the length of time'.",
+        "whatTheAgentLoses": "An agent might omit a job that lasted only a few days, assuming it is irrelevant, which would violate the instructions and potentially invalidate the claim."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Attest and submit",
+    "note": "6.1 with 6.2 against it, then 6.3, 6.4, 6.5 - the states vary the signature, never the order. entered from 3, 4, or 5. five keepers stop at or inside this goal: Or9Z, a0_z, and urAf end before 6.5, q2an never reaches it, and 802J presses it with the result unshown.",
+    "questions": [
+     {
+      "question": "Are your claim summary answers correct, and do you agree to the legal certification terms under penalty of perjury?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "This matters because the screen requires you to review your eligibility and income summaries and legally certify that the information is correct.",
+      "whatTheAgentLoses": "You lose the chance to personally verify the accuracy of your claim details before legally binding yourself to the certification terms."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Review the summary",
+      "questions": [
+       {
+        "question": "Are my answers to these four questions correct so I can continue?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the completed form ensures that the provided information is accurate before moving to the next step of the application.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify the accuracy of their answers before the agent submits the page."
+       },
+       {
+        "question": "Is all the information on this application summary correct before you submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary page displays all your entered details so you can catch and fix any errors before finalizing the unemployment claim.",
+        "whatTheAgentLoses": "You lose the chance to personally verify your employment and personal details, risking a delayed or denied claim if the agent made a mistake."
+       },
+       {
+        "question": "Are all my answers for both certification weeks correct before I submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary table displays your Yes or No answers for both weeks side-by-side, allowing you to catch any errors before finalizing the certification.",
+        "whatTheAgentLoses": "You lose the final opportunity to personally verify that your specific circumstances were recorded accurately before the claim is officially submitted."
+       },
+       {
+        "question": "Are you ready to proceed to the final review and submit section?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen indicates you have completed the previous sections and offers the choice to save and exit or start the final review.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to pause your application or proceed immediately to the final review."
+       },
+       {
+        "question": "Are all your provided answers correct and ready for final certification?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a summary of your responses regarding your address and job offers, requiring you to verify their accuracy before officially certifying the claim.",
+        "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to personally verify that your legal declarations about your employment and address are completely accurate before submission."
+       },
+       {
+        "question": "How do you safely return to a previous section to fix a mistake you spotted on the summary page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "If you find an error in your previous answers, you must find the portal's internal 'Edit' buttons rather than using the browser's back button, which often clears the entire form.",
+        "whatTheAgentLoses": "The user loses the ability to safely correct their own earlier mistake without risking the destruction of their current session state."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Check the answers against the earlier screens",
+      "questions": [
+       {
+        "question": "Do you notice that the date range in the instructions conflicts with the date range on the checkbox?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The page instructions ask for employment since 10/01/2018, but the checkbox for no employment only covers up to 09/30/2019, creating ambiguity about how to answer accurately.",
+        "whatTheAgentLoses": "An agent might check the box without realizing the date discrepancy, potentially submitting inaccurate information that could delay your benefits."
+       },
+       {
+        "question": "Did you enter the applicant's last name consistently across all sections?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the last name entered as 'Doe' initially but as 'Aldrin' in the employment section, which will likely trigger an identity verification failure.",
+        "whatTheAgentLoses": "The user loses the assurance that their application was submitted with matching personal details, risking a denial or delay in receiving benefits."
+       },
+       {
+        "question": "Do the gross wages and hours worked shown on the summary page accurately reflect your earnings?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary page displays $100.00 in gross wages for 10 hours worked, and verifying this implied $10.00 hourly rate ensures your benefits are calculated correctly.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to catch data-entry errors in your reported wages or hours that could result in claim denial or overpayment penalties."
+       },
+       {
+        "question": "Does the summary table include all the job contacts you listed on the previous screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary table dropped the 'Salad Chef' job contact that was just listed, meaning your work search record is now incomplete.",
+        "whatTheAgentLoses": "You lose the chance to catch a system error that omitted one of your job contacts, which could jeopardize your weekly benefit payment."
+       },
+       {
+        "question": "Are you comfortable with the review page translating your 'NA' response about earnings into a definitive 'no'?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The system summarizes your 'NA' selection as a definitive statement that you did not earn more than $504, which becomes a legally binding declaration upon submission.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch and correct how the system interprets an ambiguous 'NA' response into a definitive legal statement."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Acknowledge the legal terms"
+     },
+     {
+      "id": "6.4",
+      "label": "Sign electronically",
+      "questions": [
+       {
+        "question": "Do you agree to the certification terms and confirm your information is true?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to legally certify that you are unemployed and that your application details are correct under penalty of law.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally attest to the accuracy of your claim, which carries legal penalties for false statements."
+       },
+       {
+        "question": "Am I ready to legally certify my answers and provide my ZIP code for the electronic signature?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to declare under penalty of perjury that your COVID-19 unemployment information is true and to enter your ZIP code to sign the form.",
+        "whatTheAgentLoses": "You lose the opportunity to personally attest to the truthfulness of your application under penalty of perjury."
+       },
+       {
+        "question": "What name should be entered to electronically sign the application?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The form requires the first and last name of the adult completing the application and a checked box to serve as a legally binding electronic signature.",
+        "whatTheAgentLoses": "The user loses the ability to personally provide their legally binding electronic signature to authorize the benefits application."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Submit",
+      "questions": [
+       {
+        "question": "Are you ready to finalize and submit your claim reopening request, or do you need to go back?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides options to submit the request, go back to previous screens to edit answers, save as a draft, or cancel entirely.",
+        "whatTheAgentLoses": "You lose the final opportunity to personally review your answers and decide whether to submit the claim or save it for later."
+       },
+       {
+        "question": "Are there any fields on the review screen highlighted in red indicating a silent validation error?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Sometimes submitting a form fails silently, simply returning to the review screen with the problematic fields outlined in red without a prominent error message at the top.",
+        "whatTheAgentLoses": "If the agent just says the page reloaded, the user won't know that a visual-only validation error is blocking the submission."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Verify and track the claim",
+    "note": "7.1 then 7.2 before leaving the page - one receipt is unrecoverable once closed (76Pa). 7.3 with 7.4 against it; 7.5 where messages sit unread; 7.6 to leave. 7.3 and 7.4 also open later sessions - certifiers read the same dashboard on the way in at 4.1.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Read the confirmation and next steps",
+      "questions": [
+       {
+        "question": "Is the submission confirmation visible?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The narrator instructs you to submit the application, but the video ends while still showing the submit button.",
+        "whatTheAgentLoses": "You lose the confirmation that the application was successfully received by the government agency."
+       },
+       {
+        "question": "Did my submission go through successfully, and what is my confirmation number?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The success message confirms your certification was received, and the confirmation number provides essential proof in case of future payment delays.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing the success message and the opportunity to personally record the confirmation number for your own records."
+       },
+       {
+        "question": "Does the final confirmation match the specific weeks you were initially prompted to certify?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the confirmation screen aligns with the initial dashboard notification ensures that the correct two-week period was successfully submitted.",
+        "whatTheAgentLoses": "Delegating this verification means you lose the direct reassurance of confirming that your specific benefit weeks were officially recorded by the system."
+       },
+       {
+        "question": "How do you return to the main dashboard?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen provides a specific 'Return' button to safely navigate back to the UI Online Home page.",
+        "whatTheAgentLoses": "The user loses the reassurance of manually navigating back to the home page to verify their dashboard reflects the newly reopened claim."
+       },
+       {
+        "question": "Was your weekly certification submitted successfully, and what is your expected payment status?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "This confirms your weekly certification was received and explains that you will not be paid because it is a waiting week.",
+        "whatTheAgentLoses": "You miss the direct notification that your payment is withheld due to a waiting week and the provided contact number for questions."
+       },
+       {
+        "question": "Has your weekly certification been successfully submitted, and what action will you take next?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen confirms that your weekly claim has been entered for processing and presents optional actions like setting up direct deposit or finding a job.",
+        "whatTheAgentLoses": "The user loses the chance to verify the confirmation details and decide whether to explore optional programs or simply exit."
+       },
+       {
+        "question": "Did the system crash or log you out after clicking submit without providing a confirmation number?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "State portals frequently crash under load at the moment of submission, leaving it ambiguous whether the claim was actually received.",
+        "whatTheAgentLoses": "If the agent encounters a crash, it might report failure when the claim succeeded, or report success when the claim was lost, leaving you unsure if you need to reapply."
+       },
+       {
+        "question": "What is the confirmation number and what are the specific next steps listed on the success screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The final screen provides a unique tracking number and instructions (like downloading a PDF or waiting for a letter) that are only shown once and cannot be easily retrieved if the page is closed.",
+        "whatTheAgentLoses": "If the agent closes the window without capturing this transient visual information, you lose your proof of application and the instructions on what to do next."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Save the proof",
+      "questions": [
+       {
+        "question": "Is my claim successfully reopened, and should I save a copy of the summary before leaving the page?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen verifies your unemployment claim is resumed and provides a summary link that must be saved now before it becomes inaccessible.",
+        "whatTheAgentLoses": "You lose the unrecoverable confirmation summary of your reopened claim if the agent fails to save or print a copy for your records."
+       },
+       {
+        "question": "How do you want to save your confirmation receipt?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen provides options to text, email, or download the confirmation receipt, which is essential for keeping a record of your application number and submission date.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally choose how and where to securely store your official application receipt."
+       },
+       {
+        "question": "Does the receipt popup display the correct application number and date?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Verifying the application number and timestamp on the receipt ensures you have accurate proof of your submission if issues arise later.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying your application number and saving the official receipt for your own records."
+       },
+       {
+        "question": "Should you print a record of your confirmation number before clicking finish?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen explicitly advises keeping a written record of the confirmation number as proof that the claim was received.",
+        "whatTheAgentLoses": "The user loses a physical or digital copy of their confirmation receipt if the agent skips the print step."
+       },
+       {
+        "question": "Do you want to save a printable view of your confirmation number or just return to the dashboard?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen provides a confirmation number for your successful submission and offers a printable view for your records.",
+        "whatTheAgentLoses": "You lose the chance to immediately print or save a personal copy of the confirmation receipt for your own records."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the claim status",
+      "questions": [
+       {
+        "question": "Are there any red warning icons or color-coded banners on the dashboard that indicate an urgent hold on your claim?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Dashboards use visual cues like red text or alert icons to immediately draw attention to critical issues, such as a pending identity verification or a missed deadline.",
+        "whatTheAgentLoses": "An agent might read the raw text of the dashboard without conveying the visual urgency of a red banner, causing the user to underestimate the severity of an account hold."
+       },
+       {
+        "question": "Has your request to reopen the claim been received, and when can you next certify for benefits?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The Notifications section confirms your request was received and provides the specific date you need to check back to certify for your next available weeks.",
+        "whatTheAgentLoses": "Delegating this step means you might miss the specific date you must return to certify for benefits or overlook important unread messages in your inbox."
+       },
+       {
+        "question": "What is the current processing status of your claim?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the status tracker confirms your claim was filed and shows it is currently awaiting an employer response.",
+        "whatTheAgentLoses": "You lose direct visibility into your claim's progress and the specific reason it is currently waiting for review."
+       },
+       {
+        "question": "Does the confirmation screen flag an 'issue on file' or 'adjudication' that requires you to schedule a mandatory fact-finding interview?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "A successful submission does not mean approval. If your answers triggered a flag (e.g., fired for cause), the claim goes to adjudication, requiring you to actively schedule or watch for a phone interview.",
+        "whatTheAgentLoses": "The user misses the critical warning that their claim is frozen and requires immediate offline preparation, risking a default denial if they miss the agency's call."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Check the numbers and statuses agree",
+      "questions": [
+       {
+        "question": "Do the occupations in your job search strategy match the job contacts you just entered?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system shows a strategy for 'Architects' with zero available jobs, which contradicts the 'Sales' roles you just entered for your weekly job contacts.",
+        "whatTheAgentLoses": "An agent might ignore this discrepancy and submit the certification, potentially triggering an audit or denial if the state requires you to search within your registered occupation."
+       },
+       {
+        "question": "Does the expected payout for the certified weeks correctly align with your remaining claim balance?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The dashboard showed a $3,600 balance and a $450 weekly benefit, meaning a two-week certification should result in a $900 payout and leave a $2,700 balance.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the system correctly calculated your expected payout and remaining benefit balance."
+       },
+       {
+        "question": "Does the 'What to Expect Next' screen agree with the previous screen about why you won't be paid?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The final screen states you may not be paid due to an 'active issue', contradicting the previous screen that said it was just a standard 'waiting week'.",
+        "whatTheAgentLoses": "An automated agent might miss this contradiction in the confirmation screens, leaving you unaware that there is an active issue holding up your benefits."
+       },
+       {
+        "question": "Does your total claim balance mathematically align with your weekly benefit amount?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the $6,939.00 claim balance is exactly 27 times the $257.00 weekly benefit amount confirms your remaining benefits are calculated correctly.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the state's math for your remaining financial safety net is accurate."
+       },
+       {
+        "question": "Did your remaining weeks balance update correctly after submitting the certification?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the dashboard updated from 10.00 to 9.00 weeks remaining confirms the system successfully processed the weekly claim.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the system correctly deducted the claimed week from your remaining benefits balance."
+       },
+       {
+        "question": "Do the different sections of the status page agree on whether your claim is under review?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The 'What to Expect Next' section states the claim is still under review, while the 'Claim Status' table directly below it says 'No', leaving the actual status unclear.",
+        "whatTheAgentLoses": "You lose the chance to notice this contradictory information and contact the agency to find out if your claim is actually being processed."
+       },
+       {
+        "question": "Does the total benefit paid align with the pending status of your recent weekly certifications?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming that the $0.00 total paid matches the 'In Progress' status of your recent weekly claims ensures that your payment records are accurate and no funds are missing.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the portal's overall payment totals correctly reflect the pending status of your recent weekly claims."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Read the agency messages",
+      "questions": [
+       {
+        "question": "Should you read your new messages now or proceed to your dashboard?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The popup alerts you to seven unread messages that might contain critical updates or requirements regarding your benefits.",
+        "whatTheAgentLoses": "You lose the opportunity to immediately review potentially urgent correspondence about your claim before taking further action."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Sign out",
+      "questions": [
+       {
+        "question": "How do I securely sign out of my account from the dashboard?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays sensitive links to your Social Security Statement and Benefit Verification Letter, making it important to know where the 'Sign Out' button is located to protect your personal information.",
+        "whatTheAgentLoses": "Delegating this step means you lose the peace of mind of personally verifying that your sensitive government benefits session has been securely closed."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Manage the benefit card",
+    "note": "8.1 once; then the hub - 8.2 to 8.4 in any order, 8.5 then 8.6 for a PIN change, each spoke returning to the dashboard. 8.7 whenever self-service dead-ends: the recovery channels are a phone line and an office, not a form.",
+    "questions": [
+     {
+      "question": "Which EBT card management feature do you want to access?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The EBT balances card presents options to view transaction history, view card details, or change your PIN, determining which specific management task you perform next.",
+      "whatTheAgentLoses": "Letting an agent choose means losing direct control over whether to review past spending, check card details, or update your security PIN."
+     },
+     {
+      "question": "Do you want to tap the notification to apply for LIHEAP Preseason since you qualify?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The dashboard explicitly notifies the user that they qualify for a specific seasonal energy assistance program and provides a direct link to apply.",
+      "whatTheAgentLoses": "An agent focused only on checking EBT balances might ignore this targeted notification, causing the user to miss out on additional energy assistance benefits they are eligible for."
+     }
+    ],
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Link the card account",
+      "questions": [
+       {
+        "question": "Should you sign in with your existing EBT account or create a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to either enter your existing username and password to sign in or use the link at the bottom to create a new account.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose the choice of whether to connect your existing EBT account or create a new profile."
+       },
+       {
+        "question": "Do you need to complete the account creation form right now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an account creation form requesting sensitive details like your Social Security Number and card number, forcing a choice between submitting real data or bypassing the step.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to actually provide sensitive personal information to create an account or simply skip the step."
+       },
+       {
+        "question": "Do you consent to having your information communicated between servers to log in?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Leaving the data sharing consent box unchecked keeps the 'SIGN IN' button disabled, preventing you from accessing your account.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether they are comfortable with their personal data being shared across servers."
+       },
+       {
+        "question": "Are my EBT login credentials correct, and do I consent to connecting my account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must provide your correct username and password and check the box to allow information sharing between servers to link your EBT account.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally handle your sensitive EBT login credentials and explicitly consent to the data sharing."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Check the balances",
+      "questions": [
+       {
+        "question": "What are my current EBT balances, and should I refresh the screen to get the most up-to-date amounts?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a specific 'Last updated' timestamp alongside your SNAP and cash balances, indicating that you may need to tap the refresh icon to fetch real-time data.",
+        "whatTheAgentLoses": "The user loses direct, real-time visibility into their exact available funds and the reassurance of manually verifying the most current balance."
+       },
+       {
+        "question": "Does the EBT card's 'Last updated' timestamp update correctly after you change your PIN?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The timestamp on the dashboard jumps backward from 3:42 AM to 3:11 AM after the PIN change, suggesting a caching issue or system glitch.",
+        "whatTheAgentLoses": "You lose the opportunity to notice portal inconsistencies that might indicate your account changes were not properly recorded."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Review the transactions",
+      "questions": [
+       {
+        "question": "Do you want to view all recent EBT transactions combined, or filter them by a specific benefit like SNAP?",
+        "cluster": "select",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen currently displays a mixed list of both SNAP and Cash transactions, so you must decide if you need to isolate the spending history for just one program.",
+        "whatTheAgentLoses": "Delegating this review means you lose firsthand awareness of exactly where, when, and how your specific benefit funds are being spent."
+       },
+       {
+        "question": "Are the transactions listed under the correct month headers in your history?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The transaction history displays identical November 2021 transactions under both the April 2022 and March 2022 headers, indicating a potential system error.",
+        "whatTheAgentLoses": "The user loses the opportunity to spot obvious discrepancies in the portal's records that might require contacting the agency to resolve."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "View the virtual card"
+     },
+     {
+      "id": "8.5",
+      "label": "Pass the card security check",
+      "questions": [
+       {
+        "question": "What information will you provide to verify your account and change your PIN?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires your EBT card number, date of birth, and the last four digits of your SSN to securely verify your identity before allowing a PIN change.",
+        "whatTheAgentLoses": "The user loses privacy and control over highly sensitive credentials, including their EBT card number and partial Social Security Number."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Set the new PIN",
+      "questions": [
+       {
+        "question": "What are my current and desired new PINs?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must enter your current PIN and confirm a new one to activate the grayed-out 'CHANGE PIN' button.",
+        "whatTheAgentLoses": "Letting an agent choose your new PIN compromises the security and exclusive control of your government benefits account."
+       },
+       {
+        "question": "Was my PIN successfully updated, and how do I return to the dashboard?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Success!' message with a green checkmark confirming the PIN change and provides a 'Back to Dashboard' button to resume navigating the portal.",
+        "whatTheAgentLoses": "Delegating this step means you miss the direct visual confirmation that your new security credentials have been successfully registered."
+       },
+       {
+        "question": "Does the app correctly return to the main dashboard showing your current balances?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Confirming the dashboard loads correctly ensures you can see your updated SNAP and cash balances along with any pending account reminders.",
+        "whatTheAgentLoses": "Delegating this step means you miss the immediate reassurance of seeing your current benefit balances and account reminders firsthand."
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Find the offline recovery path",
+      "questions": [
+       {
+        "question": "What should you do if you need to verify your account but don't have a Social Security Number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The PIN reset screen requires the last four digits of your SSN to verify your identity, but offers a 'No SSN?' link for alternative instructions.",
+        "whatTheAgentLoses": "You lose the ability to directly manage how your identity is verified if you lack a standard Social Security Number."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

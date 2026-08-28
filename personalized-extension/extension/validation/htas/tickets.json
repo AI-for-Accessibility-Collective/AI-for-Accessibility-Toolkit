@@ -1,0 +1,1744 @@
+{
+ "task": "buy event tickets online (Ticketmaster, StubHub, AXS): find the event, pick seats or a price tier from the seat map, face the fees at checkout, pay; complete when the order confirmation with the tickets is on screen. Buying resale tickets is still buying a ticket and belongs; the frozen definition names primary-vs-resale explicitly. Surface pinned: a ticketing website or app. Variants: selling or listing tickets, transferring tickets to a friend, and scanning in at the venue do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Buy tickets to an event",
+  "note": "do 1 - 1.5 to 1.9 run days early as deliberate prep (fP0i, KGT_), are skipped by guests (gZ7o, BWes), and are forced open mid-task when 5.12 fires signed out (3nAn, mmjh). 2 then 3 only when the sale is a gated presale (gCYx, Yham, ubak); every other keeper goes straight to 4. repeat 4 until an on-sale event holds up - the not-yet-on-sale wall exits to a different event, not a later step (RakL, mmjh). then 5; 5.14 re-enters it when the seats vanish. 6 and 7 run under the hold; 7.5 can send the run back to 3's queue (Yham). 8 as far as the recording goes - fourteen of twenty stop before it.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get onto the platform",
+    "note": "1.1 to 1.3 when arriving from the open web; 1.4 where the storefront is regional. the account path is timing-flexible: 1.5 and 1.6 days ahead as prep (fP0i) or mid-purchase under the hold timer (3nAn); 1.7 to 1.9 on an existing account; 1.10 instead of all of it on guest platforms. 1.11 fires anywhere in the task.",
+    "questions": [
+     {
+      "question": "Should you sign in or register for an account now?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The top navigation bar displays a 'Sign In/Register' button, and logging in early ensures your tickets will be saved to the correct account.",
+      "whatTheAgentLoses": "The user loses control over which account is used, potentially scattering their ticket history or missing out on saved payment methods."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Reach the site from search",
+      "questions": [
+       {
+        "question": "Which search result should you click to reach the official StubHub website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple links including ads, making it important to identify the legitimate StubHub site to avoid scams.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the authenticity of the search result before navigating to the ticketing platform."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Check the site is official",
+      "questions": [
+       {
+        "question": "Are you on the correct, official ticketing website for your event?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Verifying the URL and homepage branding ensures you are using a legitimate platform rather than a scam site before searching for your event.",
+        "whatTheAgentLoses": "Delegating this step means trusting the agent to identify the official ticketing platform, risking exposure to fraudulent or unauthorized third-party sellers."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Read the buyer guarantee",
+      "questions": [
+       {
+        "question": "How are you protected if the tickets turn out to be invalid?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The StubHub FanProtect Guarantee page explicitly states they will provide comparable replacement tickets or a refund if the tickets are not valid for entry.",
+        "whatTheAgentLoses": "You lose the personal reassurance of reading the exact terms of the buyer protection policy before committing your money."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Set the site region"
+     },
+     {
+      "id": "1.5",
+      "label": "Create the account",
+      "questions": [
+       {
+        "question": "Which email address should you use to sign in or register?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The welcome screen requires an email address to proceed, and choosing one linked to a fan club might be necessary for presale access.",
+        "whatTheAgentLoses": "The user loses the opportunity to strategically use an email address tied to their existing fan memberships for exclusive ticket access."
+       },
+       {
+        "question": "What personal details and password should I use to create the account, and should I opt into marketing emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires specific password criteria, personal details, and a choice about receiving promotional messages to complete the signup.",
+        "whatTheAgentLoses": "Delegating this means the agent chooses your account credentials and decides whether to opt you into marketing communications."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Verify the email and phone",
+      "questions": [
+       {
+        "question": "Which phone number should I use to complete the required account verification?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen states that verifying both your email and phone number with a one-time code is required to keep the account secure.",
+        "whatTheAgentLoses": "The user loses the ability to link their own personal device to the account, which might be necessary to log in and retrieve the tickets later."
+       },
+       {
+        "question": "Are both your email and phone verified so you can confirm your account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows green checkmarks next to your email and phone, confirming the required verifications are complete before you click 'Done'.",
+        "whatTheAgentLoses": "You lose the ability to personally ensure that your own contact information is correctly linked and verified for ticket delivery."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "Are you currently logged into your account to proceed with the purchase?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing 'My Account' in the top right corner instead of 'Sign In/Register' confirms you are authenticated and can smoothly proceed through checkout.",
+        "whatTheAgentLoses": "You lose the direct visual reassurance that the tickets are being purchased under your personal account and will be accessible to you later."
+       },
+       {
+        "question": "How do you proceed when prompted to sign in with your Ticketmaster account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a mandatory 'SIGN IN WITH ticketmaster' button that must be clicked to authenticate and continue the checkout process.",
+        "whatTheAgentLoses": "You lose the ability to verify that the tickets are being securely linked to your preferred personal account."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Answer the sign-in extras",
+      "questions": [
+       {
+        "question": "Do you want to opt into marketing updates on the new sign-in screen?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents an optional 'Stay updated' checkbox for promotional emails and SMS alongside a mandatory acknowledgment of a new global identity sign-in.",
+        "whatTheAgentLoses": "The user loses control over their communication preferences and might receive unwanted marketing messages if the agent automatically opts them in."
+       },
+       {
+        "question": "Should I add a passkey to my account for faster and more secure logins?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The login screen offers the option to add or sign in with a passkey instead of using a traditional password.",
+        "whatTheAgentLoses": "The user loses control over their account's security settings and preferred authentication methods."
+       }
+      ]
+     },
+     {
+      "id": "1.9",
+      "label": "Complete the contact profile",
+      "questions": [
+       {
+        "question": "Which tab should you select to update your contact information before buying tickets?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile page displays multiple settings tabs, so you must specifically choose 'Additional Contact Details' to ensure the platform has the right information for order updates.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific backup emails or phone numbers are kept on file for your ticketing account."
+       },
+       {
+        "question": "What contact and delivery details do you need to verify for this order?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen states this personal information, including your nationality and address, is required to secure your shopping rights and ensure proper delivery or pickup of your tickets.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify that your tickets will be delivered to the correct address or registered under the right name for venue pickup."
+       },
+       {
+        "question": "Did the system successfully save your updated information?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The success popup confirms that your new contact details were accepted, ensuring your tickets and receipts will be sent to the right place.",
+        "whatTheAgentLoses": "You lose the peace of mind of seeing the explicit confirmation that your updated account details were successfully saved."
+       },
+       {
+        "question": "What contact details do you want to provide for ticket delivery, and do you want to opt into marketing emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout page requires your personal information and address for ticket delivery, and presents an optional checkbox for marketing communications.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which personal contact details are shared with the ticketing platform and whether to opt out of promotional emails."
+       },
+       {
+        "question": "Do you want to opt into marketing emails when agreeing to the terms of use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen requires agreeing to the terms of use to complete the purchase, but also includes a separate checkbox for receiving promotional offers.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might sign you up for unwanted promotional spam or skip marketing updates you actually wanted."
+       },
+       {
+        "question": "Do you want to save these preferences for future purchases?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents a prompt to save your checkout details, which determines if your data is kept on file for next time.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether their payment and personal information is permanently stored on the ticketing platform."
+       }
+      ]
+     },
+     {
+      "id": "1.10",
+      "label": "Continue as guest"
+     },
+     {
+      "id": "1.11",
+      "label": "Dismiss the interrupting popups",
+      "questions": [
+       {
+        "question": "Do you want to subscribe to email alerts for upcoming events?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A pop-up interrupted the event search to ask for an email address for future ticket alerts and offers.",
+        "whatTheAgentLoses": "You lose control over whether your email address is added to the ticketing platform's promotional mailing list."
+       },
+       {
+        "question": "Do you want to allow Ticketmaster to send you browser notifications?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A browser popup asked for permission to show notifications, which determines if the site can send you alerts outside of the active tab.",
+        "whatTheAgentLoses": "You lose control over your personal browser preferences regarding which websites are allowed to interrupt you with notifications."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Prepare for the presale",
+    "note": "2.1 first - it is what the presale application needs. 2.2 and 2.3 as the artist's scheme demands, weeks out; both are one-shot. 2.4 lands about an hour before the sale (gCYx). 2.5 any time before the drop.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Buy the fan membership",
+      "questions": [
+       {
+        "question": "Which membership tier do you want to purchase for presale access?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a $22 basic membership and a $150 merch pack option, requiring a choice between just getting presale access or paying extra for physical merchandise.",
+        "whatTheAgentLoses": "Delegating this means the agent might spend an extra $128 on merchandise you didn't want or buy the basic tier when you actually wanted the physical collectibles."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Apply for the presale",
+      "questions": [
+       {
+        "question": "Do you want to agree to the third-party data transfer to complete the presale application?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires checking boxes to share personal information internationally before applying for the presale.",
+        "whatTheAgentLoses": "The user loses the ability to withhold consent for their personal data being transferred outside their country."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Register as a verified fan",
+      "questions": [
+       {
+        "question": "What are the rules and dates to register for the Verified Fan presale?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The blog post outlines specific dates and steps for the Verified Fan presale that must be followed to successfully access the ticket sale.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the exact registration deadlines and membership requirements needed to secure your spot in the presale."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Receive the presale code"
+     },
+     {
+      "id": "2.5",
+      "label": "Plan the seats and backups"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Pass the sale gate",
+    "note": "3.1, then 3.2 until the site flips itself. 3.3 to 3.7 while the queue drains - 3.4 from the start when racing several dates (Yham, ubak), 3.6 when the capped counter is not enough (Yham), 3.7 to spend the wait (ubak). 3.8 is the system's move, not the user's; then 3.9. 7.5 re-enters here at the back of the line (Yham).",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Wait out the countdown",
+      "questions": [
+       {
+        "question": "How much time is left before the ticket sale starts?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a countdown timer showing exactly when the next sale begins, which dictates how long you must wait to enter the queue.",
+        "whatTheAgentLoses": "You lose the ability to decide whether waiting out the countdown is worth your time or if you should look for tickets elsewhere."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Hold in the waiting room",
+      "questions": [
+       {
+        "question": "Should you manually refresh the page as the countdown ends, or let it auto-refresh?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states the page will automatically refresh to move you into the queue, so a manual refresh might disrupt your entry.",
+        "whatTheAgentLoses": "The user misses the suspenseful thrill of watching the countdown hit zero and hoping for a favorable spot in the queue."
+       },
+       {
+        "question": "Did the waiting room automatically refresh to put you in the queue?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The waiting room screen explicitly stated it would automatically refresh when the sale began, so confirming the transition to the queue ensures the system worked correctly.",
+        "whatTheAgentLoses": "You lose the ability to personally monitor the screen refresh, leaving you unable to manually refresh or intervene immediately if the queue system glitches."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Read the queue rules",
+      "questions": [
+       {
+        "question": "How is your place in the ticket queue determined?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The popup explains that joining the waiting room before the sale starts grants a random spot, whereas joining late places you at the very end of the line.",
+        "whatTheAgentLoses": "You lose the transparency of knowing exactly how the queue system operates and the strategic understanding of when to join to maximize your chances."
+       },
+       {
+        "question": "Are you comfortable proceeding given the warnings about presale availability and resale markups?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a mandatory warning that ticket availability and pricing can change, and that resale tickets may exceed face value.",
+        "whatTheAgentLoses": "You lose the awareness that the tickets you are about to see might be dynamically priced or marked up by resellers."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Run parallel queues",
+      "questions": [
+       {
+        "question": "Should you close your extra tabs and devices as instructed to ensure a smooth purchase?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pop-up explicitly warns that using more than one device or tab per show could disrupt the purchase experience.",
+        "whatTheAgentLoses": "The user loses the strategic advantage of ignoring the warning to run multiple queues simultaneously, as an agent would likely comply and close the extra tabs."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Track the queue position",
+      "questions": [
+       {
+        "question": "Are you willing to wait in a queue of over 2000 people to access the ticket sale?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a confirmation that you are in a queue with 2000+ people ahead of you, meaning there will be a significant delay before you can even view available seats.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if the potentially massive wait time is worth it or if they should abandon the purchase."
+       },
+       {
+        "question": "Are you willing to wait in the virtual queue and keep your browser open?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a virtual queue with thousands of people ahead of you and specific instructions to stay signed in and keep the browser open.",
+        "whatTheAgentLoses": "You lose the ability to decide if the wait time is worth it and to monitor the queue's progress in real time."
+       },
+       {
+        "question": "How many people are ahead of you in the queue for each date?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing the exact numbers of 2199 and 2585 people ahead of you sets your expectations for the wait time and your chances of getting tickets.",
+        "whatTheAgentLoses": "You miss the relief and satisfaction of discovering your queue placement is significantly better than your usual experience."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Inspect the true position",
+      "questions": [
+       {
+        "question": "Do you realize the on-screen queue caps at 2000+ while the network data shows your exact place in line?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the network payload reveals there are exactly 3431 people ahead of you, which gives a much clearer picture of your wait time than the generic '2000+' UI message.",
+        "whatTheAgentLoses": "The user loses the ability to peek behind the interface to find their exact queue position and make an informed choice about whether to keep waiting."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Study the venue and prices",
+      "questions": [
+       {
+        "question": "What is the price range, and what membership number do you need ready to unlock access?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the expected price range and explicitly states that a 9-digit ARMY membership number is required to unlock ticket access.",
+        "whatTheAgentLoses": "Delegating this means you miss seeing the expected price range upfront and lose the prompt to gather your specific fan club credentials before the fast-paced sale begins."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Wait for the redirect",
+      "questions": [
+       {
+        "question": "Are you at the front of the queue and being redirected to pick your seats?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "This matters because the screen updates from asking for your patience to announcing 'It's Your Turn!', signaling that the wait is over and you must be ready to act.",
+        "whatTheAgentLoses": "The user misses the suspenseful experience of watching the queue progress and the immediate excitement of finally getting through to the seat map."
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Enter the presale code",
+      "questions": [
+       {
+        "question": "What is your presale passcode to unlock early access tickets?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for an offer passcode to unlock exclusive presale options like the BLINK Membership Early Bird Presale.",
+        "whatTheAgentLoses": "The person loses the opportunity to use their exclusive membership codes to access better seats before the general public."
+       },
+       {
+        "question": "What is your presale passcode, and which of the presale options should I leave checked?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an offer passcode to unlock early access to tickets and defaults to searching across three different membership and VIP presale options.",
+        "whatTheAgentLoses": "The user loses the chance to use their exclusive access code and control exactly which specialty seating packages are included in the search."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Find the event",
+    "note": "one of 4.1 to 4.3 raises candidates, with 4.4 as the pick - several keepers demo two entry paths to the same event on purpose (wqv4, VkCe). 4.5 rides alongside. 4.6 on any event whose sale has not opened - its exits are wait or a different event (RakL, mmjh). then 4.7, with 4.8 against it; 4.9 and 4.10 where the venue or a partner site interposes.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Browse the categories",
+      "questions": [
+       {
+        "question": "Which sport do you want to see events for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sport filter dropdown lists various options like Baseball, Basketball, and Soccer to help narrow down the available events.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides which type of sporting event you will attend, potentially picking a sport you have no interest in."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Search by name",
+      "questions": [
+       {
+        "question": "Which search suggestion matches the team you want to see?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown shows several Los Angeles sports teams and parking passes, so you must select the exact team you intend to see.",
+        "whatTheAgentLoses": "You lose the chance to clarify exactly which local team or specific event type, such as a game versus a parking pass, you actually meant to select."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Pick a featured event"
+     },
+     {
+      "id": "4.4",
+      "label": "Pick from the results",
+      "questions": [
+       {
+        "question": "Which event do you want to buy tickets for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple upcoming concerts like Calum Scott and I POP U [address], so you must select the specific show you want to attend.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a concert you have no interest in attending."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Set the discovery filters",
+      "questions": [
+       {
+        "question": "Should you filter the events by date?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a date filter dropdown with options like 'This Weekend' or a custom 'Date Range' to help narrow down the search results.",
+        "whatTheAgentLoses": "Delegating this means the agent might not know your exact availability and could struggle to narrow down a large list of upcoming events."
+       },
+       {
+        "question": "Should you apply date and location filters, or just search using a broad keyword?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar accepts broad terms like genres, but skipping the available date and city filters can leave you sifting through irrelevant results.",
+        "whatTheAgentLoses": "Delegating this step means you give up control over how strictly the search results are narrowed down by time and place."
+       },
+       {
+        "question": "Do you want to adjust the search radius to include events further from your location?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Select Your Distance' filter restricts search results to a specific radius, and expanding it might reveal more available dates or venues for the artist.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover and attend the event in a neighboring city if their local show is sold out or inconvenient."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Check the on-sale status",
+      "questions": [
+       {
+        "question": "Can you proceed to seat selection, or is the event currently locked behind a presale?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'Presale is happening now! Public Onsale Starts TBA', meaning you cannot browse or purchase standard tickets without a valid code.",
+        "whatTheAgentLoses": "The user loses the opportunity to provide their specific presale code or decide to check a secondary market for available resale tickets."
+       },
+       {
+        "question": "Which presale or general sale should you prepare to join?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists a countdown timer alongside multiple upcoming presales and a general sale, so you need to determine the exact date and time you are eligible to buy tickets.",
+        "whatTheAgentLoses": "Delegating this means the agent might not know if you qualify for specific early access like a credit card presale, potentially causing you to miss out on the best seats."
+       },
+       {
+        "question": "Do you have the specific credit card required to access this presale?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that you must use the first six digits of an eligible Citi card as the access code and use that same card to complete the purchase.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize they are ineligible for this early access and need to plan for a different presale or the general public sale."
+       },
+       {
+        "question": "Do the countdown timers on the presale event cards align with the stated sale times?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Verifying the countdown timers against the stated sale times on the event cards ensures the ticketing system is displaying accurate availability.",
+        "whatTheAgentLoses": "You lose the opportunity to catch system glitches where the displayed countdown contradicts the actual sale time, potentially causing you to miss the ticket drop."
+       },
+       {
+        "question": "When do tickets go on sale, and do you meet the requirements for any of the presales?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a countdown to the next sale and specific credit card requirements for the Citi presale, which dictate when and how you can access the seat map.",
+        "whatTheAgentLoses": "Delegating this means the agent might fail to secure early access if it doesn't know you possess an eligible credit card for the presale."
+       },
+       {
+        "question": "Do you qualify for any of these presales, or do you want to wait for the general sale?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a countdown timer for the general sale and requires specific memberships or codes to buy tickets right now.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal credit card perks or fan club memberships to bypass the countdown and secure tickets early."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Pick the date and showtime",
+      "questions": [
+       {
+        "question": "Which event date do you want to attend?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a dropdown menu with available dates like '15 Nov 2026' for the 'wave to earth' concert that must be chosen before proceeding to the seat map.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a date that conflicts with your schedule."
+       },
+       {
+        "question": "Which game date and starting price best fits your schedule and budget?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple upcoming games with different dates, times, and starting prices, requiring you to choose the exact event you want to attend.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between different game dates, times, and their respective starting prices."
+       },
+       {
+        "question": "Did you notice the date discrepancy between the event labeled 'TODAY' and the system clock?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The event list labels August 1st as 'TODAY', but the system clock shows February 8th, 2026, indicating a potential error in the site's data or a stale page.",
+        "whatTheAgentLoses": "The user loses the ability to catch obvious temporal inconsistencies that might lead to buying tickets for a past or incorrect date."
+       },
+       {
+        "question": "Are there any stadium promotions or theme nights that make one game date more appealing than another?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search results tag specific games with promotions like '1$ Hot Dog Night', adding extra value or a unique experience to that particular date.",
+        "whatTheAgentLoses": "The user loses the opportunity to select a game that includes a fun or money-saving stadium promotion because the agent only looked at the teams and times."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Confirm the exact event",
+      "questions": [
+       {
+        "question": "Is this the correct date and venue for the concert?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the specific tour date, city, and arena ensures you don't accidentally buy tickets for the wrong show.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to personally confirm that the selected concert date and location fit your schedule."
+       },
+       {
+        "question": "Does the event title or description indicate this is a tribute band or cover act rather than the original artist?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Tribute bands often play at similar venues and appear prominently in search results for the original artist, leading to accidental purchases if the event details aren't read carefully.",
+        "whatTheAgentLoses": "The user could end up paying hundreds of dollars to see a cover band instead of the actual famous artist they intended to see."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Read the venue rules",
+      "questions": [
+       {
+        "question": "Do the venue details and seating layout look good enough to proceed with this event?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the venue details and seat map tabs helps you decide if the location and layout meet your preferences before trying to buy tickets.",
+        "whatTheAgentLoses": "Delegating this means an agent might proceed with an event at a venue that doesn't suit your personal preferences."
+       },
+       {
+        "question": "Does the event page or important info popup state any age restrictions (e.g., 18+ or 21+) for entry?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many venues, such as clubs or casinos, strictly enforce age limits at the door, regardless of whether you hold a valid ticket.",
+        "whatTheAgentLoses": "The user wastes money on a ticket they cannot use because they will be denied entry at the venue for not meeting the age requirement."
+       },
+       {
+        "question": "Should you expand the important info banner to read the full venue rules before picking seats?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The banner truncated the venue's limited bag size policy, which could dictate what you are allowed to bring to the performance.",
+        "whatTheAgentLoses": "You lose the opportunity to learn about strict venue policies that might affect your attendance before committing to the tickets."
+       },
+       {
+        "question": "Do you need to buy more than four tickets and fill out the inquiry form, or should I just click continue?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a popup offering a special inquiry form and contact process for users interested in buying more than four tickets.",
+        "whatTheAgentLoses": "The user loses the opportunity to use the dedicated contact channel for large group purchases if they actually needed that many tickets."
+       },
+       {
+        "question": "Does the venue's specific age policy for children change how many tickets you need to buy?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The event information explicitly states that children age 1 and older must have a ticket to attend, overriding general assumptions about lap infants.",
+        "whatTheAgentLoses": "An agent might assume a young toddler can enter for free and buy too few tickets, resulting in a family member being denied entry at the door."
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Handle the partner handoff",
+      "questions": [
+       {
+        "question": "Do you want to select the Premium or Loge seating on this redirected site, or go back?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a redirect to Ticketweb with options for Premium Seating at $35 or Loge Seating at $25, requiring a choice to proceed or abandon the page.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose the choice of whether to trust the third-party redirect and which seating tier fits your preferences."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Choose the tickets",
+    "note": "5.1 and 5.2 shape the list, mostly by confirming defaults - every seat-map keeper ends at quantity 2 except 3nAn and 3MvM. 5.3 to 5.5 survey. then the platform, not the user, decides which of 5.7 to 5.10 takes the tickets: a chart pick, a listing row, a system-assigned seat, or a self-set price - 5.6 stacks on top where tickets are priced by attendee (BWes). 5.11 as offers land. 5.12 starts the hold - 5.13 gates it on the Philippine storefront - and 5.14 re-runs the take when the seats are gone first (Yham).",
+    "questions": [
+     {
+      "question": "Do you want to select specific seats from the map or let the system assign them?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen provides a 'SEAT MAP' tab, meaning you must decide whether to manually select your exact locations or let the platform assign them for you.",
+      "whatTheAgentLoses": "You lose the chance to visually evaluate the venue layout and hand-pick the exact vantage point you prefer."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Set the ticket quantity",
+      "questions": [
+       {
+        "question": "How many tickets do you need to purchase?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a ticket quantity dropdown that requires a selection to proceed with the order.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might buy the wrong number of tickets for your group."
+       },
+       {
+        "question": "Did the ticket quantity actually update when you clicked the plus or minus buttons?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user clicked the minus and plus buttons next to the ticket quantity, but the number remained stuck at 2, indicating the interface is unresponsive or the selection is locked.",
+        "whatTheAgentLoses": "The user loses the ability to notice that the interface is ignoring their inputs, potentially leading them to accidentally buy more or fewer tickets than they intended if they proceed to checkout."
+       },
+       {
+        "question": "Does your desired ticket quantity fall within the event's strict ticket limit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The ticket selection panel explicitly states an 'Event ticket limit' (e.g., 8 tickets), and exceeding this cap can result in the venue retroactively canceling your entire order.",
+        "whatTheAgentLoses": "You lose the critical awareness of the venue's hard purchase limit, risking the cancellation of all your tickets if you attempt to buy too many for a large group."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Filter and sort the list",
+      "questions": [
+       {
+        "question": "Should you adjust the price range to filter the available tickets?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a price slider from $205 to $782+, which lets you hide tickets that fall outside your budget.",
+        "whatTheAgentLoses": "You lose the ability to strictly enforce your budget by manually filtering out tickets that are too expensive."
+       },
+       {
+        "question": "Do you notice that the event list says tickets start at $13, but the price filter shows a $12 minimum?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The event list advertised tickets starting at $13, but the price filter on the seat map page showed a minimum of $12, revealing an inconsistency in the platform's pricing display.",
+        "whatTheAgentLoses": "A person delegating this task loses the chance to spot this pricing inconsistency and hunt for the cheaper $12 ticket that the filter implies might exist."
+       },
+       {
+        "question": "Does the lowest price actually change from $97.58 to $112.33 after you apply the 'Standard' ticket filter?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking if the lowest price jumps after filtering matters because an inconsistent interface might hide the cheapest available tickets.",
+        "whatTheAgentLoses": "You lose the ability to notice if a filter glitch hides the cheapest tickets, potentially causing you to overpay."
+       },
+       {
+        "question": "Do you want to adjust the default ticket quantity and type filters before checking section prices?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map displays prices like $58.75 for section 206 based on the default selection of two tickets and both standard and resale types, which might not match what you actually need.",
+        "whatTheAgentLoses": "You lose the ability to specify exactly how many tickets you need and whether you prefer standard admission over potentially marked-up resale tickets."
+       },
+       {
+        "question": "Do you want to enable the 'Show prices with fees' toggle to see the true cost of the tickets on the map?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The filter panel includes a checkbox to display prices with fees included, which prevents sticker shock at checkout by revealing the actual cost upfront.",
+        "whatTheAgentLoses": "The user loses the ability to browse seats based on their true final cost, potentially wasting time selecting tickets that exceed their budget once fees are added."
+       },
+       {
+        "question": "Do you need to enable the accessibility options to find appropriate seating?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly advises using the accessibility options on the map to ensure you are offered sections that accommodate specific physical needs.",
+        "whatTheAgentLoses": "The user loses the ability to ensure they are seated in an accessible area, potentially ending up with tickets they cannot use."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Read the seat map",
+      "questions": [
+       {
+        "question": "How limited is the ticket availability across these shows?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The mostly gray seating map and the 'almost sold out' caption indicate you need to act quickly or consider alternative dates to secure a ticket.",
+        "whatTheAgentLoses": "You lose the immediate visual context of ticket scarcity, which might influence how much you are willing to compromise on seat quality or price."
+       },
+       {
+        "question": "Which seating section best fits your budget and viewing preferences?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The seat map displays distinct zones like standing, VIP, and lower box, requiring a trade-off between ticket price and proximity to the stage.",
+        "whatTheAgentLoses": "Letting an agent decide means losing the personal judgment of whether a closer view is worth the higher price for this specific event."
+       },
+       {
+        "question": "Do the ticket prices on the seat map fall within the range advertised in the queue?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking that the visible seat prices match the $89.20 to $789.00 range stated earlier ensures the ticketing platform is not applying unexpected markups.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the actual seat prices align with the initially promised price range before making a selection."
+       },
+       {
+        "question": "Is the seat map actually visible on screen to confirm your seat selection?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because a seat selection mismatch was reported, but the screen actually displayed a Ticketmaster homepage tour banner instead of the seat map.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct seats are being chosen if the agent hallucinates interacting with a seat map that is not on screen."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Check the seat views",
+      "questions": [
+       {
+        "question": "Does the virtual seat view show any obstructions that would affect your experience?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface provides a photo or 360-degree view from the selected section (e.g., 'View from rows 1 - 5'), allowing you to check for pillars, railings, or extreme angles before committing to the seats.",
+        "whatTheAgentLoses": "You lose the opportunity to visually verify the actual line of sight from the seat, risking paying full price for a restricted or partially obstructed view."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Compare the price tiers",
+      "questions": [
+       {
+        "question": "Are the specific ticket types you want, like VIP packages, still available?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Latest Updates' pop-up warns that high demand might make certain options like VIP packages unavailable, which could change your purchasing strategy.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to decide whether to settle for standard tickets or abandon the purchase if your preferred VIP option is sold out."
+       },
+       {
+        "question": "Which ticket price level fits your budget?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists six different price tiers ranging from PHP 2625 to PHP [number], requiring you to balance cost with your preferred seating.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a price tier that is either too expensive or offers a worse view than you would prefer."
+       },
+       {
+        "question": "Which price level are you aiming for, and do you want to verify if these amounts include all fees before proceeding?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays six distinct price levels ranging from PHP 2625 to PHP [number], but it is not immediately clear if these include final ticketing charges.",
+        "whatTheAgentLoses": "You lose the ability to strictly control your budget by evaluating the true final cost of each tier before entering the purchase flow."
+       },
+       {
+        "question": "Which section and price tier do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The seat map displays numerous ticket categories and packages with vastly different prices, requiring you to balance your budget against your preferred concert experience.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the value of premium VIP packages against standard seating based on your specific budget and preferences."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Choose the ticket type",
+      "questions": [
+       {
+        "question": "How many of each ticket type do you need?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify the exact number of Adult, Concession, or Children tickets you want to purchase based on your group's demographics.",
+        "whatTheAgentLoses": "Delegating this means the agent might buy the wrong combination of ticket types, potentially overpaying for adults when concession or child rates apply."
+       },
+       {
+        "question": "Which ticket tier and how many tickets should you reserve?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing a specific General Admission tier and ticket quantity, which directly determines your subtotal.",
+        "whatTheAgentLoses": "You lose the ability to control exactly how much to spend on the available ticket tiers and the exact number of people attending."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Pick seats on the map",
+      "questions": [
+       {
+        "question": "Which specific seats should you select and are you comfortable with the initial subtotal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing exact seat locations from the available blue dots and displays a base subtotal that does not yet include the processing fees mentioned in the info panel.",
+        "whatTheAgentLoses": "You lose the opportunity to manually pick your exact seat locations within the venue and weigh their position against the initial cost."
+       },
+       {
+        "question": "Is there an 'Obstructed View' or 'Limited Sightline' warning attached to these specific seats?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Venues sell cheaper seats that are behind pillars or the stage, and this is only disclosed via a small text tag during seat selection.",
+        "whatTheAgentLoses": "The user ends up paying for a ticket where they cannot actually see the performance, ruining the event experience."
+       },
+       {
+        "question": "Are these seats marked as Accessible or ADA seating, and do you meet the venue's requirements to use them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Ticketing platforms explicitly label wheelchair-accessible seats and warn that buying them without a valid need can result in ticket cancellation or denied entry.",
+        "whatTheAgentLoses": "The user risks having their ticket revoked at the door or unethically taking a necessary seat away from someone with a disability."
+       },
+       {
+        "question": "Does the spatial arrangement of the dots on the seat map show that these are aisle seats?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Whether a seat is on the aisle is rarely stated in the text label; it must be inferred by looking at the visual gaps between the seat dots on the interactive map.",
+        "whatTheAgentLoses": "The user loses the ability to secure an aisle seat for better legroom or easy access, as the agent cannot visually interpret the spatial layout of the map."
+       },
+       {
+        "question": "Are the selected seats physically adjacent to each other on the visual map, despite how the seat numbers are listed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Venues often use non-sequential numbering (like evens on one side, odds on the other) or have aisles splitting consecutive numbers, making the visual map the only reliable way to confirm seats are actually together.",
+        "whatTheAgentLoses": "The user might arrive at the venue to find their group is split across an aisle or separated by a gap, ruining the shared experience."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Pick a listed row",
+      "questions": [
+       {
+        "question": "Which specific seats offer the best balance of price, location, and quantity for you?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of tickets sorted by lowest price, requiring a trade-off between the absolute cheapest seats and slightly more expensive ones in better rows.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally weigh the value of saving a few dollars versus securing a better view."
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Accept the assigned seats",
+      "questions": [
+       {
+        "question": "Which seating section and ticket quantity do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose a specific section like BOX B PREMIUM and select a ticket quantity before proceeding with the best available seats.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a section that exceeds your budget or doesn't match your viewing preferences."
+       }
+      ]
+     },
+     {
+      "id": "5.10",
+      "label": "Name the ticket price",
+      "questions": [
+       {
+        "question": "How much should you choose to pay for a 'Name Your Price' ticket?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a suggested price of $5 but allows a minimum of $0, leaving the final payment amount entirely up to your discretion.",
+        "whatTheAgentLoses": "The user loses the ability to decide how much financial support to voluntarily offer the artist."
+       }
+      ]
+     },
+     {
+      "id": "5.11",
+      "label": "Decline the seat offers"
+     },
+     {
+      "id": "5.12",
+      "label": "Reserve the tickets",
+      "questions": [
+       {
+        "question": "Are these the correct seat details and ticket quantity you want to buy?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The overlay displays the specific section, row, seat range, and price, requiring confirmation of the exact number of tickets before heading to checkout.",
+        "whatTheAgentLoses": "The user loses the chance to double-check the seat location and manually adjust the ticket quantity before entering the checkout flow."
+       },
+       {
+        "question": "Are the ticket quantity and fee-inclusive subtotal acceptable to you?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The ticket selection panel displays a subtotal of $224.66 for two tickets including fees, which you must accept to reserve the seats.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the seat location, ticket quantity, and total cost before the tickets are locked in for checkout."
+       },
+       {
+        "question": "Are the section, row, quantity, and subtotal correct before you reserve these tickets?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The slide-out panel displays the exact seat details, individual price including fees, and total cost that must be confirmed to hold the tickets.",
+        "whatTheAgentLoses": "You lose the chance to verify the specific seat location and adjust the ticket quantity before they are locked in for checkout."
+       },
+       {
+        "question": "Did you notice the warning that your selected tickets are not actually reserved until you click Next?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns 'Tickets are not reserved yet. To secure your tickets, click Next', meaning lingering on the seat map risks losing the seats to another buyer.",
+        "whatTheAgentLoses": "The user loses the urgency to proceed, potentially losing the seats if the agent idles on the selection screen instead of advancing to checkout."
+       },
+       {
+        "question": "Are the event date, seat numbers, and delivery method correct before you proceed to checkout?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying the specific section, row, and date in the order details sidebar ensures you are buying the right tickets before advancing to see the final fees.",
+        "whatTheAgentLoses": "You lose the opportunity to double-check your exact seat location or consider the upsell for better seats before committing to the checkout process."
+       }
+      ]
+     },
+     {
+      "id": "5.13",
+      "label": "Pass the security check",
+      "questions": [
+       {
+        "question": "Do you accept the Purchase Policy and terms and conditions for this event?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires entering a verification code and checking a box to agree to the event's purchase, exchange, and refund policies before proceeding.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the specific refund and admission policies before legally committing to the purchase."
+       },
+       {
+        "question": "Do you agree to the event's purchase policy and terms of entry?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires solving a CAPTCHA and checking a box to accept the Purchase Policy, Exchange and Refund Policy, and Admission Policy before proceeding.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to read the specific refund and admission rules you are legally binding yourself to."
+       }
+      ]
+     },
+     {
+      "id": "5.14",
+      "label": "Retry the seat grab",
+      "questions": [
+       {
+        "question": "Are these alternative seats acceptable?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The panel offered alternative seats, requiring a quick evaluation of whether they meet your needs before another buyer claims them.",
+        "whatTheAgentLoses": "You lose the ability to personally judge whether the unexpected seat locations are an acceptable compromise for your event experience."
+       },
+       {
+        "question": "Did the system reject your seat selection because another fan claimed them first?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A popup warns that another fan beat you to the selected seats, meaning your reservation failed and you must quickly return to the map to choose different ones.",
+        "whatTheAgentLoses": "The user loses the immediate awareness that their first choice failed and the urgency to quickly select alternative seats before the event sells out."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Work through the checkout",
+    "note": "6.1 runs behind everything once the hold starts. 6.2 where a cart exists; 6.3 and 6.4 where delivery is a choice - the US storefront fixes it at Mobile FREE. 6.5 as the forms demand - two keepers arrive pre-filled and only confirm. 6.6 is a forced yes-or-no on Ticketmaster; 6.7 and 6.10 as the page presents them. 6.8 then 6.9. 6.11 last - it is what enables the commit button (4DKm).",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Track the hold timer",
+      "questions": [
+       {
+        "question": "Does the checkout countdown timer decrease logically without unexpectedly resetting as you proceed to payment?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The countdown timer jumped from 09:54 to 14:53 between screens, which reveals an impossible inconsistency in the session's timeline.",
+        "whatTheAgentLoses": "The user loses assurance that the ticket purchase was a single, continuous, and authentic transaction."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Review the cart",
+      "questions": [
+       {
+        "question": "Are the assigned seat details, ticket fees, and total price correct before you proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The shopping cart displays the specific section, row, and seat assigned to you, along with the added ticket fees and total price, which you must verify before the countdown timer expires.",
+        "whatTheAgentLoses": "You lose the chance to personally verify if the automatically assigned seat location and the final price including fees are acceptable before committing to the purchase."
+       },
+       {
+        "question": "Does the ticket quantity in the cart match the number of seats you selected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart summary showed 4 tickets for $110.00 even though only 2 seats were selected on the map, indicating extra tickets were added to the order.",
+        "whatTheAgentLoses": "The user loses the chance to notice that extra tickets were added to the cart and avoid paying double the intended amount."
+       },
+       {
+        "question": "How do you want to navigate to your cart to review the order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a green confirmation banner with a direct 'View cart' link, offering a shortcut to checkout instead of using the main site navigation.",
+        "whatTheAgentLoses": "You lose the immediate visual reassurance of seeing the success banner confirm that your specific event was added to the cart."
+       },
+       {
+        "question": "Are the event details in your cart correct, and do you have a coupon code to apply?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart page displays the selected event, quantity, and total price alongside an optional coupon code field, requiring you to verify the order and decide whether to apply a discount before checking out.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify the exact event details in the cart or provide a personal discount code to lower the final cost."
+       },
+       {
+        "question": "Are you aware that the ticket in your cart is a 'Verified Resale Ticket' rather than a standard primary ticket?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The order summary explicitly labels the item as a 'Verified Resale Ticket', meaning you are buying from another fan, which often involves different refund policies and markups.",
+        "whatTheAgentLoses": "The user loses the transparency of knowing they are buying on the secondary market, which might affect their willingness to pay the asking price or their expectations for customer service."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Choose the delivery method",
+      "questions": [
+       {
+        "question": "How do you want your tickets delivered?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout process requires confirming a delivery method, such as the free print-at-home or mobile ticket option, to ensure you can access your tickets.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred way of receiving and presenting the tickets on the day of the event."
+       },
+       {
+        "question": "Which delivery method do you prefer, and do you accept the final price including fees?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires selecting a delivery method like a mobile ticket and displays the final order details and fees before proceeding to payment.",
+        "whatTheAgentLoses": "You lose the ability to choose how you will receive your tickets and to review the final total cost before the purchase is finalized."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Read the delivery rules",
+      "questions": [
+       {
+        "question": "How will you receive and access your tickets?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The modal explicitly states that tickets will not be emailed and must be accessed through your Ticketmaster account on your phone.",
+        "whatTheAgentLoses": "Delegating this means you might miss the crucial instruction that your tickets won't be emailed and require logging into your account at the venue."
+       },
+       {
+        "question": "Does the delivery disclosure state that the tickets will not be available or transferred to you until shortly before the event?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many high-demand or resale tickets feature delayed delivery (e.g., 'Tickets available 48 hours before the show') to prevent scalping, which can cause logistical anxiety.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if they are comfortable waiting until the last minute to actually receive their barcodes, especially if they are traveling for the event."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Fill the billing details",
+      "questions": [
+       {
+        "question": "Are your contact details already pre-filled on the checkout pages?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the contact details section is visibly pre-filled on both the confirmation and payment pages, confirming the advice to set this up in advance to save time.",
+        "whatTheAgentLoses": "The user loses the peace of mind of verifying that their tickets will be sent to the correct, pre-configured email address and phone number."
+       },
+       {
+        "question": "What delivery address should I use, and are you okay with the final total including fees?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout page requires a full delivery address and displays a final total of $47.50, which includes $9.70 in service fees and $1.80 in taxes.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify where the tickets are being sent and to decide if the added service fees make the tickets too expensive."
+       },
+       {
+        "question": "Did you proceed to the payment screen without completing the required delivery address fields or checking the terms agreement?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout form marked delivery address fields as required and had an unchecked terms box, yet the payment screen appeared next.",
+        "whatTheAgentLoses": "The user loses the assurance that their delivery details and terms acceptance were properly submitted, risking order issues or delivery failure."
+       },
+       {
+        "question": "Does the name on the purchasing account exactly match the photo ID of the person who will attend?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many venues, VIP packages, and specific delivery methods (like Will Call) strictly require the attendee to present a photo ID that matches the original purchaser's name to gain entry.",
+        "whatTheAgentLoses": "The user risks being denied entry at the door if the agent completes the checkout using a generic profile name, a nickname, or a different family member's account."
+       },
+       {
+        "question": "Which personal and payment details should I provide to complete this purchase?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a checkout form requiring your name, address, contact information, and credit card details to finalize the $111.20 order.",
+        "whatTheAgentLoses": "The person loses control over which specific payment method and billing address are submitted for the transaction."
+       },
+       {
+        "question": "Is the pre-filled billing information correct before you place the order?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed pre-filled billing details like your address and email, which must be accurate to ensure the tickets are delivered to the right place.",
+        "whatTheAgentLoses": "You lose the chance to verify your personal billing details or add specific order notes before the transaction is finalized."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Decide the ticket insurance",
+      "questions": [
+       {
+        "question": "Should you add ticket insurance or event extras to your order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen presents optional add-ons like a reserved table upgrade and ticket insurance that will increase the final price.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to weigh the cost of insurance against your personal need for purchase protection."
+       },
+       {
+        "question": "Are the final order details correct, and do you want to purchase ticket insurance before selecting a payment method?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen requires a decision on ticket insurance and agreement to the terms before you can enter payment details and place the order.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review the final cost breakdown and decide if you want the protection of ticket insurance."
+       },
+       {
+        "question": "Should you purchase the optional ticket insurance before placing your order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen requires a mandatory selection on the ticket protection offer before you can submit your payment.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to weigh the extra cost of insurance against your personal need for purchase protection."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Decline the checkout upsells",
+      "questions": [
+       {
+        "question": "Are any optional add-ons, like ticket insurance or a parking pass, pre-checked by default in the visual layout?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checkout flows often use dark patterns where an extra fee is visually toggled on by default, requiring the user to actively notice the filled checkbox and uncheck it to avoid the charge.",
+        "whatTheAgentLoses": "The user unknowingly pays for unnecessary insurance or parking because the agent accepted the default visual state of the form without realizing it added to the cost."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Pick the payment method",
+      "questions": [
+       {
+        "question": "Which accepted credit card will you use to pay the PHP8,025.00 total?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen requires specific payment details for accepted methods like Visa or Mastercard to successfully process the PHP8,025.00 charge.",
+        "whatTheAgentLoses": "Delegating this step requires sharing sensitive credit card details with the agent and losing control over which account is charged."
+       },
+       {
+        "question": "Which payment method do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen offers several payment options like credit card, PayPal, Klarna, and Venmo, which determine how the purchase is funded.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific financial account or financing service is charged for the tickets."
+       },
+       {
+        "question": "Which credit card will you use, and do you want to opt into marketing emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen requires payment details, notes a 1.1% surcharge for American Express, and includes an optional checkbox for promotional updates.",
+        "whatTheAgentLoses": "Delegating this step means losing control over which card incurs the charge, potentially paying an unexpected surcharge, and receiving unwanted promotional emails."
+       }
+      ]
+     },
+     {
+      "id": "6.9",
+      "label": "Enter the card details",
+      "questions": [
+       {
+        "question": "Are you ready to accept the final total including fees and provide your card's security code to complete the purchase?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a final total of $175.47 that includes unexpanded fees, and requires a CVV code for the selected Mastercard before the order can be processed.",
+        "whatTheAgentLoses": "You lose the chance to review the exact fee breakdown before committing your money and the ability to ensure the payment goes through successfully by providing the required security code."
+       }
+      ]
+     },
+     {
+      "id": "6.10",
+      "label": "Set the marketing checkboxes",
+      "questions": [
+       {
+        "question": "Do you want to uncheck the default marketing and data-saving boxes before completing the purchase?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout page includes pre-checked boxes that will subscribe you to promotional emails and save your booking details if you do not actively opt out.",
+        "whatTheAgentLoses": "If an agent leaves these boxes checked by default, you lose control over your inbox and data privacy preferences."
+       }
+      ]
+     },
+     {
+      "id": "6.11",
+      "label": "Accept the terms",
+      "questions": [
+       {
+        "question": "Are you comfortable with the final total including the added fees, and ready to agree to the terms of use?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen reveals a $47.36 service fee and a $2.95 processing fee added to the base ticket price, requiring your explicit agreement to the terms before proceeding.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate if the nearly $50 in extra fees makes the final price too expensive to justify the purchase."
+       },
+       {
+        "question": "Are you willing to accept the non-refundable terms to finalize this purchase?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen requires explicit agreement to a policy stating the tickets are non-refundable and non-exchangeable before the purchase button can be clicked.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally review and accept the strict no-refund policy before their funds are permanently committed."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Place the order",
+    "note": "7.1 with 7.2 against it; 7.3 where the storefront's currency is not the buyer's (Zd_n). 7.4 commits - 7.6 finishes it on a gateway the platform never sees inside (fP0i, KGT_). 7.5 on failure, and the recovery forfeits the seats and the queue place (Yham). sixteen of twenty keepers never complete 7.4.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the order summary",
+      "questions": [
+       {
+        "question": "Do the final ticket details and total cost look correct before you enter your billing information?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a final total of PHP8,025.00, including a PHP150.00 fee for a specific seat, which must be verified before filling out the billing address.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the final price and seat details before handing over your sensitive billing information."
+       },
+       {
+        "question": "Are you okay with the $30.10 service fee bringing your final total to $87.10?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen reveals a $30.10 service fee that significantly increases the base ticket price of $54.00.",
+        "whatTheAgentLoses": "You lose the opportunity to abandon the purchase if you feel the added service fees are too high."
+       },
+       {
+        "question": "Are the event details, seat assignments, and total price correct before you place the order?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen shows the final $41.82 total, seat range in section 215, and delivery method, which are crucial to verify before committing to the purchase.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose the final opportunity to verify the exact seat location, total cost, and insurance selection before your money is spent."
+       },
+       {
+        "question": "Are you comfortable with the final total, including the service fees and taxes?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen reveals the true final cost of $130.76, breaking down the base ticket price, service fees, and taxes, alongside optional add-ons like a $50 parking pass.",
+        "whatTheAgentLoses": "Delegating this step removes your ability to evaluate if the added service fees make the tickets too expensive or to decide if you want to purchase the optional parking pass."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Check totals against earlier screens",
+      "questions": [
+       {
+        "question": "Does the processing fee in the order summary match the warning shown earlier?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking that the CA $6.50 processing fee in the order summary matches the earlier info panel ensures you are not being overcharged.",
+        "whatTheAgentLoses": "You lose the ability to verify that the platform's final processing fees align with their upfront disclosures."
+       },
+       {
+        "question": "Are you willing to pay the extra $147.64 in fees that appeared at checkout?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen shows a final total of $1,126.64, adding a significant amount in fees to the original $979.00 seat price.",
+        "whatTheAgentLoses": "The user loses the chance to decide if the final price with added fees exceeds their budget for the event."
+       },
+       {
+        "question": "Did you catch the unadvertised price jump between the seat map and the selection dropdown before the cart fees were even added?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The seat plan advertised Lower Box B at PHP 7,500, but the dropdown silently increased it to PHP 7,875 before the final cart fees were applied.",
+        "whatTheAgentLoses": "The user loses the chance to notice deceptive pricing practices and decide if the hidden markups make the ticket too expensive."
+       },
+       {
+        "question": "Does the final checkout total correctly combine the base ticket price you selected with the added fees?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "Verifying that the $296.31 final total exactly matches the $246.00 base price plus the $50.31 in service and processing fees ensures you are not being overcharged.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to evaluate whether the steep markup in fees makes the tickets too expensive before finalizing the purchase."
+       },
+       {
+        "question": "Does the base price plus the service fees at checkout exactly match the initial ticket price you selected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking that the initial ticket price matches the base price plus the service fee breakdown on the checkout page ensures no hidden fees were added between selection and checkout.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch deceptive pricing if the agent blindly accepts a final total that contradicts the initially advertised price."
+       },
+       {
+        "question": "Does the displayed subtotal correctly match your selected ticket price multiplied by the quantity?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the $38.50 ticket price multiplied by two equals the $77.00 subtotal ensures the platform hasn't altered the price or quantity.",
+        "whatTheAgentLoses": "Delegating this step means losing the chance to personally verify the math and catch unexpected price jumps or incorrect ticket quantities before paying."
+       },
+       {
+        "question": "Do the final checkout charges match the initial fee breakdown without adding the warned taxes?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The earlier screen warned that taxes might be added at checkout, so it is important to verify that the final total of $41.82 did not actually include any surprise charges.",
+        "whatTheAgentLoses": "Delegating this step means losing the chance to catch and reject unexpected tax additions before the final payment is processed."
+       },
+       {
+        "question": "Does the final price breakdown honor the free delivery promised earlier?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking that the final $41.82 total at 1:28 excludes delivery fees ensures the 'FREE' mobile delivery promised at 1:14 was actually applied.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to catch hidden fees slipped into the final total despite earlier promises of free delivery."
+       },
+       {
+        "question": "Does the total price remain consistent across the checkout and payment gateway screens?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the base price of P4,250.00 and the P100.00 fee correctly total P4,350.00 across all payment screens ensures you are not being hit with hidden charges at the last second.",
+        "whatTheAgentLoses": "Delegating this means trusting an agent to notice if the third-party payment gateway silently alters the final total before completing the transaction."
+       },
+       {
+        "question": "Do the cart, checkout, and confirmation totals all match the $0 price you entered?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The product page stated a minimum price of $0, so the subsequent screens must consistently reflect a $0.00 total without reverting to the default $5.",
+        "whatTheAgentLoses": "The user loses the peace of mind of knowing they weren't accidentally charged the default price for a ticket they chose to get for free."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Convert to home currency",
+      "questions": [
+       {
+        "question": "What is the estimated cost of this order in my local currency?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a calculator multiplying the 69.21 order total by an exchange rate of 1.3 to estimate the final charge in Canadian dollars.",
+        "whatTheAgentLoses": "The user loses the chance to evaluate the converted price in their own currency to decide if the tickets are still worth buying."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Submit the order",
+      "questions": [
+       {
+        "question": "Are you ready to accept the $1,126.64 total and place your order?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking the 'Place Order' button attempts to process the payment and commits you to a $1,126.64 charge for the Las Vegas event.",
+        "whatTheAgentLoses": "You lose the final opportunity to verify the exact total cost and event details before authorizing a large payment."
+       },
+       {
+        "question": "Why did your order submission fail?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "A red error message stating 'Please enter valid code' appeared under the CVV field, indicating that the purchase cannot proceed without the correct security code.",
+        "whatTheAgentLoses": "You lose the tickets you selected because the agent failed to provide the required payment security details to complete the transaction."
+       },
+       {
+        "question": "Are you ready to accept the final total and place the order?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because clicking the green 'Place Order' button finalizes the $47.50 charge, locking in the tickets, service fees, and taxes.",
+        "whatTheAgentLoses": "The user loses the final opportunity to review the exact breakdown of service fees and taxes before their payment method is irreversibly charged."
+       },
+       {
+        "question": "Is the screen currently showing an ephemeral 'processing' spinner with a warning not to refresh the page?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "During payment submission, a temporary modal appears warning the user not to navigate away or refresh, as doing so can cause double charges or drop the reserved tickets.",
+        "whatTheAgentLoses": "If the agent does not visually recognize this high-stakes loading state and tries to retry the action, the user could be charged twice or lose their tickets entirely."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Recover from a failed order",
+      "questions": [
+       {
+        "question": "Did the system block you from selecting new seats by claiming you exceeded the ticket limit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A popup states you \"exceeded maximum number of tickets\" right after a failed checkout, indicating a system glitch where the failed order is still counting against your account's limit.",
+        "whatTheAgentLoses": "The user loses the ability to realize the platform's cart state is glitched, which requires waiting for the ghost cart to expire before trying to select seats again."
+       },
+       {
+        "question": "How should you handle the checkout processing error?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an 'unable to process your request' error with a 'Return to Event Page' button, forcing you to decide how to proceed.",
+        "whatTheAgentLoses": "You lose your reserved tickets and get sent back to the queue if the agent clicks the return button instead of trying to preserve the session."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Pay on the external gateway",
+      "questions": [
+       {
+        "question": "Are you ready to enter your credit card details and commit to the final total before the timer expires?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final total of PHP 3,050.00 and requires your payment details within a strict time limit to secure the tickets.",
+        "whatTheAgentLoses": "Delegating this step means you lose the final veto power over the actual charge to your credit card."
+       },
+       {
+        "question": "Which specific payment details do you need to enter into the payment gateway?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a third-party payment gateway requiring your credit card number, expiration date, CVV, name, and email to process the final charge.",
+        "whatTheAgentLoses": "You lose the ability to choose which specific credit card to use and to personally secure your financial information on a third-party site."
+       },
+       {
+        "question": "Did a bank verification popup appear requiring a one-time password (OTP) or app approval to authorize the transaction?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "High-value ticket purchases frequently trigger 3D Secure or fraud alerts, requiring the cardholder to actively approve the charge via their bank before the ticketing site processes the order.",
+        "whatTheAgentLoses": "The agent will stall and lose the tickets if it cannot prompt the user for the mandatory security code needed to pass the bank's fraud check."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Collect and check the tickets",
+    "note": "8.1 and 8.2 where an order exists. 8.3 when checkout was walked away from mid-hold (KGT_, fP0i). 8.4 to 8.6 as the keeper's purpose runs - wqv4 walks three routes to the same stream link, KGT_ tours tickets and transfers across two regions.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Is the order confirmation page visible?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows the order-received page on the merchant site, confirming the purchase was successful.",
+        "whatTheAgentLoses": "The user loses the immediate visual confirmation and order details provided right after the purchase."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Check the confirmation email",
+      "questions": [
+       {
+        "question": "How else can you access the concert link?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Although the confirmation screen displays your order details, checking your inbox ensures you have a permanent link to your tickets.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the ticket confirmation successfully arrived in your email inbox."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Check the pending order",
+      "questions": [
+       {
+        "question": "What is the current status of your ticket order?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the status matters because the screen shows the order is \"Pending Payment,\" indicating the transaction is incomplete and the tickets are not yet secured.",
+        "whatTheAgentLoses": "Delegating this step means you lose the immediate visibility into whether your payment successfully cleared or if the tickets might be released."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Open the saved ticket",
+      "questions": [
+       {
+        "question": "Are the event details and QR code on the mobile ticket correct?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the ticket for the correct event, date, and QR code ensures you have the valid entry pass for the concert.",
+        "whatTheAgentLoses": "Delegating this means you do not get to personally verify the final ticket details or immediately save the QR code to your own device."
+       },
+       {
+        "question": "Did you verify that the purchased tickets appear in your account's concert list?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation email states the tickets can be found under 'My Concerts', so checking this page confirms the purchase was successfully linked to your account.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the tickets are safely accessible in your account inventory."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Find the stream link",
+      "questions": [
+       {
+        "question": "Where is the link to access the event on this confirmation page?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The order details table provides the specific concert page link required to actually attend the virtual event.",
+        "whatTheAgentLoses": "You miss the immediate reassurance of seeing exactly where and how to join the virtual concert you just booked."
+       },
+       {
+        "question": "Are you on the correct destination page to watch the concert stream?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a video player and a chat section, confirming access to the virtual event.",
+        "whatTheAgentLoses": "The user loses the assurance that they have successfully gained access to the correct virtual event stream."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Read the transfer options"
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,1274 @@
+{
+ "task": "find the latest news about a specific topic (a company, a person, a sport, a technology) on a news site or aggregator (google news, apnews, reuters, bbc, espn): search for or navigate to the topic, sort by or judge recency, and open the relevant latest article; complete when a current article on the right topic is on screen. Surface pinned: news sites and aggregators. Variants: news commentary/opinion videos as the subject, and \"daily news recap\" videos where a person reads headlines to camera, do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Keep up with the news",
+  "note": "do 1. 2 and 3 feed each other and repeat - the Feedly keepers build with 2 and then scan what accrues with 3; the Google keepers run 3 alone and keep nothing (RKSc, gyDs, xATD, vLA0), except one topic follow that reaches into 2.6 (64Vu). 4 from any list, though most lists are scanned and left - 9 stories and one video clip get opened across 14 keepers. 5 after 4 where the story is worth keeping; 4_Sv runs 5 without ever opening the story. 6 replaces 4 and 5 on the newsroom service (AE9a). 7 in the one keeper that closes the loop (v4vm).",
+  "questions": [
+   {
+    "question": "Should you browse your existing feeds or follow a new source to find the topic?",
+    "cluster": "select",
+    "moment": "Now",
+    "moneyMoving": false,
+    "why": "The sidebar displays existing categories like 'Marketing' alongside a '+' icon to 'Follow New Sources', requiring a choice between current and new content streams.",
+    "whatTheAgentLoses": "You lose the opportunity to personally curate which specific news publications are added to your account."
+   },
+   {
+    "question": "Should you choose one of these recent marketing articles, or add a new content source?",
+    "cluster": "select",
+    "moment": "Now",
+    "moneyMoving": false,
+    "why": "The screen shows recent popular articles in the Marketing feed, but you may need to add a different topic to find the specific news you are looking for.",
+    "whatTheAgentLoses": "You lose the opportunity to personally decide whether the current feed is relevant enough or if a new topic needs to be added to the aggregator."
+   }
+  ],
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the news service",
+    "note": "1.1 or 1.2 to arrive. 1.3 to 1.5 only where an account gates the service - three Feedly keepers start mid-session and skip all of it (4_Sv, zCA3, r9X3), and every Google keeper walks in without an account. 1.6 replaces 1.4 on the newsroom service (AE9a). 1.7 where the edition matters (gyDs).",
+    "questions": [
+     {
+      "question": "Does a cookie consent banner or ad-blocker warning prevent you from interacting with the homepage?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "News sites frequently employ aggressive overlays that must be accepted, rejected, or bypassed before any search or navigation can occur.",
+      "whatTheAgentLoses": "The user loses the ability to manage their privacy preferences or decide whether to disable their ad-blocker for this specific site."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the news site",
+      "questions": [
+       {
+        "question": "What initial platform and search context do you want to start with?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Google News Timeline labs page pre-loaded with a search for 'christmas' and dates from December 2009.",
+        "whatTheAgentLoses": "The user loses the ability to define the specific starting platform, search term, and historical timeframe for the task."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Find the site by searching",
+      "questions": [
+       {
+        "question": "Which search result is the official Feedly website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first search result displays the URL 'https://feedly.com/', confirming it is the legitimate aggregator rather than a third-party or sponsored link.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the search result URL to ensure you are accessing the authentic news platform."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Choose log in or sign up",
+      "questions": [
+       {
+        "question": "Do you want to log in to an existing account or create a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage displays both 'GET STARTED FOR FREE' and 'LOGIN' buttons, requiring a choice based on whether you already have an account.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent uses your existing account with its pre-configured news feeds rather than starting from scratch."
+       },
+       {
+        "question": "Should you get started for free or import an OPML file?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to either start a new free account or import an existing OPML file to set up your news feeds.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might create a new blank account instead of importing your existing curated news feeds."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the sign-in method",
+      "questions": [
+       {
+        "question": "Which authentication method do you want to use to log in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login modal presents multiple options like Google, Feedly, and various social accounts, requiring you to choose the one linked to your existing profile.",
+        "whatTheAgentLoses": "The user loses control over which personal or third-party account is used to authenticate and access their personalized news feeds."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Pick the Google account",
+      "questions": [
+       {
+        "question": "Which Google account should you use to sign in to Feedly?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple Google accounts to continue to Feedly, and the choice determines which personalized news feed and subscriptions are accessed.",
+        "whatTheAgentLoses": "You lose the ability to control which specific personal or work profile is associated with your news reading activity."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Sign in with shared credentials",
+      "questions": [
+       {
+        "question": "Should you use the auto-filled credentials to sign in without checking the 'Remember me' box?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a login panel with a pre-filled username and obscured password, requiring a decision on whether to proceed and if the session should be saved.",
+        "whatTheAgentLoses": "The user loses the ability to manage their own login credentials and decide whether the session should be persistently saved on the device."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Set the region and language",
+      "questions": [
+       {
+        "question": "Do you need to adjust the language and region settings for your news feed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar currently displays 'English (Nigeria)', which will heavily influence the geographic focus and relevance of the news results you receive.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact cultural and geographic context that determines which local or regional news stories are prioritized."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Build the source feed",
+    "note": "2.1, then 2.2 or 2.3 raises candidates; 2.4 on every card, 2.5 where a sneak peek is wanted. 2.6 commits and 2.7 follows immediately - the platform will not let a follow float unfiled (2o_3); 64Vu's topic star is the exception, a follow with no filing step. 2.8 inside 2.7 when the feed is new; v4vm also runs 2.8 standalone and fills the empty feed afterward. repeat 2.2 to 2.7 per source - four in about 15 seconds (zCA3), six in a sitting (1HW8). 2.9 after any batch; 2.10 wherever the counts are on screen.",
+    "questions": [
+     {
+      "question": "Which source should you follow next, and which feed should you add it to?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The search results display multiple sources like MediaShift, and selecting the right one to follow and add to your Journalism feed ensures you track the correct topic.",
+      "whatTheAgentLoses": "You lose the personal curation of deciding exactly which publications are trustworthy or relevant enough to include in your specific news feeds."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Open the discovery surface",
+      "questions": [
+       {
+        "question": "Should you check the Explore tab to find trending articles?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 'Me' and 'Explore' tabs, offering a choice between personalized news and broader trending topics.",
+        "whatTheAgentLoses": "You lose the opportunity to personally decide whether to browse general trends or stick to your customized news feed."
+       },
+       {
+        "question": "Which method should I use to add new content to your Feedly account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple options for adding content, such as 'Publications & Blogs' or 'Keyword Alerts', which determine how the topic will be sourced.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred method for tracking and organizing the new topic in their feed."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Search for a topic or source",
+      "questions": [
+       {
+        "question": "Which language do you want to use for the search results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Results language' dropdown with multiple options, allowing you to filter the news articles by languages like English, Spanish, or Japanese.",
+        "whatTheAgentLoses": "You lose the ability to specify your preferred reading language or to intentionally seek out foreign-language coverage of the topic."
+       },
+       {
+        "question": "What specific blog or source do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar requires you to input the exact name of the publication or topic you want to read about.",
+        "whatTheAgentLoses": "You lose the opportunity to personally select a trusted, niche source that aligns with your specific professional interests."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Browse the curated categories",
+      "questions": [
+       {
+        "question": "Which topic category should you explore to find relevant news?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays various featured industries and skills, making it necessary to choose the right category to surface relevant news sources.",
+        "whatTheAgentLoses": "Delegating this choice means losing the opportunity to browse and select a specific niche topic that perfectly aligns with your current interests."
+       },
+       {
+        "question": "Which regional or topical video channel should you filter by?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar lists multiple regional and topical video channels under Broadcast Video, requiring a choice to narrow down the news content.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to prioritize which specific region's news is most relevant to your current interests."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Read the source stats",
+      "questions": [
+       {
+        "question": "Which source should you select from the matching results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed multiple matching sources with varying follower counts and posting frequencies, requiring a subjective choice.",
+        "whatTheAgentLoses": "The user loses the ability to apply their personal taste or specific niche interest when choosing among multiple valid sources."
+       },
+       {
+        "question": "Which specific blog should you add from this category?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several business blogs with varying reader counts and article frequencies, requiring a choice of which specific perspective to follow.",
+        "whatTheAgentLoses": "The user loses the opportunity to select a source based on their personal appreciation for a specific author's industry reputation and writing style."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Preview the source first",
+      "questions": [
+       {
+        "question": "Do the recent articles in this preview pane look relevant and interesting enough to follow?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Scanning the article titles grouped under 'TODAY' and 'YESTERDAY' helps you verify if the source consistently publishes content that matches your target topic.",
+        "whatTheAgentLoses": "You lose the ability to personally evaluate the nuance and quality of the article titles to decide if the source truly aligns with your specific interests."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Follow the source",
+      "questions": [
+       {
+        "question": "Should you follow the 'Apple' topic, or proceed directly to reading the latest articles?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results page provides options to follow the overarching 'Apple' topic, browse sub-topics like 'Apple Watch', or immediately click on recent news articles.",
+        "whatTheAgentLoses": "You lose the ability to personalize your news feed by choosing which specific topics to follow for future updates."
+       },
+       {
+        "question": "Do you want to follow this topic for future updates?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the star icon changes the status to 'Following' and triggers a confirmation toast, altering your account's saved preferences.",
+        "whatTheAgentLoses": "The user loses control over the curation of their personalized news feed if the agent autonomously follows topics."
+       },
+       {
+        "question": "Should you follow this news category to see future updates in your feed, or just browse the current stories?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Follow' button at the top right, allowing you to add this specific news category to your personal feed for easier access later.",
+        "whatTheAgentLoses": "You lose the ability to curate your personal news feed by deciding whether this specific topic is worth tracking long-term."
+       },
+       {
+        "question": "Should you follow the entire pre-packaged bundle of sources, or explore further to select individual publications?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search results feature a 'Marketing Bundle' with a 'FOLLOW ALL' button that would add 10 sources at once, rather than requiring you to evaluate each one.",
+        "whatTheAgentLoses": "The user loses the ability to keep their feed uncluttered by vetting each publication individually rather than accepting a bulk package."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "File it into a feed",
+      "questions": [
+       {
+        "question": "Should you add this newly followed source to an existing custom feed or create a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu after clicking follow requires choosing whether to organize this source into an existing category like 'Journalism' or to create a brand new feed.",
+        "whatTheAgentLoses": "You lose the ability to personally organize your news sources into custom categories that match your specific reading habits."
+       },
+       {
+        "question": "Which feed category should you add this source to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple existing categories like Journalism and Photography alongside an option to create a new feed, requiring you to choose how to organize this specific source.",
+        "whatTheAgentLoses": "You lose the ability to personally curate and organize your news sources according to your own preferred mental model."
+       },
+       {
+        "question": "Are the settings correct before you add this feed to your collections?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal displays the feed title and the selected collection, requiring verification before saving.",
+        "whatTheAgentLoses": "The user loses the ability to verify and choose exactly which custom collection the topic feed is saved into."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Name the new feed",
+      "questions": [
+       {
+        "question": "What should you name this new feed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides an input field and suggestions like '+ Black women', requiring a decision on how to label the topic.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to organize and name your news sources according to your own personal categories."
+       },
+       {
+        "question": "Should you create a new feed category to track this topic?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar displays a 'Create New Feed' option, which dictates how the news topic will be organized and saved in your account.",
+        "whatTheAgentLoses": "You lose the opportunity to personally name and organize the feed category to match your specific reading preferences."
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Verify the follow landed",
+      "questions": [
+       {
+        "question": "Did the new feed appear in the sidebar, and which source should you select to view its articles?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The sidebar updated to show 'EdTech' and 'MindShift' under 'FEEDS', confirming the topic was added and providing a way to access its articles.",
+        "whatTheAgentLoses": "The user loses the ability to confirm the feed was added successfully and to choose exactly which source to view."
+       },
+       {
+        "question": "Does the feed's unread count update correctly when you add new sources?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the unread count immediately jump to 20 confirms that the platform successfully pulled in the latest articles from the sources you just added.",
+        "whatTheAgentLoses": "You lose the immediate visual reassurance that your custom feed is correctly aggregating the specific sources you care about."
+       }
+      ]
+     },
+     {
+      "id": "2.10",
+      "label": "Check the counts against the earlier screens",
+      "questions": [
+       {
+        "question": "Do you notice the inconsistency in how unread articles are reported across different feeds?",
+        "cluster": "compare",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Black Women in History' feed claiming you are caught up despite containing an article from yesterday, while the 'Journalism' feed immediately displays accurate unread counts.",
+        "whatTheAgentLoses": "An agent might trust the false 'caught up' message and fail to find the latest news, whereas a human would manually check the feed to verify."
+       },
+       {
+        "question": "Does the publication frequency shown on the feed header agree with the search result?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The feed header for MindShift states it publishes one article per month, contradicting the search result which claimed four articles per week.",
+        "whatTheAgentLoses": "An agent might miss this contradiction and rely on inaccurate search results regarding how often the source publishes."
+       },
+       {
+        "question": "Do the different screens agree on the length of the video?",
+        "cluster": "compare",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The search results and title slate show a duration of 2:04, while the web player and import window show 2:09.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch a metadata mismatch that could indicate missing footage or technical errors."
+       },
+       {
+        "question": "Does the publication date on the loaded article match the date shown in the timeline?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The timeline listed the article under December 19th, but the loaded article page shows December 20, 2009, indicating a discrepancy in the reported dates.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is accurately verifying the true publication date of the news."
+       },
+       {
+        "question": "Does the unread count update to reflect the article you just opened?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The unread count for the EdTech feed dropping from 593 to 592 confirms that the system successfully registered your view of the latest article.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that their reading progress is being accurately tracked by the news aggregator."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Pull up the stories",
+    "note": "3.1 or 3.2 or 3.3 raises a list - the Google keepers pull per section or query and keep nothing, the Feedly keepers open what 2 built. 3.4 only where the surface offers filters, and vLA0 round-trips every one before a single range sticks. 3.5 on every list; 3.6 where the surface clusters outlets; 3.7 on the newsroom service. re-entered per query - three searches in a row (64Vu).",
+    "questions": [
+     {
+      "question": "Should you apply mute filters to hide unwanted topics from your feed?",
+      "cluster": "refine",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers a 'GET MUTE FILTERS' button designed to remove irrelevant articles and fine-tune the news feed.",
+      "whatTheAgentLoses": "The user loses the opportunity to permanently customize their feed by filtering out specific unwanted keywords."
+     },
+     {
+      "question": "Should you add more keywords to narrow the results, or use the built-in filter tools?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The search results for 'Red sox curse' are broad, and choosing between typing additional keywords or clicking the 'Tools' button determines how efficiently you can filter for the most recent articles.",
+      "whatTheAgentLoses": "You lose the ability to apply your knowledge of platform-specific features to efficiently filter results instead of relying on trial-and-error keyword searches."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Sweep the sections",
+      "questions": [
+       {
+        "question": "Which personalized feed should you select from the sidebar to find your topic?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar displays distinct navigation options like 'For you' and 'Following', which dictate whether you see algorithmically suggested news or topics you have explicitly chosen.",
+        "whatTheAgentLoses": "You lose the ability to leverage your personally curated feeds to quickly locate topics you already track."
+       },
+       {
+        "question": "What topics, locations, and sources are you currently following?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Reviewing the empty state messages under the 'Topics & Sources' tab confirms whether you have already set up quick access to the specific subject you want to read about.",
+        "whatTheAgentLoses": "You lose the awareness of your account's current personalization state and the knowledge that no specific topics or sources are currently saved for quick access."
+       },
+       {
+        "question": "Do you have any saved searches available?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays an empty state message indicating no saved searches exist, meaning you must search for your topic manually instead of using a shortcut.",
+        "whatTheAgentLoses": "The user loses the awareness that their saved searches list is empty and the opportunity to manage their personalized news feed shortcuts."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Open a followed feed",
+      "questions": [
+       {
+        "question": "Which specific source from the Marketing feed do you want to view?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The expanded sidebar shows multiple marketing sources with unread counts, requiring a choice of which specific publication or author to prioritize.",
+        "whatTheAgentLoses": "You lose the ability to select a preferred industry expert or publication based on your personal trust and reading preferences."
+       },
+       {
+        "question": "Which feed should you select to find news on your topic?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar displays specific feeds like 'Adam Riemer Marketing', and choosing the correct one is necessary to locate relevant articles.",
+        "whatTheAgentLoses": "You lose the ability to personally curate which specific feeds or sources best cover your topic of interest."
+       },
+       {
+        "question": "Should you use one of the pre-existing feeds in the sidebar to locate your topic?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar displays pre-configured feeds like 'Social Media Marketing' containing specific sources that might already cover the topic you need.",
+        "whatTheAgentLoses": "You lose the ability to personally review and select from your curated list of trusted sources."
+       },
+       {
+        "question": "Which feed in the sidebar should you click to view the aggregated EdTech news?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar displays multiple related feeds like 'EdTech 16' and 'Educational Technolo... 9', requiring you to choose the exact category that aggregates the desired topic.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific sub-feed best matches your nuanced interest in the topic."
+       },
+       {
+        "question": "Do you want to filter the aggregated feed to only show articles from the 'Educational Technology' source?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the cursor hovering over the 'Educational Technolo...' source in the left sidebar, offering a way to narrow the current EdTech news feed.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose whether to read broadly across multiple sources or restrict their news to one specific publisher."
+       },
+       {
+        "question": "Should you select a specific feed within the EdTech category or view the aggregated list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed an expanded list of individual feeds like 'EdSurge Articles' under the EdTech category, offering a way to narrow down the 593 unread items.",
+        "whatTheAgentLoses": "The delegator loses the opportunity to prioritize specific, trusted sources over the broader, unfiltered topic feed."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Search the stories",
+      "questions": [
+       {
+        "question": "Should you select the 'red sox news' autocomplete suggestion instead of submitting the broad query?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown explicitly offered 'red sox news', which directly targets your goal of finding recent articles rather than general team information.",
+        "whatTheAgentLoses": "You lose the ability to explicitly narrow the search intent, potentially causing the agent to waste time sifting through general search results like scores or schedules."
+       },
+       {
+        "question": "How do you narrow down the search results to your specific topic?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial search yielded over 18 million broad results and generic dropdown suggestions like 'red sox score', requiring manual keyword refinement to target the exact news.",
+        "whatTheAgentLoses": "The user loses the ability to bypass generic suggestions and intuitively refine the search query to match their exact, unlisted interest."
+       },
+       {
+        "question": "What topic do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar prompts for topics, locations, or sources, requiring you to specify the exact subject you want to read about.",
+        "whatTheAgentLoses": "You lose the opportunity to choose a news topic that aligns with your personal interests or immediate curiosity."
+       },
+       {
+        "question": "Which fields should you target in the advanced search dropdown?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu offers options like 'Headline', 'Full Text', and 'Topic', allowing you to control exactly where the site looks for your keywords.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to cast a wide net across all text or narrow the focus strictly to headlines or specific topics."
+       },
+       {
+        "question": "Does the resulting page match the topic you intended to search for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming that the timeline updates to 'Health News' ensures the platform correctly processed your specific query.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally verify that the search results accurately reflect the exact topic you had in mind."
+       },
+       {
+        "question": "Did the search engine automatically alter your search term to a more common spelling or related topic?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms sometimes silently autocorrect niche or specific terms, displaying a 'Showing results for...' message and returning irrelevant articles.",
+        "whatTheAgentLoses": "The user loses the chance to notice the unwanted correction and click 'Search instead for...' to force the exact query."
+       },
+       {
+        "question": "Did the site return zero results for your specific query, requiring you to check for typos or use broader terms?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A highly specific or misspelled query might yield an empty state, forcing a pivot in the search strategy.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize their search was too narrow or misspelled and to manually adjust their approach."
+       },
+       {
+        "question": "Did the autocomplete suggestions suddenly show irrelevant topics, indicating a typo in your search input?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A spelling mistake in the search bar immediately populates the dropdown with unrelated suggestions, serving as an early warning that your query is wrong before you even submit it.",
+        "whatTheAgentLoses": "The ability to catch their own spelling mistake in real-time by noticing off-topic autocomplete suggestions and correcting the input before executing a useless search."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Narrow the results",
+      "note": "3.4.1 first on a general engine. 3.4.2 to 3.4.4 in any order, each applied, inspected, and reverted before the next (vLA0) - only 3.4.5 sticks. 3.4.3 is also how the newsroom keeper reaches text advisories (AE9a).",
+      "questions": [
+       {
+        "question": "Do you need to use search tools to filter out older, non-news results?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed outdated articles from May 2018 and non-news links like Wikipedia, meaning the default search results did not meet the requirement for recent news.",
+        "whatTheAgentLoses": "The user loses the control to decide whether to refine the search using built-in platform tools or by manually modifying the search keywords."
+       }
+      ],
+      "children": [
+       {
+        "id": "3.4.1",
+        "label": "Switch to the news results",
+        "questions": [
+         {
+          "question": "Are you still on the 'News' tab for your search results?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen shows the 'All' tab underlined in blue and a Wikipedia article as the top result, indicating general web results instead of news.",
+          "whatTheAgentLoses": "The user loses the assurance that the agent is actually looking at news articles rather than general web results."
+         },
+         {
+          "question": "Does the active search tab visually match the filtering options displayed in the 'Tools' menu?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen needs to clearly show whether a general search or a news-specific search is active to ensure the correct recency filters can be applied.",
+          "whatTheAgentLoses": "The person loses the correct search context and accurate recency filtering if the agent misinterprets which search tab is currently active."
+         }
+        ]
+       },
+       {
+        "id": "3.4.2",
+        "label": "Sort the results",
+        "questions": [
+         {
+          "question": "Should you keep the chronological sorting or revert to relevance?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dropdown menu offers both 'Sorted by date' and 'Sorted by relevance', forcing a choice between seeing the absolute newest articles or the most topically accurate ones first.",
+          "whatTheAgentLoses": "You lose the ability to decide whether strict recency or topical relevance is more important for your specific news search."
+         }
+        ]
+       },
+       {
+        "id": "3.4.3",
+        "label": "Restrict the source type",
+        "questions": [
+         {
+          "question": "Did your filter restrict the search results to only show blog posts?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The first result displayed was a 2018 blog post, indicating that the current search parameters might be excluding authoritative recent news.",
+          "whatTheAgentLoses": "You lose the opportunity to notice that a filter is returning outdated blog content instead of actual news and decide to revert it."
+         },
+         {
+          "question": "Should you filter the feed to show only text advisories instead of videos?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays checkboxes for 'Video' and 'Advisories', allowing you to remove unwanted media formats from the search results.",
+          "whatTheAgentLoses": "You lose the ability to specify your preferred media format for consuming the news."
+         }
+        ]
+       },
+       {
+        "id": "3.4.4",
+        "label": "Set the time window",
+        "questions": [
+         {
+          "question": "How far back do you want to restrict the search results?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dropdown offers multiple time frames like 'Past hour' or 'Past month', which determines how recent the news articles must be to appear in your results.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might pick a time frame that is too broad or too narrow for your specific information needs."
+         },
+         {
+          "question": "Did the filter successfully return older articles?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Seeing older dates like 2017 and 2013 on the search results confirms that the archive filter is functioning correctly.",
+          "whatTheAgentLoses": "You lose the visual confirmation that the platform's date filters are actually working as intended before selecting an article."
+         }
+        ]
+       },
+       {
+        "id": "3.4.5",
+        "label": "Enter a custom date range",
+        "questions": [
+         {
+          "question": "How do you specify an exact date range for the search?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Choosing the custom range option in the date filter dropdown lets you pinpoint articles from a specific timeframe instead of relying on general archive categories.",
+          "whatTheAgentLoses": "You lose the ability to manually define the exact start and end dates that perfectly capture the specific timeframe you care about."
+         },
+         {
+          "question": "Does the applied date filter accurately reflect the years you entered?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Verifying that the system expanded your input of '1990' and '1999' to the full calendar years ensures your search covers the entire intended timeframe.",
+          "whatTheAgentLoses": "The user loses the opportunity to verify that the system's automatic date formatting perfectly aligns with their intended search boundaries."
+         },
+         {
+          "question": "Did your custom date filter eliminate all articles and return an empty results page?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Applying a very narrow or historically distant custom date range can easily result in zero matching news stories, indicating the filter was too strict.",
+          "whatTheAgentLoses": "The ability to recognize that their own recency filter was too restrictive and proactively widen the timeframe to find relevant news."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Scan the headline list",
+      "questions": [
+       {
+        "question": "Which international news story on the 'World' page should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple recent articles about the Fukushima water release, presenting an option to dive into this topic or keep scrolling for others.",
+        "whatTheAgentLoses": "The user loses the ability to browse headlines and personally select which international news story catches their interest."
+       },
+       {
+        "question": "Should you scroll down to check the additional recent stories below the top story?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays other recent articles with their timestamps, such as an ASEAN statement and an International Rice Research Institute update, which might match your target topic.",
+        "whatTheAgentLoses": "The user loses the chance to visually scan the feed and decide if any of the alternative recent stories cover the exact topic they want to read about."
+       },
+       {
+        "question": "Do any of these headlines in the feed match your specific interests?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several recent EdTech articles, requiring you to scan the headlines to see if any cover your specific interests like video technologies or pedagogy.",
+        "whatTheAgentLoses": "You lose the ability to apply your nuanced, personal criteria to filter which specific sub-topics are actually worth reading."
+       },
+       {
+        "question": "Is the top search result visually marked as 'Sponsored' or an ad rather than an organic news story?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search engines and aggregators place visually distinct but subtly labeled advertisements above organic news results, which can look identical to real articles.",
+        "whatTheAgentLoses": "The user loses the ability to bypass paid placements and ensure they are selecting independent, relevant news coverage rather than commercial content."
+       },
+       {
+        "question": "How are the dates organized in this timeline?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Understanding the timeline column headers for specific dates like December 24th and 25th is essential to accurately judge which articles are the most recent.",
+        "whatTheAgentLoses": "You lose the intuitive ability to visually verify the site's specific chronological layout to ensure you are looking at the newest updates."
+       },
+       {
+        "question": "Do the article timestamps actually match the 'Today' filter?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The interface suggests the content is from today, but the visible timestamps reveal articles ranging from 17 hours to 5 days old.",
+        "whatTheAgentLoses": "The user loses the assurance of getting truly recent news if the agent blindly trusts the category label instead of verifying the actual publication dates."
+       },
+       {
+        "question": "Are these top headlines for your selected country the most recent and relevant news you are looking for?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed top headlines for Nigeria, which must be evaluated to ensure they meet your criteria for recency and relevance.",
+        "whatTheAgentLoses": "The user loses the ability to personally scan the top headlines and decide which specific story catches their interest."
+       },
+       {
+        "question": "Is the most recent article flagged as 'Opinion', 'Analysis', or 'Sponsored' rather than hard news?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "News aggregators and sites often interleave subjective commentary or paid content with chronological news, which might not serve the goal of finding factual updates.",
+        "whatTheAgentLoses": "The user loses the personal judgment to skip over editorials or ads in favor of objective reporting on the topic."
+       },
+       {
+        "question": "Is the 'latest' timestamp misleading because an older article was merely updated with a minor correction?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Publishers sometimes update old articles, changing the timestamp to 'Just now' even though the core news is days or weeks old.",
+        "whatTheAgentLoses": "The user loses the ability to notice that the content itself is stale despite the fresh timestamp."
+       },
+       {
+        "question": "Does the relative timestamp on the article indicate minutes or months?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A timestamp abbreviation like '1m' can visually mean '1 minute ago' or '1 month ago' depending on the platform's specific UI conventions, drastically changing the recency judgment.",
+        "whatTheAgentLoses": "The user loses the ability to apply human common sense to ambiguous UI abbreviations, potentially accepting stale news as breaking."
+       },
+       {
+        "question": "Does the news item feature a 'Live' badge or pulsing visual indicator showing it is a developing story?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Breaking news often features a distinct red or pulsing visual badge indicating that the page is actively updating with new information.",
+        "whatTheAgentLoses": "The user loses the crucial context that the information is currently unfolding and that staying on the page will yield real-time updates."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Compare the outlets on a story",
+      "questions": [
+       {
+        "question": "Should you click 'Full Coverage' to see more sources and in-depth reporting on this story?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The news card features a 'Full Coverage' button alongside related links from different publishers, offering a way to expand on the main headline.",
+        "whatTheAgentLoses": "The user loses the chance to spontaneously decide how deeply they want to explore a specific news event based on the available sources."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Check the advisories for coming footage",
+      "questions": [
+       {
+        "question": "Should you check the advisory details to confirm the content and delivery time of the upcoming footage?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The details pane on the right reveals the specific description and expected delivery time for the upcoming news.",
+        "whatTheAgentLoses": "You lose the opportunity to know exactly when the upcoming news footage will become available."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Read the story",
+    "note": "4.1 from any list; 4.2, then 4.3 when the preview runs out - four reads finish on the source site, two stay in the preview. 4.4 for video items. 4.5 closes the loop every time, by whichever door the surface gives.",
+    "questions": [
+     {
+      "question": "Is the opened article primarily a photo gallery or interactive infographic rather than standard text?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "A sighted user instantly recognizes when an article's main content is visual (like a slideshow), which drastically changes how it is consumed.",
+      "whatTheAgentLoses": "The user loses the warning that the content requires visual browsing, which is frustrating if they are relying on text-to-speech or a screen reader."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Open the story",
+      "questions": [
+       {
+        "question": "Which of these recent business articles do you want to open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the 'Latest' business tab with articles from 5 to 6 hours ago, providing the necessary options to select and open a current story.",
+        "whatTheAgentLoses": "The user loses the chance to personally pick the specific business headline that most appeals to their current interests."
+       },
+       {
+        "question": "Which article do you want to read from this feed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'caught up' message instead of a news feed, requiring you to click 'SEE ALL ARTICLES' to reveal the chronological list and find the newest story.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the expanded list of past articles and select the specific story that most appeals to you."
+       },
+       {
+        "question": "Which of these recent articles about the Red Sox should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed multiple articles published 2 hours ago, requiring a choice of which specific story or source to read.",
+        "whatTheAgentLoses": "The user loses the ability to select their preferred news source or specific angle on the recent events."
+       },
+       {
+        "question": "Which article from the timeline should you choose to read?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple articles spanning several days, requiring a decision on which specific headline and source to explore.",
+        "whatTheAgentLoses": "The user loses the chance to scan the timeline and pick the specific headline or publication that catches their eye."
+       },
+       {
+        "question": "Which of the latest health articles should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple recent health headlines, including stories about an HIV trust fund and a COVID-19 wave, requiring you to choose the most relevant one.",
+        "whatTheAgentLoses": "You lose the opportunity to browse the current health headlines and organically select the story that most interests you."
+       },
+       {
+        "question": "Does the content of the opened article match the preview snippet from the search results?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Verifying that the article text matches the preview snippet ensures you have opened the correct article.",
+        "whatTheAgentLoses": "The user receives incorrect information if the agent opens an article that doesn't match the expected content from the search results."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Read the in-app preview"
+     },
+     {
+      "id": "4.3",
+      "label": "Go to the source site",
+      "questions": [
+       {
+        "question": "Do you want to click through to the original website to read the full article?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an article preview in an aggregator with a 'VISIT WEBSITE' button, meaning the full text is hosted externally.",
+        "whatTheAgentLoses": "The user loses the choice of whether to settle for the provided summary or proceed to the external publisher's site."
+       },
+       {
+        "question": "Can you see the full article content?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen showed the title and subtitle, but the author's name and the rest of the text were cut off.",
+        "whatTheAgentLoses": "The user misses the actual news content if the agent stops before the article fully loads."
+       },
+       {
+        "question": "Are you currently viewing the opened article or still browsing the aggregator's feed?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows the active tab is the Guardian article, contradicting the claim that the aggregator feed is being scrolled.",
+        "whatTheAgentLoses": "The user loses accurate tracking of whether the agent has successfully opened the target article or is still searching the feed."
+       },
+       {
+        "question": "Do you need to dismiss a newsletter sign-up or cookie consent banner to actually read the text?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "News sites aggressively overlay the content with consent forms or email capture pop-ups that must be navigated before the article is visible.",
+        "whatTheAgentLoses": "The user loses control over what data they consent to sharing or whether they want to subscribe to the publisher's mailing list just to read one article."
+       },
+       {
+        "question": "Did the link from the aggregator lead to a 404 error or a removed page on the publisher's site?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Aggregators sometimes index articles that are subsequently taken down or moved by the original publisher, resulting in a broken link.",
+        "whatTheAgentLoses": "The user loses the awareness that the selected source is unavailable and the chance to pick the next best article."
+       },
+       {
+        "question": "Did the external article load successfully, or did you hit a publisher's paywall?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Clicking through to an original source often leads to a subscription prompt or paywall instead of the full text, forcing you to abandon the page and find a different source.",
+        "whatTheAgentLoses": "The ability to recognize an access barrier on the external site and decide to back out and choose a freely available article instead."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Play the video item",
+      "questions": [
+       {
+        "question": "Should you open a video instead of a standard text article?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google News Timeline shows a video thumbnail under December 18th, presenting an opportunity to view multimedia coverage.",
+        "whatTheAgentLoses": "You lose the personal preference of selecting video coverage over written articles when both are available."
+       },
+       {
+        "question": "Does the video playing in the pop-up match the news article you intended to open?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Clicking the video thumbnail opens a pop-up player, making it necessary to confirm the video actually covers the specific news topic you selected.",
+        "whatTheAgentLoses": "The user loses the immediate visual confirmation that the pop-up video is the correct news story rather than an unrelated clip or ad."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Return to the list",
+      "questions": [
+       {
+        "question": "How do you return to the main feed from the opened article?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed the article in an overlay or modal with an 'X' button rather than loading a completely new page.",
+        "whatTheAgentLoses": "You lose the ability to easily resume browsing the same list of recent articles if the agent closes the entire tab instead of just the overlay."
+       },
+       {
+        "question": "Should you read further down the article, or return to the timeline?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must decide if the visible text about the Senate Democrats' health bill deal is sufficient for your needs or if you should go back to browse other headlines.",
+        "whatTheAgentLoses": "You lose the personal judgment of whether an article's initial paragraphs are engaging enough to warrant reading the whole piece versus returning to the main feed."
+       },
+       {
+        "question": "Have you seen enough of the video to close the pop-up?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a video pop-up titled 'Protest outside of closing nursing home' playing over the content, requiring a decision on whether to keep watching or dismiss it using the 'X' button.",
+        "whatTheAgentLoses": "The user loses the ability to judge exactly how much of the video preview is necessary to watch before dismissing it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Save and curate the stories",
+    "note": "5.1 before the first save. 5.2 or 5.3 - 5.4 inside 5.3 on a first board. 5.5 after a save: the same check succeeds in one keeper and comes back empty in another. 5.6 then 5.7 only in the keeper that unwinds its own work (xbgg).",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Review the save and share options",
+      "questions": [
+       {
+        "question": "Should you save, share, or perform any other action on this article before closing it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The action bar displays numerous options like saving to a board, emailing, or sharing to social media, offering ways to retain or distribute the information.",
+        "whatTheAgentLoses": "You lose the opportunity to organically decide to save or share an interesting article to your personal networks or reading lists."
+       },
+       {
+        "question": "Do you want to save this article to your board or mark it as read?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a star icon to save the article and a checkmark icon to mark it as read, providing alternative ways to manage the content.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally curate your reading list or track your reading history using the platform's tools."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Save the story for later",
+      "questions": [
+       {
+        "question": "Do you want to save this article to read later?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a \"Read Later\" bookmark icon next to the article, offering the option to save it.",
+        "whatTheAgentLoses": "The user loses the ability to curate a reading list of interesting articles for future reference."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Save the story to a board",
+      "questions": [
+       {
+        "question": "Do you want to save this article to a specific board for later reference?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The star icon opens a modal to organize saved articles by project or topic, letting you create a custom board to easily find the article again.",
+        "whatTheAgentLoses": "You lose the opportunity to personally name the board and define the organizational structure for your saved news."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Name the new board",
+      "questions": [
+       {
+        "question": "What do you want to name the new board?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Board name' popup that requires a custom text entry to organize the saved article.",
+        "whatTheAgentLoses": "Delegating this means the agent might choose a generic board name that does not fit your personal organizational system."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Check the save landed",
+      "questions": [
+       {
+        "question": "How do you access an article you saved for later?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Closing the current panel and selecting 'Read later' from the left sidebar lets you quickly retrieve an article you previously set aside.",
+        "whatTheAgentLoses": "You lose the time-saving benefit of your personal curation if the agent ignores your saved list and performs a fresh search."
+       },
+       {
+        "question": "Is the article you saved earlier visible in the Read Later section?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays 'No Read Later Stories Yet', indicating that the article you attempted to save earlier was not successfully added to the list.",
+        "whatTheAgentLoses": "You lose access to the specific article you intended to read because the agent moves on to a different section instead of verifying why the save action failed."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Remove the story from the board"
+     },
+     {
+      "id": "5.7",
+      "label": "Delete the board",
+      "questions": [
+       {
+        "question": "Are you sure you want to delete the entire board?",
+        "cluster": "undo",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The '...' dropdown menu displays both harmless sorting options like 'Latest' and the destructive 'Delete' option, requiring careful selection.",
+        "whatTheAgentLoses": "The user loses the opportunity to prevent the permanent deletion of their curated board if the agent mistakenly chooses the wrong menu item."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Download and import the footage",
+    "note": "6.1, then 6.2 and 6.3 in the browser, 6.4 to 6.6 in the editor, 6.7 when playback stutters. one keeper runs it (AE9a), and the task ends with the transcode still at 12 percent.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Preview the footage and script",
+      "questions": [
+       {
+        "question": "Which specific search result should you select from the list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The results show multiple recent items with different media types and topics, such as a video about Russian ice hockey versus one about India's IOC ban, requiring a choice based on relevance.",
+        "whatTheAgentLoses": "You lose the ability to personally select the specific sub-topic and media format that best fits your current interest."
+       },
+       {
+        "question": "Does this video and its accompanying transcript contain the specific footage and story details you need?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the video player and the text sections like 'SHOWS:' and 'STORY:' confirms whether the asset actually contains the relevant footage and information about the Russian hockey team.",
+        "whatTheAgentLoses": "You lose the opportunity to personally watch the video and read the transcript to ensure the footage and story nuances meet your exact expectations."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Configure the download",
+      "questions": [
+       {
+        "question": "Which files associated with this video should you download?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The download menu defaults to including XML and other metadata, but selecting only the video file saves storage and bandwidth if you are writing your own story.",
+        "whatTheAgentLoses": "You lose the ability to prevent the agent from downloading unnecessary metadata files that clutter your local storage."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Name the file and keep the extension",
+      "questions": [
+       {
+        "question": "What should you name this file and how should you configure the save options?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The default filename is a cryptic string of characters, so renaming it and keeping the extension visible makes the file much easier to identify later.",
+        "whatTheAgentLoses": "The user loses the ability to apply their own personal naming conventions and organizational preferences to downloaded files."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Import into the editor"
+     },
+     {
+      "id": "6.5",
+      "label": "File it into an event",
+      "questions": [
+       {
+        "question": "How should you organize and store the imported media files?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The import settings dialog requires deciding whether to copy files to the local events folder to prevent losing access if the original drive is disconnected.",
+        "whatTheAgentLoses": "The user loses control over their local file management and the assurance that media is safely stored on their primary hard drive."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Place the clip on the timeline"
+     },
+     {
+      "id": "6.7",
+      "label": "Check the transcode progress",
+      "questions": [
+       {
+        "question": "Do you want to check the progress of the media import in the Background Tasks window?",
+        "cluster": "watch",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The Background Tasks window shows the media import is at 12%, which helps determine how much longer the process will take.",
+        "whatTheAgentLoses": "The user loses the ability to monitor the exact progress of the background import and decide whether to wait for it to finish."
+       },
+       {
+        "question": "Is the video you are playing in the viewer running smoothly?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen showed choppy playback of a high-resolution file, which prompted an investigation into background tasks.",
+        "whatTheAgentLoses": "A person delegating to an agent loses the ability to visually assess playback quality and intuitively troubleshoot system performance issues."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Close the session",
+    "note": "7.1 then 7.2. one keeper does both (v4vm); the rest stop the recorder or just stop.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Log out"
+     },
+     {
+      "id": "7.2",
+      "label": "Confirm the logout",
+      "questions": [
+       {
+        "question": "Did you successfully log out of the account?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a promotional landing page with a 'LOGIN' button, confirming that the active session has ended.",
+        "whatTheAgentLoses": "The user loses the assurance that their personal account was securely closed and their session data protected at the end of the task."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

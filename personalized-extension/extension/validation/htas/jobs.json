@@ -1,0 +1,3021 @@
+{
+ "task": "apply to a job online (Indeed, Workday, LinkedIn Easy Apply, company career portals): find the posting, start the application, fill the multi-page form, upload or attach a resume, answer the screening questions, submit; complete when the application-submitted confirmation is on screen. Surface pinned: a job board or employer application portal on the web. Variants: resume writing, job-search browsing without submitting, and interview preparation do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Apply for a job online",
+  "note": "do 1, then 2 - repeat 2.1 and 2.2 until a posting survives the read (skni rejects three on location alone before committing). 3 where the platform puts it: at the very first step (nI4K, and the session ends there), between the posting and the form (WjDI, DzPw, cXKe, CDOH), or only after the availability preferences (15nS, dz2Z) - the Indeed keepers arrive signed in and never see it. 4 before anything else on the profile marketplace (8dGC). then 5 on the employer portals, or 6 in its place on the marketplaces (8dGC, a2Q4). then 7. 8 where the platform demands more after the submit - an assessment (CL48, skni) or an identity check (GPCO). 9 where a confirmation or dashboard exists; on ERA the application stays editable there until the vacancy closes.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the hiring portal",
+    "note": "1.1 and 1.2 together on search-engine entries (CDOH, 15nS, cXKe), 1.3 where the employer runs two portals, 1.4 on direct-link entries (WjDI, DzPw). 1.5 where the session starts signed in. 1.6 fires throughout the task, not just at entry - the platform raises them at whatever point it wants.",
+    "questions": [
+     {
+      "question": "Should you enable Developer mode to install a custom extension?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The Chrome Extensions page requires the Developer mode toggle in the top right corner to be turned on before you can load unpacked, custom extensions.",
+      "whatTheAgentLoses": "The user loses the ability to decide whether to expose their browser to unverified, custom code that could access sensitive application data."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Search for the careers site",
+      "questions": [
+       {
+        "question": "Should you select an autocomplete suggestion or search for your exact query?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar displays autocomplete suggestions like 'workday careers login' that could unintentionally narrow or change the focus of your job search.",
+        "whatTheAgentLoses": "You lose the ability to decide whether a suggested search term might yield better job portal results than your original query."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Skip the sponsored lookalikes",
+      "questions": [
+       {
+        "question": "Does the URL of the application portal exactly match the employer's official domain, or is it a lookalike phishing site?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Scammers frequently post fake jobs on legitimate boards to harvest personal information and resumes.",
+        "whatTheAgentLoses": "The user loses the critical security check of verifying the employer's digital identity before handing over their PII."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Pick the portal track",
+      "questions": [
+       {
+        "question": "Which search result should you click to access the platform for jobs posted by other companies rather than jobs at Workday itself?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result is for jobs directly at Workday, while the second result is the portal for applying to jobs at other companies that use the Workday platform.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent navigates to the general job board rather than accidentally searching for internal roles at the software company itself."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Follow the employer's application link",
+      "questions": [
+       {
+        "question": "Where do you click to access the official application portal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page explicitly states that all applications must be submitted through the Electronic Recruitment Application (ERA) system to be considered.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent is navigating to the officially mandated recruitment system to find and apply for the job."
+       },
+       {
+        "question": "Should you use a specific referral link to access the application?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a specific referral URL directly into the address bar bypasses the standard search and provides a streamlined application process.",
+        "whatTheAgentLoses": "You lose the advantage of applying through personal network connections or specific referral codes that might improve your chances of being hired."
+       },
+       {
+        "question": "Are you on the correct referral landing page, and should you accept the invite?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a Handshake landing page for 'remote AI work', and you must confirm this is the correct program before clicking 'Accept invite'.",
+        "whatTheAgentLoses": "The user loses the ability to independently verify the referral source and read the expected benefits before committing to the platform."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Check the signed-in account",
+      "questions": [
+       {
+        "question": "Are you signed into the correct Indeed account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the email address displayed in the profile dropdown ensures your job applications will be linked to the correct identity.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the application is being submitted under your preferred professional email address."
+       },
+       {
+        "question": "Are you on the correct job board, logged into your account, and aware of the default search location?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the ZipRecruiter logo, the logged-in profile badge, and the pre-filled 'Lahore, PK' location ensures you are searching for jobs under the correct account and in the right area.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to verify that the agent is using your personal account and targeting your preferred geographic location before it starts applying to jobs."
+       },
+       {
+        "question": "Are you aware that you are searching for jobs in the United Kingdom while logged into an Amazon account based in the US?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the Amazon delivery address is Ahoskie [number] (US), but the job search is set to the United Kingdom, which might cause issues with application eligibility or account region settings.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize they are using a US-based Amazon account to apply for UK jobs, which could complicate their application."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Answer the platform prompts",
+      "questions": [
+       {
+        "question": "Which language should you select, and should you continue in the browser or open the app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between English and Hindi, and deciding whether to stay in the browser or open the Indeed app to proceed with the job search.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over the interface language and whether the application process happens in your browser or a separate mobile app."
+       },
+       {
+        "question": "Should I accept all cookies, including advertising and analytics, or manage my preferences?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The banner explicitly asks for permission to set analytics and advertising cookies that track your activity.",
+        "whatTheAgentLoses": "You lose the opportunity to protect your digital privacy by opting out of non-essential tracking cookies."
+       },
+       {
+        "question": "Should you allow the website to access your location?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser displays a pop-up asking if careers.walmart.com can access your location, requiring a choice to allow or block the request.",
+        "whatTheAgentLoses": "You lose the ability to control whether your precise physical location is shared with the employer's website."
+       },
+       {
+        "question": "Do you want to connect your account to your school now, or skip this step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers the option to connect to your school to access school-only jobs and resources, but allows you to skip it for now.",
+        "whatTheAgentLoses": "You lose the opportunity to access exclusive school-only jobs and campus networking resources if the agent automatically skips this step."
+       },
+       {
+        "question": "Should you sign up for a Loom account to watch the video, or bypass the prompts?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple pop-ups like 'Sign up with Google' and 'Take me to the video', forcing a choice between creating an account and skipping the prompts.",
+        "whatTheAgentLoses": "The user loses control over whether their personal email is used to create an account on a third-party platform just to view an application video."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Choose an opening",
+    "note": "2.1, then 2.2 on the opened posting; repeat until one fits - skni backs out of three, fXP4 takes the fourth card. 2.3 and 2.4 where offered; F6eA runs both on the same job it then applies to.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Search the listings",
+      "note": "2.1.1, 2.1.2, or 2.1.3 raises a list. 2.1.4 and 2.1.5 narrow it where used - half the corpus opens filters and applies none. 2.1.6 when a search comes back empty. then 2.1.7.",
+      "questions": [
+       {
+        "question": "Should you browse the recommended 'Top job picks for you' or initiate a new search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays personalized recommendations like a Sales Specialist role based on your profile, which might be relevant without needing a manual search.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh whether the algorithm's suggestions align with your current career interests better than your planned search."
+       }
+      ],
+      "children": [
+       {
+        "id": "2.1.1",
+        "label": "Enter the search terms",
+        "questions": [
+         {
+          "question": "Should you start a new search or select one of your recent searches?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a list of recent searches like \"accounting in Raleigh, NC\" that you can quickly reuse, or you can enter new keywords to find different roles.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to spontaneously pivot your job search strategy instead of relying on your past search history."
+         },
+         {
+          "question": "What job title or keyword should you search for?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search bar displayed recent searches like 'executive virtual assistant' and various suggestions, but your specific keyword choice determines which job postings will appear.",
+          "whatTheAgentLoses": "The user loses the ability to define the exact role they want to target, risking that the agent might rely on past searches or generic suggestions instead."
+         },
+         {
+          "question": "Do you want to search for jobs in a specific city or look for remote positions?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search field suggests specific cities like Manila or Cebu City, but typing 'Remote' filters the results exclusively for work-from-home opportunities.",
+          "whatTheAgentLoses": "The user loses the ability to dictate their work environment preference, such as prioritizing work-from-home flexibility over local office roles."
+         },
+         {
+          "question": "Should you apply classification and location filters, or just search by keyword?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search bar provided 'Any Classification' and 'Where' dropdowns, which can significantly narrow the results compared to a broad keyword search.",
+          "whatTheAgentLoses": "The user loses control over how strictly the job search is filtered by industry and location versus a broad keyword match."
+         },
+         {
+          "question": "Do you want to leave the keyword field blank to see all available jobs in the United Kingdom?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Leaving the 'Search for jobs by title or keyword' field empty while selecting 'United Kingdom' in the location dropdown allows you to browse all open roles in that country.",
+          "whatTheAgentLoses": "You lose the chance to browse an unfiltered list of regional job openings that might reveal unexpected career opportunities."
+         },
+         {
+          "question": "How should you configure the career area, keyword, and location fields to search for a job?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a search bar with an 'All Career Areas' dropdown, a keyword text field, and an 'All Locations' field that must be set to find relevant postings.",
+          "whatTheAgentLoses": "The user loses the opportunity to manually specify their exact career area, keyword, and location preferences for the initial job search."
+         }
+        ]
+       },
+       {
+        "id": "2.1.2",
+        "label": "Browse the job categories"
+       },
+       {
+        "id": "2.1.3",
+        "label": "Take a recommended job",
+        "questions": [
+         {
+          "question": "Which project should you select from the available matches on the dashboard?",
+          "cluster": "compare",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dashboard presents multiple opportunities, such as 'Project Hedgehog' and 'Project Ivy', with different pay rates and engagement types.",
+          "whatTheAgentLoses": "The user loses the ability to prioritize which specific project or pay rate best aligns with their current career goals."
+         }
+        ]
+       },
+       {
+        "id": "2.1.4",
+        "label": "Set the filters",
+        "questions": [
+         {
+          "question": "Do you want to apply any filters to narrow down the job search results?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays several filter categories like Series, Grades, Salary, Location, and Agency that can help target specific roles.",
+          "whatTheAgentLoses": "You lose the ability to specify your exact preferences for job series, grade, salary, or location before browsing the vacancies."
+         },
+         {
+          "question": "Do you notice that the sum of the job type filters exceeds the total search results, indicating that some jobs are listed under multiple categories?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The initial search showed 236 jobs but the filter categories added up to 252, which means filtering by one type might still include jobs that fall into other categories.",
+          "whatTheAgentLoses": "The user loses the nuanced understanding that selecting a specific job type filter might still yield roles with mixed or overlapping classifications."
+         },
+         {
+          "question": "Which filters should you apply to narrow down these initial search results?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search returned over 100 jobs, making it useful to apply filters like 'Date posted' or 'Job Type' to find the most relevant postings.",
+          "whatTheAgentLoses": "You lose the opportunity to personally prioritize which specific job criteria and filters matter most for your current job search."
+         },
+         {
+          "question": "Which 'Date posted' filter should you select to minimize competition?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting 'Last 24 hours' from the dropdown options limits the results to recently posted jobs, which reduces competition and increases your chances of being seen early.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to strategically balance the recency of the job post against the total volume of available opportunities."
+         },
+         {
+          "question": "What type of employment are you looking for?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Job Type' popup with options like 'Full-time' to filter the job search results.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might apply for part-time or contract roles when you only want a full-time position."
+         },
+         {
+          "question": "Should you filter the job search results by a specific company?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Company' dropdown with options like 'COCONUT' and 'GrowthAssistant', letting you decide whether to target specific employers or view all available jobs.",
+          "whatTheAgentLoses": "The user loses the ability to prioritize or avoid specific employers based on their personal preferences or career goals."
+         },
+         {
+          "question": "What language do you want the job postings to be in?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides a 'Job Language' filter dropdown to ensure the search results match the languages you can work in.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might apply to jobs in languages you do not speak or miss opportunities in other languages you are fluent in."
+         },
+         {
+          "question": "Does it make sense that applying the English language filter increased the number of job results?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The search results count unexpectedly increased from 5 to 6 jobs after applying the filter, indicating that the job board's search function might be malfunctioning or broadening the criteria instead of narrowing it.",
+          "whatTheAgentLoses": "An agent might blindly proceed with flawed search results, causing you to miss out on the most relevant job postings or waste time reviewing irrelevant ones."
+         },
+         {
+          "question": "Should you filter the job listings by remote type?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search page shows 421 results with options to filter by Flex, Onsite, or Remote, which narrows down the list to match your working location preference.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might apply to onsite roles when you only want remote work, or miss out on flexible opportunities by applying a strict filter."
+         },
+         {
+          "question": "Do you want to filter the job listings by a specific country or territory?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Country / Territory' filter with options like the United States and India, which determines whether the search results are restricted to a specific geographic location.",
+          "whatTheAgentLoses": "Letting an agent decide means it might skip geographic filters and apply to roles in countries where you do not live or lack work authorization."
+         },
+         {
+          "question": "Should you apply filters for job category or state to narrow down the results?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The left sidebar displays filters for job category and state, which could significantly reduce the number of postings you have to sort through.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to browse broadly or restrict the search to specific categories and locations."
+         },
+         {
+          "question": "Do you verify that the total number of search results matches the sum of the remote type filter categories?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "Checking that the 421 total results equal the sum of the Flex, Onsite, and Remote categories confirms that the job board's filters are applying correctly.",
+          "whatTheAgentLoses": "A person delegating this task loses the ability to sanity-check the platform's search filters to ensure no job opportunities are being hidden by a glitch."
+         },
+         {
+          "question": "Should you filter the search results to only show jobs with the Easy Apply option?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Clicking the 'Easy Apply' filter button restricts the search results to postings that support the streamlined application process.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to prioritize quick applications over a broader job search that includes external portals."
+         },
+         {
+          "question": "Does the total number of jobs match the breakdown shown in the city filter?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The unfiltered search shows over 500 jobs while the city filter only accounts for 50, suggesting the site's location filtering might be broken or incomplete.",
+          "whatTheAgentLoses": "An agent might blindly trust the flawed filter options and miss out on hundreds of unlisted job opportunities."
+         },
+         {
+          "question": "Are the job counts in the filters consistent with the total search results?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The total results show 570 jobs which matches the brand filters, but the employment type and rate filters show tens of thousands of jobs, suggesting the search interface might be malfunctioning.",
+          "whatTheAgentLoses": "A person delegating to an agent loses the ability to notice these contradictory filter counts and adjust their search strategy around a potentially broken job board."
+         },
+         {
+          "question": "Do you want to filter the search results by a specific job title from the dropdown?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dropdown displays specific roles like Occupational Therapist and RN with tens of thousands of listings, which can help narrow down a broad job search.",
+          "whatTheAgentLoses": "You lose the chance to see the distribution of available jobs across different titles and pivot your search based on market demand."
+         }
+        ]
+       },
+       {
+        "id": "2.1.5",
+        "label": "Sort the results",
+        "questions": [
+         {
+          "question": "Do you want to review the newly posted jobs at the top of the sorted list?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Sorting by date revealed a new \"Senior GL Accountant\" role posted \"Today\", which might be highly relevant to apply for early.",
+          "whatTheAgentLoses": "You lose the chance to personally evaluate whether these freshly posted roles are a better fit for your career goals than the default results."
+         }
+        ]
+       },
+       {
+        "id": "2.1.6",
+        "label": "Recover from a failed search",
+        "questions": [
+         {
+          "question": "What alternative location should you search for if your first choice yields no results?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The location search modal displayed a 'No results found' error for New York, meaning a different valid city or state must be entered to find job postings.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to decide which backup cities or regions are acceptable for your commute or relocation."
+         },
+         {
+          "question": "How do you recover when the search engine misinterprets your location query and returns zero results?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Searching for 'neva' resulted in an error stating no results were found for an empty string in 'NV', requiring you to clear the buggy location field and try a broader search.",
+          "whatTheAgentLoses": "The user loses the opportunity to find relevant jobs if the agent abandons the search upon encountering a glitchy location filter instead of clearing it and trying again."
+         }
+        ]
+       },
+       {
+        "id": "2.1.7",
+        "label": "Scan the results",
+        "questions": [
+         {
+          "question": "Which job posting from the search results should you open to see more details?",
+          "cluster": "compare",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays multiple roles like 'Consular Assistant' and 'Visa Assistant (NIV)' with differing salaries, grades, and schedules, requiring you to select the one that fits your goals.",
+          "whatTheAgentLoses": "You lose the ability to evaluate the compensation and schedule details to prioritize the role that best aligns with your career preferences."
+         },
+         {
+          "question": "How deep into the search results should you look before selecting a job?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The pagination controls at the bottom of the list indicate there are many more jobs available beyond the first page of results.",
+          "whatTheAgentLoses": "You lose the opportunity to manually browse deeper into the listings to find a role that perfectly matches your niche preferences."
+         },
+         {
+          "question": "Are you comfortable letting the automated script filter and skip jobs based on these resume match percentages?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the extension automatically skipping roles like 'Systems Engineer' and 'Staff Full Stack Software Engineer' due to low keyword match scores, which dictates your actual application pool.",
+          "whatTheAgentLoses": "Delegating this means losing the opportunity to manually review and apply for jobs that might be a strong fit despite having a low automated keyword match score."
+         },
+         {
+          "question": "Which job should you apply to next?",
+          "cluster": "compare",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a System Engineer role at HYVE Solutions in Fremont with a specific salary range, requiring a decision on whether this position meets your criteria.",
+          "whatTheAgentLoses": "Delegating this choice means losing the ability to personally evaluate if the salary, location, and company align with your specific career preferences."
+         },
+         {
+          "question": "Did you actually dismiss the 'Skip' job posting, or is it still available to select?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "This matters because the screen shows the 'Skip' Software Engineer job card is still listed with its dismiss button available, contradicting the claim that it was manually discarded.",
+          "whatTheAgentLoses": "The user loses control over their job search strategy if the agent applies to roles they intended to skip or discard."
+         },
+         {
+          "question": "Which of these available roles best matches your qualifications and pay expectations, or should you keep scrolling?",
+          "cluster": "compare",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen lists multiple roles like Generalist and Physics Expert with varying pay rates and degree requirements, so you must decide if any fit your background or if you should keep looking.",
+          "whatTheAgentLoses": "Delegating this means the agent might select a role that doesn't align with your actual degrees or salary needs, or it might miss a better fit further down the page."
+         },
+         {
+          "question": "Which of these updated job results should you explore?",
+          "cluster": "compare",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Seeing 570 results including Staff and Principal Technical Program Manager roles in Bentonville requires you to evaluate which specific positions align with your career level and interests.",
+          "whatTheAgentLoses": "Delegating this search means you lose the chance to personally weigh the nuances of different senior-level titles and decide which specific roles catch your eye."
+         },
+         {
+          "question": "Do the locations of the job search results match the city you searched for?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Applying to jobs in the wrong city or country wastes time and can lead to immediate rejection if there are local residency requirements.",
+          "whatTheAgentLoses": "The user loses the opportunity to secure a viable local job if the agent blindly applies to mismatched search results."
+         },
+         {
+          "question": "Which specific job opening do you want to select from this list, or should you apply filters?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays 13 current and 48 future openings across various roles and pay rates, requiring a choice on how to navigate the options.",
+          "whatTheAgentLoses": "You lose the ability to personally evaluate the available roles and pay rates to decide which specific position best fits your career goals."
+         },
+         {
+          "question": "Is this a 'ghost job' that has been open for months or constantly reposted without any actual hiring activity?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Job boards are cluttered with postings that companies have no intention of filling, which wastes applicant time.",
+          "whatTheAgentLoses": "The user loses the ability to prioritize fresh, active job openings over stale listings that will never result in an interview."
+         },
+         {
+          "question": "Is the selected job posting a 'Promoted' or 'Sponsored' listing rather than an organic search result?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Job boards visually blend paid placements at the top of search results, which might not be the most relevant match for your actual search criteria.",
+          "whatTheAgentLoses": "The user loses the ability to distinguish between organically relevant roles and paid advertisements that the agent might blindly prioritize."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Read the posting",
+      "note": "2.2.1 always - every keeper reads the money. 2.2.2 to 2.2.4 selectively, headers over body text. 2.2.5 on the bidding marketplace, where the applicant screens the client instead of the other way around. 2.2.6 where an info session is offered. then 2.2.7, or back to 2.1.",
+      "questions": [
+       {
+        "question": "Should you scroll down to read the full page before clicking 'Sign up now'?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top of the page highlights that no AI experience is required, but reviewing the rest of the page ensures you understand all program details before starting.",
+        "whatTheAgentLoses": "The user loses the opportunity to fully evaluate the program's context and expectations before committing to the application process."
+       }
+      ],
+      "children": [
+       {
+        "id": "2.2.1",
+        "label": "Read the pay and terms",
+        "questions": [
+         {
+          "question": "Does the job description actually match your search for a freelance role?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The job description explicitly states 'This is a Part Time Role NOT a Freelance position', contradicting the initial search intent.",
+          "whatTheAgentLoses": "The user ends up applying for a job type they do not want, wasting time and misrepresenting their availability."
+         },
+         {
+          "question": "Do you want to review the compensation and benefits offered for this role?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen lists specific perks like earning up to $100 per hour and gaining AI certification, which help you decide if the role is worth pursuing.",
+          "whatTheAgentLoses": "You lose the opportunity to evaluate if the specific compensation and skill-building perks align with your personal career and financial goals."
+         },
+         {
+          "question": "Do the basic terms and overview of this role meet your expectations?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed key details like the pay rate, schedule flexibility, and a brief overview of the AI Trainer role.",
+          "whatTheAgentLoses": "The user loses the opportunity to evaluate if the job's compensation and basic requirements match their personal preferences before committing time to apply."
+         },
+         {
+          "question": "Did you calculate that the $17/hour rate and $680/week maximum imply exactly a 40-hour work week?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The project invitation explicitly states an hourly rate of $17 and a weekly maximum of $680, which mathematically confirms the expectation of full-time availability.",
+          "whatTheAgentLoses": "The user loses the ability to accurately assess the true time commitment expected by the employer before submitting their application."
+         },
+         {
+          "question": "Are you willing to accept a role where your entire income depends on sales performance rather than a guaranteed wage?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The job details explicitly state it is a '100% Commission based position,' meaning the advertised $50,000 to $250,000 salary is not guaranteed.",
+          "whatTheAgentLoses": "The user loses the ability to catch this crucial financial caveat and might waste time applying for a job that does not provide the stable income they need."
+         },
+         {
+          "question": "Does the pay rate shown in the application match the rate advertised on the original job posting?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Verifying consistency across the application process ensures the employer hasn't changed the compensation terms after you clicked apply.",
+          "whatTheAgentLoses": "The user loses the ability to catch a bait-and-switch in the compensation details and halt the application before handing over personal data."
+         },
+         {
+          "question": "Are the project details and compensation acceptable to begin onboarding?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays specific project details, including a $17/hour rate and onboarding requirements, which you must evaluate before committing your time.",
+          "whatTheAgentLoses": "Delegating this to an agent means you lose the opportunity to personally decide if the specific project work and compensation rate meet your expectations."
+         }
+        ]
+       },
+       {
+        "id": "2.2.2",
+        "label": "Read the duties and qualifications",
+        "questions": [
+         {
+          "question": "How do you review the specific responsibilities and required qualifications for this job?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen displays detailed duties and specific qualifications like education and language requirements that determine if you are a fit for the role.",
+          "whatTheAgentLoses": "You lose the ability to personally evaluate if your background genuinely matches the specific duties and requirements listed for the position."
+         },
+         {
+          "question": "Do you meet the required educational and work style qualifications for this role?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Evaluating the qualifications ensures your background and comfort with asynchronous, remote work match the employer's specific requirements before you invest time in applying.",
+          "whatTheAgentLoses": "You lose the opportunity to personally judge if your unique skills and work preferences genuinely align with the specific demands of the role."
+         },
+         {
+          "question": "Does your internet connection meet the strict 100 Mbps requirement for this remote job?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The narrator explicitly states that a [address] internet connection is necessary for the role.",
+          "whatTheAgentLoses": "The user loses the ability to evaluate if their home infrastructure actually meets the employer's strict technical requirements before applying."
+         }
+        ]
+       },
+       {
+        "id": "2.2.3",
+        "label": "Check the eligibility rules",
+        "questions": [
+         {
+          "question": "Does this remote job's location requirement match where you live?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The job posting specified 'Work from home in (Telangana), India', showing that even remote roles can have strict regional residency requirements.",
+          "whatTheAgentLoses": "An agent might waste time applying to a remote job without realizing you do not meet its specific regional residency requirements."
+         },
+         {
+          "question": "Do you meet the specific location and employment type requirements outlined in the job overview?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly states the role is for 'India-based' candidates doing hourly contract work, which dictates your eligibility before you spend time applying.",
+          "whatTheAgentLoses": "You lose the ability to personally decide if these specific geographic and employment-type constraints are a fit for your current situation."
+         },
+         {
+          "question": "Should you review the program FAQs before looking at specific roles?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The FAQs section lists important details about eligibility, the type of work, and the application timeline that could determine if the program is a good fit.",
+          "whatTheAgentLoses": "You lose the chance to verify your eligibility and understand the nature of the work before investing time in finding and applying for a role."
+         },
+         {
+          "question": "Are you eligible for this program based on the listed academic fields and degree criteria?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The document explicitly outlines the eligible fields and specific criteria, such as excluding PhD students and not requiring language test scores.",
+          "whatTheAgentLoses": "You lose the opportunity to personally verify that your specific academic background and current student status meet the program's strict requirements before investing time in the application."
+         }
+        ]
+       },
+       {
+        "id": "2.2.4",
+        "label": "Check the deadlines and steps",
+        "questions": [
+         {
+          "question": "What specific documents do you need to prepare and what is the application deadline?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The document explicitly states that all required files must be in PDF format and submitted by January 31st, 2021, to be considered.",
+          "whatTheAgentLoses": "The user loses the ability to personally verify that their prepared documents meet the strict formatting rules and deadline outlined in the instructions."
+         }
+        ]
+       },
+       {
+        "id": "2.2.5",
+        "label": "Vet the client",
+        "questions": [
+         {
+          "question": "Is the listed company the direct employer or a third-party staffing agency?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Job boards often feature listings from recruiting agencies (like Aston Carter or Hudson Agency) rather than the direct employer, which changes who you are actually communicating with and potentially your employment status.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide if they are comfortable working through a third-party recruiter rather than applying directly to the hiring company."
+         }
+        ]
+       },
+       {
+        "id": "2.2.6",
+        "label": "Join the info session",
+        "questions": [
+         {
+          "question": "Are you sure you want to join the meeting using the pre-filled name 'loki'?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the name 'loki' is pre-filled for the meeting, which might not be appropriate for a professional job application context.",
+          "whatTheAgentLoses": "The user loses the chance to correct their display name to their actual, professional name before entering an employer-facing meeting."
+         },
+         {
+          "question": "Should you allow camera and microphone access for the meeting?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen asks if you want people to see you in the meeting and provides buttons to either use or continue without your microphone and camera.",
+          "whatTheAgentLoses": "You lose the ability to control your personal privacy regarding whether your live audio and video feed is shared with the employer."
+         },
+         {
+          "question": "Should I click OK to acknowledge the transcription notice?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a privacy warning stating that the meeting is being transcribed and that the transcript may be viewed or shared by others.",
+          "whatTheAgentLoses": "The user loses the opportunity to evaluate the privacy implications and decide whether they consent to their session being transcribed and potentially shared."
+         }
+        ]
+       },
+       {
+        "id": "2.2.7",
+        "label": "Decide to apply",
+        "questions": [
+         {
+          "question": "Should you apply for this job based on its specific technical requirements and budget?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Evaluating the $200 fixed-price budget and the specific task of fixing object detection in video surveillance software ensures the job is worth your time and matches your expertise.",
+          "whatTheAgentLoses": "Delegating this step means an agent might apply to jobs with inadequate compensation or technical requirements outside your actual skill set."
+         },
+         {
+          "question": "Are you sure this Auto Care Center position in Sandy, UT is the right job for you to apply to?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Reviewing the location, employment type, and the 'What you'll do' section ensures the role actually fits your needs before you commit time to the application.",
+          "whatTheAgentLoses": "You lose the chance to personally evaluate the job description and decide if the specific daily responsibilities are a good fit for your career goals."
+         },
+         {
+          "question": "Are these the correct vacancy details for the Consular Assistant role, and should you click to apply?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Reviewing the position title, hiring agency, and salary ensures you are starting an application for the intended job.",
+          "whatTheAgentLoses": "The user loses the chance to personally verify the job's duties, qualifications, and salary to ensure it aligns with their goals before committing to the application."
+         },
+         {
+          "question": "Does this job description match your skills and goals, and should you start the application?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Evaluating the 'About the job' text and tags like 'Remote' and 'Entry level' ensures the role actually fits your qualifications before you commit time to applying.",
+          "whatTheAgentLoses": "Delegating this decision means an agent might apply to roles that do not truly align with your personal career aspirations or specific work preferences."
+         },
+         {
+          "question": "Did the 'Apply' button redirect you to a lengthy external portal like Workday when you expected a quick 1-click application?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The friction of creating a new account and filling a 10-page external form might outweigh the user's interest in the role.",
+          "whatTheAgentLoses": "The user loses the agency to abandon the application if the required effort suddenly exceeds their threshold."
+         },
+         {
+          "question": "Did clicking the external 'Apply' button lead to the specific active job requisition, or did it redirect to a 404 error or generic corporate homepage?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Job boards often cache postings for days or weeks after the employer has closed the requisition and disabled the direct application link on their own ATS.",
+          "whatTheAgentLoses": "The user loses the ability to recognize that the position is dead, letting the agent waste time applying to a generic talent pool or getting stuck in a broken redirect loop."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Save the job for later"
+     },
+     {
+      "id": "2.4",
+      "label": "Set up a job alert",
+      "questions": [
+       {
+        "question": "Do you want to activate a job alert with this email address and accept the associated terms?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking activate subscribes the listed email to future job notifications and constitutes agreement to the platform's terms.",
+        "whatTheAgentLoses": "You lose the choice of whether to receive ongoing job alert emails and the opportunity to review the terms of service."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Sign in or register",
+    "note": "3.1, then 3.2 to 3.4 as the platform demands; 3.5 on a rejection; 3.6 where a code or SMS gate exists - it is the first thing nI4K meets and it ends that session. 3.7 after account creation on ERA, where the new account lands on an empty dashboard and the vacancy has to be re-found. 3.8 is account upkeep, demoed after the task in both ERA keepers.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Decide whether to sign in",
+      "questions": [
+       {
+        "question": "Should you search for jobs or log in as a returning candidate?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Hiring Center home screen presents distinct paths to either search for new jobs or log in to an existing profile.",
+        "whatTheAgentLoses": "The user loses the ability to leverage their existing profile and saved application history if the agent bypasses the returning candidate login."
+       },
+       {
+        "question": "Do you want to click 'Sign up now' to begin the application process?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen outlines a four-step process requiring account creation and identity verification, so you must decide whether to commit to signing up.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if you are comfortable with the required identity verification and onboarding steps before an account is created on your behalf."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Pick the sign-in method",
+      "questions": [
+       {
+        "question": "How do you want to sign up for the application portal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offered choices to sign up manually with an email address or use third-party authentication like Google or Apple.",
+        "whatTheAgentLoses": "The user loses control over which of their personal accounts or email addresses is linked to the employer's system."
+       },
+       {
+        "question": "Which authentication method should you use to log in to the application portal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers options to log in with Amazon, Google, or an email address, which determines how your application profile is created and linked.",
+        "whatTheAgentLoses": "You lose the ability to decide which of your personal accounts is linked to your job application profile."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Grant the profile access",
+      "questions": [
+       {
+        "question": "Should you allow Amazon.jobs to access your Amazon profile information?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the consent screen explicitly asks to share your personal name and email address with the job portal.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to decide whether to link your personal Amazon account to your job application."
+       },
+       {
+        "question": "Do you need to manually enter your first and last name since the Amazon login didn't auto-fill them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the Amazon login consent screen explicitly listed the name Bradley Harrison, the first and last name fields on the subsequent application form remained blank.",
+        "whatTheAgentLoses": "The user risks submitting an incomplete application if the agent assumes the third-party login automatically populated their personal details."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Fill in the account details",
+      "questions": [
+       {
+        "question": "Did you successfully create an account and note the login email?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen confirms the account was created and explicitly displays the email address you will need to log in from now on.",
+        "whatTheAgentLoses": "You lose the opportunity to personally record the specific email address and account details used for this employer's portal."
+       },
+       {
+        "question": "Which email address should I use to create your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires an email address to create an account for applying and tracking your status.",
+        "whatTheAgentLoses": "You lose control over which of your email addresses is registered with the employer for tracking and communication."
+       },
+       {
+        "question": "Do you want to read the Recruitment Privacy Statement before agreeing to create this account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires checking an agreement box to create an account, which binds you to the data practices outlined in the linked privacy statement.",
+        "whatTheAgentLoses": "You lose the opportunity to review how your personal information will be collected, used, and stored by the employer before granting your consent."
+       },
+       {
+        "question": "What contact information and preferences should you use to create this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an email, a password, and a mobile number to set up the account, along with a choice to opt into text messages.",
+        "whatTheAgentLoses": "You lose the ability to choose which personal contact details are registered and whether to receive text message updates from the employer."
+       },
+       {
+        "question": "What username, email, and password should you use to create this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a username, email address, and password to create an account before you can continue the application.",
+        "whatTheAgentLoses": "The user loses control over the specific login credentials and password security used for their employer portal accounts."
+       },
+       {
+        "question": "Did the system advance to the dashboard even though you left the mandatory email and password fields blank?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed the application dashboard loading immediately after clicking 'Create account', despite the required credential fields remaining visibly empty.",
+        "whatTheAgentLoses": "The user loses the ability to log back in and track their application status because the account was created without their actual credentials."
+       },
+       {
+        "question": "Did you notice that the password must be strictly between 8 and 11 characters long?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly states the password must be 8-11 characters long, which is an unusually restrictive maximum length that standard password generators might violate.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent generates a password that actually fits within this unusually strict length limit, preventing a validation error."
+       },
+       {
+        "question": "What personal details and security questions do you want to use to create your applicant account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal states that your applicant profile cannot be saved until all required personal information and security questions are completed.",
+        "whatTheAgentLoses": "You lose the ability to choose memorable security questions and answers, potentially making it difficult to recover your account in the future."
+       },
+       {
+        "question": "What password do you want to set for this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application portal requires creating a new account with a password that meets specific security criteria like length and character types.",
+        "whatTheAgentLoses": "The user loses control over their login credentials, making it difficult for them to log back in later to check their application status."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Fix the password rejection",
+      "questions": [
+       {
+        "question": "How will you resolve the password validation error to finish creating your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a validation error stating that your password must be at least 12 characters and include specific character types before you can proceed.",
+        "whatTheAgentLoses": "Delegating this means the agent will choose your password and security question answers, which could prevent you from accessing this employer's portal in the future."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Verify the contact channel",
+      "questions": [
+       {
+        "question": "How do you proceed when the portal requires email verification before signing in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The red alert banner explicitly states that account verification is required before signing in, meaning you must access your email to continue.",
+        "whatTheAgentLoses": "The user loses the privacy of their personal email inbox if the agent must navigate there to retrieve the verification link."
+       },
+       {
+        "question": "How should you complete the account verification process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email from Workday states that the verification link must be clicked within 24 hours to confirm your email address and complete the account setup.",
+        "whatTheAgentLoses": "You lose the ability to personally monitor your inbox and verify the legitimacy of the account confirmation link before clicking it."
+       },
+       {
+        "question": "Should you enter your phone number to receive an SMS verification code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates that phone verification via a one-time SMS is required to continue creating an account.",
+        "whatTheAgentLoses": "The person loses the opportunity to keep their personal phone number private and avoid potential SMS charges."
+       },
+       {
+        "question": "Does the sign-up step immediately demand phone verification instead of letting you create an account first?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The stated application process lists account creation before identity verification, but clicking sign up immediately blocks progress with a phone verification prompt.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if they are comfortable providing their personal phone number to an unfamiliar platform just to start an application."
+       },
+       {
+        "question": "Is the displayed email address the one you want to use for application updates?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that updates on your job applications will be sent to this address and that you will need to verify it in the next step.",
+        "whatTheAgentLoses": "You lose the ability to route employer communications to a specific professional inbox if the agent automatically accepts the default email."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Log back in",
+      "questions": [
+       {
+        "question": "Where should you navigate when presented with an empty applications dashboard?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows there are no applications to view, requiring a choice on how to return to the job search to find a posting.",
+        "whatTheAgentLoses": "You lose the chance to verify whether your expected application history is genuinely empty before starting a new search."
+       },
+       {
+        "question": "How do you access your new account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a login form with options to enter an email and password, create an account, or search for jobs.",
+        "whatTheAgentLoses": "The user loses the ability to securely handle their own login credentials and verify they are accessing the correct account."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Recover the account password",
+      "questions": [
+       {
+        "question": "How do you initiate the password recovery process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login page includes a 'Forgot Password?' link to help you establish a new password using your secret questions and personal email.",
+        "whatTheAgentLoses": "You lose direct control over your account security and might be unaware if the agent triggers a password reset email to your personal inbox."
+       },
+       {
+        "question": "Which email address is associated with your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires the email address linked to the account in order to initiate a password reset and continue the application.",
+        "whatTheAgentLoses": "Delegating this means the agent might enter the wrong email address, sending the password reset link to an incorrect or inaccessible inbox."
+       },
+       {
+        "question": "What are the exact answers to your secret security questions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires case-sensitive answers to specific secret questions like your birthplace and mother's maiden name to proceed.",
+        "whatTheAgentLoses": "The user loses the privacy of highly sensitive personal security answers that could be used to compromise other accounts."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Build the marketplace profile",
+    "note": "4.1 before the account exists, then 4.2 to 4.8 in the order the platform's own nags suggest. only 8dGC walks this goal - and the application in 6 reads from what it builds, which is where the changes to the profile show up.",
+    "questions": [
+     {
+      "question": "Should you complete the remaining profile steps, such as adding a resume and headline, before searching for jobs?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays a profile completion checklist indicating that finishing these remaining items will unlock better job matches and help you stand out.",
+      "whatTheAgentLoses": "The user loses the ability to decide whether to invest time in fully completing their platform profile to attract employers or to skip ahead to browsing job postings."
+     },
+     {
+      "question": "What name should you enter for your application profile?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The application form requires a name to identify your profile and associate it with your submitted materials.",
+      "whatTheAgentLoses": "You lose the ability to decide whether to use your full legal name, a preferred name, or a professional alias for this specific employer."
+     },
+     {
+      "question": "Should I upload a profile picture right now?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen advises that adding an attractive profile picture increases the chance of being seen by employers.",
+      "whatTheAgentLoses": "The user loses the potential advantage of increased visibility and appeal to employers that a profile picture might provide."
+     },
+     {
+      "question": "Do you trust the narrator's claim that the profile is complete when the banner shows it is only 30% done?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The audio claims the profile is finished, but the visual evidence shows a 30% completion banner and a tooltip asking for more videos.",
+      "whatTheAgentLoses": "The user loses the opportunity to submit a strong, fully completed application if the agent ignores the visual warnings and stops early."
+     },
+     {
+      "question": "Should you upload a resume and add references, or just review the existing profile sections?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows an 'Add Resume' button and a 'Request References' option, indicating that additional supporting documents and contacts can be included.",
+      "whatTheAgentLoses": "The user loses the opportunity to strengthen their application with a formatted resume document and professional references."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Pick the account type",
+      "questions": [
+       {
+        "question": "Which account type should you select to proceed with your application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between 'I want to hire' and 'I want a job', which dictates the features and permissions your new account will have.",
+        "whatTheAgentLoses": "The user loses the certainty that the agent will correctly register them as a job seeker rather than an employer."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Add the portfolio work",
+      "questions": [
+       {
+        "question": "What details should you provide for this portfolio piece?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form prompts for a YouTube link, a description of your work, your specific roles like Scriptwriter, and how you connected with the client.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to handpick the specific project that best highlights your skills and accurately describe your exact contributions to the employer."
+       },
+       {
+        "question": "Which YouTube videos should you add to your portfolio to best demonstrate your experience?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application specifically requests links to your six best YouTube videos, prioritizing those with high views and likes, to assess your previous work.",
+        "whatTheAgentLoses": "You lose the ability to strategically select and describe the specific portfolio pieces that best represent your skills to this employer."
+       },
+       {
+        "question": "Should you continue without adding the six videos despite the warning that you might miss out on employers?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system displayed a warning modal explicitly stating that failing to add six successful videos reduces the chance of being selected by most employers.",
+        "whatTheAgentLoses": "The user loses the opportunity to weigh the time cost of recording additional videos against the risk of submitting a less competitive job application."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Enter the job history",
+      "questions": [
+       {
+        "question": "How should you describe your current or last job?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form requires specific details about your most recent role, including the title, description, relevant links, and exact start and end dates.",
+        "whatTheAgentLoses": "You lose the ability to carefully frame your most recent work experience and highlight the specific projects or links that best showcase your skills."
+       },
+       {
+        "question": "Did you notice that the end date fields for your past job are hidden, and do you need to uncheck the current role box to reveal them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form defaults to checking 'I am currently working in this role', which silently hides the end date inputs and forces you to report the job as ongoing unless you manually uncheck it.",
+        "whatTheAgentLoses": "The agent might fail to report the end date, accidentally lying on your resume by claiming you are still employed at a past company."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Set the work terms",
+      "questions": [
+       {
+        "question": "Which job types and work locations should I indicate you are available for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a modal asking for your preferred job types, such as full-time or part-time, and locations, like remote or onsite.",
+        "whatTheAgentLoses": "You lose the ability to restrict your profile to the specific work arrangements and geographic locations you actually want."
+       },
+       {
+        "question": "Should your salary expectations be visible on your public profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen presents a toggle that dictates whether your financial expectations are shared publicly or kept private.",
+        "whatTheAgentLoses": "You lose the ability to control your privacy regarding financial expectations, which could impact your leverage in future salary negotiations."
+       },
+       {
+        "question": "Should you update your minimum desired pay and other profile details before continuing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays fields for minimum desired pay, degree, and experience, which can directly impact whether an employer considers your application.",
+        "whatTheAgentLoses": "Delegating this means an agent might skip these fields or use outdated defaults, potentially pricing you out of the role or underselling your qualifications."
+       },
+       {
+        "question": "What are your salary expectations for hourly, full-time, and project-based work?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for specific monetary rates across different employment types, which establishes your baseline compensation requirements for the employer.",
+        "whatTheAgentLoses": "You lose the ability to strategically calibrate your asking price based on your personal financial goals and the specific role."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Fill in the profile facets",
+      "questions": [
+       {
+        "question": "Which portfolio links do you want to include in your application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application provides optional fields to link a YouTube channel, Twitter, Behance, or a personal website to demonstrate your skills.",
+        "whatTheAgentLoses": "You lose the ability to curate exactly which personal projects and social media profiles are shared with the employer."
+       },
+       {
+        "question": "Which of your portfolio roles should you select as your main role?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The role you choose will be displayed under your name on your profile and cards, shaping how employers perceive your primary expertise.",
+        "whatTheAgentLoses": "You lose the ability to strategically highlight the specific title that best aligns with the job you are currently targeting."
+       },
+       {
+        "question": "Which roles did you perform for this specific portfolio video?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to select your specific contributions, such as Thumbnail Designer or Scriptwriter, for the portfolio piece you are submitting.",
+        "whatTheAgentLoses": "An agent lacks the personal knowledge of your exact contributions to past projects and might select roles you did not actually perform."
+       },
+       {
+        "question": "Which video styles should you add to your profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Styles' modal lists options like 'Documentary' and 'Gameplay' that determine how your creative skills are presented to potential employers.",
+        "whatTheAgentLoses": "You lose the ability to handpick the specific video formats that accurately reflect your unique production experience."
+       },
+       {
+        "question": "Which personal websites or social media profiles should I add to your application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form includes an optional section to link a personal website, Twitter, LinkedIn, or Facebook profile.",
+        "whatTheAgentLoses": "You lose the opportunity to showcase your professional online presence or portfolio to the hiring team."
+       },
+       {
+        "question": "Should you add or edit the listed skills to better match this specific job?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays existing skills like 'Computer Repair' and 'Fast Learner' with options to add or edit them, allowing you to tailor your profile for the role.",
+        "whatTheAgentLoses": "You lose the ability to strategically select and highlight nuanced personal strengths or recent skills that an automated agent might not know to include."
+       },
+       {
+        "question": "How do you proceed when the profile modal silently fails to save your selected main role?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Select Your Main Role' modal failed to save and close after clicking the button, likely because multiple roles were selected when only one is permitted, forcing you to abandon the changes.",
+        "whatTheAgentLoses": "An agent might get stuck in an infinite loop trying to save invalid selections or abandon the profile setup entirely without realizing why it failed."
+       },
+       {
+        "question": "Which languages are you proficient in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application includes a language skills section that asks you to select your proficient languages from a list.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report all the languages they speak, potentially missing a competitive advantage for the role."
+       },
+       {
+        "question": "Which video categories should I select as my areas of experience?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires selecting video categories that accurately reflect your portfolio and past experience.",
+        "whatTheAgentLoses": "The agent might select categories that do not match your actual experience or portfolio, potentially misrepresenting your skills to the employer."
+       },
+       {
+        "question": "Which software skills should you select as your strongest?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to select your best skills from a list of creative software, which directly impacts how your technical qualifications are evaluated.",
+        "whatTheAgentLoses": "An agent might select software you are not actually proficient in, misrepresenting your true capabilities to the employer."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Turn on the job notifications",
+      "questions": [
+       {
+        "question": "Do you want to receive instant notifications, and will you update your browser settings to allow them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warned that current browser settings prevent notifications, meaning toggling them on without clicking 'Allow Notifications' is ineffective.",
+        "whatTheAgentLoses": "The user loses the opportunity to properly configure their browser to receive real-time job alerts on their device."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Draft the profile text",
+      "questions": [
+       {
+        "question": "How should you summarize your experience in the About section?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an AI-generated summary being created for the profile, but it was never pasted and saved into the actual About section.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure their professional summary sounds authentic and accurately reflects their personal brand."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Invite the client reviews",
+      "questions": [
+       {
+        "question": "Should I copy the link to request reviews from your past clients?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Ask for Review' modal with a shareable link intended to gather client feedback and strengthen the profile.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether and when to solicit reviews from their professional network to boost their profile's credibility."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Complete the application form",
+    "note": "5.1 and 5.2 at the door. 5.3 only where the Apply click dumped the chosen job (15nS, dz2Z). then 5.4 to 5.12 in the wizard's fixed order, each section committed with its own Save and Continue - no keeper navigates back across sections. 5.13 when a commit bounces. 5.14 wherever a progress bar or checklist shows the road ahead.",
+    "questions": [
+     {
+      "question": "Is the Easy Apply Automater extension successfully loaded and turned on?",
+      "cluster": "facts",
+      "moment": "After",
+      "moneyMoving": false,
+      "why": "The Chrome extensions page displays the Easy Apply Automater card with the toggle switch in the on position, confirming the tool is active and ready.",
+      "whatTheAgentLoses": "You lose the ability to independently verify that the automation tool is correctly installed and active before it processes your job applications."
+     },
+     {
+      "question": "Should you discard this application or continue?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays a 'Discard application?' confirmation dialog after closing the application modal, requiring a choice to either discard or save your progress.",
+      "whatTheAgentLoses": "You lose the discretion to manually abort an application that you no longer wish to pursue."
+     },
+     {
+      "question": "Does your current LinkedIn profile headline accurately reflect the role you are applying for?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The application modal prominently displays your current headline (\"CMO | Digital Marketing & Brand Strategy Expert\"), which the employer will see, and it might not align with the \"Customer Service Loyalty Specialist\" role you are applying to.",
+      "whatTheAgentLoses": "The user loses the opportunity to update their LinkedIn headline to better match the target job before submitting the application, potentially confusing the recruiter."
+     },
+     {
+      "question": "How do you halt the automated Easy Apply script?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The extension popup displays a square stop button in the top right corner that allows you to terminate the automation process.",
+      "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to manually intervene and immediately halt the script if it behaves unexpectedly."
+     },
+     {
+      "question": "Is the application forcing you to provide contact information for professional references before you have even secured an interview?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Many applicants prefer to protect their references' privacy until they know the employer is seriously considering them.",
+      "whatTheAgentLoses": "The user loses the discretion to withhold their network's contact details until a later, more appropriate stage in the hiring process."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose the application method",
+      "questions": [
+       {
+        "question": "Which method do you want to use to start the application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple options to begin, such as autofilling with a resume or applying manually, which determines how your information will be entered.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to save time by autofilling from a resume or to control the exact data entry by applying manually."
+       },
+       {
+        "question": "How do you initiate the automated application process for the selected job?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed an Easy Apply Automater popup that requires clicking its 'Easy Apply' button to trigger the autocomplete sequence.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to trust a third-party automation extension or manually enter their information to ensure accuracy."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Accept the terms and consents",
+      "questions": [
+       {
+        "question": "Do you accept the data processing and privacy terms to continue?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to acknowledge the job requirements and consent to your personal data being processed by third parties like Amazon and Salesforce.",
+        "whatTheAgentLoses": "You lose the opportunity to read the detailed privacy terms and make an informed decision about how your personal data will be handled and shared."
+       },
+       {
+        "question": "Do you consent to Amazon retaining your application data for future opportunities?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account creation form requires a decision on whether the company can keep your personal data on file for other roles.",
+        "whatTheAgentLoses": "Delegating this choice means you lose direct control over your privacy preferences regarding long-term data retention by the employer."
+       },
+       {
+        "question": "Do you agree to the disclaimer and terms and conditions to continue the application?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to accept a disclaimer regarding reasonable accommodation and background verification before you can proceed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to review and personally consent to the employer's background check authorization and legal terms."
+       },
+       {
+        "question": "Does the application require you to agree to an unpaid 'test project' or trial period as a condition of submitting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Predatory postings sometimes use the application and screening process to extract free labor or intellectual property under the guise of an assessment.",
+        "whatTheAgentLoses": "The user loses the ability to spot and reject exploitative hiring practices before legally agreeing to give away their work for free."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Re-select the job and store",
+      "note": "5.3.1, then 5.3.2, then 5.3.3; the availability in 5.4 arrives pre-checked from what 5.3.3 picked. this goal exists because the Apply click discarded the chosen job: 15nS picked a Fuel Station role in Storm Lake and ends up applying to Apparel Team Associate in Washington, IA.",
+      "children": [
+       {
+        "id": "5.3.1",
+        "label": "Search the store location",
+        "questions": [
+         {
+          "question": "Which specific location should you select from the search dropdown?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Typing 'wa' brings up multiple distinct locations like 'Washington, IA' and 'Washington, UT', requiring you to specify the exact city and state to find relevant postings.",
+          "whatTheAgentLoses": "You lose control over the geographic area of your job search, potentially resulting in applications for roles in places you cannot or do not want to work."
+         }
+        ]
+       },
+       {
+        "id": "5.3.2",
+        "label": "Pick the store",
+        "questions": [
+         {
+          "question": "Are you selecting the correct store location for your application?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a specific Walmart Supercenter in Washington, IA, and choosing the wrong location means applying for a job at a store you may not be able to commute to.",
+          "whatTheAgentLoses": "You lose the ability to personally verify that the application is being submitted to a store location that is convenient and acceptable to you."
+         },
+         {
+          "question": "Is this the correct store location you want to apply to?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed a specific Walmart Supercenter address in Scarborough, ME, which dictates exactly where you will be working if hired.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to verify the commute distance and ensure your application is sent to your preferred store."
+         }
+        ]
+       },
+       {
+        "id": "5.3.3",
+        "label": "Filter and pick the roles",
+        "questions": [
+         {
+          "question": "How do you want to sort the current job openings?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Job Search page displays six current openings and a 'Sort By' dropdown, requiring a choice on how to prioritize the results.",
+          "whatTheAgentLoses": "Delegating this choice means you lose the ability to prioritize the job listings based on your personal preferences, such as highest pay."
+         },
+         {
+          "question": "Which specific job opening do you want to apply for?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen lists multiple current openings with different roles and pay ranges, requiring a choice that aligns with your career and salary expectations.",
+          "whatTheAgentLoses": "You lose the ability to weigh the different pay ranges and roles to select the position that best fits your personal preferences."
+         },
+         {
+          "question": "Which employment types, shifts, and skill levels do you want to filter by?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting specific options like 'Part time', 'Mid-Shift', and 'Entry Level' narrows down the search results to jobs that match your actual availability and qualifications.",
+          "whatTheAgentLoses": "You lose the ability to personally fine-tune the exact combination of acceptable shifts and employment types that fit your personal schedule."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Set the availability",
+      "questions": [
+       {
+        "question": "Which shifts do you prefer to work?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to select your preferred 8-9 hour shifts, such as Mid-Shift or Closing, to determine your scheduling availability.",
+        "whatTheAgentLoses": "Delegating this means the agent might select shift times that conflict with your actual daily schedule and personal availability."
+       },
+       {
+        "question": "What specific hours are you available to work?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify whether you are open to working any hours or only available for certain hours.",
+        "whatTheAgentLoses": "Letting an agent answer this could misrepresent your actual availability and commit you to a schedule you cannot accommodate."
+       },
+       {
+        "question": "Do you want to proceed despite the warning that your selections might limit your job opportunities?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application displayed a notice modal warning that updating your selections could limit your job opportunities.",
+        "whatTheAgentLoses": "The user loses the ability to weigh the risk of limiting their job prospects against the accuracy of their specific preferences."
+       },
+       {
+        "question": "Did you notice the application pre-selected both full-time and part-time availability for a strictly part-time role?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The job card explicitly listed the employment type as part-time, but the subsequent availability screen defaulted to selecting both options.",
+        "whatTheAgentLoses": "The user loses the ability to review and correct pre-filled form data to ensure their submitted availability perfectly matches the specific constraints of the job."
+       },
+       {
+        "question": "What type of employment are you looking for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to choose between full-time, part-time, and temporary employment, noting that a default has been pre-selected based on the job.",
+        "whatTheAgentLoses": "Delegating this step means you cannot ensure the selected employment type matches your actual schedule preferences."
+       },
+       {
+        "question": "Do you accept the pre-selected shifts and employment types, and what specific hours are you available to work?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application pre-selected full-time and part-time options based on the job, so you must confirm these match your actual availability and specify your hour constraints.",
+        "whatTheAgentLoses": "Delegating this means the agent might declare open availability or accept pre-selected shifts, potentially committing you to work hours you cannot actually fulfill."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Enter the personal details",
+      "questions": [
+       {
+        "question": "How should you answer the required basic information and referral source questions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays mandatory fields marked with asterisks, such as 'How Did You Hear About Us?' and previous employment status, which must be completed to advance the application.",
+        "whatTheAgentLoses": "Delegating this step means the agent might guess your referral source or past employment status, potentially misrepresenting your background to the employer."
+       },
+       {
+        "question": "Which of your personal details should I enter for the required name and address fields?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows mandatory fields marked with an asterisk for your first name, last name, city, and state.",
+        "whatTheAgentLoses": "The user loses the assurance that their application will be accepted with their correct legal identity and contact information."
+       },
+       {
+        "question": "Which contact details do you want to provide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form includes fields for an email address and a phone number, prompting a choice about how the employer should reach you.",
+        "whatTheAgentLoses": "Letting an agent decide means it might share your phone number when you prefer to only be contacted via email."
+       },
+       {
+        "question": "Are your pre-filled personal details correct, and do you want to leave the phone number blank?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows auto-filled names and a location alongside an empty phone number field, requiring you to verify your contact information before proceeding.",
+        "whatTheAgentLoses": "Delegating this step means the agent might submit outdated auto-filled details or omit a phone number you would have preferred to share with the employer."
+       },
+       {
+        "question": "Is your contact information correct and complete so you can proceed to the next step?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Ensuring your name and phone number are accurate in the 'Contact info' section is essential so the employer can successfully reach you.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agent is providing your preferred phone number and exact name format for this specific application."
+       },
+       {
+        "question": "Is your contact information accurate, do you consent to SMS updates, and how did you hear about this job?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires accurate location details, explicit consent to receive automated SMS messages from Amazon, and a selection for how you heard about the role before continuing.",
+        "whatTheAgentLoses": "You lose control over opting into automated employer text messages and accurately reporting your specific referral source."
+       },
+       {
+        "question": "How should you answer the mandatory question about where you heard about the job?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to select a specific source from a nested dropdown menu to successfully complete the form.",
+        "whatTheAgentLoses": "An agent would have to guess the source, losing the accurate context of how you actually discovered the job opportunity."
+       },
+       {
+        "question": "Should you enter a referral code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form includes an optional field for a referral code.",
+        "whatTheAgentLoses": "The user loses the opportunity to leverage a personal connection or referral network to boost their application."
+       },
+       {
+        "question": "What is the link to your LinkedIn profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form contains a specific text input field requesting your LinkedIn URL to provide recruiters with more professional context.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide whether your current LinkedIn profile is polished enough to share with this specific employer."
+       },
+       {
+        "question": "Which country are you located in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form requires selecting your country of residence from a dropdown list to establish your geographic location.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their exact country of residence is selected, which could impact their eligibility or work authorization status for the role."
+       },
+       {
+        "question": "Do you want to provide a preferred name that differs from your legal name?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The application form includes an optional 'I have a preferred name' checkbox that allows you to be addressed by a name other than your legal one during the hiring process.",
+        "whatTheAgentLoses": "The user loses the opportunity to assert their personal identity and ensure the employer addresses them by their preferred name from the start."
+       },
+       {
+        "question": "Did you notice that typing 'Search' yielded no matches, forcing you to select a valid referral source from the predefined list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'How Did You Hear About Us?' dropdown does not accept custom text, so typing an unlisted option silently fails and requires you to manually pick a valid choice like 'Website' to proceed.",
+        "whatTheAgentLoses": "An agent might try to force a custom referral source and get stuck when the form rejects it, preventing the application from advancing."
+       },
+       {
+        "question": "Are your auto-filled contact details and education level accurate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed auto-filled contact information and an education level question that need to be verified for accuracy before proceeding.",
+        "whatTheAgentLoses": "The user loses the opportunity to correct any outdated or incorrect contact information or screening question answers that the agent might submit on their behalf."
+       },
+       {
+        "question": "How should you answer the preliminary demographic and language questions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form asks for specific personal details like birth year, nationality, and language proficiency levels to evaluate your profile.",
+        "whatTheAgentLoses": "You lose control over how your personal demographics, nationality, and language skills are presented to the employer."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Enter the national identifiers",
+      "questions": [
+       {
+        "question": "Which optional national ID type will you provide?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form includes an optional section to select a National ID Type and enter the corresponding number.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to share this optional sensitive information and which specific identification document to use."
+       },
+       {
+        "question": "Are you willing to provide the last 6 digits of your Social Security Number for this application?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The application form explicitly requires the last 6 digits of your Social Security Number, which is highly sensitive personal data, just to complete the \"About you\" section.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether they trust this specific employer portal enough to hand over a significant portion of their Social Security Number before even securing an interview."
+       },
+       {
+        "question": "Is the form demanding your Social Security Number, bank details, or a photo of your driver's license at this early stage?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Legitimate employers rarely need this information before an offer is made; asking for it now is a strong indicator of identity theft.",
+        "whatTheAgentLoses": "The user loses the ability to halt the process and protect their most sensitive personal data from potential scammers."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Answer the eligibility questions",
+      "questions": [
+       {
+        "question": "How should you answer the mandatory eligibility questions about relatives, work authorization, driving, and citizenship?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires specific yes or no answers to legal and eligibility questions regarding relatives at the Embassy, work authorization, driving, and citizenship.",
+        "whatTheAgentLoses": "Delegating this step means the agent might guess your legal work status or family connections, which could falsify your application or cause immediate disqualification."
+       },
+       {
+        "question": "How should you answer the work authorization and visa sponsorship questions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify if you are legally authorized to work in the United States and whether you will need visa sponsorship.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly state your legal work status or visa requirements, potentially leading to immediate disqualification."
+       },
+       {
+        "question": "Do you meet the basic qualifications and agree to the required working conditions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to confirm your age, work authorization, education, and willingness to work non-technical roles with flexible or overnight hours.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate whether you are truly willing to commit to the specific shift requirements and role conditions."
+       },
+       {
+        "question": "Should you continue the application if your screening answers contradict the job posting's requirements?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The job posting explicitly required US work authorization, but the application form allowed you to proceed even after selecting 'No' to that requirement.",
+        "whatTheAgentLoses": "The user loses the opportunity to save time by abandoning an application that will ultimately be rejected due to strict authorization requirements."
+       },
+       {
+        "question": "How do you want to answer the mandatory background check question?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application displays an error message stating that an answer to the background check question is required to continue.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to consent to a background check for this specific employer."
+       },
+       {
+        "question": "Are you absolutely sure your phone and work authorization details are correct before clicking continue?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly warns that you cannot go back to edit your phone or work authorization information once you proceed past this screen.",
+        "whatTheAgentLoses": "The user loses the chance to double-check critical contact and legal eligibility information before it is permanently locked in the application."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Answer the screening questions",
+      "questions": [
+       {
+        "question": "How should you answer the specific screening questions for this vacancy?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires specific answers about your education, experience interacting with visitors, and proficiency in Microsoft Office programs.",
+        "whatTheAgentLoses": "You lose the ability to accurately represent your specific education, experience, and software proficiencies to the employer."
+       },
+       {
+        "question": "What number do you enter for your years of experience with specific skills?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form requires a specific numeric value for your years of experience with Python and C++.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their actual years of experience for each required skill."
+       },
+       {
+        "question": "Are you comfortable working in a hybrid setting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser prompt explicitly asked for your preference on a hybrid work setting to determine your fit for the role's schedule.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might commit you to a hybrid work schedule that you are unwilling or unable to accommodate."
+       },
+       {
+        "question": "How do you want to answer the screening questions about your web3 experience and on-site availability?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires specific answers about your years of experience with JavaScript and TypeScript, as well as your web3 background and ability to work on-site in San Francisco.",
+        "whatTheAgentLoses": "You lose the ability to verify that the auto-filled answers about your technical experience and on-site availability accurately reflect your actual background and preferences."
+       },
+       {
+        "question": "Are the auto-filled years of experience for React.js, Python, and data center operations accurate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows specific numerical answers filled in for your experience with React.js, Python, and data center operations, which must accurately reflect your background.",
+        "whatTheAgentLoses": "You lose the chance to verify that the auto-filled years of experience perfectly match your actual qualifications before the application is submitted."
+       },
+       {
+        "question": "How should you answer the specific screening questions about your education and years of experience?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application modal requires exact answers regarding your bachelor's degree and years of experience with Python and biotechnology research.",
+        "whatTheAgentLoses": "You lose the ability to carefully tailor or nuance the representation of your specific qualifications and experience."
+       },
+       {
+        "question": "Are you comfortable commuting to this job's location?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application presented a custom prompt asking about your willingness to commute to the work site.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the actual commute distance and decide if it fits your personal boundaries."
+       },
+       {
+        "question": "Are the auto-filled answers to the screening questions accurate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Submitting incorrect auto-filled answers for specific experience like 7 years of Python or visa requirements could instantly disqualify you from the job.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify and correct their specific qualifications, risking rejection due to inaccurate automated responses."
+       },
+       {
+        "question": "How should you answer the screening questions about your motivation, domain, and technical skills?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form includes multiple fields for your motivation, domain, and technical skills like programming languages and databases that need to accurately reflect your background.",
+        "whatTheAgentLoses": "You lose the ability to strategically decide which text fields to skip and how to personally frame your technical expertise for this specific role."
+       },
+       {
+        "question": "How should you answer the screening questions regarding your academic status, availability, and previous CERN experience?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form requires specific details about your current university studies, preferred internship dates, and past CERN employment to assess your eligibility.",
+        "whatTheAgentLoses": "You lose the ability to accurately represent your specific academic background, availability, and prior experience to the employer."
+       },
+       {
+        "question": "What specific dates and time ranges should you provide for a potential interview?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator states that the application requires listing 2-3 dates and times you are available to interview.",
+        "whatTheAgentLoses": "Delegating this means the agent might provide interview times that conflict with your actual calendar, causing scheduling issues with the employer."
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Enter the education and experience",
+      "questions": [
+       {
+        "question": "How should you detail your educational background, work history, and language proficiency?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Accurately filling out the required fields for schools, past employers, and languages helps the employer fully understand your experience.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to manually tailor how your past roles and educational achievements are presented to the employer."
+       },
+       {
+        "question": "Which past job should you highlight as relevant experience?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes an optional section to enter a past job title and company, giving you a chance to highlight your most applicable role to the employer.",
+        "whatTheAgentLoses": "Delegating this step means an agent might skip this optional field or choose a less impactful role, potentially weakening your application."
+       },
+       {
+        "question": "Should you review the FAQs about how your resume and data will be used before clicking next?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays FAQs explaining how your resume matches you to projects and whether you can change your information later, which clarifies how your data is handled.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to understand exactly how the platform uses your resume and personal data."
+       },
+       {
+        "question": "Which standardized title from the list should I select for your current role?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires selecting a standardized profession from a predefined dropdown list rather than allowing a custom job title.",
+        "whatTheAgentLoses": "You lose the ability to decide which broad category best represents your specific experience and aligns with the job you are applying for."
+       },
+       {
+        "question": "What school did you attend?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form requires your educational history to accurately reflect your academic qualifications for the role.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the exact campus or specific branch of your university from the system's predefined list."
+       },
+       {
+        "question": "Which graduation year should you select?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires selecting a graduation year from a dropdown list, which must accurately match the education timeline on your resume.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify that the selected graduation year perfectly aligns with the specific resume you are submitting."
+       },
+       {
+        "question": "Do you want to manually add your work experience details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal contains mandatory fields like job title and dates that must be filled if you choose to manually enter your work history.",
+        "whatTheAgentLoses": "You lose the opportunity to selectively curate or omit specific past roles and descriptions in the application form."
+       },
+       {
+        "question": "Do you want to manually enter your education details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal asks for specific information like institution, major, and dates, which takes time to complete and may already be covered by your uploaded resume.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to save time by skipping this manual entry or to carefully format how your educational background appears in the employer's system."
+       },
+       {
+        "question": "Did the system's resume parser scramble your work history, requiring manual correction of your dates and job titles?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Automated parsers frequently misread PDFs, resulting in a garbled profile that makes the applicant look incompetent if not fixed.",
+        "whatTheAgentLoses": "The user loses the chance to ensure their professional history is presented cleanly and accurately to the recruiter."
+       },
+       {
+        "question": "How should you fill out your personal and professional background details?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires specific details about your previous employment, experience level, and compensation to assess your fit for the role.",
+        "whatTheAgentLoses": "Delegating this means the agent might misrepresent your work history, experience level, or compensation expectations, potentially disqualifying your application."
+       },
+       {
+        "question": "How should I answer the screening questions about your languages, citizenship, and internet setup?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires specific details about your language proficiencies, citizenship status, and internet connection to determine your eligibility for the customer service role.",
+        "whatTheAgentLoses": "You lose the ability to accurately represent your actual language skills, legal citizenship status, and home internet capabilities to the employer."
+       },
+       {
+        "question": "What is your highest educational qualification and course of study?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form requires selecting your highest qualification, current study status, and specific course of study from provided dropdown menus to evaluate your background.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select an inaccurate education level or course, potentially disqualifying you from the role if it does not match the employer's requirements."
+       },
+       {
+        "question": "Which field and sub-fields best describe your professional background?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires selecting a primary field and specific sub-fields from dropdown menus to accurately categorize your expertise.",
+        "whatTheAgentLoses": "The user loses the ability to strategically select which aspects of their multidisciplinary background to highlight for this specific role."
+       }
+      ]
+     },
+     {
+      "id": "5.10",
+      "label": "Answer the diversity questions",
+      "questions": [
+       {
+        "question": "How should I answer the voluntary diversity and disability questions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application includes a voluntary diversity questionnaire asking for your gender, LGBTQIA+ identity, and disability status, which you can choose to disclose or decline.",
+        "whatTheAgentLoses": "Delegating this step means the agent might disclose sensitive demographic information you prefer to keep private or decline to answer when you actually wanted to self-identify."
+       }
+      ]
+     },
+     {
+      "id": "5.11",
+      "label": "Confirm the consideration preferences",
+      "questions": [
+       {
+        "question": "Which series, grade, location, and notification preferences should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to confirm your desired job series, grade level, location, and email notification preferences before proceeding.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to specify the exact role level and location you are willing to accept."
+       }
+      ]
+     },
+     {
+      "id": "5.12",
+      "label": "Provide the resume and documents",
+      "note": "5.12.1, then 5.12.2 and 5.12.3 as the upload route demands; 5.12.4 where a cover letter exists; 5.12.5 on portals that request document types; 5.12.6 after any upload.",
+      "questions": [
+       {
+        "question": "How do you want to provide your resume and cover letter?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form provides distinct choices to upload, select, write, or omit both the resume and cover letter.",
+        "whatTheAgentLoses": "The user loses the opportunity to strategically choose whether to upload existing files, draft a custom cover letter on the spot, or omit them entirely."
+       }
+      ],
+      "children": [
+       {
+        "id": "5.12.1",
+        "label": "Choose the resume source",
+        "questions": [
+         {
+          "question": "Which resume do you want to submit for this application?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers a choice between using a saved online profile resume and a specific uploaded PDF file, which might contain different or more tailored information.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might submit a generic online profile instead of a custom PDF resume tailored for the specific role."
+         },
+         {
+          "question": "Do you want to upload an existing CV file or build a new Indeed CV?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires choosing between uploading an existing document in an accepted format or using the platform's guided tool to build a new CV.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to present their own custom-formatted resume file or use the platform's standardized CV builder."
+         }
+        ]
+       },
+       {
+        "id": "5.12.2",
+        "label": "Pick the file"
+       },
+       {
+        "id": "5.12.3",
+        "label": "Set the resume visibility",
+        "questions": [
+         {
+          "question": "Do you want your resume to be searchable by other employers on the platform?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The platform gives you the option to make your CV visible in general employer searches or keep it private.",
+          "whatTheAgentLoses": "You lose the ability to control your privacy preferences regarding whether other employers can find your resume and contact you."
+         }
+        ]
+       },
+       {
+        "id": "5.12.4",
+        "label": "Attach the cover letter",
+        "questions": [
+         {
+          "question": "Should I upload a cover letter, write one, or skip it?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires a decision on the cover letter, offering options to upload a file, write text directly, or opt out entirely.",
+          "whatTheAgentLoses": "The user loses the opportunity to provide a personalized introduction that highlights their specific skills and qualifications for the role."
+         },
+         {
+          "question": "Did you paste the cover letter you just generated?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen shows you generated a cover letter in a separate tab but left the application's text box empty and changed your selection to not include one after getting an error.",
+          "whatTheAgentLoses": "The user loses the competitive advantage of a customized cover letter because the agent failed to transfer the generated text into the application form."
+         },
+         {
+          "question": "Should you include a message to the hiring manager in the provided text area?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen features a specific text area to let the company know about your interest, which acts as an optional cover letter or motivation statement.",
+          "whatTheAgentLoses": "You lose the opportunity to provide a highly personalized and authentic explanation of why you want to work for this specific company."
+         },
+         {
+          "question": "Do you want to attach optional documents like a cover letter or subscribe to email updates before submitting?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The review screen provides options to attach additional documents and a toggle to subscribe to email updates for similar jobs.",
+          "whatTheAgentLoses": "An agent might subscribe you to unwanted job alerts or skip adding optional documents that could strengthen your application."
+         }
+        ]
+       },
+       {
+        "id": "5.12.5",
+        "label": "Upload the requested documents",
+        "questions": [
+         {
+          "question": "Which supporting documents should you upload?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen lists several requested document types like a High School Diploma and DD-214, requiring you to decide which ones are relevant to your background.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to strategically choose which optional certificates or diplomas best highlight your qualifications for the role."
+         },
+         {
+          "question": "How many reference letters should you submit when the application form contradicts the job description?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application form states that at least one reference letter is required, but the job description and provided documents strictly mandate two.",
+          "whatTheAgentLoses": "The user loses the ability to make a strategic judgment call on whether to provide the stricter number of references to avoid potential disqualification."
+         }
+        ]
+       },
+       {
+        "id": "5.12.6",
+        "label": "Verify the uploads landed",
+        "questions": [
+         {
+          "question": "Have you verified that the correct document is selected, meets the size limit, and successfully appears in the uploaded list?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the document type, description, and the 3MB size limit ensures the TOEIC certificate is properly attached and recorded in the system before continuing.",
+          "whatTheAgentLoses": "You lose the peace of mind of manually confirming that your specific certifications were successfully uploaded without exceeding the portal's file size limits."
+         },
+         {
+          "question": "Is 'Raunak_DC_ppt.pdf' the correct CV to submit for this application?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows 'Raunak_DC_ppt.pdf' as the uploaded file, so you must verify it is the right document before continuing.",
+          "whatTheAgentLoses": "You lose the opportunity to verify that the agent selected the most relevant and up-to-date resume file for this specific employer."
+         },
+         {
+          "question": "Does the uploaded file name match the file you selected?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen showed Raunak_DC_ppt.pdf as the uploaded file even though you selected Boii.pdf, meaning the wrong document was attached.",
+          "whatTheAgentLoses": "The user loses the chance to catch a system error that attaches an incorrect or irrelevant document to their job application."
+         },
+         {
+          "question": "Did a temporary success banner or green checkmark appear to confirm your resume file finished uploading?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "File uploads often use visual spinners that turn into brief checkmarks or disappearing toast notifications to indicate success.",
+          "whatTheAgentLoses": "The user loses the certainty that their specific file was successfully attached, risking the submission of an empty application if the agent misses the brief visual cue."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.13",
+      "label": "Fix the form errors",
+      "questions": [
+       {
+        "question": "How should you fix the employer phone number to resolve the validation error?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an error banner stating that the employer phone number contains invalid characters and must be corrected before the information can be saved.",
+        "whatTheAgentLoses": "The user loses the ability to decide how to preserve the deleted extension information, such as moving it to a different text field."
+       },
+       {
+        "question": "How do you resolve the missing personal details error?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an error message stating 'Please complete your personal details' because the phone number field is empty.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply for the job if the agent abandons the application instead of providing the required information."
+       },
+       {
+        "question": "Are there any subtle red outlines or asterisks indicating missed required fields that are preventing the form from advancing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Forms often rely on visual cues like red borders or greyed-out 'Next' buttons to indicate validation errors, which might not be explicitly announced by screen readers.",
+        "whatTheAgentLoses": "The user loses the ability to quickly identify exactly which screening question was missed, potentially causing the agent to stall or abandon the task."
+       }
+      ]
+     },
+     {
+      "id": "5.14",
+      "label": "Read the application checklist",
+      "questions": [
+       {
+        "question": "Are you willing to manually fill out a four-step questionnaire after clicking a '1-Click Apply' button?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface displayed a '1-Click Apply' button, but proceeding actually revealed a multi-page form requiring manual text entry.",
+        "whatTheAgentLoses": "The user loses the opportunity to abandon the application if the unexpected manual effort outweighs their interest in the role."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Pitch and price the work",
+    "note": "runs in place of 5 on the marketplaces. 6.1 on the profile marketplace (8dGC), where the platform itself compares the profile to the job. 6.2 to 6.5 in the form's order on the bidding marketplace (a2Q4), 6.6 in both, 6.7 last. the cost surfaced in 6.3 is spent by the submit in 7.5.",
+    "questions": [
+     {
+      "question": "Do you want to attach any project files or work samples?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The application form includes an optional 'Attachments' section where you can drag or upload files to showcase your past work.",
+      "whatTheAgentLoses": "You lose the opportunity to decide whether specific portfolio pieces or past project files should be included to strengthen your application."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Review the platform's fit check",
+      "questions": [
+       {
+        "question": "Do the job requirements and compensation match my skills and expectations?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Evaluating details like the $1,500-$2,000 per project salary and the three years of experience requirement ensures you only spend time applying to suitable roles.",
+        "whatTheAgentLoses": "Delegating this evaluation means an agent might apply for jobs that do not align with your personal career goals or financial needs."
+       },
+       {
+        "question": "Do the skills listed in the application review match the ones you selected during profile setup?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The application comparison table showed 'Adobe Illustrator' and omitted 'Final Cut Pro', contradicting the skills selected earlier in the process.",
+        "whatTheAgentLoses": "The user loses the assurance that their specific skill set is accurately represented to the employer, potentially costing them the job opportunity."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Pick the submitting profile",
+      "questions": [
+       {
+        "question": "Which of your profiles should you use to apply for this job?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers a choice between a general and specialized profile, which determines the specific skills and portfolio the client will see when reviewing the proposal you are spending Connects on.",
+        "whatTheAgentLoses": "The user loses the strategic ability to decide whether their general or specialized profile makes the strongest impression for this specific job."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check the cost to apply",
+      "questions": [
+       {
+        "question": "Are you willing to spend the required Connects to apply for this job?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that submitting this proposal requires spending 12 Connects, which will be deducted from your limited balance.",
+        "whatTheAgentLoses": "You lose the ability to budget your limited platform currency and decide if a specific job is actually worth the cost."
+       },
+       {
+        "question": "Does your remaining Connects balance correctly reflect the cost of the proposal?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the 12 Connects were accurately deducted from your starting balance of 120 to leave 108 ensures you were charged the expected amount for the application.",
+        "whatTheAgentLoses": "The user loses oversight of their platform currency and might miss unexpected charges if the agent does not verify the final balance."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Set the payment terms",
+      "questions": [
+       {
+        "question": "How do you want to structure the payment milestones and bid amount?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines your payment schedule and calculates your actual take-home pay after the platform's service fee is deducted.",
+        "whatTheAgentLoses": "The user loses the ability to negotiate their payment terms, set their own milestones, and review their net earnings before applying."
+       },
+       {
+        "question": "Did you verify that your bid amount was fully entered and accepted without any red warning outlines?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a partially typed digit in the milestone amount field with a red warning outline, contradicting the assumption that a complete bid was successfully entered.",
+        "whatTheAgentLoses": "The user loses control over their proposed compensation, risking an incomplete application or a bid that does not reflect their actual rate."
+       },
+       {
+        "question": "Do you accept the platform's service fee and your final estimated payout?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a $30 service fee deducted from the $300 project price, which determines your actual take-home pay of $270.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if the net payment justifies the work or if the bid should be adjusted to account for the fees."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Set the price and duration",
+      "questions": [
+       {
+        "question": "What estimated project duration should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The client explicitly stated a preference for a '1 to 3 months Project Length' earlier in the posting, making it the most strategic choice.",
+        "whatTheAgentLoses": "You lose the ability to strategically tailor your application answers to match the employer's explicitly stated preferences."
+       },
+       {
+        "question": "Are you keeping your bid amount within the fixed-price budget listed in the job posting?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The job posting explicitly listed a fixed budget of $200.00, but a bid of $300.00 was entered on the application form.",
+        "whatTheAgentLoses": "The user loses a realistic chance at the job because the agent submitted a bid that ignored the employer's stated budget constraints."
+       },
+       {
+        "question": "Did you select a project duration that matches the requirements in the job details?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a project duration of less than one month contradicts the job details which specify a length of one to three months.",
+        "whatTheAgentLoses": "The user loses their chance at the job because the agent provided an answer that directly contradicts the stated role requirements."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Write the pitch",
+      "questions": [
+       {
+        "question": "What should you write in the cover letter section?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application features an empty text box for a cover letter with a banner offering personalized tips, providing an opportunity to explain your professional background.",
+        "whatTheAgentLoses": "Delegating this step means losing the chance to personally articulate your unique qualifications and professional story in your own voice."
+       },
+       {
+        "question": "What should you write in the 'Why You are a Good Fit' text box?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application includes a 500-character text box asking for a brief description of why you are a good fit, which requires a compelling and tailored response.",
+        "whatTheAgentLoses": "You lose the ability to inject your authentic voice and personal passion into this crucial first impression."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Decide on the boost",
+      "questions": [
+       {
+        "question": "Do you want to spend extra connects to boost this proposal before submitting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers an optional 'Boost your proposal' section where you can bid extra connects to stand out among the current live proposals.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might waste your limited connects on an unnecessary boost or miss an opportunity to highlight a crucial application."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Review and submit the application",
+    "note": "7.1 with 7.2 and 7.3 against it; 7.4 where a declaration exists; then 7.5, with 7.6 riding on the review screen. five keepers cut away or bounce at 7.5 - the submit is the least-witnessed moment in the corpus.",
+    "questions": [
+     {
+      "question": "Do you want to add any additional attachments, and how should you answer the final consent and disability declarations?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The screen requires you to confirm your attached documents, consent to data processing, certify your application, and declare your disability status before submitting.",
+      "whatTheAgentLoses": "Delegating this means you lose the ability to personally decide whether to disclose a disability or include extra documents like a cover letter or portfolio."
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the application summary",
+      "questions": [
+       {
+        "question": "Is all your entered information accurate and ready for final submission?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a comprehensive review page with a banner stating the application is incomplete until submitted, making this the final opportunity to catch any errors.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that their personal details, eligibility answers, and attached documents are perfectly accurate before finalizing the application."
+       },
+       {
+        "question": "Are you aware that the employer will receive a full copy of your LinkedIn profile along with this application?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The review screen explicitly states \"The employer will also receive a copy of your profile,\" meaning your entire LinkedIn history, not just the answers provided in the form, will be evaluated.",
+        "whatTheAgentLoses": "The user loses the chance to ensure their public LinkedIn profile is fully updated and polished before the employer reviews it alongside the automated application."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Cross-check the answers",
+      "questions": [
+       {
+        "question": "Do your questionnaire answers match the experience listed on your resume?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The review screen shows a contradiction between the 7 and 10+ years of experience on the resume and the 8 and 12 years claimed in the questionnaire, which could cause the employer to reject the application.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch and correct inconsistencies between their uploaded documents and form answers before the employer sees them."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Confirm the job applied to",
+      "questions": [
+       {
+        "question": "Does the job ID and location on the application form match the posting you originally selected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application form header displays a Kolkata role with Job ID [number], contradicting the Delhi role with Job ID [number] that was reviewed on the job description page.",
+        "whatTheAgentLoses": "The user loses the opportunity to secure their desired position if the agent blindly submits an application for the wrong location and job ID."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Sign the declaration",
+      "questions": [
+       {
+        "question": "Do you agree to the legal declaration certifying the truthfulness of your application?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The declaration modal explicitly warns that providing false or fraudulent information can be grounds for dismissal or not being hired.",
+        "whatTheAgentLoses": "Delegating this step removes your ability to personally attest to the accuracy of your application before accepting legal liability for its contents."
+       },
+       {
+        "question": "Are you inadvertently agreeing to a mandatory arbitration clause or a broad background check authorization just by clicking submit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Employers sometimes bury binding legal agreements or broad background check consents in the final submission terms.",
+        "whatTheAgentLoses": "The user loses the opportunity to review and potentially reject binding legal terms that extend beyond a simple job application."
+       },
+       {
+        "question": "Does the electronic signature field require typing your name exactly as it is visually formatted elsewhere on the page, such as including a middle initial?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many application portals require an electronic signature that must perfectly match the visual string of the applicant's registered name to be accepted.",
+        "whatTheAgentLoses": "The user loses the ability to visually cross-reference the required name format, potentially causing the submission to fail if the agent uses a default string."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Submit the application",
+      "questions": [
+       {
+        "question": "Did you actually submit the application before the recording cut away?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The recording cuts away from the 'Why You are a Good Fit' page before any text is entered or the submission button is clicked.",
+        "whatTheAgentLoses": "The user loses the chance to be considered for the job because the application was abandoned before it was actually submitted."
+       },
+       {
+        "question": "Should you keep waiting for the stalled application to process or abandon it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The application page stalled during submission, requiring a decision on whether to wait indefinitely or click the SEEK logo to return to the homepage.",
+        "whatTheAgentLoses": "The user loses the ability to decide their own tolerance for technical glitches and when to cut their losses on a stalled job application."
+       },
+       {
+        "question": "Do you complete the submission as narrated, or do you abandon the application after a validation error?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The narrator describes the final steps to submit, but the screen shows you clicking the SEEK logo to abandon the process after a validation error appears for missing personal details.",
+        "whatTheAgentLoses": "If the agent abandons the process instead of fixing the errors, your job application is never actually submitted."
+       },
+       {
+        "question": "Did you verify that a submission confirmation appeared after you clicked send?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen jumped back to the top of the unsubmitted proposal page instead of showing a confirmation message after clicking the send button.",
+        "whatTheAgentLoses": "The user loses the certainty that their application was actually submitted and received by the employer."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Set the update preferences",
+      "questions": [
+       {
+        "question": "Did you set the email updates toggle to the requested on position?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The narrator explicitly instructed to turn on email updates, but the screen shows the toggle being switched to the off state.",
+        "whatTheAgentLoses": "The user misses out on desired job alerts and communications because the agent applied the opposite of their requested setting."
+       },
+       {
+        "question": "Are there any visually subdued, pre-checked boxes at the bottom of the review page opting you into marketing emails or third-party data sharing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Employers often use small, low-contrast text and pre-checked boxes at the very end of the form to gain consent for marketing or data sharing.",
+        "whatTheAgentLoses": "The user loses the ability to easily spot and opt out of these subtle defaults, resulting in unwanted spam or compromised data privacy."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Complete the assessment or verification",
+    "note": "8.1, then 8.2 or 8.3 as the platform demands. CL48 enters this goal from the dashboard with the application already in; skni reaches 8.1 straight from the wizard and stops there; GPCO's 8.3 restarts from 8.3.1 on failure. the ERA and Indeed keepers never see this goal.",
+    "questions": [
+     {
+      "question": "What specific tasks do you need to complete for onboarding, and how long will they take?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen outlines a multi-step onboarding process, including identity verification and a 30-minute assessment, that must be finished to start tasking.",
+      "whatTheAgentLoses": "You lose the ability to personally handle sensitive identity and tax setup steps or gauge the actual time commitment required for the project assessments."
+     },
+     {
+      "question": "Should you click 'Answer questions' to complete the employer's required assessment, or close the confirmation dialog?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The post-apply dialog displayed an 'Answer questions' button instead of a 'Done' button, indicating that further action is required to fully complete the application.",
+      "whatTheAgentLoses": "The user loses the chance to be considered for the role if the agent simply closes the dialog and fails to complete the mandatory follow-up questions."
+     }
+    ],
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the rules",
+      "questions": [
+       {
+        "question": "Do you notice the conflicting time estimates for completing the application?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard initially estimated 20-30 minutes, but the 'Getting Started' screen contradicts this by advising you to set aside 15 minutes.",
+        "whatTheAgentLoses": "Delegating to an agent means you miss out on spotting this inconsistency, leaving you uncertain about the actual time commitment required."
+       },
+       {
+        "question": "Are you ready to begin the proctored online assessment in a single sitting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The instructions require you to complete the assessment within four hours in one sitting while your video and audio are recorded.",
+        "whatTheAgentLoses": "You lose the ability to personally complete the assessment, which requires your physical presence for video and audio proctoring."
+       },
+       {
+        "question": "Which assessment do you need to take for this position?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that the Hourly Retail Associate Assessment is required for the Online Order Filling Team Associate position and will take 20 to 30 minutes.",
+        "whatTheAgentLoses": "Delegating this step means the agent completes a lengthy skills or personality assessment on your behalf, which might misrepresent your actual traits and abilities to the employer."
+       },
+       {
+        "question": "Are you prepared to spend 15 minutes in a distraction-free environment to complete this assessment right now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly advises setting aside 15 minutes in a distraction-free environment before proceeding.",
+        "whatTheAgentLoses": "The user loses the ability to decide if this is the right time to commit their personal, uninterrupted focus to the assessment."
+       },
+       {
+        "question": "Are you prepared to begin the timed assessment and follow its strict rules?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that the upcoming assessment is timed, takes about two minutes, and prevents you from going back to previous questions.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally prepare for and authentically answer the timed screening assessment."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Take the assessment",
+      "note": "8.2.1, then 8.2.2 to 8.2.5 in the fixed order, then 8.2.6; no back navigation beyond one question in 8.2.4.",
+      "children": [
+       {
+        "id": "8.2.1",
+        "label": "Accept the assessment terms",
+        "questions": [
+         {
+          "question": "Do you want to review the Terms of Use and Privacy Policy before accepting them?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to check a box accepting these legal agreements and select your device type before you can click Continue to start the assessment.",
+          "whatTheAgentLoses": "Delegating this step means the agent will legally bind you to terms and privacy policies regarding your assessment data without your review."
+         }
+        ]
+       },
+       {
+        "id": "8.2.2",
+        "label": "Answer the judgment scenarios",
+        "questions": [
+         {
+          "question": "How do you choose the 'most' and 'least' likely responses for this situational judgment scenario?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The employer uses these behavioral scenarios to evaluate your professional judgment, requiring you to carefully weigh the provided responses against your own work style.",
+          "whatTheAgentLoses": "You lose the ability to authentically represent your actual problem-solving approach and workplace personality to the employer."
+         }
+        ]
+       },
+       {
+        "id": "8.2.3",
+        "label": "Complete the timed checks"
+       },
+       {
+        "id": "8.2.4",
+        "label": "Answer the history questions",
+        "questions": [
+         {
+          "question": "What are the rules and instructions for this assessment section?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen outlines critical constraints for the assessment, such as automatically advancing and only being able to go back one question.",
+          "whatTheAgentLoses": "Delegating this means the agent might miss critical constraints like the inability to review past answers or how to interpret specific terms like 'supervisor'."
+         },
+         {
+          "question": "Which option best describes your longest tenure with a single employer?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "This matters because you must accurately report your employment stability by selecting the correct time range from the provided options.",
+          "whatTheAgentLoses": "Delegating this to an agent means losing the opportunity to personally calculate and verify the exact time range that best represents your longest employment tenure."
+         },
+         {
+          "question": "Which option best describes your tenure with your most recent employer?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select a duration from the provided options to accurately reflect your recent work history before advancing to the next question.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to personally ensure your employment tenure is categorized correctly according to the specific options provided."
+         },
+         {
+          "question": "How should you rate your customer service skills on this assessment?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select a self-assessment rating for your customer service skills, which could determine if you pass the initial screening.",
+          "whatTheAgentLoses": "You lose the ability to calibrate your self-assessment based on your actual confidence and past supervisor feedback."
+         },
+         {
+          "question": "How would your most recent supervisor rate your verbal communication skills?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select a rating from 'The very best' to 'Not applicable' to assess your communication skills from a past manager's perspective.",
+          "whatTheAgentLoses": "Delegating this step prevents you from providing an accurate self-assessment of your communication skills based on your actual past performance reviews."
+         },
+         {
+          "question": "How should you rate your drive to become a top performer?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select a rating from 'Extremely high' to 'Extremely low' to describe how your most recent supervisor would evaluate your drive.",
+          "whatTheAgentLoses": "You lose the ability to provide an honest self-assessment based on your actual past performance and supervisor feedback."
+         },
+         {
+          "question": "How would your most recent supervisor rate your punctuality?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to estimate how your most recent supervisor would rate your ability to get to work on time on a scale from 'The very best' to 'Needing substantial development'.",
+          "whatTheAgentLoses": "Letting an agent answer this means losing the ability to accurately represent your past performance and manage how your reliability is perceived by the employer."
+         },
+         {
+          "question": "How many times per year did you miss work without telling a supervisor in your most recent job?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select an option like 'None' or '1-2 times per year' to report your unexcused absences.",
+          "whatTheAgentLoses": "An agent might guess this behavioral question incorrectly, potentially misrepresenting your reliability and jeopardizing the job opportunity."
+         },
+         {
+          "question": "How would your most recent supervisor rate your performance compared to others?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to choose a rating from 'The very best' to 'Needing substantial development' to describe your most recent supervisor's evaluation of your performance.",
+          "whatTheAgentLoses": "The person loses the ability to decide how to represent their past performance and relationship with their former supervisor."
+         },
+         {
+          "question": "How many full-time employers have you had in the last five years?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select the number of full-time employers you have worked for in the last five years from a provided list of ranges.",
+          "whatTheAgentLoses": "Delegating this means the agent might misrepresent your recent employment history, potentially leading to disqualification if it does not match your actual background."
+         },
+         {
+          "question": "How much total time have you worked in retail?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select your total retail experience from a list of predefined timeframes to advance to the next question.",
+          "whatTheAgentLoses": "You lose the opportunity to accurately report your specific retail experience, which could directly impact your eligibility for the role."
+         },
+         {
+          "question": "What is the most important factor to you when choosing a job?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select your primary motivation from a list of options such as starting pay, schedule, or hiring speed to advance to the next question.",
+          "whatTheAgentLoses": "You lose the chance to express your true personal priorities and motivations for seeking employment."
+         },
+         {
+          "question": "Which of the listed skills do you consider to be your strongest?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select your strongest skill from a multiple-choice list to assess your behavioral profile.",
+          "whatTheAgentLoses": "You lose the opportunity to present your own self-assessment of your strongest soft skills to the employer."
+         },
+         {
+          "question": "Which of these scenarios are you most comfortable with?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application includes a behavioral assessment question asking which of several social or professional scenarios you are most comfortable handling.",
+          "whatTheAgentLoses": "The user loses the ability to accurately represent their own personality and comfort levels to the prospective employer."
+         },
+         {
+          "question": "How should you rate your ability to learn and adapt to new technology?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to select a self-evaluation rating from options ranging from 'The very best' to 'Needing substantial development'.",
+          "whatTheAgentLoses": "Delegating this means the agent might select a rating that misrepresents your actual confidence and skill level to the employer."
+         },
+         {
+          "question": "How should you interpret the work history questions if this is your first job?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The assessment instructions explicitly state that candidates without previous work experience should base their answers on their academic and extracurricular accomplishments.",
+          "whatTheAgentLoses": "The user loses the specific guidance on how to validly complete the assessment without work experience, potentially leading to abandoned or poorly answered questions."
+         }
+        ]
+       },
+       {
+        "id": "8.2.5",
+        "label": "Answer the work-style pairs",
+        "questions": [
+         {
+          "question": "How do you want to answer the behavioral question comparing your preference for precision versus moving on quickly?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application includes a behavioral assessment asking you to rate whether you are more like someone who prefers to move on or someone who is highly precise.",
+          "whatTheAgentLoses": "Delegating this means the agent might misrepresent your actual work style and personality traits to the prospective employer."
+         },
+         {
+          "question": "Which statement best describes your preferred pace of work?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application includes a behavioral assessment asking whether you prefer a fast or steady pace of work.",
+          "whatTheAgentLoses": "Delegating this means the agent might misrepresent your actual work style and personality to the employer."
+         },
+         {
+          "question": "How do you approach goals and performance standards?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application includes a behavioral assessment asking you to rate statements about your work ethic and performance standards to evaluate your fit for the role.",
+          "whatTheAgentLoses": "Delegating this to an agent means losing the opportunity to authentically represent your personal work ethic and attitude toward achieving goals."
+         },
+         {
+          "question": "Which statement best describes your approach to tackling difficult problems?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to choose between avoiding difficult tasks or being fully confident in tackling them to assess your behavioral profile.",
+          "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to authentically represent your own personality and confidence level to the employer."
+         },
+         {
+          "question": "Which statement about handling shifting priorities best describes your work style?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to choose whether you easily adjust to shifting priorities or become frustrated by them.",
+          "whatTheAgentLoses": "You lose the opportunity to authentically represent your personal adaptability and work style to the employer."
+         },
+         {
+          "question": "How do you want to describe your work style regarding making mistakes when learning something new?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application presents a behavioral assessment asking you to choose between avoiding mistakes or expecting them, which signals your learning style to the employer.",
+          "whatTheAgentLoses": "Letting an agent answer this behavioral question means it might select a work style that misrepresents your actual personality and approach to learning."
+         },
+         {
+          "question": "Which statement best describes your attitude towards overcoming obstacles?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires you to choose between two statements about handling challenges to assess your work style and resilience.",
+          "whatTheAgentLoses": "Delegating this choice means an agent might select a response that does not accurately reflect your actual personality or problem-solving mindset."
+         },
+         {
+          "question": "Which statement best describes your work style?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application includes a behavioral assessment that asks you to choose between valuing effort or being driven by success.",
+          "whatTheAgentLoses": "The user loses the opportunity to accurately reflect their own personal motivations and work style to the potential employer."
+         }
+        ]
+       },
+       {
+        "id": "8.2.6",
+        "label": "Finish the exit survey"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Verify the identity",
+      "note": "8.3.1 to 8.3.3 in order; 8.3.4 loops back to 8.3.1 with a different document; then 8.3.5.",
+      "children": [
+       {
+        "id": "8.3.1",
+        "label": "Consent to the identity check",
+        "questions": [
+         {
+          "question": "Do you want to proceed with the required identity verification using your government-issued ID?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen states that you must complete a quick identity verification with a valid government-issued ID to continue.",
+          "whatTheAgentLoses": "An AI agent cannot physically present your government-issued ID or complete the live camera checks required by the Persona verification system."
+         },
+         {
+          "question": "Do you consent to Persona's terms for processing your biometric data?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires explicit consent for a third-party vendor to collect and process your biometric information to verify your identity.",
+          "whatTheAgentLoses": "The user loses the opportunity to review the privacy policy and decide whether they are comfortable sharing highly sensitive biometric data."
+         }
+        ]
+       },
+       {
+        "id": "8.3.2",
+        "label": "Pick the country and document",
+        "questions": [
+         {
+          "question": "Which alternative ID type should you try if your first upload fails?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires a government-issued photo ID to verify your identity, and you must select a valid backup option from the provided list if the first attempt fails.",
+          "whatTheAgentLoses": "The user loses the ability to decide which specific piece of highly sensitive personal identification is shared with the employer."
+         }
+        ]
+       },
+       {
+        "id": "8.3.3",
+        "label": "Capture the document by phone",
+        "questions": [
+         {
+          "question": "How will you complete the camera-based identity verification?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The application requires access to a camera to verify your identity via a QR code or secure link.",
+          "whatTheAgentLoses": "An AI agent cannot physically scan a QR code with a mobile device or take a live selfie to pass the identity check."
+         }
+        ]
+       },
+       {
+        "id": "8.3.4",
+        "label": "Handle the failed attempt",
+        "questions": [
+         {
+          "question": "How do you want to handle the identity verification failure?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen showed a 'Verification Failed' popup stating your identity could not be verified, which might prevent a successful submission.",
+          "whatTheAgentLoses": "The user loses the ability to troubleshoot the verification error or provide alternative details to ensure the application goes through."
+         }
+        ]
+       },
+       {
+        "id": "8.3.5",
+        "label": "Read the verification status",
+        "questions": [
+         {
+          "question": "What is the final status of your application?",
+          "cluster": "facts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The screen indicates that your identity or account is under review, meaning your application is pending rather than fully processed.",
+          "whatTheAgentLoses": "You lose the immediate awareness that your account requires a manual review before the employer can process your application."
+         },
+         {
+          "question": "Did you notice the 'Confirm identity' status change to 'Pending review' and remain unresolved?",
+          "cluster": "facts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The onboarding checklist initially showed a 'Verify' button that later changed to 'Pending review' due to an off-screen action and never resolved.",
+          "whatTheAgentLoses": "The user loses the assurance that their identity was successfully verified and their application is fully complete."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Track the application",
+    "note": "9.1 where a confirmation renders. 9.2 and 9.3 where a dashboard exists. 9.4 and 9.5 where offered.",
+    "questions": [
+     {
+      "question": "What do you want to do now that your application is submitted?",
+      "cluster": "select",
+      "moment": "Completion",
+      "moneyMoving": true,
+      "why": "The confirmation screen offers options to download a copy of the application, view its status in your dashboard, or return to the vacancy listing.",
+      "whatTheAgentLoses": "You lose the opportunity to decide whether to save a personal copy of the application for your records or immediately review your dashboard."
+     }
+    ],
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Read the submission confirmation",
+      "questions": [
+       {
+        "question": "Did you confirm the application was successfully submitted?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displayed a 'Thank You!' message confirming the successful submission, which proves the application process is complete.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the success message confirming their application was received by the employer."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Open the application dashboard",
+      "questions": [
+       {
+        "question": "Does the closing date on the submission dashboard match what was shown during the application?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The application badge stated the vacancy closes in two days, but the post-submission dashboard stated it closes in three days.",
+        "whatTheAgentLoses": "The user loses awareness of a platform inconsistency regarding the application deadline, which could affect their expectations for the hiring timeline."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Note the revision options"
+     },
+     {
+      "id": "9.4",
+      "label": "Check the messages"
+     },
+     {
+      "id": "9.5",
+      "label": "Return to the search"
+     }
+    ]
+   }
+  ]
+ }
+}
