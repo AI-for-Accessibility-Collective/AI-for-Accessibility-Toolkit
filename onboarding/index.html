@@ -76,6 +76,22 @@
       <label id="areas-label">Specific areas of need</label>
       <div class="areas" role="group" aria-labelledby="areas-label" id="areas"></div>
 
+      <!-- The "vision" area spans two OPPOSITE populations. Capture WHICH one
+           explicitly rather than guessing from the free text — it is the single
+           most consequential fact about how the page should adapt. -->
+      <fieldset id="vision-kind" hidden
+                style="border:1px solid rgba(128,128,128,.35); border-radius:8px; margin-top:.6rem; padding:.5rem .8rem;">
+        <legend style="font-weight:600; font-size:.9rem; padding:0 .3rem;">Which best describes your vision needs?</legend>
+        <label style="display:block; font-weight:400; margin:.3rem 0;">
+          <input type="radio" name="visionKind" value="blind">
+          I use a screen reader / am blind — structure &amp; descriptions, <strong>no magnification</strong>
+        </label>
+        <label style="display:block; font-weight:400; margin:.3rem 0;">
+          <input type="radio" name="visionKind" value="lowVision">
+          I have low vision — <strong>bigger text</strong> &amp; higher contrast
+        </label>
+      </fieldset>
+
       <label for="uid">Profile id <span class="muted">(optional — leave blank to auto-generate)</span></label>
       <input type="text" id="uid" name="uid" autocomplete="off" placeholder="auto">
 
@@ -173,7 +189,11 @@ async function loadConfig() {
 $('add-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const supportAreas = [...document.querySelectorAll('#areas input:checked')].map((c) => c.value);
-  const payload = { uid: $('uid').value.trim() || undefined, freeText: $('need').value.trim(), supportAreas };
+  // Explicit blind vs low-vision choice (only when the vision area is selected).
+  const visionKind = supportAreas.includes('vision')
+    ? (document.querySelector('#vision-kind input:checked')?.value || undefined)
+    : undefined;
+  const payload = { uid: $('uid').value.trim() || undefined, freeText: $('need').value.trim(), supportAreas, visionKind };
   if (!payload.freeText && supportAreas.length === 0) {
     return setStatus($('add-status'), 'Enter a need or pick at least one area.', 'err');
   }
@@ -187,6 +207,7 @@ $('add-form').addEventListener('submit', async (e) => {
     const areas = d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
     setStatus($('add-status'), 'Updated profile “' + d.uid + '” · Needs: ' + needs + ' · Specific areas of need: ' + areas, 'ok');
     $('add-form').reset();
+    updateVisionKindVisibility();     // reset() cleared the checkboxes — hide the sub-question
     $('uid').value = d.uid;           // keep the just-updated profile as the current one
     loadCurrent();
     usedVoice = false;
@@ -253,6 +274,14 @@ $('admin-form').addEventListener('submit', (e) => {
 // Typing/selecting a different profile id updates the banner.
 $('uid').addEventListener('change', loadCurrent);
 
+// Show the blind vs low-vision question only when the vision area is selected.
+function updateVisionKindVisibility() {
+  const on = !!document.querySelector('#areas input[value="vision"]:checked');
+  $('vision-kind').hidden = !on;
+  if (!on) document.querySelectorAll('#vision-kind input:checked').forEach((r) => { r.checked = false; });
+}
+$('areas').addEventListener('change', updateVisionKindVisibility);
+
 // The top Add button submits the same form as the one in the section.
 $('add-top').addEventListener('click', () => $('add-form').requestSubmit());
 
@@ -300,6 +329,7 @@ if (TTS) {
 
 (async () => {
   await loadConfig();
+  updateVisionKindVisibility();
   const saved = localStorage.getItem('onb-uid');
   if (saved) $('uid').value = saved;
   loadCurrent();

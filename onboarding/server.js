@@ -146,18 +146,23 @@ function isBlindText(freeText) {
   return /\bblind\b/.test(t) && !/\blegally blind\b/.test(t);
 }
 
-// Derive a de-duplicated `fields.needs` array from the support areas + free text.
-function deriveDefaultNeeds(areas, freeText) {
+// Derive a de-duplicated `fields.needs` array from the support areas.
+// `visionKind` ('blind' | 'lowVision') is the FIRST-CLASS, explicit answer to
+// "which vision population?" captured at onboarding. When it's absent (e.g. a
+// programmatic caller that didn't ask), we fall back to the `isBlindText`
+// keyword heuristic on the free text — a guess, and only ever a fallback.
+function deriveDefaultNeeds(areas, freeText, visionKind) {
   const byDimension = new Map(); // dimension → need (last writer wins, stable de-dupe)
   const add = (n, strength = 'preference') => byDimension.set(n.dimension, { dimension: n.dimension, value: n.value, strength, source: 'onboarding-derived' });
 
   for (const area of areas) {
     if (area === 'vision') {
-      // "vision" spans two OPPOSITE populations. A blind screen-reader user gets
+      // "vision" spans two OPPOSITE populations. Blind screen-reader users get
       // the STRUCTURE baseline (floor strength); low vision (or an unspecified
-      // "vision" pick) gets magnification. Magnification for a blind user is the
-      // wrong modality entirely, so the free text disambiguates.
-      if (isBlindText(freeText)) { for (const n of BLIND_NEEDS) add(n, 'floor'); continue; }
+      // pick) gets magnification. Magnification for a blind user is the wrong
+      // modality entirely — so we prefer the explicit choice, else the heuristic.
+      const blind = visionKind ? visionKind === 'blind' : isBlindText(freeText);
+      if (blind) { for (const n of BLIND_NEEDS) add(n, 'floor'); continue; }
       for (const n of LOW_VISION_NEEDS) add(n);
       continue;
     }
@@ -166,16 +171,17 @@ function deriveDefaultNeeds(areas, freeText) {
   return [...byDimension.values()];
 }
 
-async function onboard({ uid, supportAreas, freeText }) {
+async function onboard({ uid, supportAreas, freeText, visionKind }) {
   uid = (uid && String(uid).trim()) || genUid();
   if (/[/\\.]/.test(uid) && (uid.includes('/') || uid.includes('\\') || uid.includes('..'))) {
     throw new Error('invalid uid');
   }
   const areas = (Array.isArray(supportAreas) ? supportAreas : []).filter((a) => SUPPORT_AREAS.includes(a));
   const text = (freeText || '').toString().trim();
+  const kind = (visionKind === 'blind' || visionKind === 'lowVision') ? visionKind : undefined;
   // Structured baseline the surfaces can render — without this, needs[] is empty.
-  // Free text disambiguates the vision area (blind vs low vision).
-  const needs = deriveDefaultNeeds(areas, text);
+  // The explicit vision kind (else the free-text heuristic) picks blind vs low vision.
+  const needs = deriveDefaultNeeds(areas, text, kind);
 
   if (MODE === 'remote') {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding' });
@@ -185,6 +191,7 @@ async function onboard({ uid, supportAreas, freeText }) {
     // Always write (even []) so a re-onboard clears stale needs — e.g. a profile
     // corrected from low-vision to blind must drop the old magnification needs.
     await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
+    if (kind) await remoteLibrarian(token, 'setProfileField', ['fields.visionKind', kind]);
     if (text) {
       await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
       await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit' }]);
@@ -194,12 +201,13 @@ async function onboard({ uid, supportAreas, freeText }) {
     const { librarian } = await host.getInstance(uid);
     if (areas.length) await librarian.setProfileField('supportAreas', areas);
     await librarian.setProfileField('fields.needs', needs); // always write — clears stale needs on re-onboard
+    if (kind) await librarian.setProfileField('fields.visionKind', kind);
     if (text) {
       await librarian.setProfileField('freeText', text);
       await librarian.addNote(text, { source: 'user-explicit' });
     }
   }
-  return { uid, supportAreas: areas, freeText: text, needs };
+  return { uid, supportAreas: areas, freeText: text, visionKind: kind, needs };
 }
 
 // ── Read one profile's current configuration (for the "current profile" banner)
@@ -391,4 +399,4 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
   });
 }
 
-export { server, onboard, listProfileIds, listProfileSummaries, deleteProfile };
+export { server, onboard, listProfileIds, listProfileSummaries, deleteProfile, deriveDefaultNeeds, isBlindText };
