@@ -131,14 +131,19 @@ async function run() {
     const r = await c.handle('bigger text'); // a grammar phrase — must NOT be adapted here
     check('rawToTask: a grammar phrase is sent as a task, not adapted', r.ok && recv.focus === 'task' && r.intent.type === 'command' && r.intent.action === 'task');
     check('rawToTask: even a bare word goes to the app', (await c.handle('undo')).intent.action === 'task');
+    // The reported case: a compound instruction must go through as ONE task, not
+    // be dismembered by the grammar into a "search" it then refuses.
+    check('rawToTask: "open google and search for apples" → one task', (await c.handle('open google and search for apples')).intent.action === 'task');
 
     // Sanity: the SAME receiver without rawToTask still runs the grammar.
     const c2 = createController({ control: createMockReceiver({ actions: ['task'] }) });
     check('no rawToTask: a grammar phrase still adapts locally', (await c2.handle('bigger text')).intent.type === 'adapt');
 
-    // rawToTask but the receiver can't take tasks → fall through to grammar.
+    // rawToTask sends a task even when the receiver doesn't advertise one — it
+    // does NOT silently fall back to grammar (that produced "can't search").
     const c3 = createController({ control: createMockReceiver({ actions: [] }), rawToTask: true });
-    check('rawToTask + no task action → falls back to grammar', (await c3.handle('dark mode')).intent.type === 'adapt');
+    const r3 = await c3.handle('search for apples');
+    check('rawToTask: unadvertised task still routed as a task (no grammar fallback)', r3.intent.type === 'command' && r3.intent.action === 'task');
   }
 
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);

@@ -43,15 +43,13 @@ function validate(key, value) {
  */
 export function createRouter({ control, llm = null, rawToTask = false }) {
   async function resolve(utterance) {
-    // rawToTask (the Controller is driving a URL — a task-capable app): send the
-    // raw input straight through as a task, no local grammar. Everything the
-    // person types/says is an instruction for the app, which interprets it —
-    // including phrasing the settings grammar would otherwise have claimed.
-    if (rawToTask) {
-      const caps = await control.describeCapabilities();
-      if ((caps.actions || []).includes('task')) return taskCommand(utterance);
-      // rawToTask but the receiver can't take tasks: fall through to grammar.
-    }
+    // rawToTask (the Controller is driving a URL): the host asserted this
+    // receiver takes tasks, so send the raw input straight through as a task —
+    // UNCONDITIONALLY, no local grammar. (Gating this on the receiver also
+    // advertising a 'task' action silently fell back to grammar, which then
+    // produced confusing refusals like "this app can't search" for compound
+    // instructions such as "open google and search for apples".)
+    if (rawToTask) return taskCommand(utterance);
 
     const det = parse(utterance);
     if (det) return det;
@@ -151,7 +149,11 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
 
   async function dispatchCommand(intent) {
     const caps = await control.describeCapabilities();
-    if (!(caps.actions || []).includes(intent.action)) {
+    // Under rawToTask the host asserted the receiver takes tasks, so send a
+    // 'task' even if it isn't advertised — let the receiver decide, rather than
+    // refuse here. Other actions are still gated on the receiver declaring them.
+    const exempt = rawToTask && intent.action === 'task';
+    if (!exempt && !(caps.actions || []).includes(intent.action)) {
       return result(false, intent, `This app can't ${intent.action}.`, { unsupported: [intent.action] });
     }
     const res = await control.performAction(intent.action, intent.target, intent.text);
