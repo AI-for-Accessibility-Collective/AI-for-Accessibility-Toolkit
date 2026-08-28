@@ -13,6 +13,8 @@
   .bar button { padding: .35rem .7rem; border: 1px solid #99a; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
   .bar button[aria-pressed="true"] { background: #1f6feb; color: #fff; border-color: #1f6feb; }
   .muted { color: #667; font-size: .85rem; }
+  .current { margin: .5rem 0 0; padding: .6rem .75rem; border: 1px solid rgba(128,128,128,.35); border-radius: 8px; background: rgba(31,111,235,.08); font-size: .95rem; }
+  .current strong { font-family: ui-monospace, Menlo, monospace; }
   main#app { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; }
   aside.ad { border: 1px dashed #b3261e; padding: .5rem; margin: 1rem 0; color: #b3261e; font-size: .85rem; }
   a { color: #1f6feb; }
@@ -25,18 +27,12 @@
     “scroll down”, “help”</em>. The card below is the <strong>receiving app</strong> it drives through the
     neutral <code>ControlPort</code>.</p>
 
-  <div class="bar" id="operator-bar" role="group" aria-label="Operator profile">
-    <span class="muted">Operator:</span>
-    <input id="profile-uid" type="text" placeholder="profile id (from /onboarding)"
-           style="width:14rem; padding:.35rem .5rem; border:1px solid #99a; border-radius:6px; background:transparent; color:inherit;">
-    <button id="load-profile">Load profile</button>
-    <span class="muted">· or a demo profile:</span>
-    <button data-areas="" data-demo aria-pressed="true">default</button>
-    <button data-areas="vision" data-demo>vision</button>
-    <button data-areas="hearing" data-demo>hearing</button>
-    <button data-areas="motor" data-demo>motor</button>
-    <button data-areas="cognitive" data-demo>cognitive</button>
-  </div>
+  <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
+  <p class="muted" style="margin:.25rem 0;">
+    The Controller reads this profile (set it once at
+    <a href="/onboarding">onboarding</a>). To change it, edit it there and
+    <a href="#" id="reload-profile">reload</a>.
+  </p>
   <p class="muted" id="presentation-note"></p>
 
   <div class="bar" role="group" aria-label="What the controller drives">
@@ -74,8 +70,7 @@
 
   let mounted = null;
   let currentControl = localReceiver;   // local DOM app, or a remote receiver
-  let currentModel = { supportAreas: [] };   // the operator's AbilityModel
-  let currentLabel = 'default';               // what to call the operator in the note
+  let currentModel = { supportAreas: [] };   // the operator's AbilityModel (from onboarding)
   let remoteChannel = null;
 
   function rebuild() {
@@ -84,39 +79,38 @@
     const controller = createController({ control: currentControl, operator: { abilityModel: currentModel }, rawToTask: !!remoteChannel });
     mounted = mountController(controller, { mode: 'element', corner: 'bottom-right' });
     document.getElementById('presentation-note').textContent =
-      `Operator: ${currentLabel} → ` + describePresentation(controller.presentation);
+      'Controller presents as → ' + describePresentation(controller.presentation);
     window.__controller = controller; // handy for scripted checks
   }
-  const note = (t) => { document.getElementById('presentation-note').textContent = t; };
 
-  // Demo-profile buttons: a synthetic AbilityModel from support areas.
-  document.querySelectorAll('#operator-bar button[data-demo]').forEach((b) => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('#operator-bar button[data-demo]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
-      b.setAttribute('aria-pressed', 'true');
-      currentModel = { supportAreas: b.dataset.areas ? b.dataset.areas.split(',') : [] };
-      currentLabel = 'demo · ' + (b.textContent || 'default');
-      rebuild();
-    });
-  });
+  // Read-only view of the current profile — the same shape onboarding shows.
+  // Editing happens in onboarding; the Controller just reads it (text nodes, no
+  // HTML injection from the free text).
+  function renderCurrent(uid, model) {
+    const el = document.getElementById('current');
+    el.textContent = '';
+    if (!uid || !model) { el.textContent = 'Current profile: not set — set one up at onboarding.'; return; }
+    el.append('Current profile: ');
+    const name = document.createElement('strong'); name.textContent = uid; el.append(name);
+    const parts = [];
+    if (model.supportAreas && model.supportAreas.length) parts.push('Support areas: ' + model.supportAreas.join(', '));
+    if (model.freeText) parts.push('Needs: “' + model.freeText + '”');
+    el.append(' · ' + (parts.length ? parts.join(' · ') : 'not set yet'));
+  }
 
-  // Load a REAL onboarded profile by id: the Controller reads that person's
-  // AbilityModel (incl. structured needs) and presents itself accordingly.
+  // Read the onboarded profile and (re)build the Controller for that operator.
   async function loadProfile(uid) {
     uid = (uid || '').trim();
-    if (!uid) return;
+    if (!uid) { currentModel = { supportAreas: [] }; renderCurrent(null); rebuild(); return; }
     try {
       const d = await (await fetch('/api/ability-model?uid=' + encodeURIComponent(uid))).json();
-      if (!d.exists) { note(`No profile "${uid}" — onboard at /onboarding first.`); return; }
-      currentModel = d.model || { supportAreas: [] };
-      currentLabel = uid;
-      try { localStorage.setItem('onb-uid', uid); } catch {}
-      document.querySelectorAll('#operator-bar button[data-demo]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
-      rebuild();
-    } catch (e) { note('Could not load profile: ' + e.message); }
+      currentModel = (d.exists && d.model) ? d.model : { supportAreas: [] };
+      renderCurrent(d.exists ? uid : null, currentModel);
+    } catch { currentModel = { supportAreas: [] }; renderCurrent(null); }
+    rebuild();
   }
-  document.getElementById('load-profile').addEventListener('click', () => loadProfile(document.getElementById('profile-uid').value));
-  document.getElementById('profile-uid').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadProfile(e.target.value); });
+  function currentUid() { try { return localStorage.getItem('onb-uid'); } catch { return null; } }
+  document.getElementById('reload-profile').addEventListener('click', (e) => { e.preventDefault(); loadProfile(currentUid()); });
 
   // Connect the controller OUT to a remote receiver over a WebSocket.
   // One-click: fill the default local-harness URL and connect. The text field
@@ -145,12 +139,9 @@
     rebuild();
   });
 
-  // Pick up the profile you just onboarded with (same-origin localStorage key
-  // that /onboarding writes). Otherwise start on the default demo profile.
-  let savedUid = null;
-  try { savedUid = localStorage.getItem('onb-uid'); } catch {}
-  if (savedUid) { document.getElementById('profile-uid').value = savedUid; loadProfile(savedUid); }
-  else rebuild();
+  // Read the profile you onboarded with (same-origin localStorage 'onb-uid' that
+  // /onboarding writes); shows "not set" and builds a default operator if none.
+  loadProfile(currentUid());
 </script>
 </body>
 </html>
