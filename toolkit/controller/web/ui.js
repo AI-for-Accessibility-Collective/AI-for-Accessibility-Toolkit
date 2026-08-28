@@ -30,14 +30,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   const p = controller.presentation;
   const wantVoiceIn = !!(SR && p.input.voice);
 
-  // "Speak results" is the PERSON'S choice, not an inference (issue #5). The
-  // default is the presentation's computed value — off for a screen-reader
-  // operator, who hears the live region in their own voice — but it is a toggle:
-  // a blind person on a kiosk with no AT can turn it ON (otherwise: silence),
-  // and a low-vision person with a screen reader running can turn it OFF
-  // (otherwise: two voices). Persisted per browser.
+  // "Speak results" is the PERSON'S choice, not an inference (issue #5). It
+  // defaults ON — results are spoken unless turned off — and is persisted per
+  // browser. A screen-reader operator can switch it OFF to avoid a second voice
+  // over their AT; either way the live region always carries the text, so
+  // nothing is lost when it's off.
   const SPEAK_KEY = 'aa-controller-speak-results';
-  let speakResults = !!p.output.speech;
+  let speakResults = true; // default ON; the toggle + localStorage let anyone turn it off
   if (TTS) { try { const v = localStorage.getItem(SPEAK_KEY); if (v !== null) speakResults = v === '1'; } catch { /* storage blocked */ } }
 
   const root = el(doc, 'div', { class: 'aa-controller' + (p.targetSize === 'large' ? ' aa-large' : '') });

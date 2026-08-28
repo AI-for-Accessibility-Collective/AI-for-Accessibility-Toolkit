@@ -25,9 +25,10 @@ const { renderControllerUI } = await import('../controller/web/ui.js');
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 async function run() {
-  // A 'vision' operator with no needs → not assistiveTech → output.speech true →
-  // Speak-results defaults ON.
-  const c = createController({ control: createMockReceiver(), operator: { abilityModel: { supportAreas: ['vision'] } } });
+  // Speak-results defaults ON regardless of profile — use a default profile,
+  // whose presentation.output.speech is false, to prove the default isn't the
+  // inference.
+  const c = createController({ control: createMockReceiver(), operator: { abilityModel: { supportAreas: [] } } });
   const ui = renderControllerUI(c, { doc: document });
   document.body.appendChild(ui.root);
 
@@ -39,7 +40,7 @@ async function run() {
 
   check('#6: two live regions — assertive alert + polite status', alertEl.getAttribute('aria-live') === 'assertive' && statusEl.getAttribute('aria-live') === 'polite');
   check('#5: Speak-results toggle is present', !!cb);
-  check('#5: toggle default follows presentation (vision → on)', cb.checked === true);
+  check('#5: Speak-results defaults ON (even for a default profile)', cb.checked === true);
 
   // Adaptation acknowledgement → assertive region, and spoken (toggle on).
   input.value = 'bigger text'; go.click(); await tick(); await tick();
