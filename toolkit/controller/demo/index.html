@@ -39,6 +39,7 @@
     <span class="muted">Drive:</span>
     <input id="ws-url" type="text" placeholder="ws://127.0.0.1:9333  (a remote receiver, e.g. browser-harness)"
            style="flex:1; min-width:16rem; padding:.35rem .5rem; border:1px solid #99a; border-radius:6px; background:transparent; color:inherit;">
+    <button id="connect-local" title="ws://127.0.0.1:9333">Connect to local harness</button>
     <button id="connect">Connect remote</button>
     <button id="disconnect" hidden>Use local app</button>
   </div>
@@ -92,6 +93,12 @@
   });
 
   // Connect the controller OUT to a remote receiver over a WebSocket.
+  // One-click: fill the default local-harness URL and connect. The text field
+  // still lets a different host/port be entered by hand.
+  document.getElementById('connect-local').addEventListener('click', () => {
+    document.getElementById('ws-url').value = 'ws://127.0.0.1:9333';
+    document.getElementById('connect').click();
+  });
   document.getElementById('connect').addEventListener('click', () => {
     const url = document.getElementById('ws-url').value.trim();
     if (!url) return;

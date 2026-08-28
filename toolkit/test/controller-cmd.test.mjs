@@ -104,6 +104,8 @@ async function run() {
     const c = createController({ control: recv });
     const r = await c.handle('find a good recipe for lasagna and add it to my shopping list');
     check('task fallback: unparsed utterance → performed as a task', r.ok && recv.focus === 'task');
+    check('task fallback: acknowledgement reads the utterance back (#3)', /Ok, running: find a good recipe for lasagna/.test(r.say));
+    check('task fallback: a very long utterance is trimmed in the ack', (await c.handle('x'.repeat(200))).say.length < 120);
 
     const noTask = createMockReceiver({ actions: ['scroll'] }); // no 'task'
     const c2 = createController({ control: noTask });

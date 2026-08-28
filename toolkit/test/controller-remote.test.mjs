@@ -93,6 +93,30 @@ async function run() {
     check('ws-channel: socket exposes close()', clientSock.readyState === 3);
   }
 
+  // ── Out-of-band receiver→Controller note (a late task result) ─────────────
+  {
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    const recv = createMockReceiver();
+    const [cc, sc] = fakeSocketPair();
+    const sChan = websocketChannel(sc);
+    serveControl(sChan, recv);
+    const remote = remoteControl({ channel: websocketChannel(cc) });
+
+    let got = null;
+    const off = remote.onNote((t) => { got = t; });
+    sChan.post({ kind: 'aa-control-note', text: 'The top story is X' });
+    await tick();
+    check('onNote: receives an out-of-band note (no id)', got === 'The top story is X');
+
+    // A note must not be mistaken for a response — normal calls still work.
+    check('onNote: a note does not corrupt the request/response path', (await remote.describeCapabilities()).platform === 'mock');
+
+    off(); got = null;
+    sChan.post({ kind: 'aa-control-note', text: 'ignored' });
+    await tick();
+    check('onNote: unsubscribe stops delivery', got === null);
+  }
+
   console.log(`\nController M5 (remote transport): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }

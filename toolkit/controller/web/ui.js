@@ -98,10 +98,20 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     });
   }
 
+  // Out-of-band notes from a remote receiver — a task result that arrives after
+  // the response (see transport/remote.js onNote). Route into the live region
+  // (a screen reader announces it in the operator's own voice) and speak() it —
+  // speak() is already gated on presentation.output.speech, so a screen-reader
+  // operator gets no second TTS voice (issue #7 stays intact).
+  let unNote = null;
+  if (controller.control && typeof controller.control.onNote === 'function') {
+    unNote = controller.control.onNote((text) => { if (text) { show(String(text)); speak(String(text)); } });
+  }
+
   return {
     root,
     focus: refocus,
-    destroy() { try { recog && recog.abort(); } catch {} root.remove(); },
+    destroy() { try { unNote && unNote(); } catch {} try { recog && recog.abort(); } catch {} root.remove(); },
   };
 }
 

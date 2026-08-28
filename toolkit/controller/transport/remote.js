@@ -13,6 +13,11 @@
 
 const REQ = 'aa-control-req';
 const RES = 'aa-control-res';
+// An OUT-OF-BAND receiver→Controller push (no id, not a reply to any request):
+// a result that arrives after performAction already returned — e.g. a long task
+// (30–120s) whose answer would otherwise have nowhere to go. Optional; ignored
+// by receivers/Controllers that don't know it.
+const NOTE = 'aa-control-note';
 // The exact ControlPort surface we proxy. Each is async and returns a result
 // object (never throws) — matching the contract in control-port.js.
 const METHODS = ['describeCapabilities', 'getContext', 'applySettings', 'undoLast', 'resetUndo', 'getContent', 'performAction'];
@@ -46,9 +51,16 @@ export function serveControl(channel, port) {
 export function remoteControl({ channel, timeoutMs = 10000 }) {
   let seq = 0;
   const waiting = new Map();
+  const noteHandlers = new Set();
 
   channel.subscribe((msg) => {
-    if (!msg || msg.kind !== RES || !waiting.has(msg.id)) return;
+    if (!msg) return;
+    // Out-of-band note (no id): a late result. Fan out to onNote subscribers.
+    if (msg.kind === NOTE) {
+      for (const h of [...noteHandlers]) { try { h(msg.text, msg); } catch { /* handler is best-effort */ } }
+      return;
+    }
+    if (msg.kind !== RES || !waiting.has(msg.id)) return;
     const { resolve, timer } = waiting.get(msg.id);
     waiting.delete(msg.id);
     if (timer) clearTimeout(timer);
@@ -69,6 +81,10 @@ export function remoteControl({ channel, timeoutMs = 10000 }) {
 
   const port = {};
   for (const m of METHODS) port[m] = (...args) => call(m, args);
+  // Beyond the ControlPort methods: register for out-of-band receiver notes.
+  // Returns an unsubscribe fn. The Controller UI routes these into its live
+  // region (see web/ui.js).
+  port.onNote = (cb) => { noteHandlers.add(cb); return () => noteHandlers.delete(cb); };
   return port;
 }
 

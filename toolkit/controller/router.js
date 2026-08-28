@@ -58,7 +58,12 @@ export function createRouter({ control, llm = null }) {
     // an agent), instead of dying in the Controller — the grammar stays
     // deterministic for the settings vocabulary; the rest goes to the app.
     if ((caps.actions || []).includes('task')) {
-      return command(utterance, { action: 'task', text: utterance, say: 'Passing that to the app' });
+      // Read the utterance back — for spoken input this is the only chance to
+      // catch a mis-recognition ("braille music" heard as "braille moozik")
+      // before the app spends a minute on it.
+      const heard = String(utterance).trim();
+      const shown = heard.length > 80 ? heard.slice(0, 79) + '…' : heard;
+      return command(utterance, { action: 'task', text: utterance, say: `Ok, running: ${shown}` });
     }
     return noMatch(utterance);
   }

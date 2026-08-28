@@ -51,6 +51,22 @@ Rules:
   object with an `error` field (or a top-level `error` on the response). The
   Controller treats an application error as data, not a transport failure.
 
+### Optional: receiver→Controller note (a late result)
+
+A `performAction("task", …)` must return within the 10s timeout, but a real task
+takes 30–120s. Emit the answer when it's ready as an out-of-band **note** on the
+same socket — no `id`, not a reply to any request:
+
+```json
+{ "kind": "aa-control-note", "text": "The top story is …" }
+```
+
+Send it on failure too — silence after "Ok, running…" is the worst outcome for
+someone who can't see the page. The Controller routes `text` into its ARIA live
+region (a screen reader announces it in the person's own voice; it's also spoken
+when the operator's presentation wants TTS). It's inert for a Controller that
+doesn't know the kind, so it's safe to emit today.
+
 ## 3. The methods (the ControlPort)
 
 Implement these seven. Types are the canonical shapes from `control-port.js`.
