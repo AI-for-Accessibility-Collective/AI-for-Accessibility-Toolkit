@@ -28,14 +28,29 @@ function el(doc, tag, attrs = {}, text) {
  */
 export function renderControllerUI(controller, { doc = document } = {}) {
   const p = controller.presentation;
-  const speakOut = !!(TTS && p.output.speech);
   const wantVoiceIn = !!(SR && p.input.voice);
+
+  // "Speak results" is the PERSON'S choice, not an inference (issue #5). The
+  // default is the presentation's computed value — off for a screen-reader
+  // operator, who hears the live region in their own voice — but it is a toggle:
+  // a blind person on a kiosk with no AT can turn it ON (otherwise: silence),
+  // and a low-vision person with a screen reader running can turn it OFF
+  // (otherwise: two voices). Persisted per browser.
+  const SPEAK_KEY = 'aa-controller-speak-results';
+  let speakResults = !!p.output.speech;
+  if (TTS) { try { const v = localStorage.getItem(SPEAK_KEY); if (v !== null) speakResults = v === '1'; } catch { /* storage blocked */ } }
 
   const root = el(doc, 'div', { class: 'aa-controller' + (p.targetSize === 'large' ? ' aa-large' : '') });
   root.setAttribute('role', 'region');
   root.setAttribute('aria-label', 'Accessibility controller');
 
-  const feedback = el(doc, 'div', { class: 'aa-feedback', role: 'status', 'aria-live': 'polite' },
+  // Two live regions (issue #6): acknowledgements & errors are ASSERTIVE — they
+  // confirm an action just started and are the only chance to catch a mis
+  // -recognition, so they must not queue behind a paragraph. Task results and
+  // content reads are POLITE — don't interrupt someone mid-sentence. Both sit in
+  // the same place; only one holds text at a time (the other collapses empty).
+  const feedbackAlert = el(doc, 'div', { class: 'aa-feedback', role: 'alert', 'aria-live': 'assertive' });
+  const feedbackStatus = el(doc, 'div', { class: 'aa-feedback', role: 'status', 'aria-live': 'polite' },
     'Type or say what you need — e.g. "bigger text", "dark mode", "read this".');
 
   const row = el(doc, 'div', { class: 'aa-row' });
@@ -48,14 +63,30 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     row.append(mic);
   }
   row.append(help);
-  root.append(feedback, row);
+  root.append(feedbackAlert, feedbackStatus, row);
+
+  // The Speak-results toggle (only where TTS exists) — keyboard-reachable + labelled.
+  if (TTS) {
+    const toggle = el(doc, 'label', { class: 'aa-toggle' });
+    const cb = el(doc, 'input', { type: 'checkbox' });
+    cb.checked = speakResults;
+    toggle.append(cb, doc.createTextNode(' Speak results aloud'));
+    cb.addEventListener('change', () => { speakResults = cb.checked; try { localStorage.setItem(SPEAK_KEY, speakResults ? '1' : '0'); } catch { /* storage blocked */ } });
+    root.append(toggle);
+  }
 
   // ── behavior ──
   function speak(text) {
-    if (!speakOut || !text) return;
+    if (!TTS || !speakResults || !text) return;
     try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch {}
   }
-  function show(text) { feedback.textContent = text; }
+  // Deliver to the right live region: assertive for acks/errors, polite for results.
+  function deliver(text, { assertive = false } = {}) {
+    const t = String(text == null ? '' : text);
+    if (assertive) { feedbackAlert.textContent = t; feedbackStatus.textContent = ''; }
+    else { feedbackStatus.textContent = t; feedbackAlert.textContent = ''; }
+  }
+  function show(text) { deliver(text, { assertive: false }); } // polite: results, content, notes
   function refocus() { (p.input.primary === 'voice' && wantVoiceIn ? mic : input).focus(); }
 
   let busy = false;
@@ -66,10 +97,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     show('…');
     try {
       const res = await controller.handle(u);
-      show(res.say);
+      // A content read (query → getContent) is a RESULT → polite; everything
+      // else (adaptations, task acks, errors) is an acknowledgement → assertive.
+      const contentRead = res.intent && res.intent.type === 'query' && res.intent.ask === 'content';
+      deliver(res.say, { assertive: !(res.ok && contentRead) });
       speak(res.say);
     } catch (e) {
-      show('Sorry, something went wrong.');
+      deliver('Sorry, something went wrong.', { assertive: true });
     }
     input.value = '';
     busy = false;
@@ -90,7 +124,7 @@ export function renderControllerUI(controller, { doc = document } = {}) {
       input.value = txt.replace(/\s+/g, ' ').trim();
       gotText = !!input.value;
     };
-    recog.onerror = () => show('Voice input is unavailable — please type instead.');
+    recog.onerror = () => deliver('Voice input is unavailable — please type instead.', { assertive: true });
     recog.onend = () => { setMic(false); if (gotText) { gotText = false; submit(input.value); } };
     mic.addEventListener('click', () => {
       if (listening) { recog.stop(); return; }
@@ -99,10 +133,10 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   }
 
   // Out-of-band notes from a remote receiver — a task result that arrives after
-  // the response (see transport/remote.js onNote). Route into the live region
+  // the response (see transport/remote.js onNote). Route into the POLITE region
   // (a screen reader announces it in the operator's own voice) and speak() it —
-  // speak() is already gated on presentation.output.speech, so a screen-reader
-  // operator gets no second TTS voice (issue #7 stays intact).
+  // speak() is gated on the Speak-results toggle (default from presentation), so
+  // a screen-reader operator gets no second voice unless they asked (issues #5/#7).
   let unNote = null;
   if (controller.control && typeof controller.control.onNote === 'function') {
     unNote = controller.control.onNote((text) => { if (text) { show(String(text)); speak(String(text)); } });
@@ -122,6 +156,9 @@ export const CONTROLLER_CSS = `
   border: 1px solid rgba(128,128,128,.4); border-radius: 12px; padding: .75rem; background: Canvas; color: CanvasText;
   box-shadow: 0 6px 24px rgba(0,0,0,.18); max-width: 32rem; }
 .aa-feedback { font-size: .95rem; margin-bottom: .5rem; min-height: 1.4em; }
+.aa-feedback:empty { min-height: 0; margin: 0; }   /* the inactive live region collapses */
+.aa-toggle { display: inline-flex; align-items: center; gap: .35rem; margin-top: .5rem; font-size: .85rem; cursor: pointer; }
+.aa-toggle input:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
 .aa-row { display: flex; gap: .4rem; align-items: stretch; }
 .aa-input { flex: 1; padding: .5rem .6rem; font-size: 1rem; border: 1px solid #99a; border-radius: 8px;
   background: transparent; color: inherit; }
