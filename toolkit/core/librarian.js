@@ -126,6 +126,7 @@ export function createLibrarian({
       topic: r.aspect && r.aspect.startsWith('note.') ? r.aspect.slice(5) : null,
       scope,
       source: r.source,
+      writer: r.writer || 'person', // who wrote it: person | agent | import (issue #6)
       importance: r.importance,
       status: r.status,
       createdAt: r.createdAt,
@@ -404,11 +405,21 @@ export function createLibrarian({
     async recordScopedSettings(scope, settings, opts = {}) {
       const now = clock.now();
       scope = VALID_SCOPE.test(scope || '') ? scope : 'general';
-      const where = opts.scopeLabel || (
-        scope === 'general' ? '' :
-        scope.startsWith('category:') ? ` on ${scope.slice(9)} sites` :
-        scope.startsWith('origin:') ? ` on ${scope.slice(7)}` :
-        scope.startsWith('context:') ? ` for ${scope.slice(8)} content` : '');
+      // Who is writing this? 'person' (a real user action) vs 'agent' (a
+      // Controller/verifier/insight loop) vs 'import'. Strength stays 'user
+      // -explicit'/confidence 1 — this only lets review surfaces and the proposal
+      // budget tell them apart (issue #6). Defaults to 'person'.
+      const writer = ['person', 'agent', 'import'].includes(opts.writer) ? opts.writer : 'person';
+      // A caller-supplied scopeLabel is user-facing record text; ensure it is
+      // separated from the sentence (the built-in fallbacks already lead with a
+      // space, a caller's "everywhere" would not) — issue #5.
+      const label = opts.scopeLabel;
+      const where = (label != null && label !== '')
+        ? (/^\s/.test(String(label)) ? String(label) : ' ' + label)
+        : (scope === 'general' ? '' :
+          scope.startsWith('category:') ? ` on ${scope.slice(9)} sites` :
+          scope.startsWith('origin:') ? ` on ${scope.slice(7)}` :
+          scope.startsWith('context:') ? ` for ${scope.slice(8)} content` : '');
       const shard = await DS().getMemoryShard(scope);
       const ids = [];
       for (const [key, value] of Object.entries(settings || {})) {
@@ -418,6 +429,7 @@ export function createLibrarian({
         if (rec) {
           rec.settings = sanitizeSettings({ [key]: value }); // coerce at the write boundary
           rec.text = text;
+          rec.writer = writer;
           rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
           rec.updatedAt = now;
           rec.lastAccessed = now;
@@ -428,6 +440,7 @@ export function createLibrarian({
             source: 'user-explicit', confidence: 1, importance: 8,
             decayClass: 'stable', settings: { [key]: value }, text,
           }, now);
+          rec.writer = writer;
           shard.push(rec);
         }
         ids.push(rec.id);
@@ -731,6 +744,7 @@ export function createLibrarian({
       if (!body) return { ok: false, reason: 'empty-text' };
       const scope = VALID_SCOPE.test(opts.scope || '') ? opts.scope : 'general';
       const source = String(opts.source || 'user-explicit');
+      const writer = ['person', 'agent', 'import'].includes(opts.writer) ? opts.writer : 'person'; // who wrote it (issue #6)
       // The pause is a floor for INFERENCE, never for direct user statements —
       // the same rule recordScopedSettings follows. A person typing a sentence
       // about themselves while memory is paused meant to type it.
@@ -749,6 +763,7 @@ export function createLibrarian({
         : null;
       if (rec) {
         rec.text = body.slice(0, NOTE_TEXT_MAX);
+        rec.writer = writer;
         rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
         rec.updatedAt = now;
         rec.lastAccessed = now;
@@ -766,6 +781,7 @@ export function createLibrarian({
           settings: null,
           text: body,
         }, now);
+        rec.writer = writer;
         shard.push(rec);
       }
       await DS().setMemoryShard(scope, shard);
