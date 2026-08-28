@@ -30,11 +30,11 @@ ${scope} body {
   margin: 0 auto !important;
 }
 /* Floats and CSS multi-column are what put content side by side. Scoped to a
- * FINITE set of block/layout/media elements rather than `*`: a universal
- * !important rule defeats the browser's style-sharing and forces a whole-tree
- * style+layout recalc that locks the main thread for seconds on large pages.
- * These are the elements that actually get floated or become multi-column;
- * inline/text/table-cell leaves (the bulk of a big DOM) are left untouched. */
+ * FINITE set of block/layout/media elements rather than a universal selector:
+ * a universal !important rule defeats the browser style-sharing and forces a
+ * whole-tree style+layout recalc that locks the main thread for seconds on
+ * large pages. These are the elements that actually get floated or become
+ * multi-column; inline/text/table-cell leaves are left untouched. */
 ${scope} div, ${scope} section, ${scope} article, ${scope} aside, ${scope} main,
 ${scope} header, ${scope} footer, ${scope} nav, ${scope} figure, ${scope} figcaption,
 ${scope} p, ${scope} ul, ${scope} ol, ${scope} dl, ${scope} li, ${scope} table,
