@@ -4,7 +4,7 @@
 
 **A general, platform-agnostic toolkit for adding agentic accessibility to any app.**
 
-[Quick Start](#quick-start) · [Concepts](#core-concepts) · [Using the Toolkit](#using-the-toolkit) · [Catalog](#the-catalog) · [Architecture](docs/architecture.md) · [API](toolkit/API.md)
+[Quick Start](#quick-start) · [Concepts](#core-concepts) · [Using the Toolkit](#using-the-toolkit) · [Controller](#the-controller-optional) · [Catalog](#the-catalog) · [Architecture](docs/architecture.md) · [API](toolkit/API.md)
 
 </div>
 
@@ -82,6 +82,39 @@ Three ways to build on it, depending on your host:
 1. **Embed the core directly (any JS runtime).** `createToolkit({ ports }) → { datastore, librarian }`. Implement the ports for your platform — the Node bindings in [`toolkit/platforms/node/`](toolkit/platforms/node/) are the template; a Chrome host implementation lives in [`toolkit/platforms/chrome/`](toolkit/platforms/chrome/).
 2. **Call the hosted HTTP service (any language).** Run [`server/`](server/) (locally or on Cloud Run) and hit the same Librarian methods over HTTP with a bearer token — for non-JS clients, or to keep the profile server-side. See [server/README.md](server/README.md).
 3. **Draw from the catalog.** Use the ready-made accessibility fixes, detectors, and profiles in [`tools/`](tools/) — and the tools/skills registry in [`toolkit/registry/`](toolkit/registry/) — as building blocks, whether or not you embed the personalization core.
+4. **Drop in the Controller.** Give people a text/voice way to drive your app: implement the `ControlPort` for your surface and mount the [`controller/`](controller/) widget (or connect it to a remote receiver). Optional and independent of the core.
+
+## The Controller (optional)
+
+A ready-made, **platform-neutral text/voice control surface** that lets a person
+drive any app — "bigger text", "reduce motion", "read this", "open wikipedia.org",
+or a free-form task — through one neutral **`ControlPort`**. It's an *optional*
+sibling of the core ([`controller/`](controller/)), not part of it: the toolkit
+never depends on the controller; the controller consumes the toolkit's settings
+vocabulary.
+
+- **One core, any receiver.** A local web page, or a remote app (mobile / desktop /
+  XR / another browser) that implements the `ControlPort` and connects back over a
+  channel — the same controller drives all of them. See
+  [`controller/PROTOCOL.md`](controller/PROTOCOL.md).
+- **Renders itself per operator.** The widget's own input/output (voice vs text,
+  spoken vs a live region, large targets) is derived from the operator's
+  AbilityModel — a screen-reader user hears results in their own voice, never a
+  second TTS voice.
+- **Deterministic first, LLM optional.** A zero-dependency grammar handles the
+  settings vocabulary; a host-supplied LLM lane and a `task` catch-all handle the
+  rest.
+
+`createController({ control, operator }) → { handle, presentation }`. Design +
+milestones: [`controller/DESIGN.md`](controller/DESIGN.md).
+
+## Onboarding (example service)
+
+[`onboarding/`](onboarding/) is a tiny, zero-dependency web service that captures
+a person's needs into an ability profile (embedding the toolkit locally, or
+proxying a running `server/`), and — with an admin password — lists and deletes
+profiles. It also serves the Controller demo from the same port. A runnable
+reference for the "capture a profile" half of a host.
 
 ## The Catalog
 
@@ -100,7 +133,10 @@ A developer library of reusable accessibility building blocks, usable on their o
 toolkit/     Platform-agnostic core — Librarian, datastore, ability model, broker,
              skill engine, ports, sync, protocol, surfaces, reference platform bindings
 tools/       Developer catalog — adapters, auditors, profiles, utils
+controller/  Optional text/voice control surface — ControlPort, grammar, mounts,
+             remote transport, web UI, demo (a sibling; the core never depends on it)
 server/      Hosted HTTP service exposing the core to any language/runtime
+onboarding/  Example web service: capture a profile + serve the Controller demo
 examples/    Runnable, dependency-free examples
 docs/        Architecture, API, and design docs
 ```

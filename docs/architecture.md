@@ -99,6 +99,44 @@ Either way, **the user validates before anything is saved** — suggestions, nev
 - **Continual update** — the profile is living: the user builds new skills, edits old ones, gives feedback, and corrects adaptations; the Librarian folds all of it back into the profile and memory.
 - **Privacy layer** — the Ability Profile/Memory db sits behind access control: **personal, friends, or anyone**. Other apps read through the Librarian, never the raw store. *Built:* the host's "Who can see your profile" control sets the profile's sharing level, every broker grant carries an **audience** (personal / friends / anyone), and `exportUnderstanding` refuses any grant whose audience sits above the current level — lowering the level immediately cuts off out-of-level grants.
 
+## The Controller (optional control surface)
+
+An **optional** UI layer — a repo-root sibling ([`controller/`](../controller/)),
+not part of the platform-agnostic core — that gives a person a **text or voice**
+way to drive any app. It is the neutral, go-forward successor to the extension's
+old "voice mode": the toolkit kept the *port* and rebuilt the *UI* host-agnostic.
+
+- **`ControlPort`** ([`controller/control-port.js`](../controller/control-port.js))
+  — the platform-neutral interface a receiving app implements: `describeCapabilities`,
+  `getContext`, `applySettings`, `undoLast`, `resetUndo`, `getContent`,
+  `performAction`. A local DOM app, or a mobile / XR / desktop app — each implements
+  the same shape in its own terms. It supersedes the web-shaped
+  [`toolkit/ports/actuation.js`](../toolkit/ports/actuation.js) (tab/zoom/readPage);
+  crucially `getContent` **returns** text for the operator's own delivery channel
+  rather than presuming a second speaking voice.
+- **Hybrid intent engine.** A zero-dependency grammar over the registry settings
+  vocabulary handles "bigger text / dark mode / read this / undo"; an optional,
+  host-supplied LLM lane handles free-form phrasing; a `task` catch-all routes
+  anything else to a task-capable app (e.g. an agent). When driving a URL, a raw
+  mode sends *all* input to the app as tasks (no grammar).
+- **Renders itself per operator** ([`controller/presentation.js`](../controller/presentation.js))
+  — the widget's own input/output is derived from the operator's AbilityModel
+  (voice- vs text-primary, spoken vs live-region delivery, large targets,
+  one-step-at-a-time, confirmations). A screen-reader operator gets results in
+  their own voice via an ARIA live region, never a second TTS voice.
+- **Delivery** — three developer-configured mounts (page / floating element /
+  companion); a remote transport
+  ([`controller/transport/remote.js`](../controller/transport/remote.js)) runs the
+  `ControlPort` over any duplex channel (WebSocket / postMessage / …), so a web
+  controller can drive a receiver in another process or on another device. The
+  receiver wire contract is [`controller/PROTOCOL.md`](../controller/PROTOCOL.md).
+
+`createController({ control, operator }) → { handle, presentation }`. The core
+never imports the controller; the controller imports only the toolkit's settings
+vocabulary (`../toolkit/registry/tools.js`). Full design + staged milestones:
+[`controller/DESIGN.md`](../controller/DESIGN.md). The [`onboarding/`](../onboarding/)
+example service serves a runnable demo at `/controller`.
+
 ## XR Agent (future direction)
 
 <p align="center">
@@ -170,6 +208,11 @@ flowchart TB
   `toolkit/sync`; it never touches a surface, adapter, or platform API. Hosts
   and surfaces bring the platform. Reference platform bindings live in
   `toolkit/platforms/node/` (the template) and `toolkit/platforms/chrome/`.
+- **The Controller is optional.** `controller/` is a UI layer, not part of the
+  core — a repo-root sibling that *consumes* the toolkit (it imports only
+  `../toolkit/registry/tools.js` for the settings vocabulary). The toolkit never
+  depends on it; a host can embed the core with no controller, or drop the
+  controller in over a `ControlPort`. See *The Controller* above.
 - **Host apps live in their own repos.** This repository is the toolkit and its
   catalog — not any particular application. A web extension, mobile app, or XR
   runtime consumes it (by embedding the ES modules or calling the HTTP service).
@@ -202,11 +245,11 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 
 | Profile | What it enables |
 |---------|-----------------|
-| `blind` | Auto alt text, labels, WCAG fixes, keyboard nav, page outline, announce updates, describe on demand, language tags, explore charts, announce page changes, skip links, accessible math |
+| `blind` | Auto alt text, form labels, WCAG fixes, landmark repair, announce updates, describe on demand, language tags, explore charts, SPA focus, skip links, accessible math (structure/labels/descriptions — deliberately no magnification, no on-page heading navigator or keyboard-nav overlay, which duplicate/collide with a screen reader) |
 | `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier, reflow to column, focus locator, explore charts |
 | `colorBlind` | Color filters, enhanced contrast |
 | `deaf` | Auto captions, visual emphasis, sound visualizer |
-| `motor` | Large cursor, keyboard nav, voice commands, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions, skip links |
+| `motor` | Large cursor, keyboard nav, hands-free (spatial voice) navigation, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions, skip links |
 | `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading, reading ruler |
 | `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading, reading ruler |
 | `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions, save reading spot, expand abbreviations |
@@ -240,6 +283,16 @@ AI-for-Accessibility-Toolkit/
 │   ├── profiles/               # base ability profiles (settings.json)
 │   └── utils/                  # ai.js (provider abstraction), dom.js, color.js
 │
+├── controller/                  # Optional text/voice control surface (a sibling)
+│   ├── control-port.js         # the neutral ControlPort contract + honest noop
+│   ├── grammar.js · router.js · intent.js   # deterministic intent engine
+│   ├── presentation.js         # renders the widget per the operator's AbilityModel
+│   ├── llm-lane.js             # optional free-form NL lane
+│   ├── web/ · mount/ · transport/           # web UI, mounts, remote transport
+│   ├── demo/ · DESIGN.md · PROTOCOL.md
+│   └── test/
+│
+├── onboarding/                  # Example service: capture a profile + serve /controller
 ├── server/                      # Hosted HTTP service over the core (Cloud Run)
 ├── examples/                    # Runnable, dependency-free examples (cross-surface.mjs)
 └── docs/

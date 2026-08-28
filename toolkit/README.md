@@ -7,6 +7,10 @@ Pure logic — no `chrome.*`, no DOM, no `Date.now()`. Everything platform-speci
 arrives through injected **ports**, so the same engine runs in a browser host
 today and an iOS or XR host tomorrow.
 
+> The optional **Controller** (a text/voice control surface) is *not* part of the
+> core — it's a repo-root sibling at [`../controller/`](../controller/) that
+> consumes this toolkit's settings vocabulary. The core never depends on it.
+
 ```
 toolkit/
 ├── index.js               createToolkit({ kv, clock, scheduler, consent, ... })

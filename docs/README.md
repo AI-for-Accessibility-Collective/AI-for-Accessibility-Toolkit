@@ -18,10 +18,20 @@ necessarily current.
 - [API.md](API.md) — The **catalog** API: auditors, adapters, profiles, and the AI-provider abstraction in `tools/`.
 - Hosted service ([../server/](../server/)): [../server/API.md](../server/API.md) (HTTP routes, also served at `GET /v1/meta`) · [CONTRACT.md](../server/CONTRACT.md) (wire contract) · [DEPLOYMENT.md](../server/DEPLOYMENT.md) (runbook; placeholders only — real instance details are deliberately not in the repo).
 
+## Controller (optional control surface)
+
+The ready-made text/voice control surface that drives any app through a neutral
+`ControlPort` — a repo-root sibling ([`../controller/`](../controller/)), optional
+and independent of the core.
+
+- [../controller/DESIGN.md](../controller/DESIGN.md) — Design + staged milestones: the neutral `ControlPort`, the hybrid intent engine, per-operator presentation, mounts, and the remote transport.
+- [../controller/PROTOCOL.md](../controller/PROTOCOL.md) — The wire contract a **receiver** implements (the seven `ControlPort` methods, the JSON envelope, the `task`/`navigate`/`search` actions, the receiver→Controller note) — what a project like `browser-harness-a11y` builds against.
+- [../onboarding/README.md](../onboarding/README.md) — Example service that captures a profile and serves the Controller demo at `/controller`.
+
 ## Consumer / feature references
 
 - [artinsight-integration.md](artinsight-integration.md) — A second, non-web consumer of the toolkit (Swift conformer, profile blob, insight outbox) — a worked example of embedding the core in another host.
-- [voice-mode.md](voice-mode.md) — A host controlling the toolkit by voice via the actuation port (consent invariants, reversible undo) — the pattern a host follows to drive adaptations agentically.
+- [voice-mode.md](voice-mode.md) — The original pattern for a host controlling the toolkit by voice via the actuation port (consent invariants, reversible undo). The [Controller](#controller-optional-control-surface) now packages this as a reusable, host-agnostic surface over the neutral `ControlPort`.
 
 ## Community
 
