@@ -68,6 +68,21 @@ async function run() {
   check('#6: an out-of-band note routes to the POLITE region', ui2.root.querySelector('.aa-feedback[role="status"]').textContent === 'The top story is X'
     && ui2.root.querySelector('.aa-feedback[role="alert"]').textContent === '');
 
+  // A running task shows the waiting dots until a result note arrives.
+  let fire3 = null;
+  const taskControl = Object.assign({}, createMockReceiver({ actions: ['task'] }), { onNote(fn) { fire3 = fn; return () => { fire3 = null; }; } });
+  const c3 = createController({ control: taskControl, rawToTask: true });
+  const ui3 = renderControllerUI(c3, { doc: document });
+  document.body.appendChild(ui3.root);
+  const w = ui3.root.querySelector('.aa-waiting');
+  check('waiting: dots present, aria-hidden, and hidden at rest', w && w.getAttribute('aria-hidden') === 'true' && w.hidden === true && w.querySelectorAll('.aa-dot').length === 3);
+  ui3.root.querySelector('.aa-input').value = 'find me a lasagna recipe';
+  ui3.root.querySelector('.aa-go').click();
+  await tick(); await tick();
+  check('waiting: dots shown while a task runs', w.hidden === false);
+  fire3('Here is a lasagna recipe');
+  check('waiting: dots hidden when the result note arrives', w.hidden === true);
+
   console.log(`\nController UI: ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }

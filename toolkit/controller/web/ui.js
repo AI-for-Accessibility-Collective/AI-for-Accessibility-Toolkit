@@ -9,6 +9,38 @@
 const SR = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
 const TTS = (typeof window !== 'undefined') && ('speechSynthesis' in window);
 
+// ── Web Audio earcons (ported from browser-harness) ─────────────────────────
+// Short non-verbal cues: a repeating "thinking" pulse while a task runs, and a
+// done chime when the result arrives. Non-verbal, so they don't collide with a
+// screen reader's speech the way TTS would — they play regardless of the
+// Speak-results toggle. One shared AudioContext per page, resumed on use (the
+// submit gesture unblocks autoplay).
+let _ac = null;
+function audioCtx() {
+  const AC = (typeof window !== 'undefined') && (window.AudioContext || window.webkitAudioContext);
+  if (!AC) return null;
+  try { if (!_ac) _ac = new AC(); if (_ac.state === 'suspended') _ac.resume(); } catch { return null; }
+  return _ac;
+}
+function blip(freq, dur, when = 0, vol = 0.05, type = 'sine') {
+  const a = audioCtx();
+  if (!a) return;
+  try {
+    const t = a.currentTime + when;
+    const o = a.createOscillator();
+    const g = a.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch { /* audio unavailable */ }
+}
+const earconThinkPulse = () => { blip(440, 0.12, 0, 0.045); blip(620, 0.12, 0.14, 0.035); };
+const earconDone = () => { blip(660, 0.12, 0, 0.06); blip(880, 0.18, 0.11, 0.06); };
+const earconError = () => { blip(300, 0.2, 0, 0.07, 'square'); blip(210, 0.26, 0.17, 0.06, 'square'); };
+
 function el(doc, tag, attrs = {}, text) {
   const n = doc.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -52,6 +84,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   const feedbackStatus = el(doc, 'div', { class: 'aa-feedback', role: 'status', 'aria-live': 'polite' },
     'Type or say what you need — e.g. "bigger text", "dark mode", "read this".');
 
+  // A VISUAL waiting indicator shown while a task runs (the earcon is the audio
+  // cue). aria-hidden so a screen reader doesn't read animating dots — the "Ok,
+  // running…" ack (assertive) and the earcon carry the non-visual signal.
+  const waiting = el(doc, 'div', { class: 'aa-waiting', 'aria-hidden': 'true' });
+  waiting.hidden = true;
+  for (let i = 0; i < 3; i++) waiting.appendChild(el(doc, 'span', { class: 'aa-dot' }));
+
   const row = el(doc, 'div', { class: 'aa-row' });
   const input = el(doc, 'input', { type: 'text', class: 'aa-input', placeholder: 'What do you need?', 'aria-label': 'What do you need?' });
   const go = el(doc, 'button', { type: 'button', class: 'aa-btn aa-go' }, 'Go');
@@ -62,7 +101,7 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     row.append(mic);
   }
   row.append(help);
-  root.append(feedbackAlert, feedbackStatus, row);
+  root.append(feedbackAlert, feedbackStatus, waiting, row);
 
   // The Speak-results toggle (only where TTS exists) — keyboard-reachable + labelled.
   if (TTS) {
@@ -88,11 +127,29 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   function show(text) { deliver(text, { assertive: false }); } // polite: results, content, notes
   function refocus() { (p.input.primary === 'voice' && wantVoiceIn ? mic : input).focus(); }
 
+  // Waiting state (a task is running): animated dots + a repeating "thinking"
+  // earcon, from the ack until a result note arrives (or a safety timeout).
+  let thinkTimer = null, waitGuard = null;
+  function startWaiting() {
+    stopWaiting();
+    waiting.hidden = false;
+    earconThinkPulse();
+    thinkTimer = setInterval(earconThinkPulse, 2400);
+    waitGuard = setTimeout(stopWaiting, 120000); // don't pulse forever if no note comes
+    if (waitGuard && waitGuard.unref) waitGuard.unref();
+  }
+  function stopWaiting() {
+    waiting.hidden = true;
+    if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
+    if (waitGuard) { clearTimeout(waitGuard); waitGuard = null; }
+  }
+
   let busy = false;
   async function submit(utterance) {
     const u = (utterance || '').trim();
     if (!u || busy) return;
     busy = true;
+    stopWaiting();
     show('…');
     try {
       const res = await controller.handle(u);
@@ -101,8 +158,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
       const contentRead = res.intent && res.intent.type === 'query' && res.intent.ask === 'content';
       deliver(res.say, { assertive: !(res.ok && contentRead) });
       speak(res.say);
+      // A dispatched task runs in the background (its result arrives via a note).
+      // Show the waiting dots + play the thinking earcon until it does.
+      if (res.ok && res.intent && res.intent.action === 'task') startWaiting();
+      else if (!res.ok) earconError();
     } catch (e) {
       deliver('Sorry, something went wrong.', { assertive: true });
+      earconError();
     }
     input.value = '';
     busy = false;
@@ -138,13 +200,17 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   // a screen-reader operator gets no second voice unless they asked (issues #5/#7).
   let unNote = null;
   if (controller.control && typeof controller.control.onNote === 'function') {
-    unNote = controller.control.onNote((text) => { if (text) { show(String(text)); speak(String(text)); } });
+    unNote = controller.control.onNote((text) => {
+      stopWaiting();          // the task finished — stop the dots + thinking earcon
+      earconDone();
+      if (text) { show(String(text)); speak(String(text)); }
+    });
   }
 
   return {
     root,
     focus: refocus,
-    destroy() { try { unNote && unNote(); } catch {} try { recog && recog.abort(); } catch {} root.remove(); },
+    destroy() { stopWaiting(); try { unNote && unNote(); } catch {} try { recog && recog.abort(); } catch {} root.remove(); },
   };
 }
 
@@ -158,6 +224,14 @@ export const CONTROLLER_CSS = `
 .aa-feedback:empty { min-height: 0; margin: 0; }   /* the inactive live region collapses */
 .aa-toggle { display: inline-flex; align-items: center; gap: .35rem; margin-top: .5rem; font-size: .85rem; cursor: pointer; }
 .aa-toggle input:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
+/* Waiting indicator: three dots pulsing while a task runs. */
+.aa-waiting { display: flex; gap: .3rem; align-items: center; margin-bottom: .5rem; }
+.aa-waiting[hidden] { display: none; }
+.aa-dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; opacity: .3; animation: aa-blink 1.2s infinite ease-in-out; }
+.aa-dot:nth-child(2) { animation-delay: .2s; }
+.aa-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes aa-blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .aa-dot { animation: none; opacity: .6; } }
 .aa-row { display: flex; gap: .4rem; align-items: stretch; }
 .aa-input { flex: 1; padding: .5rem .6rem; font-size: 1rem; border: 1px solid #99a; border-radius: 8px;
   background: transparent; color: inherit; }
