@@ -25,22 +25,6 @@
        "reversibility": 3,
        "recovery": 2
       }
-     },
-     {
-      "question": "Should you open the Settings app or swipe down to the Control Center to disable location sharing?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The home screen clearly displays the Settings app, but accessing the Control Center provides an alternative, potentially faster way to manage connectivity and location.",
-      "whatTheAgentLoses": "The user loses the ability to decide which specific method or shortcut is used to discreetly disable their location sharing.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
      }
     ],
     "children": [
@@ -63,469 +47,29 @@
          "reversibility": 0,
          "recovery": 1
         }
-       },
-       {
-        "question": "Which folder or app should you open to access your Google account settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays multiple individual apps alongside a dedicated Google folder, requiring you to choose the correct path to reach your privacy controls.",
-        "whatTheAgentLoses": "The user loses the ability to decide which specific app or shortcut is used as the entry point to their account settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which app in this folder should you open to access your account settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays several Google apps, so you must choose one that provides a reliable path to your overarching Google account settings.",
-        "whatTheAgentLoses": "The user loses the ability to choose which specific app is used as the entry point, which might unnecessarily expose personal data like their email inbox.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which app do you want to open to adjust the privacy settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays multiple apps with configurable privacy settings, such as Instagram, Snapchat, and TikTok, requiring a specific choice for the task.",
-        "whatTheAgentLoses": "The user loses the ability to choose which specific application's privacy settings are being modified.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which app should you open to change your device settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "With dozens of apps visible on the home screen, you must specifically select the Settings app to access your device's privacy and account controls.",
-        "whatTheAgentLoses": "The user loses the assurance of knowing exactly which application the agent is entering to manage their sensitive device permissions.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you want to open the system settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Start button context menu displays various administrative shortcuts, making it necessary to specifically select 'Settings' to reach the main configuration hub.",
-        "whatTheAgentLoses": "You lose the opportunity to learn alternative navigation shortcuts or discover other administrative tools available in the Start context menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which app should you open to access the web?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays several native apps like Facebook and TikTok, but selecting Safari from the dock determines that you will navigate to the settings via a web browser.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to manage your privacy settings through a dedicated native app or a web browser.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
        }
       ]
      },
      {
       "id": "1.2",
-      "label": "Find the menu entry point",
-      "questions": [
-       {
-        "question": "Where should you click to access the browser settings?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Finding the three-dot menu on the start page is the necessary first step to reach the privacy and activity controls.",
-        "whatTheAgentLoses": "Delegating this navigation means you lose the hands-on familiarity of knowing exactly where the settings menu is located for future adjustments.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which menu section should you expand to access your account settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presented broad categories like 'Settings & privacy' and 'Help & support', requiring you to identify the correct path to the privacy controls.",
-        "whatTheAgentLoses": "Delegating this step means you miss seeing the overall organization of your account management and support options.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Do you want to access settings through this sidebar menu, or use your preferred alternative method?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The sidebar clearly displays a 'Settings' option, but you might have a simpler or more direct route you prefer to use.",
-        "whatTheAgentLoses": "You lose the ability to choose your preferred, potentially faster navigation habit if the agent defaults to the first visible settings link.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you tap to access the account settings menu?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The hamburger menu icon in the top right corner of the profile is the standard entry point for Instagram's settings.",
-        "whatTheAgentLoses": "The user loses the knowledge of the specific navigation path required to access and monitor their own account settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you tap to access the account menu from the home feed?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the YouTube home feed with an avatar icon in the top right, which is the entry point to the account settings.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent correctly identified the entry point to the account settings from the main screen.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you access the app settings from the 'Time watched' screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main settings are not explicitly labeled and must be accessed through the three vertical dots in the top right corner.",
-        "whatTheAgentLoses": "You lose the opportunity to learn the specific menu navigation patterns required to find settings in this app.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you tap to access account management or family settings?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The hamburger menu in the top left corner typically houses broader account and family settings not visible on the main dashboard.",
-        "whatTheAgentLoses": "The user loses the opportunity to learn the app's navigation structure for finding broader account settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which icon should you tap to access the account settings?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The menu screen displays numerous shortcuts and profile options, making it necessary to locate the specific gear icon to proceed to the settings.",
-        "whatTheAgentLoses": "Delegating this navigation means you lose the chance to review your current profile status or other available menu shortcuts before entering the settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you tap to access the settings menu from your profile?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The three dots icon at the top right is the standard entry point to access the settings and privacy menu from a TikTok profile.",
-        "whatTheAgentLoses": "You lose the chance to learn the app's navigation layout and discover exactly where your account settings are located.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you open the settings menu to disable ads in File Explorer?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown menu displays several system actions, and selecting 'Options' is required to access the specific folder settings where ad preferences are managed.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to discover or configure other system and network management tools available in the command bar dropdown.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Find the menu entry point"
      },
      {
       "id": "1.3",
-      "label": "Enter the settings menu",
-      "questions": [
-       {
-        "question": "Which menu option should you select to access your browsing history?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Chrome dropdown menu displays multiple navigation options, and selecting 'History' is required to view or manage your past activity.",
-        "whatTheAgentLoses": "The user loses the ability to choose which specific section of their browser data or settings to access.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option should you select from the context menu to access the app's system settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The menu displays several shortcuts like 'New tab' and 'Remove', but selecting 'App info' is the direct path to manage system-level permissions.",
-        "whatTheAgentLoses": "Delegating this step means you miss learning a fast, universal shortcut for accessing system settings for any app directly from the home screen.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which menu option should you choose to access your account settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The bottom sheet menu presents multiple administrative options like 'Creator tools' and 'Business suite', so you must select 'Settings and privacy' to reach the correct configuration area.",
-        "whatTheAgentLoses": "Delegating this step means you miss discovering other available account management tools that are presented in the main menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Enter the settings menu"
      },
      {
       "id": "1.4",
-      "label": "Reach the account hub",
-      "questions": [
-       {
-        "question": "Which option do you select to access your Google Account settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The profile menu displays several app-specific options, so you must identify the exact button that opens your overarching account settings.",
-        "whatTheAgentLoses": "You lose the knowledge of how to navigate to your overarching Google Account settings from within a connected app.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you tap to access your Google account settings from this main menu?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main settings screen lists many device-level options like Wi-Fi and Display, requiring you to scroll down to find the specific 'Google' entry for account controls.",
-        "whatTheAgentLoses": "The user loses the awareness of where their Google account settings are located relative to other device security and privacy menus.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Reach the account hub"
      },
      {
       "id": "1.5",
-      "label": "Go straight to the settings URL",
-      "questions": [
-       {
-        "question": "Which search result should you click to access the My Activity dashboard?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results display both the direct link to the dashboard and several support articles, requiring you to choose the actual tool rather than a help page.",
-        "whatTheAgentLoses": "You lose the assurance that the agent is navigating to the official settings portal instead of getting sidetracked by support documentation.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you tap the autocomplete suggestion for 'myactivity.google.com' or continue typing the full address?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows autocomplete options for 'myactivity.google.com' after typing 'my', presenting a choice between using a quick shortcut and manually entering the exact URL.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to trust the browser's autocomplete history or manually type the exact destination to ensure accuracy.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Go straight to the settings URL"
      },
      {
       "id": "1.6",
       "label": "Open the quick-settings panel",
       "questions": [
-       {
-        "question": "How do you access the network settings from the home screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen does not display a direct button for network settings, requiring a specific swipe gesture to reveal the Control Center.",
-        "whatTheAgentLoses": "You lose the physical muscle memory and convenience of quickly swiping to access your device's core system toggles.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you close the Control Center to return to the home screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen currently shows the Control Center overlay, which must be dismissed to access the home screen and find the Settings app.",
-        "whatTheAgentLoses": "The user gives up the direct control of using familiar swipe gestures to navigate out of system overlays.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you revert the network settings from the home screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Swiping down to open the Control Center provides immediate access to network toggles without needing to navigate through the main Settings app.",
-        "whatTheAgentLoses": "You lose the ability to manually verify and control your device's immediate network connectivity state before proceeding.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which network setting should you adjust as a workaround?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Control Center shows the Airplane mode toggle is currently off, providing an immediate option to reset the device's connectivity.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to completely cut off your network connection as a temporary workaround.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
        {
         "question": "Should you use Airplane Mode to quickly cut off all connectivity and location tracking?",
         "cluster": "approve",
@@ -571,38 +115,6 @@
         "moneyMoving": false,
         "why": "The screen displays multiple family accounts, so you must specify whether to change settings for the organizer or the child account.",
         "whatTheAgentLoses": "Delegating this choice means the agent might alter the privacy settings of the wrong family member.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which option should you select to proceed with managing the kid's account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The side menu shows general family options alongside the child's profile 'Anita', requiring you to select the specific profile to access its settings.",
-        "whatTheAgentLoses": "You lose the ability to verify exactly which child's profile is being selected for account changes.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Did you verify that you are in the correct account and platform to apply these privacy changes?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The profile picture and account handle visible on the screen confirm exactly whose data permissions are about to be altered.",
-        "whatTheAgentLoses": "The user loses the ability to personally guarantee that their primary account, rather than a secondary or work profile, is the one being restricted.",
         "costDims": {
          "money": 0,
          "privacy": 2,
@@ -719,22 +231,6 @@
          "reversibility": 0,
          "recovery": 1
         }
-       },
-       {
-        "question": "Do you need to wait for the splash screen to clear before trying to access your profile?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This matters because the screen currently only shows the TikTok launch logo on a black background, meaning the bottom navigation bar is not yet available to interact with.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent is interacting with the actual loaded interface rather than hallucinating actions on a loading screen.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
        }
       ]
      }
@@ -781,318 +277,12 @@
     "children": [
      {
       "id": "2.1",
-      "label": "Pick the settings category",
-      "questions": [
-       {
-        "question": "Which menu option do you choose to access the privacy settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a hamburger menu with options like 'Settings' and 'Your activity', so you must identify the correct path to find the privacy controls.",
-        "whatTheAgentLoses": "The user loses the chance to learn the app's menu structure and know exactly where their sensitive account settings are located.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which menu option do you select to access your privacy settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The bottom sheet displays both 'Creator tools' and 'Settings and privacy', requiring you to choose the correct path to modify your account.",
-        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the app's menu structure and discover where other account management tools are located.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option do you select to access the battery settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays numerous top-level categories like Network and Apps, so you need to know to scroll down to find the Battery option.",
-        "whatTheAgentLoses": "You lose the spatial memory of where the battery controls are located within your device's menu structure.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which settings category should you open?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple settings options like 'Basics', 'Safety check', and 'Privacy and security', requiring you to choose the correct path to the privacy controls.",
-        "whatTheAgentLoses": "The user loses the ability to direct the agent to the exact settings category they want to review or change.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which settings category should you open to adjust your privacy preferences?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The settings menu lists many categories like 'General' and 'Accessibility', so you must identify the correct path to reach the specific privacy controls.",
-        "whatTheAgentLoses": "You lose the ability to choose exactly which privacy aspect, such as location services, is prioritized for review and adjustment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which tab should you select to access device security settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The visible tabs only include 'Home', 'Personal info', and 'Data & privacy', so you must swipe left on the menu to reveal the 'Security' tab.",
-        "whatTheAgentLoses": "The user loses the ability to manually explore the navigation menu to find the correct category for their desired setting.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option should you select to manage installed applications?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Settings menu displays numerous categories, requiring you to locate the specific one for app settings to adjust permissions.",
-        "whatTheAgentLoses": "The user loses the opportunity to learn the navigation path to their app settings for future reference.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which settings category should you select to find the private account option?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple categories like Privacy, Security, and Notifications, so you must choose the correct path to access account visibility controls.",
-        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the app's menu structure and discover other related privacy settings you might want to adjust.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which settings category do you select to manage your search history?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays the top-level settings menu, requiring you to identify that 'History & privacy' is the correct path to reach the data clearing options.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent is navigating to the correct privacy sub-menu rather than altering unrelated account preferences.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which settings category do you want to open?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple account management sections like 'Personal info', 'Security and sign-in', and 'Data and privacy', requiring a choice of which area to explore.",
-        "whatTheAgentLoses": "The user loses the ability to decide which specific area of their account settings is accessed and modified.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Pick the settings category"
      },
      {
       "id": "2.2",
       "label": "Find the control in the section",
       "questions": [
-       {
-        "question": "Which option should you select from the Media & Purchases pop-up?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents a menu with options to sign out or view the account, requiring a choice to proceed to the correct settings area.",
-        "whatTheAgentLoses": "You lose the control to decide whether to securely view your account details or sign out of your media purchases.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you navigate to change the Family Sharing settings?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays multiple apps, and you must select the Settings app to access the device's account and family controls.",
-        "whatTheAgentLoses": "The user loses the ability to personally secure the parent's physical device and passcode required to authorize these changes.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you find the setting for screen rotation?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple display options, requiring you to scroll down to locate the auto-rotate setting.",
-        "whatTheAgentLoses": "The user loses the opportunity to learn the exact location of the screen rotation setting within the display menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which menu option should you select to adjust the screen's responsiveness?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple display and touch controls, so you must identify the specific option for touch sensitivity to adjust how the screen responds to input.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to ensure the agent selects the correct touch setting instead of altering unrelated display features like color contrast or night light.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which setting should you select to change the default search engine?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Basics' section displays multiple options including 'Privacy and security' and 'Search engine', requiring you to identify the correct menu to adjust your search preferences.",
-        "whatTheAgentLoses": "You lose the opportunity to review other basic browser configurations, such as password management and safety checks, while navigating to the search controls.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option do you select to configure safe browsing?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple privacy controls like \"Clear browsing data\" and \"Ads privacy\", so you must identify the specific \"Safe Browsing\" option to adjust its settings.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally review the available privacy options and ensure the correct security control is being accessed.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option should you select from the left menu?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting the correct sub-menu from the left navigation is necessary to locate the specific setting you want to modify instead of interacting with the default DNS options.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the agent navigates to the exact internal diagnostic tool they intended to configure.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which tab should you select to view all Google services?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen defaults to a 'Recommended' list, which might hide the specific privacy control you are trying to locate.",
-        "whatTheAgentLoses": "You lose the opportunity to review Google's curated privacy recommendations for your account before navigating to the full list of controls.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which setting do you choose to control shared data for personalization?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a long list of Google services, requiring you to locate the specific 'Personalise using shared data' option under the privacy section.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to review and understand the other privacy and security options available for your account.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
        {
         "question": "Which setting do you tap to control usage and diagnostics data?",
         "cluster": "hand over",
@@ -1100,598 +290,6 @@
         "moneyMoving": false,
         "why": "The screen showed the 'All services' tab with options like 'Play Games' and 'Search, Assistant and Voice', but 'Usage and diagnostics' was not visible.",
         "whatTheAgentLoses": "The user loses the assurance that the agent actually located and interacted with the correct setting instead of hallucinating an action on an invisible option.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option should you select to manage location settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple privacy categories, so you must identify that 'Location Services' at the top is the correct path to modify location permissions.",
-        "whatTheAgentLoses": "You lose the opportunity to review other top-level privacy categories on this screen that you might also want to secure.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which tab should you select to find your location sharing settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The app displays multiple tabs like 'People' and 'Me', so you must identify which one actually contains your personal location controls.",
-        "whatTheAgentLoses": "You lose the opportunity to learn exactly where your personal location sharing controls are located within the app's interface.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which specific submenu should you select to find the connection security settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple privacy and security categories like 'Site settings' and 'Cookies', requiring you to choose the exact path for your desired control.",
-        "whatTheAgentLoses": "You lose the opportunity to review the other available privacy and security categories that might need your attention.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you find the setting to manage secure connections?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple toggles under the Advanced section, so you must identify the specific switch for always using secure connections.",
-        "whatTheAgentLoses": "You lose the spatial awareness of where this specific security setting is located within the advanced options menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where should you go to find the log of my past activities?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The settings page is divided into multiple categories like 'Permissions' and 'Your information', requiring you to identify the correct section for activity history.",
-        "whatTheAgentLoses": "The user loses the opportunity to discover other data management tools like downloading or transferring their information.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which activity category should you expand to manage your past posts?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The activity log groups interactions under broad categories like 'Your activity across Facebook', requiring you to drill down into specific sections to find the post management controls.",
-        "whatTheAgentLoses": "You lose the awareness of how your various interactions, such as comments and tags, are categorized and stored by the platform.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which menu option should you select to manage app notifications?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Settings menu displays many categories like 'Lock screen' and 'Display & brightness', so you must choose 'Notifications & status bar' to find the right controls.",
-        "whatTheAgentLoses": "You lose the ability to personally navigate the system menus and learn where your device's notification controls are located.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which privacy topic should you select to restrict your profile visibility?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents multiple distinct privacy topics, requiring you to choose the correct path to access profile visibility controls.",
-        "whatTheAgentLoses": "You lose the opportunity to personally decide which specific aspects of your online presence need the most immediate restriction.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which category under audience and visibility should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple privacy categories like profile locking and posts, so you must choose the specific one that controls your public content.",
-        "whatTheAgentLoses": "Delegating this means you lose the opportunity to review or adjust other related visibility settings like who can see your posts or stories.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you find the list of devices currently signed into your account?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The initial view only shows security tips and sign-in options, so scrolling is required to reveal the 'Your devices' section.",
-        "whatTheAgentLoses": "You lose the chance to personally review the list of active devices, such as 'Raj's iphone' or 'iPad', to spot any unauthorized access.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option lets you manage the app's stored data?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The App info screen lists several categories like Permissions, Mobile data, and Storage, so you must identify the correct menu to manage saved files and cache.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review how much internal storage the app is currently consuming before deciding to modify its data.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you find the settings for specific site permissions?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen only shows the top of the Chrome Settings menu, meaning you must scroll down to locate the 'Site settings' option.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent knows to scroll down to find the correct privacy controls instead of getting stuck at the top of the menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which site setting should you select to manage cookies?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a long list of site settings like Motion sensors and Notifications, with 'Third-party cookies' appearing at the very bottom under the Content header.",
-        "whatTheAgentLoses": "Delegating this step means losing direct control over which specific site permissions and tracking cookies are restricted.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option should you select to access the ad settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple Google services like 'Ads', 'Autofill', and 'Backup', requiring you to choose the correct path to the specific control.",
-        "whatTheAgentLoses": "The user loses the ability to decide exactly which privacy or account setting to focus on modifying.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which sub-menu do you select to find the location controls?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main settings menu lists multiple categories like 'Battery' and 'Sounds & Haptics', requiring you to specifically identify 'Privacy' to manage app permissions.",
-        "whatTheAgentLoses": "The user loses the spatial awareness of where their device's sensitive location and privacy permissions are actually located.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which menu option do you select to access the account visibility settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Settings and privacy' menu displays multiple options like 'Manage account' and 'Privacy', requiring the correct choice to find the visibility controls.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent navigated to the correct privacy sub-menu rather than altering unrelated account settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you find the option to switch accounts on this page?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Because the settings menu contains many sections like 'Account' and 'Content & Display', you need to know that the login controls are located at the very bottom.",
-        "whatTheAgentLoses": "You lose the spatial familiarity with the app's menu layout and where specific login controls are grouped.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which option do you select to add another account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Switch account' bottom sheet displays the active profile alongside the '+ Add account' button needed to link a new one.",
-        "whatTheAgentLoses": "The user loses the ability to securely input and verify the specific secondary account they want to link to the app.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Where do you find the global pop-up settings?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Site Settings page contains numerous permissions, requiring you to scroll down to the Content section at the very bottom to locate the pop-ups and redirects control.",
-        "whatTheAgentLoses": "You lose the chance to review or adjust other related content permissions, such as JavaScript or image loading, while navigating this section.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which option within Screen Time should you choose to manage specific restrictions?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple digital wellbeing categories like App Limits and Downtime, requiring you to identify which one contains the actual privacy controls.",
-        "whatTheAgentLoses": "You lose the opportunity to review your daily average screen time or adjust other digital wellbeing limits while navigating to the privacy controls.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which specific content restriction do you want to view or modify?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple categories for content restrictions, such as store content and web content, requiring a choice of which specific setting to adjust.",
-        "whatTheAgentLoses": "The user loses the ability to decide exactly which type of content restriction is targeted for modification.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which submenu should you select to access the region settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows multiple system options like 'Date & Time' and 'Keyboard', requiring you to specifically identify 'Language & Region' to find the right controls.",
-        "whatTheAgentLoses": "You lose the knowledge of exactly where your device's localization preferences are located within the general settings menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which section should you open to manage your App Store settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Apple Account screen displays multiple categories like 'Subscriptions' and 'iCloud', requiring you to know that 'Media & Purchases' is the correct path for App Store preferences.",
-        "whatTheAgentLoses": "Delegating this step means you miss the chance to review your other active Apple Account configurations, such as current subscriptions or connected devices.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which menu option do you select to access your account-level location settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main settings menu displays many categories, so you must know that account-wide location controls are nested specifically under the Apple ID profile at the top of the screen.",
-        "whatTheAgentLoses": "You lose the immediate visibility of which specific Apple ID profile is currently active and having its privacy settings modified.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which menu item leads to the 'Ask to Buy' controls?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main Settings menu displays the parent's Apple ID banner, which houses family sharing and purchase settings.",
-        "whatTheAgentLoses": "The user loses the intuitive understanding of how Apple organizes family and purchase controls under the main Apple ID profile.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Should I tap the 'You have security tips' section to review the recommendations?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen highlights a 'You have security tips' section that leads directly to the recommended security controls.",
-        "whatTheAgentLoses": "The user loses the chance to review their recent security activity listed on this page before diving into the tips.",
-        "costDims": {
-         "money": 1,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which option under the Controls tab should you select to adjust the supervision settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple supervision categories like 'App limits', 'Content restrictions', and 'Account settings', requiring you to choose the correct path for the intended modification.",
-        "whatTheAgentLoses": "Delegating this step means you miss out on reviewing the full range of parental controls and restrictions available for the supervised account.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which option allows you to stop supervision?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple settings categories like 'Account supervision' and 'Privacy settings', requiring the correct selection to manage supervision controls.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify and select the correct settings category for managing account supervision.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which menu option should you select to manage the family group?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The menu presents multiple family-related options like 'Parent access' and 'Manage family', requiring you to select the right path to adjust the group's settings.",
-        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to review other available options like parent access controls or privacy notices.",
-        "costDims": {
-         "money": 1,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which setting should you select to manage the profile information used for ads?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple ad preference options like activity information and audience-based advertising, requiring you to identify the correct path for profile data.",
-        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review the various categories of data advertisers use to target you.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Should you review the additional non-profile categories used to reach you?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an 'Other categories' option that contains additional, non-profile data points advertisers use for targeting.",
-        "whatTheAgentLoses": "You lose the opportunity to personally evaluate and restrict the specific, non-profile categories used to target ads to your account.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do you click the direct 'Activity controls' link in the sidebar or use the three-dot menu?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a direct 'Activity controls' link in the left sidebar, but the three-dot menu offers an alternative, less obvious path.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the agent takes the most direct and efficient navigation path available on the screen.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which option in this menu leads to the tracking settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown lists multiple activity-related options like \"Delete activity by\" and \"Other Google activity\", so you must select the correct one to manage your tracking preferences.",
-        "whatTheAgentLoses": "You lose the opportunity to review or select other privacy management tools like deleting past activity.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which privacy category do you want to configure for individual apps?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays various privacy permissions like Location Services, Contacts, and Camera, requiring you to choose which specific data access to manage.",
-        "whatTheAgentLoses": "Delegating this step means the agent decides which privacy category to explore, potentially missing the specific permissions you actually wanted to restrict.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which section should you open to find the advertising ID and content suggestion toggles?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen divides privacy settings into multiple categories like Security and Windows permissions, requiring you to identify which sub-menu contains the specific ad and content controls.",
-        "whatTheAgentLoses": "You lose the awareness of where your operating system locates and categorizes specific data collection and advertising preferences.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which category should you select to manage personalized ads based on your device usage?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Device usage' option explicitly states it controls personalized tips, ads, and recommendations within Microsoft experiences.",
-        "whatTheAgentLoses": "You lose the ability to personally review and decide exactly which types of device usage data are shared for ad personalization.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which setting in the advanced list should you disable to stop provider notifications?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The advanced settings list contains many unrelated file display options, requiring you to scroll down to find the specific 'Show sync provider notifications' checkbox.",
-        "whatTheAgentLoses": "You lose the chance to review and adjust other file visibility and privacy settings available in this detailed list.",
         "costDims": {
          "money": 0,
          "privacy": 1,
@@ -1723,54 +321,6 @@
       "id": "2.3",
       "label": "Search the settings",
       "questions": [
-       {
-        "question": "Which search result should you select to access the Bluetooth scanning settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search returned multiple paths containing the word Bluetooth, requiring you to identify the specific result that leads to the location services scanning toggle.",
-        "whatTheAgentLoses": "You lose the ability to verify that the agent selected the exact system path for Bluetooth scanning rather than a general Bluetooth menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which search result should you select to manage notification settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results highlight 'Site settings' in yellow, indicating that notification permissions are nested within that specific section.",
-        "whatTheAgentLoses": "Delegating this means you lose the opportunity to learn how your browser categorizes specific permissions under broader site controls.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you want to locate the specific setting?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Search settings' bar alongside numerous categories like 'Accounts' and 'Google', offering multiple ways to find the control.",
-        "whatTheAgentLoses": "You lose the choice of whether to quickly search for the exact term or manually browse the categories to discover related privacy options.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
        {
         "question": "Is this the exact setting you were searching for?",
         "cluster": "facts",
@@ -1810,38 +360,6 @@
         }
        },
        {
-        "question": "Which apps should you downgrade from 'Always' before scrolling down to System Services?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen clearly showed apps like AAA and Alaska set to 'Always', which contradicts the goal of restricting location access.",
-        "whatTheAgentLoses": "The user loses the chance to immediately secure specific third-party apps that are over-collecting location data.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which app's location access do you want to change?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists various apps like Google and Chrome along with their current location permission levels, requiring a choice of which to modify.",
-        "whatTheAgentLoses": "You lose the ability to apply your personal judgment regarding which specific apps you trust with your location data.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Which of these signed-in devices do you recognize?",
         "cluster": "select",
         "moment": "Now",
@@ -1854,22 +372,6 @@
          "thirdParty": 2,
          "safety": 1,
          "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which signed-out device's options menu should you open?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Where you've signed out' section with multiple devices like a Google Pixel 4 XL and a Mac, each with a closed three-dot button that must be tapped to reveal further actions.",
-        "whatTheAgentLoses": "The user loses the ability to specify which past device's security settings or account history should be reviewed.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
          "recovery": 2
         }
        },
@@ -1922,22 +424,6 @@
         }
        },
        {
-        "question": "How do you easily locate a specific app in the notifications list?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the app list is currently sorted by 'Most recent', which makes finding a specific app much harder than if it were sorted alphabetically.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred sorting method for navigating and managing long lists of applications.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Which device should you remove from your account?",
         "cluster": "select",
         "moment": "Now",
@@ -1960,44 +446,12 @@
       "label": "Recover the missing control",
       "questions": [
        {
-        "question": "Which menu option do you choose to find the history settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The account menu displays several options including 'Time watched' and 'Settings', requiring a choice on how to best navigate to the activity controls.",
-        "whatTheAgentLoses": "The user loses control over which specific dashboard the agent navigates through to manage their viewing history.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Is the direct profile locking feature available for your account?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Audience and visibility' section shows whether the 'Profile locking' option is currently supported and visible for this specific account.",
         "whatTheAgentLoses": "Delegating this step means you lose the awareness of whether your account natively supports the direct profile locking feature or if you must rely on individual privacy toggles.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which tool should you select to manage your privacy settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple options under 'Tools and resources', requiring you to choose the correct path for adjusting your account privacy.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to use a guided checkup tool or manually navigate to specific privacy controls.",
         "costDims": {
          "money": 0,
          "privacy": 2,
@@ -2030,76 +484,12 @@
       "label": "Pick the next setting",
       "questions": [
        {
-        "question": "Which audio setting should you select to modify?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Sound and vibration' menu displays numerous options, so you must identify the specific control you intend to change.",
-        "whatTheAgentLoses": "The user's personal preference for which specific device setting they want to adjust.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which privacy setting do you want to review next?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists numerous privacy categories like Photos, Camera, and Microphone, so you must decide which specific area of data sharing to inspect or restrict.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might prioritize adjusting device analytics rather than more sensitive personal data permissions like location or photos.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Which of these contact settings should you adjust to maximize your privacy?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen lists multiple visibility options with their current states, requiring you to identify which ones are not yet set to the most restrictive level.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to personally evaluate and choose the exact level of restriction you are comfortable with for each individual contact method.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which profile and tagging setting should you change first?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple viewing and sharing options, requiring you to choose whether to adjust who can post, who can see posts, or who can share them.",
-        "whatTheAgentLoses": "You lose the ability to prioritize which specific aspect of your profile's interaction permissions gets restricted.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which privacy setting do you want to adjust first?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Privacy menu displays multiple options like 'Private account' and 'Suggest your account to others', requiring you to choose the exact control to modify.",
-        "whatTheAgentLoses": "Delegating this step means the agent decides which aspect of your privacy to change, potentially altering discoverability settings you wanted to keep as they were.",
         "costDims": {
          "money": 0,
          "privacy": 2,
@@ -2140,62 +530,12 @@
          "reversibility": 3,
          "recovery": 1
         }
-       },
-       {
-        "question": "How do you proceed to the second method?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen shows that 'Share My Location' is successfully toggled off, meaning the first setting is verified and you must navigate away to continue the task.",
-        "whatTheAgentLoses": "The user loses the ability to choose which specific app or privacy setting should be modified next.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you suggest powering off the phone as another way to prevent location sharing?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "With the home screen and its battery and calendar widgets displayed, the software steps are finished, making it a natural moment to offer verbal hardware alternatives before locking the device.",
-        "whatTheAgentLoses": "The user loses out on comprehensive security advice that extends beyond just toggling software settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
        }
       ]
      },
      {
       "id": "2.7",
-      "label": "Step back to the parent menu",
-      "questions": [
-       {
-        "question": "How do you return to the previous menu to continue the process?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the back arrow at the top left returns the screen to the Google services menu so the next step can begin.",
-        "whatTheAgentLoses": "You lose the ability to ensure the agent navigates back to the correct menu rather than accidentally closing the settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Step back to the parent menu"
      }
     ]
    },
@@ -2369,22 +709,6 @@
         }
        },
        {
-        "question": "Is this the correct toggle to disable your location sharing?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows an active green toggle for 'Share My Location', and you need to be certain this is the right control to stop broadcasting your whereabouts.",
-        "whatTheAgentLoses": "You lose the reassurance of personally confirming that the correct master toggle for location sharing was identified and disabled.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Are you able to change the wired accessories permission to a more secure option?",
         "cluster": "facts",
         "moment": "Now",
@@ -2444,22 +768,6 @@
          "privacy": 2,
          "thirdParty": 0,
          "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you turn off location services on this screen, and what are the system-wide effects?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "Understanding the master Location Services toggle matters because disabling it overrides individual app permissions and stops all apps from accessing your location.",
-        "whatTheAgentLoses": "You lose the direct confirmation that your master location tracking is fully disabled and the awareness of how this impacts your other apps.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
          "reversibility": 3,
          "recovery": 1
         }
@@ -2589,22 +897,6 @@
         }
        },
        {
-        "question": "Should you download one of these apps to test permissions, or proceed directly to your device settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays several apps with download buttons, offering a chance to install a fresh app to verify the privacy changes.",
-        "whatTheAgentLoses": "The user loses the choice of whether to test the privacy settings on a newly downloaded app versus one already on the device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Which app should you download to trigger the permission prompt?",
         "cluster": "select",
         "moment": "Now",
@@ -2634,70 +926,6 @@
       "label": "Flip the toggle",
       "questions": [
        {
-        "question": "Should you enable Adaptive connectivity to manage your network connections?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen explains that this setting automatically manages network connections to extend battery life and improve device performance.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize strict manual control over your network connections or automated battery savings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Do you want the exact battery percentage to be visible in the top status bar?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a 'Battery percentage' toggle that controls whether the exact numeric charge level is always displayed.",
-        "whatTheAgentLoses": "Delegating this means the agent decides your interface preference for seeing the exact battery percentage versus having a cleaner status bar.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you toggle on Smooth display to increase the screen refresh rate?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a 'Smooth display' option that automatically raises the refresh rate, which impacts visual performance and battery consumption.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the ability to balance your personal preference for smoother screen animations against potential battery drain.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you enable adaptive vibration to automatically adjust based on your environment?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an 'Adaptive vibration' toggle that automatically adjusts the phone's vibrations based on the surrounding environment.",
-        "whatTheAgentLoses": "The user loses the ability to decide if they prefer consistent vibration strength or automated environmental adjustments.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Do you want to enable face detection for auto-rotate, granting it access to your front-facing camera?",
         "cluster": "approve",
         "moment": "Now",
@@ -2714,38 +942,6 @@
         }
        },
        {
-        "question": "Should you enable increased touch sensitivity, perhaps because you are using a screen protector?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays options for 'Adaptive touch' and 'Increased sensitivity', which adjust how the screen responds to physical touches.",
-        "whatTheAgentLoses": "The user loses the ability to customize screen responsiveness based on their specific physical device setup, such as the presence of a screen protector.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you enable themed icons for the home screen?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a live preview of the home screen, allowing you to toggle the setting and visually compare the standard and themed icons before applying.",
-        "whatTheAgentLoses": "Delegating this means losing the opportunity to visually compare the previews and choose the aesthetic that best fits your personal taste.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Should you enable the option to filter spam calls?",
         "cluster": "approve",
         "moment": "Now",
@@ -2755,38 +951,6 @@
         "costDims": {
          "money": 0,
          "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you enable the 'Hold for Me' feature so Call Assist waits on hold for you?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This determines whether your phone will wait on hold for you and notify you when someone is ready to talk, as described on the screen.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide if you are comfortable with an automated assistant handling your phone calls while on hold.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you enable the 'Flip to Shhh' gesture to activate Do Not Disturb when the phone is face down?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This determines whether placing your device face down on a flat surface will automatically silence your notifications.",
-        "whatTheAgentLoses": "Delegating this means you lose control over whether your physical phone habits will automatically trigger Do Not Disturb mode.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
          "thirdParty": 0,
          "safety": 0,
          "reversibility": 1,
@@ -2870,22 +1034,6 @@
          "thirdParty": 1,
          "safety": 1,
          "reversibility": 2,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you disable the Wi-Fi Calling toggle?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The narrator advised that the Wi-Fi Calling feature could be safely turned off, but the toggle was visibly left enabled on the screen.",
-        "whatTheAgentLoses": "The user loses the ability to exercise personal preference by keeping a useful feature enabled despite external advice suggesting it can be disabled.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
          "recovery": 1
         }
        },
@@ -3034,22 +1182,6 @@
         }
        },
        {
-        "question": "Should you continue with turning on Enhanced Safe Browsing or dismiss it?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The expanded Safe Browsing section offers a choice between continuing to enable enhanced protection or dismissing the prompt.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the privacy trade-offs of enabling enhanced security features for your browsing activity.",
-        "costDims": {
-         "money": 1,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Do you want your account to be suggested to your contacts and Facebook friends?",
         "cluster": "approve",
         "moment": "Now",
@@ -3130,22 +1262,6 @@
         }
        },
        {
-        "question": "Do you want to share your location data with Apple for product improvement?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the 'iPhone Analytics' toggle under 'PRODUCT IMPROVEMENT' is currently off, which controls whether your location history is sent to Apple.",
-        "whatTheAgentLoses": "Delegating this means the agent might enable analytics sharing without your consent, compromising your location privacy.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Do you want to allow third-party advertisers to use your videos in ads?",
         "cluster": "approve",
         "moment": "Now",
@@ -3176,38 +1292,6 @@
          "reversibility": 3,
          "recovery": 2
         }
-       },
-       {
-        "question": "Do you want to completely turn off Web & App Activity tracking here?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents a master 'Turn off' button alongside specific subsettings for Chrome history and voice activity, requiring a choice between a complete pause or granular adjustments.",
-        "whatTheAgentLoses": "Delegating this choice means losing the ability to decide exactly how much of your browsing and app data Google continues to collect.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Do you want to turn on the private account setting, knowing it restricts who can follow you and watch your videos?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen explicitly states that enabling this setting means only approved users can interact with your content, which fundamentally changes your account's public reach.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate whether the privacy benefits outweigh the loss of public discoverability before the restriction is applied.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 1
-        }
        }
       ]
      },
@@ -3222,38 +1306,6 @@
         "moneyMoving": false,
         "why": "The screen displays three page thumbnails with checkmarks, indicating that you can hide an entire page of apps by unchecking it.",
         "whatTheAgentLoses": "The user loses the ability to personally curate their home screen layout and decide which specific groups of apps remain visible.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Do you prefer to use adaptive charging or strictly limit your battery charge to 80%?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen offers a choice between learning your charging routine to pause at 80% or strictly limiting the charge to 80% to extend battery lifespan.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize a full 100% charge for daily use or cap it at 80% to maximize long-term battery health.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "What do you want to happen when you press and hold the power button?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides options to assign either the digital assistant or the power menu to the press and hold action.",
-        "whatTheAgentLoses": "You lose the opportunity to customize the physical button shortcuts according to your personal daily workflow preferences.",
         "costDims": {
          "money": 0,
          "privacy": 0,
@@ -3357,22 +1409,6 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "What level of location access should you grant this app, and do you want it to use your precise location?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen offers multiple access levels like \"Allow only while using the app\" and a \"Use precise location\" toggle, which directly dictate how much tracking data the app collects.",
-        "whatTheAgentLoses": "Letting an agent decide means you lose the ability to balance your personal privacy comfort against the app's need for your exact whereabouts.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 1
         }
        },
        {
@@ -3696,22 +1732,6 @@
         }
        },
        {
-        "question": "Which comment permissions and filters do you want to apply to your videos?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows options to restrict commenters to everyone, friends, or no one, plus toggles to filter all comments or just spam.",
-        "whatTheAgentLoses": "Delegating this decision means losing the ability to personally set the boundary for who can interact with your content.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Who should be able to see the list of accounts you follow?",
         "cluster": "select",
         "moment": "Now",
@@ -3856,38 +1876,6 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 1
-          }
-         },
-         {
-          "question": "Which option do you select to initiate clearing your browsing data?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen presents multiple privacy controls like ad privacy and cookies, so you must explicitly choose the 'Clear browsing data' option to begin removing your history and cache.",
-          "whatTheAgentLoses": "You lose the opportunity to review or adjust other visible privacy settings, such as third-party cookies or ad privacy, before jumping into the data clearing process.",
-          "costDims": {
-           "money": 0,
-           "privacy": 2,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 3,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "How do you initiate the deletion process for your activity?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen presents both filtering and deletion options, so you must select the 'Delete' dropdown to begin removing your data.",
-          "whatTheAgentLoses": "You lose the opportunity to decide whether to filter the data first or proceed directly to the deletion options.",
-          "costDims": {
-           "money": 0,
-           "privacy": 2,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 3,
-           "recovery": 2
           }
          },
          {
@@ -4047,22 +2035,6 @@
           }
          },
          {
-          "question": "Should you proceed with the 3 products you have selected?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows that exactly 3 products are selected, meaning the upcoming privacy changes will apply specifically to them.",
-          "whatTheAgentLoses": "You lose the chance to verify exactly which of your products or apps are about to have their privacy settings changed.",
-          "costDims": {
-           "money": 0,
-           "privacy": 2,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 3,
-           "recovery": 3
-          }
-         },
-         {
           "question": "Which specific block of tracked activity do you want to delete?",
           "cluster": "select",
           "moment": "Now",
@@ -4145,22 +2117,6 @@
         "moneyMoving": false,
         "why": "The screen presents options to either sign out or flag the unrecognized device, which determines the appropriate security response.",
         "whatTheAgentLoses": "You lose the ability to decide whether to simply disconnect the device or formally report it as a security breach.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 3
-        }
-       },
-       {
-        "question": "Do you want to sign out of this unknown device or flag it as unrecognized?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a popup menu on the unknown device card with options to either sign out or report it.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether to simply revoke access or formally flag the device as a security concern.",
         "costDims": {
          "money": 0,
          "privacy": 3,
@@ -4273,22 +2229,6 @@
         }
        },
        {
-        "question": "Do you want to select all the filtered posts at once?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a dimmed list of posts with small grey squares behind a rising blank bottom sheet, suggesting a bulk selection action is underway.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to apply the privacy change to all filtered posts at once or select them individually.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Which option do you select from the bottom sheet to modify the selected posts?",
         "cluster": "select",
         "moment": "Now",
@@ -4359,22 +2299,6 @@
         "moneyMoving": false,
         "why": "The screen lists multiple distinct data sharing options, such as iPhone Analytics and Siri dictation, each affecting different types of personal data sent to Apple.",
         "whatTheAgentLoses": "You lose the ability to decide exactly which types of usage data you are comfortable sharing with Apple.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which specific apps should you disable notifications for to reduce distractions and save battery?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a long list of installed apps with active notification toggles, requiring a judgment call on which ones are non-essential.",
-        "whatTheAgentLoses": "You lose the ability to apply your personal preferences regarding which apps are important enough to interrupt you versus which ones are just annoying.",
         "costDims": {
          "money": 0,
          "privacy": 1,
@@ -4494,22 +2418,6 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Which categories of users should my account be suggested to?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents multiple toggles for suggesting the account to different groups like contacts, Facebook friends, and mutual connections, directly impacting who can discover the profile.",
-        "whatTheAgentLoses": "The user loses the ability to customize their account's discoverability according to their personal privacy preferences for different types of connections.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
         }
        },
        {
@@ -4660,22 +2568,6 @@
         }
        },
        {
-        "question": "Do you want to activate 'Hold for Me' despite the warning about urgent situations?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The prompt explicitly warns that the feature might not always work as expected and should not be used for urgent calls.",
-        "whatTheAgentLoses": "You lose the ability to personally assess if the call's urgency makes it inappropriate to rely on an automated assistant.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Are you sure you want to permanently delete this activity?",
         "cluster": "approve",
         "moment": "Now",
@@ -4756,22 +2648,6 @@
         }
        },
        {
-        "question": "Do you want to confirm switching to a private account?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Switch to Private Account?' confirmation sheet with a blue button to finalize the privacy change.",
-        "whatTheAgentLoses": "The user loses the final chance to abort the change before their account visibility becomes restricted.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Are you sure you want to clear your search history?",
         "cluster": "approve",
         "moment": "Now",
@@ -4810,22 +2686,6 @@
         "moneyMoving": false,
         "why": "The confirmation dialog explicitly warns that switching to a public account means anyone can watch your videos and all pending follow requests will be automatically approved.",
         "whatTheAgentLoses": "You lose the chance to evaluate the specific privacy trade-offs and decide if you are truly comfortable exposing your content and account to the public.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do you want to confirm the change to a public account?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "A confirmation dialog is open on screen asking to finalize the switch from a private to a public account.",
-        "whatTheAgentLoses": "The user loses the final opportunity to cancel the action and keep their account private.",
         "costDims": {
          "money": 0,
          "privacy": 3,
@@ -4932,22 +2792,6 @@
         }
        },
        {
-        "question": "Are you sure you want to enable Web & App Activity tracking?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The confirmation dialog explicitly states that turning this on will store your searches, location, and activity across Google services.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate the privacy trade-offs of allowing Google to store your search and location history.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Does turning off this tracking feature also prompt you to delete the historical data it has already collected?",
         "cluster": "facts",
         "moment": "Now",
@@ -5040,22 +2884,6 @@
         }
        },
        {
-        "question": "How do you exit the region selection menu without making changes?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows 'United States' is already checked and provides a 'Cancel' button at the top right to exit without altering this selection.",
-        "whatTheAgentLoses": "The user loses the ability to safely back out of a settings menu without accidentally modifying their account's region.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Should you tap 'Ask' or 'Cancel' when the parental permission pop-up appears?",
         "cluster": "select",
         "moment": "Now",
@@ -5075,94 +2903,12 @@
      },
      {
       "id": "5.4",
-      "label": "Dismiss the completion notice",
-      "questions": [
-       {
-        "question": "How do you dismiss the deletion confirmation screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'Deletion complete' message that must be acknowledged to return to the main settings.",
-        "whatTheAgentLoses": "You lose the reassurance of personally reading the confirmation that your selected activity was permanently deleted and is no longer tied to you.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you dismiss the preference saved confirmation?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This matters because the screen explicitly confirms that your activity older than 3 months is being permanently deleted and requires acknowledgment.",
-        "whatTheAgentLoses": "The user loses the reassurance of personally reading the confirmation details about exactly what data is being permanently deleted from their account.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you acknowledge the successful setup to exit the confirmation screen?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen displays an 'All set!' message and a 'GOT IT' button that must be tapped to finalize the process and return to the settings menu.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally seeing the confirmation message stating your device is now secured.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should I tap 'Back to home' to acknowledge that supervision has been stopped?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen confirms that parent management settings have been turned off, and returning to the home screen concludes the verification step.",
-        "whatTheAgentLoses": "The user loses the opportunity to read the confirmation message or learn how to undo the action if it was a mistake.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Dismiss the completion notice"
      },
      {
       "id": "5.5",
       "label": "Save the change",
       "questions": [
-       {
-        "question": "Should you click Apply before clicking OK to save your changes?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows both Apply and OK buttons, giving you the choice to save changes while keeping the window open or to save and close it simultaneously.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to keep the settings window open to make further adjustments or to close it immediately.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        }
-       },
        {
         "question": "Do you need to scroll to the bottom of the page to click a 'Save' or 'Apply' button for the change to take effect?",
         "cluster": "hand over",
@@ -5219,22 +2965,6 @@
        "reversibility": 1,
        "recovery": 2
       }
-     },
-     {
-      "question": "How do you verify the privacy settings you just changed across all these categories?",
-      "cluster": "hand over",
-      "moment": "Completion",
-      "moneyMoving": false,
-      "why": "While the 'Audience and visibility' list shows individual controls for Posts, Stories, and Reels, you must navigate back to the main menu to actually confirm your profile is hidden from others.",
-      "whatTheAgentLoses": "You lose the personal reassurance of seeing exactly what your restricted profile looks like to the outside world.",
-      "costDims": {
-       "money": 0,
-       "privacy": 2,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 1,
-       "recovery": 2
-      }
      }
     ],
     "children": [
@@ -5242,22 +2972,6 @@
       "id": "6.1",
       "label": "Re-read the control",
       "questions": [
-       {
-        "question": "Did you actually toggle the setting to the on position as instructed?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The audio instructs turning on increased sensitivity, but the on-screen toggle remains in the off position until the video cuts.",
-        "whatTheAgentLoses": "The user believes their account settings have been updated when they actually remain unchanged.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        }
-       },
        {
         "question": "Did you actually change the setting for every app like you said you would?",
         "cluster": "facts",
@@ -5291,22 +3005,6 @@
         }
        },
        {
-        "question": "Did you actually turn off the Wi-Fi Calling setting as you just stated?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "You said the setting could be turned off safely, but the screen showed you scrolling past the toggle while leaving it in the on position.",
-        "whatTheAgentLoses": "The user is left with a device configured differently than the spoken instructions led them to believe.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Is the account actually private, or do you still need to confirm the prompt?",
         "cluster": "facts",
         "moment": "Now",
@@ -5319,22 +3017,6 @@
          "thirdParty": 0,
          "safety": 0,
          "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Are you assuming the system is processing the change despite the lack of any visible interface?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This matters because the frame shows a presenter and a stock photo of people applauding, not a settings menu or processing indicator.",
-        "whatTheAgentLoses": "The user loses the ability to know if their privacy setting was actually modified since the agent is hallucinating interface actions during a video cutaway.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
          "recovery": 2
         }
        },
@@ -5569,22 +3251,6 @@
         }
        },
        {
-        "question": "Do you see the downloading indicator to confirm the app installation has started?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The App Store showed a downloading circle and the home screen displayed 'Waiting...', verifying that the account restriction changes successfully allowed the download.",
-        "whatTheAgentLoses": "The user loses the practical, visual confirmation that the modified account settings actually took effect on the device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Are all the security checkmarks complete?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -5669,22 +3335,6 @@
          "reversibility": 3,
          "recovery": 2
         }
-       },
-       {
-        "question": "Do you want to review the specific location permissions for each app?",
-        "cluster": "refine",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen now lists individual apps like Camera and Chrome with their current location access levels, which you may want to audit.",
-        "whatTheAgentLoses": "You lose the opportunity to manually verify and restrict location access for specific apps on your device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
        }
       ]
      },
@@ -5722,22 +3372,6 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
-       },
-       {
-        "question": "How do you access more profile options to verify visibility?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen displays a '...' button next to 'Edit profile' which likely contains options to view the profile as the public sees it.",
-        "whatTheAgentLoses": "The user loses the assurance of seeing exactly how their profile appears to others after the privacy changes.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
         }
        },
        {
@@ -5866,95 +3500,11 @@
      },
      {
       "id": "6.7",
-      "label": "Restart to apply",
-      "questions": [
-       {
-        "question": "Which power option should I select to apply the system changes?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The XOS power menu presents both 'POWER OFF' and 'RESTART' options, and selecting the correct one is necessary to reboot the device and apply the new settings.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the device restarts rather than completely shutting down, which would abruptly end the session and prevent verification.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       }
-      ]
+      "label": "Restart to apply"
      },
      {
       "id": "6.8",
-      "label": "Leave the settings surface",
-      "questions": [
-       {
-        "question": "How do you navigate away from this settings page now that the task is complete?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen shows the location toggle is grey, indicating the setting is successfully disabled and it is time to exit using the back button.",
-        "whatTheAgentLoses": "You lose the final visual confirmation of the disabled setting before choosing to exit the menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should I close all background apps or just the settings app?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The recent apps screen displays a 'Close all' button alongside the Settings app card.",
-        "whatTheAgentLoses": "The user loses the choice of whether to keep other background apps open or close them all.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you return to the home screen?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen does not have a visible home button, requiring a swipe up from the bottom edge to exit the settings.",
-        "whatTheAgentLoses": "You lose the physical reassurance of manually executing the system gesture to close the app and conclude the task.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you return to the previous screen from the Privacy menu?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen is titled 'Privacy' and features a '<' back arrow at the top left that must be tapped to navigate back toward the profile.",
-        "whatTheAgentLoses": "The user loses the spatial understanding of how the privacy settings are nested within the app's overall menu hierarchy.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Leave the settings surface"
      }
     ]
    }

@@ -23,14 +23,6 @@
         "whatTheAgentLoses": "You lose the ability to choose which specific navigation app gets installed on your device."
        },
        {
-        "question": "How often should the device require a password for additional purchases?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The system presented a choice between always requiring a password or allowing a 15-minute grace period for future media and app purchases.",
-        "whatTheAgentLoses": "You lose the ability to balance your personal preference for device security against the convenience of fewer password prompts."
-       },
-       {
         "question": "Do you confirm the installation of the Waze app?",
         "cluster": "approve",
         "moment": "Now",
@@ -75,52 +67,16 @@
         "moneyMoving": false,
         "why": "The app asks if it can use your account information and activity to show personalized ads, which affects your data privacy.",
         "whatTheAgentLoses": "An agent might opt into personalized ads by default, sharing your personal data and app activity without your explicit consent."
-       },
-       {
-        "question": "Should you dismiss the blurred prompt before searching for your destination?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The blurred prompt with the 'OK' button overlays the screen and must be cleared to fully access the 'Where to?' search bar.",
-        "whatTheAgentLoses": "Letting an agent handle this means you miss reading the prompt's message and familiarizing yourself with the main map's quick links and reporting tools."
        }
       ]
      },
      {
       "id": "1.3",
-      "label": "Update the app",
-      "questions": [
-       {
-        "question": "Should you update the app before opening it?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presented both \"Update\" and \"Open\" buttons, requiring a choice between immediately launching the current version or waiting to install the latest one.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to wait for the app to update or proceed immediately with the currently installed version."
-       }
-      ]
+      "label": "Update the app"
      },
      {
       "id": "1.4",
-      "label": "Turn on location and data",
-      "questions": [
-       {
-        "question": "How do you turn on device location services?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The quick settings panel shows the Location icon is initially gray, meaning the device's GPS is off and the map cannot automatically detect your starting point.",
-        "whatTheAgentLoses": "The user loses direct control over their device's global privacy settings and the choice of when their physical location is actively tracked."
-       },
-       {
-        "question": "Do you need to enable mobile data and location services first?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The quick settings panel shows toggles for mobile data and location, which are necessary for the map to download route data and pinpoint your starting position.",
-        "whatTheAgentLoses": "The user loses the ability to manually control their cellular data consumption and location privacy."
-       }
-      ]
+      "label": "Turn on location and data"
      },
      {
       "id": "1.5",
@@ -135,14 +91,6 @@
         "whatTheAgentLoses": "Letting an agent decide means you lose the ability to enforce your own privacy boundaries regarding how and when your location data is shared."
        },
        {
-        "question": "Which app's settings do you want to access?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a long list of installed applications, requiring you to locate and select the specific map app to adjust its preferences.",
-        "whatTheAgentLoses": "The user loses the opportunity to manually verify or restrict the map application's permissions and settings before navigating."
-       },
-       {
         "question": "Are location services enabled and accessible to the Maps app?",
         "cluster": "facts",
         "moment": "Now",
@@ -154,41 +102,7 @@
      },
      {
       "id": "1.6",
-      "label": "Open the app or site",
-      "questions": [
-       {
-        "question": "Which app will you open to get directions?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen shows many different applications, so you must select the specific map app you want to use for navigation.",
-        "whatTheAgentLoses": "You lose the ability to choose your preferred navigation app from the ones installed on your device."
-       },
-       {
-        "question": "Should you close the active app to start from a clean home screen?",
-        "cluster": "undo",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Returning to the home screen ensures the demonstration starts from a neutral state rather than an already open map.",
-        "whatTheAgentLoses": "You lose the assurance that the agent will begin the task from a predictable home screen instead of an unknown app state."
-       },
-       {
-        "question": "How do you navigate to the map service from the search homepage?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking the 'Maps' link in the top navigation bar ensures you enter the dedicated mapping interface rather than performing a general web search.",
-        "whatTheAgentLoses": "The user loses the opportunity to select their preferred mapping platform or verify the starting point of the search."
-       },
-       {
-        "question": "Should you select the suggested Google Maps website from the dropdown or finish typing the URL manually?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Safari displays a 'Suggested Website' shortcut for Google Maps as you type, offering a quicker way to navigate than typing the full address.",
-        "whatTheAgentLoses": "The user loses the choice of whether to use the browser's autocomplete shortcuts or manually type out the exact web address."
-       }
-      ]
+      "label": "Open the app or site"
      },
      {
       "id": "1.7",
@@ -225,14 +139,6 @@
         "whatTheAgentLoses": "You lose the physical awareness required to notice if the GPS has pinpointed the wrong starting location."
        },
        {
-        "question": "Should you center the map on your current location before tapping Go?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the target icon ensures the blue dot accurately reflects your starting point before you hit the blue 'GO' button to enter the routing screen.",
-        "whatTheAgentLoses": "You lose the ability to visually verify that the GPS has correctly pinpointed your exact physical location before requesting directions."
-       },
-       {
         "question": "Is the navigation screen stuck on a 'Searching for GPS' warning?",
         "cluster": "",
         "moment": null,
@@ -250,14 +156,6 @@
     "note": "2.1 or 2.2 - the same toggles live behind both doors, worded differently per platform and version. then any of 2.3 to 2.7 as the trip demands. changes persist for future trips (obk4), and a toggle round-trip that ends where it began is proven by unchanged route numbers (kIU1, lYnD). for zJVt, HrMd, kIU1, and lYnD the toggles are the task itself.",
     "questions": [
      {
-      "question": "Which map visualization style do you want to apply?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The menu offers different map types like Default, Satellite, and Terrain, as well as details like Traffic, which change how the area is displayed.",
-      "whatTheAgentLoses": "You lose the ability to choose a preferred visual layout, like satellite imagery, that might help you better recognize landmarks along your way."
-     },
-     {
       "question": "Do you want to turn on Incognito mode or adjust any account settings before searching for your destination?",
       "cluster": "hand over",
       "moment": "On demand",
@@ -266,28 +164,12 @@
       "whatTheAgentLoses": "You lose the chance to protect your privacy by enabling Incognito mode or managing how your location data is saved and shared."
      },
      {
-      "question": "Should you disable the Street View layer?",
-      "cluster": "undo",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The blue lines showing Street View coverage clutter the screen and make it harder to read the underlying map.",
-      "whatTheAgentLoses": "You lose the ability to decide which map layers are active for your own optimal visibility."
-     },
-     {
       "question": "Do you want to review the current air quality in the area?",
       "cluster": "facts",
       "moment": "On demand",
       "moneyMoving": false,
       "why": "The screen displays an air quality overlay with green pins indicating 'Good' conditions based on EPA South Australia data.",
       "whatTheAgentLoses": "You lose the chance to factor local environmental and health conditions into your travel plans."
-     },
-     {
-      "question": "Do you need to adjust any voice or routing preferences in the navigation settings?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The navigation settings menu offers options to customize voice guidance behavior and set route avoidances for freeways, tolls, and ferries.",
-      "whatTheAgentLoses": "Letting an agent handle this means you lose the opportunity to tailor the audio experience and route restrictions to your personal driving preferences."
      },
      {
       "question": "Do you need to configure any specific navigation settings, like avoiding unpaved roads or setting your vehicle type?",
@@ -310,14 +192,6 @@
         "moneyMoving": false,
         "why": "The profile menu displays a Preferences option currently set to Driving, which dictates how the app calculates your routes.",
         "whatTheAgentLoses": "You lose the ability to set global navigation defaults, such as your preferred travel mode or avoiding highways."
-       },
-       {
-        "question": "How do you return to the map view from the settings menu?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The settings menu covers the screen, requiring a tap on the top-left back arrow to resume planning the route.",
-        "whatTheAgentLoses": "The user loses the chance to verify exactly which navigation setting was enabled before the agent navigates away."
        }
       ]
      },
@@ -432,14 +306,6 @@
         "moneyMoving": false,
         "why": "The screen shows options for mute state, guidance volume, and voice selection that dictate how turn-by-turn directions will sound.",
         "whatTheAgentLoses": "Delegating this means the agent might leave the guidance unmuted or too loud, potentially disrupting your phone calls or preferred driving environment."
-       },
-       {
-        "question": "Which voice do you want to use for the navigation instructions?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays several voice options, including standard voices that read street names and novelty options like Boy Band, which dictate the audio experience during the trip.",
-        "whatTheAgentLoses": "You lose the opportunity to customize your driving experience with a navigation voice that you find clear, pleasant, or entertaining."
        }
       ]
      },
@@ -447,30 +313,6 @@
       "id": "2.5",
       "label": "Set the display and units",
       "questions": [
-       {
-        "question": "Do you want to enable satellite view by default?",
-        "cluster": "select",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The settings menu offers a toggle to start maps in satellite view, which changes the default visual layout of the application.",
-        "whatTheAgentLoses": "You lose the opportunity to set your preferred default map appearance, which can affect how easily you recognize landmarks."
-       },
-       {
-        "question": "Which distance unit do you prefer to use for the route?",
-        "cluster": "select",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The general settings menu provides an option to toggle the distance units between miles and kilometers.",
-        "whatTheAgentLoses": "You lose the ability to ensure the route distances and navigation prompts are presented in the measurement system you are most comfortable reading."
-       },
-       {
-        "question": "Are your driving display and tracking preferences set correctly?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows driving and parking options like distance units, map orientation, and the speedometer, which determine how your route is tracked and displayed.",
-        "whatTheAgentLoses": "You lose the ability to customize the navigation interface, such as keeping the map north up or showing a speedometer, to match your personal driving preferences."
-       },
        {
         "question": "Do the route distances correctly update when you switch the units from miles to kilometers?",
         "cluster": "facts",
@@ -505,56 +347,6 @@
     "id": "3",
     "label": "Pick the destination",
     "note": "one of 3.1, 3.3, 3.4, 3.5, 3.6, or 3.7 raises candidates - 3.2 only happens after 3.1, and 3.8 happens wherever ads sit in the results. then 3.9 and 3.10 to make sure it is the right place. 3.11 where the trip starts somewhere other than here - mandatory on desktop, where both endpoints are typed fields.",
-    "questions": [
-     {
-      "question": "Do you need to select an option from this side menu to find your destination?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The screen displays the side menu with options like 'Your places' and 'Settings', prompting a decision on whether the destination is saved here or requires a manual search on the main map.",
-      "whatTheAgentLoses": "The user loses the ability to decide whether to navigate to a pre-saved location from their account rather than typing out a new search."
-     },
-     {
-      "question": "How do you want to enter your destination?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen provides multiple ways to start a search, including a manual text entry bar, a microphone for voice input, and quick search chips for saved or common locations.",
-      "whatTheAgentLoses": "The user loses the ability to choose their preferred input method, such as using voice commands for hands-free convenience instead of typing."
-     },
-     {
-      "question": "Do you want to select a recent trip from the 'Drive now' panel, or search for a new destination?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays a 'Drive now' panel with quick destination options like 'Work' and other recent trips.",
-      "whatTheAgentLoses": "You lose the convenience of quickly selecting a frequently visited or recently searched destination without having to type it out."
-     },
-     {
-      "question": "Should you select a destination from your recent history or type a new one?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays convenient recent history entries like Rajiv Gandhi International Airport, but typing a new entry is necessary if your specific destination isn't listed.",
-      "whatTheAgentLoses": "If an agent automatically types out the destination, you lose the time-saving convenience of utilizing perfectly matching recent history entries."
-     },
-     {
-      "question": "Should you use the search bar, tap the recently viewed address, or exit to the home screen to start fresh?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The Apple Maps main screen displays a search bar and a recently viewed address under Siri Suggestions, presenting different ways to begin the task.",
-      "whatTheAgentLoses": "You lose the opportunity to choose whether to use a quick suggestion or reset the app to a clean starting state."
-     },
-     {
-      "question": "Do you want to navigate directly to a saved contact's address?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The search menu includes a \"Search contacts\" or \"Drive to friends & family\" option, which lets you bypass manual address entry by using your phone's address book.",
-      "whatTheAgentLoses": "You lose the convenience of quickly routing to a personal contact without having to look up and type their exact address."
-     }
-    ],
     "children": [
      {
       "id": "3.1",
@@ -593,14 +385,6 @@
         "moneyMoving": false,
         "why": "Selecting a previously searched location from the 'TODAY' list, like the Queen Elizabeth Theatre, saves time over typing the full address manually.",
         "whatTheAgentLoses": "You lose the convenience of quickly selecting a familiar, recently searched location directly from your personal map history."
-       },
-       {
-        "question": "Should you use the 'Start driving' option from the side menu?",
-        "cluster": "select",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The side menu displays a 'Start driving' option that immediately initiates a driving interface using your current location without needing a destination first.",
-        "whatTheAgentLoses": "You lose the ability to choose this alternative, quick-start driving mode over the standard search bar."
        }
       ]
      },
@@ -619,14 +403,6 @@
         "moneyMoving": false,
         "why": "The map displays multiple nearby restaurants with varying ratings, requiring a choice of which specific location to target.",
         "whatTheAgentLoses": "You lose the ability to personally select a destination based on its specific map location and user ratings."
-       },
-       {
-        "question": "Which category of nearby places should you explore for this destination?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The location card displays quick-search categories like restaurants and hotels, letting you find a specific point of interest before getting directions.",
-        "whatTheAgentLoses": "You lose the chance to visually browse the location's photos and spontaneously decide to search for nearby amenities."
        },
        {
         "question": "Which gas station do you want to select from the search results?",
@@ -735,14 +511,6 @@
         "whatTheAgentLoses": "You lose the visual context of the destination's surroundings, which helps in recognizing the exact spot upon arrival."
        },
        {
-        "question": "How do you move along the street in the preview?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Street View popup displays navigation arrows overlaid on the road, indicating where you can click to visually step through the path.",
-        "whatTheAgentLoses": "You lose the chance to visually familiarize yourself with specific landmarks and tricky intersections by manually stepping through the street-level preview."
-       },
-       {
         "question": "Should you preview the street-level view of specific turns on your route?",
         "cluster": "hand over",
         "moment": "On demand",
@@ -824,14 +592,6 @@
         "moneyMoving": false,
         "why": "Comparing the 4-hour driving time against the 9-hour transit option ensures you pick the most practical way to reach your destination.",
         "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between a faster drive and alternative transportation methods."
-       },
-       {
-        "question": "Which icon do you tap to select the public transportation mode?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple travel modes at the top, requiring you to identify the correct bus or train icon to view transit routes and times.",
-        "whatTheAgentLoses": "You lose the ability to verify that the agent selected the correct transportation mode for your specific travel needs."
        },
        {
         "question": "Which travel mode should you select?",
@@ -1014,14 +774,6 @@
         "whatTheAgentLoses": "If an agent chooses the time for you, you lose the ability to align the route estimates and transit schedules with your actual personal schedule."
        },
        {
-        "question": "How do you close the time selection without applying changes?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays 'CANCEL' and 'DONE' buttons, requiring a choice to either discard or apply the adjusted schedule.",
-        "whatTheAgentLoses": "The user loses the ability to safely back out of unintended schedule changes without altering their route search."
-       },
-       {
         "question": "Do you want to adjust the departure time to see how it affects the estimated travel times for each route?",
         "cluster": "hand over",
         "moment": "On demand",
@@ -1036,14 +788,6 @@
         "moneyMoving": false,
         "why": "The screen showed different suggested departure times, such as 12:00 or 12:05, depending on which route you take to arrive by 1:00 PM.",
         "whatTheAgentLoses": "You lose the ability to evaluate the different route options and choose your own departure time to build in a comfortable buffer."
-       },
-       {
-        "question": "How do you check predicted traffic for a specific departure time?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "Using the traffic popup's day and time slider allows you to view historical traffic conditions for your planned departure time rather than just live traffic.",
-        "whatTheAgentLoses": "You lose the ability to visually explore how traffic conditions might fluctuate around your specific travel window."
        },
        {
         "question": "Should you search for the last available transit route of the day?",
@@ -1139,28 +883,12 @@
         "label": "Read the legs and transfers",
         "questions": [
          {
-          "question": "Do you want to visualize the transit steps on the map or just read the text itinerary?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays a detailed text breakdown of the transit journey, including specific stops and walking distances, alongside an interactive map area.",
-          "whatTheAgentLoses": "The user loses the spatial context of seeing exactly where the bus stops and walking paths are located on the map."
-         },
-         {
           "question": "What are the exact steps, timings, and delays for this transit route?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The detailed route view shows real-time bus delays, wait times, and provides a map preview of the walking segments between stops.",
           "whatTheAgentLoses": "The user loses the ability to visually verify the walking paths between transit stops and mentally prepare for specific wait times or delays."
-         },
-         {
-          "question": "How do you collapse the detailed route itinerary to see the main map again?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The detailed itinerary covers the map, so you must tap the down arrow on the bottom card to collapse it and view the full route overview.",
-          "whatTheAgentLoses": "You lose the spatial awareness of seeing the full route on the map before committing to the navigation."
          },
          {
           "question": "Is the scheduled transfer time between transit lines actually feasible for your walking speed?",
@@ -1207,14 +935,6 @@
           "whatTheAgentLoses": "You lose the spatial awareness of exactly how to navigate the initial walking portion to your first transit stop."
          },
          {
-          "question": "How do you want to view the walking directions for this transfer?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays both a 'Live View' button and a map icon next to the walking segment instructions, offering different ways to visualize the path.",
-          "whatTheAgentLoses": "You lose the ability to choose the visual format that best helps you orient yourself in an unfamiliar area during the walking transfer."
-         },
-         {
           "question": "Do you want to view the exact walking path for this transit segment on the map?",
           "cluster": "hand over",
           "moment": "On demand",
@@ -1228,14 +948,6 @@
         "id": "4.7.5",
         "label": "Filter the transit modes",
         "questions": [
-         {
-          "question": "Should you customize the transit route options or cancel?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays an 'OPTIONS' button to adjust transit preferences alongside a 'CANCEL' button to dismiss the current menu.",
-          "whatTheAgentLoses": "The user loses the ability to decide whether to apply specific transit filters or simply back out to the default recommended routes."
-         },
          {
           "question": "Do you want to restrict the search to specific types of public transit?",
           "cluster": "select",
@@ -1440,14 +1152,6 @@
     "note": "5.1, answering 5.2's prompt stack where it fires. 5.3 almost immediately - it is the most-touched in-drive control in the corpus. then 5.4 to 5.9 in any order as the drive demands. 5.10 is reached only in one spliced session. 5.11 ends it - every keeper who starts guidance and keeps recording stops it on purpose, except mo0Q, whose video simply ends mid-drive.",
     "questions": [
      {
-      "question": "How do you want to configure voice guidance and monitor upcoming traffic on the route?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The active navigation screen displays voice toggle settings and red traffic segments that dictate how you receive directions and what delays to expect.",
-      "whatTheAgentLoses": "You lose the ability to customize your preferred voice guidance settings and personally inspect the map for upcoming traffic delays."
-     },
-     {
       "question": "Which side of the street is the destination on, or is it located inside a larger complex?",
       "cluster": "",
       "moment": null,
@@ -1584,14 +1288,6 @@
         "whatTheAgentLoses": "You lose the spatial awareness of exactly where the traffic delays are located along your journey."
        },
        {
-        "question": "Which active trip settings, such as showing traffic on the map, do you want to enable?",
-        "cluster": "select",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The expanded menu provides options to share your trip progress or display live traffic, which can help you stay informed during the drive.",
-        "whatTheAgentLoses": "You lose the ability to personalize your active navigation view with specific overlays like live traffic or safety features."
-       },
-       {
         "question": "Are you monitoring the active navigation and current trip estimates?",
         "cluster": "watch",
         "moment": "On demand",
@@ -1701,33 +1397,7 @@
      },
      {
       "id": "5.8",
-      "label": "Explore the in-drive menu",
-      "questions": [
-       {
-        "question": "Do you want to access other apps like media or messages from the navigation dashboard?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The driving mode dashboard displays icons for Calls, Messages, and Media, allowing you to use other phone features without leaving the navigation interface.",
-        "whatTheAgentLoses": "Delegating this to an agent means you lose the ability to seamlessly queue up your preferred media or check messages while the navigation runs."
-       },
-       {
-        "question": "Do you want to answer or decline the incoming call?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "An incoming call banner with green and red buttons has appeared on the screen, requiring a choice that might interrupt your navigation.",
-        "whatTheAgentLoses": "You lose the ability to decide whether this specific caller is important enough to speak with while you are driving."
-       },
-       {
-        "question": "Which action do you want to take from the expanded navigation menu?",
-        "cluster": "select",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen shows options like 'Send ETA' and 'Overview', which allow you to communicate your status or check the full path while navigating.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to share your arrival time with someone or review the entire route map yourself."
-       }
-      ]
+      "label": "Explore the in-drive menu"
      },
      {
       "id": "5.9",
@@ -1740,14 +1410,6 @@
         "moneyMoving": false,
         "why": "The screen displays an authorization prompt asking to connect Waze to Spotify for integrated music control.",
         "whatTheAgentLoses": "You lose the ability to decide whether to share your personal music streaming account data with the navigation app."
-       },
-       {
-        "question": "Do you want to start playing music using the integrated Spotify widget?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen displays a Spotify widget with playback controls, offering a way to manage audio without leaving the navigation view.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide whether and when to start your music during the drive."
        }
       ]
      },
@@ -1762,14 +1424,6 @@
         "moneyMoving": false,
         "why": "The screen shows options to rate the navigation or end the trip, requiring you to explicitly select 'Continue' to resume routing to your final destination.",
         "whatTheAgentLoses": "You lose the ability to decide whether to end the trip early at this stop or provide feedback on the navigation experience."
-       },
-       {
-        "question": "Do you want to leave feedback on the navigation experience?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The arrival screen displays a feedback prompt with smiley face icons to rate the trip before tapping 'Done'.",
-        "whatTheAgentLoses": "Delegating this means the agent might skip the rating or submit feedback that does not reflect your actual travel experience."
        }
       ]
      },
@@ -1777,14 +1431,6 @@
       "id": "5.11",
       "label": "Stop the navigation",
       "questions": [
-       {
-        "question": "How do you exit active navigation mode?",
-        "cluster": "undo",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "Tapping the 'X' button stops the turn-by-turn guidance and returns you to the route overview screen showing the ETA and a Start button.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to quickly cancel the active route if you need to change your plans or destination."
-       },
        {
         "question": "Do you want to stop the automatic navigation?",
         "cluster": "undo",
@@ -1831,14 +1477,6 @@
         "whatTheAgentLoses": "An agent might blindly trust the generated document and fail to alert you to the calculation error in your printed directions."
        },
        {
-        "question": "Should I open the detailed step-by-step directions and print them?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen shows the full list of driving maneuvers alongside a print icon, which is useful if you need a physical copy of the directions.",
-        "whatTheAgentLoses": "Delegating this means you lose the chance to review the specific turns yourself and decide if a physical copy is necessary for your trip."
-       },
-       {
         "question": "Do you want to print the directions, and if so, should the printout include the map?",
         "cluster": "select",
         "moment": "Now",
@@ -1875,14 +1513,6 @@
       "label": "Plan a drive for later",
       "questions": [
        {
-        "question": "How do you initiate the process of scheduling a future trip?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The menu provides a 'Planned drives' option and a 'Plan a drive' button to help you determine when to leave based on anticipated traffic.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to manually plan the drive or connect your personal calendar and Facebook accounts for automatic event syncing."
-       },
-       {
         "question": "Do you see that the estimated drive time changed from 15 to 16 minutes after saving?",
         "cluster": "facts",
         "moment": "After",
@@ -1910,14 +1540,6 @@
       "id": "6.5",
       "label": "Send the route elsewhere",
       "questions": [
-       {
-        "question": "Should you check the box to create a short URL for sharing this route?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a share pop-up with a long URL and a 'Short URL' checkbox, allowing you to customize the link format.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to share a concise version of the route link or just proceed to the schedule explorer."
-       },
        {
         "question": "Which device or method should you choose to send the route to your phone?",
         "cluster": "select",
@@ -1957,14 +1579,6 @@
     "label": "Use the maps offline",
     "note": "7.1 then 7.2; 7.3 for what is already downloaded. 7.4 then 7.5 to prove the download works - PjID and QULM both stage the outage on purpose. 7.6 when the proof fails. 7.5 reruns 3 and 4 in miniature against the downloaded area.",
     "questions": [
-     {
-      "question": "Do you need to access your profile settings or offline maps before starting your search?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The profile icon in the top right corner provides access to additional app features like offline maps that could be necessary for your journey.",
-      "whatTheAgentLoses": "You lose the chance to proactively download offline maps or adjust account settings before navigating."
-     },
      {
       "question": "Do you want to download a new offline map area or use one of the currently saved maps?",
       "cluster": "select",
@@ -2121,14 +1735,6 @@
       "label": "Open the location sharing",
       "questions": [
        {
-        "question": "Do you need to share your current location with someone?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The 'Your Location' bottom sheet provides options like 'Share location' and 'Save parking' that are useful for coordinating with others.",
-        "whatTheAgentLoses": "The user loses the opportunity to proactively send their exact coordinates to a friend they are coordinating with."
-       },
-       {
         "question": "Do you want to share your real-time location?",
         "cluster": "approve",
         "moment": "Now",
@@ -2194,17 +1800,7 @@
      },
      {
       "id": "8.6",
-      "label": "Verify the share arrived",
-      "questions": [
-       {
-        "question": "How do you open the shared live location?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the provided Maps link in the WhatsApp chat directly opens the shared location in the map application.",
-        "whatTheAgentLoses": "The user loses the seamless transition from their messaging app directly to the exact coordinates shared by their contact."
-       }
-      ]
+      "label": "Verify the share arrived"
      }
     ]
    }

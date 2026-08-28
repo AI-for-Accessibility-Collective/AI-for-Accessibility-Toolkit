@@ -9,26 +9,6 @@
     "id": "1",
     "label": "Open the booking platform",
     "note": "one of 1.2, 1.4, or 1.5 to arrive - 1.3 after 1.2; 1.1 when a chooser interrupts; 1.6 and 1.7 when the app asks.",
-    "questions": [
-     {
-      "question": "How should you access the hotel booking platform?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Selecting the official Booking.com link from the search suggestions ensures you navigate to a legitimate platform to start your search.",
-      "whatTheAgentLoses": "You lose the ability to choose your preferred booking website and verify that the official site is being accessed.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      },
-      "kind": "decision",
-      "verify_form": "The agent chose its own route to the booking platform - check which site it landed on and that it is the official one, not a lookalike or reseller."
-     }
-    ],
     "children": [
      {
       "id": "1.1",
@@ -51,50 +31,12 @@
         },
         "kind": "decision",
         "verify_form": "The agent picked a browser profile - check whose it is; the profile carries saved cards and logins, so the wrong one books under someone else's identity."
-       },
-       {
-        "question": "Which web browser should you open to start the booking process?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The taskbar displays several application icons, so you must choose a web browser like Google Chrome to access the hotel booking websites.",
-        "whatTheAgentLoses": "You lose the opportunity to select your preferred web browser, which might contain your saved payment details or loyalty account passwords.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent opened a browser on its own - check which one; your saved payments and loyalty logins live in a specific browser."
        }
       ]
      },
      {
       "id": "1.2",
-      "label": "Search for the site",
-      "questions": [
-       {
-        "question": "Do you select one of the search autocomplete suggestions or keep typing?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The search engine displays a dropdown of suggestions like 'booking.com hotel' that could save time if one matches your exact intent.",
-        "whatTheAgentLoses": "You lose the minor convenience of choosing a relevant autocomplete suggestion to speed up your search.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent took or ignored the search-engine autocomplete - check what it actually searched; a suggestion can redirect the whole session."
-       }
-      ]
+      "label": "Search for the site"
      },
      {
       "id": "1.3",
@@ -127,24 +69,6 @@
       "id": "1.5",
       "label": "Install or open the app",
       "questions": [
-       {
-        "question": "Which app should you open to start your hotel search?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays Booking.com with an 'Open' button, indicating it is already installed and ready to use compared to the other advertised apps.",
-        "whatTheAgentLoses": "The user loses the chance to decide which specific hotel booking platform they want to use for their reservation.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent opened one booking app among several on screen - check which platform it committed you to."
-       },
        {
         "question": "Should you install this app based on its 4.2 rating and 10 million downloads without reading the detailed reviews?",
         "cluster": "approve",
@@ -329,23 +253,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent proceeded signed out or signed in - check which, and whether your loyalty benefits made it into this session."
-       },
-       {
-        "question": "Do you notice that you are already signed in despite the instruction to log in?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows that the account is already logged in as a Genius Level 1 member, which contradicts the narrator's instruction to sign in.",
-        "whatTheAgentLoses": "The delegator loses the efficiency of an agent that can recognize the actual screen state and skip unnecessary steps.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "state-check"
        }
       ]
      },
@@ -370,23 +277,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent picked a sign-in method - check whether it used Google, Facebook, or email, and which identity that ties the booking to."
-       },
-       {
-        "question": "How do you access the login section from the main screen?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Finding the login section matters because signing in before searching can unlock member-only rates, but the option is tucked away in the hamburger menu.",
-        "whatTheAgentLoses": "You lose the opportunity to verify that the agent successfully logged into your specific loyalty account before making the booking.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "state-check"
        },
        {
         "question": "How do you want to sign in or create an account?",
@@ -518,24 +408,6 @@
         "kind": "state-check"
        },
        {
-        "question": "Do you want to explore your One Key benefits?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The homepage displays a banner highlighting a 10% discount and a link to explore One Key benefits.",
-        "whatTheAgentLoses": "The user loses the opportunity to understand their loyalty benefits and potential savings before making a booking.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent skipped or opened the One Key benefits page - check whether a benefit it ignored applies to this booking."
-       },
-       {
         "question": "Do you want to register for the points promotion before starting your search?",
         "cluster": "",
         "moment": null,
@@ -579,108 +451,15 @@
     "id": "3",
     "label": "Specify the trip",
     "note": "3.1 where the site mixes services; 3.2 with 3.3, or 3.4 instead; then 3.5 to 3.7 in any order, 3.8 where offered; 3.9 submits. 3.10 then 3.11 before any of it on the agent desk (XIZB). Re-entered from 4, 5, or 6 when availability or rates disappoint (rHfR, QuDA, R6LA).",
-    "questions": [
-     {
-      "question": "What destination, dates, and guest details do you want to search for?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen displays the destination field, calendar, and guest dropdown, which are necessary to filter for available properties.",
-      "whatTheAgentLoses": "Delegating this means you lose control over specifying the exact location, travel dates, and party size for your trip.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      },
-      "kind": "decision",
-      "verify_form": "The agent filled the whole search form - read back destination, dates, and party size before the results shape everything after."
-     }
-    ],
     "children": [
      {
       "id": "3.1",
-      "label": "Choose the service category",
-      "questions": [
-       {
-        "question": "Should you browse by property type or check out the homepage deals before doing a manual search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The homepage displayed quick links to specific property types and weekend deals that could offer a faster or cheaper way to find accommodation.",
-        "whatTheAgentLoses": "You lose the opportunity to spontaneously discover special weekend deals or alternative property types featured directly on the homepage.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent skipped or took the homepage shortcuts and weekend deals - check what it passed over on the way to the search box."
-       },
-       {
-        "question": "Which type of travel service do you want to select from the main menu?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple travel options like flights and car rentals, so selecting the right category ensures you are searching for hotel accommodations.",
-        "whatTheAgentLoses": "You lose the chance to decide whether to bundle your hotel with a flight or car rental for potential convenience and savings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "intent-check"
-       },
-       {
-        "question": "Do you want to explore the holiday promotions or nearby destinations before starting your search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The homepage displays banners for member holiday savings and suggested nearby destinations like Lonavala that could offer discounts or alternative trip ideas.",
-        "whatTheAgentLoses": "You lose the chance to spontaneously discover discounted holiday trips or alternative nearby getaways that might catch your eye on the homepage.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent scrolled past the holiday promotions and nearby-destination banners - check whether any skipped deal fits this trip."
-       }
-      ]
+      "label": "Choose the service category"
      },
      {
       "id": "3.2",
       "label": "Enter the destination",
       "questions": [
-       {
-        "question": "What destination do you want to search for?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The destination search field requires a specific city or location to find relevant hotel availability.",
-        "whatTheAgentLoses": "You lose the ability to specify the exact city or region you want to visit.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent searched a destination - read it back; if your request was vague, the city it chose is its guess."
-       },
        {
         "question": "How do you clear the current destination to search for a new location?",
         "cluster": "hand over",
@@ -697,24 +476,6 @@
          "recovery": 1
         },
         "kind": "intent-check"
-       },
-       {
-        "question": "Should I select one of the popular nearby destinations from the dropdown or type my own specific location?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking the search bar reveals a dropdown of popular nearby destinations like Boracay and Manila, offering a quick selection if your travel plans are flexible.",
-        "whatTheAgentLoses": "You lose the opportunity to discover and spontaneously choose popular nearby travel spots suggested by the platform.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent typed its own destination or took a suggested nearby one - check which, and whether the suggestion matches where you are actually going."
        },
        {
         "question": "Do you want to keep the default location or search for a new destination?",
@@ -1118,24 +879,6 @@
         "verify_form": "The agent set traveler counts and children's ages - read them back; the site prices and filters rooms off these numbers, and it warned until ages were set."
        },
        {
-        "question": "How many guests are you searching for, and can you set the number of adults to zero?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The guest selector displays a forbidden symbol over the minus button for adults, indicating that a booking must include at least one adult.",
-        "whatTheAgentLoses": "You lose the ability to specify the exact number of guests and rooms needed for your specific travel party.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent settled the guest count at the one-adult floor - read back what it searched for; the site refused to go lower."
-       },
-       {
         "question": "How many rooms, adults, and children are you booking for, and what is the child's age?",
         "cluster": "hand over",
         "moment": "Now",
@@ -1228,49 +971,12 @@
         },
         "kind": "decision",
         "verify_form": "The agent left the travelling-for-work box one way or the other - check it; the flag changes rates and matters for invoicing."
-       },
-       {
-        "question": "Should you check the 'I'm looking for flights' box before searching for your hotel?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The hotel search form includes a specific checkbox to also look for flights, which changes the search flow to include airfare.",
-        "whatTheAgentLoses": "The user loses the opportunity to conveniently bundle their hotel and flight searches into a single coordinated itinerary.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent left the looking-for-flights checkbox as found - check whether you wanted the hotel bundled with airfare."
        }
       ]
      },
      {
       "id": "3.9",
-      "label": "Submit the search",
-      "questions": [
-       {
-        "question": "Are your search parameters complete and ready to submit?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Submitting accurate destination and date inputs ensures the resulting list of hotels matches your actual travel plans.",
-        "whatTheAgentLoses": "You lose the chance to verify that the exact travel dates and location are correct before the agent pulls up the options.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "intent-check"
-       }
-      ]
+      "label": "Submit the search"
      },
      {
       "id": "3.10",
@@ -1326,26 +1032,6 @@
     "id": "4",
     "label": "Narrow and compare results",
     "note": "4.1 on arrival. loop: 4.2 to cut the list, 4.3 to 4.5 to probe it, 4.6 to pick - 5 vets the pick and a failed vet returns here; 4.7 when the pick dies. back to 3 when the list is hopeless.",
-    "questions": [
-     {
-      "question": "Should you turn on the battery saver before continuing the booking process?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen showed a 15% battery warning, indicating the device might run out of power before the reservation is finalized.",
-      "whatTheAgentLoses": "The user loses the ability to manage their device's power settings to prevent it from shutting down during the transaction.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 0
-      },
-      "kind": "decision",
-      "verify_form": "The agent ignored or handled the low-battery warning - on a real device, check the session can survive to the confirmation screen."
-     }
-    ],
     "children": [
      {
       "id": "4.1",
@@ -1420,24 +1106,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent kept the default dates and picked a promising hotel - check the dates first; they were the app's defaults, not yours."
-       },
-       {
-        "question": "How should you handle the pricing notification, and which hotel do you want to select from the results?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a pricing pop-up alongside multiple highly-rated options like Chancellor Hotel Boracay and Ferra Hotel, requiring a choice on both the notification and the property.",
-        "whatTheAgentLoses": "The user loses the opportunity to read the pricing details and evaluate other properties before making a selection.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent dismissed the pricing popup and picked a hotel in one motion - check what the popup disclosed and which property it chose."
        },
        {
         "question": "Do you want to proceed with these dates despite the low availability warning?",
@@ -2475,24 +2143,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent decided the photos and description pass - skim them; 'good enough' here is a taste call it made for you."
-       },
-       {
-        "question": "Do the property details look correct, and are you ready to jump straight to room selection?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen confirms the hostel's high ratings and Genius discount, prompting you to decide whether to read the full description or proceed directly to picking a room.",
-        "whatTheAgentLoses": "You lose the opportunity to review the detailed property description to ensure the hostel's amenities and vibe match your personal preferences.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent jumped straight to rooms or read the description first - check what the skipped description said about the place."
        }
       ]
      },
@@ -4294,24 +3944,6 @@
         "verify_form": "The agent booked as you or for someone else - check the radio it set; the name on the reservation follows it."
        },
        {
-        "question": "Should you fill in the full guest name here?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The booking form asks for a first and last name to correctly identify who will be checking into the property.",
-        "whatTheAgentLoses": "The user loses control over whose name is officially attached to the hotel reservation for check-in.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent filled or skipped the full-guest-name field - check whose name will meet the front desk."
-       },
-       {
         "question": "Are your pre-filled personal details correct, and what is the primary purpose of your trip?",
         "cluster": "facts",
         "moment": "Now",
@@ -4353,24 +3985,6 @@
       "id": "7.5",
       "label": "Decline or add extras",
       "questions": [
-       {
-        "question": "Do you want to add a discounted rental car or an airport taxi to your booking?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The site offers a 10% discount on rental cars and the option to arrange an airport taxi in advance.",
-        "whatTheAgentLoses": "You lose the opportunity to conveniently bundle discounted transportation options with your hotel reservation.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent declined or added the rental-car and airport-taxi offers - check which; a 10% car discount was on the table."
-       },
        {
         "question": "Do you want to add any extras to your stay, and is the total price correct?",
         "cluster": "select",
@@ -4466,24 +4080,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent skipped the requests and arrival-time fields - check whether an unusual arrival or a needed accommodation went unsaid."
-       },
-       {
-        "question": "Should you write your special requests in the local language of the destination?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The narrator notes that because the destination is Hong Kong, you have the option to write your special requests in Chinese as well as English.",
-        "whatTheAgentLoses": "You lose the opportunity to increase the likelihood that the hotel staff will perfectly understand and fulfill your special requests by providing them in their local language.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent wrote the requests in one language - check whether the local-language option would land better with the staff."
        }
       ]
      },
@@ -4567,42 +4163,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent set the save-my-details and marketing boxes - check both; one stores your data, the other fills your inbox."
-       },
-       {
-        "question": "Do you want a paperless confirmation sent to your phone?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen offers a recommended checkbox for a free paperless confirmation, which determines how you will receive your reservation details.",
-        "whatTheAgentLoses": "The user loses the opportunity to choose whether they want the convenience of having their booking confirmation sent directly to their mobile device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent set the paperless-confirmation box - check where your confirmation will actually arrive."
-       },
-       {
-        "question": "How do you want to configure your booking preferences and optional add-ons?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The form includes options for paperless confirmation, guest identity, and work travel status alongside details about taxes and damage deposits.",
-        "whatTheAgentLoses": "You lose the ability to personalize reservation details like confirmation delivery methods and work travel status.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent configured the booking preferences - check paperless, guest identity, and work travel the way it left them."
        },
        {
         "question": "Are you okay with leaving the marketing email box checked and completing the booking without providing payment details?",
@@ -4803,23 +4363,6 @@
         "verify_form": "The agent advanced past the details page - check what sat unread next to the button, like the booking-conditions link."
        },
        {
-        "question": "Have you filled out all required guest details and selected the correct arrival time before proceeding?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Clicking 'Next: Final details >' without entering required personal information will trigger an error and prevent the booking from advancing.",
-        "whatTheAgentLoses": "The user loses control over ensuring the reservation is booked under their exact name and contact information.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "state-check"
-       },
-       {
         "question": "Are you actually completing the booking, or just proceeding to the final details?",
         "cluster": "facts",
         "moment": "Now",
@@ -4856,23 +4399,6 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        },
-        "kind": "state-check"
-       },
-       {
-        "question": "Have you filled in all required guest details before attempting to complete the booking?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Clicking the completion button while leaving required text fields blank will trigger an error and halt the booking process.",
-        "whatTheAgentLoses": "The user experiences a delay or fails to secure the room because the agent gets stuck on form validation errors.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
         },
         "kind": "state-check"
        },
@@ -5285,24 +4811,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent chose whether to pay now to use the OneKeyCash - check whether the $15 credit was applied or silently forfeited."
-       },
-       {
-        "question": "Do you want to review how your previous loyalty rewards were converted before proceeding?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "A notification at checkout explains that existing Hotels.com stamps were converted to the new OneKeyCash rewards system.",
-        "whatTheAgentLoses": "The user loses the chance to understand their new rewards balance and how their previously earned loyalty currency was valued in the transition.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent skipped or read the rewards-conversion notice - check what your old stamps became before relying on the balance."
        },
        {
         "question": "How do you want to split the cost between reward points and cash?",
@@ -5956,24 +5464,6 @@
         "verify_form": "The session timed out and the price moved - check whether the agent accepted the new higher rate or stopped to ask."
        },
        {
-        "question": "Do you have your payment details ready to complete the booking before the price hold timer expires?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The checkout screen displays a countdown timer indicating exactly how long the current price and room availability are guaranteed before they may change or expire.",
-        "whatTheAgentLoses": "The user loses the guaranteed room rate and availability if the agent idles on the checkout page and allows the hold timer to expire.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "A price-hold timer is running - check the agent has the payment details staged before the hold expires and the rate moves."
-       },
-       {
         "question": "How much time is left on the reservation hold timer before the room is released back to the public?",
         "cluster": "",
         "moment": null,
@@ -6281,23 +5771,6 @@
         "kind": "state-check"
        },
        {
-        "question": "Do you actually submit the booking and see the confirmation screen before the video ends?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The narrator mentions a confirmation email will arrive, but the video ends before the booking is submitted and a confirmation number is displayed on screen.",
-        "whatTheAgentLoses": "The user is left without proof of a completed reservation or a confirmation number to reference for their trip.",
-        "costDims": {
-         "money": 2,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "state-check"
-       },
-       {
         "question": "Is the booking successfully confirmed with the expected 'pay at property' terms?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -6391,24 +5864,6 @@
         "verify_form": "The SMS save failed and the agent picked a fallback - check where the confirmation actually ended up."
        },
        {
-        "question": "Do you want to save the confirmation as a PDF, and what should the file be named?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen shows a print dialog with options to save as a PDF and name the file, which is useful for keeping a local record of the reservation.",
-        "whatTheAgentLoses": "The user loses the ability to specify their preferred file name and storage location for the confirmation document.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent saved the PDF under some name - check the file name and folder so the confirmation is findable at check-in."
-       },
-       {
         "question": "Did you securely record the PIN code alongside your confirmation number?",
         "cluster": "",
         "moment": null,
@@ -6448,41 +5903,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent chose how to reach the itinerary - check whether it signed in or used the itinerary-number lookup, and that it can get back in later."
-       },
-       {
-        "question": "How do you access the management options for this confirmed booking?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays the confirmed booking details for Hotel Prince, and you must decide whether to use the provided contact buttons or open the three-dot menu for more options.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review the confirmed check-in times and choose how to manage the reservation.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "state-check"
-       },
-       {
-        "question": "Do you want to note down the booking ID and guest details, or explore post-booking options like getting directions?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays the final booking ID and guest details, along with options to contact the hotel or get directions.",
-        "whatTheAgentLoses": "The user loses the opportunity to immediately note down their booking ID or familiarize themselves with post-booking actions like getting directions.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent noted or skipped the booking ID - check the ID got captured; managing the stay later needs it."
        }
       ]
      },
@@ -6490,24 +5910,6 @@
       "id": "9.4",
       "label": "Contact the property",
       "questions": [
-       {
-        "question": "Should I message or call the property?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a 'Contact the property' pop-up with options to either send an in-app message or call a provided phone number.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred communication method for reaching out to the hotel with questions or requests.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent chose message or call - check which channel it used to reach the property, and what it said."
-       },
        {
         "question": "Do you need to send a message to the property through the chat interface?",
         "cluster": "hand over",
@@ -6525,24 +5927,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent decided about messaging the property - check what it sent; the chat itself warns never to share account or payment details."
-       },
-       {
-        "question": "Do you need to contact the property regarding your confirmed reservation?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The home screen displays your confirmed stay at Hotel Prince with quick actions to contact the property or get directions.",
-        "whatTheAgentLoses": "You lose the ability to personally communicate specific requests or questions directly to the hotel staff.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent decided about contacting the property - check what it asked or told them in your name."
        }
       ]
      },
@@ -6566,24 +5950,6 @@
          "recovery": 1
         },
         "kind": "state-check"
-       },
-       {
-        "question": "Do you want to get directions to the hotel?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The confirmation screen includes a \"Get directions\" button so you can immediately see exactly where the property is located.",
-        "whatTheAgentLoses": "You lose the immediate spatial awareness of seeing the hotel's exact location on your own map.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent did or did not pull directions - check the route; the map moment is where wrong-hotel mistakes surface."
        }
       ]
      },
@@ -6610,24 +5976,6 @@
         "verify_form": "The agent left the room-preference request empty or wrote one - check; the property only knows what got written."
        },
        {
-        "question": "Which aspect of the room reservation do you want to manage?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen provides a menu to modify specific details like room preferences, room type, or guest information.",
-        "whatTheAgentLoses": "You lose the opportunity to specify personal comforts or correct guest details before finalizing the booking.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent picked which reservation detail to manage - check whether it touched room preferences, room type, or guest info."
-       },
-       {
         "question": "Do you need to update the guest name, change the number of guests, or add more space?",
         "cluster": "select",
         "moment": "Now",
@@ -6644,24 +5992,6 @@
         },
         "kind": "decision",
         "verify_form": "The agent updated or left the guest name, count, and space - check what actually changed on the reservation."
-       },
-       {
-        "question": "Which action do you want to take on this booking?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen shows a menu with options like 'Change dates' and 'Cancel booking', requiring you to decide how to manage your reservation.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to personally explore and select the specific post-booking actions you might need.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent picked a management action from the menu - check whether it changed dates, cancelled, or left the booking alone."
        }
       ]
      },
@@ -6804,45 +6134,7 @@
      },
      {
       "id": "9.9",
-      "label": "Book follow-on services",
-      "questions": [
-       {
-        "question": "Which departure airport should you select for the flight search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a list of suggested locations including New York, Las Vegas, and San Francisco, requiring you to specify exactly where your journey begins.",
-        "whatTheAgentLoses": "The user loses control over their starting location, which could result in travel being routed from the wrong city or an inconvenient airport.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent picked a departure airport for the follow-on flight search - check it is where your journey actually starts."
-       },
-       {
-        "question": "Do you want to book additional travel services like a car rental or airport taxi using your unlocked rewards?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The confirmation screen offers discounted car rentals, private airport taxis, and attraction tickets that could save you money on your trip.",
-        "whatTheAgentLoses": "Delegating this means you might miss out on convenient, discounted add-ons for your trip that you would have otherwise booked.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "decision",
-        "verify_form": "The agent skipped or booked the discounted post-confirmation add-ons - check what car, taxi, or ticket offers it waved off."
-       }
-      ]
+      "label": "Book follow-on services"
      },
      {
       "id": "9.10",

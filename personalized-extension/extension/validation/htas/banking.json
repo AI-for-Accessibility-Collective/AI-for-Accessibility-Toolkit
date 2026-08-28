@@ -110,14 +110,6 @@
     "whatTheAgentLoses": "Letting an AI handle this means you lose the final opportunity to catch errors in the delivery address before the checkbook is printed and mailed."
    },
    {
-    "question": "Which button do you click to submit your cheque book request?",
-    "cluster": "",
-    "moment": null,
-    "moneyMoving": false,
-    "why": "The screen presents 'Submit' and 'Back' buttons, requiring you to choose the correct action to advance the request.",
-    "whatTheAgentLoses": "The user loses the final opportunity to review their request details or back out before the bank processes the new cheque book order."
-   },
-   {
     "question": "Is the displayed address correct?",
     "cluster": "",
     "moment": null,
@@ -189,14 +181,6 @@
       "whatTheAgentLoses": "The user misses the explicit confirmation that their new mobile PIN was successfully registered and is ready to use for future logins."
      },
      {
-      "question": "Which login screen layout do you prefer?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The app prompts you to choose between a Basic or Advanced login screen layout, which determines the features available at your fingertips.",
-      "whatTheAgentLoses": "The user loses the opportunity to personalize their app interface according to their own preferences."
-     },
-     {
       "question": "Should I accept the mobile banking security guidelines to proceed?",
       "cluster": "",
       "moment": null,
@@ -243,22 +227,6 @@
         "whatTheAgentLoses": "The user loses the ability to personally verify that the search query will lead to the legitimate bank website rather than a phishing link."
        },
        {
-        "question": "Which search result link should you click to access the bank's website?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The search results display both the main State Bank of India link and direct sitelinks like 'Login', requiring a choice on the best entry point.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify the search result URL to ensure they are navigating to the legitimate banking site."
-       },
-       {
-        "question": "How do you start the process?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows the Google Play Store page for the PNB ONE app with an 'Open' button, indicating the app is installed and ready to launch.",
-        "whatTheAgentLoses": "The user loses the ability to verify that the correct, official banking app is being launched from the app store."
-       },
-       {
         "question": "Are you sure this is the official bank app to install?",
         "cluster": "",
         "moment": null,
@@ -275,36 +243,12 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to proceed with a potentially outdated app or search for the current, fully supported version."
        },
        {
-        "question": "Which app store should you open to download the bank's application?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The home screen displays various app icons, requiring you to identify the correct app store for your specific device's operating system.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the agent uses the correct, official marketplace to securely download their sensitive banking application."
-       },
-       {
-        "question": "Which search suggestion should you tap to find the correct banking app?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Selecting the exact match for 'jiofinance' from the search suggestions ensures you navigate to the legitimate banking application rather than an unrelated or fake app.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify that the agent is selecting the official, trustworthy banking app from the store's search results."
-       },
-       {
         "question": "Is the banking app finished downloading and ready to open?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The App Store page displays an 'Open' button, confirming that the JioFinance app has successfully downloaded and is ready to launch.",
         "whatTheAgentLoses": "You lose the ability to verify that the correct, official banking app was downloaded before launching it on your device."
-       },
-       {
-        "question": "Which app should you select from the search results?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Selecting the official PNB ONE app from the search results ensures you are accessing the bank's legitimate platform to safely conduct your banking task.",
-        "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the app's authenticity and developer credentials before opening it."
        }
       ]
      },
@@ -337,28 +281,12 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent is correctly navigating to the existing account portal rather than initiating a new product application."
        },
        {
-        "question": "Does the app recognize your account, and how do you proceed to access it?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays a welcome message with your name and a login button, confirming your profile is saved and ready for authentication.",
-        "whatTheAgentLoses": "Delegating this step means you lose the reassurance of seeing your own name recognized by the bank's app before initiating the login process."
-       },
-       {
         "question": "Do you want to use a quick pre-login feature like viewing your balance, or proceed with a full login?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The login screen offers a 'View Balance' option that allows you to check your funds immediately without entering your full credentials.",
         "whatTheAgentLoses": "You lose the ability to decide whether a quick, unauthenticated balance check is sufficient for your current needs instead of a full login."
-       },
-       {
-        "question": "Do you want to log in to enable the quick balance feature, or dismiss the prompt?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The app displayed a popup stating that quick balance requires logging in and adjusting settings to function.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to configure their account for faster balance checks in the future."
        }
       ]
      },
@@ -413,14 +341,6 @@
         "whatTheAgentLoses": "The user loses the security of manually typing their password and verifying they are logging into their own profile."
        },
        {
-        "question": "Have you entered your password and are you ready to sign in?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The password field is filled with dots, indicating your credentials are ready to be submitted to access the account.",
-        "whatTheAgentLoses": "You lose the security of keeping your password private, as the agent must handle your sensitive login credentials to proceed."
-       },
-       {
         "question": "What credentials and verification steps must you provide to log in?",
         "cluster": "",
         "moment": null,
@@ -445,14 +365,6 @@
         "whatTheAgentLoses": "An agent would not know your personal security image and phrase, making it unable to verify the site's authenticity before handing over your password."
        },
        {
-        "question": "How will you authenticate to access your account?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The login screen requires a six-digit mPIN to verify your identity and grant access to the banking app.",
-        "whatTheAgentLoses": "Delegating this step means sharing your highly sensitive mPIN with an agent, which compromises your account's primary security barrier."
-       },
-       {
         "question": "Which mobile number will you enter to sign in?",
         "cluster": "",
         "moment": null,
@@ -467,14 +379,6 @@
         "moneyMoving": false,
         "why": "The screen displays four empty boxes and a number pad, requiring your specific MPIN to securely access the account.",
         "whatTheAgentLoses": "Delegating this step means sharing your highly sensitive personal PIN with a third-party agent, compromising your account's fundamental security."
-       },
-       {
-        "question": "Which credentials should you use to log in?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays blank username and password fields that must be filled with the correct account details to access your banking.",
-        "whatTheAgentLoses": "Delegating this step requires you to expose your highly sensitive banking username and password to a third-party agent."
        },
        {
         "question": "Will you initiate the fingerprint scan for biometric verification?",
@@ -664,14 +568,6 @@
       "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the available balance and ensure the correct account is being accessed."
      },
      {
-      "question": "Do you want to review your credit card summary, manage the card, or navigate to another section?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen presents multiple options for your active credit card, including limit increases, point redemption, and general management, which determine your next step.",
-      "whatTheAgentLoses": "You lose the chance to personally review your credit card status, available points, and promotional loan offers."
-     },
-     {
       "question": "Which customer support contact method do you want to select from the 'Reach Us' menu?",
       "cluster": "",
       "moment": null,
@@ -798,14 +694,6 @@
       "label": "Open the feature",
       "questions": [
        {
-        "question": "Which option do you select to start the check deposit process?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'I Want To...' section offers several banking actions, requiring you to specifically locate and select 'Deposit' to proceed.",
-        "whatTheAgentLoses": "You lose the opportunity to discover other quick actions available for your account, such as sending money with Zelle or locking your card."
-       },
-       {
         "question": "Which account summary option should you select?",
         "cluster": "",
         "moment": null,
@@ -822,20 +710,20 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to verify that the agent selects the correct investment vehicle rather than accidentally navigating into stocks or pension schemes."
        },
        {
+        "question": "Which navigation tab do you select to initiate a bill payment?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The top navigation menu presents multiple distinct banking features like 'Transfers' and 'Bill Pay', requiring you to choose the correct path for your intended task.",
+        "whatTheAgentLoses": "You lose the opportunity to glance at your checking and savings account balances on the summary page before deciding to initiate a payment."
+       },
+       {
         "question": "Which transfer option should you select to send money to another bank?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The menu offers multiple transfer types like 'Your External Accounts', 'Wires & Transfers', and 'Zelle', so you must choose the correct routing method for your specific transaction.",
         "whatTheAgentLoses": "Delegating this step means losing control over which transfer method is used, which could unexpectedly incur wire fees or affect how quickly the funds arrive."
-       },
-       {
-        "question": "Which option should you select to initiate adding funds to your account?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard presents both 'Add money' and 'Send / Transfer' buttons, which may trigger different workflows for moving money.",
-        "whatTheAgentLoses": "You lose the opportunity to decide exactly which banking workflow to use to fund your account."
        }
       ]
      },
@@ -975,6 +863,14 @@
         "moneyMoving": false,
         "why": "The screen requires you to choose between an HDFC account and a non-HDFC account to determine how the transfer will be routed.",
         "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct banking network for your specific payee, which could cause the transfer to fail if categorized incorrectly."
+       },
+       {
+        "question": "How do you search for or enter the recipient's IFSC code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides fields like 'IFSC Code', 'Bank Name', and 'Branch Name / City' to locate the correct routing information for the transfer.",
+        "whatTheAgentLoses": "The person loses the assurance that the correct bank branch is identified, which is critical for the money to reach the intended recipient."
        },
        {
         "question": "Do you want to accept the automatically selected bank branch for this SWIFT code?",
@@ -1195,14 +1091,6 @@
         "whatTheAgentLoses": "You lose control over exactly how the bank processes and routes the transfer to the destination account."
        },
        {
-        "question": "Are your financial details complete?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Clicking next confirms that the financial information entered on this screen is accurate and ready for the transaction.",
-        "whatTheAgentLoses": "Letting an agent proceed means you lose the opportunity to personally verify the accuracy of your entered financial information."
-       },
-       {
         "question": "What should you enter as the beneficiary's family name?",
         "cluster": "",
         "moment": null,
@@ -1245,14 +1133,6 @@
         "moneyMoving": false,
         "why": "Verifying the branch name that appears after entering the code ensures your account transfer is routed to the correct physical location.",
         "whatTheAgentLoses": "You lose the ability to personally double-check that the system-generated branch name matches your intended destination before accepting the terms."
-       },
-       {
-        "question": "Should you fetch the account details to verify the recipient?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The 'Fetch Account Details' button became active after the account number was entered, providing a way to confirm the recipient's identity before moving forward.",
-        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying the fetched account name to ensure their money is going to the correct person."
        },
        {
         "question": "Does the displayed account name match your intended recipient?",
@@ -1442,14 +1322,6 @@
       "whatTheAgentLoses": "The user loses the opportunity to evaluate the bank's exchange rate against other services to ensure they are getting a fair deal before starting the transfer."
      },
      {
-      "question": "What transfer details do you need to enter, and which field should you start with?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays empty fields for the transfer amount, source account, and destination account, requiring you to decide where to begin your data entry.",
-      "whatTheAgentLoses": "You lose direct control over specifying the exact transfer amount and ensuring the correct source and destination accounts are selected."
-     },
-     {
       "question": "How much money will you send, from which account, and do you want to add a memo?",
       "cluster": "hand over",
       "moment": "Now",
@@ -1486,14 +1358,6 @@
         "moneyMoving": false,
         "why": "The screen provides several distinct options like sending money, requesting money, or viewing activity, alongside a prominent scam warning.",
         "whatTheAgentLoses": "You lose the opportunity to read the scam alert and verify that sending money is exactly what you intend to do."
-       },
-       {
-        "question": "Which transfer option should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Pay & Transfer' screen presents multiple distinct transaction types, requiring you to specifically choose the 'Wire Money' button to initiate a wire transfer instead of a standard transfer or Zelle payment.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly which payment method or transfer rail is used to move your funds."
        },
        {
         "question": "Which delivery method do you want to use for this transfer?",
@@ -1880,14 +1744,6 @@
       "label": "Accept the warnings",
       "questions": [
        {
-        "question": "Are you ready to proceed with this transaction?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Tapping continue moves you to the review screen, confirming you are satisfied with the transfer or deposit details entered so far.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the transaction details before advancing to the final review."
-       },
-       {
         "question": "Are you comfortable proceeding knowing the recipient must enroll in Zelle within 14 days to claim the funds?",
         "cluster": "approve",
         "moment": "Now",
@@ -1986,14 +1842,6 @@
         "moneyMoving": false,
         "why": "The screen displays an 'Enter OTP' dialog box requiring the code sent to your registered mobile number to finalize the request.",
         "whatTheAgentLoses": "The user loses the final layer of security that comes from personally receiving and inputting the one-time password."
-       },
-       {
-        "question": "How do you authorize this transaction?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen requires a specific transaction password to securely authorize and submit the transfer.",
-        "whatTheAgentLoses": "The user loses the security of keeping their secondary transaction password private, as the agent would need it to finalize the transfer."
        },
        {
         "question": "What is your mPIN to authorize this payment?",
@@ -2439,28 +2287,12 @@
           "whatTheAgentLoses": "Delegating this step means the agent would need access to your personal devices or communication channels to retrieve the required one-time passcode."
          },
          {
-          "question": "Are you prepared to receive and enter the one-time passcode required to verify your identity?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The Wells Fargo screen warns that an Advanced Access code must be sent and submitted to proceed with the task.",
-          "whatTheAgentLoses": "The user loses full automation because they must manually retrieve and provide the security code sent to their personal device."
-         },
-         {
           "question": "Did you approve the sign-in notification on your bank's mobile app?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
           "why": "The screen requires you to approve a security notification sent to your primary device before you can click 'I have verified' to finish signing in.",
           "whatTheAgentLoses": "Delegating this to an agent means you lose the security of personally authorizing access to your bank account through your trusted mobile device."
-         },
-         {
-          "question": "How do you verify your identity using the one-time PIN?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "The BPI OTP Verification page requires entering a time-sensitive code sent to your device to prove your identity before proceeding.",
-          "whatTheAgentLoses": "Delegating this step means the user must intercept and hand over a secure security code, compromising the bank's multi-factor authentication protections."
          }
         ]
        },
@@ -2489,14 +2321,6 @@
           "moneyMoving": false,
           "why": "The Wells Fargo screen explicitly states you will be returned to the third-party service after connecting, so this verifies the handoff worked.",
           "whatTheAgentLoses": "An agent might fail to verify that the cross-app navigation completed successfully, potentially leaving the account unlinked if the handoff breaks."
-         },
-         {
-          "question": "How do you return to the merchant app after a successful payment?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "The screen displays a 'Payment Successful!' message alongside a 'Back to Merchant' button that must be clicked to complete the transaction flow.",
-          "whatTheAgentLoses": "You lose the peace of mind of seeing the final success confirmation and manually verifying the return to the originating app."
          }
         ]
        }
@@ -2585,14 +2409,6 @@
       "id": "6.1",
       "label": "Open the transaction history",
       "questions": [
-       {
-        "question": "Do you want to review your recent transactions before initiating the statement download?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The passbook screen displays your recent transaction history, which you may want to verify before generating a formal document.",
-        "whatTheAgentLoses": "The user loses the opportunity to visually inspect their recent account activity for accuracy before committing to a download."
-       },
        {
         "question": "How far back in the transaction history do you want to scroll?",
         "cluster": "",
@@ -2702,28 +2518,12 @@
         "whatTheAgentLoses": "Delegating this means the agent might select an incorrect start date, resulting in a downloaded statement that misses the specific transaction history you need."
        },
        {
-        "question": "What end date do you want to set for the statement period?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a date picker for the end date, which determines the exact timeframe of the statements retrieved.",
-        "whatTheAgentLoses": "Delegating this means the agent might select an incorrect date range, causing you to miss the specific transaction history you need."
-       },
-       {
         "question": "What time period should the account statement cover?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen provides options like 'By Date', 'By Month', 'Last 6 Months', and 'Financial Year' to specify the exact range of transactions to include in the document.",
         "whatTheAgentLoses": "Delegating this choice means the agent might download a statement for a time frame that does not contain the specific transactions you need to review."
-       },
-       {
-        "question": "Which time period do you need for the account statement?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The interface requires choosing a specific timeframe for the statement, offering options like by month, the last six months, the financial year, or a custom date range.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might download a statement that doesn't cover the specific dates you need for your financial records."
        },
        {
         "question": "How do you access statements and tax forms from previous years?",
@@ -2792,14 +2592,6 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might select a file format that doesn't suit your needs for record-keeping or data analysis."
        },
        {
-        "question": "Which month's statement do you want to open?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Expanding the statements section reveals a grid of all available monthly documents for the selected year, allowing you to pinpoint the exact billing cycle you need.",
-        "whatTheAgentLoses": "Delegating this means you miss the chance to quickly scan the dates and availability of all your monthly statements for the year."
-       },
-       {
         "question": "Did you disable the e-signed statement option after seeing the associated fees?",
         "cluster": "",
         "moment": null,
@@ -2814,14 +2606,6 @@
         "moneyMoving": true,
         "why": "Tapping the generate button submits your selected account and date range to create the official document.",
         "whatTheAgentLoses": "Delegating this step means you lose the final chance to verify the statement parameters before the document is created."
-       },
-       {
-        "question": "Are you ready to dismiss the success message?",
-        "cluster": "approve",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a green checkmark and a 'Success' message, confirming that the statement request is complete.",
-        "whatTheAgentLoses": "The user misses the peace of mind of seeing the visual confirmation that their statement was successfully requested."
        },
        {
         "question": "Did you bypass the 'Transaction Password has expired' alert and successfully download the statement anyway?",
@@ -2870,36 +2654,12 @@
         "whatTheAgentLoses": "You lose the ability to decide exactly where and how this sensitive financial document is stored or transmitted off the platform."
        },
        {
-        "question": "How do you save the attached bank statement to your device?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays an attachment card with a PDF preview and a download icon, indicating the file is ready to be saved locally.",
-        "whatTheAgentLoses": "The user loses direct control over exactly where and how their sensitive financial document is stored on their device."
-       },
-       {
-        "question": "Is the statement download complete and ready to be opened?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The download bar at the bottom of the browser displays the progress of the PDF file, letting you know exactly when it is ready to click and view.",
-        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the file successfully save to their device and opening it to verify their financial records."
-       },
-       {
         "question": "Do you want to download a copy of this transaction receipt?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen displays the final transaction details and a download button, offering a chance to save a permanent record of the successful transfer.",
         "whatTheAgentLoses": "Delegating this step means the agent might close the confirmation screen without downloading the receipt, leaving you without an immediate, shareable proof of payment."
-       },
-       {
-        "question": "Do you want to download or share the transaction receipt?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The receipt screen offers options to download or share the confirmation for your records before closing out of the transaction.",
-        "whatTheAgentLoses": "An agent might automatically close the screen without saving or sharing the receipt, leaving you without an external record of the transaction."
        },
        {
         "question": "Should you share the receipt using one of the suggested apps, or dismiss the menu to download it instead?",
@@ -3019,14 +2779,6 @@
           "moneyMoving": false,
           "why": "The email explicitly states that the attached account statement is password protected and provides the specific formula using your name and date of birth needed to open it.",
           "whatTheAgentLoses": "You lose the opportunity to keep your date of birth private by having an agent construct the password on your behalf to access your financial records."
-         },
-         {
-          "question": "What password do I enter to unlock this downloaded statement?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "The screen displays a 'Password required' prompt, meaning you must apply the bank's specific password format to access the document.",
-          "whatTheAgentLoses": "The user loses the privacy of their financial records, as the agent must decrypt and potentially read the statement to verify the task is complete."
          }
         ]
        },
@@ -3041,14 +2793,6 @@
           "moneyMoving": true,
           "why": "Scrolling through the 6-page PDF titled 'ACCOUNT STATEMENT' ensures that the transaction table accurately reflects all activities for the requested timeframe.",
           "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that the downloaded document contains the correct and complete transaction history you need."
-         },
-         {
-          "question": "How do you verify the contents of the downloaded statement?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "Scrolling through the multi-page PDF ensures the transaction dates, deposits, and closing balances are fully and correctly captured in the document.",
-          "whatTheAgentLoses": "You lose the immediate visual confirmation that the downloaded file actually contains your complete transaction history rather than an error or blank page."
          },
          {
           "question": "Is the correct account statement displayed with your balance and transaction history?",
@@ -3413,14 +3157,6 @@
         "moneyMoving": false,
         "why": "The app stated the deposit would take up to 5 business days to clear, meaning the final availability of funds remains unresolved at the end of the session.",
         "whatTheAgentLoses": "The user loses immediate certainty that the transaction fully succeeded and must remember to independently verify the funds later."
-       },
-       {
-        "question": "Do you want to review the final fixed deposit details or return to the home screen?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays a success message with the final maturity amount and dates, allowing you to verify the transaction before leaving.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind of seeing the green success checkmark and verifying the exact maturity amount and dates for yourself."
        },
        {
         "question": "Did you click 'OK' to acknowledge the successful card deactivation?",
@@ -3798,17 +3534,7 @@
      },
      {
       "id": "8.4",
-      "label": "Read the arriving messages",
-      "questions": [
-       {
-        "question": "Do you need to check your new messages or account balances before ending the session?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The account summary shows four new messages and current balances that might need your attention before closing the app.",
-        "whatTheAgentLoses": "The user loses the chance to organically notice and read new bank alerts that an agent would likely ignore after finishing the main task."
-       }
-      ]
+      "label": "Read the arriving messages"
      },
      {
       "id": "8.5",

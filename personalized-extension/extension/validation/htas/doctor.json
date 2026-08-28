@@ -4,46 +4,12 @@
   "id": "0",
   "label": "Book a doctor appointment online",
   "note": "do 1. do 2 when the system asks - before anything on portals, at booking time on marketplaces, after the hospital and date on the Indian government portals, never on guest forms. then 3. on a marketplace do 4 then 5; on a portal the wizard walks 3 into 5 directly. then 6, then 7. then 8. 9 only once the booking exists.",
-  "questions": [
-   {
-    "question": "Do the moments of this task agree with each other?",
-    "cluster": "facts",
-    "moment": "Completion",
-    "moneyMoving": true,
-    "why": "At 04:14 you started eCheck-In for an April 13 appointment, but at 04:46 the screen shows an April 10 appointment as already complete without showing how it happened.",
-    "whatTheAgentLoses": "The user loses an accurate and trustworthy record of their medical appointments if the agent mixes up dates or skips crucial check-in steps.",
-    "costDims": {
-     "money": 1,
-     "privacy": 1,
-     "thirdParty": 2,
-     "safety": 2,
-     "reversibility": 2,
-     "recovery": 2
-    }
-   }
-  ],
   "children": [
    {
     "id": "1",
     "label": "Reach the booking site",
     "note": "one of: 1.1 then 1.2 (task arrives as a search), 1.3 (arrives as an app), 1.4 (arrives as a message). then 1.5 when the venue is a directory fronting many hospitals.",
     "questions": [
-     {
-      "question": "Which navigation path do you want to use to access the scheduling interface?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The top navigation bar offers multiple ways to start scheduling, such as through the Menu dropdown or the Visits button.",
-      "whatTheAgentLoses": "The user loses the chance to choose their preferred navigation method or discover other features in the menu.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
      {
       "question": "Do you already have an upcoming appointment, and where do you click to schedule a new one?",
       "cluster": "facts",
@@ -58,310 +24,6 @@
        "safety": 1,
        "reversibility": 2,
        "recovery": 2
-      }
-     },
-     {
-      "question": "How do you switch between your account portal and the booking site?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The top navigation bar displays links that allow you to easily move between your personal account dashboard and the clinic's booking page.",
-      "whatTheAgentLoses": "You lose the spatial awareness of how the patient portal connects to the clinic's booking system.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which link should you click to access the patient portal?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The homepage displays multiple navigation options like Bill Pay and Contact Us, so you must identify the correct MyChart link to begin booking.",
-      "whatTheAgentLoses": "You lose the chance to familiarize yourself with the hospital's website layout and discover other available patient resources.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Where do you click to start booking or managing an appointment?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The homepage presents multiple distinct options like 'Book appointment' and 'Give to CMC', requiring you to select the correct entry point for scheduling.",
-      "whatTheAgentLoses": "The user loses the opportunity to notice other relevant hospital services or announcements featured on the homepage before entering the booking portal.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to update your account preferences before starting the appointment search?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The dashboard displays immediate options like scheduling an appointment or paying an unpaid bill, so you must choose whether to prioritize account configuration.",
-      "whatTheAgentLoses": "You lose the ability to decide whether to address urgent dashboard alerts like unpaid bills before navigating away to change your account settings.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 1,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which section of the home dashboard should you interact with next?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays both an 'Appointments' list and a 'Billing' section with a $1.68 balance, requiring you to choose which task to prioritize.",
-      "whatTheAgentLoses": "You lose the ability to personally decide whether to review your existing appointments or settle an outstanding bill before booking a new visit.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to review your recent account activity?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows a log of recent invoices, canceled appointments, and scanned documents that help track updates to your health record.",
-      "whatTheAgentLoses": "You lose the opportunity to personally monitor your health updates, billing changes, and appointment history.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which recent activity notification should you investigate further?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The recent activity list shows newly added scanned documents and canceled appointments that might contain important context for your health record.",
-      "whatTheAgentLoses": "You lose the opportunity to personally review newly added medical documents and stay directly informed about updates to your health record.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to open any of the available medical documents or lab results?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen lists past records like MRIs, clinical summaries, and labs that might contain important context for your next visit.",
-      "whatTheAgentLoses": "You lose the opportunity to personally review your sensitive medical history and decide which past results are relevant to your current health needs.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 1,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which health tracking apps, if any, should you add to your dashboard?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The App Center presents optional integrations like Blood Sugar tracking that can be installed to customize your health profile.",
-      "whatTheAgentLoses": "You miss the opportunity to personally review and select which external health trackers are connected to your medical records.",
-      "costDims": {
-       "money": 0,
-       "privacy": 2,
-       "thirdParty": 1,
-       "safety": 0,
-       "reversibility": 2,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Should I review the messages in my inbox or compose a new one before proceeding?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays an inbox with a system message about a sent health record and options to compose or manage folders.",
-      "whatTheAgentLoses": "The user loses the opportunity to read potentially important communications or send a message to their provider.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 1,
-       "safety": 1,
-       "reversibility": 1,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which of your past lab results do you want to review?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen lists specific past lab results like Insulin and Ferritin, which might inform the reason for the appointment you are trying to book.",
-      "whatTheAgentLoses": "You lose the privacy and personal insight of reviewing your own sensitive health data before deciding on the context of your appointment.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 1,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to review your recorded vitals?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays past health metrics like blood pressure and heart rate from a previous office visit.",
-      "whatTheAgentLoses": "The user loses the opportunity to review their personal health history, which might inform their reason for the upcoming appointment.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 1,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which provider do you want to send a message to?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The compose email dialog requires selecting a specific provider from the dropdown list to route your message correctly.",
-      "whatTheAgentLoses": "You lose the ability to personally ask the provider questions or provide context before your visit.",
-      "costDims": {
-       "money": 0,
-       "privacy": 2,
-       "thirdParty": 2,
-       "safety": 1,
-       "reversibility": 3,
-       "recovery": 2
-      }
-     },
-     {
-      "question": "Which appointment action do you want to select from the menu?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The dropdown menu displays options to make, reschedule, cancel, or view appointments, requiring you to choose the correct path to proceed.",
-      "whatTheAgentLoses": "The user loses visibility into their ability to manage existing appointments or view past visits directly from this menu.",
-      "costDims": {
-       "money": 1,
-       "privacy": 0,
-       "thirdParty": 2,
-       "safety": 1,
-       "reversibility": 2,
-       "recovery": 2
-      }
-     },
-     {
-      "question": "Should you explore the 'Blue Button' tab to access your personal health data?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The navigation bar features a 'Blue Button' tab that allows patients to view and download their personal health records.",
-      "whatTheAgentLoses": "You lose the opportunity to independently review or download your comprehensive medical history before scheduling the visit.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 1,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to review the pharmacy-related actions available in the navigation menu?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The navigation bar includes an 'Rx Refill' dropdown with options to request refills, check statuses, or access the TRICARE mail order pharmacy.",
-      "whatTheAgentLoses": "You lose the awareness of additional portal features like prescription management that might be relevant to your overall healthcare needs.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 1,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Where can you manage your account settings and reminders?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen showed a 'Profile' navigation menu with sub-items like 'My Profile' and 'Change MTF' for account management.",
-      "whatTheAgentLoses": "The user loses the knowledge of where to update their personal details and notification preferences.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 1,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you need to access any additional resources from the navigation menu?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The hamburger menu reveals a dropdown with a Resource Center and Quick Links that might provide helpful healthcare information.",
-      "whatTheAgentLoses": "You lose the opportunity to discover and explore the typical healthcare resources and information provided by the clinic.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to open the step-by-step guide for making an appointment?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays a 'View steps to make appointment' link next to the main heading that opens a detailed PDF guide.",
-      "whatTheAgentLoses": "You lose the opportunity to review the official instructions and familiarize yourself with the platform's specific booking workflow.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
       }
      },
      {
@@ -381,86 +43,6 @@
       }
      },
      {
-      "question": "What are the contact details if you have issues booking through the portal?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen lists specific email addresses for the Abuja and Lagos offices to use as a fallback if the online booking system fails.",
-      "whatTheAgentLoses": "An agent might simply fail the task if the portal errors out, missing the provided email addresses to request the appointment manually.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which menu option do you want to select to start booking?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays a main menu with options like 'Search by name', 'Medical Team', and 'Appointments', requiring a choice on how to initiate the booking process.",
-      "whatTheAgentLoses": "The user loses the ability to decide whether to book through their established medical team or search for a new provider.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Should you open the settings menu?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The side menu showed several navigation options, and selecting settings lets you manage your account preferences before booking.",
-      "whatTheAgentLoses": "You lose the ability to personally verify or update your account and privacy preferences.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Should you check the 'Contact us' section?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The side menu presents multiple navigation paths, and selecting 'Contact us' is useful if you need direct assistance or alternative booking methods.",
-      "whatTheAgentLoses": "The user loses the ability to decide when to abandon the automated online flow in favor of reaching out to the clinic directly.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Do you want to contact support or submit an inquiry?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen showed a contact form and an option to leave a message for assistance.",
-      "whatTheAgentLoses": "The user loses the ability to ask specific questions or get help if they are stuck.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 2,
-       "safety": 0,
-       "reversibility": 2,
-       "recovery": 1
-      }
-     },
-     {
       "question": "Are you willing to wait in the virtual queue to access the scheduling page?",
       "cluster": "",
       "moment": null,
@@ -475,46 +57,12 @@
        "reversibility": 1,
        "recovery": 2
       }
-     },
-     {
-      "question": "How do you navigate back to the booking flow after successfully creating your account?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The welcome screen displays several general account options like upcoming appointments and wait lists, requiring you to specifically locate and click the button to book an appointment.",
-      "whatTheAgentLoses": "The user loses the chance to familiarize themselves with their new patient portal dashboard and verify their account details before jumping into the booking process.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
      }
     ],
     "children": [
      {
       "id": "1.1",
-      "label": "Search for the booking site",
-      "questions": [
-       {
-        "question": "Which search suggestion should you select to find the appointment portal?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The autocomplete suggestions offer different paths, and selecting 'cmc vellore online appointment' directly targets the booking site rather than general information about the college.",
-        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the most direct search term to reach the correct medical portal instead of a general institution page.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Search for the booking site"
      },
      {
       "id": "1.2",
@@ -543,38 +91,6 @@
         "moneyMoving": false,
         "why": "Verifying the 'ors.gov.in' URL and 'Online Registration System' header ensures you are using the legitimate government platform to book your OPD appointment.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify you are submitting your sensitive medical information to the official government portal.",
-        "costDims": {
-         "money": 2,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 3,
-         "recovery": 3
-        }
-       },
-       {
-        "question": "Which search result should you click to access the correct booking portal?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results display multiple PGIMER links like 'Online Pre Registration' and 'Portal Online Registration', requiring you to pick the right entry point for a new appointment.",
-        "whatTheAgentLoses": "You lose the assurance that the agent is navigating to the official and correct registration portal for your specific hospital.",
-        "costDims": {
-         "money": 2,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 3,
-         "recovery": 3
-        }
-       },
-       {
-        "question": "How do you access the correct online registration form?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The slide displays the exact URL and menu path required to reach the U.S.A. Online Registration page.",
-        "whatTheAgentLoses": "You lose the assurance of knowing exactly which clinic website and specific registration path the agent used to initiate the booking.",
         "costDims": {
          "money": 2,
          "privacy": 3,
@@ -623,70 +139,6 @@
         }
        },
        {
-        "question": "Do you want to read through the app's features before getting started?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The onboarding screens explain additional platform capabilities like online chat and medicine delivery.",
-        "whatTheAgentLoses": "You miss the chance to discover other useful healthcare services the app provides beyond just booking appointments.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which app should you open to manage your appointments?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "You must select the MyChart app from your home screen to access the dashboard containing your care team and appointment options.",
-        "whatTheAgentLoses": "You lose the chance to review your overall health dashboard, such as unread messages and pending to-dos, before booking.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which app do you need to open to download the Doctena application?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen shows the App Store icon, which must be used to download the required medical booking app.",
-        "whatTheAgentLoses": "The user loses the chance to decide which specific medical booking application gets installed on their device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Where do you enter the name of the app you want to find?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the search bar at the top of the screen allows you to type the name of the specific medical booking app you need instead of relying on the unrelated suggested apps.",
-        "whatTheAgentLoses": "You lose the control over deciding which specific medical booking app or patient portal to search for and download.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Which app from the search results should you install?",
         "cluster": "select",
         "moment": "Now",
@@ -717,22 +169,6 @@
          "reversibility": 1,
          "recovery": 1
         }
-       },
-       {
-        "question": "Do you want to switch to the native mobile app for a better user experience?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The mobile web page displays a prompt suggesting that using the native app provides the best user experience, offering links to download it.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to continue in the mobile browser or download the dedicated app for potentially better performance and features.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
        }
       ]
      },
@@ -740,22 +176,6 @@
       "id": "1.4",
       "label": "Follow the message link",
       "questions": [
-       {
-        "question": "Which scheduling notification should you click?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard displays multiple alerts, so you must identify and click the specific 'Schedule Now' button for the COVID-19 vaccine.",
-        "whatTheAgentLoses": "You lose the awareness of other pending health notifications and alerts displayed on your dashboard.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
        {
         "question": "How do you access the scheduling ticket mentioned in the email?",
         "cluster": "hand over",
@@ -768,54 +188,6 @@
          "privacy": 0,
          "thirdParty": 0,
          "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which web browser do you want to use to open the patient portal?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an 'Open with' dialog asking to select an app like Safari or Chrome to open the web link.",
-        "whatTheAgentLoses": "The user loses the opportunity to route the task through their preferred browser where their login credentials might already be saved.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you click the verification link in the email to continue registration?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The verification email contains a specific link that must be clicked to authenticate your address and access the rest of the registration form.",
-        "whatTheAgentLoses": "Delegating this step requires granting the agent access to your personal email inbox to retrieve and click the verification link.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you want to access the patient portal?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a text message containing a personalized link to access the patient portal.",
-        "whatTheAgentLoses": "The user loses the privacy of handling their own medical text messages and secure access links.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
          "reversibility": 1,
          "recovery": 1
         }
@@ -873,38 +245,6 @@
          "reversibility": 2,
          "recovery": 2
         }
-       },
-       {
-        "question": "Which hospital do you want to select for your appointment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presented a \"Select Hospital\" step with a search box and a scrollable list of hospital names.",
-        "whatTheAgentLoses": "The user loses the ability to choose a preferred or convenient hospital location for their appointment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "What is the first step you need to take to start booking your appointment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen outlines a specific sequence of steps starting with selecting a state or hospital, which is required to proceed with the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to review the portal's specific sequence of steps and understand the overall booking process.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
        }
       ]
      }
@@ -915,22 +255,6 @@
     "label": "Sign in or register",
     "note": "whichever of 2.1, 2.2, 2.4 the venue offers. 2.3 whenever a code is demanded - sometimes twice, mobile then email. 2.5 once, the first time this system sees the patient.",
     "questions": [
-     {
-      "question": "How do you request technical assistance if you encounter an issue?",
-      "cluster": "hand over",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The footer displays a Technical Support link that provides a direct channel for resolving problems during the booking process.",
-      "whatTheAgentLoses": "The user loses the opportunity to personally troubleshoot or directly communicate with support staff if an unexpected error occurs.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
      {
       "question": "Should you log in with existing credentials or sign up as a new user?",
       "cluster": "select",
@@ -994,38 +318,6 @@
        "reversibility": 1,
        "recovery": 1
       }
-     },
-     {
-      "question": "Do you need to log in or sign up as a patient?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The dropdown menu requires selecting whether to log in or sign up as a patient to access the correct account portal.",
-      "whatTheAgentLoses": "You lose control over whether to log into an existing patient account or create a new one for this booking.",
-      "costDims": {
-       "money": 0,
-       "privacy": 1,
-       "thirdParty": 0,
-       "safety": 1,
-       "reversibility": 1,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "How do you view a combined chronological history of your medical records?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The Chart tab displays a consolidated timeline of past medications and conditions sorted by date, letting you verify your complete medical history in one place.",
-      "whatTheAgentLoses": "You lose the opportunity to personally review your consolidated medical history for accuracy and context before booking a new visit.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 1,
-       "reversibility": 0,
-       "recovery": 1
-      }
      }
     ],
     "children": [
@@ -1060,22 +352,6 @@
          "money": 0,
          "privacy": 1,
          "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which login method should you use to access your account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal offers multiple login options, such as using a Patient ID or a User ID, along with an option for new patients.",
-        "whatTheAgentLoses": "The person loses control over which of their personal credentials is used to authenticate their identity.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
@@ -1127,22 +403,6 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Which email address do you want to use to log in?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a login modal requiring an email address and agreement to terms to proceed.",
-        "whatTheAgentLoses": "The user loses control over which email account is associated with the appointment and receives the confirmation.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
         }
        }
       ]
@@ -1254,22 +514,6 @@
         }
        },
        {
-        "question": "How should you initiate the mobile number verification?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Verification Process' page requires confirming contact details, presenting a specific link to verify the listed mobile number.",
-        "whatTheAgentLoses": "The user loses the ability to personally trigger the verification process and anticipate the arrival of the security code on their device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Did the site confirm your mobile number verification was successful?",
         "cluster": "facts",
         "moment": "After",
@@ -1281,22 +525,6 @@
          "privacy": 0,
          "thirdParty": 0,
          "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which contact method do you need to verify next?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the mobile number is already verified with a green checkmark, but the email address still requires you to click a verification link.",
-        "whatTheAgentLoses": "You lose the awareness of which specific contact methods the platform has successfully validated for your account security and communications.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
          "reversibility": 1,
          "recovery": 1
         }
@@ -1330,38 +558,6 @@
          "thirdParty": 0,
          "safety": 1,
          "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Are both your mobile and email verified, and how do you proceed?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This matters because the green checkmarks and success message confirm your contact details are verified so you can move forward with the booking.",
-        "whatTheAgentLoses": "Delegating this means you lose direct confirmation that your personal contact methods were successfully linked for receiving future login credentials.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "What is the PIN sent to your email to access the dashboard?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires a PIN code sent to your email to access and update your online medical forms.",
-        "whatTheAgentLoses": "You must either monitor your email to provide the PIN in real-time or give the agent access to your inbox.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
          "recovery": 1
         }
        }
@@ -1415,22 +611,6 @@
         "moneyMoving": false,
         "why": "The screen lists specific departments that support online pre-registration, which determines if you can actually book your appointment this way.",
         "whatTheAgentLoses": "You lose the chance to verify if your specific medical need falls under the departments eligible for online pre-registration.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you proceed to book an appointment for a patient?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The welcome page requires clicking 'Register Member' to add the patient to the account before booking.",
-        "whatTheAgentLoses": "The user loses the ability to personally manage which family members are registered under their mobile number.",
         "costDims": {
          "money": 0,
          "privacy": 0,
@@ -1556,22 +736,6 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
-         },
-         {
-          "question": "Which state should you select as your residence?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen requires you to select your residential state from a dropdown list to proceed with the patient identification process.",
-          "whatTheAgentLoses": "You lose the ability to ensure your correct residential state is accurately recorded for your medical profile.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 1,
-           "recovery": 1
           }
          }
         ]
@@ -1955,22 +1119,6 @@
           }
          },
          {
-          "question": "What procedure name should you search for?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Searching for specific terms like 'drug' in the search field helps you find the exact medical procedure required for your appointment.",
-          "whatTheAgentLoses": "You lose the ability to manually explore procedure search results to ensure the correct medical service is selected.",
-          "costDims": {
-           "money": 2,
-           "privacy": 0,
-           "thirdParty": 1,
-           "safety": 2,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
           "question": "Where do you find the short code for your specific procedure?",
           "cluster": "facts",
           "moment": "Now",
@@ -1979,22 +1127,6 @@
           "whatTheAgentLoses": "You lose the ability to personally verify that the exact medical test you need was looked up and selected.",
           "costDims": {
            "money": 1,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "How will you search for the required procedure?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen offers options to search for individual procedures either by name or by specific medical code.",
-          "whatTheAgentLoses": "You lose the ability to ensure the exact medical test or procedure code selected matches your specific health needs.",
-          "costDims": {
-           "money": 0,
            "privacy": 0,
            "thirdParty": 0,
            "safety": 1,
@@ -2305,22 +1437,6 @@
         }
        },
        {
-        "question": "How should you answer the required COVID-19 health screening questions?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The scheduling page requires you to answer three questions about recent COVID-19 exposure and symptoms before proceeding.",
-        "whatTheAgentLoses": "You lose the ability to provide accurate, up-to-date information about your recent health and potential COVID-19 exposure.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 1,
-         "recovery": 2
-        }
-       },
-       {
         "question": "What are your eligibility details?",
         "cluster": "hand over",
         "moment": "Now",
@@ -2544,22 +1660,6 @@
            "reversibility": 1,
            "recovery": 1
           }
-         },
-         {
-          "question": "Which health assessment center location should you choose?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen offers different locations like Abuja and Lagos, each with distinct addresses, operating hours, and contact details.",
-          "whatTheAgentLoses": "Delegating this choice means the agent might select a clinic location that is geographically inconvenient or has incompatible operating hours.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
          }
         ]
        },
@@ -2625,22 +1725,6 @@
           "costDims": {
            "money": 1,
            "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Are the currently selected military health care facility and family sponsor correct for this booking?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen lists your assigned military health care facility and family sponsor, which dictate the available providers and insurance coverage for the appointment.",
-          "whatTheAgentLoses": "You lose the ability to catch if the system defaulted to the wrong military facility or sponsor for your specific medical needs.",
-          "costDims": {
-           "money": 1,
-           "privacy": 2,
            "thirdParty": 0,
            "safety": 1,
            "reversibility": 1,
@@ -2736,22 +1820,6 @@
         }
        },
        {
-        "question": "Which insurance plan should I select from the dropdown?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the insurance dropdown open on the Zocdoc search page, requiring a selection to filter for in-network providers.",
-        "whatTheAgentLoses": "The user loses the ability to ensure their specific insurance plan is chosen, which is critical for avoiding out-of-network medical bills.",
-        "costDims": {
-         "money": 2,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Does the number of available providers change when you switch your insurance filter to self-pay?",
         "cluster": "refine",
         "moment": "Now",
@@ -2813,22 +1881,6 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do you have medical and prescription insurance?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Provide insurance details' page requires you to specify whether you have medical and prescription coverage.",
-        "whatTheAgentLoses": "An agent might incorrectly state your insurance status, which could result in unexpected out-of-pocket medical bills.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
         }
        },
        {
@@ -2901,22 +1953,6 @@
       "moneyMoving": false,
       "why": "The screen provides tabs to 'Choose by Doctor' or 'Choose by Date', which changes whether the search prioritizes a specific provider or scheduling convenience.",
       "whatTheAgentLoses": "Letting an agent make this choice means losing the ability to decide whether seeing a preferred provider or getting a convenient time is more important to you.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
-      "question": "Which section of your account do you want to access to find a provider?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The main menu offers different paths to find a doctor, such as searching by name or selecting from your established medical team.",
-      "whatTheAgentLoses": "You lose the ability to decide whether to book with a familiar doctor from your medical team or search for a new provider.",
       "costDims": {
        "money": 0,
        "privacy": 0,
@@ -3026,22 +2062,6 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Are the search results displayed on a map, and do you need to hover over pins to see provider details?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Some booking sites default to a map view where provider details are hidden until you interact with specific geographic pins.",
-        "whatTheAgentLoses": "The user loses the spatial context of the map and the ability to quickly scan provider locations visually.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
         }
        },
        {
@@ -3418,22 +2438,6 @@
       "label": "Widen the search window",
       "questions": [
        {
-        "question": "If no appointments are available in your initial search area, which alternative ZIP codes or cities are you willing to check?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The system may return zero results for your primary location, requiring you to manually input different ZIP codes to find an open slot.",
-        "whatTheAgentLoses": "Delegating this means the agent might simply fail the task upon seeing no results, rather than knowing which neighboring cities you are willing to travel to.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Do the available times in the next 3 days work for you, or should you look further ahead?",
         "cluster": "refine",
         "moment": "Now",
@@ -3504,22 +2508,6 @@
         }
        },
        {
-        "question": "Which available date and time slot should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays weekly availability grids with some weeks showing no availability, requiring you to navigate to future dates to find an open slot.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might select a time that conflicts with your personal calendar or daily routine.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Which branch, date, and time slot do you want for your appointment?",
         "cluster": "select",
         "moment": "Now",
@@ -3542,38 +2530,6 @@
         "moneyMoving": false,
         "why": "Reviewing the highlighted calendar date alongside the list of future appointments ensures you avoid scheduling conflicts.",
         "whatTheAgentLoses": "You lose the opportunity to manually coordinate the new visit with your family's existing schedule.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Is the selected appointment time correct and should you proceed?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking this button confirms your chosen date and time before moving on to the review process.",
-        "whatTheAgentLoses": "You lose the chance to personally verify that the selected time fits your schedule before proceeding.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which of these available time slots works best for my schedule?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a grid of available appointment times for a specific date.",
-        "whatTheAgentLoses": "The user loses the ability to choose the exact appointment time that best fits their personal schedule.",
         "costDims": {
          "money": 0,
          "privacy": 0,
@@ -3636,22 +2592,6 @@
          "reversibility": 0,
          "recovery": 1
         }
-       },
-       {
-        "question": "Do you want to join the wait list for earlier appointments before scheduling?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen offers an optional checkbox to be notified of earlier openings before finalizing the booking.",
-        "whatTheAgentLoses": "An agent might skip the wait list option, causing you to miss out on an earlier appointment if one becomes available.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
        }
       ]
      },
@@ -3659,38 +2599,6 @@
       "id": "5.5",
       "label": "Send an appointment request",
       "questions": [
-       {
-        "question": "How do you initiate an appointment request from the main dashboard?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard displays multiple sections like Health Summary and Action Center, so you must locate the specific 'Request' button under the Appointments section to start booking.",
-        "whatTheAgentLoses": "You lose the opportunity to review your overall health summary, current insurance on file, and pending action items like unpaid bills before scheduling.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you specify the details for your appointment request?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The scheduling modal includes dropdowns for the provider, appointment type, and timing preferences needed to find the right slot.",
-        "whatTheAgentLoses": "You lose the chance to personally choose a specific provider or add nuanced medical context to the provider instructions.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
        {
         "question": "What dates and times are you available for the appointment?",
         "cluster": "hand over",
@@ -3765,22 +2673,6 @@
       }
      },
      {
-      "question": "Do you want to save and continue, or cancel?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays 'Cancel' and 'Save And Continue' buttons, requiring a choice to either submit the entered information or discard it.",
-      "whatTheAgentLoses": "The user loses the control to back out of the booking process before their personal information is saved and submitted.",
-      "costDims": {
-       "money": 0,
-       "privacy": 0,
-       "thirdParty": 0,
-       "safety": 0,
-       "reversibility": 0,
-       "recovery": 1
-      }
-     },
-     {
       "question": "What are the specific rules for filling out this registration form?",
       "cluster": "facts",
       "moment": "Now",
@@ -3851,22 +2743,6 @@
         }
        },
        {
-        "question": "How do you confirm your updated demographic information?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "You must check the box stating the information is correct to enable the continue button and proceed with the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that your address and other demographic details are accurate in your medical record.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Is your demographic information correct?",
         "cluster": "approve",
         "moment": "Now",
@@ -3889,22 +2765,6 @@
         "moneyMoving": false,
         "why": "The screen displays your pre-filled contact information for verification alongside a checkbox for text alerts and dropdowns for personal demographics.",
         "whatTheAgentLoses": "You lose the ability to decide exactly which personal demographic details to share and whether to opt into text message notifications.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Is your personal and contact information currently accurate?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Demographics page displays your basic details and contact information, which the office relies on to communicate with you.",
-        "whatTheAgentLoses": "An agent might ignore outdated contact details, preventing the clinic from reaching you about your appointment.",
         "costDims": {
          "money": 0,
          "privacy": 1,
@@ -3942,22 +2802,6 @@
         "label": "Fill the personal fields",
         "questions": [
          {
-          "question": "What is your full name?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displayed \"First Name\" and \"Last Name\" fields to identify the patient booking the appointment.",
-          "whatTheAgentLoses": "You lose the ability to ensure the appointment is booked under your actual name.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
           "question": "Do you want to provide your National ID even though it is optional?",
           "cluster": "hand over",
           "moment": "Now",
@@ -3970,54 +2814,6 @@
            "thirdParty": 0,
            "safety": 0,
            "reversibility": 2,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "What is your date of birth?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The calendar widget requires navigating to the specific year, month, and day to accurately populate the date of birth field.",
-          "whatTheAgentLoses": "Delegating this step requires sharing your exact date of birth, which is sensitive personal information, with an automated agent.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "What are your gender and marital status?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The form requires selecting a gender and marital status from dropdown menus to complete the patient profile, alongside other mandatory fields like your name.",
-          "whatTheAgentLoses": "The user loses the ability to ensure their personal demographic details are accurately represented in the clinic's system.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "What is your nationality?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The booking form requires selecting a nationality from the dropdown to complete the patient's demographic profile.",
-          "whatTheAgentLoses": "The user loses the ability to ensure their demographic information is accurately recorded in their medical file.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 1,
            "recovery": 1
           }
          },
@@ -4124,38 +2920,6 @@
           }
          },
          {
-          "question": "Which email, phone number, and national ID should you enter?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The booking form requires an Email ID, Phone number, and National ID to properly identify you and send appointment updates.",
-          "whatTheAgentLoses": "You lose control over which specific contact information and identification number are associated with your medical records and appointment updates.",
-          "costDims": {
-           "money": 0,
-           "privacy": 2,
-           "thirdParty": 1,
-           "safety": 1,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "What contact details do you want to provide for this appointment?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The booking form requires a mobile number, email address, and city to register your contact information.",
-          "whatTheAgentLoses": "Letting an agent choose means they might provide a phone number or email you do not actively monitor for appointment updates.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 1,
-           "safety": 1,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
           "question": "Who should you list as your emergency contact, and what is their phone number?",
           "cluster": "",
           "moment": null,
@@ -4175,73 +2939,7 @@
        },
        {
         "id": "6.2.3",
-        "label": "Fill the address fields",
-        "questions": [
-         {
-          "question": "What city or village do you live in?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The form requires your city or village to complete your patient profile and ensure accurate contact information.",
-          "whatTheAgentLoses": "Delegating this step means the agent might use an outdated or incorrect city, potentially causing issues with billing or clinic communications.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "What area category best describes where you live?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen presents an area category dropdown to classify your residence for the patient profile.",
-          "whatTheAgentLoses": "You lose the ability to accurately self-report your living environment, which could impact how your demographic data is categorized.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "Should you enter your zip code first to auto-populate the city and state?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Entering the zip code first automatically fills in the city and state fields, saving time and preventing manual entry errors.",
-          "whatTheAgentLoses": "The user loses the opportunity to learn and apply a time-saving form shortcut for future registrations.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "Are your address details correctly populated?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows your full address, including the floor number, which the clinic needs for accurate patient records and billing.",
-          "whatTheAgentLoses": "You lose the chance to ensure your medical correspondence is sent to your exact current address.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         }
-        ]
+        "label": "Fill the address fields"
        },
        {
         "id": "6.2.4",
@@ -4308,22 +3006,6 @@
           "moneyMoving": false,
           "why": "The screen requires choosing an available time slot for the Hempstead branch and entering sensitive information like the patient's SSN and date of birth.",
           "whatTheAgentLoses": "You lose the ability to choose the most convenient appointment time and to personally handle highly sensitive personal information.",
-          "costDims": {
-           "money": 1,
-           "privacy": 1,
-           "thirdParty": 1,
-           "safety": 1,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Are the new patient details and appointment slot correct before adding the applicant?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays the selected branch, date, and time along with the new patient's name, SSN, and date of birth, which must be accurate to properly register the patient.",
-          "whatTheAgentLoses": "The user loses the chance to personally verify that their sensitive personal information, such as their SSN and date of birth, is entered correctly.",
           "costDims": {
            "money": 1,
            "privacy": 1,
@@ -4508,22 +3190,6 @@
         "moneyMoving": false,
         "why": "The form requires extensive identification details, including your passport number, visa type, and the position applied for, to register you for the appointment.",
         "whatTheAgentLoses": "You lose the ability to decide exactly which sensitive passport and demographic details to disclose or leave blank.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "What passport and visa details should you enter?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The form requires your passport number, issue and expiry dates, issue place, and visa type to proceed with the booking.",
-        "whatTheAgentLoses": "The user loses the ability to personally ensure their highly sensitive passport and visa details are entered accurately.",
         "costDims": {
          "money": 0,
          "privacy": 2,
@@ -4764,22 +3430,6 @@
         }
        },
        {
-        "question": "Has the system registered that you downloaded the required fact sheet so you can continue scheduling?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen confirms the successful download of the patient fact sheet, which is a required step to unlock the button to proceed with booking.",
-        "whatTheAgentLoses": "You lose the chance to personally review the vaccine's side effects and risks before committing to the appointment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "What terms are you agreeing to by signing electronically?",
         "cluster": "facts",
         "moment": "Now",
@@ -4824,38 +3474,6 @@
         "moneyMoving": false,
         "why": "The screen displays a CAPTCHA image and requires entering those specific characters into the input field to prove you are human and proceed.",
         "whatTheAgentLoses": "The user loses the ability to personally solve the visual puzzle, relying instead on the agent's image recognition capabilities which might fail on distorted text and block the booking.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "What verification code should you enter?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a CAPTCHA image with a specific number that must be typed into the verification field to proceed.",
-        "whatTheAgentLoses": "Delegating this step requires relying on the agent's visual recognition capabilities to successfully pass the security check on your behalf.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "How do you pass the CAPTCHA to submit the appointment request?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires entering the exact text from the CAPTCHA image to successfully submit the final booking.",
-        "whatTheAgentLoses": "The user loses the ability to personally complete the security check and guarantee their medical appointment is submitted.",
         "costDims": {
          "money": 0,
          "privacy": 0,
@@ -4921,22 +3539,6 @@
        "reversibility": 2,
        "recovery": 2
       }
-     },
-     {
-      "question": "Are the appointment details correct, and are you ready to submit the booking?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "Reviewing the summary ensures the appointment time, location, and patient details are accurate before finalizing.",
-      "whatTheAgentLoses": "The user loses the chance to verify their personal and appointment details before committing to the booking.",
-      "costDims": {
-       "money": 1,
-       "privacy": 1,
-       "thirdParty": 2,
-       "safety": 2,
-       "reversibility": 2,
-       "recovery": 2
-      }
      }
     ],
     "children": [
@@ -4974,22 +3576,6 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do you want to save this appointment setup as a favorite for easier scheduling later?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen includes a checkbox to favorite the appointment, which allows you to quickly reuse the same visit details in the future.",
-        "whatTheAgentLoses": "If the agent skips saving the appointment as a favorite, you lose the convenience of quickly rebooking this exact visit setup later.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
         }
        },
        {
@@ -5073,22 +3659,6 @@
         }
        },
        {
-        "question": "How do you proceed to the appointment summary?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires clicking the 'View Summary' button to advance to the final review of the booking details.",
-        "whatTheAgentLoses": "The user loses the opportunity to manually initiate the review phase and control the pacing of the booking process.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Are the appointment details correct, what procedures are included, and what payment terms are you agreeing to?",
         "cluster": "approve",
         "moment": "Now",
@@ -5117,22 +3687,6 @@
         "moneyMoving": false,
         "why": "The form defaulted to 'Illness' even though the booking was started for an 'Annual physical'.",
         "whatTheAgentLoses": "An agent might accept the default visit reason without checking, resulting in the wrong type of appointment being scheduled.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "What should you enter as the most important thing to address during this visit?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires a comment explaining what you want addressed before you can click the Schedule button to finalize the appointment.",
-        "whatTheAgentLoses": "You lose the ability to personally communicate your specific medical concerns or questions directly to the provider.",
         "costDims": {
          "money": 0,
          "privacy": 1,
@@ -5446,22 +4000,6 @@
           }
          },
          {
-          "question": "Are the appointment details and patient cost correct before proceeding to the summary?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "This matters because the screen displays a $55.00 patient amount and specific scheduling details that must be verified before moving forward.",
-          "whatTheAgentLoses": "The user loses the opportunity to personally verify the out-of-pocket cost and appointment time before advancing to the final summary.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 2,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
           "question": "Is there a tooltip or disclaimer icon next to the estimated copay or fee?",
           "cluster": "",
           "moment": null,
@@ -5564,44 +4102,12 @@
           }
          },
          {
-          "question": "How do you want to complete the payment step?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen showed a payment page before being blurred for privacy, indicating that payment information is required to proceed.",
-          "whatTheAgentLoses": "The person delegating loses the ability to keep their payment details private if they must share them with an agent to complete the booking.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
           "question": "Which credit card do you want to use to pay the $10.00 fee?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The screen shows a $10.00 payment is required to proceed, along with fields for credit card details.",
           "whatTheAgentLoses": "The user loses control over which financial account is charged for the appointment.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Which credit card should you use to pay the $10.00 fee?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen requires entering credit card details to pay a $10.00 fee before the appointment can be finalized.",
-          "whatTheAgentLoses": "Delegating this step requires sharing sensitive financial information and giving the agent permission to charge your card.",
           "costDims": {
            "money": 2,
            "privacy": 1,
@@ -5793,22 +4299,6 @@
         }
        },
        {
-        "question": "Do you need to book another appointment, or are you done?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The confirmation popup explicitly asks if you want to 'Book More' or if you are 'Done' after successfully scheduling the visit.",
-        "whatTheAgentLoses": "An agent might automatically exit the flow, missing the opportunity to conveniently schedule additional required appointments.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Does the confirmed appointment date and time match the slot you originally selected?",
         "cluster": "facts",
         "moment": "Completion",
@@ -5817,22 +4307,6 @@
         "whatTheAgentLoses": "The user loses the chance to catch a critical scheduling error, which could lead to missing the appointment entirely.",
         "costDims": {
          "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Is the appointment confirmed and where should you navigate next?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the on-screen text stating the appointment is confirmed ensures the booking was successful before you navigate back to the visits list.",
-        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the final confirmation message with their own eyes.",
-        "costDims": {
-         "money": 0,
          "privacy": 0,
          "thirdParty": 2,
          "safety": 2,
@@ -5911,22 +4385,6 @@
       "label": "Acknowledge the appointment",
       "questions": [
        {
-        "question": "Are the details of your scheduled appointment correct, and are you ready to confirm?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays the date, time, and location of the COVID-19 vaccine appointment and requires a final click to acknowledge the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify the finalized appointment time and clinic location before acknowledging the details.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Do you want to confirm the appointment now to avoid a reminder phone call?",
         "cluster": "hand over",
         "moment": "Completion",
@@ -5941,22 +4399,6 @@
          "reversibility": 2,
          "recovery": 1
         }
-       },
-       {
-        "question": "Do you want to confirm the appointment to skip the reminder call, or proceed directly to begin the visit?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen offers a 'Confirm' button to skip future reminder calls alongside a 'BEGIN VISIT' button to start the appointment.",
-        "whatTheAgentLoses": "The user loses the ability to choose whether to formally confirm the appointment to prevent automated reminder calls.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
        }
       ]
      },
@@ -5964,38 +4406,6 @@
       "id": "8.3",
       "label": "Save the proof",
       "questions": [
-       {
-        "question": "Do you want to download the appointment confirmation document?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen provides a link to download the confirmation file if it cannot be viewed directly in the browser.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to save a local PDF copy of their appointment details for offline access.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Do you want to confirm the download of this PDF file again?",
-        "cluster": "approve",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The system displays a dialog box asking if you want to download a specific PDF file again, which could result in duplicate files on your device.",
-        "whatTheAgentLoses": "You lose the ability to manage your local storage by deciding whether or not to save a duplicate copy of the appointment document.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
        {
         "question": "What details should you verify on the appointment confirmation PDF?",
         "cluster": "receipts",
@@ -6045,70 +4455,6 @@
         }
        },
        {
-        "question": "Are the confirmed appointment details correct before you print?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the confirmation status, appointment ID, and date ensures the booking was successful before saving or printing the record.",
-        "whatTheAgentLoses": "Delegating this step means you miss the immediate peace of mind of personally verifying your appointment ID and date on the confirmation screen.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "What passport number and nationality should you enter to retrieve the appointment slip?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen requires a passport number and nationality to search for and display the Wafid appointment slip.",
-        "whatTheAgentLoses": "You lose control over which personal identification details are used to access your medical appointment slip.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do you want to review the appointment slip details and download a PDF copy?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays the final appointment slip with your payment status and medical center information, which you need to verify and save.",
-        "whatTheAgentLoses": "Delegating this means you lose the chance to personally verify the accuracy of your personal details and ensure the PDF is saved to your preferred location.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Should you open the downloaded PDF to verify the appointment details?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen shows a newly downloaded PDF in the Downloads folder, which likely contains the final appointment confirmation or pre-visit instructions.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the downloaded confirmation slip contains the correct date, time, and provider.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
         "question": "Are the details on the generated appointment slip correct, including the assigned medical center?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -6138,38 +4484,6 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Should you print a copy of the appointment confirmation for your records?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a successful booking confirmation with a 'Print Selected' button, allowing you to keep a physical record of the exam number and appointment time.",
-        "whatTheAgentLoses": "The user loses the ability to immediately print and secure a physical copy of the appointment details for their personal files.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should I save the appointment confirmation PDF?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The browser displays a download bar asking whether to open or save the AppointmentConfirmation.pdf file.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to save the confirmation document directly to your personal device for your own records.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
         }
        }
       ]
@@ -6233,60 +4547,12 @@
       "label": "Check the appointment list",
       "questions": [
        {
-        "question": "Which menu option should you select to access your appointments?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The side menu contains various health-related options like 'Test Bookings' and 'Consultations', making it necessary to specifically choose 'Appointments' to manage doctor visits.",
-        "whatTheAgentLoses": "The user loses the opportunity to discover or review other available health services and records listed in their profile menu.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which icon should you click to access your upcoming appointments?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard displays several distinct options like 'CARE TEAM' and 'ACTIVITIES', requiring you to choose the correct path to manage your visits.",
-        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the layout of your patient portal and discover other available health management tools.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Does the newly booked appointment appear in your upcoming visits list?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The 'Appointments and Visits' page initially showed no upcoming visits, so seeing the new appointment appear there confirms the booking was actually registered by the system.",
         "whatTheAgentLoses": "You lose the peace of mind that comes from independently verifying your appointment was successfully saved to your patient portal.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do you see your newly booked appointment listed under upcoming appointments?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The dashboard displays the upcoming appointment date and time, confirming the booking was successful.",
-        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying the appointment details and accessing any required intake forms.",
         "costDims": {
          "money": 1,
          "privacy": 0,
@@ -6309,22 +4575,6 @@
          "thirdParty": 0,
          "safety": 1,
          "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which upcoming appointment do you want to view or manage?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays multiple upcoming appointments with different doctors and times, so you must select the specific one you want to review, cancel, or reschedule.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review your upcoming schedule and decide which specific appointment needs adjustment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
          "recovery": 1
         }
        },
@@ -6412,22 +4662,6 @@
         }
        },
        {
-        "question": "Should I proceed to the medical form?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The appointment details screen shows a pending status with a specific button to open the medical form.",
-        "whatTheAgentLoses": "The user loses the ability to personally enter and review their sensitive medical history before it is submitted to the provider.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Which optional contact details and medical history questions do you provide?",
         "cluster": "hand over",
         "moment": "Now",
@@ -6441,22 +4675,6 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do you want to answer the optional medical and family questions, or skip them?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The booking form included specific questions about enlarged lymph nodes, pregnancy, and accompanying children, which you chose to leave blank.",
-        "whatTheAgentLoses": "You lose control over deciding which optional medical or personal details to disclose to the provider prior to the appointment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
         }
        },
        {
@@ -6508,22 +4726,6 @@
         }
        },
        {
-        "question": "Do you want to add a specific reason for your visit to the confirmed booking?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The confirmation screen includes an optional prompt to specify the reason for your visit and a link to fill out an intake form so the clinic can prepare.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to provide the clinic with personal context about your symptoms before you arrive.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Do you want to fill out the online intake form or subscribe to the calendar now?",
         "cluster": "hand over",
         "moment": "Completion",
@@ -6535,22 +4737,6 @@
          "privacy": 0,
          "thirdParty": 0,
          "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Should you start the required eCheck-In process now?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The pop-up explicitly states that eCheck-In is required before joining the video visit, requiring a choice between doing it immediately or deferring it.",
-        "whatTheAgentLoses": "The user loses the ability to decide the most convenient time to enter and review their sensitive personal and medical information.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
          "reversibility": 1,
          "recovery": 1
         }
@@ -6575,41 +4761,7 @@
      },
      {
       "id": "9.3",
-      "label": "Attend the video visit",
-      "questions": [
-       {
-        "question": "How do I hang up the video call when the visit is finished?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays an active video session with a bottom control bar, making the red phone icon the necessary button to disconnect.",
-        "whatTheAgentLoses": "The user loses the personal agency of deciding exactly when the medical conversation has naturally concluded before ending the call.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Do you want to confirm leaving the video visit?",
-        "cluster": "approve",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a confirmation dialog asking if you want to leave the video visit, noting that you can return until the appointment time ends.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly when to exit the telehealth session interface.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       }
-      ]
+      "label": "Attend the video visit"
      },
      {
       "id": "9.4",
@@ -6670,22 +4822,6 @@
       "label": "Collect the results",
       "questions": [
        {
-        "question": "Which menu option do you select to view your medical examination results?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Medical Examinations' dropdown contains the specific 'Medical Examination Result' link needed to access your health records.",
-        "whatTheAgentLoses": "You lose the privacy of personally accessing and reviewing your sensitive medical test results.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
         "question": "Should you download the full PDF report of your 'FIT' examination results?",
         "cluster": "select",
         "moment": "Now",
@@ -6697,54 +4833,6 @@
          "privacy": 2,
          "thirdParty": 0,
          "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Which message should you open to view your test results?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an inbox list with a message specifically labeled 'Test Result' for 'SARS COV 2 RNA' that must be selected.",
-        "whatTheAgentLoses": "The user loses the privacy of directly handling their own sensitive medical information and deciding which health records to access.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "What are the details of my test result and what guidelines should I follow?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a positive COVID-19 test result along with extensive quarantine and isolation guidelines that dictate your next health and safety steps.",
-        "whatTheAgentLoses": "Delegating this step means you miss directly reading your personal health results and the specific quarantine instructions provided by the lab.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 3,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Are there any documents or notes shared with you by the practitioner?",
-        "cluster": "facts",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "Checking the documents section allows you to verify if the practitioner has uploaded any files or shared treatment notes with you.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review your medical documents and treatment plans, which might contain sensitive or important health information.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 2,
          "reversibility": 1,
          "recovery": 1
         }

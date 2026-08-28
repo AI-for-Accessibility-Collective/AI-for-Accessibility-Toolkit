@@ -43,14 +43,6 @@
       "whatTheAgentLoses": "The user loses the ability to decide whether their medical appointments are automatically synced to their personal device calendar."
      },
      {
-      "question": "Do you want to read through the app's introductory feature screens before getting started?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The app presents a carousel of informational screens highlighting features like family account linking and video visits before you can proceed.",
-      "whatTheAgentLoses": "The user misses the opportunity to learn about the app's capabilities and features before diving into the portal."
-     },
-     {
       "question": "Will you allow the app to access your device's camera and microphone?",
       "cluster": "approve",
       "moment": "Now",
@@ -75,36 +67,12 @@
       "whatTheAgentLoses": "An AI agent cannot make a phone call to the medical office to verbally provide your personal information and request the account setup link."
      },
      {
-      "question": "How do you prefer to download the required MyChart and Zoom apps?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays QR codes to download the necessary apps for iOS and Android, offering a choice between scanning them or searching the app store manually.",
-      "whatTheAgentLoses": "You lose the ability to use your physical device's camera to quickly scan the QR codes for a direct and verified download."
-     },
-     {
       "question": "Which healthcare organization should you select to access your records?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The MyChart app requires you to search for and add your specific healthcare provider, such as PPOC, to connect to the correct portal.",
       "whatTheAgentLoses": "Delegating this step means the agent might not know which specific hospital or clinic network holds your medical history."
-     },
-     {
-      "question": "Which app store do you open to download the patient portal?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The home screen displays multiple app icons, so you must identify the correct store to download the required health portal.",
-      "whatTheAgentLoses": "You lose the chance to verify that the official app store is being used to download an application that will handle your sensitive medical data."
-     },
-     {
-      "question": "How do you search for the patient portal app in the App Store?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "Tapping the Search tab and using the search bar is necessary to locate a specific health app like MyChart instead of browsing through the general App Store categories.",
-      "whatTheAgentLoses": "You lose the ability to specify exactly which health system's portal app corresponds to your personal medical providers."
      },
      {
       "question": "What is your doctor's practice code or phone number?",
@@ -225,22 +193,6 @@
         "whatTheAgentLoses": "You lose the ability to verify that the agent selects the official health portal app instead of a sponsored third-party medical app."
        },
        {
-        "question": "Which menu link do you select to access the patient portal?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The clinic's navigation menu contains multiple options like 'Services' and 'Virtual Clinic', making it necessary to identify the exact link for the patient portal.",
-        "whatTheAgentLoses": "Delegating this step means you miss learning how the clinic organizes its online services and where to find the portal access point for future visits."
-       },
-       {
-        "question": "Do you tap the recent search for Labcorp.com or type the address manually?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays 'Labcorp.com' under recent searches, offering a convenient shortcut to bypass manual typing.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to utilize your search history shortcuts for faster navigation."
-       },
-       {
         "question": "Which search result is the official Labcorp website?",
         "cluster": "select",
         "moment": "Now",
@@ -249,28 +201,12 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that you are navigating to the secure, official health portal rather than an unofficial third-party service."
        },
        {
-        "question": "How do you proceed to the portal to continue on a laptop?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The success screen presents both a text link for the website and buttons for mobile apps, requiring you to select the correct option for a desktop device.",
-        "whatTheAgentLoses": "You lose the choice of whether to continue your session on the current device's web browser or switch to a mobile application."
-       },
-       {
         "question": "Are you sure this is the correct patient portal app, and is it already installed?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The Play Store listing shows the official MyChart app by Epic Systems Corporation with an 'Open' button, confirming it is the right app and already on the device.",
         "whatTheAgentLoses": "The user loses the ability to verify the app's authenticity and publisher before accessing their sensitive health information."
-       },
-       {
-        "question": "Do you want to participate in the site feedback survey?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The LabCorp homepage displays a popup asking 'Can we send you a brief survey' to gather feedback, which interrupts the initial navigation and login flow.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to provide feedback on their portal experience or simply dismiss the interruption to proceed to their records."
        }
       ]
      },
@@ -278,29 +214,11 @@
       "id": "1.2",
       "label": "Register from the invitation",
       "note": "1.2.1 to 1.2.4 in order - the code and the verification answer both come from the same email-and-form loop. then 1.2.5 and 1.2.6: two separate consent gates after the account already exists.",
-      "questions": [
-       {
-        "question": "How do you proceed to your health record once access is approved?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen confirms you have completed the necessary steps to exchange information, but you must manually navigate to the home screen to see your record.",
-        "whatTheAgentLoses": "The user misses the explicit confirmation that they have successfully completed the steps to exchange information with their provider."
-       }
-      ],
       "children": [
        {
         "id": "1.2.1",
         "label": "Open the invitation link",
         "questions": [
-         {
-          "question": "Which link should you click to begin the registration process?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The email provides a specific URL and mentions an invitation code required to set up your new portal account.",
-          "whatTheAgentLoses": "You miss seeing the exact instructions and invitation code sent directly by your healthcare provider."
-         },
          {
           "question": "Which link in the signup email should you click to activate your account?",
           "cluster": "select",
@@ -470,14 +388,6 @@
           "moneyMoving": false,
           "why": "The portal requires answering a specific security question, such as your date of birth, to confirm your identity and proceed.",
           "whatTheAgentLoses": "Delegating this step requires sharing sensitive personal information, like your date of birth, with an agent to pass the security check."
-         },
-         {
-          "question": "Are you ready to submit the verification answer?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Submitting the correct security answer is required to bypass the verification prompt and access your health account.",
-          "whatTheAgentLoses": "The user loses the ability to personally handle their security questions, requiring them to share sensitive verification answers with the agent."
          },
          {
           "question": "What is the answer to your security question?",
@@ -691,38 +601,6 @@
     "note": "2.1, then 2.2 past whatever the feed stacks on top, then 2.3 for visit tasks - the other destinations open from the nav or a widget, and their entry ops sit in their own goals. re-entered between tasks: FE1_ returns here after each subtask, g18A comes back through Home to reach the inbox.",
     "questions": [
      {
-      "question": "Which section of the portal do you want to navigate to?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The dashboard menu offers multiple paths like Health Record, Messaging, and Appointments, requiring you to select the one that matches your current goal.",
-      "whatTheAgentLoses": "Delegating this navigation means you lose the ability to personally browse your available health categories and prioritize what information to review."
-     },
-     {
-      "question": "Do you want to view your upcoming appointments or request a new one?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The expanded Appointments menu offers distinct paths for checking your existing schedule versus initiating a new visit request.",
-      "whatTheAgentLoses": "Delegating this choice prevents you from deciding whether to review your current schedule or initiate a request for a new visit."
-     },
-     {
-      "question": "Which tab should you click after reviewing the visit summaries?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The top navigation bar displays multiple options like 'Health Record' and 'Messaging', requiring you to select the correct section to proceed.",
-      "whatTheAgentLoses": "The user misses the explanation about the system's go-live date and where to find older missing records if the agent immediately navigates away."
-     },
-     {
-      "question": "Do you want to activate the browser's text-to-speech feature to read the page aloud?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The browser menu includes a 'Read aloud' option, providing an accessible way to consume the page content.",
-      "whatTheAgentLoses": "The user loses the immediate, accessible experience of having the portal's content read aloud to them."
-     },
-     {
       "question": "Are these the upcoming appointments you want to print?",
       "cluster": "",
       "moment": null,
@@ -753,14 +631,6 @@
         "whatTheAgentLoses": "The user loses the immediate reassurance of seeing that they have no new or unread test results pending."
        },
        {
-        "question": "Do you want to review your account overview on the dashboard before navigating to your specific task?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard displays immediate updates like upcoming appointments, current medications, and latest statements that might need your attention.",
-        "whatTheAgentLoses": "You lose the opportunity to catch important incidental updates about your health or billing that are surfaced on the main dashboard."
-       },
-       {
         "question": "Do you need to address the incomplete questionnaires flagged on your dashboard?",
         "cluster": "",
         "moment": null,
@@ -788,38 +658,12 @@
      },
      {
       "id": "2.2",
-      "label": "Scroll past the feed cards",
-      "questions": [
-       {
-        "question": "Do you want to learn more about the hello2healow audio and video call feature before proceeding?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal displays an interstitial promoting a new telehealth communication tool with options to learn more or skip.",
-        "whatTheAgentLoses": "The user misses the opportunity to learn about a potentially useful telehealth feature if the agent automatically dismisses the announcement."
-       },
-       {
-        "question": "Should I dismiss the tutorial overlay about managing appointments?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a tutorial overlay explaining the appointments section, which must be dismissed to navigate the rest of the portal.",
-        "whatTheAgentLoses": "You miss the chance to read the platform's introductory guidance on how to manage your upcoming appointments and alerts."
-       }
-      ]
+      "label": "Scroll past the feed cards"
      },
      {
       "id": "2.3",
       "label": "Locate the appointment",
       "questions": [
-       {
-        "question": "Which dashboard option do you select to find your upcoming tele-visit?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main screen features a circular menu with multiple options like 'Appointments', 'Check-in', and 'My Records', requiring a choice based on your specific goal.",
-        "whatTheAgentLoses": "You miss seeing the layout of your health dashboard and any notification badges that indicate items needing your attention."
-       },
        {
         "question": "Which appointment are you selecting to start your televisit?",
         "cluster": "select",
@@ -1599,14 +1443,6 @@
         "whatTheAgentLoses": "The person loses the ability to ensure the correct form is chosen and that accurate personal health information is provided for their child."
        },
        {
-        "question": "Which medical form should you complete next?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple pending forms, such as the Developmental Questionnaire and Interim History, requiring a choice to proceed with the check-in.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally review and prioritize which specific health history forms are submitted to their provider."
-       },
-       {
         "question": "Which medical conditions apply to you or your family members?",
         "cluster": "",
         "moment": null,
@@ -1629,14 +1465,6 @@
         "moneyMoving": false,
         "why": "The narrator points out that a specific questionnaire is mandatory, meaning you cannot proceed without answering it, whereas others might be skippable.",
         "whatTheAgentLoses": "An agent might get stuck trying to skip a mandatory questionnaire or waste time filling out optional ones unnecessarily."
-       },
-       {
-        "question": "Does completing the interim history form online save you from having to answer it in the office?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The person considers the benefit of completing the optional history form online, which is that it prevents the staff from having to ask those same questions in person.",
-        "whatTheAgentLoses": "An agent might skip the optional history form, unaware that filling it out now saves the user time and repetition during the actual office visit."
        }
       ],
       "children": [
@@ -1894,28 +1722,12 @@
       "whatTheAgentLoses": "The user loses the ability to verify which specific medical practices they are authorizing for telehealth communications."
      },
      {
-      "question": "How do you want to prepare for your upcoming video visit?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The confirmation screen offers an option to stop reminder calls and prompts you to get your device ready for the telehealth appointment.",
-      "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally test your own device's camera and microphone to ensure they work for the visit."
-     },
-     {
       "question": "Do you want to confirm ending the TeleVisit?",
       "cluster": "approve",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays a confirmation popup asking if you are sure you want to end the TeleVisit, which will permanently close the active video session.",
       "whatTheAgentLoses": "Delegating this step means you lose the ability to personally ensure all your medical questions were answered by the provider before disconnecting the call."
-     },
-     {
-      "question": "How do you properly end the telehealth visit?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen displays a slide with specific instructions to click the 'Leave Visit' button when you are ready to disconnect.",
-      "whatTheAgentLoses": "Delegating this means you miss the platform's specific instructions on how to properly exit your telehealth appointment."
      }
     ],
     "children": [
@@ -1961,14 +1773,6 @@
       "id": "4.2",
       "label": "Test the hardware",
       "questions": [
-       {
-        "question": "Which menu option should you select to check your system's compatibility for a televisit?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal places the televisit compatibility tool under the 'Medical Records' dropdown rather than in general account settings.",
-        "whatTheAgentLoses": "Delegating this step means you miss learning the somewhat unintuitive location of the televisit setup tools within your portal's menu structure."
-       },
        {
         "question": "Should I test my camera and microphone?",
         "cluster": "approve",
@@ -2161,17 +1965,7 @@
      },
      {
       "id": "4.5",
-      "label": "Rate the call quality",
-      "questions": [
-       {
-        "question": "How should I rate the technical quality of the video call?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen prompts you to provide feedback on the telehealth experience by selecting a thumbs up, thumbs down, or dismiss option.",
-        "whatTheAgentLoses": "An agent cannot accurately evaluate the subjective audio and video quality you experienced during the telehealth visit."
-       }
-      ]
+      "label": "Rate the call quality"
      }
     ]
    },
@@ -2254,33 +2048,7 @@
      },
      {
       "id": "5.2",
-      "label": "Start a new message",
-      "questions": [
-       {
-        "question": "How do you initiate a message from this appointment block?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The appointment block provides a context menu with a Communication section that links directly to the Messenger.",
-        "whatTheAgentLoses": "You lose the ability to visually confirm you are opening the messenger for the correct patient's appointment."
-       },
-       {
-        "question": "Which option do you select to compose a new message?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'MESSAGES' tab reveals a dropdown with multiple options, so you must specifically choose 'New Message' to start a draft instead of just opening your inbox.",
-        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to check your inbox for recent replies before initiating a new conversation."
-       },
-       {
-        "question": "Do you want to send a new message to your care providers?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen confirms there are no previously sent messages and offers a button to start a new secure message.",
-        "whatTheAgentLoses": "You miss the reassurance of reviewing your sent message history before deciding to contact your care team again."
-       }
-      ]
+      "label": "Start a new message"
      },
      {
       "id": "5.3",
@@ -2437,17 +2205,7 @@
       "children": [
        {
         "id": "5.10.1",
-        "label": "Pick the requested date",
-        "questions": [
-         {
-          "question": "How do you select the target date for your appointment request?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The dashboard displayed an empty input box next to 'Date:' that must be clicked to reveal the calendar widget.",
-          "whatTheAgentLoses": "You lose the ability to personally review the calendar and choose the exact date that best fits your schedule."
-         }
-        ]
+        "label": "Pick the requested date"
        },
        {
         "id": "5.10.2",
@@ -2627,14 +2385,6 @@
       "label": "Open a record section",
       "questions": [
        {
-        "question": "Which section of your health record do you want to view?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The left navigation menu lists multiple health record categories, such as allergies, immunizations, and vital signs, to explore.",
-        "whatTheAgentLoses": "Delegating this choice prevents you from prioritizing which specific health information you want to review first."
-       },
-       {
         "question": "How do you access all of your available documents?",
         "cluster": "select",
         "moment": "Now",
@@ -2651,36 +2401,12 @@
         "whatTheAgentLoses": "You lose the immediate awareness that your COVID-19 vaccination and test records are missing from this health system's portal."
        },
        {
-        "question": "Which navigation icon do you tap to access your lab results?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard displays multiple options like 'Health Index' and 'Med Records', requiring you to choose the correct path to your test results.",
-        "whatTheAgentLoses": "You miss seeing other health metrics and rewards like the 'Health Index' or 'OmCoins' that are featured on the main dashboard."
-       },
-       {
-        "question": "Which dashboard tile do you select to access patient registration?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard presents multiple distinct tiles like health information and appointments, so you must choose the correct one to access your registration details.",
-        "whatTheAgentLoses": "The user loses the ability to verify which specific portal section the agent is accessing to handle their registration data."
-       },
-       {
         "question": "Which specific type of medical record or health information do you want to access from this menu?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The portal offers multiple distinct categories like lab results, care summaries, and full medical record downloads.",
         "whatTheAgentLoses": "The agent might select the wrong category, missing the specific health information you actually need to review."
-       },
-       {
-        "question": "Where do I view my active medications and request a renewal?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Locating the medications section is essential to view your current prescriptions and access the renewal options, even if the list currently shows no recorded information.",
-        "whatTheAgentLoses": "Delegating this to an agent means you miss the context of where to find and manage your prescriptions once the system is fully populated with your medical history."
        }
       ]
      },
@@ -2700,17 +2426,7 @@
      },
      {
       "id": "6.3",
-      "label": "Sort the list",
-      "questions": [
-       {
-        "question": "How do you want to sort your list of allergies?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal allows you to organize your medical data by clicking column headers like 'Allergy' or 'Allergen Type' to change the sort order.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to visually organize and review your health records in the order that makes the most sense to you."
-       }
-      ]
+      "label": "Sort the list"
      },
      {
       "id": "6.4",
@@ -2847,14 +2563,6 @@
         "moneyMoving": false,
         "why": "The 'Patient Files' page lists multiple documents with 'Download' buttons, requiring you to choose which specific record to view.",
         "whatTheAgentLoses": "Letting an agent choose means you miss the chance to prioritize which specific health documents are most relevant to your immediate needs."
-       },
-       {
-        "question": "How do you close the document viewer?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 1200-calorie meal plan is displayed in a PDF overlay that must be dismissed using the 'X' button to return to the main portal interface.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review the specific dietary guidelines outlined in the 1200-calorie meal plan before the document is closed."
        },
        {
         "question": "Which care summary or note do you want to view?",
@@ -3036,14 +2744,6 @@
         "moneyMoving": false,
         "why": "Portals often display a brief, disappearing message at the top or bottom of the screen to confirm an action (like sending a message) before redirecting the page.",
         "whatTheAgentLoses": "The user misses the immediate, transient confirmation that their action succeeded, which is easily missed by someone not watching the screen at that exact moment."
-       },
-       {
-        "question": "Do you want to get directions to the facility for your appointment?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The check-in complete screen provides a little arrow icon that routes you directly to the facility's location.",
-        "whatTheAgentLoses": "The user loses the convenience of instantly pulling up navigation directions to the clinic for their upcoming visit."
        }
       ]
      },
@@ -3413,14 +3113,6 @@
       "moneyMoving": false,
       "why": "The screen provides options to grant 'Read only' or 'Read and modify' access, along with settings for specific information types and expiration dates, which dictate how much control another person has over your medical record.",
       "whatTheAgentLoses": "You lose the ability to personally decide the exact boundaries and duration of access someone else has to your sensitive health information."
-     },
-     {
-      "question": "How do you save the new access settings?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The modal displays options to change, cancel, or remove access, requiring you to select the correct button to apply the new permissions.",
-      "whatTheAgentLoses": "The user loses the ability to personally verify and confirm the exact level of medical record access being granted."
      }
     ],
     "children": [
@@ -3428,22 +3120,6 @@
       "id": "8.1",
       "label": "Survey the profile options",
       "questions": [
-       {
-        "question": "Which option should I select from your profile menu?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The profile menu contains several distinct actions, such as managing the account, sharing records, viewing record history, or signing out.",
-        "whatTheAgentLoses": "The user loses control over which account management or sharing feature is accessed, or if they are signed out prematurely."
-       },
-       {
-        "question": "Which account management option do you want to select from the dropdown menu?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown menu presents several choices, including 'Record History' which tracks deleted items and account changes.",
-        "whatTheAgentLoses": "The user loses the ability to decide which specific account management feature to access."
-       },
        {
         "question": "Whose health record do you want to view?",
         "cluster": "",
@@ -3494,45 +3170,15 @@
      },
      {
       "id": "8.3",
-      "label": "Bookmark the portal",
-      "questions": [
-       {
-        "question": "Do you want to bookmark the portal for easy access later?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a bookmark popup offering to save the portal's address to your bookmarks bar.",
-        "whatTheAgentLoses": "The user loses the opportunity to choose a recognizable name or specific folder for the saved bookmark."
-       }
-      ]
+      "label": "Bookmark the portal"
      },
      {
       "id": "8.4",
-      "label": "Log out",
-      "questions": [
-       {
-        "question": "How do you securely log out of the patient portal?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The top navigation menu provides a 'Logout' tab to safely end your session and protect your health information.",
-        "whatTheAgentLoses": "Delegating this step means you cannot personally confirm that your sensitive medical account was securely closed."
-       }
-      ]
+      "label": "Log out"
      },
      {
       "id": "8.5",
-      "label": "Reset the shared device",
-      "questions": [
-       {
-        "question": "How should you clear the session?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The 'Thank You' screen indicates the task is complete, requiring the app to be fully closed to protect patient privacy.",
-        "whatTheAgentLoses": "You lose the certainty of personally verifying that your private health session was completely terminated."
-       }
-      ]
+      "label": "Reset the shared device"
      }
     ]
    }

@@ -22,33 +22,7 @@
     "children": [
      {
       "id": "1.1",
-      "label": "Compare the booking sites",
-      "questions": [
-       {
-        "question": "Do you want to use Expedia to search for your flights?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays the Expedia flight search interface as an alternative booking platform.",
-        "whatTheAgentLoses": "The user loses the opportunity to specify their preferred travel aggregator for the flight search."
-       },
-       {
-        "question": "Which flight search platform are you using?",
-        "cluster": "facts",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen displays the Skyscanner search interface with fields for origin, destination, and dates, establishing the tool used for finding flights.",
-        "whatTheAgentLoses": "The user loses the opportunity to select their preferred travel aggregator or airline website for the search."
-       },
-       {
-        "question": "Will you use Google Flights to search for your route?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the initial Google Flights search form, prompting a decision on whether to use this specific aggregator to find your tickets.",
-        "whatTheAgentLoses": "Delegating this decision means you lose the opportunity to dictate exactly which search engine or aggregator is used to find your preferred fares."
-       }
-      ]
+      "label": "Compare the booking sites"
      },
      {
       "id": "1.2",
@@ -61,30 +35,6 @@
         "moneyMoving": false,
         "why": "Selecting the correct sponsored link ensures you book directly on the official Ethiopian Airlines website rather than a third-party platform.",
         "whatTheAgentLoses": "If the agent clicks the wrong link, you might end up booking through an unreliable third-party agency or a fraudulent website."
-       },
-       {
-        "question": "Should you select the 'Flights' tab to begin, or switch to another platform if you need to book without immediate payment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple travel categories like 'Stays' and 'Flights', requiring you to navigate to the correct section to start your airfare search.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate whether this specific platform aligns with their payment flexibility preferences before initiating the search."
-       },
-       {
-        "question": "Which app should you open to book the flight?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays multiple apps, so you must select a dedicated airline app like SpiceJet to begin searching for flights.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred airline or booking platform for the trip."
-       },
-       {
-        "question": "Which type of travel service are you booking?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The site's navigation menu offers multiple options like stays, cars, and packages, so you must explicitly select the flights tab to access the correct search tool.",
-        "whatTheAgentLoses": "You lose the opportunity to notice and explore bundled travel packages or hotel deals that might offer better overall value for your trip."
        }
       ]
      },
@@ -218,28 +168,12 @@
       "whatTheAgentLoses": "Delegating this means the agent might blindly accept the pre-filled locations and search for the wrong flight route."
      },
      {
-      "question": "What type of trip are you booking, and what is your destination?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Selecting between options like \"Round trip\" or \"One way\" and picking a specific destination airport like Lagos (LOS) establishes the fundamental parameters for the flight search.",
-      "whatTheAgentLoses": "You lose control over defining your basic travel itinerary, such as whether you need a return flight or which specific airport you want to arrive at."
-     },
-     {
       "question": "What parameters are you setting for your flight search?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The search widget displayed pre-filled options for a one-way trip from Honolulu to Adelaide, and an attempt to switch to a return trip failed to register before proceeding.",
       "whatTheAgentLoses": "The user loses the ability to specify their exact travel route, dates, and whether they need a return ticket."
-     },
-     {
-      "question": "Do you want to resume your previous search from the 'Here's where you left off' section?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The homepage displays a 'Here's where you left off' section with your previously searched route, offering a one-click shortcut to resume planning.",
-      "whatTheAgentLoses": "The user loses the convenience of instantly restoring their previous search parameters and instead has to manually re-enter the route and dates."
      },
      {
       "question": "Do you want to check your 'Tracked prices' to see if a flight you were monitoring has dropped in cost?",
@@ -264,30 +198,6 @@
         "whatTheAgentLoses": "An agent might default to a standard round-trip search without knowing that your visa status or travel plans require a one-way ticket."
        },
        {
-        "question": "Are you booking a roundtrip, one-way, or multi-city itinerary?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides tabs for roundtrip, one-way, and multi-city searches, which dictates the structure of the destinations and dates you need to enter.",
-        "whatTheAgentLoses": "You lose the opportunity to spontaneously adjust your travel structure, such as realizing a multi-city route might fit your plans better than a standard roundtrip."
-       },
-       {
-        "question": "Should you select a round trip, one-way, or multi-city itinerary?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The KLM booking form requires you to specify the trip type from the dropdown menu before entering your origin and destination.",
-        "whatTheAgentLoses": "You lose the opportunity to structure your travel plans exactly as you prefer before initiating the flight search."
-       },
-       {
-        "question": "Are you booking a return trip or a one-way flight, and do you have a promo code to apply?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires you to choose between a return or one-way itinerary to structure the search and provides a checkbox to enter any available discount codes.",
-        "whatTheAgentLoses": "The user loses the ability to dictate their exact travel itinerary structure and the chance to apply personal discount codes to lower the fare."
-       },
-       {
         "question": "Should you select one of these departing flights, or abandon this search to look for a round-trip instead?",
         "cluster": "approve",
         "moment": "Now",
@@ -301,14 +211,6 @@
       "id": "2.2",
       "label": "Set the origin",
       "questions": [
-       {
-        "question": "How will you specify your departure airport?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Typing an airport code into the \"From\" field triggers a dropdown menu to help you select the exact origin.",
-        "whatTheAgentLoses": "You lose the opportunity to manually verify and select the exact airport code from the provided search suggestions."
-       },
        {
         "question": "Is the pre-filled departure airport, Abuja (ABV), correct?",
         "cluster": "approve",
@@ -340,14 +242,6 @@
         "whatTheAgentLoses": "You lose the ability to ensure the correct city and specific airport code are chosen for your arrival."
        },
        {
-        "question": "How do you select your destination airport if you don't know the exact code?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Browsing the list of 188 countries and regions allows you to accurately locate and select the specific airport when you only know the destination country.",
-        "whatTheAgentLoses": "You lose the chance to visually browse regional airport options that might be more convenient for your specific travel plans."
-       },
-       {
         "question": "Do you want to search all Tokyo airports or select a specific one like Haneda or Narita?",
         "cluster": "select",
         "moment": "Now",
@@ -376,14 +270,6 @@
         "moneyMoving": false,
         "why": "The calendar initially opened to August, requiring navigation to October to find the correct travel window.",
         "whatTheAgentLoses": "You lose the ability to specify the exact day you need to travel."
-       },
-       {
-        "question": "When do you want to depart and return?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Navigating the calendar to select specific departure and return days sets the exact timeframe for the flight search.",
-        "whatTheAgentLoses": "You lose the ability to visually browse the calendar and adjust your travel days based on personal flexibility."
        },
        {
         "question": "How should you adjust the departure and return dates to bypass the previous scheduling error?",
@@ -476,14 +362,6 @@
         "whatTheAgentLoses": "An agent might strictly search your exact dates and miss out on significant savings available just a day or two away."
        },
        {
-        "question": "Do you want to search for an award flight and specify a premium cabin class upfront?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Checking 'Shop with Miles' and selecting 'Delta One' in the advanced search ensures the results only show premium award availability for this route.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to spend miles instead of cash and whether to prioritize a specific luxury cabin."
-       },
-       {
         "question": "Do you want to apply any price or time filters before running the search?",
         "cluster": "refine",
         "moment": "Now",
@@ -569,14 +447,6 @@
       "label": "Restart after an error",
       "questions": [
        {
-        "question": "How should you proceed when the search returns a 403 error?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The site displayed an 'Error-Genel-403' message and a confirmation dialog asking if you wanted to return to the homepage.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to stay on the page to troubleshoot or return to the homepage to restart your search."
-       },
-       {
         "question": "Do you want to abandon the current search and start over?",
         "cluster": "undo",
         "moment": "Now",
@@ -635,14 +505,6 @@
         "moneyMoving": false,
         "why": "The flexible dates grid reveals that shifting your travel by a few days could significantly drop the cost from 54,400 miles to 30,600 miles.",
         "whatTheAgentLoses": "You lose the opportunity to decide if the substantial points savings are worth adjusting your personal travel schedule."
-       },
-       {
-        "question": "Which specific dates offer the lowest price while fitting your preferred schedule?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The price calendar displays varying costs like '30,600 + $62' versus '54,400 + $62' across different days, requiring a balance between finding the lowest fare and matching your availability.",
-        "whatTheAgentLoses": "An agent might default to the absolute cheapest dates on the calendar without knowing you prefer a Saturday-to-Saturday itinerary to save your personal vacation days."
        },
        {
         "question": "Which departure date will you choose based on the non-stop fares?",
@@ -825,14 +687,6 @@
         "whatTheAgentLoses": "You lose the ability to weigh whether securing a flight with more available seats is worth paying a higher fare."
        },
        {
-        "question": "Which departing flight time and fare should you select?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple departing flights with different times and fares, requiring you to choose the option that best fits your schedule and budget.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh your preferred departure time against the cost of other available flights."
-       },
-       {
         "question": "Which flight offers the best balance of price, time, and convenience for you?",
         "cluster": "compare",
         "moment": "Now",
@@ -932,14 +786,6 @@
         "moneyMoving": false,
         "why": "The interstitial screen requires clicking 'Continue to booking' to successfully redirect from the search aggregator to the final booking site.",
         "whatTheAgentLoses": "You lose the awareness of being handed off to a third-party booking site to complete your reservation."
-       },
-       {
-        "question": "Do you want to acknowledge the travel reminders to proceed?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a mandatory reminder about entry and exit regulations that must be accepted to continue.",
-        "whatTheAgentLoses": "You miss the chance to review important travel regulations and airline contact information specific to your route."
        }
       ]
      },
@@ -1007,14 +853,6 @@
         "whatTheAgentLoses": "An agent might overpay for a flexible fare with extra baggage when a cheaper, more restrictive ticket would have sufficed for your plans."
        },
        {
-        "question": "Should you compare the details of the different fare tiers before choosing one?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows three fare options with varying prices and perks like free date changes, and comparing them helps clarify what each includes.",
-        "whatTheAgentLoses": "You lose the opportunity to decide if the extra benefits of a premium fare are worth the higher price for your specific travel needs."
-       },
-       {
         "question": "Do the benefits promised on the initial fare card match what is shown in the fare comparison table?",
         "cluster": "facts",
         "moment": "Now",
@@ -1067,6 +905,14 @@
         "moneyMoving": false,
         "why": "The screen presents multiple fare tiers like Basic, Regular, and Plus, each with different costs and allowances for overhead bags and seat reservations.",
         "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide if paying extra for priority boarding and overhead baggage space is worth the cost for this specific trip."
+       },
+       {
+        "question": "Do you proceed to the payment screen, or do you navigate back to edit your checked baggage?",
+        "cluster": "undo",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The audio suggests moving to payment, but the screen shows a return to the flights tab to modify baggage, leaving the booking incomplete.",
+        "whatTheAgentLoses": "The user fails to secure their flight because the agent abandons the checkout process to modify baggage settings."
        }
       ]
      },
@@ -1134,14 +980,6 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to personally ensure your sensitive passport and payment details are entered securely and accurately."
        },
        {
-        "question": "What passenger and contact details will you enter?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires names matching a government ID and contact information to ensure the ticket and flight updates are sent to the correct person.",
-        "whatTheAgentLoses": "Delegating this step means you lose control over which email and phone number receive the flight updates and risk a name mismatch with your government ID."
-       },
-       {
         "question": "Does your passport meet the 4-month validity requirement shown on the screen?",
         "cluster": "facts",
         "moment": "Now",
@@ -1178,14 +1016,6 @@
         "moneyMoving": false,
         "why": "The passenger information form includes an optional section to enter GST details, which is necessary if you intend to claim a tax credit for a business trip.",
         "whatTheAgentLoses": "An agent might skip this optional field, causing you to lose the ability to claim the flight as a tax-deductible business expense."
-       },
-       {
-        "question": "Do you want to save this new passenger's details to your account for future bookings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The form includes a checkbox to 'Add this name to my passenger list', which stores the traveler's information to speed up future reservations.",
-        "whatTheAgentLoses": "An agent might leave this unchecked, forcing you to manually re-enter the same passenger details the next time you book a flight."
        }
       ]
      },
@@ -1216,14 +1046,6 @@
         "moneyMoving": false,
         "why": "The screen presents checkboxes to allow notifications via SMS and email before you click Continue to proceed with the USD 2,971.60 booking.",
         "whatTheAgentLoses": "You lose the opportunity to protect your privacy and decline optional marketing messages by leaving the boxes unchecked."
-       },
-       {
-        "question": "What contact information will you provide for this booking?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows empty fields for contact name, email, and mobile phone, which dictate where your itinerary and flight updates will be sent.",
-        "whatTheAgentLoses": "Letting an agent handle this means you lose control over who receives the booking confirmation and critical day-of-travel alerts."
        }
       ]
      },
@@ -1246,14 +1068,6 @@
         "moneyMoving": false,
         "why": "The screen shows required fields for name, date of birth, and nationality, plus a mandatory checkbox to agree to the Cebu Pacific Privacy Policy before continuing.",
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the privacy terms you are agreeing to and verify that your contact information is entered correctly."
-       },
-       {
-        "question": "How do you proceed to the final payment step?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking the top navigation tab instead of the continue button at the bottom prevents the flow from advancing because the required form fields were left empty.",
-        "whatTheAgentLoses": "The user loses the knowledge that they must complete the required on-page forms and use the designated continue button rather than clicking the top progress tabs to move forward."
        }
       ]
      },
@@ -1261,14 +1075,6 @@
       "id": "6.6",
       "label": "Fix the failed submit",
       "questions": [
-       {
-        "question": "Can you proceed to the next step without filling in the passenger details?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking continue without entering information triggers red 'Required field' warnings for the name, contact, and demographic fields.",
-        "whatTheAgentLoses": "The user loses the assurance that their mandatory personal information is entered correctly to secure the booking."
-       },
        {
         "question": "Why did your form submission fail, and which passenger profile must you select to proceed?",
         "cluster": "hand over",
@@ -1285,16 +1091,6 @@
     "id": "7",
     "label": "Add or decline the extras",
     "note": "7.1 to 7.5 in whatever order the site's stepper runs them; every child is a priced offer and most keepers decline most of them. 7.3 fires when 7.2 says no. three offers arrive pre-set - bags pre-added (Q4Km), insurance pre-selected (MasT), paid seats pre-assigned (Q4Km) - so declining means finding the removal control first.",
-    "questions": [
-     {
-      "question": "Do you want to add fast track security, travel insurance, or pre-paid in-flight credit to your booking?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen presents optional add-ons like fast track security for £8.00 and travel insurance starting at £13.72, which provide extra convenience and protection but increase the total cost.",
-      "whatTheAgentLoses": "Delegating this choice means the agent might skip protections you want or purchase unnecessary extras that inflate the final price of your trip."
-     }
-    ],
     "children": [
      {
       "id": "7.1",
@@ -1560,14 +1356,6 @@
         "moneyMoving": false,
         "why": "The screen offers several paid add-ons like SpiceMax, SpiceCafe, and BagProtekt that will increase the ₹ 6,063 total price.",
         "whatTheAgentLoses": "The user loses the ability to balance their personal comfort preferences against the extra costs of these optional flight add-ons."
-       },
-       {
-        "question": "Do you want to select any other add-ons before proceeding to payment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The add-ons screen shows your seats are already selected with a total price of ₹ 6,363, making this the final opportunity to include extras like baggage or meals.",
-        "whatTheAgentLoses": "You lose the ability to personally evaluate whether additional flight extras are worth increasing your final fare."
        }
       ]
      }
@@ -1633,28 +1421,12 @@
         "whatTheAgentLoses": "You lose the final opportunity to verify the exact itinerary, baggage fees, and total cost before the payment is finalized."
        },
        {
-        "question": "Do you want to review the specific aircraft and fare details for your outbound flight?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Expanding the flight details reveals the aircraft model, like the Boeing 757-200, and the fare class to confirm exactly what you are booking.",
-        "whatTheAgentLoses": "You lose the chance to verify the specific aircraft type and fare class before finalizing the itinerary."
-       },
-       {
         "question": "Do you accept the final cost breakdown before paying?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a final total of ₹ 5,745 after applying a discount and a convenience fee, which is the exact amount that will be charged.",
         "whatTheAgentLoses": "You lose the chance to review the final fees and discounts to ensure the total price is acceptable before the transaction is finalized."
-       },
-       {
-        "question": "Are the flight details, fare rules, and total price correct before you proceed to checkout?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Reviewing the itinerary summary ensures you haven't made a mistake with the dates, times, or non-refundable fare rules before committing to the final checkout.",
-        "whatTheAgentLoses": "You lose the final opportunity to catch booking errors or reconsider the strict fare rules before committing to the purchase."
        }
       ]
      },
@@ -1835,14 +1607,6 @@
       "label": "Pick the payment method",
       "questions": [
        {
-        "question": "How do you use the 'book now pay later' option?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a notice with specific steps to retrieve a PNR and purchase the trip later, which is crucial to understand if you want to secure the reservation without immediate payment.",
-        "whatTheAgentLoses": "You lose the awareness of the specific manual steps required to retrieve your booking and finalize payment at a later time."
-       },
-       {
         "question": "Should you select the 'Book Now Pay Later' option to hold the fare?",
         "cluster": "select",
         "moment": "Now",
@@ -1865,14 +1629,6 @@
         "moneyMoving": false,
         "why": "The checkout page offers an exclusive card member benefit to take $50 off the $90.97 total for every 5,000 miles redeemed.",
         "whatTheAgentLoses": "Delegating this choice means an agent might spend your accumulated miles when you would have preferred to pay the cash balance."
-       },
-       {
-        "question": "How many miles do you want to apply toward the cost of the flight?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed a dropdown with specific discount tiers, such as $50.00 off for 5,000 miles, which determines your final out-of-pocket cash cost.",
-        "whatTheAgentLoses": "Delegating this means losing the ability to decide your preferred balance between spending accumulated miles and paying cash."
        },
        {
         "question": "Does the applied miles discount provide enough value to justify the final amount due?",
@@ -1937,14 +1693,6 @@
         "moneyMoving": true,
         "why": "Booking sites and payment gateways often offer Dynamic Currency Conversion (DCC), which applies a heavily inflated exchange rate compared to letting your travel credit card handle the conversion.",
         "whatTheAgentLoses": "An agent might select your home currency thinking it is safer or clearer, inadvertently adding a 5-7% hidden markup to the final cost of the flight."
-       },
-       {
-        "question": "Is the final total being billed in your home currency, or will your credit card charge a foreign transaction fee?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Booking on international airline websites or foreign travel agencies often results in the card being charged in a foreign currency, triggering hidden conversion fees from your bank.",
-        "whatTheAgentLoses": "The user loses the opportunity to switch to a travel credit card with no foreign transaction fees or to manually change the billing currency on the site before paying."
        }
       ]
      },
@@ -2017,14 +1765,6 @@
       "label": "Verify the itinerary document",
       "questions": [
        {
-        "question": "Should you print this booking confirmation right now?",
-        "cluster": "select",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a print dialog box with options to print or cancel, requiring a decision on whether to create a physical record of the itinerary.",
-        "whatTheAgentLoses": "Delegating this step means losing the choice of whether to immediately print a hard copy of the booking confirmation for your personal records."
-       },
-       {
         "question": "Are the flight details, passenger information, and total cost correct on the itinerary summary?",
         "cluster": "approve",
         "moment": "Now",
@@ -2063,14 +1803,6 @@
         "moneyMoving": true,
         "why": "The video shows a booking process for a flight to Boracay in October 2022, but the final itinerary receipt displayed is for a completely different flight to Tokyo from July 2020.",
         "whatTheAgentLoses": "You lose the assurance that your specific flight was actually booked if the agent presents a mismatched or fabricated confirmation receipt."
-       },
-       {
-        "question": "Where do you click to view your confirmed itinerary?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Manage Bookings' icon at the bottom of the home screen provides access to your saved trips so you can verify the booking details.",
-        "whatTheAgentLoses": "You lose the familiarity with the app's layout needed to quickly pull up your itinerary or check your flight status later."
        },
        {
         "question": "Where do you check to see if the ticket was actually issued if the payment confirmation screen fails to load?",

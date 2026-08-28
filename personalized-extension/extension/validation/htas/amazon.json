@@ -26,30 +26,12 @@
       "label": "Install or update the app",
       "questions": [
        {
-        "question": "Which search suggestion should you select to find the Amazon app?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Typing 'am' reveals multiple suggestions like 'amazon' and 'airtel app', making it important to pick the exact match to find the correct store.",
-        "whatTheAgentLoses": "You lose the ability to verify that the agent selects the official Amazon app from the search suggestions instead of a similarly named alternative.",
-        "kind": "state-check"
-       },
-       {
         "question": "Which search result is the correct Amazon app to select?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a sponsored third-party app at the top of the results, requiring you to bypass it and identify the official Amazon app to continue.",
         "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the legitimate Amazon application rather than a sponsored ad.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Has the app finished updating so you can open it?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen now displays an active 'Open' button instead of 'Installing...', confirming the app is ready to launch.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct Amazon app successfully installed before proceeding to use it.",
         "kind": "state-check"
        }
       ]
@@ -91,16 +73,6 @@
         "whatTheAgentLoses": "Delegating this step means you lose direct control over your device's privacy settings and whether the app receives temporary or permanent camera access.",
         "kind": "decision",
         "verify_form": "The agent answered the camera-permission prompt - check what it granted and whether it ticked the remember-this-choice box; that box makes the access permanent, not one-time."
-       },
-       {
-        "question": "Should I dismiss the WhatsApp notification about a cancelled Flipkart order?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "A WhatsApp notification banner about a cancelled Flipkart order appeared at the top of the screen, presenting a potential distraction from the current task.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to address an urgent notification about a cancelled order or ignore it to focus on the Amazon purchase.",
-        "kind": "decision",
-        "verify_form": "A WhatsApp banner about a cancelled Flipkart order dropped in mid-task - check whether the agent dismissed it unread; only u know if that cancellation needed your attention more than this purchase."
        },
        {
         "question": "Should you allow the app to send you notifications?",
@@ -152,18 +124,7 @@
      },
      {
       "id": "1.5",
-      "label": "Find the sign-in entry",
-      "questions": [
-       {
-        "question": "Which icon do you tap to sign into your account from the home screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The bottom navigation bar contains both a Profile icon and a Menu icon that can lead to the sign-in screen.",
-        "whatTheAgentLoses": "You lose control over the navigation path used to access and verify your personal account.",
-        "kind": "state-check"
-       }
-      ]
+      "label": "Find the sign-in entry"
      },
      {
       "id": "1.6",
@@ -310,37 +271,7 @@
     "children": [
      {
       "id": "2.1",
-      "label": "Open the Amazon Pay hub",
-      "questions": [
-       {
-        "question": "Where do you tap to access your wallet and balance features?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The top navigation bar displays several distinct service icons like 'Pay', 'Fresh', and 'Bazaar', requiring you to identify the correct entry point for financial features.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify your available Amazon Pay balance before starting your shopping journey.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Should you use your balance for a service like a bill payment, or proceed to shop for a physical product?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Amazon Pay dashboard displays alternative ways to spend your balance, such as mobile recharges and bill payments.",
-        "whatTheAgentLoses": "You lose the opportunity to prioritize spending your balance on pending utility bills or recharges over buying a physical item.",
-        "kind": "decision",
-        "verify_form": "The agent had your Amazon Pay balance in front of it - check whether it spent toward the product or a pending recharge or bill; only u know which claim on that balance comes first."
-       },
-       {
-        "question": "Which option should you select to redeem a new gift card?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The dashboard presents multiple gift card options, so selecting 'Add a Gift Card' is necessary to apply a new balance to your account.",
-        "whatTheAgentLoses": "The user loses the security of personally handling their gift card code and verifying that the funds are correctly added to their account balance.",
-        "kind": "state-check"
-       }
-      ]
+      "label": "Open the Amazon Pay hub"
      },
      {
       "id": "2.2",
@@ -460,16 +391,6 @@
     "note": "one of 3.1, 3.3, 3.4, or 3.5 to raise candidates - 3.2 rides on 3.1. then 3.6, with 3.7 running wherever ads sit in the list. re-entered per item on multi-item orders.",
     "questions": [
      {
-      "question": "Which product from the homepage recommendations should you select?",
-      "cluster": "compare",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The homepage displays several distinct items like a Galaxy phone, a water heater, and earbuds, so you must choose the specific product you intend to purchase.",
-      "whatTheAgentLoses": "You lose the opportunity to spontaneously browse and select an appealing item from the personalized homepage recommendations.",
-      "kind": "decision",
-      "verify_form": "The agent picked one product off a homepage showing a Galaxy phone, a water heater, and earbuds - check that the item it opened is the one u meant to buy."
-     },
-     {
       "question": "Are you sure this is the correct wishlist link to open?",
       "cluster": "facts",
       "moment": "Now",
@@ -506,25 +427,6 @@
       "whatTheAgentLoses": "You lose the personal context of knowing how long an item has been saved and whether your desire for it has faded over time.",
       "kind": "decision",
       "verify_form": "The agent shopped from items saved long ago - check the 'added on' dates of what it picked; only u know whether something saved months back is still wanted."
-     },
-     {
-      "question": "Should you browse the promotional deals on the home screen or use the search bar to find a specific product?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The home screen features immediate purchase options through promotions like the Great Indian Festival and sponsored products, which might catch your interest before you even search.",
-      "whatTheAgentLoses": "You lose the opportunity to organically discover unexpected deals or trending items that you might want but didn't explicitly instruct the agent to buy.",
-      "kind": "decision",
-      "verify_form": "The agent went past the Great Indian Festival promotions on the home screen - check whether it browsed the deals or searched directly, and what promotions it walked past; any of them could have beaten the price it eventually paid."
-     },
-     {
-      "question": "How do you access your previously saved items?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The account dropdown menu contains multiple options like 'Wish List' and 'Shopping List', so you must select the correct one to find the specific items you want to buy.",
-      "whatTheAgentLoses": "The user loses the opportunity to personally review their curated lists and decide which specific saved item they are currently ready to purchase.",
-      "kind": "intent-check"
      }
     ],
     "children": [
@@ -532,15 +434,6 @@
       "id": "3.1",
       "label": "Enter the search terms",
       "questions": [
-       {
-        "question": "Did you confirm the search parameters and filters are correct?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search bar and selected filters dictate the initial results on the screen, so incorrect parameters will hide the best options.",
-        "whatTheAgentLoses": "You lose the ability to intuitively tweak the search phrasing based on personal context that wasn't explicitly stated.",
-        "kind": "intent-check"
-       },
        {
         "question": "Which department should you select from the dropdown to narrow your search?",
         "cluster": "select",
@@ -555,54 +448,12 @@
      },
      {
       "id": "3.2",
-      "label": "Pick a suggested completion",
-      "questions": [
-       {
-        "question": "Do any of these search suggestions match my intent?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown showed specific variations like 't shirts for men casual', which could save typing time and yield better-targeted results if they match your exact goal.",
-        "whatTheAgentLoses": "You lose the chance to organically discover and pivot to a more specific, helpful search term suggested by the platform's autocomplete.",
-        "kind": "decision",
-        "verify_form": "The agent settled the search term at the suggestion dropdown - check whether it took an autocomplete variant like 't shirts for men casual' or your raw phrase; the variant it picked scoped every result after it."
-       }
-      ]
+      "label": "Pick a suggested completion"
      },
      {
       "id": "3.3",
       "label": "Search with the camera",
       "questions": [
-       {
-        "question": "Should you use text, voice, or the camera to search for the item?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search bar displays text, microphone, and camera icons, requiring you to choose the most effective input method for finding your specific product.",
-        "whatTheAgentLoses": "The user loses the ability to easily find an exact match by snapping a picture of a physical item they already have in front of them.",
-        "kind": "decision",
-        "verify_form": "The agent picked a search input - check whether it typed text instead of using the camera; a photo of the item u already own finds the exact match text cannot describe."
-       },
-       {
-        "question": "Should you upload an existing photo from your gallery or use the live camera?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Amazon Lens screen presents an 'Upload a photo' button, requiring you to decide whether you already have an image of the item or need to capture it live.",
-        "whatTheAgentLoses": "The user loses the ability to select a specific, pre-saved image from their personal gallery to ensure the visual search matches their exact desired item.",
-        "kind": "decision",
-        "verify_form": "The agent chose between uploading a photo and the live camera - check which image the visual search actually ran on; only u know which picture shows the exact item u want."
-       },
-       {
-        "question": "Do you want to select an existing photo from your gallery for the visual search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays recent files and image thumbnails, allowing you to choose an already saved picture of the item to use for the search.",
-        "whatTheAgentLoses": "You lose the ability to select a specific, previously taken photo from your personal device gallery that best represents the item you want to buy.",
-        "kind": "decision",
-        "verify_form": "The agent picked a photo from the gallery thumbnails for the visual search - check which image it chose; a near-miss photo sends the whole search after the wrong item."
-       },
        {
         "question": "What should you do when your uploaded photo doesn't appear in the visual search?",
         "cluster": "hand over",
@@ -636,34 +487,11 @@
      },
      {
       "id": "3.4",
-      "label": "Browse the categories",
-      "questions": [
-       {
-        "question": "How should you navigate the site's menu to find the smartphones category?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting 'Smartphones' under the 'Mobiles & Tablets' drop-down menu efficiently filters the site's massive inventory down to the exact items you want to browse.",
-        "whatTheAgentLoses": "You lose the chance to manually explore the category hierarchy, which might reveal alternative device types or current category-wide sales you hadn't considered.",
-        "kind": "intent-check"
-       }
-      ]
+      "label": "Browse the categories"
      },
      {
       "id": "3.5",
-      "label": "Reuse a recent search",
-      "questions": [
-       {
-        "question": "Should you type a new search query or select one of your recently viewed items or past searches?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search dropdown displays previously viewed categories like PC game headsets and recent searches, offering a quick shortcut to resume a past shopping session.",
-        "whatTheAgentLoses": "You lose the ability to spontaneously resume an interrupted shopping session prompted by your personalized search history.",
-        "kind": "decision",
-        "verify_form": "The search dropdown offered your recent searches and viewed items - check whether the agent typed fresh or resumed an old thread like the PC game headsets; only u know if that older session is the one u actually want back."
-       }
-      ]
+      "label": "Reuse a recent search"
      },
      {
       "id": "3.6",
@@ -744,15 +572,6 @@
     "label": "Vet the item",
     "note": "4.1 to 4.6 in any order and depth - the corpus mostly reads 4.1 and skips 4.3. 4.7 whenever the item has variants; 4.8 and 4.9 where formats and fit make it matter. 4.7 re-prices the page, so 4.5 and 4.6 are re-read after it.",
     "questions": [
-     {
-      "question": "Do you scroll down to check the price, rating, and item details, or look through the image carousel first?",
-      "cluster": "photos",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Scrolling down reveals the exact price, offers, and detailed reviews from the 525 ratings to confirm the T-shirt combo pack meets your needs.",
-      "whatTheAgentLoses": "You lose the chance to personally evaluate the product's written specifications and customer reviews to ensure it is exactly what you want to buy.",
-      "kind": "state-check"
-     },
      {
       "question": "Are you satisfied with the specific details of this product, such as the color, price, and delivery time?",
       "cluster": "approve",
@@ -984,16 +803,6 @@
         "why": "The search results displayed 12,534 ratings for the Bare Home Fleece Blanket, but the product detail page shows 12,392 ratings.",
         "whatTheAgentLoses": "The user loses the ability to notice discrepancies in product metrics that could indicate a glitch or an unexpected change in the selected item variation.",
         "kind": "state-check"
-       },
-       {
-        "question": "Should you verify the product reviews and quantity before adding it to your cart?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Confirming the final details and reading reviews ensures you do not accidentally purchase a low-quality or incorrect item.",
-        "whatTheAgentLoses": "The user loses the peace of mind that comes from personally vetting the product's quality and specifications before proceeding to purchase.",
-        "kind": "decision",
-        "verify_form": "The agent added the item without pausing on reviews or quantity - check what the reviews say and how many it set; only u can decide whether the quality bar is met before paying."
        }
       ]
      },
@@ -1303,16 +1112,6 @@
     "note": "5.1 forks the route. cart route: 5.2 as interstitials appear, 5.3 to 5.6 as the order needs, then 5.7. buy-now route: none of it - the next screen is 7 with the address on top (bNZA, BKI3, BWIx, QXip).",
     "questions": [
      {
-      "question": "Do you want to proceed to checkout now, or continue shopping for other items?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen confirms the item was added to the cart and presents a \"Proceed to checkout\" button, requiring a choice between finalizing the current order or looking for additional products.",
-      "whatTheAgentLoses": "You lose the opportunity to bundle multiple items into a single order if the agent automatically proceeds to checkout without asking if you need anything else.",
-      "kind": "decision",
-      "verify_form": "The item landed in the cart and the agent faced 'Proceed to checkout' - check whether it went straight through; if u needed anything else, it just closed the order without asking."
-     },
-     {
       "question": "Should you proceed directly to checkout, continue shopping, or review your cart first?",
       "cluster": "approve",
       "moment": "Now",
@@ -1367,26 +1166,6 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally decide whether to investigate the reviews before committing the item to the cart.",
         "kind": "decision",
         "verify_form": "The agent chose a purchase path at the ₹649 deal price - check whether it went add-to-cart or straight to Buy Now; Buy Now skips the pause where you'd have read the 83 ratings before money moves."
-       },
-       {
-        "question": "Should you tap 'Buy Now' to check out immediately, or 'Add to Cart' to stage the item?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents both 'Buy Now' and 'Add to Cart' buttons below the price and delivery details, offering two different paths to initiate the purchase.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred purchase flow, such as grouping items in a cart versus an instant single-item checkout.",
-        "kind": "decision",
-        "verify_form": "The agent picked between 'Buy Now' and 'Add to Cart' - check which path it took; Buy Now commits to an instant single-item checkout, the cart leaves room to bundle and review."
-       },
-       {
-        "question": "Should you use 'Buy Now' for instant checkout or 'Add to Cart' to continue shopping for multiple items?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays both 'Buy Now' and 'Add to Cart' buttons, requiring a choice based on whether you plan to purchase additional products.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to expedite the checkout for this single item or keep the cart open to consolidate multiple purchases.",
-        "kind": "decision",
-        "verify_form": "The agent chose 'Buy Now' or 'Add to Cart' - check which; if u had more items to buy, an instant checkout just split them into separate orders."
        }
       ]
      },
@@ -1394,16 +1173,6 @@
       "id": "5.2",
       "label": "Answer the add-on offers",
       "questions": [
-       {
-        "question": "Should you add any of the recommended accessories to your order before checking out?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The cart confirmation page displays 'Frequently Bought Together' items like screen protectors and cases, offering a convenient way to bundle essential add-ons.",
-        "whatTheAgentLoses": "You lose the opportunity to spontaneously discover and bundle useful accessories that complement your main purchase.",
-        "kind": "decision",
-        "verify_form": "The confirmation page pitched screen protectors and cases under 'Frequently Bought Together' - check whether the agent added any accessory or skipped them all; only u know if the phone needs a case in this order."
-       },
        {
         "question": "Do you want to add the extended warranty or adjust the quantity before adding the item to your cart?",
         "cluster": "select",
@@ -1423,42 +1192,12 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether the extra cost is worth the extended warranty coverage for this specific item.",
         "kind": "decision",
         "verify_form": "An Asurion prompt demanded a yes or no on the $19.99 3-year protection plan - check which the agent clicked; accepting adds the cost, declining drops the coverage, and it could not proceed without answering."
-       },
-       {
-        "question": "Is the basket confirmation correct, and do you want to add any of the recommended items?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "Reviewing the right panel ensures the correct item and price were added, while the main section offers a chance to discover related products.",
-        "whatTheAgentLoses": "Delegating this step removes the chance for serendipitous discovery and spontaneous purchases of related items.",
-        "kind": "decision",
-        "verify_form": "The agent read the basket confirmation and moved past the recommended items - check that the right item and price landed, and what related products it scrolled past without asking."
        }
       ]
      },
      {
       "id": "5.3",
-      "label": "Open the cart",
-      "questions": [
-       {
-        "question": "How do you navigate to the cart to continue the checkout process?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows an 'Added to cart' confirmation alongside a bottom navigation bar, requiring you to identify the correct icon to proceed.",
-        "whatTheAgentLoses": "You lose the opportunity to manually navigate the app's interface and verify the cart's status before initiating checkout.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Is the item successfully added to your cart, and how do you navigate to it?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "Confirming the 'Added to Cart' message and clicking the 'View Cart' button ensures the system registered your selection so you can proceed to checkout.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the success message and reviewing the cart's contents before initiating checkout.",
-        "kind": "state-check"
-       }
-      ]
+      "label": "Open the cart"
      },
      {
       "id": "5.4",
@@ -1640,16 +1379,6 @@
       "label": "Add another item",
       "questions": [
        {
-        "question": "Do you want to search for additional items?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking the search bar revealed past searches like 'cap' and 'bucket hat', offering a quick way to find more products if needed.",
-        "whatTheAgentLoses": "You lose the opportunity to spontaneously remember and add other needed items based on seeing your recent search history.",
-        "kind": "decision",
-        "verify_form": "The agent finished with one item while the search bar held your past searches like 'cap' and 'bucket hat' - check whether anything else u needed got asked about before the session moved on."
-       },
-       {
         "question": "Are you sure this Lenovo A6000 is the correct second product to purchase?",
         "cluster": "approve",
         "moment": "Now",
@@ -1710,16 +1439,6 @@
       "whatTheAgentLoses": "You lose the convenience of splitting a single order among different recipients, forcing you to make separate transactions for each destination.",
       "kind": "decision",
       "verify_form": "The agent shipped everything to one address - check whether any item in this order was meant for someone else; the Add Another Address box was there and went unchecked."
-     },
-     {
-      "question": "Should I enter your delivery address manually or use the map to auto-fill it?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen provides standard text fields for your address details alongside an 'Add location on map' button for auto-filling.",
-      "whatTheAgentLoses": "You lose control over whether to trust the map's auto-fill accuracy or manually specify your exact building and landmark details.",
-      "kind": "decision",
-      "verify_form": "The agent entered your address by hand or used the map auto-fill - check which; the map's pin can miss the exact building and landmark details only you know."
      }
     ],
     "children": [
@@ -1768,24 +1487,6 @@
         "why": "The checkout process requires a valid destination, so leaving the name, mobile number, pincode, and state fields empty will trigger an error or prevent delivery.",
         "whatTheAgentLoses": "The user loses the ability to successfully complete checkout and receive their item if the agent submits a blank address form.",
         "kind": "intent-check"
-       },
-       {
-        "question": "Which state should you select for the delivery address?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a dropdown list of Indian states, which must be accurately selected to complete the shipping address.",
-        "whatTheAgentLoses": "You lose control over specifying the correct state for your shipping address, which could result in the package being misrouted.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Does it make sense that clicking 'Use this address' on an empty form successfully added a new address to your list?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "Submitting an empty form should trigger validation errors, so the sudden appearance of a new address indicates the video was edited or spliced.",
-        "whatTheAgentLoses": "An agent trained on this spliced footage will fail to learn that it actually needs to input text into the address fields before proceeding.",
-        "kind": "state-check"
        },
        {
         "question": "Which weekend days can you receive packages at this address?",
@@ -2215,48 +1916,17 @@
           "whatTheAgentLoses": "You lose the ability to securely manage and verify your own payment credentials when the system flags a new shipping destination.",
           "kind": "decision",
           "verify_form": "The agent picked a payment method and handled the card-number re-entry the new shipping address triggered - check which card it selected and re-typed; that full number is your credential, entered on your behalf."
-         },
-         {
-          "question": "Should you add a new credit or debit card to pay for this order?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "The screen presents an 'Add a credit or debit card' option, requiring a decision on exactly which financial account will fund the purchase.",
-          "whatTheAgentLoses": "The user loses the financial control of deciding which specific bank account or credit line is charged for the transaction.",
-          "kind": "decision",
-          "verify_form": "The agent added a new credit or debit card to pay - read back whose card and which one; that is the account this order and any saved-card future orders will draw from."
          }
         ]
        },
        {
         "id": "7.5.2",
-        "label": "Enter the card security code",
-        "questions": [
-         {
-          "question": "Do you need help finding the security code on your card?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The checkout screen includes a \"What's this?\" link next to the security code field to visually guide users on where to find the CVV on their specific type of credit card.",
-          "whatTheAgentLoses": "You lose the educational guidance provided by the platform that teaches you how to locate the security code on your physical card.",
-          "kind": "intent-check"
-         }
-        ]
+        "label": "Enter the card security code"
        },
        {
         "id": "7.5.3",
         "label": "Open the installment options",
         "questions": [
-         {
-          "question": "How do you want to configure your EMI options?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "Tapping 'Select EMI options' is required to specify the bank and tenure for the installment plan.",
-          "whatTheAgentLoses": "You lose control over selecting the specific installment duration and interest rate that best fits your financial situation.",
-          "kind": "decision",
-          "verify_form": "The agent went into EMI selection - read back the bank, tenure, and interest structure it settled on; that plan decides your monthly outflow for months and cannot be casually undone."
-         },
          {
           "question": "Do you want to pay in full or select an EMI plan for this purchase?",
           "cluster": "select",
@@ -2710,16 +2380,6 @@
       "label": "Place the order",
       "questions": [
        {
-        "question": "How do you finalize the purchase or abort the transaction from this screen?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "This matters because the screen presents the ultimate choice between committing to the purchase with the place order button or cancelling by navigating back to the homepage.",
-        "whatTheAgentLoses": "The user loses the chance to make a final go/no-go decision on the purchase if the agent proceeds without pausing to explain these ultimate options.",
-        "kind": "decision",
-        "verify_form": "The agent hit Place Order or backed out to the homepage - check which, and that the screen actually confirms it; this was the last go/no-go before your money moved."
-       },
-       {
         "question": "Are you sure you want to place this order given the 2026 delivery estimate?",
         "cluster": "approve",
         "moment": "Now",
@@ -2815,15 +2475,6 @@
         "kind": "state-check"
        },
        {
-        "question": "Does the video show a continuous transition to the order confirmation after you tap 'Continue'?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The video cuts abruptly from the payment selection to a completely different product page, failing to show if the order was actually placed.",
-        "whatTheAgentLoses": "The user loses proof that their purchase was successfully completed because the recording skips the final confirmation screen.",
-        "kind": "state-check"
-       },
-       {
         "question": "Does the confirmation email reflect the correct delivery dates and a zero total balance?",
         "cluster": "receipts",
         "moment": "Completion",
@@ -2845,52 +2496,11 @@
      },
      {
       "id": "9.2",
-      "label": "Decline the post-purchase offers",
-      "questions": [
-       {
-        "question": "Is the order fully confirmed, and should I interact with the scratch card or Prime offers before leaving?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays the final 'Order placed' confirmation alongside distracting upsells like a scratch card and a Prime subscription offer.",
-        "whatTheAgentLoses": "The user loses the opportunity to claim post-purchase rewards or evaluate the Prime subscription offer if the agent automatically dismisses them.",
-        "kind": "decision",
-        "verify_form": "The agent left the confirmation screen - check whether it opened the scratch card or just dismissed it with the Prime offer; an unopened reward is simply forfeited."
-       }
-      ]
+      "label": "Decline the post-purchase offers"
      },
      {
       "id": "9.3",
-      "label": "Open the orders list",
-      "questions": [
-       {
-        "question": "Which option should you select to view your past orders?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The bottom bar displays an Orders button that directly opens your purchase history.",
-        "whatTheAgentLoses": "The user loses the chance to personally review their past purchases to find the exact item they want to reorder.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Which section do you select to verify your recent purchase?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Selecting 'Your Orders' from the profile menu is necessary to confirm that the checkout process was successful and the order is officially logged.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying that the new order successfully appears in your account history.",
-        "kind": "state-check"
-       },
-       {
-        "question": "How do you access your order history to track a package?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The home screen features a bottom navigation bar with multiple options like 'You' and 'Menu', requiring you to know which tab actually contains your recent orders.",
-        "whatTheAgentLoses": "The user loses the immediate reassurance of personally navigating to their order history to verify the tracking status of their package.",
-        "kind": "state-check"
-       }
-      ]
+      "label": "Open the orders list"
      },
      {
       "id": "9.4",
@@ -2913,16 +2523,6 @@
         "why": "The screen shows the gift card code entered, but the video ends on the pending payment page before the code is applied or the order is finalized.",
         "whatTheAgentLoses": "The user is left falsely believing their item was successfully purchased using the gift card when the order was never actually placed.",
         "kind": "state-check"
-       },
-       {
-        "question": "Which of your recent orders do you want to check the status for?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays the recently ordered smartwatch right at the top of the 'Your Orders' section, allowing you to verify its specific details without needing to browse through all past purchases.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally confirming the order details and delivery status of your newly purchased item.",
-        "kind": "decision",
-        "verify_form": "The agent opened one order from 'Your Orders' - check it's the smartwatch you just bought, not an older purchase; a status read off the wrong order is false reassurance."
        }
       ]
      },
@@ -2948,15 +2548,6 @@
         "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the green checkmark confirming the order and the opportunity to quickly cancel or adjust delivery instructions before shipping.",
         "kind": "decision",
         "verify_form": "The agent left the order standing at 'Ordered' - check the progress bar shows it went through, and decide now whether to cancel or change delivery instructions; that window closes when it ships."
-       },
-       {
-        "question": "How do you check the tracking timeline and delivery status of your order?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The Order Details screen provides a 'Track package' button that reveals the exact delivery timeline and shipping status for the purchased item.",
-        "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying the real-time shipping updates and exact delivery date.",
-        "kind": "state-check"
        }
       ]
      }
