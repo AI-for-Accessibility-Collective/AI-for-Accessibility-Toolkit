@@ -3,11 +3,11 @@
 A tiny, zero-dependency web service to **capture a person's accessibility needs
 into a toolkit ability profile**, and — with the admin password — **list and
 delete profiles**. From the same port it also serves the **Controller** UI (the
-text/voice control surface, `toolkit/controller/`) at `/controller`.
+text/voice control surface, `controller/`) at `/controller`.
 
 Routes: `/onboarding` (the onboarding page, also the redirect target of `/`) and
 `/controller` (the Controller demo; its ESM loads under `/controller/lib` and the
-shared settings vocabulary under `/controller/registry`).
+toolkit settings vocabulary it imports under `/controller/toolkit/registry`).
 
 It talks to the toolkit in one of two modes:
 

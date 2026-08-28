@@ -5,9 +5,9 @@
 //
 //   node toolkit/test/controller-remote.test.mjs
 
-import { createDirectChannelPair, serveControl, remoteControl, websocketChannel, connectRemoteReceiver } from '../controller/transport/remote.js';
-import { createController } from '../controller/createController.js';
-import { createMockReceiver } from '../controller/mock-receiver.js';
+import { createDirectChannelPair, serveControl, remoteControl, websocketChannel, connectRemoteReceiver } from '../transport/remote.js';
+import { createController } from '../createController.js';
+import { createMockReceiver } from '../mock-receiver.js';
 
 // A minimal linked WebSocket-like pair (opens asynchronously, like a real socket).
 class FakeSocket {

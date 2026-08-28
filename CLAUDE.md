@@ -25,6 +25,11 @@ ports and consume the core, the catalog, or the hosted service.
   `auditors/` (issue detectors), `profiles/` (ability presets), `utils/`.
 - `server/` — hosted HTTP service exposing the Librarian methods to any
   language/runtime.
+- `controller/` — an **optional** UI layer (a sibling of the toolkit, not part
+  of the core): the default text/voice control surface that drives any app
+  through a neutral `ControlPort`. It *consumes* the toolkit (imports
+  `../toolkit/registry/tools.js` for the settings vocabulary); the toolkit never
+  depends on it. See `controller/DESIGN.md` + `controller/PROTOCOL.md`.
 - `examples/`, `docs/` — runnable examples and documentation.
 
 `createToolkit({ kv, clock, scheduler, consent, ... }) → { datastore, librarian }`

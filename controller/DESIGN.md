@@ -3,13 +3,13 @@
 > **Status:** M0–M5 complete — headless core, self-presentation, web UI + mounts
 > + demo, optional LLM lane, command intents with confirmation, and the remote
 > transport (the ControlPort over a channel, so the Controller is a cross-device
-> service). This document is the spec; the code under `toolkit/controller/`
+> service). This document is the spec; the code under `controller/`
 > implements it. What remains is production hardening of real transports
 > (WebSocket/postMessage/HTTP adapters to the Channel shape) and a native UI.
 >
 > **Run the demo:** serve the repo statically and open the demo page —
 > `python3 -m http.server 4100` then
-> `http://127.0.0.1:4100/toolkit/controller/demo/index.html`. The floating widget
+> `http://127.0.0.1:4100/controller/demo/index.html`. The floating widget
 > drives the article through the DOM `ControlPort`; the operator-profile buttons
 > show the Controller re-presenting itself (M1).
 

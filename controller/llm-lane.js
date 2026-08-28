@@ -15,7 +15,7 @@
 //     router then clamps/filters again on dispatch. The model cannot invent a
 //     setting, exceed a range, or trigger an unsupported action.
 
-import { settingsMeta } from '../registry/tools.js';
+import { settingsMeta } from '../toolkit/registry/tools.js';
 import { adapt, undo, query, command } from './intent.js';
 
 function vocabularyLines(caps) {

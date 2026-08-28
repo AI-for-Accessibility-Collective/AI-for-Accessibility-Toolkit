@@ -3,10 +3,10 @@
 //
 //   node toolkit/test/controller-cmd.test.mjs
 
-import { parse } from '../controller/grammar.js';
-import { createController } from '../controller/createController.js';
-import { createMockReceiver } from '../controller/mock-receiver.js';
-import { createDomReceiver } from '../controller/web/dom-receiver.js';
+import { parse } from '../grammar.js';
+import { createController } from '../createController.js';
+import { createMockReceiver } from '../mock-receiver.js';
+import { createDomReceiver } from '../web/dom-receiver.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {

@@ -5,9 +5,9 @@
 //
 //   node toolkit/test/controller-llm.test.mjs
 
-import { createLlmLane } from '../controller/llm-lane.js';
-import { createController } from '../controller/createController.js';
-import { createMockReceiver } from '../controller/mock-receiver.js';
+import { createLlmLane } from '../llm-lane.js';
+import { createController } from '../createController.js';
+import { createMockReceiver } from '../mock-receiver.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {

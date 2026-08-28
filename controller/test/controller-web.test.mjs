@@ -5,8 +5,8 @@
 //
 //   node toolkit/test/controller-web.test.mjs
 
-import { createDomReceiver } from '../controller/web/dom-receiver.js';
-import { createController } from '../controller/createController.js';
+import { createDomReceiver } from '../web/dom-receiver.js';
+import { createController } from '../createController.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {

@@ -33,11 +33,12 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'onboarding-data');
 const TOOLKIT_URL = (process.env.TOOLKIT_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
 
-// The Controller UI (toolkit/controller) is served from THIS same port at
-// /controller. Its ESM modules load statically under /controller/lib, and the
-// shared settings vocabulary under /controller/registry.
+// The Controller UI (the repo-root `controller/` — optional, a sibling of the
+// toolkit) is served from THIS same port at /controller. Its ESM modules load
+// statically under /controller/lib, and the toolkit settings vocabulary they
+// import (`../toolkit/registry/tools.js`) under /controller/toolkit/registry.
 const TOOLKIT_DIR = path.join(__dirname, '..', 'toolkit');
-const CONTROLLER_DIR = path.join(TOOLKIT_DIR, 'controller');
+const CONTROLLER_DIR = path.join(__dirname, '..', 'controller');
 const REGISTRY_DIR = path.join(TOOLKIT_DIR, 'registry');
 
 // Support-area vocabulary (mirrors the toolkit's ability dimensions). The UI
@@ -331,7 +332,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Controller UI at /controller. The demo's imports are relative to
-    // toolkit/controller/demo/; rewrite them to the /controller/lib prefix this
+    // controller/demo/; rewrite them to the /controller/lib prefix this
     // server exposes so the same page works when served from here.
     if (method === 'GET' && (pathname === '/controller' || pathname === '/controller/')) {
       let html = await readFile(path.join(CONTROLLER_DIR, 'demo', 'index.html'), 'utf8');
@@ -342,8 +343,8 @@ const server = http.createServer(async (req, res) => {
     if (method === 'GET' && pathname.startsWith('/controller/lib/')) {
       return serveStatic(res, CONTROLLER_DIR, pathname.slice('/controller/lib/'.length));
     }
-    if (method === 'GET' && pathname.startsWith('/controller/registry/')) {
-      return serveStatic(res, REGISTRY_DIR, pathname.slice('/controller/registry/'.length));
+    if (method === 'GET' && pathname.startsWith('/controller/toolkit/registry/')) {
+      return serveStatic(res, REGISTRY_DIR, pathname.slice('/controller/toolkit/registry/'.length));
     }
 
     if (method === 'GET' && pathname === '/api/config') {

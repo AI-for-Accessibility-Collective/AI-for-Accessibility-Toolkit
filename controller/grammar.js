@@ -9,7 +9,7 @@
 // registry `settingsMeta`, so the vocabulary and the receiver's honesty checks
 // stay in sync automatically.
 
-import { settingsMeta } from '../registry/tools.js';
+import { settingsMeta } from '../toolkit/registry/tools.js';
 import { adapt, undo, query, command, unrecognized } from './intent.js';
 
 // Relative numeric nudges use these step sizes; the router resolves them

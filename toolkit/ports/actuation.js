@@ -114,7 +114,7 @@
  *   screen-reader voice, at their rate), UIAccessibility on iOS, spatial audio
  *   on XR, real TTS only where there is no AT. Reaching for speechSynthesis is
  *   the failure mode for exactly the users this serves. The neutral, go-forward
- *   ControlPort (toolkit/controller/control-port.js) names this `getContent`
+ *   ControlPort (controller/control-port.js) names this `getContent`
  *   precisely to drop the "read aloud" implication; this web-shaped port is
  *   superseded by it.
  * @property {(action: string, target?: string, text?: string) => Promise<PageActionResult>} pageAction

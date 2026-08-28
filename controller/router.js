@@ -11,7 +11,7 @@
 // A Result is `{ ok, intent, say, data? }` — `say` is the human feedback the UI
 // speaks/shows; `data` carries structured detail (applied keys, content, …).
 
-import { settingsMeta } from '../registry/tools.js';
+import { settingsMeta } from '../toolkit/registry/tools.js';
 import { parse, noMatch, SUGGESTIONS } from './grammar.js';
 import { command } from './intent.js';
 

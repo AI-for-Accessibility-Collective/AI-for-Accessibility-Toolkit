@@ -6,8 +6,8 @@
 //   node toolkit/test/controller-ui.test.mjs
 
 import { JSDOM } from 'jsdom';
-import { createController } from '../controller/createController.js';
-import { createMockReceiver } from '../controller/mock-receiver.js';
+import { createController } from '../createController.js';
+import { createMockReceiver } from '../mock-receiver.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; console.log('PASS:', name); } else { fail++; console.log('FAIL:', name); } }
@@ -21,7 +21,7 @@ global.window.speechSynthesis = { speak: (u) => spoken.push(u && u.text), cancel
 global.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
 // No SpeechRecognition on purpose — text-only path.
 
-const { renderControllerUI } = await import('../controller/web/ui.js');
+const { renderControllerUI } = await import('../web/ui.js');
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 async function run() {
@@ -117,7 +117,9 @@ async function run() {
   check('background note posts a notification', notes.length === 1 && /42/.test(notes[0].body));
 
   console.log(`\nController UI: ${pass} passed, ${fail} failed`);
-  if (fail) process.exit(1);
+  // Force exit — a still-running task's earcon setInterval would otherwise keep
+  // the event loop alive after the checks are done.
+  process.exit(fail ? 1 : 0);
 }
 
 run();

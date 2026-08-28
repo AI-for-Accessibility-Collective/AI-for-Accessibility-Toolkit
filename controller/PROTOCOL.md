@@ -198,8 +198,8 @@ Map the settings to CDP: `applySettings` injects a stylesheet / CSS vars (see
 ## 5. Controller side (already built here — for reference)
 
 ```js
-import { createController } from 'toolkit/controller/createController.js';
-import { connectRemoteReceiver } from 'toolkit/controller/transport/remote.js';
+import { createController } from 'controller/createController.js';
+import { connectRemoteReceiver } from 'controller/transport/remote.js';
 
 const control = connectRemoteReceiver('ws://127.0.0.1:9333'); // your endpoint
 const c = createController({ control, operator: { uid } });    // + optional llm

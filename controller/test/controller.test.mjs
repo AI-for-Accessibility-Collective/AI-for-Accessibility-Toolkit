@@ -5,12 +5,12 @@
 //
 //   node toolkit/test/controller.test.mjs
 
-import { parse, vocabularyKeys } from '../controller/grammar.js';
-import { createController } from '../controller/createController.js';
-import { createMockReceiver } from '../controller/mock-receiver.js';
-import { noopControl } from '../controller/control-port.js';
-import { deriveControllerPresentation, describePresentation } from '../controller/presentation.js';
-import { settingsMeta } from '../registry/tools.js';
+import { parse, vocabularyKeys } from '../grammar.js';
+import { createController } from '../createController.js';
+import { createMockReceiver } from '../mock-receiver.js';
+import { noopControl } from '../control-port.js';
+import { deriveControllerPresentation, describePresentation } from '../presentation.js';
+import { settingsMeta } from '../../toolkit/registry/tools.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {
