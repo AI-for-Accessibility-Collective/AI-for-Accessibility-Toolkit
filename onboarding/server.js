@@ -24,6 +24,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifyAdminPassword } from '../server/src/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -276,8 +277,8 @@ async function abilityModelFor(uid) {
 function adminOk(req) {
   if (!ADMIN_PASSWORD) return false;
   const given = req.headers['x-admin-password'] || '';
-  // Constant-ish length check + compare (small tool; not a hardened secret store).
-  return given.length === ADMIN_PASSWORD.length && given === ADMIN_PASSWORD;
+  // Same timing-safe compare the toolkit server uses for its admin password.
+  return verifyAdminPassword(ADMIN_PASSWORD, given);
 }
 
 async function listProfileIds() {
