@@ -21,7 +21,7 @@ global.window.speechSynthesis = { speak: (u) => spoken.push(u && u.text), cancel
 global.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
 // No SpeechRecognition on purpose — text-only path.
 
-const { renderControllerUI, bestVoice } = await import('../web/ui.js');
+const { renderControllerUI, bestVoice, forSpeech } = await import('../web/ui.js');
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 async function run() {
@@ -163,6 +163,32 @@ async function run() {
     check('voice: an explicit choice persists to localStorage', localStorage.getItem('aa-controller-voice') === 'Google US English');
     uiv.root.querySelector('.aa-input').value = 'dark mode'; uiv.root.querySelector('.aa-go').click(); await tick(); await tick();
     check('voice: the chosen voice is used', lastVoice && lastVoice.name === 'Google US English');
+  }
+
+  // ── forSpeech: strip markdown/stray chars before TTS reads them literally ───
+  {
+    check('forSpeech: drops ** bold ** asterisks', forSpeech('**Done** and dusted') === 'Done and dusted');
+    check('forSpeech: drops single-asterisk emphasis', forSpeech('a *big* change') === 'a big change');
+    check('forSpeech: drops inline code backticks', forSpeech('edit `config.js` now') === 'edit config.js now');
+    check('forSpeech: links → label only', forSpeech('see [the docs](https://x.y/z) here') === 'see the docs here');
+    check('forSpeech: strips heading + bullet markers', forSpeech('# Title\n- one\n- two') === 'Title one two');
+    check('forSpeech: keeps sentence punctuation', forSpeech('Ready! Next: step 2, then done.') === 'Ready! Next: step 2, then done.');
+    check('forSpeech: spares snake_case', forSpeech('call read_file now') === 'call read_file now');
+    check('forSpeech: empty/whitespace → empty', forSpeech('  **  **  ') === '');
+  }
+
+  // End-to-end: a note with markdown is SPOKEN clean (no asterisks/backticks).
+  {
+    localStorage.setItem('aa-controller-speak-results', '1');
+    let lastSpoken = null;
+    global.window.speechSynthesis.speak = (u) => { lastSpoken = u && u.text; spoken.push(u && u.text); };
+    let fireN = null;
+    const nc = Object.assign({}, createMockReceiver({ actions: ['task'] }), { onNote(fn) { fireN = fn; return () => {}; } });
+    const cn = createController({ control: nc, rawToTask: true });
+    const uin = renderControllerUI(cn, { doc: document });
+    document.body.appendChild(uin.root);
+    fireN('**All set** — opened `google.com` and searched for *apples*.');
+    check('speak: the spoken string has no markdown characters', lastSpoken === 'All set — opened google.com and searched for apples.');
   }
 
   console.log(`\nController UI: ${pass} passed, ${fail} failed`);

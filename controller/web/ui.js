@@ -62,6 +62,26 @@ const earconThinkPulse = () => { blip(440, 0.12, 0, 0.045); blip(620, 0.12, 0.14
 const earconDone = () => { blip(660, 0.12, 0, 0.06); blip(880, 0.18, 0.11, 0.06); };
 const earconError = () => { blip(300, 0.2, 0, 0.07, 'square'); blip(210, 0.26, 0.17, 0.06, 'square'); };
 
+// Strip markdown / stray formatting characters before speaking. A task result
+// or note often comes back as markdown ("**done** — see `config.js`"), and a
+// speech engine reads the punctuation literally ("asterisk asterisk done") or
+// stumbles on it. Keep real sentence punctuation (. , ? ! : ; ' " -), which
+// carries prosody; remove only the markup. Pure + exported so it's testable.
+export function forSpeech(text) {
+  let s = String(text == null ? '' : text);
+  s = s.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1'); // [label](url) / ![alt](url) → label/alt
+  s = s.replace(/`+/g, '');                          // inline code / fence backticks
+  s = s.replace(/\*+/g, '');                         // *, **, *** emphasis + "* " bullets
+  s = s.replace(/~~/g, '');                          // ~~strikethrough~~
+  s = s.replace(/_(?=\S)([^_]*?\S)_/g, '$1');        // _emphasis_ → emphasis (paired only; spares snake_case)
+  s = s.replace(/^\s{0,3}#{1,6}\s+/gm, '');          // # heading markers
+  s = s.replace(/^\s{0,3}>\s?/gm, '');               // > blockquote markers
+  s = s.replace(/^\s*[-+]\s+/gm, '');                // "- " / "+ " list bullets
+  s = s.replace(/[|#]+/g, ' ');                      // table pipes / stray hashes
+  s = s.replace(/\s+/g, ' ').trim();                 // collapse whitespace
+  return s;
+}
+
 function el(doc, tag, attrs = {}, text) {
   const n = doc.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -202,10 +222,12 @@ export function renderControllerUI(controller, { doc = document } = {}) {
 
   // ── behavior ──
   function speak(text) {
-    if (!TTS || !speakResults || !text) return;
+    if (!TTS || !speakResults) return;
+    const clean = forSpeech(text); // strip markdown/stray chars so they aren't read literally
+    if (!clean) return;
     try {
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
+      const u = new SpeechSynthesisUtterance(clean);
       const v = canPickVoice ? pickVoice() : null;
       if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
       window.speechSynthesis.speak(u);
