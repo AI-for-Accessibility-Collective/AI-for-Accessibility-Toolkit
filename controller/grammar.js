@@ -90,6 +90,17 @@ export const SUGGESTIONS = [
   'read this', "what's on screen", 'undo',
 ];
 
+// First rule whose pattern matches the normalized utterance, with the match
+// object (so callers can see WHERE in the utterance it matched, not just that
+// it did).
+function firstMatch(u) {
+  for (const rule of RULES) {
+    const m = u.match(rule.re);
+    if (m) return { rule, m };
+  }
+  return null;
+}
+
 /**
  * Parse one utterance deterministically.
  * @param {string} utterance
@@ -98,11 +109,59 @@ export const SUGGESTIONS = [
 export function parse(utterance) {
   const u = norm(utterance);
   if (!u) return null;
-  for (const rule of RULES) {
-    const m = u.match(rule.re);
-    if (m) return rule.build(m, utterance);
-  }
-  return null;
+  const hit = firstMatch(u);
+  return hit ? hit.rule.build(hit.m, utterance) : null;
+}
+
+// Lead-in words allowed before a whole-utterance command without making it
+// "compound": politeness, articles, and imperative verbs ("make the text
+// bigger"). A clause connector is deliberately NOT in here.
+const PREFIX_FILLER = new Set([
+  'please', 'could', 'can', 'would', 'will', 'you', 'hey', 'ok', 'okay', 'now',
+  'i', "i'd", 'id', "i'll", 'like', 'want', 'to', "let's", 'lets', 'just',
+  'make', 'set', 'turn', 'on', 'the', 'a', 'an', 'my', 'this', 'some', 'more',
+  'it', 'them', 'give', 'me', 'use', 'put', 'go',
+]);
+// A second clause: another instruction tacked on. Any of these downstream of a
+// match means the utterance is compound and must go to the app whole.
+const CONNECTOR = /\b(and|then|also|plus|after that)\b|[,;]/;
+
+/**
+ * Does the grammar match consume (essentially) the WHOLE utterance?
+ *
+ * This is the guard that lets the Controller keep a deterministic fast path for
+ * the settings vocabulary while it's driving a URL (`rawToTask`) WITHOUT
+ * reintroducing the compound-instruction bug: "bigger text" / "dark mode" /
+ * "undo" / "read this to me" map cleanly and stay deterministic; "open google
+ * and search for apples" carries a second clause and is left for the app.
+ *
+ * True only when: a rule matched, it reaches the end (allowing trailing
+ * punctuation/politeness), the lead-in is nothing but filler, and there is no
+ * clause connector anywhere in the utterance.
+ * @param {string} utterance
+ * @returns {boolean}
+ */
+export function consumesWholeUtterance(utterance) {
+  const u = norm(utterance);
+  if (!u) return false;
+  const hit = firstMatch(u);
+  if (!hit || hit.m.index == null) return false;
+  // A second clause (…and…, …then…, a comma) → compound → not whole.
+  if (CONNECTOR.test(u)) return false;
+  const start = hit.m.index;
+  const end = start + hit.m[0].length;
+  // Must reach the end, ignoring trailing punctuation and benign tails
+  // (politeness + addressee/manner words like "to me", "aloud" that some rules
+  // leave dangling, e.g. "read this" out of "read this to me").
+  const suffix = u.slice(end)
+    .replace(/\b(please|thanks|thank you|for me|to me|out ?loud|aloud|now)\b/g, '')
+    .replace(/[.?!,;\s]+/g, '')
+    .trim();
+  if (suffix) return false;
+  // The lead-in (if any) may only be filler words.
+  const prefix = u.slice(0, start).trim();
+  if (prefix && !prefix.split(/\s+/).every((w) => PREFIX_FILLER.has(w))) return false;
+  return true;
 }
 
 /** Numeric step sizes, exposed so the router can resolve `deltas`. */

@@ -5,7 +5,7 @@
 //
 //   node toolkit/test/controller.test.mjs
 
-import { parse, vocabularyKeys } from '../grammar.js';
+import { parse, vocabularyKeys, consumesWholeUtterance } from '../grammar.js';
 import { createController } from '../createController.js';
 import { createMockReceiver } from '../mock-receiver.js';
 import { noopControl } from '../control-port.js';
@@ -183,6 +183,20 @@ async function run() {
     check('dispatch: help lists example commands', h.ok && /dark mode/.test(h.say));
     const s = await c.handle('speak slower');
     check('dispatch: speech rate moves from baseline 1.0 and clamps to range', recv.settings.speechRate === 0.8);
+  }
+
+  // ── consumesWholeUtterance: the rawToTask fast-path guard ──────────────────
+  // A whole-utterance settings phrase is deterministic; a second clause or
+  // extra trailing content sends it to the app whole.
+  {
+    const whole = ['bigger text', 'dark mode', 'undo', 'read this to me',
+      'make the text bigger', 'please turn on dark mode', 'high contrast'];
+    for (const u of whole) check(`whole: "${u}" consumes the utterance`, consumesWholeUtterance(u) === true);
+
+    const notWhole = ['open google and search for apples', 'bigger text and dark mode',
+      'dark mode, then scroll down', 'tell me about dark mode in physics',
+      'what is dark mode used for'];
+    for (const u of notWhole) check(`not whole: "${u}" is left for the app`, consumesWholeUtterance(u) === false);
   }
 
   console.log(`\nController M0+M1: ${pass} passed, ${fail} failed`);

@@ -12,7 +12,7 @@
 // speaks/shows; `data` carries structured detail (applied keys, content, …).
 
 import { settingsMeta } from '../toolkit/registry/tools.js';
-import { parse, noMatch, SUGGESTIONS } from './grammar.js';
+import { parse, consumesWholeUtterance, noMatch, SUGGESTIONS } from './grammar.js';
 import { command } from './intent.js';
 
 // Baseline for a numeric key when the receiver reports no current value, so a
@@ -44,12 +44,34 @@ function validate(key, value) {
 export function createRouter({ control, llm = null, rawToTask = false }) {
   async function resolve(utterance) {
     // rawToTask (the Controller is driving a URL): the host asserted this
-    // receiver takes tasks, so send the raw input straight through as a task —
-    // UNCONDITIONALLY, no local grammar. (Gating this on the receiver also
-    // advertising a 'task' action silently fell back to grammar, which then
-    // produced confusing refusals like "this app can't search" for compound
-    // instructions such as "open google and search for apples".)
-    if (rawToTask) return taskCommand(utterance);
+    // receiver takes tasks, so free-form input goes straight through as a task
+    // — an 8-second agent turn per utterance. We keep ONE deterministic fast
+    // path in front of that: an utterance that maps cleanly onto the settings
+    // vocabulary the receiver actually declared. "bigger text" / "dark mode" /
+    // "undo" / "read this to me" are ~150 ms through applySettings, persist in
+    // the profile, and can be undone — no reason to spend a model call on them.
+    //
+    // The guard is deliberately narrow so it can't reintroduce the
+    // compound-instruction bug (see below): only adapt/undo/query intents that
+    // `consumesWholeUtterance` (no trailing second clause), and — for adapt —
+    // only when every target key is in the receiver's `settingKeys`. Anything
+    // partial, unrecognized, or a `command` (scroll/navigate/search/activate —
+    // things the agent does at least as well, and the reason compound phrasing
+    // like "open google and search for apples" must reach the app whole) falls
+    // through to a task, exactly as before.
+    if (rawToTask) {
+      const det = parse(utterance);
+      if (det && consumesWholeUtterance(utterance)) {
+        if (det.type === 'undo' || det.type === 'query') return det;
+        if (det.type === 'adapt') {
+          const caps = await control.describeCapabilities();
+          const supported = new Set(caps.settingKeys || []);
+          const keys = [...Object.keys(det.changes || {}), ...Object.keys(det.deltas || {})];
+          if (keys.length && keys.every((k) => supported.has(k))) return det;
+        }
+      }
+      return taskCommand(utterance);
+    }
 
     const det = parse(utterance);
     if (det) return det;

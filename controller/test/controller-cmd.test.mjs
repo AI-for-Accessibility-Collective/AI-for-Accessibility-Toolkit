@@ -124,26 +124,47 @@ async function run() {
     check('navigate refused when receiver lacks it', (await noNav.handle('open wikipedia.org')).ok === false);
   }
 
-  // ── 9. rawToTask (driving a URL): all input → task, no grammar ────────────
+  // ── 9. rawToTask (driving a URL): free-form → task; the settings vocabulary
+  //       keeps a deterministic fast path when it maps cleanly ────────────────
   {
-    const recv = createMockReceiver({ actions: ['task', 'scroll'] });
+    const recv = createMockReceiver({ actions: ['task', 'scroll'] }); // default settingKeys incl. fontScale, darkMode
     const c = createController({ control: recv, rawToTask: true });
-    const r = await c.handle('bigger text'); // a grammar phrase — must NOT be adapted here
-    check('rawToTask: a grammar phrase is sent as a task, not adapted', r.ok && recv.focus === 'task' && r.intent.type === 'command' && r.intent.action === 'task');
-    check('rawToTask: even a bare word goes to the app', (await c.handle('undo')).intent.action === 'task');
-    // The reported case: a compound instruction must go through as ONE task, not
-    // be dismembered by the grammar into a "search" it then refuses.
-    check('rawToTask: "open google and search for apples" → one task', (await c.handle('open google and search for apples')).intent.action === 'task');
 
-    // Sanity: the SAME receiver without rawToTask still runs the grammar.
+    // A whole-utterance settings phrase the receiver declares → deterministic,
+    // NOT an 8-second agent task. It really applies (persists in activeSettings).
+    const r = await c.handle('bigger text');
+    check('rawToTask: a clean settings phrase stays deterministic (adapt, not task)', r.ok && r.intent.type === 'adapt' && recv.settings.fontScale === 110);
+    check('rawToTask: "dark mode" adapts deterministically', (await c.handle('dark mode')).intent.type === 'adapt' && recv.settings.darkMode === true);
+    check('rawToTask: an imperative lead-in ("make the text bigger") still counts as whole', (await c.handle('make the text bigger')).intent.type === 'adapt' && recv.settings.fontScale === 120);
+    check('rawToTask: "undo" undoes deterministically', (await c.handle('undo')).intent.type === 'undo' && recv.settings.fontScale === 110);
+    check('rawToTask: "read this to me" reads deterministically (query)', (await c.handle('read this to me')).intent.type === 'query');
+
+    // The reported case: a compound instruction must go through as ONE task, not
+    // be dismembered by the grammar into a "search" it then refuses. The second
+    // clause ("… and search …") is what keeps it out of the fast path.
+    const rc = await c.handle('open google and search for apples');
+    check('rawToTask: "open google and search for apples" → one task', rc.intent.action === 'task');
+    check('rawToTask: a settings phrase with a trailing clause → task', (await c.handle('bigger text and dark mode')).intent.action === 'task');
+
+    // A `command` (scroll/navigate/search) is deliberately NOT fast-pathed — the
+    // agent does it at least as well, and routing it keeps compound phrasing working.
+    check('rawToTask: "scroll down" (a command) → task', (await c.handle('scroll down')).intent.action === 'task');
+    check('rawToTask: "search for apples" → task', (await c.handle('search for apples')).intent.action === 'task');
+
+    // Honesty: a settings phrase the receiver does NOT declare falls through to
+    // a task (let the agent try) rather than being refused locally.
+    const noFont = createController({ control: createMockReceiver({ actions: ['task'], settingKeys: ['darkMode'] }), rawToTask: true });
+    check('rawToTask: a setting the receiver lacks → task (agent fallback, not refusal)', (await noFont.handle('bigger text')).intent.action === 'task');
+
+    // Sanity: the SAME receiver without rawToTask still runs the full grammar.
     const c2 = createController({ control: createMockReceiver({ actions: ['task'] }) });
     check('no rawToTask: a grammar phrase still adapts locally', (await c2.handle('bigger text')).intent.type === 'adapt');
 
-    // rawToTask sends a task even when the receiver doesn't advertise one — it
-    // does NOT silently fall back to grammar (that produced "can't search").
+    // rawToTask still routes an unrecognized/free-form utterance as a task even
+    // when the receiver doesn't advertise one — no silent "can't search" refusal.
     const c3 = createController({ control: createMockReceiver({ actions: [] }), rawToTask: true });
-    const r3 = await c3.handle('search for apples');
-    check('rawToTask: unadvertised task still routed as a task (no grammar fallback)', r3.intent.type === 'command' && r3.intent.action === 'task');
+    const r3 = await c3.handle('book me a flight to boston');
+    check('rawToTask: unadvertised free-form still routed as a task (no grammar fallback)', r3.intent.type === 'command' && r3.intent.action === 'task');
   }
 
   // ── 10. returnToController flag reaches the app via performAction meta ─────
