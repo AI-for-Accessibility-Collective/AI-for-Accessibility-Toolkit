@@ -22,7 +22,7 @@ is a **pure function** from this one model to its own device-appropriate
 vocabulary: web gets `fontScale`/`darkMode`, XR gets angular text height and
 world-locked captions, mobile gets Dynamic-Type-style `scalePercent` and
 `touch.minTargetPt`. `web.js` doesn't even own its derivation — it delegates
-to `adapters/chrome/web-surface.js#deriveWebSettings`, the single source of
+to `platforms/chrome/web-surface.js#deriveWebSettings`, the single source of
 truth for "what does this need render as on the web" — and the test asserts
 that delegation is exact (`JSON.stringify` equality), not just similar.
 Where a surface genuinely cannot represent a need, `createSurfaceAdapter`
@@ -103,7 +103,7 @@ is for `web.js`'s numbers becoming CSS today.
 
 1. **Settings vocabulary and needs vocabulary are two different writer paths,
    and only one crosses surfaces.** `WEB_DERIVATION` in
-   `adapters/chrome/web-surface.js` maps `needs[] → settings` one way; there
+   `platforms/chrome/web-surface.js` maps `needs[] → settings` one way; there
    is no reverse. `recordExplicitSetting`/`recordScopedSettings` (the popup
    toggle path) write to memory-shard `settings` records that only
    `getEffectivePreferences` reads — `getAbilityModel()` never sees them,

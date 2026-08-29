@@ -319,7 +319,7 @@ the settled "adapter/skill" vocabulary.
   [core/librarian.js](../../toolkit/core/librarian.js) `createLibrarian(...)`), a
   [ports contract](../../toolkit/ports/index.js), a
   [`createToolkit`](../../toolkit/index.js) DI entry, and a Chrome adapter
-  ([adapters/chrome/](../../toolkit/adapters/chrome/)).
+  ([platforms/chrome/](../../toolkit/platforms/chrome/)).
 - Core converted from `globalThis`/`importScripts` to ES modules. The three
   classic scripts the SW/popup/test load —
   `extension/lib/{taxonomy,datastore,librarian}.js` — are now **generated**
@@ -365,7 +365,7 @@ the settled "adapter/skill" vocabulary.
   needs, reading level, language, confidence) from per‑app renderings.
   **(increment 2 ✅)**
 - Introduce `SurfaceAdapter`; move today's web settings mapping
-  (`fontScale/lineHeight/…`) into `adapters/chrome` as the *web* surface. Add the
+  (`fontScale/lineHeight/…`) into `platforms/chrome` as the *web* surface. Add the
   derivation `abilityModel → webSettings`. Behavior identical for web users.
   **(increment 1 ✅ seam; increment 2 ✅ derivation + content.js wiring)**
 - Bake in the cheap safeguards here: add **`strength` (floor/preference/hint)** to
@@ -379,7 +379,7 @@ the settled "adapter/skill" vocabulary.
 > toolkit modules [core/units.js](../../toolkit/core/units.js) (typed units +
 > coercion), [core/surface.js](../../toolkit/core/surface.js) (`createSurfaceAdapter`
 > → `{applied, unmet, degradedTo, satisfied}`), and
-> [adapters/chrome/web-surface.js](../../toolkit/adapters/chrome/web-surface.js).
+> [platforms/chrome/web-surface.js](../../toolkit/platforms/chrome/web-surface.js).
 > `strength` added to every record (defaults to `preference`) and the
 > `getEffectivePreferences` merge now strength‑gates overwrites: **floor > preference
 > > hint**, regardless of scope specificity, equal strength keeps the old
@@ -409,7 +409,7 @@ the settled "adapter/skill" vocabulary.
 > `fields.needs/.readingLevel/.confidence` sub‑keys → empty `needs[]` for every
 > current user); `Librarian.getAbilityModel()` exposes it. The **web SurfaceProfile
 > is a pure derivation, not a store**:
-> [web-surface.js](../../toolkit/adapters/chrome/web-surface.js) `deriveWebSettings`
+> [web-surface.js](../../toolkit/platforms/chrome/web-surface.js) `deriveWebSettings`
 > maps neutral dimensions (`textSize`, `reduceMotion`, …) → web settings, and
 > `resolveWebPreferences` composes the derived baseline **under** the authoritative
 > merge (a real record at any strength beats it — the identity‑safe rule). It is
