@@ -190,11 +190,14 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
     const token = t.body.token;
-    if (areas.length) await remoteLibrarian(token, 'setProfileField', ['supportAreas', areas]);
-    // Always write (even []) so a re-onboard clears stale needs — e.g. a profile
-    // corrected from low-vision to blind must drop the old magnification needs.
+    // Always write all three derived fields (even empty) so a re-onboard clears
+    // what the person deselected — e.g. a profile corrected from low-vision to
+    // blind must drop the old magnification needs, and someone who unchecks
+    // every area must not keep stale supportAreas or visionKind that then
+    // disagree with the cleared needs.
+    await remoteLibrarian(token, 'setProfileField', ['supportAreas', areas]);
     await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
-    if (kind) await remoteLibrarian(token, 'setProfileField', ['fields.visionKind', kind]);
+    await remoteLibrarian(token, 'setProfileField', ['fields.visionKind', kind ?? null]);
     if (text) {
       await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
       // Stable topic so a re-onboard UPSERTS this note (addNote upserts by
@@ -204,9 +207,11 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
   } else {
     const { host } = await localBits();
     const { librarian } = await host.getInstance(uid);
-    if (areas.length) await librarian.setProfileField('supportAreas', areas);
-    await librarian.setProfileField('fields.needs', needs); // always write — clears stale needs on re-onboard
-    if (kind) await librarian.setProfileField('fields.visionKind', kind);
+    // Same rule as the remote branch: all three written unconditionally so a
+    // re-onboard clears what was deselected and the profile stays consistent.
+    await librarian.setProfileField('supportAreas', areas);
+    await librarian.setProfileField('fields.needs', needs);
+    await librarian.setProfileField('fields.visionKind', kind ?? null);
     if (text) {
       await librarian.setProfileField('freeText', text);
       // Stable topic → re-onboard upserts (not appends) this note.
