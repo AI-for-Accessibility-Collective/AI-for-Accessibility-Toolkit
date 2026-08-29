@@ -9,6 +9,27 @@
 const SR = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
 const TTS = (typeof window !== 'undefined') && ('speechSynthesis' in window);
 
+// Pick a good speech voice instead of inheriting the OS default — which is
+// often a *compact* voice (e.g. macOS "Samantha"), a poor default sitting among
+// novelty voices. First match wins, in this order:
+//   1. a local high-quality macOS voice — (Premium)/(Enhanced): offline, instant
+//   2. a network voice (Google …): clearly better than a compact voice
+//   3. the platform default; else the first available.
+// Local-before-network is deliberate: a network voice adds a round trip before
+// the first word and stops working offline — a poor property for an
+// accessibility control surface — so it's only preferred over a compact voice.
+// Pure (takes the voice list) so it's unit-testable.
+export function bestVoice(voices, lang = 'en') {
+  const all = voices || [];
+  const inLang = all.filter((v) => v && v.lang && v.lang.toLowerCase().startsWith(lang));
+  const pool = inLang.length ? inLang : all;
+  const pick = (rx) => pool.find((v) => v && rx.test(v.name || ''));
+  return pick(/\((Premium|Enhanced)\)/i)
+      || pick(/^Google /)
+      || pool.find((v) => v && v.default)
+      || pool[0] || null;
+}
+
 // ── Web Audio earcons (ported from browser-harness) ─────────────────────────
 // Short non-verbal cues: a repeating "thinking" pulse while a task runs, and a
 // done chime when the result arrives. Non-verbal, so they don't collide with a
@@ -120,6 +141,54 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     root.append(toggle);
   }
 
+  // Voice selection. The chosen voice is a strong personal preference — and the
+  // people most affected are the least able to work around a bad default — so
+  // expose it beside the toggle, persisted the same way. Default is "Automatic"
+  // (bestVoice above). getVoices() is empty on first call in Chrome and fills in
+  // asynchronously, so we (re)build the list on `voiceschanged` too.
+  const VOICE_KEY = 'aa-controller-voice';
+  const canPickVoice = TTS && typeof window.speechSynthesis.getVoices === 'function';
+  const LANG = ((typeof navigator !== 'undefined' && navigator.language) || 'en').slice(0, 2).toLowerCase();
+  let voices = [];
+  let chosenVoiceName = '';
+  if (canPickVoice) { try { chosenVoiceName = localStorage.getItem(VOICE_KEY) || ''; } catch { /* storage blocked */ } }
+
+  function pickVoice() {
+    if (chosenVoiceName) { const v = voices.find((x) => x.name === chosenVoiceName); if (v) return v; }
+    return bestVoice(voices, LANG);
+  }
+
+  let voiceSelect = null;
+  function loadVoices() {
+    if (!canPickVoice) return;
+    try { voices = window.speechSynthesis.getVoices() || []; } catch { voices = []; }
+    if (!voiceSelect) return;
+    const inLang = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith(LANG));
+    const list = inLang.length ? inLang : voices;
+    voiceSelect.textContent = '';
+    voiceSelect.append(el(doc, 'option', { value: '' }, 'Automatic (best available)'));
+    for (const v of list) {
+      const label = v.name + (v.localService === false ? ' — network' : '');
+      voiceSelect.append(el(doc, 'option', { value: v.name }, label));
+    }
+    // Keep the persisted choice selected if it's still available; else Automatic.
+    voiceSelect.value = (chosenVoiceName && list.some((v) => v.name === chosenVoiceName)) ? chosenVoiceName : '';
+  }
+  if (canPickVoice) {
+    const vlabel = el(doc, 'label', { class: 'aa-toggle aa-voice' });
+    voiceSelect = el(doc, 'select', { 'aria-label': 'Voice for spoken results' });
+    vlabel.append(doc.createTextNode('Voice '), voiceSelect);
+    voiceSelect.addEventListener('change', () => {
+      chosenVoiceName = voiceSelect.value;
+      try { localStorage.setItem(VOICE_KEY, chosenVoiceName); } catch { /* storage blocked */ }
+    });
+    root.append(vlabel);
+    loadVoices();
+    const ss = window.speechSynthesis;
+    if (typeof ss.addEventListener === 'function') ss.addEventListener('voiceschanged', loadVoices);
+    else if ('onvoiceschanged' in ss) ss.onvoiceschanged = loadVoices;
+  }
+
   // "Return to controller after running" — passed to the app so it can bring
   // focus back to this Controller when a task finishes.
   {
@@ -134,7 +203,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   // ── behavior ──
   function speak(text) {
     if (!TTS || !speakResults || !text) return;
-    try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch {}
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const v = canPickVoice ? pickVoice() : null;
+      if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
+      window.speechSynthesis.speak(u);
+    } catch {}
   }
   // Deliver to the right live region: assertive for acks/errors, polite for results.
   function deliver(text, { assertive = false } = {}) {
@@ -247,7 +322,13 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   return {
     root,
     focus: refocus,
-    destroy() { stopWaiting(); try { unNote && unNote(); } catch {} try { recog && recog.abort(); } catch {} root.remove(); },
+    destroy() {
+      stopWaiting();
+      try { unNote && unNote(); } catch {}
+      try { recog && recog.abort(); } catch {}
+      try { const ss = window.speechSynthesis; if (canPickVoice && ss && typeof ss.removeEventListener === 'function') ss.removeEventListener('voiceschanged', loadVoices); } catch {}
+      root.remove();
+    },
   };
 }
 
@@ -260,7 +341,9 @@ export const CONTROLLER_CSS = `
 .aa-feedback { font-size: .95rem; margin-bottom: .5rem; min-height: 1.4em; }
 .aa-feedback:empty { min-height: 0; margin: 0; }   /* the inactive live region collapses */
 .aa-toggle { display: inline-flex; align-items: center; gap: .35rem; margin-top: .5rem; font-size: .85rem; cursor: pointer; }
-.aa-toggle input:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
+.aa-toggle input:focus-visible, .aa-toggle select:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
+.aa-voice { display: flex; }
+.aa-voice select { max-width: 15rem; font: inherit; padding: .15rem .3rem; border: 1px solid #99a; border-radius: 6px; background: transparent; color: inherit; }
 /* Waiting indicator: three dots pulsing while a task runs. */
 .aa-waiting { display: flex; gap: .3rem; align-items: center; margin-bottom: .5rem; }
 .aa-waiting[hidden] { display: none; }

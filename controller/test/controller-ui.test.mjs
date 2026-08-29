@@ -21,7 +21,7 @@ global.window.speechSynthesis = { speak: (u) => spoken.push(u && u.text), cancel
 global.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
 // No SpeechRecognition on purpose — text-only path.
 
-const { renderControllerUI } = await import('../web/ui.js');
+const { renderControllerUI, bestVoice } = await import('../web/ui.js');
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 async function run() {
@@ -115,6 +115,55 @@ async function run() {
   document.body.appendChild(ui4.root);
   fire4('The answer is 42');
   check('background note posts a notification', notes.length === 1 && /42/.test(notes[0].body));
+
+  // ── Voice selection: pick a good voice; expose + persist the choice ─────────
+  // bestVoice is a pure ordering: local Premium/Enhanced > network Google >
+  // platform default > first available.
+  {
+    const VS = [
+      { name: 'Samantha', lang: 'en-US', default: true, localService: true }, // compact default
+      { name: 'Bells', lang: 'en-US', localService: true },                   // novelty
+      { name: 'Google US English', lang: 'en-US', localService: false },      // network
+      { name: 'Ava (Premium)', lang: 'en-US', localService: true },           // local hi-quality
+    ];
+    check('bestVoice: prefers a local Premium/Enhanced voice', bestVoice(VS, 'en').name === 'Ava (Premium)');
+    check('bestVoice: without Premium, prefers Google over the compact default', bestVoice(VS.filter((v) => !/Premium/.test(v.name)), 'en').name === 'Google US English');
+    check('bestVoice: with only local voices, takes the platform default', bestVoice([{ name: 'Bells', lang: 'en-US', localService: true }, { name: 'Samantha', lang: 'en-US', default: true, localService: true }], 'en').name === 'Samantha');
+    check('bestVoice: empty list → null', bestVoice([], 'en') === null);
+  }
+
+  // With a voice list available, the UI shows a picker; Automatic uses bestVoice,
+  // and an explicit choice is used and persisted.
+  {
+    const VOICES = [
+      { name: 'Samantha', lang: 'en-US', default: true, localService: true },
+      { name: 'Bells', lang: 'en-US', localService: true },
+      { name: 'Google US English', lang: 'en-US', localService: false },
+      { name: 'Ava (Premium)', lang: 'en-US', localService: true },
+      { name: 'Amélie', lang: 'fr-FR', localService: true }, // other-language → filtered out
+    ];
+    let lastVoice = null;
+    localStorage.setItem('aa-controller-speak-results', '1'); // an earlier test turned it off; speak needs it on
+    global.window.speechSynthesis.getVoices = () => VOICES;
+    global.window.speechSynthesis.speak = (u) => { lastVoice = u && u.voice; spoken.push(u && u.text); };
+
+    const cv = createController({ control: createMockReceiver(), operator: { abilityModel: { supportAreas: [] } } });
+    const uiv = renderControllerUI(cv, { doc: document });
+    document.body.appendChild(uiv.root);
+    const sel = uiv.root.querySelector('.aa-voice select');
+    check('voice: a picker is shown when getVoices is available', !!sel);
+    check('voice: options are Automatic + the en voices (other langs filtered)', !!sel && sel.options.length === 5 && sel.options[0].value === '');
+    check('voice: default selection is Automatic', !!sel && sel.value === '');
+
+    spoken.length = 0;
+    uiv.root.querySelector('.aa-input').value = 'bigger text'; uiv.root.querySelector('.aa-go').click(); await tick(); await tick();
+    check('voice: Automatic speaks with the best voice (local Premium)', lastVoice && lastVoice.name === 'Ava (Premium)');
+
+    sel.value = 'Google US English'; sel.dispatchEvent(new dom.window.Event('change'));
+    check('voice: an explicit choice persists to localStorage', localStorage.getItem('aa-controller-voice') === 'Google US English');
+    uiv.root.querySelector('.aa-input').value = 'dark mode'; uiv.root.querySelector('.aa-go').click(); await tick(); await tick();
+    check('voice: the chosen voice is used', lastVoice && lastVoice.name === 'Google US English');
+  }
 
   console.log(`\nController UI: ${pass} passed, ${fail} failed`);
   // Force exit — a still-running task's earcon setInterval would otherwise keep
