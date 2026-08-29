@@ -9,6 +9,13 @@ Routes: `/onboarding` (the onboarding page, also the redirect target of `/`) and
 `/controller` (the Controller demo; its ESM loads under `/controller/lib` and the
 toolkit settings vocabulary it imports under `/controller/toolkit/registry`).
 
+> **Run this on localhost or a trusted network only. Do not deploy it to the
+> public internet as it is.** The onboarding and profile-view routes are
+> unauthenticated by design (a person onboarding has no credential yet), so
+> anyone who can reach the port can read and write ability profiles for any
+> profile id they can guess, and profiles hold disability-related information.
+> The admin password gates only the list and delete routes.
+
 It talks to the toolkit in one of two modes:
 
 - **local** — embeds the toolkit in-process over a file store (`DATA_DIR`). This
