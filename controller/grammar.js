@@ -20,6 +20,22 @@ function norm(s) {
   return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+// Build the "off" rule for one boolean toggle. Matches the common off
+// phrasings for the toggle's noun: "<noun> off" (which also covers "turn the
+// <noun> off"), "turn off / switch off / disable / stop / remove / no /
+// no more / without <noun>", plus any per-toggle aliases in `extraSrc`.
+// One shared builder instead of a hand-kept phrase list per setting: the
+// hand-kept list is how "dark mode off" turned dark mode ON.
+function offRule(nounSrc, changes, say, extraSrc) {
+  const noun = `(?:${nounSrc})`;
+  const parts = [
+    `\\b${noun}\\s+off\\b`,
+    `\\b(?:turn off|switch off|disable|stop|remove|no more|no|without)\\s+(?:the\\s+)?${noun}\\b`,
+  ];
+  if (extraSrc) parts.push(extraSrc);
+  return { re: new RegExp(parts.join('|')), build: (_m, u) => adapt(u, { changes, say }) };
+}
+
 /** @type {Array<{re: RegExp, build: (m: RegExpMatchArray, u: string) => import('./intent.js').Intent}>} */
 const RULES = [
   // — meta —
@@ -43,12 +59,25 @@ const RULES = [
   // — spacing —
   { re: /\b(more |extra )?(line )?spacing\b|\bspace out the lines\b/, build: (_m, u) => adapt(u, { deltas: { lineHeight: +STEP.lineHeight }, say: 'Increasing line spacing' }) },
 
-  // — dark / light — negation first
-  { re: /\b(light mode|no dark|turn off dark)\b/, build: (_m, u) => adapt(u, { changes: { darkMode: false }, say: 'Turning dark mode off' }) },
+  // — toggles off — before every positive toggle rule, so an off phrasing can
+  // never fall through to the positive rule and do the opposite of what the
+  // person asked. Two toggles are special-cased below the block: distractions
+  // ("remove distractions" means hide them) and motion ("stop motion" means
+  // reduce it), so they keep their own narrower off aliases.
+  offRule('dark(?: mode| theme)?', { darkMode: false }, 'Turning dark mode off', '\\blight mode\\b'),
+  offRule('focus mode', { focusMode: false }, 'Turning focus mode off'),
+  offRule('dyslexi[ac](?: friendly)?(?: font)?', { dyslexiaFont: false }, 'Back to the standard font'),
+  offRule('reading (?:guide|ruler)', { readingGuide: false }, 'Turning the reading guide off'),
+  offRule('(?:large|big|bigger) cursor', { largeCursor: false }, 'Back to the normal cursor', '\\bnormal cursor\\b'),
+  offRule('(?:big|large|bigger) (?:targets|buttons|controls)', { bigTargets: false }, 'Back to normal-size controls'),
+  { re: /\b(?:motion reducer|reduced? motion)\s+off\b|\bturn off (?:the )?(?:motion reducer|reduced? motion)\b|\ballow (?:motion|animations?)( again)?\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: false }, say: 'Allowing motion again' }) },
+  { re: /\b(?:show|bring back|stop hiding) (?:the )?(?:distractions?|ads)\b/, build: (_m, u) => adapt(u, { changes: { hideDistractions: false }, say: 'Showing everything again' }) },
+
+  // — dark / light —
   { re: /\bdark( mode| theme)?\b/, build: (_m, u) => adapt(u, { changes: { darkMode: true }, say: 'Turning on dark mode' }) },
 
   // — contrast — negation first
-  { re: /\b(no|remove|less) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'none' }, say: 'Removing high contrast' }) },
+  { re: /\b(no|remove|less) contrast\b|\b(?:high[- ]?)?contrast\s+off\b|\bturn off (?:the )?(?:high[- ]?)?contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'none' }, say: 'Removing high contrast' }) },
   { re: /\bhigh[- ]?contrast\b|\bmore contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
 
   // — motion —
