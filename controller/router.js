@@ -182,7 +182,15 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
     // returnToController: activate the Controller's tab again when done.
     const meta = { returnToController: opts.returnToController !== false };
     const res = await control.performAction(intent.action, intent.target, intent.text, meta);
-    if (!res || !res.ok) return result(false, intent, `That didn't work${res && res.detail ? ': ' + res.detail : ''}.`, res);
+    if (!res || !res.ok) {
+      // Surface WHY. Receivers put an action-specific reason in `detail`
+      // ("no agent configured") and a transport/method failure in `error`
+      // ("lost the connection to Chrome — check for an 'Allow remote debugging'
+      // prompt", "control channel timeout"). Either is far more actionable than
+      // a bare "That didn't work" — don't swallow it.
+      const why = (res && (res.detail || res.error)) || '';
+      return result(false, intent, `That didn't work${why ? ': ' + why : ''}.`, res);
+    }
     return result(true, intent, (intent.say || 'Done') + '.', res);
   }
 

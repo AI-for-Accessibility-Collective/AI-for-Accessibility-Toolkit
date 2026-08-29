@@ -182,6 +182,27 @@ async function run() {
     check('meta.returnToController defaults to true', lastMeta && lastMeta.returnToController === true);
   }
 
+  // ── 11. a failing action surfaces the receiver's reason, not a bare error ──
+  {
+    // A remote receiver that lost its backend replies with a rich `error`
+    // string (the real case: browser-harness lost its Chrome connection). The
+    // Controller must relay it — a bare "That didn't work." is useless to
+    // someone who can't see the page.
+    const broken = Object.assign({}, createMockReceiver({ actions: ['task'] }), {
+      async performAction() { return { error: "lost the connection to Chrome — check for an 'Allow remote debugging' prompt" }; },
+    });
+    const cb = createController({ control: broken, rawToTask: true });
+    const rb = await cb.handle('open google and search for apples');
+    check('failure relays the receiver error string', rb.ok === false && /lost the connection to Chrome/.test(rb.say));
+
+    // `detail` (an action-specific reason) is surfaced too, and preferred.
+    const noAgent = Object.assign({}, createMockReceiver({ actions: ['task'] }), {
+      async performAction() { return { ok: false, detail: 'no agent configured' }; },
+    });
+    const cn = createController({ control: noAgent, rawToTask: true });
+    check('failure relays the receiver detail string', /no agent configured/.test((await cn.handle('do a thing')).say));
+  }
+
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }
