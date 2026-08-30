@@ -51,11 +51,20 @@ def _exit(status) -> None:
 
 
 def _engine():
-    """Import the session engine on first use (it pulls in Playwright)."""
-    try:
+    """Import the session engine on first use (it pulls in Playwright).
+
+    The branch is on how this module was loaded, not on whether an import
+    failed. Catching ImportError here caught the engine's own missing
+    dependencies too, and then retried under a name that does not exist, so
+    "playwright is not installed" reached the user as "No module named
+    'ai4a11y'" and sent them looking in the wrong place.
+    """
+    if __package__:
         from . import ai4a11y
-    except ImportError:
-        import ai4a11y  # direct script/module use without the package installed
+    else:
+        # Run as a plain script (python cli/cli.py): cli/ is on sys.path and
+        # there is no package to import from.
+        import ai4a11y
     return ai4a11y
 
 
