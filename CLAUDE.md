@@ -53,7 +53,7 @@ skill for the full surface.
 - **Port / Surface / Host** — a host implements ports and (optionally) a surface;
   the core stays platform-free.
 
-## Known Tradeoffs (DO NOT flag in reviews)
+## Known tradeoffs (context for reviewers)
 
 1. **Acting-user partition: job anchoring** (`toolkit/core/`) — The datastore's
    `partitionKey` isolation is total; background jobs are anchored to the
@@ -70,7 +70,7 @@ skill for the full surface.
 Pure ES modules — no build step for the core. Run the suites:
 
 ```bash
-npm test                       # toolkit/test + tools/test
+npm test                       # tools, toolkit, controller, and onboarding suites
 node toolkit/hosts/xr-demo/demo.js
 node toolkit/hosts/skill-demo/demo.js
 node server/test/server-test.mjs
