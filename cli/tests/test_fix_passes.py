@@ -1,0 +1,112 @@
+"""What the AI fix passes do when the model cannot be reached.
+
+These pin behavior that already exists. Nine passes carry the same contract
+(fix-alt, fix-labels, simplify, and the six inside scan), and each was written
+out separately, so the contract is asserted here once per pass before it is
+collapsed into one implementation. A pass that stops honoring any line in this
+file has changed behavior, whatever the diff says.
+"""
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from ai4a11y import AI_UNAVAILABLE_EXIT, NEEDS_AI_LINE  # noqa: E402
+
+from conftest import FIXTURE_URL  # noqa: E402
+
+FIX_COMMANDS = [
+    ("fix-alt", "images"),
+    ("fix-labels", "elements"),
+]
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize("command,noun", FIX_COMMANDS)
+def test_unreachable_model_writes_nothing_and_says_so(
+    chromium_session, run_without_claude, command, noun
+):
+    """No answer means no write, one needs-ai line per item, exit 3."""
+    run_without_claude("session", "go", FIXTURE_URL)
+    result = run_without_claude("session", command)
+
+    assert result.returncode == AI_UNAVAILABLE_EXIT
+    assert NEEDS_AI_LINE in result.stdout
+    # The failure payload must never reach the page as content.
+    assert "Claude Code CLI not installed" not in result.stdout
+    assert "Claude CLI error" not in result.stdout
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize("command,noun", FIX_COMMANDS)
+def test_json_payload_shape_is_stable(
+    chromium_session, run_without_claude, command, noun
+):
+    """--json prints the three-key payload and nothing else."""
+    run_without_claude("session", "go", FIXTURE_URL)
+    result = run_without_claude("session", command, "--json")
+
+    payload = json.loads(result.stdout)
+    assert set(payload) == {"fixed", "attempted", "skippedNeedsAi"}
+    assert payload["fixed"] == []
+    assert payload["skippedNeedsAi"] == payload["attempted"]
+    assert payload["attempted"] > 0
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize("command,noun", FIX_COMMANDS)
+def test_partial_run_keeps_its_fixes_and_still_fails(
+    chromium_session, run_with_flaky_claude, command, noun
+):
+    """One answered call and the rest unanswered: keep the fix, report exit 3."""
+    run = run_with_flaky_claude(1)
+    run("session", "go", FIXTURE_URL)
+    result = run("session", command, "--json")
+
+    payload = json.loads(result.stdout)
+    assert len(payload["fixed"]) == 1
+    assert payload["skippedNeedsAi"] >= 1
+    assert result.returncode == AI_UNAVAILABLE_EXIT
+    # The key the answer is filed under is part of the payload a caller reads.
+    # Collapsing two fixers into one is exactly how it gets renamed by accident.
+    expected_key = {"fix-alt": "alt", "fix-labels": "label"}[command]
+    assert expected_key in payload["fixed"][0]
+    assert set(payload["fixed"][0]) == {"selector", expected_key}
+
+
+@pytest.mark.browser
+def test_fix_all_fails_when_either_half_falls_short(
+    chromium_session, run_without_claude
+):
+    """fix-all is not satisfied by one half succeeding."""
+    run_without_claude("session", "go", FIXTURE_URL)
+    result = run_without_claude("session", "fix-all")
+    assert result.returncode == AI_UNAVAILABLE_EXIT
+
+
+@pytest.mark.browser
+def test_scan_reports_local_and_ai_work_separately(
+    chromium_session, run_without_claude
+):
+    """The contrast pass calls no model, so it is not counted as an AI fix."""
+    run_without_claude("session", "go", FIXTURE_URL)
+    result = run_without_claude("session", "scan")
+
+    assert NEEDS_AI_LINE in result.stdout
+    assert "Claude Code CLI not installed" not in result.stdout
+    assert result.returncode == AI_UNAVAILABLE_EXIT
+
+
+@pytest.mark.browser
+def test_simplify_writes_nothing_without_a_model(
+    chromium_session, run_without_claude
+):
+    """An unanswered simplify must not replace a paragraph with the empty string."""
+    run_without_claude("session", "go", FIXTURE_URL)
+    result = run_without_claude("session", "simplify")
+
+    assert NEEDS_AI_LINE in result.stdout
+    assert result.returncode == AI_UNAVAILABLE_EXIT
