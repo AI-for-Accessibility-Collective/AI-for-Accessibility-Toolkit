@@ -5,84 +5,84 @@
     provider = p;
   }
   async function describeImage(imageData) {
-    if (!(provider == null ? void 0 : provider.describeImage)) {
+    if (!provider?.describeImage) {
       throw new Error("AI provider not set or missing describeImage");
     }
     return provider.describeImage(imageData);
   }
   async function simplifyText(text, options = {}) {
-    if (!(provider == null ? void 0 : provider.simplifyText)) {
+    if (!provider?.simplifyText) {
       throw new Error("AI provider not set or missing simplifyText");
     }
     return provider.simplifyText(text, options);
   }
   async function summarizeText(text) {
-    if (!(provider == null ? void 0 : provider.summarizeText)) {
+    if (!provider?.summarizeText) {
       throw new Error("AI provider not set or missing summarizeText");
     }
     return provider.summarizeText(text);
   }
   async function inferLabel(context) {
-    if (!(provider == null ? void 0 : provider.inferLabel)) {
+    if (!provider?.inferLabel) {
       throw new Error("AI provider not set or missing inferLabel");
     }
     return provider.inferLabel(context);
   }
   async function fixContrast(foreground, background) {
-    if (!(provider == null ? void 0 : provider.fixContrast)) {
+    if (!provider?.fixContrast) {
       return null;
     }
     return provider.fixContrast(foreground, background);
   }
   async function getYouTubeTranscript(videoId) {
-    if (!(provider == null ? void 0 : provider.getYouTubeTranscript)) {
+    if (!provider?.getYouTubeTranscript) {
       return null;
     }
     return provider.getYouTubeTranscript(videoId);
   }
   function announce(message) {
-    if (provider == null ? void 0 : provider.announce) {
+    if (provider?.announce) {
       provider.announce(message);
     }
   }
   async function transcribeVideo(videoUrl) {
-    if (!(provider == null ? void 0 : provider.transcribeVideo)) {
+    if (!provider?.transcribeVideo) {
       return null;
     }
     return provider.transcribeVideo(videoUrl);
   }
   async function transcribeAudio(audioUrl) {
-    if (!(provider == null ? void 0 : provider.transcribeAudio)) {
+    if (!provider?.transcribeAudio) {
       return null;
     }
     return provider.transcribeAudio(audioUrl);
   }
   async function improveLinkText(linkText, href, context) {
-    if (!(provider == null ? void 0 : provider.improveLinkText)) {
+    if (!provider?.improveLinkText) {
       return null;
     }
     return provider.improveLinkText(linkText, href, context);
   }
   async function inferColumnHeader(sampleData) {
-    if (!(provider == null ? void 0 : provider.inferColumnHeader)) {
+    if (!provider?.inferColumnHeader) {
       return null;
     }
     return provider.inferColumnHeader(sampleData);
   }
   async function translateText(text, targetLang) {
-    if (!(provider == null ? void 0 : provider.translateText)) {
+    if (!provider?.translateText) {
       return null;
     }
     return provider.translateText(text, targetLang);
   }
   async function defineWord(word, context) {
-    if (!(provider == null ? void 0 : provider.defineWord)) {
+    if (!provider?.defineWord) {
       return null;
     }
     return provider.defineWord(word, context);
   }
   async function extractChartData(imageDataUrl, context) {
-    if (!(provider == null ? void 0 : provider.extractChartData)) {
+    if (!provider?.extractChartData) {
       return null;
     }
     return provider.extractChartData(imageDataUrl, context);
@@ -255,8 +255,7 @@
       }
     },
     remove() {
-      var _a;
-      if (typeof document !== "undefined") (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      if (typeof document !== "undefined") document.getElementById(this.styleId)?.remove();
     },
     // ── Font-scale DOM traversal ──────────────────────────────────────────────
     applyFontScale(scale) {
@@ -327,7 +326,6 @@
     },
     // ── CSS generation ────────────────────────────────────────────────────────
     generateCSS() {
-      var _a;
       const s = this.settings;
       let css = "";
       if (s.contrastMode === "light") {
@@ -395,7 +393,7 @@
       `;
       }
       if (s.dyslexiaFont) {
-        const fontUrl = typeof chrome !== "undefined" && ((_a = chrome.runtime) == null ? void 0 : _a.getURL) ? chrome.runtime.getURL("lib/OpenDyslexic-Regular.woff2") : "https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff2";
+        const fontUrl = typeof chrome !== "undefined" && chrome.runtime?.getURL ? chrome.runtime.getURL("lib/OpenDyslexic-Regular.woff2") : "https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff2";
         css += `@font-face { font-family: 'OpenDyslexic'; src: url('${fontUrl}'); }
 `;
         css += `
@@ -513,14 +511,13 @@
       document.head.appendChild(style);
     },
     disable() {
-      var _a;
       if (typeof DarkReader !== "undefined") {
         try {
           DarkReader.disable();
         } catch (e) {
         }
       }
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       this.enabled = false;
       console.log("[AI4A11y] Dark Mode disabled");
       announce("Dark mode disabled");
@@ -639,7 +636,6 @@
       announce("Motion reduced");
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       this.freezeGen++;
@@ -647,7 +643,7 @@
         this.unregisterSweep();
         this.unregisterSweep = null;
       }
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       for (const [canvas, img] of this.frozenImages) {
         if (canvas.parentNode) {
           canvas.parentNode.insertBefore(img, canvas);
@@ -674,9 +670,9 @@
         const src = iframe.src || "";
         try {
           if (src.includes("youtube.com")) {
-            (_b = iframe.contentWindow) == null ? void 0 : _b.postMessage('{"event":"command","func":"playVideo","args":""}', "*");
+            iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', "*");
           } else if (src.includes("vimeo.com")) {
-            (_c = iframe.contentWindow) == null ? void 0 : _c.postMessage('{"method":"play"}', "*");
+            iframe.contentWindow?.postMessage('{"method":"play"}', "*");
           }
         } catch (e) {
         }
@@ -799,13 +795,12 @@
         }
       });
       document.querySelectorAll("iframe").forEach((iframe) => {
-        var _a, _b;
         const src = iframe.src || "";
         if (src.includes("youtube.com") && src.includes("enablejsapi=1")) {
-          (_a = iframe.contentWindow) == null ? void 0 : _a.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*");
+          iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*");
           this.pausedIframes.add(iframe);
         } else if (src.includes("vimeo.com")) {
-          (_b = iframe.contentWindow) == null ? void 0 : _b.postMessage('{"method":"pause"}', "*");
+          iframe.contentWindow?.postMessage('{"method":"pause"}', "*");
           this.pausedIframes.add(iframe);
         }
       });
@@ -848,8 +843,7 @@
       '[class*="gdpr-banner"]'
     ],
     enable(options = {}) {
-      var _a;
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       this.disableProgressIndicator();
       this.currentSettings = { ...this.currentSettings, ...options };
       this.enabled = true;
@@ -895,9 +889,8 @@
       announce("Focus mode enabled");
     },
     disable() {
-      var _a;
       this.enabled = false;
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       this.disableProgressIndicator();
       console.log("[AI4A11y] Focus Mode disabled");
       announce("Focus mode disabled");
@@ -997,10 +990,9 @@
       }
     },
     extractReadableText(element) {
-      var _a;
       const clone = element.cloneNode(true);
       clone.querySelectorAll('script, style, nav, header, footer, aside, [aria-hidden="true"]').forEach((el) => el.remove());
-      return ((_a = clone.textContent) == null ? void 0 : _a.replace(/\s+/g, " ").trim()) || "";
+      return clone.textContent?.replace(/\s+/g, " ").trim() || "";
     },
     async speak(text) {
       this.stop();
@@ -1215,7 +1207,7 @@
     // Strip Readability output down to safe HTML before injecting it with
     // innerHTML. No DOMPurify dependency is vendored for tools/ (only the
     // extension's popup.html loads it as a devDependency of
-    // personalized-extension), so this replicates DOMPurify's HTML-profile
+    // a browser host), so this replicates DOMPurify's HTML-profile
     // sanitize with a hand-rolled allowlist-of-dangers pass: strip
     // script-capable elements, all `on*` handlers, and URL-bearing attributes
     // that carry an executable scheme (javascript:/vbscript:/data:text/html
@@ -1357,14 +1349,8 @@
         if (idx < buttons.length - 1) buttons[idx + 1].focus();
         else if (buttons.length > 0) buttons[0].focus();
       },
-      "read page": () => {
-        var _a;
-        return (_a = window.__ai4a11yReadAloud) == null ? void 0 : _a.speakPage();
-      },
-      "stop reading": () => {
-        var _a;
-        return (_a = window.__ai4a11yReadAloud) == null ? void 0 : _a.stop();
-      }
+      "read page": () => window.__ai4a11yReadAloud?.speakPage(),
+      "stop reading": () => window.__ai4a11yReadAloud?.stop()
     },
     enable(options = {}) {
       if (this.enabled) return;
@@ -1413,7 +1399,6 @@
       announce('Voice commands enabled. Say "stop listening" to disable.');
     },
     disable() {
-      var _a;
       if (this.recognition) {
         this.enabled = false;
         this.recognition.onend = null;
@@ -1424,12 +1409,11 @@
         this.feedbackElement.remove();
         this.feedbackElement = null;
       }
-      (_a = document.getElementById("ai4a11y-voice-pulse-style")) == null ? void 0 : _a.remove();
+      document.getElementById("ai4a11y-voice-pulse-style")?.remove();
       console.log("[AI4A11y] Voice Commands disabled");
       announce("Voice commands disabled");
     },
     createFeedbackElement() {
-      var _a;
       if (this.feedbackElement) return;
       this.feedbackElement = document.createElement("div");
       this.feedbackElement.id = "ai4a11y-voice-feedback";
@@ -1461,7 +1445,7 @@
       const pulseStyle = document.createElement("style");
       pulseStyle.id = "ai4a11y-voice-pulse-style";
       pulseStyle.textContent = "@keyframes ai4a11y-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }";
-      (_a = document.getElementById("ai4a11y-voice-pulse-style")) == null ? void 0 : _a.remove();
+      document.getElementById("ai4a11y-voice-pulse-style")?.remove();
       document.head.appendChild(pulseStyle);
       document.body.appendChild(this.feedbackElement);
     },
@@ -1563,18 +1547,17 @@
       announce("Keyboard navigation enhanced");
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
-      (_b = this.skipLinkElement) == null ? void 0 : _b.remove();
+      document.getElementById(this.styleId)?.remove();
+      this.skipLinkElement?.remove();
       this.skipLinkElement = null;
       this.hideTabSequence();
       if (this.shortcutHandler) {
         document.removeEventListener("keydown", this.shortcutHandler);
         this.shortcutHandler = null;
       }
-      (_c = this.unregisterSweep) == null ? void 0 : _c.call(this);
+      this.unregisterSweep?.();
       this.unregisterSweep = null;
       this.modifiedElements.forEach(({ el, prior }) => {
         if (prior === null) el.removeAttribute("tabindex");
@@ -1600,8 +1583,7 @@
       el.setAttribute("tabindex", val);
     },
     injectStyles() {
-      var _a;
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       const css = `
       ${this.settings.enhanceFocusVisible ? `
         *:focus-visible {
@@ -1755,12 +1737,11 @@
     },
     setupKeyboardShortcuts() {
       this.shortcutHandler = (e) => {
-        var _a, _b;
         if (!e.altKey) return;
         if (e.ctrlKey || e.metaKey) return;
-        const tag = (_a = e.target) == null ? void 0 : _a.tagName;
+        const tag = e.target?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-        if ((_b = e.target) == null ? void 0 : _b.isContentEditable) return;
+        if (e.target?.isContentEditable) return;
         const key = (e.key || "").toLowerCase();
         if (key === "1") {
           e.preventDefault();
@@ -1817,7 +1798,6 @@
       tritanopia: "url(#ai4a11y-tritanopia-filter)"
     },
     enable(mode = "protanopia") {
-      var _a;
       if (!this.filters[mode]) {
         console.warn("[AI4A11y] Invalid color blind mode:", mode);
         return;
@@ -1825,7 +1805,7 @@
       this.currentMode = mode;
       this.enabled = true;
       this.injectSvgFilters();
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
@@ -1838,11 +1818,10 @@
       announce(`Color blind correction applied: ${mode}`);
     },
     disable() {
-      var _a, _b;
       this.enabled = false;
       this.currentMode = "none";
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
-      (_b = document.getElementById(this.filterId)) == null ? void 0 : _b.remove();
+      document.getElementById(this.styleId)?.remove();
+      document.getElementById(this.filterId)?.remove();
       console.log("[AI4A11y] Color Blind Mode disabled");
       announce("Color blind correction removed");
     },
@@ -1982,16 +1961,15 @@
       return blocking;
     },
     disable() {
-      var _a, _b;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
       }
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       if (this.hidden) {
-        for (const el of this.hidden) (_b = el.classList) == null ? void 0 : _b.remove(this.hiddenClass);
+        for (const el of this.hidden) el.classList?.remove(this.hiddenClass);
         this.hidden.clear();
         this.hidden = null;
       }
@@ -2045,11 +2023,10 @@ ${scope(":focus")} {
       announce("Click targets enlarged");
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       try {
-        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+        document.getElementById(this.styleId)?.remove();
       } catch {
       }
       try {
@@ -2156,14 +2133,13 @@ ${scope(":focus")} {
       return true;
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
       }
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       if (document.body) document.body.classList.remove(this.bodyClass);
       if (this.titled) {
         for (const a of this.titled) {
@@ -2186,106 +2162,6 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yLinkHighlighter = LinkHighlighter;
 
-  // tools/adapters/page-outline.js
-  var PageOutline = {
-    containerId: "ai4a11y-page-outline",
-    enabled: false,
-    addedIds: null,
-    // Set of headings we gave a generated id (for exact restore)
-    addedTabindex: null,
-    // Set of headings we gave tabindex="-1" (for exact restore)
-    enable(options = {}) {
-      if (this.enabled) return;
-      this.enabled = true;
-      this.addedIds = /* @__PURE__ */ new Set();
-      this.addedTabindex = /* @__PURE__ */ new Set();
-      const selector = options.selector || "h1, h2, h3";
-      let headings = [];
-      try {
-        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
-      } catch {
-      }
-      const nav = document.createElement("nav");
-      nav.id = this.containerId;
-      nav.setAttribute("role", "navigation");
-      nav.setAttribute("aria-label", "Page outline");
-      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
-      if (headings.length === 0) {
-        const note = document.createElement("p");
-        note.textContent = "No headings on this page";
-        nav.appendChild(note);
-      } else {
-        const list = document.createElement("ul");
-        list.style.cssText = "list-style: none; margin: 0; padding: 0;";
-        let n = 0;
-        for (const heading of headings) {
-          if (!heading.id) {
-            let id;
-            do {
-              id = `ai4a11y-outline-h-${n++}`;
-            } while (document.getElementById(id));
-            heading.id = id;
-            this.addedIds.add(heading);
-          }
-          const item = document.createElement("li");
-          const level = Number(heading.tagName[1]) || 1;
-          item.style.paddingLeft = `${(level - 1) * 16}px`;
-          const link = document.createElement("a");
-          link.href = `#${heading.id}`;
-          link.textContent = heading.textContent.trim();
-          link.addEventListener("click", () => this.jumpTo(heading));
-          item.appendChild(link);
-          list.appendChild(item);
-        }
-        nav.appendChild(list);
-      }
-      try {
-        (document.body || document.documentElement).appendChild(nav);
-      } catch {
-      }
-      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
-      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
-    },
-    // Move both the viewport and keyboard/screen-reader focus to the heading.
-    // Headings aren't focusable by default, so add tabindex="-1" — tracked so
-    // disable() removes it again.
-    jumpTo(heading) {
-      var _a;
-      try {
-        if (!heading.hasAttribute("tabindex")) {
-          heading.setAttribute("tabindex", "-1");
-          (_a = this.addedTabindex) == null ? void 0 : _a.add(heading);
-        }
-        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
-        heading.focus();
-      } catch {
-      }
-    },
-    disable() {
-      var _a;
-      if (!this.enabled) return;
-      this.enabled = false;
-      (_a = document.getElementById(this.containerId)) == null ? void 0 : _a.remove();
-      if (this.addedIds) {
-        for (const h of this.addedIds) h.removeAttribute("id");
-        this.addedIds.clear();
-        this.addedIds = null;
-      }
-      if (this.addedTabindex) {
-        for (const h of this.addedTabindex) h.removeAttribute("tabindex");
-        this.addedTabindex.clear();
-        this.addedTabindex = null;
-      }
-      console.log("[AI4A11y] Page Outline disabled");
-      announce("Page outline removed");
-    },
-    toggle() {
-      if (this.enabled) this.disable();
-      else this.enable();
-    }
-  };
-  if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
-
   // tools/adapters/_primitives.js
   function injectStyle(id, css, doc = typeof document !== "undefined" ? document : null) {
     if (!doc) return { remove() {
@@ -2298,9 +2174,8 @@ ${scope(":focus")} {
     }
     el.textContent = css;
     return { el, remove() {
-      var _a;
       try {
-        (_a = doc.getElementById(id)) == null ? void 0 : _a.remove();
+        doc.getElementById(id)?.remove();
       } catch {
       }
     } };
@@ -2373,6 +2248,123 @@ ${scope(":focus")} {
     if (!doc) return null;
     return doc.querySelector('main, article, [role="main"], .content, #content') || doc.body || null;
   }
+
+  // tools/adapters/page-outline.js
+  var PageOutline = {
+    containerId: "ai4a11y-page-outline",
+    enabled: false,
+    style: null,
+    // the scoped colour stylesheet (removed on disable)
+    addedIds: null,
+    // Set of headings we gave a generated id (for exact restore)
+    addedTabindex: null,
+    // Set of headings we gave tabindex="-1" (for exact restore)
+    enable(options = {}) {
+      if (this.enabled) return;
+      this.enabled = true;
+      this.addedIds = /* @__PURE__ */ new Set();
+      this.addedTabindex = /* @__PURE__ */ new Set();
+      this.style = injectStyle(`${this.containerId}-styles`, `
+#${this.containerId} { background: #ffffff !important; color: #111111 !important; border-color: #333333 !important; }
+#${this.containerId} p, #${this.containerId} li { color: #111111 !important; }
+#${this.containerId} a,
+#${this.containerId} a:link,
+#${this.containerId} a:visited,
+#${this.containerId} a:hover,
+#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }`);
+      const selector = options.selector || "h1, h2, h3";
+      let headings = [];
+      try {
+        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
+      } catch {
+      }
+      const nav = document.createElement("nav");
+      nav.id = this.containerId;
+      nav.setAttribute("role", "navigation");
+      nav.setAttribute("aria-label", "Page outline");
+      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
+      if (headings.length === 0) {
+        const note = document.createElement("p");
+        note.textContent = "No headings on this page";
+        nav.appendChild(note);
+      } else {
+        const list = document.createElement("ul");
+        list.style.cssText = "list-style: none; margin: 0; padding: 0;";
+        let n = 0;
+        for (const heading of headings) {
+          if (!heading.id) {
+            let id;
+            do {
+              id = `ai4a11y-outline-h-${n++}`;
+            } while (document.getElementById(id));
+            heading.id = id;
+            this.addedIds.add(heading);
+          }
+          const item = document.createElement("li");
+          const level = Number(heading.tagName[1]) || 1;
+          item.style.paddingLeft = `${(level - 1) * 16}px`;
+          const link = document.createElement("a");
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent.trim();
+          link.addEventListener("click", () => this.jumpTo(heading));
+          item.appendChild(link);
+          list.appendChild(item);
+        }
+        nav.appendChild(list);
+      }
+      try {
+        (document.body || document.documentElement).appendChild(nav);
+      } catch {
+      }
+      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
+      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
+    },
+    // Move both the viewport and keyboard/screen-reader focus to the heading.
+    // Headings aren't focusable by default, so add tabindex="-1" — tracked so
+    // disable() removes it again.
+    jumpTo(heading) {
+      try {
+        if (!heading.hasAttribute("tabindex")) {
+          heading.setAttribute("tabindex", "-1");
+          this.addedTabindex?.add(heading);
+        }
+        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
+        heading.focus();
+      } catch {
+      }
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      document.getElementById(this.containerId)?.remove();
+      try {
+        this.style?.remove();
+      } catch {
+      }
+      try {
+        document.getElementById(`${this.containerId}-styles`)?.remove();
+      } catch {
+      }
+      this.style = null;
+      if (this.addedIds) {
+        for (const h of this.addedIds) h.removeAttribute("id");
+        this.addedIds.clear();
+        this.addedIds = null;
+      }
+      if (this.addedTabindex) {
+        for (const h of this.addedTabindex) h.removeAttribute("tabindex");
+        this.addedTabindex.clear();
+        this.addedTabindex = null;
+      }
+      console.log("[AI4A11y] Page Outline disabled");
+      announce("Page outline removed");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yPageOutline = PageOutline;
 
   // tools/adapters/bionic-reading.js
   var MAX_TEXT_NODES = 2e3;
@@ -2500,16 +2492,15 @@ ${scope(":focus")} {
       return true;
     },
     disable() {
-      var _a, _b;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
       }
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       if (this.unpinned) {
-        for (const el of this.unpinned) (_b = el.classList) == null ? void 0 : _b.remove(this.unpinnedClass);
+        for (const el of this.unpinned) el.classList?.remove(this.unpinnedClass);
         this.unpinned.clear();
         this.unpinned = null;
       }
@@ -2874,7 +2865,7 @@ ${scope(":focus")} {
     sentenceContext(span) {
       try {
         const block = span.closest(CONTEXT_SEL) || span.parentNode;
-        return ((block == null ? void 0 : block.textContent) || "").replace(/\s+/g, " ").trim().slice(0, CONTEXT_CHARS);
+        return (block?.textContent || "").replace(/\s+/g, " ").trim().slice(0, CONTEXT_CHARS);
       } catch {
         return "";
       }
@@ -2904,7 +2895,6 @@ ${scope(":focus")} {
       }
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.showHandler) {
@@ -2918,17 +2908,17 @@ ${scope(":focus")} {
         this.hideHandler = null;
       }
       try {
-        (_a = document.getElementById(TOOLTIP_ID)) == null ? void 0 : _a.remove();
+        document.getElementById(TOOLTIP_ID)?.remove();
       } catch {
       }
       try {
-        (_b = document.getElementById(STYLE_ID)) == null ? void 0 : _b.remove();
+        document.getElementById(STYLE_ID)?.remove();
       } catch {
       }
       if (this.wrapped) {
         for (const { span, originalNode } of this.wrapped) {
           try {
-            (_c = span.parentNode) == null ? void 0 : _c.replaceChild(originalNode, span);
+            span.parentNode?.replaceChild(originalNode, span);
           } catch {
           }
         }
@@ -3058,7 +3048,6 @@ ${scope(":focus")} {
       if (el.querySelectorAll) this.sweep(el);
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.observer) {
@@ -3066,7 +3055,7 @@ ${scope(":focus")} {
         this.observer = null;
       }
       try {
-        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+        document.getElementById(this.styleId)?.remove();
       } catch {
       }
       if (this.removedMetas) {
@@ -3086,7 +3075,7 @@ ${scope(":focus")} {
       if (this.pausedMedia) {
         for (const el of this.pausedMedia) {
           try {
-            if (typeof el.play === "function") (_c = (_b = el.play()) == null ? void 0 : _b.catch) == null ? void 0 : _c.call(_b, () => {
+            if (typeof el.play === "function") el.play()?.catch?.(() => {
             });
           } catch {
           }
@@ -3150,19 +3139,18 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       announce("Screen dimmed");
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       try {
-        (_a = document.documentElement) == null ? void 0 : _a.classList.remove(this.htmlClass);
+        document.documentElement?.classList.remove(this.htmlClass);
       } catch {
       }
       try {
-        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+        document.getElementById(this.styleId)?.remove();
       } catch {
       }
       try {
-        (_c = document.getElementById(this.overlayId)) == null ? void 0 : _c.remove();
+        document.getElementById(this.overlayId)?.remove();
       } catch {
       }
       console.log("[AI4A11y] Reduce Brightness disabled");
@@ -3227,7 +3215,6 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }, this.flashMs);
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       try {
@@ -3240,7 +3227,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         clearTimeout(this.hideTimer);
         this.hideTimer = null;
       }
-      (_a = this.indicator) == null ? void 0 : _a.remove();
+      this.indicator?.remove();
       this.indicator = null;
       console.log("[AI4A11y] Sound Visualizer disabled");
       announce("Sound indicator off");
@@ -3336,7 +3323,6 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }, this.debounceMs);
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.debounceTimer) {
@@ -3349,7 +3335,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         this.observer = null;
       }
       try {
-        (_a = this.region || document.getElementById(REGION_ID)) == null ? void 0 : _a.remove();
+        (this.region || document.getElementById(REGION_ID))?.remove();
       } catch {
       }
       this.region = null;
@@ -3469,7 +3455,6 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       if (this.lens) this.lens.style.display = "none";
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.moveHandler) {
@@ -3484,7 +3469,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       this.rafId = null;
       this.lastEvent = null;
       this.lastUpdate = 0;
-      (_a = document.getElementById(this.lensId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.lensId)?.remove();
       this.lens = null;
       console.log("[AI4A11y] Magnifier disabled");
       announce("Magnifier off");
@@ -3551,14 +3536,13 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
       }
-      (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.styleId)?.remove();
       if (this.tracked) {
         for (const { video, hadAutoplay, wasPlaying } of this.tracked) {
           try {
@@ -3589,8 +3573,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
 
   // tools/utils/image.js
   async function imageToDataUrl(img) {
-    var _a, _b;
-    if (((_a = img.src) == null ? void 0 : _a.startsWith("data:")) || ((_b = img.src) == null ? void 0 : _b.startsWith("blob:"))) {
+    if (img.src?.startsWith("data:") || img.src?.startsWith("blob:")) {
       return img.src;
     }
     try {
@@ -3750,7 +3733,6 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       if (this.panel) this.panel.style.display = "none";
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       if (this._keyHandler) document.removeEventListener("keydown", this._keyHandler, true);
@@ -3758,12 +3740,12 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
       this._keyHandler = this._clickHandler = this._moveHandler = null;
       try {
-        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+        document.getElementById(this.styleId)?.remove();
       } catch {
       }
-      (_b = this.panel) == null ? void 0 : _b.remove();
+      this.panel?.remove();
       this.panel = null;
-      (_c = this.live) == null ? void 0 : _c.remove();
+      this.live?.remove();
       this.live = null;
       this.lastHover = null;
       announce("Describe on demand off");
@@ -3791,8 +3773,17 @@ ${scope} body {
   max-width: ${width}px !important;
   margin: 0 auto !important;
 }
-/* Floats and CSS multi-column are what put content side by side. */
-${scope} * {
+/* Floats and CSS multi-column are what put content side by side. Scoped to a
+ * FINITE set of block/layout/media elements rather than a universal selector:
+ * a universal !important rule defeats the browser style-sharing and forces a
+ * whole-tree style+layout recalc that locks the main thread for seconds on
+ * large pages. These are the elements that actually get floated or become
+ * multi-column; inline/text/table-cell leaves are left untouched. */
+${scope} div, ${scope} section, ${scope} article, ${scope} aside, ${scope} main,
+${scope} header, ${scope} footer, ${scope} nav, ${scope} figure, ${scope} figcaption,
+${scope} p, ${scope} ul, ${scope} ol, ${scope} dl, ${scope} li, ${scope} table,
+${scope} blockquote, ${scope} pre, ${scope} form, ${scope} fieldset,
+${scope} img, ${scope} picture, ${scope} video, ${scope} iframe {
   float: none !important;
   column-count: 1 !important;
 }
@@ -3822,7 +3813,6 @@ ${scope} table {
       announce("Page reflowed into a single column");
     },
     disable() {
-      var _a, _b;
       if (!this.enabled) return;
       this.enabled = false;
       try {
@@ -3830,11 +3820,11 @@ ${scope} table {
       } catch {
       }
       try {
-        (_a = this.style) == null ? void 0 : _a.remove();
+        this.style?.remove();
       } catch {
       }
       try {
-        (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+        document.getElementById(this.styleId)?.remove();
       } catch {
       }
       this.style = null;
@@ -4141,7 +4131,6 @@ ${scope} table {
       }
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.moveHandler) {
@@ -4153,11 +4142,11 @@ ${scope} table {
         this.frame = null;
       }
       this.raf = this.cancelRaf = null;
-      (_a = this.band) == null ? void 0 : _a.remove();
+      this.band?.remove();
       this.band = null;
-      (_b = this.shadeTop) == null ? void 0 : _b.remove();
+      this.shadeTop?.remove();
       this.shadeTop = null;
-      (_c = this.shadeBottom) == null ? void 0 : _c.remove();
+      this.shadeBottom?.remove();
       this.shadeBottom = null;
       console.log("[AI4A11y] Reading Ruler disabled");
       announce("Reading ruler off");
@@ -4237,7 +4226,6 @@ ${scope} table {
     },
     // Drop any pending confirmation: timer, prompt, and armed flags.
     clearArmed() {
-      var _a;
       if (this.promptTimer) {
         clearTimeout(this.promptTimer);
         this.promptTimer = null;
@@ -4247,7 +4235,7 @@ ${scope} table {
         this.prompt = null;
       }
       if (this.armed) {
-        for (const el of this.armed) (_a = el.removeAttribute) == null ? void 0 : _a.call(el, this.armedAttr);
+        for (const el of this.armed) el.removeAttribute?.(this.armedAttr);
         this.armed.clear();
       }
     },
@@ -4343,7 +4331,6 @@ ${scope} table {
       announce(savedY !== null && savedY > 0 ? "Found your last reading spot \u2014 a jump-back button was added" : "Saving your reading spot as you scroll");
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.scrollHandler) {
@@ -4356,7 +4343,7 @@ ${scope} table {
       }
       this.restorePending = false;
       this.savedY = null;
-      (_a = document.getElementById(this.buttonId)) == null ? void 0 : _a.remove();
+      document.getElementById(this.buttonId)?.remove();
       console.log("[AI4A11y] Save Reading Spot disabled");
       announce("Reading spot saving turned off");
     },
@@ -4837,8 +4824,8 @@ ${scope} table {
       btn.type = "button";
       btn.className = "ai4a11y-chart-btn";
       btn.textContent = "View data table";
-      const hint = this.contextText(chart);
-      btn.setAttribute("aria-label", hint ? `View data table for chart: ${hint}` : "View data table for this chart");
+      const hint2 = this.contextText(chart);
+      btn.setAttribute("aria-label", hint2 ? `View data table for chart: ${hint2}` : "View data table for this chart");
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -4906,13 +4893,12 @@ ${scope} table {
     // Nearby text that anchors the extraction — the chart's label/alt/title plus
     // any <figcaption> — so the model knows what it is looking at.
     contextText(el) {
-      var _a;
       const bits = [];
       const attr = (n) => el.getAttribute && el.getAttribute(n) || "";
       if (attr("aria-label")) bits.push(attr("aria-label"));
       if (attr("alt")) bits.push(attr("alt"));
       if (attr("title")) bits.push(attr("title"));
-      const cap = el.closest && ((_a = el.closest("figure")) == null ? void 0 : _a.querySelector("figcaption"));
+      const cap = el.closest && el.closest("figure")?.querySelector("figcaption");
       if (cap && cap.textContent.trim()) bits.push(cap.textContent.replace(/\s+/g, " ").trim());
       return bits.join(" \u2014 ").slice(0, 300);
     },
@@ -4983,7 +4969,6 @@ ${scope} table {
       if (this.panel) this.panel.style.display = "none";
     },
     disable() {
-      var _a, _b, _c;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.unregisterSweep) {
@@ -5002,12 +4987,12 @@ ${scope} table {
       this.buttons = [];
       this.charts = [];
       try {
-        (_a = document.getElementById(this.styleId)) == null ? void 0 : _a.remove();
+        document.getElementById(this.styleId)?.remove();
       } catch {
       }
-      (_b = this.panel) == null ? void 0 : _b.remove();
+      this.panel?.remove();
       this.panel = null;
-      (_c = this.live) == null ? void 0 : _c.remove();
+      this.live?.remove();
       this.live = null;
       this.lastHover = null;
       announce("Explore a chart off");
@@ -5111,7 +5096,6 @@ ${scope} table {
       return text || "New page";
     },
     disable() {
-      var _a;
       if (!this.enabled) return;
       this.enabled = false;
       if (this.settleTimer) {
@@ -5132,7 +5116,7 @@ ${scope} table {
       for (const el of this.tabindexAdded) el.removeAttribute("tabindex");
       this.tabindexAdded.clear();
       try {
-        (_a = this.region || document.getElementById(REGION_ID2)) == null ? void 0 : _a.remove();
+        (this.region || document.getElementById(REGION_ID2))?.remove();
       } catch {
       }
       this.region = null;
@@ -5483,7 +5467,6 @@ ${scope} table {
       announce("Auto Transcriber enabled");
     },
     disable() {
-      var _a, _b;
       if (!this.enabled) return;
       this.enabled = false;
       if (this._enableTimer) {
@@ -5494,10 +5477,10 @@ ${scope} table {
         window.removeEventListener("pagehide", this._pagehideHandler);
         this._pagehideHandler = null;
       }
-      (_a = this.observer) == null ? void 0 : _a.disconnect();
+      this.observer?.disconnect();
       this.observer = null;
       document.querySelectorAll(".ai4a11y-audio-btn, .ai4a11y-caption-box").forEach((el) => el.remove());
-      (_b = document.getElementById(this.styleId)) == null ? void 0 : _b.remove();
+      document.getElementById(this.styleId)?.remove();
       document.querySelectorAll("video[data-ai4a11y-setup]").forEach((v) => {
         delete v.dataset.ai4a11ySetup;
       });
@@ -5547,21 +5530,20 @@ ${scope} table {
     },
     setupVideoObserver() {
       this.observer = new MutationObserver((mutations) => {
-        var _a, _b, _c, _d, _e;
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
               if (node.tagName === "VIDEO") this.setupVideo(node);
-              if (node.tagName === "IFRAME" && ((_a = node.src) == null ? void 0 : _a.includes("youtube"))) {
+              if (node.tagName === "IFRAME" && node.src?.includes("youtube")) {
                 this.enableYouTubeCaptions(node);
               }
-              (_c = (_b = node.querySelectorAll) == null ? void 0 : _b.call(node, "video")) == null ? void 0 : _c.forEach((v) => this.setupVideo(v));
+              node.querySelectorAll?.("video")?.forEach((v) => this.setupVideo(v));
             }
           }
           for (const node of mutation.removedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
               if (node.tagName === "VIDEO") this.cleanupVideo(node);
-              (_e = (_d = node.querySelectorAll) == null ? void 0 : _d.call(node, "video")) == null ? void 0 : _e.forEach((v) => this.cleanupVideo(v));
+              node.querySelectorAll?.("video")?.forEach((v) => this.cleanupVideo(v));
             }
           }
         }
@@ -5571,11 +5553,10 @@ ${scope} table {
       window.addEventListener("pagehide", this._pagehideHandler, { once: true });
     },
     cleanupVideo(video) {
-      var _a, _b;
       const state = this.videoStates.get(video);
       if (state) {
-        (_a = state.btn) == null ? void 0 : _a.remove();
-        (_b = state.captionBox) == null ? void 0 : _b.remove();
+        state.btn?.remove();
+        state.captionBox?.remove();
         this.videoStates.delete(video);
       }
     },
@@ -5623,9 +5604,8 @@ ${scope} table {
       }
     },
     async transcribeVideo(video, state) {
-      var _a, _b;
       try {
-        const ytMatch = ((_a = video.closest("[data-video-id]")) == null ? void 0 : _a.dataset.videoId) || ((_b = window.location.href.match(/[?&]v=([^&]+)/)) == null ? void 0 : _b[1]);
+        const ytMatch = video.closest("[data-video-id]")?.dataset.videoId || window.location.href.match(/[?&]v=([^&]+)/)?.[1];
         if (ytMatch) {
           const transcript = await getYouTubeTranscript(ytMatch);
           if (transcript) {
@@ -5671,14 +5651,13 @@ ${scope} table {
     return rect.width > 0 && rect.height > 0;
   }
   function hasAccessibleName2(el) {
-    var _a, _b;
     if (el.getAttribute("aria-label")) return true;
     if (el.getAttribute("title")) return true;
-    if ((_a = el.textContent) == null ? void 0 : _a.trim()) return true;
+    if (el.textContent?.trim()) return true;
     const labelledBy = el.getAttribute("aria-labelledby");
     if (labelledBy) {
       const target = document.getElementById(labelledBy);
-      if ((_b = target == null ? void 0 : target.textContent) == null ? void 0 : _b.trim()) return true;
+      if (target?.textContent?.trim()) return true;
     }
     return false;
   }
@@ -5971,19 +5950,18 @@ ${scope} table {
     return true;
   }
   async function generateLinkLabel(link) {
-    var _a, _b;
     if (link.dataset.ai4a11yProcessed) return null;
     if (!isVisible(link)) return null;
     if (hasAccessibleName2(link)) return null;
     markProcessed(link, "pending");
     const href = link.href || "";
-    const existingText = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
+    const existingText = link.textContent?.trim() || "";
     const context = getContextForElement(link);
     let label;
     try {
       label = await inferLabel({
         elementType: "link",
-        html: ((_b = link.outerHTML) == null ? void 0 : _b.substring(0, 500)) || "",
+        html: link.outerHTML?.substring(0, 500) || "",
         context: [existingText, href, context].filter(Boolean).join(" | ")
       });
     } catch (e) {
@@ -6004,7 +5982,6 @@ ${scope} table {
     return null;
   }
   async function generateButtonLabel(button) {
-    var _a;
     if (button.dataset.ai4a11yProcessed) return null;
     if (!isVisible(button)) return null;
     if (hasAccessibleName2(button)) return null;
@@ -6022,7 +5999,7 @@ ${scope} table {
     try {
       label = await inferLabel({
         elementType: "button",
-        html: ((_a = button.outerHTML) == null ? void 0 : _a.substring(0, 500)) || "",
+        html: button.outerHTML?.substring(0, 500) || "",
         context
       });
     } catch (e) {
@@ -6106,9 +6083,8 @@ ${scope} table {
     return null;
   }
   function inferButtonLabel(button) {
-    var _a, _b;
-    const className = ((_a = button.className) == null ? void 0 : _a.toLowerCase()) || "";
-    const svgPaths = ((_b = button.querySelector("svg path")) == null ? void 0 : _b.getAttribute("d")) || "";
+    const className = button.className?.toLowerCase() || "";
+    const svgPaths = button.querySelector("svg path")?.getAttribute("d") || "";
     const patterns = {
       close: ["close", "dismiss", "x-btn", "btn-close"],
       menu: ["menu", "hamburger", "nav-toggle"],
@@ -6135,28 +6111,26 @@ ${scope} table {
     return null;
   }
   function getContextForElement(el) {
-    var _a;
     const parent = el.parentElement;
     if (!parent) return "";
     const clone = parent.cloneNode(true);
     clone.querySelectorAll("script, style").forEach((s) => s.remove());
-    return ((_a = clone.textContent) == null ? void 0 : _a.trim().substring(0, 200)) || "";
+    return clone.textContent?.trim().substring(0, 200) || "";
   }
   function getNearbyText(input) {
-    var _a, _b, _c;
     const prev = input.previousElementSibling;
     const next = input.nextElementSibling;
     const parent = input.parentElement;
-    if ((_a = prev == null ? void 0 : prev.textContent) == null ? void 0 : _a.trim()) {
+    if (prev?.textContent?.trim()) {
       return prev.textContent.trim().replace(/:$/, "");
     }
-    if ((_b = next == null ? void 0 : next.textContent) == null ? void 0 : _b.trim()) {
+    if (next?.textContent?.trim()) {
       return next.textContent.trim().replace(/:$/, "");
     }
     if (parent) {
       const clone = parent.cloneNode(true);
       clone.querySelectorAll("input, select, textarea, button").forEach((e) => e.remove());
-      const text = (_c = clone.textContent) == null ? void 0 : _c.trim();
+      const text = clone.textContent?.trim();
       if (text && text.length < 50) return text.replace(/:$/, "");
     }
     return null;
@@ -6175,17 +6149,16 @@ ${scope} table {
   var incrementStat3 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function generateVideoCaptions(video) {
-    var _a;
     if (video.dataset.ai4a11yCaptioned) return null;
     video.dataset.ai4a11yCaptioned = "pending";
-    const src = video.src || ((_a = video.querySelector("source")) == null ? void 0 : _a.src);
+    const src = video.src || video.querySelector("source")?.src;
     if (!src) {
       video.dataset.ai4a11yCaptioned = "failed";
       return null;
     }
     try {
       const result = await transcribeVideo(src);
-      if (result == null ? void 0 : result.text) {
+      if (result?.text) {
         const text = result.text;
         addCaptionTrack(video, text);
         video.dataset.ai4a11yCaptioned = "done";
@@ -6203,17 +6176,16 @@ ${scope} table {
     }
   }
   async function generateAudioCaptions(audio) {
-    var _a;
     if (audio.dataset.ai4a11yCaptioned) return null;
     audio.dataset.ai4a11yCaptioned = "pending";
-    const src = audio.src || ((_a = audio.querySelector("source")) == null ? void 0 : _a.src);
+    const src = audio.src || audio.querySelector("source")?.src;
     if (!src) {
       audio.dataset.ai4a11yCaptioned = "failed";
       return null;
     }
     try {
       const result = await transcribeAudio(src);
-      if (result == null ? void 0 : result.text) {
+      if (result?.text) {
         const text = result.text;
         addTranscriptBlock(audio, text);
         audio.dataset.ai4a11yCaptioned = "done";
@@ -6241,7 +6213,6 @@ ${scope} table {
     video.appendChild(track);
   }
   function addTranscriptBlock(audio, text) {
-    var _a;
     const container = document.createElement("details");
     container.className = "ai4a11y-transcript";
     const summary = document.createElement("summary");
@@ -6251,7 +6222,7 @@ ${scope} table {
     content.className = "ai4a11y-transcript-content";
     content.textContent = text;
     container.appendChild(content);
-    (_a = audio.parentElement) == null ? void 0 : _a.insertBefore(container, audio.nextSibling);
+    audio.parentElement?.insertBefore(container, audio.nextSibling);
   }
   function createSimpleVTT(text) {
     const words = text.split(/\s+/);
@@ -6288,14 +6259,13 @@ ${chunk}
   var incrementStat4 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function simplifyText2(element) {
-    var _a;
     if (element.dataset.ai4a11ySimplified) return null;
     element.dataset.ai4a11ySimplified = "pending";
     if (element.tagName === "TABLE" || element.querySelector("table")) {
       element.dataset.ai4a11ySimplified = "skipped";
       return null;
     }
-    const originalText = (_a = element.textContent) == null ? void 0 : _a.trim();
+    const originalText = element.textContent?.trim();
     if (!originalText || originalText.length < 100 || originalText.length > 1e4) {
       element.dataset.ai4a11ySimplified = "skipped";
       return null;
@@ -6352,14 +6322,13 @@ ${chunk}
     }
   }
   async function summarizeContent(element) {
-    var _a;
     if (element.dataset.ai4a11ySummarize) return null;
     element.dataset.ai4a11ySummarize = "pending";
     if (element.tagName === "TABLE") {
       element.dataset.ai4a11ySummarize = "skipped";
       return null;
     }
-    const text = (_a = element.textContent) == null ? void 0 : _a.trim();
+    const text = element.textContent?.trim();
     if (!text || text.length < 500) {
       element.dataset.ai4a11ySummarize = "skipped";
       return null;
@@ -6794,11 +6763,10 @@ ${chunk}
   });
   var MAX_LINKS_PER_PAGE = 10;
   async function improveAmbiguousLink(link) {
-    var _a, _b, _c;
     if (link.dataset.ai4a11yProcessed) return null;
     markProcessed(link, "pending");
-    const text = ((_a = link.textContent) == null ? void 0 : _a.trim()) || "";
-    const context = ((_c = (_b = link.closest("p, li, td, article, section")) == null ? void 0 : _b.textContent) == null ? void 0 : _c.trim().substring(0, 200)) || "";
+    const text = link.textContent?.trim() || "";
+    const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
     try {
       const improved = await improveLinkText(text, link.href, context);
       if (improved && improved.toLowerCase() !== text.toLowerCase()) {
@@ -6843,18 +6811,11 @@ ${chunk}
       return false;
     }
     const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*%?$/.test(t) || /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t);
-    const dataLikeCount = firstRowCells.filter((c) => {
-      var _a;
-      return isDataLike(((_a = c.textContent) == null ? void 0 : _a.trim()) || "");
-    }).length;
+    const dataLikeCount = firstRowCells.filter((c) => isDataLike(c.textContent?.trim() || "")).length;
     const looksLikeHeader = dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
-      var _a;
-      const text = ((_a = cell.textContent) == null ? void 0 : _a.trim()) || "";
+      const text = cell.textContent?.trim() || "";
       if (!text || text.length > 40) return false;
-      const below = rows.slice(1, 4).map((r) => {
-        var _a2, _b;
-        return (_b = (_a2 = r.querySelectorAll("td")[i]) == null ? void 0 : _a2.textContent) == null ? void 0 : _b.trim();
-      });
+      const below = rows.slice(1, 4).map((r) => r.querySelectorAll("td")[i]?.textContent?.trim());
       return !below.includes(text);
     });
     if (looksLikeHeader) {
@@ -6877,10 +6838,7 @@ ${chunk}
       const columnCount = firstRowCells.length;
       const headers = [];
       for (let col = 0; col < columnCount; col++) {
-        const samples = rows.slice(0, 5).map((r) => {
-          var _a, _b;
-          return (_b = (_a = r.querySelectorAll("td")[col]) == null ? void 0 : _a.textContent) == null ? void 0 : _b.trim();
-        }).filter(Boolean);
+        const samples = rows.slice(0, 5).map((r) => r.querySelectorAll("td")[col]?.textContent?.trim()).filter(Boolean);
         const header = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
         headers.push(header || `Column ${col + 1}`);
       }
@@ -6927,28 +6885,21 @@ ${chunk}
   function ensureMainLandmark() {
     if (document.querySelector('main, [role="main"]')) return false;
     const isCandidate = (el) => {
-      var _a;
       const tag = el.tagName.toLowerCase();
       if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
       if (el.getAttribute("role")) return false;
-      if ((((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) <= 100) return false;
+      if ((el.textContent?.trim().length || 0) <= 100) return false;
       if (el.querySelector(LANDMARK_SELECTOR)) return false;
       return true;
     };
     let level = Array.from(document.body.children);
     let candidates = level.filter(isCandidate);
     if (candidates.length === 0) {
-      const shell = level.find((el) => {
-        var _a;
-        return (((_a = el.textContent) == null ? void 0 : _a.trim().length) || 0) > 100 && el.querySelector(LANDMARK_SELECTOR);
-      });
+      const shell = level.find((el) => (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
       if (shell) candidates = Array.from(shell.children).filter(isCandidate);
     }
     if (candidates.length === 0) return false;
-    const main = candidates.reduce((a, b) => {
-      var _a, _b;
-      return (((_a = a.textContent) == null ? void 0 : _a.length) || 0) >= (((_b = b.textContent) == null ? void 0 : _b.length) || 0) ? a : b;
-    });
+    const main = candidates.reduce((a, b) => (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
     main.setAttribute("role", "main");
     markProcessed(main, "done");
     incrementStat9("wcag");
@@ -6956,14 +6907,36 @@ ${chunk}
     console.log('[AI4A11y] Added role="main" landmark');
     return true;
   }
+  var HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+  var FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
+  var COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
+  var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
+  function ensureBanner() {
+    if (document.querySelector('header, [role="banner"]')) return false;
+    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => (e.textContent?.trim().length || 0) < 2e3)[0];
+    if (!el) return false;
+    el.setAttribute("role", "banner");
+    incrementStat9("wcag");
+    logFix15("landmark", el, "(unmarked header)", 'role="banner"');
+    return true;
+  }
+  function ensureContentinfo() {
+    if (document.querySelector('footer, [role="contentinfo"]')) return false;
+    const cands = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role")).filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || "").slice(-400))).filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')).filter((e) => (e.textContent?.trim().length || 0) < 1500);
+    const el = cands[cands.length - 1];
+    if (!el) return false;
+    el.setAttribute("role", "contentinfo");
+    incrementStat9("wcag");
+    logFix15("landmark", el, "(unmarked footer)", 'role="contentinfo"');
+    return true;
+  }
   function ensureStructuralLandmarks() {
     let fixed = 0;
     document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
-      var _a;
       if (!looksLikeNavClass(el)) return;
       if (el.closest('nav, [role="navigation"]')) return;
       const links = el.querySelectorAll("a").length;
-      const textLength = ((_a = el.textContent) == null ? void 0 : _a.trim().length) || 1;
+      const textLength = el.textContent?.trim().length || 1;
       if (links >= 3 && links * 15 / textLength > 0.5) {
         el.setAttribute("role", "navigation");
         incrementStat9("wcag");
@@ -6971,6 +6944,8 @@ ${chunk}
         fixed++;
       }
     });
+    if (ensureBanner()) fixed++;
+    if (ensureContentinfo()) fixed++;
     return fixed;
   }
   function fixLandmarks() {
@@ -6982,6 +6957,25 @@ ${chunk}
   var axeHandlers6 = {
     "landmark-one-main": () => ensureMainLandmark()
   };
+  var FixLandmarks = {
+    id: "fix-landmarks",
+    enabled: false,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      try {
+        fixLandmarks();
+      } catch {
+      }
+    },
+    disable() {
+      this.enabled = false;
+    },
+    toggle() {
+      this.enabled ? this.disable() : this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFixLandmarks = FixLandmarks;
 
   // tools/adapters/index.js
   var axeHandlers7 = {
@@ -7041,12 +7035,11 @@ ${chunk}
   // tools/auditors/missing-captions.js
   function findVideosWithoutCaptions() {
     return Array.from(document.querySelectorAll("video")).filter((video) => {
-      var _a;
       if (wasProcessed(video)) return false;
       if (!isVisible(video)) return false;
       const tracks = video.querySelectorAll('track[kind="captions"], track[kind="subtitles"]');
       if (tracks.length > 0) return false;
-      if (((_a = video.textTracks) == null ? void 0 : _a.length) > 0) {
+      if (video.textTracks?.length > 0) {
         for (const track of video.textTracks) {
           if (track.kind === "captions" || track.kind === "subtitles") {
             return false;
@@ -7058,12 +7051,11 @@ ${chunk}
   }
   function findAudioWithoutTranscripts() {
     return Array.from(document.querySelectorAll("audio")).filter((audio) => {
-      var _a;
       if (wasProcessed(audio)) return false;
       if (!isVisible(audio)) return false;
       const parent = audio.parentElement;
       if (!parent) return true;
-      const text = ((_a = parent.textContent) == null ? void 0 : _a.toLowerCase()) || "";
+      const text = parent.textContent?.toLowerCase() || "";
       if (text.includes("transcript")) return false;
       if (audio.querySelector("track")) return false;
       return true;
@@ -7091,10 +7083,9 @@ ${chunk}
       "this link"
     ];
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
-      var _a;
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
-      const text = (_a = link.textContent) == null ? void 0 : _a.trim().toLowerCase();
+      const text = link.textContent?.trim().toLowerCase();
       return text && ambiguousTexts.includes(text);
     });
   }
@@ -7205,8 +7196,7 @@ ${chunk}
           autoFixLabels: true,
           autoDescribe: true,
           autoVideoDescribe: true,
-          keyboardNav: true,
-          pageOutline: true,
+          fixLandmarks: true,
           announceUpdates: true,
           describeOnDemand: true,
           languageTag: true,
@@ -7875,17 +7865,14 @@ ${chunk}
     },
     findPoorContrast() {
       const results = findLowContrastText();
-      return results.map((item) => {
-        var _a, _b, _c;
-        return {
-          text: (_b = (_a = item.element) == null ? void 0 : _a.textContent) == null ? void 0 : _b.slice(0, 50),
-          selector: getSelector(item.element),
-          color: item.color,
-          background: item.background,
-          ratio: (_c = item.ratio) == null ? void 0 : _c.toFixed(2),
-          required: item.required
-        };
-      });
+      return results.map((item) => ({
+        text: item.element?.textContent?.slice(0, 50),
+        selector: getSelector(item.element),
+        color: item.color,
+        background: item.background,
+        ratio: item.ratio?.toFixed(2),
+        required: item.required
+      }));
     },
     async runFullAudit() {
       const results = await runAxeAnalysis();
@@ -7968,22 +7955,18 @@ ${chunk}
     "color-contrast-enhanced"
   ]);
   async function runFullScan() {
-    var _a;
     const results = {
       violations: [],
       fixed: { nonAi: 0, ai: 0 },
       skipped: { needsAi: [], noHandler: [] }
     };
     const violations = await runAxeAnalysis();
-    results.violations = violations.map((v) => {
-      var _a2;
-      return { id: v.id, count: ((_a2 = v.nodes) == null ? void 0 : _a2.length) || 0 };
-    });
+    results.violations = violations.map((v) => ({ id: v.id, count: v.nodes?.length || 0 }));
     for (const violation of violations) {
       const ruleId = violation.id;
       const nodes = violation.nodes || [];
       for (const node of nodes) {
-        const selector = (_a = node.target) == null ? void 0 : _a[0];
+        const selector = node.target?.[0];
         if (!selector) continue;
         const el = document.querySelector(selector);
         if (!el || el.dataset.ai4a11yProcessed) continue;
@@ -8010,24 +7993,18 @@ ${chunk}
     if (settings2.autoSimplify) {
       const complexText = findComplexText();
       results.textProcessing = results.textProcessing || {};
-      results.textProcessing.simplify = complexText.map((el) => {
-        var _a2;
-        return {
-          selector: getSelector(el),
-          textLength: ((_a2 = el.textContent) == null ? void 0 : _a2.length) || 0
-        };
-      });
+      results.textProcessing.simplify = complexText.map((el) => ({
+        selector: getSelector(el),
+        textLength: el.textContent?.length || 0
+      }));
     }
     if (settings2.autoSummarize) {
       const longContent = findLongContent();
       results.textProcessing = results.textProcessing || {};
-      results.textProcessing.summarize = longContent.map((el) => {
-        var _a2;
-        return {
-          selector: getSelector(el),
-          textLength: ((_a2 = el.textContent) == null ? void 0 : _a2.length) || 0
-        };
-      });
+      results.textProcessing.summarize = longContent.map((el) => ({
+        selector: getSelector(el),
+        textLength: el.textContent?.length || 0
+      }));
     }
     return results;
   }
@@ -8057,39 +8034,36 @@ ${chunk}
   }
   function findComplexText() {
     return Array.from(document.querySelectorAll("p, li, td, div")).filter((el) => {
-      var _a;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector("p, div, article, section")) return false;
-      const text = ((_a = el.textContent) == null ? void 0 : _a.trim()) || "";
+      const text = el.textContent?.trim() || "";
       return text.length > 200 && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > 15);
     }).slice(0, 10);
   }
   function findLongContent() {
     return Array.from(document.querySelectorAll("p, article, section, .article-body, .content")).filter((el) => {
-      var _a;
       if (el.dataset.ai4a11ySummarized) return false;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.closest("[data-ai4a11y-summarized]")) return false;
-      const text = ((_a = el.textContent) == null ? void 0 : _a.trim()) || "";
+      const text = el.textContent?.trim() || "";
       return text.length > 500;
     }).slice(0, 5);
   }
   function isProfileSettingEnabled(setting) {
-    var _a;
     const state = window._ai4a11ySessionState || {};
     const profileName = state.activeProfile;
     if (!profileName) return false;
     const profile = getProfile(profileName);
     if (!profile) return false;
-    return !!((_a = profile.tools) == null ? void 0 : _a[setting]);
+    return !!profile.tools?.[setting];
   }
   function getActiveProfileSettings() {
     const state = window._ai4a11ySessionState || {};
     const profileName = state.activeProfile;
     if (!profileName) return {};
     const profile = getProfile(profileName);
-    return (profile == null ? void 0 : profile.tools) || {};
+    return profile?.tools || {};
   }
   function getSelector(el) {
     if (!el || !el.tagName) return "unknown";
@@ -8160,4 +8134,3 @@ ${chunk}
     };
   }
 })();
-//# sourceMappingURL=cli-tools.bundle.js.map

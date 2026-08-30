@@ -7,7 +7,8 @@
   },
   "scripts": {
     "test": "for f in tools/test/*-test.js toolkit/test/*-test.js toolkit/test/*.test.mjs controller/test/*.test.mjs onboarding/test/*.test.mjs; do node \"$f\" || exit 1; done",
-    "validate:browser": "node tools/test/browser-validate.js"
+    "validate:browser": "node tools/test/browser-validate.js",
+    "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

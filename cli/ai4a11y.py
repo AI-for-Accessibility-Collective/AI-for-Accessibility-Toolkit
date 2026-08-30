@@ -62,8 +62,9 @@ OUT.mkdir(parents=True, exist_ok=True)
 _CLI_TOOLS_BUNDLE = Path(__file__).parent / "cli-tools.bundle.js"
 _CLI_TOOLS_SCRIPT = None
 
-# Readability library (for ReaderMode)
-_READABILITY_PATH = Path(__file__).parent.parent / "extension" / "lib" / "readability.js"
+# Readability library (for ReaderMode), vendored under cli/lib/ so the CLI
+# does not depend on the extension repository's tree
+_READABILITY_PATH = Path(__file__).parent / "lib" / "readability.js"
 _READABILITY_SCRIPT = None
 
 
