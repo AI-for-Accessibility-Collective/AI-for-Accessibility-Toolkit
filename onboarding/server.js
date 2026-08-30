@@ -88,14 +88,26 @@ async function remoteLibrarian(token, method, args) {
 // remoteLibrarian resolves for ANY HTTP status, so an unchecked write turns a
 // failed profile save into a reported success: the person finishes onboarding,
 // is handed a uid, and the profile behind it was never written. That matters
-// more now that the uid IS the profile's read credential — we would be handing
-// out a capability for nothing. Reads stay deliberately tolerant (a profile
-// that will not load renders as empty rather than breaking the page); only
-// writes throw, and the first failure stops the rest so we do not pile more
-// half-written state on top of it.
+// more now that the uid IS the profile's read credential, because we would be
+// handing out a capability for nothing.
+//
+// A failed write has TWO shapes, and the HTTP status only catches one of them.
+// The service reports a transport-level problem with a non-200 status, but when
+// a librarian method THROWS it answers `200 {ok:false, error}`, on purpose:
+// CONTRACT.md calls application errors data, not transport failures. That is
+// the shape a real outage takes. The datastore being unreachable does not make
+// the HTTP request fail, it makes the method throw, and a check that reads only
+// the status waves it through. So the envelope is what decides: a write
+// succeeded when the service says `ok: true`, and anything else throws.
+//
+// Deliberately the envelope, not the method's own return value. `deleteNote`
+// answering `{ok:false, reason:'not-found'}` inside a successful envelope means
+// the note was already gone, which is the state we wanted. Reads stay tolerant
+// too (a profile that will not load renders as empty rather than breaking the
+// page); only writes throw, and the first failure stops the rest.
 async function remoteWrite(token, method, args) {
   const r = await remoteLibrarian(token, method, args);
-  if (r.status !== 200) {
+  if (r.status !== 200 || r.body?.ok !== true) {
     const detail = r.body?.error || r.body?.message || 'no detail';
     throw new Error(`profile write failed (${method}: HTTP ${r.status}, ${detail})`);
   }

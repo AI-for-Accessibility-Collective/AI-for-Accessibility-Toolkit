@@ -33,7 +33,15 @@ function check(name, cond) {
 // Record every librarian call so we can assert both the ORDER of the writes and
 // that the run STOPS at the first failure rather than carrying on writing.
 let calls = [];
-function stubFetch({ librarianStatus, notes = [] }) {
+// The stub answers in the service's REAL envelope, which is the whole point of
+// the second scenario below: a success is `{ok:true, result}`, a method that
+// threw is `200 {ok:false, error}`, and only a transport problem carries a
+// non-200 status. An earlier version of this stub returned a bare `{result}`
+// with no `ok` at all, so it could not have caught a check that reads the
+// status alone.
+//   librarianStatus -> HTTP status (200 unless we are simulating transport loss)
+//   librarianOk     -> the envelope's `ok`, which is where a real outage shows up
+function stubFetch({ librarianStatus = () => 200, librarianOk = () => true, notes = [] }) {
   calls = [];
   globalThis.fetch = async (url, opts = {}) => {
     const u = String(url);
@@ -45,7 +53,10 @@ function stubFetch({ librarianStatus, notes = [] }) {
       calls.push(m[1]);
       const status = librarianStatus(m[1], calls.length);
       if (status !== 200) return reply(status, { error: 'internal-error' });
-      return reply(200, { result: m[1] === 'listNotes' ? notes : null });
+      if (!librarianOk(m[1], calls.length)) {
+        return reply(200, { ok: false, error: 'datastore unavailable' });
+      }
+      return reply(200, { ok: true, result: m[1] === 'listNotes' ? notes : null });
     }
     throw new Error('unexpected fetch: ' + u + ' ' + (opts.method || 'GET'));
   };
@@ -68,6 +79,45 @@ check('all writes 500: onboard rejects', r.ok === false);
 check('all writes 500: message names the failure', /profile write failed/.test(r.error?.message || ''));
 check('all writes 500: message carries the status', /500/.test(r.error?.message || ''));
 check('all writes 500: stops at the first write', calls.length === 1);
+
+// ── the failure shape that actually happens: 200 with ok:false ─────────────
+// A librarian method that throws is answered `200 {ok:false, error}` by design,
+// because CONTRACT.md treats application errors as data rather than transport
+// failures. That is what an unreachable datastore looks like from here: the
+// HTTP request succeeds and the write does not. A check that reads only the
+// status calls this a success and hands the person a capability for a profile
+// that was never written, which is the exact bug this file exists to prevent,
+// arriving through the other door.
+stubFetch({ librarianOk: () => false });
+r = await onboardResult(ARGS);
+check('ok:false at HTTP 200: onboard rejects', r.ok === false);
+check('ok:false at HTTP 200: message names the failure', /profile write failed/.test(r.error?.message || ''));
+check('ok:false at HTTP 200: message carries the service error', /datastore unavailable/.test(r.error?.message || ''));
+check('ok:false at HTTP 200: stops at the first write', calls.length === 1);
+
+// The same shape partway through, which is the one that used to leave a
+// half-written profile AND report success.
+stubFetch({ librarianOk: (_m, n) => n !== 2 });
+r = await onboardResult(ARGS);
+check('ok:false partway: onboard rejects', r.ok === false);
+check('ok:false partway: nothing attempted after it', calls.length === 2);
+
+// A missing envelope is not a success either. Anything that is not an explicit
+// ok:true is a write we cannot vouch for.
+stubFetch({ librarianOk: () => true });
+globalThis.fetch = (function (inner) {
+  return async (url, opts) => {
+    const r2 = await inner(url, opts);
+    if (/\/v1\/librarian\//.test(String(url))) {
+      const body = await r2.json();
+      delete body.ok;
+      return { status: r2.status, json: async () => body };
+    }
+    return r2;
+  };
+})(globalThis.fetch);
+r = await onboardResult(ARGS);
+check('no ok field at all: onboard rejects', r.ok === false);
 
 // ── the profile is ONE write, never four ───────────────────────────────────
 // This is the assertion that makes a half-written profile impossible rather
