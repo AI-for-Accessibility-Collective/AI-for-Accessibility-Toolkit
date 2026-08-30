@@ -1,0 +1,39 @@
+name: CLI
+
+# Runs only when the CLI or the catalog it bundles can have changed.
+on:
+  push:
+    branches: [main, rearch-experiment]
+    paths: ['cli/**', 'tools/**', 'pyproject.toml', '.github/workflows/cli.yml']
+  pull_request:
+    paths: ['cli/**', 'tools/**', 'pyproject.toml', '.github/workflows/cli.yml']
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install the CLI and test dependencies
+        run: |
+          pip install -e . pytest
+          python -m playwright install --with-deps chromium
+
+      - name: Run the harness
+        run: python -m pytest cli/tests -q
+
+      - name: Committed bundle is fresh
+        run: |
+          npm ci
+          npm run build:cli
+          git diff --exit-code cli/cli-tools.bundle.js
