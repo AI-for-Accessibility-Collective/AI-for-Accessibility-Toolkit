@@ -206,21 +206,21 @@ Report vulnerabilities via [SECURITY.md](SECURITY.md), which also states this re
 
 <div align="center">
 <p>
-  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University" height="38"></a>
+  <a href="https://www.stanford.edu/"><img src="docs/logos/stanford.png" alt="Stanford University logo, links to the Stanford website" height="38"></a>
   &nbsp;&nbsp;
-  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington" height="32"></a>
+  <a href="https://www.washington.edu/"><img src="docs/logos/uw.png" alt="University of Washington logo, links to the UW website" height="32"></a>
   &nbsp;&nbsp;
-  <a href="https://www.media.mit.edu/"><img src="docs/logos/mit.png" alt="MIT Media Lab" height="35"></a>
+  <a href="https://www.media.mit.edu/"><img src="docs/logos/mit.png" alt="MIT Media Lab logo, links to the Media Lab website" height="35"></a>
   &nbsp;&nbsp;
-  <a href="https://www.disabilityinnovation.com/"><img src="docs/logos/gdi.jpg" alt="UCL GDI Hub" height="35"></a>
+  <a href="https://www.disabilityinnovation.com/"><img src="docs/logos/gdi.jpg" alt="UCL Global Disability Innovation Hub logo, links to the GDI Hub website" height="35"></a>
   &nbsp;&nbsp;
-  <a href="https://www.rit.edu/ntid/"><img src="docs/logos/rit.png" alt="RIT/NTID" height="40"></a>
+  <a href="https://www.rit.edu/ntid/"><img src="docs/logos/rit.png" alt="RIT National Technical Institute for the Deaf logo, links to the NTID website" height="40"></a>
   &nbsp;&nbsp;
-  <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc" height="35"></a>
+  <a href="https://thearc.org/"><img src="docs/logos/thearc.png" alt="The Arc logo, links to The Arc website" height="35"></a>
   &nbsp;&nbsp;
-  <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID" height="32"></a>
+  <a href="https://rnid.org.uk/"><img src="docs/logos/rnid.png" alt="RNID logo, links to the RNID website" height="32"></a>
   &nbsp;&nbsp;
-  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="28"></a>
+  <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org logo, links to the Google.org website" height="28"></a>
 </p>
 </div>
 </div>
