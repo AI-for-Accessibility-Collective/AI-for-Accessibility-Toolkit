@@ -10,7 +10,8 @@
 // (a host's chrome-actuation implementation) instead of touching
 // chrome.* itself, so the SAME voice tool-call contract (voiceGetContext /
 // voiceApplySettings / voiceUndoLast / voiceResetUndo / voiceReadPage /
-// voicePageAction — see extension/offscreen/src/live/tools.js) can be
+// voicePageAction — implemented in the extension repository at
+// personalized-extension/extension/offscreen/src/live/tools.js) can be
 // re-implemented for a non-Chrome host by writing one more object with this
 // same shape — no changes needed above the port.
 //
