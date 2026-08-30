@@ -82,6 +82,60 @@ def run_without_claude(cli_env: dict) -> CliRunner:
     return _run
 
 
+# A stand-in for the Claude Code CLI that answers a fixed number of calls and
+# then stops. Real degradation is partial far more often than total: a couple
+# of calls time out in a run of twenty. No model is reached either way.
+FLAKY_CLAUDE_SHIM = """#!/bin/sh
+count=$(cat "$AI4A11Y_SHIM_COUNT" 2>/dev/null || echo 0)
+count=$((count + 1))
+echo "$count" > "$AI4A11Y_SHIM_COUNT"
+if [ "$count" -le "$AI4A11Y_SHIM_SUCCEED" ]; then
+  echo "A one pixel placeholder image."
+  exit 0
+fi
+echo "shim: no answer for call $count" >&2
+exit 1
+"""
+
+
+@pytest.fixture
+def run_with_flaky_claude(cli_env: dict, tmp_path: Path):
+    """Build a runner whose ``claude`` answers ``succeed_calls`` times, then fails.
+
+    Takes the number of calls to answer and returns a runner, so one test can
+    place the cutoff wherever the behavior it is checking changes.
+    """
+
+    def _make(succeed_calls: int) -> CliRunner:
+        shim_dir = tmp_path / "shim"
+        shim_dir.mkdir(exist_ok=True)
+        script = shim_dir / "claude"
+        script.write_text(FLAKY_CLAUDE_SHIM)
+        script.chmod(0o755)
+        counter = tmp_path / "shim-calls"
+        counter.write_text("0")
+        env = {
+            **cli_env,
+            "PATH": f"{shim_dir}:/usr/bin:/bin",
+            "AI4A11Y_SHIM_COUNT": str(counter),
+            "AI4A11Y_SHIM_SUCCEED": str(succeed_calls),
+        }
+
+        def _run(*args: str, timeout: int = 120) -> "subprocess.CompletedProcess[str]":
+            return subprocess.run(
+                [sys.executable, "-m", "cli.cli", *args],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+        return _run
+
+    return _make
+
+
 @pytest.fixture(scope="session")
 def chromium_session(cli_env: dict):
     """A headless Chromium the session commands can connect to over CDP.

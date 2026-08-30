@@ -75,25 +75,33 @@ been.
 
 | Code | Meaning |
 |---|---|
-| 0 | The command did its work. A run that fixed some items and skipped others is still 0; see below. |
+| 0 | The command did the whole job. Every item it attempted was fixed. |
 | 2 | The command line was wrong (Typer's usage error). |
-| 3 | An AI-backed command reached no model and so changed nothing. |
+| 3 | An AI-backed command could not reach a model for at least one item. |
 | 4 | The recorded session is not the browser it started. Nothing was touched. |
 | 5 | A session command ran with no session started. |
 
-A partly degraded run exits 0 on purpose. `scan` also does local fixes, and
-failing the whole command because two of twenty model calls timed out would
-report eighteen real fixes as a failure. The count is in the payload instead, so
-a caller that cares can see it:
+Exit 3 covers any degree of degradation, from one unanswered call to all of
+them. A run that captions eighteen images and gives up on two reports failure,
+because a caller reading the exit status is asking whether the page is now
+fixed, and it is not. The fixes that did land are kept, and the payload says how
+far the run got:
 
 ```console
-$ ai4a11y session fix-alt --json      # with the Claude Code CLI unreachable
+$ ai4a11y session fix-alt --json      # one image captioned, one call unanswered
 {
-  "fixed": [],
+  "fixed": [
+    { "selector": "img:nth-of-type(1)", "alt": "..." }
+  ],
   "attempted": 2,
-  "skippedNeedsAi": 2
+  "skippedNeedsAi": 1
 }
+$ echo $?
+3
 ```
+
+To act only on a run that reached no model at all, read `fixed` from the
+payload rather than the exit status.
 
 `--json` prints that payload and nothing else. `scan --json` carries the same
 `skippedNeedsAi` count alongside its own fields.

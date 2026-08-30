@@ -1533,8 +1533,9 @@ def claude_answer(raw):
     return answer.strip() or None
 
 
-# Exit status for a command that could not reach a model at all. Kept distinct
-# from 1 so a script can tell "install the Claude Code CLI" from a real error.
+# Exit status for a command that could not reach a model for at least one of
+# the items it was asked to fix. Kept distinct from 1 so a script can tell
+# "install the Claude Code CLI" from a real error.
 AI_UNAVAILABLE_EXIT = 3
 
 # Exit status for a command that stopped because the recorded session no longer
@@ -1553,19 +1554,20 @@ def _ai_fix_report(fixes, attempted, unreachable):
 
     A bare list of fixes cannot express a degraded run: five fixes out of ten
     items and five out of five look identical to a caller reading it. Exit
-    status only says whether anything at all got done, so the counts go here.
+    status says only that something went unanswered, so how much goes here.
     """
     return {'fixed': fixes, 'attempted': attempted, 'skippedNeedsAi': unreachable}
 
 
 def _ai_exit_status(applied, unreachable):
-    """Nonzero when the model was unreachable and the command changed nothing.
+    """Nonzero when any item went unanswered, whatever else the run fixed.
 
-    A run that got some answers keeps them and still exits 0; the per-item
-    needs-ai lines say what was skipped. A run that got none did no work, and
-    saying so through the exit status is what lets a script or an agent notice.
+    A caller reading only the exit status is asking whether the command did the
+    job it was given. A run that left two images out of twenty without alt text
+    did not, so it reports failure and keeps the eighteen fixes it made; the
+    per-item needs-ai lines and the counts in the payload say how far it got.
     """
-    if unreachable and not applied:
+    if unreachable:
         return AI_UNAVAILABLE_EXIT
     return 0
 
@@ -5365,8 +5367,9 @@ def session_fix_all(json_output=False):
     label_status = session_fix_labels(max_elements=10, json_output=json_output)
 
     print("\n=== Done ===", flush=True)
-    # Both halves have to have got nowhere before the run counts as a failure.
-    if alt_status and label_status:
+    # Either half falling short is enough. A run that captioned the images and
+    # labelled none of the controls did not do what fix-all names.
+    if alt_status or label_status:
         return AI_UNAVAILABLE_EXIT
     return 0
 

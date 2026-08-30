@@ -7,8 +7,11 @@ straight into the page, so "the model was unreachable" has to stop at the
 call site rather than travel on as alt text, as a label, or as an empty
 string that replaces a paragraph.
 
-No AI model is called: the point of stripping PATH is that there is nothing
-to call.
+Two tests further down use a stand-in ``claude`` that answers a set number of
+calls and then stops, because degradation is partial more often than total.
+
+No AI model is called: nothing on the trimmed PATH can call one, and the
+stand-in is a shell script.
 """
 
 import json
@@ -19,6 +22,9 @@ import pytest
 from playwright.sync_api import sync_playwright
 
 from conftest import FIXTURE_URL, REPO_ROOT, CliRunner
+
+sys.path.insert(0, str(REPO_ROOT / "cli"))
+from ai4a11y import AI_UNAVAILABLE_EXIT  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -125,10 +131,10 @@ def test_no_element_is_given_an_empty_label_when_claude_is_missing(
 def test_json_output_reports_what_was_skipped(
     chromium_session: dict, run_without_claude, command: tuple
 ) -> None:
-    """A caller reading --json has to be able to see a degraded run.
+    """A caller reading --json has to be able to see how far a run got.
 
-    Exit status says only whether anything at all got done, so a run that fixed
-    some items and skipped others looks like a clean success from the outside
+    Exit status says a run was degraded but not by how much, so a run that
+    fixed nine items of ten and one that fixed none look alike from outside
     unless the payload says otherwise.
     """
     result = run_without_claude("session", *command, "--json")
@@ -137,3 +143,36 @@ def test_json_output_reports_what_was_skipped(
     assert payload["fixed"] == []
     assert payload["skippedNeedsAi"] > 0
     assert payload["attempted"] == payload["skippedNeedsAi"]
+
+
+def test_a_partly_degraded_run_exits_nonzero(
+    chromium_session: dict, run_with_flaky_claude
+) -> None:
+    """Some answers is not success.
+
+    The fixture holds two images. Answering one of them and failing the other
+    leaves the page part fixed and part not, which a caller checking only the
+    exit status would otherwise read as a clean run.
+    """
+    run = run_with_flaky_claude(1)
+    result = run("session", "fix-alt", "--json")
+    payload = json.loads(result.stdout)
+
+    assert len(payload["fixed"]) == 1, payload
+    assert payload["skippedNeedsAi"] == 1, payload
+    assert result.returncode == AI_UNAVAILABLE_EXIT, result.stdout
+
+
+def test_fix_all_fails_when_only_one_half_degraded(
+    chromium_session: dict, run_with_flaky_claude
+) -> None:
+    """One clean half does not cover for the other.
+
+    Answering both images and nothing after it means ``fix-alt`` finishes
+    cleanly and ``fix-labels`` reaches no model at all.
+    """
+    run = run_with_flaky_claude(2)
+    result = run("session", "fix-all")
+
+    assert "needs-ai" in (result.stdout + result.stderr).lower()
+    assert result.returncode == AI_UNAVAILABLE_EXIT, result.stdout
