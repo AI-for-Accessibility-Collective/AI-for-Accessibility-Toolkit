@@ -321,7 +321,7 @@ def start() -> None:
 @session_app.command()
 def stop() -> None:
     """Close the persistent browser."""
-    _engine().session_stop()
+    _exit(_engine().session_stop())
 
 
 @session_app.command()
@@ -686,7 +686,13 @@ def main() -> None:
     if len(argv) > 1 and not argv[1].startswith("-"):
         if argv[1] not in ("list", "create", "session") and argv[1] in _session_command_names():
             argv.insert(1, "session")
-    app()
+    try:
+        app()
+    except _engine().ForeignBrowser as ex:
+        # Refusing to drive a browser this session did not start is an ordinary
+        # outcome, not a crash, so it reads as a sentence and not a traceback.
+        typer.echo(str(ex), err=True)
+        raise typer.Exit(_engine().SESSION_MISMATCH_EXIT)
 
 
 if __name__ == "__main__":

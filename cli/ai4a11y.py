@@ -1520,6 +1520,10 @@ def claude_answer(raw):
 # from 1 so a script can tell "install the Claude Code CLI" from a real error.
 AI_UNAVAILABLE_EXIT = 3
 
+# Exit status for a command that stopped because the recorded session no longer
+# names the browser it started.
+SESSION_MISMATCH_EXIT = 4
+
 # Printed in place of a fix whenever the model was unreachable for that item.
 NEEDS_AI_LINE = "needs-ai: no answer from the Claude Code CLI, nothing written"
 
@@ -2008,19 +2012,63 @@ def _chromium_path():
     raise RuntimeError("No Chrome/Chromium found")
 
 
+class ForeignBrowser(RuntimeError):
+    """The browser on the recorded port is not the one this session started."""
+
+
+def _cdp_browser_id(cdp, timeout=1):
+    """The browser's own id from its CDP endpoint, or None if nothing answers.
+
+    Chrome puts a fresh uuid in webSocketDebuggerUrl every time it launches, and
+    no two browsers share one. That is what separates "the browser this session
+    started" from "whatever else is listening on this port", which matters
+    because the default here is 9222, the port every DevTools Protocol client
+    reaches for first.
+    """
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"{cdp}/json/version", timeout=timeout) as response:
+            ws = json.loads(response.read()).get('webSocketDebuggerUrl', '')
+    except Exception:
+        return None
+    return ws.rsplit('/', 1)[-1] or None
+
+
+def _read_session(verify=True):
+    """The recorded session, after checking the browser is still the same one.
+
+    A session file names a pid and a port, and neither identifies a browser. Pids
+    are handed out again once the number space wraps, so `session stop` reading
+    one at face value can signal a process that has nothing to do with this tool.
+    A port says even less: connect to it unverified and the CLI drives someone
+    else's browser, on their tabs.
+    """
+    if not SESSION_FILE.exists():
+        raise RuntimeError("No session running. Start one with: ai4a11y session start")
+    info = json.loads(SESSION_FILE.read_text())
+    if not verify:
+        return info
+    live = _cdp_browser_id(info.get('cdp', ''))
+    if live is None or live != info.get('browser'):
+        raise ForeignBrowser(
+            "The browser this session recorded is gone, and what is on "
+            f"{info.get('cdp')} now is not the browser it started. Nothing was "
+            "touched. Run 'ai4a11y session start' for a new one."
+        )
+    return info
+
+
 def session_start():
     """Launch detached Chromium with CDP port. Survives after this Python process exits."""
     import os as _os
     SESSION_DIR.mkdir(exist_ok=True)
     if SESSION_FILE.exists():
         existing = json.loads(SESSION_FILE.read_text())
-        # Check if still running
-        try:
-            _os.kill(existing['pid'], 0)
+        # A recorded pid that is still alive proves nothing on its own: it may
+        # have been recycled. The browser has to answer to its own recorded id.
+        if existing.get('browser') and _cdp_browser_id(existing.get('cdp', '')) == existing['browser']:
             print(f"Session already running (pid {existing['pid']}). Use 'session stop' first or just reuse.", flush=True)
             return existing
-        except ProcessLookupError:
-            pass
 
     exe = _chromium_path()
     proc = subprocess.Popen(
@@ -2046,7 +2094,9 @@ def session_start():
     else:
         raise RuntimeError("Chromium started but CDP endpoint never came up")
 
-    info = {"pid": proc.pid, "cdp": f"http://localhost:{CDP_PORT}",
+    cdp = f"http://localhost:{CDP_PORT}"
+    info = {"pid": proc.pid, "cdp": cdp,
+            "browser": _cdp_browser_id(cdp),
             "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     SESSION_FILE.write_text(json.dumps(info, indent=2))
     print(f"Session started (pid {proc.pid}, cdp {info['cdp']})", flush=True)
@@ -2176,9 +2226,7 @@ def session_connect():
     The selected tab is persisted to ~/.ai4a11y/last_tab.json so subsequent ai4a11y calls
     stay on the same tab even if OS focus drifts to a different window between calls.
     """
-    if not SESSION_FILE.exists():
-        raise RuntimeError("No session running. Start one with: ai4a11y session start")
-    info = json.loads(SESSION_FILE.read_text())
+    info = _read_session()
     p = sync_playwright().start()
     browser = p.chromium.connect_over_cdp(info['cdp'])
     contexts = browser.contexts
@@ -2248,11 +2296,19 @@ def session_disconnect(p, browser):
 
 
 def session_stop():
-    """Kill the persistent browser."""
+    """Kill the persistent browser, and only that browser."""
     import os as _os, signal as _signal
     if not SESSION_FILE.exists():
         print("No session to stop.", flush=True); return
-    info = json.loads(SESSION_FILE.read_text())
+    try:
+        info = _read_session()
+    except ForeignBrowser as ex:
+        # Signalling the recorded pid here is how an unrelated process gets
+        # killed: the browser exited, the number came round again, and someone
+        # else's program is now holding it. Drop the stale file instead.
+        print(str(ex), flush=True)
+        SESSION_FILE.unlink(missing_ok=True)
+        return SESSION_MISMATCH_EXIT
     try:
         _os.kill(info['pid'], _signal.SIGTERM)
         print(f"Killed session pid {info['pid']}", flush=True)
@@ -2265,13 +2321,15 @@ def session_status():
     """Print current page URL/title and basic state."""
     if not SESSION_FILE.exists():
         print("No session running.", flush=True); return
-    info = json.loads(SESSION_FILE.read_text())
+    info = _read_session(verify=False)
     try:
         p, browser, page = session_connect()
         print(f"Session pid={info['pid']} started={info['started']}", flush=True)
         print(f"URL: {page.url}", flush=True)
         print(f"Title: {page.title()[:80]}", flush=True)
         session_disconnect(p, browser)
+    except ForeignBrowser:
+        raise
     except Exception as ex:
         print(f"Session file exists but connect failed: {ex}", flush=True)
 
@@ -2282,9 +2340,9 @@ def session_tabs():
     """
     if not SESSION_FILE.exists():
         print("No session running.", flush=True); return
+    info = _read_session()
     p = sync_playwright().start()
     try:
-        info = json.loads(SESSION_FILE.read_text())
         browser = p.chromium.connect_over_cdp(info['cdp'])
         all_pages = [pg for c in browser.contexts for pg in c.pages]
         if not all_pages:
@@ -2326,9 +2384,9 @@ def session_focus_tab(n):
     """
     if not SESSION_FILE.exists():
         print("No session running.", flush=True); return
+    info = _read_session()
     p = sync_playwright().start()
     try:
-        info = json.loads(SESSION_FILE.read_text())
         browser = p.chromium.connect_over_cdp(info['cdp'])
         all_pages = [pg for c in browser.contexts for pg in c.pages]
         if not all_pages:
@@ -2355,9 +2413,9 @@ def session_cleanup_tabs():
     runs that left zombie tabs behind)."""
     if not SESSION_FILE.exists():
         print("No session running.", flush=True); return
+    info = _read_session()
     p = sync_playwright().start()
     try:
-        info = json.loads(SESSION_FILE.read_text())
         browser = p.chromium.connect_over_cdp(info['cdp'])
         all_pages = [pg for c in browser.contexts for pg in c.pages]
         if not all_pages:

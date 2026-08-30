@@ -102,10 +102,15 @@ def chromium_session(cli_env: dict):
         else:
             pytest.fail("Chromium started but its CDP endpoint never came up")
 
+        cdp = f"http://localhost:{port}"
+        with urllib.request.urlopen(f"{cdp}/json/version", timeout=5) as response:
+            browser_id = json.loads(response.read())["webSocketDebuggerUrl"].rsplit("/", 1)[-1]
+
         home = Path(cli_env["AI4A11Y_HOME"])
         home.mkdir(parents=True, exist_ok=True)
         (home / "session.json").write_text(
-            json.dumps({"pid": proc.pid, "cdp": f"http://localhost:{port}", "started": "pytest"})
+            json.dumps({"pid": proc.pid, "cdp": cdp, "browser": browser_id,
+                        "started": "pytest"})
         )
         yield cli_env
     finally:
