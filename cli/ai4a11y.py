@@ -7,39 +7,39 @@ with their screen reader; ai4a11y is called from Claude Code when something's vi
 
 Primary usage — persistent session (the BLV user's daily browser + AI lens):
 
-  ai4a11y.py session start                            # launch fullscreen Chromium (persistent)
-  ai4a11y.py session stop                             # kill it
-  ai4a11y.py session status                           # url + title of focused tab
-  ai4a11y.py session tabs                             # list every open tab, mark focused
+  ai4a11y session start                            # launch fullscreen Chromium (persistent)
+  ai4a11y session stop                             # kill it
+  ai4a11y session status                           # url + title of focused tab
+  ai4a11y session tabs                             # list every open tab, mark focused
 
   # Instant DOM/keyboard primitives (no Claude call, <1s):
-  ai4a11y.py session go <url>                         # navigate focused tab
-  ai4a11y.py session back                             # browser back
-  ai4a11y.py session scroll [down|up] [amount]
-  ai4a11y.py session tab [back]                       # Tab / Shift+Tab
-  ai4a11y.py session activate                         # Enter on focused element
-  ai4a11y.py session focused                          # report document.activeElement
-  ai4a11y.py session list [headings|links|buttons|forms|landmarks|focusables|images|tables]
-  ai4a11y.py session find "<text>"                    # body text + element attrs
-  ai4a11y.py session read [selector]                  # Readability-style article extraction
-  ai4a11y.py session tables                           # alias: list tables
-  ai4a11y.py session audit [--json]                   # run axe-core WCAG accessibility audit
+  ai4a11y session go <url>                         # navigate focused tab
+  ai4a11y session back                             # browser back
+  ai4a11y session scroll [down|up] [amount]
+  ai4a11y session tab [back]                       # Tab / Shift+Tab
+  ai4a11y session activate                         # Enter on focused element
+  ai4a11y session focused                          # report document.activeElement
+  ai4a11y session list [headings|links|buttons|forms|landmarks|focusables|images|tables]
+  ai4a11y session find "<text>"                    # body text + element attrs
+  ai4a11y session read [selector]                  # Readability-style article extraction
+  ai4a11y session tables                           # alias: list tables
+  ai4a11y session audit [--json]                   # run axe-core WCAG accessibility audit
 
   # Vision-backed primitives (one Claude call each, ~15-40s):
-  ai4a11y.py session describe                         # BLV-friendly page summary
-  ai4a11y.py session ask "<question>"                 # Q&A on current tab
-  ai4a11y.py session tap "<target>"                   # text-grounded click (vision fallback)
-  ai4a11y.py session type "<field>" "<text>"          # click field + type
-  ai4a11y.py session hover "<target>"                 # hover + read tooltip/popover
-  ai4a11y.py session drag "<from>" "<to>"             # drag between two named targets
-  ai4a11y.py session diff                             # what changed since last baseline
+  ai4a11y session describe                         # BLV-friendly page summary
+  ai4a11y session ask "<question>"                 # Q&A on current tab
+  ai4a11y session tap "<target>"                   # text-grounded click (vision fallback)
+  ai4a11y session type "<field>" "<text>"          # click field + type
+  ai4a11y session hover "<target>"                 # hover + read tooltip/popover
+  ai4a11y session drag "<from>" "<to>"             # drag between two named targets
+  ai4a11y session diff                             # what changed since last baseline
 
   # Heavy autonomous mode (rare, 1-5 min):
-  ai4a11y.py session do "<task>" [min_int] [max_steps]
+  ai4a11y session do "<task>" [min_int] [max_steps]
 
-One-shot mode (no persistent session — fresh browser per run):
-  ai4a11y.py <url>                                    # capture + describe
-  ai4a11y.py <url> agent "<task>" [min_int] [max_steps]
+Command-line parsing lives in cli.py (the `ai4a11y` Typer app); this module
+is the engine. The old one-shot mode (fresh browser per run) is not exposed
+as a command; the run() and run_agent() functions remain importable.
 """
 
 from playwright.sync_api import sync_playwright
@@ -2161,7 +2161,7 @@ def session_connect():
     stay on the same tab even if OS focus drifts to a different window between calls.
     """
     if not SESSION_FILE.exists():
-        raise RuntimeError("No session running. Start one with: ai4a11y.py session start")
+        raise RuntimeError("No session running. Start one with: ai4a11y session start")
     info = json.loads(SESSION_FILE.read_text())
     p = sync_playwright().start()
     browser = p.chromium.connect_over_cdp(info['cdp'])
@@ -5732,228 +5732,6 @@ def run(url, action=None, *args):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
-
-    # Check for --json flag anywhere in args
-    json_output = "--json" in sys.argv
-    if json_output:
-        sys.argv = [a for a in sys.argv if a != "--json"]
-
-    # Session subcommands: ai4a11y.py session <sub> [args]
-    if sys.argv[1] == "session":
-        sub = sys.argv[2] if len(sys.argv) > 2 else "status"
-        sub_args = sys.argv[3:]
-        if sub == "start":
-            session_start()
-        elif sub == "stop":
-            session_stop()
-        elif sub == "status":
-            session_status()
-        elif sub == "go":
-            if not sub_args:
-                print("usage: session go <url>"); sys.exit(1)
-            session_go(sub_args[0])
-        elif sub == "back":
-            session_back()
-        elif sub == "scroll":
-            direction = sub_args[0] if sub_args else "down"
-            amount = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 800
-            session_scroll(direction, amount)
-        elif sub == "describe":
-            session_describe(json_output=json_output)
-        elif sub == "tap":
-            if not sub_args:
-                print("usage: session tap \"<description>\""); sys.exit(1)
-            session_tap(' '.join(sub_args))
-        elif sub == "ask":
-            if not sub_args:
-                print("usage: session ask \"<question>\""); sys.exit(1)
-            session_ask(' '.join(sub_args))
-        elif sub == "type":
-            if len(sub_args) < 2:
-                print("usage: session type \"<field description>\" \"<text to type>\""); sys.exit(1)
-            session_type(sub_args[0], ' '.join(sub_args[1:]))
-        elif sub == "tab":
-            session_tab('back' if sub_args and sub_args[0] in ('back', 'prev', 'previous') else 'forward')
-        elif sub in ("activate", "enter", "press"):
-            session_activate()
-        elif sub == "key":
-            if not sub_args:
-                print("usage: session key <key> [count]"); print("  keys: ArrowRight, ArrowLeft, ArrowUp, ArrowDown, Space, Enter, Escape, Home, End, PageUp, PageDown"); sys.exit(1)
-            key = sub_args[0]
-            count = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 1
-            session_key(key, count)
-        elif sub == "arrow":
-            if not sub_args:
-                print("usage: session arrow <right|left|up|down> [count]"); sys.exit(1)
-            direction = sub_args[0]
-            count = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else 1
-            session_arrow(direction, count)
-        elif sub == "list":
-            kind = sub_args[0] if sub_args else 'focusables'
-            session_list(kind)
-        elif sub == "find":
-            if not sub_args:
-                print("usage: session find \"<text>\""); sys.exit(1)
-            session_find(' '.join(sub_args))
-        elif sub == "read":
-            session_read(sub_args[0] if sub_args else None)
-        elif sub == "tables":
-            session_list_tables()
-        elif sub == "tabs":
-            session_tabs()
-        elif sub == "nudge":
-            if not sub_args:
-                print('usage: session nudge "<slider target>" [right|left|up|down] [count]'); sys.exit(1)
-            target = sub_args[0]
-            direction = sub_args[1] if len(sub_args) > 1 else 'right'
-            try:
-                count = int(sub_args[2]) if len(sub_args) > 2 else 5
-            except ValueError:
-                count = 5
-            session_nudge(target, direction, count)
-        elif sub == "pickdate":
-            if len(sub_args) < 2:
-                print('usage: session pickdate "<date field description>" "<date like 2026-06-15>"'); sys.exit(1)
-            session_pickdate(sub_args[0], ' '.join(sub_args[1:]))
-        elif sub == "focus":
-            if not sub_args:
-                print("usage: session focus <tab-number>  (from 'session tabs' list)"); sys.exit(1)
-            try:
-                n = int(sub_args[0])
-            except ValueError:
-                print("tab number must be an integer"); sys.exit(1)
-            session_focus_tab(n)
-        elif sub == "cleanup-tabs":
-            session_cleanup_tabs()
-        elif sub == "hover":
-            if not sub_args:
-                print('usage: session hover "<target>"'); sys.exit(1)
-            session_hover(' '.join(sub_args))
-        elif sub == "drag":
-            if len(sub_args) < 2:
-                print('usage: session drag "<from>" "<to>"'); sys.exit(1)
-            session_drag(sub_args[0], ' '.join(sub_args[1:]))
-        elif sub == "diff":
-            session_diff()
-        elif sub == "audit":
-            severity = sub_args[0] if sub_args else None
-            session_audit(severity, json_output=json_output)
-        elif sub == "focused":
-            session_focused()
-        elif sub == "dismiss":
-            session_dismiss()
-        elif sub == "summary":
-            session_summary()
-        elif sub == "heading":
-            direction = sub_args[0] if sub_args else 'next'
-            level = int(sub_args[1]) if len(sub_args) > 1 and sub_args[1].isdigit() else None
-            session_heading(direction, level)
-        elif sub == "skip":
-            session_skip()
-        elif sub == "media":
-            if not sub_args:
-                print("usage: session media <play|pause|toggle|seek|rate|volume|mute|status> [value]"); sys.exit(1)
-            action = sub_args[0]
-            value = sub_args[1] if len(sub_args) > 1 else None
-            session_media(action, value)
-        elif sub == "screenshot":
-            filename = sub_args[0] if sub_args else None
-            session_screenshot(filename)
-        elif sub == "report":
-            output = sub_args[0] if sub_args else None
-            session_report(output)
-        elif sub == "do":
-            if not sub_args:
-                print("usage: session do \"<task>\" [min_interactions] [max_steps]"); sys.exit(1)
-            trailing = []
-            while sub_args and sub_args[-1].isdigit():
-                trailing.insert(0, int(sub_args[-1]))
-                sub_args = sub_args[:-1]
-            max_steps = trailing[-1] if trailing else 8
-            min_interactions = trailing[0] if len(trailing) >= 2 else 0
-            session_do(' '.join(sub_args), min_interactions=min_interactions, max_steps=max_steps)
-        # Tool management commands
-        elif sub == "enable":
-            if not sub_args:
-                print("usage: session enable <tool> [options]")
-                print("  tools: visualAssist, darkMode, motionReducer, focusMode, readAloud,")
-                print("         readerMode, voiceCommands, keyboardNav, colorBlindMode, autoTranscriber")
-                print("  options: key=value pairs or JSON, e.g. fontScale=150 largeCursor=true")
-                sys.exit(1)
-            tool = sub_args[0]
-            opts = sub_args[1:] if len(sub_args) > 1 else None
-            session_enable(tool, opts)
-        elif sub == "disable":
-            if not sub_args:
-                print("usage: session disable <tool>"); sys.exit(1)
-            session_disable(sub_args[0])
-        elif sub == "tools":
-            session_tools(json_output=json_output)
-        elif sub == "profile":
-            if not sub_args:
-                print("usage: session profile <name>")
-                print("  profiles: lowVision, blind, colorBlind, dyslexia, adhd, cognitive,")
-                print("            motor, photosensitive, deaf, anxiety, olderAdult, sensory")
-                sys.exit(1)
-            session_profile(sub_args[0], json_output=json_output)
-        elif sub == "profiles":
-            session_profiles(json_output=json_output)
-        # Auditor commands
-        elif sub in ("find-alt", "find-missing-alt", "missing-alt"):
-            session_find_missing_alt(json_output=json_output)
-        elif sub in ("find-labels", "find-missing-labels", "missing-labels"):
-            session_find_missing_labels(json_output=json_output)
-        elif sub in ("find-contrast", "find-poor-contrast", "poor-contrast"):
-            session_find_poor_contrast(json_output=json_output)
-        elif sub in ("find-captions", "find-missing-captions", "missing-captions"):
-            session_find_missing_captions(json_output=json_output)
-        elif sub in ("find-all", "find-issues", "issues"):
-            session_find_all(json_output=json_output)
-        # AI fix commands
-        elif sub in ("fix-alt", "fix-images"):
-            max_n = int(sub_args[0]) if sub_args and sub_args[0].isdigit() else 10
-            session_fix_alt(max_images=max_n, json_output=json_output)
-        elif sub in ("fix-labels",):
-            max_n = int(sub_args[0]) if sub_args and sub_args[0].isdigit() else 10
-            session_fix_labels(max_elements=max_n, json_output=json_output)
-        elif sub in ("simplify",):
-            selector = sub_args[0] if sub_args else None
-            session_simplify(selector=selector, json_output=json_output)
-        elif sub in ("fix-all", "fix"):
-            session_fix_all(json_output=json_output)
-        elif sub in ("scan",):
-            fix_ai = "--no-ai" not in sub_args
-            max_n = 10
-            for arg in sub_args:
-                if arg.isdigit():
-                    max_n = int(arg)
-            session_scan(fix_ai=fix_ai, max_ai_fixes=max_n, json_output=json_output)
-        else:
-            print(f"Unknown session subcommand: {sub}")
-            print("Available: start | stop | status | tabs | go <url> | back | scroll | describe | ask | tap | type")
-            print("           list | find | read | tables | heading | skip | tab | activate | key | arrow | focused")
-            print("           hover | drag | nudge | diff | audit | report | media | screenshot | dismiss | do")
-            print("           enable <tool> | disable <tool> | tools | profile <name> | profiles")
-            print("           find-alt | find-labels | find-contrast | find-captions | find-all")
-            print("           fix-alt | fix-labels | simplify | fix-all | scan")
-            sys.exit(1)
-        sys.exit(0)
-
-    # Original one-shot mode: ai4a11y.py <url> <action> [args]
-    url = sys.argv[1]
-    action = sys.argv[2] if len(sys.argv) > 2 else None
-    args = sys.argv[3:] if len(sys.argv) > 3 else []
-
-    if action == "agent":
-        trailing = []
-        while args and args[-1].isdigit():
-            trailing.insert(0, int(args[-1]))
-            args = args[:-1]
-        max_steps = trailing[-1] if trailing else 10
-        min_interactions = trailing[0] if len(trailing) >= 2 else 0
-        run_agent(url, ' '.join(args), max_steps=max_steps, min_interactions=min_interactions)
-    else:
-        run(url, action, *args)
+    # The dispatcher moved to cli.py (one Typer app for the whole CLI).
+    sys.stderr.write("Run `ai4a11y` (or `python -m cli.cli`) instead of this file.\n")
+    sys.exit(2)
