@@ -379,6 +379,15 @@ export function createLibrarian({
       // cross-app insight can walk into Object.prototype. A poisoned path is
       // silently dropped rather than thrown at the caller, and the clean paths
       // beside it still apply.
+      // A plain object, or nothing happens. Object.entries() accepts a string
+      // and enumerates its CHARACTERS, so a caller that passed a path where a
+      // map belongs used to write `{0:'a',1:'b',...}` into the profile and get
+      // a success back. Arrays enumerate their indices the same way. Neither is
+      // a field map, and quietly storing junk under numeric keys is worse than
+      // doing nothing.
+      if (fields != null && (typeof fields !== 'object' || Array.isArray(fields))) {
+        throw new TypeError('setProfileFields expects an object of path -> value');
+      }
       const writes = Object.entries(fields || {})
         .map(([path, value]) => [String(path).split('.'), value])
         .filter(([parts]) => !parts.some(seg => seg === '__proto__' || seg === 'prototype' || seg === 'constructor'));

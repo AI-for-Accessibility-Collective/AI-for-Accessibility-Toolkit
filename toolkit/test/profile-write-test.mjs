@@ -144,5 +144,28 @@ const FORM = {
     && p.fields.visionKind === null && p.freeText === '');
 }
 
+// ── a field map that is not a field map ────────────────────────────────────
+// Object.entries() enumerates a string's characters and an array's indices, so
+// a caller passing a path string where the map belongs used to write
+// {0:'a',1:'b',...} into the profile and be told it worked. Over the wire that
+// is reachable by anyone holding a token, and a profile carrying numeric junk
+// keys is what a surface then tries to render.
+{
+  const counts = {};
+  const { librarian } = await fresh(counts);
+  await librarian.setProfileFields({ freeText: 'real value' });
+  const key = profileKeyOf(counts);
+  const before = counts[key];
+  for (const bad of ['freeText', ['freeText'], 42, true]) {
+    let threw = false;
+    try { await librarian.setProfileFields(bad); } catch { threw = true; }
+    check(`rejects ${JSON.stringify(bad)} instead of storing it`, threw);
+  }
+  check('a rejected call writes nothing', counts[key] === before);
+  const p = await librarian.getProfile();
+  check('no numeric junk keys reached the profile', !Object.keys(p).some((k) => /^\d+$/.test(k)));
+  check('the real value is untouched', p.freeText === 'real value');
+}
+
 console.log(`\nProfile writes: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

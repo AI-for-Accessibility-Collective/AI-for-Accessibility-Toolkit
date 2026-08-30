@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-08-30T15:24:38.428Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-08-30T15:38:28.292Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
