@@ -70,6 +70,37 @@ _READABILITY_PATH = Path(__file__).parent / "lib" / "readability.js"
 _READABILITY_SCRIPT = None
 
 
+# ============================================================
+# Output helpers
+#
+# A command and its caller share one stdout, so a command that can be asked
+# for --json has to choose between the payload and the human rendering rather
+# than write both. Sixteen commands made that choice by hand, and a progress
+# line that escaped the choice left the payload unparseable for the caller.
+#
+# These two sit at the top of the file, above every command, because they read
+# nothing but their arguments and `json`. The fix engine calls `quiet` for its
+# own progress, and a later split of this module puts that engine in a lower
+# layer than the commands, so `quiet` has to live below both of them.
+# ============================================================
+
+def quiet(json_output):
+    """print, or a no-op when a machine is reading stdout.
+
+    Progress lines and the payload share stdout, so under --json the progress
+    has to be silenced or the payload does not parse.
+    """
+    return (lambda *a, **k: None) if json_output else print
+
+
+def emit(payload, render, json_output):
+    """Print the JSON payload, or run the human rendering. Never both."""
+    if json_output:
+        print(json.dumps(payload, indent=2))
+    else:
+        render()
+
+
 def _get_readability_script():
     """Load the Readability library for ReaderMode."""
     global _READABILITY_SCRIPT
@@ -1561,6 +1592,21 @@ def _ai_fix_report(fixes, attempted, unreachable):
     return {'fixed': fixes, 'attempted': attempted, 'skippedNeedsAi': unreachable}
 
 
+def _print_fix_result(fixes, attempted, unreachable, noun, json_output):
+    """The closing report every AI fix command prints.
+
+    It lives beside `_ai_fix_report` rather than beside the commands because it
+    is that payload's other half: the same three counts, worded for a person.
+    `noun` is the only thing the fix commands differ on here, "images" for one
+    and "elements" for the next.
+    """
+    def render():
+        print(f"\n✓ Fixed {len(fixes)} of {attempted} {noun}", flush=True)
+        if unreachable:
+            print(f"  {unreachable} skipped, needs AI", flush=True)
+    emit(_ai_fix_report(fixes, attempted, unreachable), render, json_output)
+
+
 def _ai_exit_status(applied, unreachable):
     """Nonzero when any item went unanswered, whatever else the run fixed.
 
@@ -1658,7 +1704,7 @@ def run_fix_pass(page, spec, items=None, max_items=10, json_output=False):
 
     fixes, unreachable = [], 0
     attempted = min(len(items), max_items)
-    say = (lambda *a, **k: None) if json_output else print
+    say = quiet(json_output)
 
     def line(text, end="\n"):
         """Print one rendered line, or nothing when the pass renders none."""
@@ -2761,10 +2807,9 @@ def session_describe(json_output=False):
         try:
             page = stack.enter_context(connected_page())
         except Exception as e:
-            if json_output:
-                print(json.dumps({"error": f"No browser session: {e}"}))
-            else:
-                print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+            emit({"error": f"No browser session: {e}"},
+                 lambda: print("Error: No browser session. Run 'ai4a11y session start' first."),
+                 json_output)
             sys.exit(1)
         import os as _os, re as _re
         run_dir = OUT / f"session_describe_{_os.getpid()}_{int(time.time())}"
@@ -2797,17 +2842,13 @@ Skip decorative elements. If it's a modal/captcha/blocker, say so first."""
 
         result = ask_claude(str(shot), prompt)
 
-        if json_output:
-            output = {
-                "url": page.url,
-                "title": page.title(),
-                "description": result,
-                "elements": addressable,
-                "screenshot": str(shot)
-            }
-            print(json.dumps(output, indent=2))
-        else:
-            print(result, flush=True)
+        emit({
+            "url": page.url,
+            "title": page.title(),
+            "description": result,
+            "elements": addressable,
+            "screenshot": str(shot)
+        }, lambda: print(result, flush=True), json_output)
 
 
 def _focused_info(page):
@@ -3198,10 +3239,11 @@ def session_audit(severity_filter=None, json_output=False):
     """
     valid_severities = {'critical', 'serious', 'moderate', 'minor'}
     if severity_filter and severity_filter not in valid_severities:
-        if json_output:
-            print(json.dumps({"error": f"Invalid severity '{severity_filter}'", "valid": list(valid_severities)}))
-        else:
-            print(f"Invalid severity '{severity_filter}'. Use: {', '.join(sorted(valid_severities))}")
+        emit({"error": f"Invalid severity '{severity_filter}'",
+              "valid": list(valid_severities)},
+             lambda: print(f"Invalid severity '{severity_filter}'. "
+                           f"Use: {', '.join(sorted(valid_severities))}"),
+             json_output)
         sys.exit(1)
 
     # connected_page() is entered through ExitStack rather than a bare `with`, so
@@ -3212,10 +3254,9 @@ def session_audit(severity_filter=None, json_output=False):
         try:
             page = stack.enter_context(connected_page())
         except Exception as e:
-            if json_output:
-                print(json.dumps({"error": f"No browser session: {e}"}))
-            else:
-                print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+            emit({"error": f"No browser session: {e}"},
+                 lambda: print("Error: No browser session. Run 'ai4a11y session start' first."),
+                 json_output)
             sys.exit(1)
         # Inject axe-core
         page.add_script_tag(content=_get_axe_script())
@@ -3252,30 +3293,16 @@ def session_audit(severity_filter=None, json_output=False):
             if impact in by_severity:
                 by_severity[impact].append(v)
 
-        # JSON output
-        if json_output:
-            output = {
-                "url": results['url'],
-                "violations": violations,
-                "by_severity": {k: v for k, v in by_severity.items() if v},
-                "summary": {
-                    "total_violations": len(violations),
-                    "passes": results['passes'],
-                    "incomplete": results['incomplete']
-                }
-            }
-            print(json.dumps(output, indent=2))
-            return
+        def render():
+            total = len(violations)
+            print(f"\nAccessibility Audit: {results['url'][:60]}")
+            print(f"{'─' * 60}")
 
-        # Print summary
-        total = len(violations)
-        print(f"\nAccessibility Audit: {results['url'][:60]}")
-        print(f"{'─' * 60}")
+            if total == 0:
+                print("No violations found.")
+                print(f"\n{results['passes']} rules passed, {results['incomplete']} need review")
+                return
 
-        if total == 0:
-            print("No violations found.")
-            print(f"\n{results['passes']} rules passed, {results['incomplete']} need review")
-        else:
             # Print by severity
             severity_order = ['critical', 'serious', 'moderate', 'minor']
             severity_icons = {'critical': '[!!]', 'serious': '[!]', 'moderate': '[~]', 'minor': '[.]'}
@@ -3293,6 +3320,17 @@ def session_audit(severity_filter=None, json_output=False):
 
             print(f"\n{'─' * 60}")
             print(f"Total: {total} violations | {results['passes']} passed | {results['incomplete']} need review")
+
+        emit({
+            "url": results['url'],
+            "violations": violations,
+            "by_severity": {k: v for k, v in by_severity.items() if v},
+            "summary": {
+                "total_violations": len(violations),
+                "passes": results['passes'],
+                "incomplete": results['incomplete']
+            }
+        }, render, json_output)
 
 
 def session_ask(question):
@@ -4929,18 +4967,17 @@ def session_tools(json_output=False):
 
         tools_list = page.evaluate("() => window.ai4a11y.listTools()")
 
-        if json_output:
-            print(json.dumps(tools_list, indent=2))
-            return
+        def render():
+            print("\nAccessibility Tools:", flush=True)
+            print("─" * 60, flush=True)
+            for tool in tools_list:
+                status = "✓ ON" if tool['enabled'] else "  off"
+                desc = f" — {tool['description']}" if tool.get('description') else ""
+                print(f"  [{status}] {tool['name']}{desc}", flush=True)
+            print("─" * 60, flush=True)
+            print("\nUse: session enable <tool> | session disable <tool>", flush=True)
 
-        print("\nAccessibility Tools:", flush=True)
-        print("─" * 60, flush=True)
-        for tool in tools_list:
-            status = "✓ ON" if tool['enabled'] else "  off"
-            desc = f" — {tool['description']}" if tool.get('description') else ""
-            print(f"  [{status}] {tool['name']}{desc}", flush=True)
-        print("─" * 60, flush=True)
-        print("\nUse: session enable <tool> | session disable <tool>", flush=True)
+        emit(tools_list, render, json_output)
 
 
 def session_profile(profile_name, json_output=False):
@@ -4976,23 +5013,25 @@ def session_profile(profile_name, json_output=False):
             profile_name
         )
 
-        if json_output:
-            print(json.dumps(result, indent=2))
+        def render():
             if result.get('success'):
-                _set_active_profile(profile_name)
-            return
+                print(f"Applied profile: {result.get('name', profile_name)}", flush=True)
+                print("(Profile saved — auto-applies on all page navigations)", flush=True)
+                print("\nEnabled tools:", flush=True)
+                for tool, enabled in result.get('enabled', {}).items():
+                    if enabled:
+                        print(f"  ✓ {tool}", flush=True)
+            else:
+                print(f"Error: {result.get('error', 'Unknown error')}", flush=True)
 
+        # Saving the profile is what the command does, not part of reporting it,
+        # so it happens the same way whoever is reading the output. Both
+        # branches already did this; it is hoisted out so `render` only prints.
         if result.get('success'):
             # Save profile for auto-application on future navigations
             _set_active_profile(profile_name)
-            print(f"Applied profile: {result.get('name', profile_name)}", flush=True)
-            print("(Profile saved — auto-applies on all page navigations)", flush=True)
-            print("\nEnabled tools:", flush=True)
-            for tool, enabled in result.get('enabled', {}).items():
-                if enabled:
-                    print(f"  ✓ {tool}", flush=True)
-        else:
-            print(f"Error: {result.get('error', 'Unknown error')}", flush=True)
+
+        emit(result, render, json_output)
 
 
 def session_profiles(json_output=False):
@@ -5009,18 +5048,17 @@ def session_profiles(json_output=False):
 
         profiles_list = page.evaluate("() => window.ai4a11y.listProfiles()")
 
-        if json_output:
-            print(json.dumps(profiles_list, indent=2))
-            return
+        def render():
+            print("\nAccessibility Profiles:", flush=True)
+            print("─" * 60, flush=True)
+            for profile in profiles_list:
+                print(f"  • {profile['id']}: {profile['name']}", flush=True)
+                if profile.get('description'):
+                    print(f"    {profile['description']}", flush=True)
+            print("─" * 60, flush=True)
+            print("\nUse: session profile <name>", flush=True)
 
-        print("\nAccessibility Profiles:", flush=True)
-        print("─" * 60, flush=True)
-        for profile in profiles_list:
-            print(f"  • {profile['id']}: {profile['name']}", flush=True)
-            if profile.get('description'):
-                print(f"    {profile['description']}", flush=True)
-        print("─" * 60, flush=True)
-        print("\nUse: session profile <name>", flush=True)
+        emit(profiles_list, render, json_output)
 
 
 # ============================================================
@@ -5051,10 +5089,7 @@ def _audit(name, json_output, render):
             print("Error: Could not inject tools.", flush=True)
             return
         result = run_auditor(page, name)
-        if json_output:
-            print(json.dumps(result, indent=2))
-            return
-        render(result)
+        emit(result, lambda: render(result), json_output)
 
 
 def session_find_missing_alt(json_output=False):
@@ -5129,19 +5164,19 @@ def session_find_all(json_output=False):
                 'missingCaptions': captions.get('total', 0)
             }
         }
-        if json_output:
-            print(json.dumps(result, indent=2))
-            return
-        s = result['summary']
-        total = sum(s.values())
-        print(f"\n{'─' * 40}", flush=True)
-        print(f"Accessibility Issues Found: {total}", flush=True)
-        print(f"{'─' * 40}", flush=True)
-        print(f"  Missing alt text:    {s['missingAlt']}", flush=True)
-        print(f"  Missing labels:      {s['missingLabels']}", flush=True)
-        print(f"  Poor contrast:       {s['poorContrast']}", flush=True)
-        print(f"  Missing captions:    {s['missingCaptions']}", flush=True)
-        print(f"{'─' * 40}", flush=True)
+        def render():
+            s = result['summary']
+            total = sum(s.values())
+            print(f"\n{'─' * 40}", flush=True)
+            print(f"Accessibility Issues Found: {total}", flush=True)
+            print(f"{'─' * 40}", flush=True)
+            print(f"  Missing alt text:    {s['missingAlt']}", flush=True)
+            print(f"  Missing labels:      {s['missingLabels']}", flush=True)
+            print(f"  Poor contrast:       {s['poorContrast']}", flush=True)
+            print(f"  Missing captions:    {s['missingCaptions']}", flush=True)
+            print(f"{'─' * 40}", flush=True)
+
+        emit(result, render, json_output)
 
 
 # ============================================================
@@ -5203,10 +5238,9 @@ def session_fix_alt(max_images=10, json_output=False):
 
         all_images = ALT_PASS.items(page)
         if not all_images:
-            if json_output:
-                print(json.dumps(_ai_fix_report([], 0, 0), indent=2))
-            else:
-                print("No images found missing alt text.", flush=True)
+            emit(_ai_fix_report([], 0, 0),
+                 lambda: print("No images found missing alt text.", flush=True),
+                 json_output)
             return
 
         # Progress goes to stdout, which is also where the payload goes, so it
@@ -5216,12 +5250,7 @@ def session_fix_alt(max_images=10, json_output=False):
             page, ALT_PASS, items=all_images, max_items=max_images,
             json_output=json_output)
 
-        if json_output:
-            print(json.dumps(_ai_fix_report(fixes, count, unreachable), indent=2))
-        else:
-            print(f"\n✓ Fixed {len(fixes)} of {count} images", flush=True)
-            if unreachable:
-                print(f"  {unreachable} skipped, needs AI", flush=True)
+        _print_fix_result(fixes, count, unreachable, "images", json_output)
         return _ai_exit_status(len(fixes), unreachable)
 
 
@@ -5284,15 +5313,16 @@ Return ONLY the simplified text, maintaining paragraph structure."""
             print(NEEDS_AI_LINE, flush=True)
             return AI_UNAVAILABLE_EXIT
 
-        if json_output:
-            print(json.dumps({'original': original[:500], 'simplified': simplified}, indent=2))
-        else:
+        def render():
             print(f"\nSimplified ({len(simplified)} chars):", flush=True)
             print("─" * 50, flush=True)
             print(simplified[:1000])
             if len(simplified) > 1000:
                 print(f"... [{len(simplified) - 1000} more chars]")
             print("─" * 50, flush=True)
+
+        emit({'original': original[:500], 'simplified': simplified},
+             render, json_output)
 
         # Optionally apply to page (create overlay or replace)
         # For now just return - user can copy/paste or we add --apply flag later
@@ -5375,22 +5405,16 @@ def session_fix_labels(max_elements=10, json_output=False):
 
         all_elements = LABEL_PASS.items(page)
         if not all_elements:
-            if json_output:
-                print(json.dumps(_ai_fix_report([], 0, 0), indent=2))
-            else:
-                print("No unlabeled elements found.", flush=True)
+            emit(_ai_fix_report([], 0, 0),
+                 lambda: print("No unlabeled elements found.", flush=True),
+                 json_output)
             return
 
         fixes, count, unreachable = run_fix_pass(
             page, LABEL_PASS, items=all_elements, max_items=max_elements,
             json_output=json_output)
 
-        if json_output:
-            print(json.dumps(_ai_fix_report(fixes, count, unreachable), indent=2))
-        else:
-            print(f"\n✓ Fixed {len(fixes)} of {count} elements", flush=True)
-            if unreachable:
-                print(f"  {unreachable} skipped, needs AI", flush=True)
+        _print_fix_result(fixes, count, unreachable, "elements", json_output)
         return _ai_exit_status(len(fixes), unreachable)
 
 
