@@ -85,4 +85,4 @@ export const DarkMode = {
   }
 };
 
-window.__ai4a11yDarkMode = DarkMode;
+if (typeof window !== 'undefined') window.__ai4a11yDarkMode = DarkMode;

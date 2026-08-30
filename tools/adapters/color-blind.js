@@ -100,4 +100,4 @@ export const ColorBlindMode = {
   }
 };
 
-window.__ai4a11yColorBlindMode = ColorBlindMode;
+if (typeof window !== 'undefined') window.__ai4a11yColorBlindMode = ColorBlindMode;

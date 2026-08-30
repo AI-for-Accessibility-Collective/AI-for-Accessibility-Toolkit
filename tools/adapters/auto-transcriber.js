@@ -220,4 +220,4 @@ export const AutoTranscriber = {
   }
 };
 
-window.__ai4a11yAutoTranscriber = AutoTranscriber;
+if (typeof window !== 'undefined') window.__ai4a11yAutoTranscriber = AutoTranscriber;
