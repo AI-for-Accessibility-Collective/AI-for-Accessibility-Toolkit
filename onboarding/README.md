@@ -54,12 +54,14 @@ ONBOARD_MODE=remote TOOLKIT_URL=http://127.0.0.1:8080 ADMIN_PASSWORD=<server-adm
 
 The onboarding and profile-view routes are unauthenticated on purpose: a
 person onboarding has no credential yet. The profile id itself is therefore
-the credential, the way an unguessable share link works. Generated ids carry
-128 random bits and cannot be guessed; treat one like a private link. A
-memorable id you type yourself CAN be guessed, and whoever knows a profile id
-can read that profile (support areas, free-text self-description, ability
-model), so use typed ids only on machines and networks you trust. The admin
-password gates only the list and delete routes.
+the credential, the way an unguessable share link works. Every new profile
+gets a generated id carrying 128 random bits; treat it like a private link,
+because whoever knows an id can read that profile (support areas, free-text
+self-description, ability model). Typing an id into the form only updates the
+existing profile it names; it cannot create a profile under a chosen name, so
+no new profile ever sits behind a guessable id. Profiles created under typed
+ids before this rule keep working under their old ids. The admin password
+gates only the list and delete routes.
 
 ## Env
 

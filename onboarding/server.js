@@ -183,10 +183,15 @@ function deriveDefaultNeeds(areas, freeText, visionKind) {
 }
 
 async function onboard({ uid, supportAreas, freeText, visionKind }) {
-  uid = (uid && String(uid).trim()) || genUid();
-  if (/[/\\.]/.test(uid) && (uid.includes('/') || uid.includes('\\') || uid.includes('..'))) {
+  const supplied = (uid && String(uid).trim()) || '';
+  if (supplied.includes('/') || supplied.includes('\\') || supplied.includes('..')) {
     throw new Error('invalid uid');
   }
+  // A supplied id only UPDATES the profile it names. A new profile always
+  // gets a generated capability id: the id is the read credential, so no new
+  // profile may sit behind a guessable, caller-chosen name. Profiles created
+  // under typed ids before this rule keep working; only creation is closed.
+  uid = supplied && (await listProfileIds()).includes(supplied) ? supplied : genUid();
   const areas = (Array.isArray(supportAreas) ? supportAreas : []).filter((a) => SUPPORT_AREAS.includes(a));
   const text = (freeText || '').toString().trim();
   const kind = (visionKind === 'blind' || visionKind === 'lowVision') ? visionKind : undefined;

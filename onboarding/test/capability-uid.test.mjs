@@ -29,12 +29,19 @@ check(`generated uid has the capability shape (${a.uid})`, SHAPE.test(a.uid));
 check('two onboards get different uids', a.uid !== b.uid);
 check('no timestamp prefix (old user-<time36> shape is gone)', !a.uid.startsWith('user-'));
 
-// A caller-chosen uid still works (the tradeoff is documented, not blocked).
+// A supplied id cannot CREATE a profile under a chosen (guessable) name:
+// an unknown id gets a fresh capability id instead.
 const c = await onboard({ uid: 'my-memorable-id', supportAreas: [], freeText: '' });
-check('typed uid is honored', c.uid === 'my-memorable-id');
+check('unknown typed uid is not honored for creation', c.uid !== 'my-memorable-id');
+check('creation under a typed uid falls back to a capability id', SHAPE.test(c.uid));
+
+// A supplied id that names an EXISTING profile updates it in place.
+const update = await onboard({ uid: a.uid, supportAreas: ['motor'], freeText: '' });
+check('existing uid is honored for update', update.uid === a.uid);
 
 const ids = await listProfileIds();
-check('all three profiles stored', ids.includes(a.uid) && ids.includes(b.uid) && ids.includes('my-memorable-id'));
+check('no profile exists under the typed name', !ids.includes('my-memorable-id'));
+check('all three capability profiles stored', ids.includes(a.uid) && ids.includes(b.uid) && ids.includes(c.uid));
 
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nCapability uid: ${pass} passed, ${fail} failed`);
