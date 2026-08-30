@@ -68,6 +68,7 @@ Every method below was read off a REAL `createToolkit(...)` instance at doc-gene
 | `librarian.getProfile()` | async | (no doc comment) |
 | `librarian.getAbilityModel()` | async | The modality-agnostic AbilityModel view (../core/ability). |
 | `librarian.setProfileField(path, value)` | async | User-initiated edit — bypasses the proposal gate by design (the gate exists for *inferred* changes; explicit user intent needs no consent). |
+| `librarian.setProfileFields(fields)` | async | Set SEVERAL profile paths in ONE write. |
 | `librarian.recordExplicitSetting(key, value, origin)` | async | Fast lane for manual setting flips (popup toggle, onboarding choice). |
 | `librarian.recordScopedSettings(scope, settings, opts)` | async | Generalized explicit-setting writer: upserts one durable user-explicit record PER setting key at the given scope (general \| category:<id> \| origin:<host> \| context:<id>). |
 | `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |

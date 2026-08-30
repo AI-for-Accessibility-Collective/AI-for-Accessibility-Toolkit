@@ -34,14 +34,19 @@ assert.equal(EXTENSION_ALIAS_ROUTES.length, 36, 'the oracle itself must list 36 
 
 // Direct-surface routes (voice side panel / chrome-actuation call these on the
 // Librarian object, no librarian* message equivalent).
+// `setProfileFields` is here rather than among the aliases because no
+// `librarian*` extension message maps to it: it is a server-side route added so
+// a remote caller can write a whole profile in one request instead of one
+// request per field, where a failure between two of them leaves the record half
+// updated.
 const DIRECT_SURFACE_ROUTES = [
   'interpretNeedsPrompt', 'hasScopedSetting', 'getScopedSetting',
-  'removeScopedSetting', 'recordExplicitSetting',
+  'removeScopedSetting', 'recordExplicitSetting', 'setProfileFields',
 ];
 // Natural-language notes — routed under their own method names.
 const NOTE_ROUTES = ['addNote', 'listNotes', 'updateNote', 'deleteNote', 'findNotes'];
 const ALL_ROUTES = [...EXTENSION_ALIAS_ROUTES, ...DIRECT_SURFACE_ROUTES, ...NOTE_ROUTES];
-assert.equal(ALL_ROUTES.length, 46, 'contract total must be 46 routes'); // CONTRACT.md "46 routes total"
+assert.equal(ALL_ROUTES.length, 47, 'contract total must be 47 routes'); // CONTRACT.md "47 routes total"
 
 const results = [];
 
@@ -98,7 +103,7 @@ async function main() {
     });
 
     // ---- meta: the full route set --------------------------------------------
-    await test('GET /v1/meta lists all 46 routes (36 extension aliases + 5 direct-surface + 5 notes), all supported', async () => {
+    await test('GET /v1/meta lists all 47 routes (36 extension aliases + 6 direct-surface + 5 notes), all supported', async () => {
       const r = await call('GET', '/v1/meta');
       assert.equal(r.status, 200);
       const methods = r.body.librarian.methods;
