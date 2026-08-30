@@ -26,7 +26,8 @@ const listener = createApp({ store, adminPassword: ADMIN, toolkitHost, version: 
 const server = http.createServer(listener);
 
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-const base = `http://127.0.0.1:${server.address().port}`;
+const port = server.address().port;
+const base = `http://127.0.0.1:${port}`;
 
 async function req(method, urlPath, { token, admin, body } = {}) {
   const headers = { 'content-type': 'application/json' };
@@ -75,6 +76,62 @@ ok('alice stays deleted', !listAfter.body.users.includes('alice'));
 // Deleting a uid that never existed is a 404, not a silent success.
 const delMissing = await req('DELETE', '/admin/users/nobody', { admin: true });
 ok('deleting an unknown uid is 404', delMissing.status === 404);
+
+// ── the in-flight request ──────────────────────────────────────────────────
+// Revoking tokens stops a request that has not authenticated yet. It does
+// nothing about one that already did and is still on its way to the datastore:
+// that request used to get a fresh toolkit instance after the evict and write
+// the wiped partition straight back, so a person who asked for their disability
+// data to be deleted still had a profile afterwards. Reproduced before the fix
+// by holding a request between authentication and the write.
+//
+// A request's body is read AFTER the token is checked, so sending it in two
+// pieces parks the request in exactly that gap without any test-only seam in
+// the server.
+function heldWrite(tok, value) {
+  const payload = JSON.stringify({ args: ['freeText', value] });
+  const cut = Math.floor(payload.length / 2);
+  const r = http.request({
+    port, host: '127.0.0.1', method: 'POST', path: '/v1/librarian/setProfileField',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${tok}`,
+      'content-length': Buffer.byteLength(payload),
+    },
+  });
+  const done = new Promise((resolve) => r.on('response', async (res) => {
+    let b = ''; for await (const c of res) b += c;
+    resolve({ status: res.statusCode, body: JSON.parse(b || 'null') });
+  }));
+  r.write(payload.slice(0, cut));           // now past the token check, blocked on the body
+  return { finish: () => r.end(payload.slice(cut)), done };
+}
+
+const bobToken = (await req('POST', '/admin/tokens', { admin: true, body: { uid: 'bob', label: 'test' } })).body.token;
+await req('POST', '/v1/librarian/setProfileField', { token: bobToken, body: { args: ['supportAreas', ['vision']] } });
+ok('bob exists before the race', (await req('GET', '/admin/users', { admin: true })).body.users.includes('bob'));
+
+const held = heldWrite(bobToken, 'written by an in-flight request');
+await new Promise((r) => setTimeout(r, 120));   // let it reach the gap
+const delBob = await req('DELETE', '/admin/users/bob', { admin: true });
+ok('delete during an in-flight write responds ok', delBob.status === 200);
+held.finish();
+const heldResult = await held.done;
+ok('the in-flight write is refused after the delete', heldResult.status === 401);
+
+await new Promise((r) => setTimeout(r, 150));   // give any stray write time to land
+const afterRace = await req('GET', '/admin/users', { admin: true });
+ok('bob is not resurrected by the in-flight write', !afterRace.body.users.includes('bob'));
+
+// The other order must still work: a write that takes its turn BEFORE the
+// delete completes normally, and the delete then removes it. Serializing must
+// not turn a legitimate write into a 401.
+const carolToken = (await req('POST', '/admin/tokens', { admin: true, body: { uid: 'carol', label: 'test' } })).body.token;
+const carolWrite = await req('POST', '/v1/librarian/setProfileField', { token: carolToken, body: { args: ['freeText', 'hello'] } });
+ok('a write with no delete racing it still succeeds', carolWrite.status === 200 && carolWrite.body.ok === true);
+const delCarol = await req('DELETE', '/admin/users/carol', { admin: true });
+ok('carol deletes cleanly afterwards', delCarol.status === 200);
+ok('carol stays deleted', !(await req('GET', '/admin/users', { admin: true })).body.users.includes('carol'));
 
 server.close();
 rmSync(dir, { recursive: true, force: true });
