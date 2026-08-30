@@ -2943,16 +2943,19 @@ def session_key(keys: str, count: int = 1):
 
 
 def session_arrow(direction: str, count: int = 1):
-    """Convenience shorthand for arrow key presses. Zero Claude calls.
+    """Arrow key presses. Zero Claude calls.
+
+    Kept as its own command name because it reads better in a session
+    transcript than `session key ArrowRight`. It had its own copy of the
+    right/left/up/down map, and `session_key` already normalizes those four
+    names, so it forwards the direction rather than translating it first.
 
     Examples:
       session_arrow("right", 5)   # increase slider 5 steps
       session_arrow("left", 3)    # decrease slider 3 steps
       session_arrow("down")       # move down in menu
     """
-    dir_map = {'right': 'ArrowRight', 'left': 'ArrowLeft', 'up': 'ArrowUp', 'down': 'ArrowDown'}
-    key = dir_map.get(direction.lower(), f'Arrow{direction.capitalize()}')
-    session_key(key, count)
+    return session_key(direction, count)
 
 
 def session_list(kind='focusables'):
