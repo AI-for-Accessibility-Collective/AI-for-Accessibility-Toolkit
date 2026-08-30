@@ -53,6 +53,7 @@ import subprocess
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from html import escape as html_escape
+from typing import NamedTuple
 
 import os as _os
 # Output directory for screenshots / filmstrips. Override with AI4A11Y_OUT env var.
@@ -1571,6 +1572,153 @@ def _ai_exit_status(applied, unreachable):
     if unreachable:
         return AI_UNAVAILABLE_EXIT
     return 0
+
+
+class FixProgress(NamedTuple):
+    """How one fix pass words the lines it prints.
+
+    The passes share a loop but not a voice. The standalone fixers print
+    ``  [1/2] selector... `` and then the outcome on the same line; the
+    sub-passes inside `scan` print an eight-space indent and a different shape
+    again. Unifying the wording would change what those commands write to
+    stdout, and this is a refactor, so only the loop and the unanswered-model
+    contract are shared. Presentation stays with the pass.
+
+    Each field is a callable returning the line to print, or None for a pass
+    that says nothing at that point.
+    """
+    header: object       # (items, count) -> the line that opens the pass
+    applied: object      # (i, item, selector, value) -> a write happened
+    failed: object       # (i, item, selector, error) -> the item raised
+    unanswered: object   # (i, item, selector) -> no answer came back
+    begin: object = None     # (i, count, item, selector) -> prefix, no newline
+    missing: object = None   # (i, item, selector) -> the element is not there
+    no_input: object = None  # (i, item, selector) -> nothing to prompt about
+
+
+class FixPass(NamedTuple):
+    """What differs between one AI fix pass and another.
+
+    `field` exists so the --json payload keeps the key it has always had:
+    fix-alt reports {'selector', 'alt'} and fix-labels {'selector', 'label'}.
+    Collapsing them must not quietly rename either, because a caller outside
+    this repository may be reading it.
+
+    `items` is a callable rather than an auditor name because not every pass has
+    an auditor behind it. Scan's video pass runs its own query for videos that
+    carry no description. `_auditor_items` builds this callable for the passes
+    that do read an auditor, so those stay one line.
+    """
+    prompt: object       # (page, item) -> the prompt text, or None to skip
+    call: str            # "vision" screenshots the located element, "text" does not
+    write: str           # JS taking (data): data.selector, data.value, data.index
+    field: str           # key the answer takes in the --json payload
+    progress: FixProgress
+    items: object = None   # (page) -> the items, when the pass can find them itself
+    locate: object = None  # (page, item, i) -> element, or None to skip the item
+    shot: object = None    # (item, i) -> where the vision screenshot goes
+    cap: object = None     # (value) -> value, how a long answer is trimmed
+    timeout: int = 30      # seconds allowed for a text call
+
+
+def _auditor_items(name, *keys):
+    """An `items` callable for a pass whose list comes from one of the auditors.
+
+    The lists named by `keys` are concatenated in the order given, which is the
+    order the commands have always reported them in.
+    """
+    def items(page):
+        result = page.evaluate(f"() => window.ai4a11y.auditors.{name}()")
+        found = []
+        for key in keys:
+            found.extend(result.get(key, []))
+        return found
+    return items
+
+
+def run_fix_pass(page, spec, items=None, max_items=10, json_output=False):
+    """Apply one AI fix pass to the page. Returns (fixes, attempted, unreachable).
+
+    Nine passes used to carry a copy of this loop. Each copy had to get the
+    unreachable-model case right on its own, and before the harness existed none
+    of them did: a failure payload was written into the page as if it were an
+    answer and counted as a fix. There is one copy now, so there is one place
+    for that to be right.
+
+    Pass `items` when the caller already has the list, which is the case for the
+    sub-passes inside `scan` that read it out of a scan result rather than off
+    the page.
+    """
+    if items is None:
+        items = spec.items(page)
+
+    fixes, unreachable = [], 0
+    attempted = min(len(items), max_items)
+    say = (lambda *a, **k: None) if json_output else print
+
+    def line(text, end="\n"):
+        """Print one rendered line, or nothing when the pass renders none."""
+        if text is not None:
+            say(text, end=end, flush=True)
+
+    if not attempted:
+        return fixes, 0, 0
+
+    render = spec.progress
+    line(render.header(items, attempted))
+    for i, item in enumerate(items[:attempted]):
+        selector = item.get('selector', '')
+        if render.begin:
+            line(render.begin(i, attempted, item, selector), end=" ")
+        try:
+            element = None
+            if spec.locate:
+                element = spec.locate(page, item, i)
+                if element is None:
+                    if render.missing:
+                        line(render.missing(i, item, selector))
+                    continue
+
+            prompt = spec.prompt(page, item)
+            if prompt is None:
+                if render.no_input:
+                    line(render.no_input(i, item, selector))
+                continue
+
+            if spec.call == "vision":
+                shot = spec.shot(item, i)
+                element.screenshot(path=str(shot))
+                raw = ask_claude(str(shot), prompt)
+                shot.unlink(missing_ok=True)
+            else:
+                raw = ask_claude_text(prompt, timeout=spec.timeout)
+
+            value = claude_answer(raw)
+            # An unreachable model is not an answer. Writing the failure payload
+            # here is how images ended up labelled "Claude CLI error: ..." for a
+            # blind reader, controls ended up with aria-label="", and a
+            # paragraph was replaced with nothing, all three counted as fixes.
+            if value is None:
+                unreachable += 1
+                line(render.unanswered(i, item, selector))
+                continue
+
+            value = value.strip('"\'').strip()
+            if spec.cap:
+                value = spec.cap(value)
+            if not value:
+                unreachable += 1
+                line(render.unanswered(i, item, selector))
+                continue
+
+            page.evaluate(spec.write, {'selector': selector, 'value': value,
+                                       'index': item.get('index')})
+            fixes.append({'selector': selector, spec.field: value})
+            line(render.applied(i, item, selector, value))
+        except Exception as exc:
+            line(render.failed(i, item, selector, exc))
+
+    return fixes, attempted, unreachable
 
 
 def ask_claude(image_path, prompt):
@@ -4969,6 +5117,44 @@ def session_find_all(json_output=False):
 # AI Fix functions — use Claude to fix accessibility issues
 # ============================================================
 
+def _alt_locate(page, item, i):
+    """The image element, falling back to a match on part of its src."""
+    el = page.query_selector(item.get('selector', ''))
+    if not el:
+        src = item.get('src', '')[:40]
+        el = page.query_selector(f'img[src*="{src[:20]}"]')
+    return el
+
+
+ALT_PASS = FixPass(
+    items=_auditor_items("findMissingAlt", "noAlt", "emptyAlt"),
+    locate=_alt_locate,
+    shot=lambda item, i: OUT / f"img_{i}.png",
+    prompt=lambda page, item: """Describe this image for a blind user. Write a concise alt text (1-2 sentences) that captures:
+1. What the image shows (main subject, action, context)
+2. Any important text visible
+3. Relevant details for understanding
+
+Return ONLY the alt text, no quotes or preamble.""",
+    call="vision",
+    cap=lambda v: (v[:297] + "...") if len(v) > 300 else v,
+    write="(data) => {\n"
+          "    const el = document.querySelector(data.selector);\n"
+          "    if (el) el.alt = data.value;\n"
+          "}",
+    field="alt",
+    progress=FixProgress(
+        header=lambda items, count: f"\nGenerating alt text for {count} images...",
+        begin=lambda i, count, item, sel: f"  [{i+1}/{count}] {sel}...",
+        missing=lambda i, item, sel: "not found",
+        unanswered=lambda i, item, sel: NEEDS_AI_LINE,
+        applied=lambda i, item, sel, value: (
+            f"✓ \"{value[:50]}...\"" if len(value) > 50 else f"✓ \"{value}\""),
+        failed=lambda i, item, sel, error: f"error: {error}",
+    ),
+)
+
+
 def session_fix_alt(max_images=10, json_output=False):
     """Use Claude to generate alt text for images missing it.
 
@@ -4984,10 +5170,7 @@ def session_fix_alt(max_images=10, json_output=False):
             print("Error: Could not inject tools.", flush=True)
             return
 
-        # Find images needing alt text
-        result = page.evaluate("() => window.ai4a11y.auditors.findMissingAlt()")
-        all_images = result.get('noAlt', []) + result.get('emptyAlt', [])
-
+        all_images = ALT_PASS.items(page)
         if not all_images:
             if json_output:
                 print(json.dumps(_ai_fix_report([], 0, 0), indent=2))
@@ -4995,68 +5178,12 @@ def session_fix_alt(max_images=10, json_output=False):
                 print("No images found missing alt text.", flush=True)
             return
 
-        fixes = []
-        unreachable = 0
-        count = min(len(all_images), max_images)
         # Progress goes to stdout, which is also where the payload goes, so it
         # is silenced under --json rather than left to make the output
         # unparseable.
-        say = (lambda *a, **k: None) if json_output else print
-        say(f"\nGenerating alt text for {count} images...", flush=True)
-
-        for i, img_info in enumerate(all_images[:count]):
-            selector = img_info.get('selector', '')
-            src = img_info.get('src', '')[:40]
-            say(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
-
-            try:
-                # Screenshot the specific image element
-                el = page.query_selector(selector)
-                if not el:
-                    # Try finding by src
-                    el = page.query_selector(f'img[src*="{src[:20]}"]')
-                if not el:
-                    say("not found", flush=True)
-                    continue
-
-                # Take screenshot of just this element
-                img_path = OUT / f"img_{i}.png"
-                el.screenshot(path=str(img_path))
-
-                # Call Claude to describe the image
-                prompt = """Describe this image for a blind user. Write a concise alt text (1-2 sentences) that captures:
-1. What the image shows (main subject, action, context)
-2. Any important text visible
-3. Relevant details for understanding
-
-Return ONLY the alt text, no quotes or preamble."""
-
-                alt_text = claude_answer(ask_claude(str(img_path), prompt))
-                img_path.unlink(missing_ok=True)
-
-                # An unreachable model is not an alt text. Writing the failure
-                # payload here is how images ended up labelled "Claude CLI
-                # error: ..." for a blind reader, counted as fixed.
-                if alt_text is None:
-                    unreachable += 1
-                    say(NEEDS_AI_LINE, flush=True)
-                    continue
-
-                alt_text = alt_text.strip('"\'').strip()
-                if len(alt_text) > 300:
-                    alt_text = alt_text[:297] + "..."
-
-                # Apply the alt text to the page
-                page.evaluate(f"""(data) => {{
-                    const el = document.querySelector(data.selector);
-                    if (el) el.alt = data.alt;
-                }}""", {'selector': selector, 'alt': alt_text})
-
-                fixes.append({'selector': selector, 'alt': alt_text})
-                say(f"✓ \"{alt_text[:50]}...\"" if len(alt_text) > 50 else f"✓ \"{alt_text}\"", flush=True)
-
-            except Exception as e:
-                say(f"error: {e}", flush=True)
+        fixes, count, unreachable = run_fix_pass(
+            page, ALT_PASS, items=all_images, max_items=max_images,
+            json_output=json_output)
 
         if json_output:
             print(json.dumps(_ai_fix_report(fixes, count, unreachable), indent=2))
@@ -5140,6 +5267,69 @@ Return ONLY the simplified text, maintaining paragraph structure."""
         # For now just return - user can copy/paste or we add --apply flag later
 
 
+LABEL_CONTEXT_JS = """(sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    return {
+        tag: el.tagName,
+        type: el.type || el.role,
+        href: el.href,
+        innerHTML: el.innerHTML.slice(0, 200),
+        parent: el.parentElement?.innerText?.slice(0, 100),
+        nearby: el.parentElement?.parentElement?.innerText?.slice(0, 200)
+    };
+}"""
+
+
+def _label_prompt(page, item):
+    """The label prompt, or None when the page gave back no context to use."""
+    context = page.evaluate(LABEL_CONTEXT_JS, item.get('selector', ''))
+    if not context:
+        return None
+    return f"""Generate an accessible label for this interactive element.
+The label should be concise (2-5 words) and describe what happens when activated.
+
+Element: {context['tag']}
+Type: {context.get('type', 'unknown')}
+Link target: {context.get('href', 'N/A')}
+Content: {context.get('innerHTML', '')[:100]}
+Surrounding text: {context.get('nearby', '')[:150]}
+
+Return ONLY the label text, nothing else."""
+
+
+# aria-label="" is not a label. It used to be written on every failed call, and
+# counted, which left the control exactly as unusable as it started while the
+# run reported a fix. run_fix_pass is where that is refused now.
+LABEL_PASS = FixPass(
+    items=_auditor_items("findMissingLabels", "links", "buttons", "inputs"),
+    locate=lambda page, item, i: page.query_selector(item.get('selector', '')),
+    prompt=_label_prompt,
+    call="text",
+    timeout=30,
+    cap=lambda v: v[:50],
+    write="(data) => {\n"
+          "    const el = document.querySelector(data.selector);\n"
+          "    if (el) {\n"
+          "        el.setAttribute('aria-label', data.value);\n"
+          "        if (el.tagName === 'A' && !el.textContent.trim()) {\n"
+          "            el.title = data.value;\n"
+          "        }\n"
+          "    }\n"
+          "}",
+    field="label",
+    progress=FixProgress(
+        header=lambda items, count: f"\nGenerating labels for {count} elements...",
+        begin=lambda i, count, item, sel: f"  [{i+1}/{count}] {sel}...",
+        missing=lambda i, item, sel: "not found",
+        no_input=lambda i, item, sel: "no context",
+        unanswered=lambda i, item, sel: NEEDS_AI_LINE,
+        applied=lambda i, item, sel, value: f"✓ \"{value}\"",
+        failed=lambda i, item, sel, error: f"error: {error}",
+    ),
+)
+
+
 def session_fix_labels(max_elements=10, json_output=False):
     """Use Claude to generate labels for unlabeled interactive elements.
 
@@ -5152,10 +5342,7 @@ def session_fix_labels(max_elements=10, json_output=False):
             print("Error: Could not inject tools.", flush=True)
             return
 
-        result = page.evaluate("() => window.ai4a11y.auditors.findMissingLabels()")
-        all_elements = (result.get('links', []) + result.get('buttons', []) +
-                       result.get('inputs', []))
-
+        all_elements = LABEL_PASS.items(page)
         if not all_elements:
             if json_output:
                 print(json.dumps(_ai_fix_report([], 0, 0), indent=2))
@@ -5163,84 +5350,9 @@ def session_fix_labels(max_elements=10, json_output=False):
                 print("No unlabeled elements found.", flush=True)
             return
 
-        fixes = []
-        unreachable = 0
-        count = min(len(all_elements), max_elements)
-        say = (lambda *a, **k: None) if json_output else print
-        say(f"\nGenerating labels for {count} elements...", flush=True)
-
-        for i, el_info in enumerate(all_elements[:count]):
-            selector = el_info.get('selector', '')
-            say(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
-
-            try:
-                el = page.query_selector(selector)
-                if not el:
-                    say("not found", flush=True)
-                    continue
-
-                # Get context about the element
-                context = page.evaluate("""(sel) => {
-                    const el = document.querySelector(sel);
-                    if (!el) return null;
-                    return {
-                        tag: el.tagName,
-                        type: el.type || el.role,
-                        href: el.href,
-                        innerHTML: el.innerHTML.slice(0, 200),
-                        parent: el.parentElement?.innerText?.slice(0, 100),
-                        nearby: el.parentElement?.parentElement?.innerText?.slice(0, 200)
-                    };
-                }""", selector)
-
-                if not context:
-                    say("no context", flush=True)
-                    continue
-
-                # Call Claude to generate label
-                prompt = f"""Generate an accessible label for this interactive element.
-The label should be concise (2-5 words) and describe what happens when activated.
-
-Element: {context['tag']}
-Type: {context.get('type', 'unknown')}
-Link target: {context.get('href', 'N/A')}
-Content: {context.get('innerHTML', '')[:100]}
-Surrounding text: {context.get('nearby', '')[:150]}
-
-Return ONLY the label text, nothing else."""
-
-                label = claude_answer(ask_claude_text(prompt, timeout=30))
-
-                # aria-label="" is not a label. It used to be written here on
-                # every failed call, and counted, which left the control exactly
-                # as unusable as it started while the run reported a fix.
-                if label is None:
-                    unreachable += 1
-                    say(NEEDS_AI_LINE, flush=True)
-                    continue
-
-                label = label.strip('"\'').strip()[:50]
-                if not label:
-                    unreachable += 1
-                    say(NEEDS_AI_LINE, flush=True)
-                    continue
-
-                # Apply the label
-                page.evaluate(f"""(data) => {{
-                    const el = document.querySelector(data.selector);
-                    if (el) {{
-                        el.setAttribute('aria-label', data.label);
-                        if (el.tagName === 'A' && !el.textContent.trim()) {{
-                            el.title = data.label;
-                        }}
-                    }}
-                }}""", {'selector': selector, 'label': label})
-
-                fixes.append({'selector': selector, 'label': label})
-                say(f"✓ \"{label}\"", flush=True)
-
-            except Exception as e:
-                say(f"error: {e}", flush=True)
+        fixes, count, unreachable = run_fix_pass(
+            page, LABEL_PASS, items=all_elements, max_items=max_elements,
+            json_output=json_output)
 
         if json_output:
             print(json.dumps(_ai_fix_report(fixes, count, unreachable), indent=2))
