@@ -93,6 +93,10 @@ async function remoteLibrarian(token, method, args) {
 // that will not load renders as empty rather than breaking the page); only
 // writes throw, and the first failure stops the rest so we do not pile more
 // half-written state on top of it.
+// FLAG(review): this reports a failed write, it does not undo the writes that
+// already landed. Whether a partial onboarding should roll back, retry, or show
+// the person a partial state is a design question about the remote error
+// contract, and it has no owner yet.
 async function remoteWrite(token, method, args) {
   const r = await remoteLibrarian(token, method, args);
   if (r.status !== 200) {
