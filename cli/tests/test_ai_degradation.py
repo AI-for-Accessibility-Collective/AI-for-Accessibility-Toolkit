@@ -140,6 +140,7 @@ def test_json_output_is_parseable_and_alone_on_stdout(
     that after the other commands stopped: it wrote its whole scan transcript
     first, and json.loads failed on the first line of it.
     """
+    run_without_claude("session", "go", FIXTURE_URL)
     result = run_without_claude("session", command, "--json")
     json.loads(result.stdout)  # raises if anything else reached stdout
 
@@ -153,14 +154,17 @@ def test_scan_json_carries_the_same_counts_as_the_human_summary(
     from different numbers, would satisfy it. This pins the keys and checks
     the counts against the summary block a person reads.
     """
+    # A scan writes its non-AI fixes into the page, so a run that starts on a
+    # page an earlier scan already fixed finds fewer things left to fix. Both
+    # runs below reload the fixture first, or the two sets of counts are taken
+    # from different pages and the comparison means nothing.
+    run_without_claude("session", "go", FIXTURE_URL)
     payload = json.loads(run_without_claude("session", "scan", "--json").stdout)
 
     assert set(payload) == {"violations", "fixed", "textProcessing",
                             "skippedNeedsAi", "remaining"}
     assert set(payload["fixed"]) == {"nonAi", "ai", "total"}
 
-    # A scan writes its non-AI fixes into the page, so the second run has to
-    # start from a reloaded fixture or it finds fewer things left to fix.
     run_without_claude("session", "go", FIXTURE_URL)
     human = run_without_claude("session", "scan").stdout
     non_ai = re.search(r"Non-AI fixes:\s*(\d+)", human)
