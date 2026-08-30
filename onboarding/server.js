@@ -191,32 +191,49 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
     const token = t.body.token;
-    // Always write all three derived fields (even empty) so a re-onboard clears
-    // what the person deselected — e.g. a profile corrected from low-vision to
-    // blind must drop the old magnification needs, and someone who unchecks
-    // every area must not keep stale supportAreas or visionKind that then
-    // disagree with the cleared needs.
+    // Always write every derived field (even empty) so a re-onboard clears what
+    // the person deselected: a profile corrected from low-vision to blind must
+    // drop the old magnification needs, and someone who unchecks every area
+    // must not keep stale supportAreas or visionKind that then disagree with
+    // the cleared needs. freeText follows the same rule, and it matters most,
+    // because it is the field where someone describes their own disability in
+    // their own words.
     await remoteLibrarian(token, 'setProfileField', ['supportAreas', areas]);
     await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
     await remoteLibrarian(token, 'setProfileField', ['fields.visionKind', kind ?? null]);
+    await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
     if (text) {
-      await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
       // Stable topic so a re-onboard UPSERTS this note (addNote upserts by
       // topic) instead of appending a duplicate every run.
       await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit', topic: 'self-description' }]);
+    } else {
+      // Clearing the box has to clear the note too. addNote('') writes nothing
+      // (it returns empty-text), and deleteNote takes an id, so the note is
+      // found by topic first. Without this the person's own sentence about
+      // their disability stays in the profile after they deleted it.
+      const listed = await remoteLibrarian(token, 'listNotes', [{ topic: 'self-description' }]);
+      for (const note of listed.body?.result || []) {
+        await remoteLibrarian(token, 'deleteNote', [note.id]);
+      }
     }
   } else {
     const { host } = await localBits();
     const { librarian } = await host.getInstance(uid);
-    // Same rule as the remote branch: all three written unconditionally so a
-    // re-onboard clears what was deselected and the profile stays consistent.
+    // Same rule as the remote branch: every derived field written
+    // unconditionally so a re-onboard clears what was deselected and the
+    // profile stays consistent.
     await librarian.setProfileField('supportAreas', areas);
     await librarian.setProfileField('fields.needs', needs);
     await librarian.setProfileField('fields.visionKind', kind ?? null);
+    await librarian.setProfileField('freeText', text);
     if (text) {
-      await librarian.setProfileField('freeText', text);
       // Stable topic → re-onboard upserts (not appends) this note.
       await librarian.addNote(text, { source: 'user-explicit', topic: 'self-description' });
+    } else {
+      // Same rule as the remote branch: clearing the box clears the note.
+      for (const note of await librarian.listNotes({ topic: 'self-description' })) {
+        await librarian.deleteNote(note.id);
+      }
     }
   }
   return { uid, supportAreas: areas, freeText: text, visionKind: kind, needs };

@@ -4,6 +4,11 @@
 // profile disagreed with itself (empty needs, lingering areas, lingering
 // visionKind driving voice-primary presentation the person had removed).
 //
+// The free-text self-description had the same guard and is the most sensitive
+// field of the set, so it gets its own section below. Note that every case in
+// this file used to pass freeText: '' and so never exercised the clearing path
+// at all. The free-text cases deliberately START from a non-empty value.
+//
 //   node onboarding/test/reonboard.test.mjs
 
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -35,6 +40,17 @@ async function profileOf(uid) {
   return librarian.getProfile();
 }
 
+// The self-description is stored twice: as profile.freeText and as a note
+// filed under the stable 'self-description' topic. Both have to be checked.
+async function selfDescriptionNotesOf(uid) {
+  const host = createToolkitHost({
+    store: fileStore(dir),
+    geminiCaller: async () => { throw new Error('no-llm-in-test'); },
+  });
+  const { librarian } = await host.getInstance(uid);
+  return librarian.listNotes({ topic: 'self-description' });
+}
+
 // First onboard: vision, explicitly blind.
 await onboard({ uid: 'retest', supportAreas: ['vision'], freeText: '', visionKind: 'blind' });
 let p = await profileOf('retest');
@@ -54,6 +70,27 @@ await onboard({ uid: 'retest', supportAreas: ['vision'], freeText: '', visionKin
 p = await profileOf('retest');
 check('switch: visionKind is the new value', p.fields?.visionKind === 'lowVision');
 check('switch: needs follow the new kind', p.fields.needs.some((n) => n.dimension === 'textSize'));
+
+// ── free text: clearing the box clears BOTH representations ────────────────
+await onboard({ uid: 'freetext', supportAreas: ['reading'], freeText: 'I need quiet pages', visionKind: undefined });
+p = await profileOf('freetext');
+check('free text: stored on first onboard', p.freeText === 'I need quiet pages');
+check('free text: note stored on first onboard', (await selfDescriptionNotesOf('freetext')).length === 1);
+
+// Submitting an empty description must remove the sentence the person wrote
+// about their own disability, in both places it lives.
+await onboard({ uid: 'freetext', supportAreas: ['reading'], freeText: '', visionKind: undefined });
+p = await profileOf('freetext');
+check('free text: cleared on empty re-onboard', !p.freeText);
+check('free text: note removed on empty re-onboard', (await selfDescriptionNotesOf('freetext')).length === 0);
+
+// Rewriting it (rather than clearing it) still upserts rather than appends.
+await onboard({ uid: 'freetext', supportAreas: ['reading'], freeText: 'one sentence', visionKind: undefined });
+await onboard({ uid: 'freetext', supportAreas: ['reading'], freeText: 'a different sentence', visionKind: undefined });
+const rewritten = await selfDescriptionNotesOf('freetext');
+check('free text: rewrite leaves exactly one note', rewritten.length === 1);
+check('free text: rewrite updates the note text', rewritten[0]?.text === 'a different sentence');
+check('free text: rewrite updates freeText', (await profileOf('freetext')).freeText === 'a different sentence');
 
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nRe-onboard consistency: ${pass} passed, ${fail} failed`);
