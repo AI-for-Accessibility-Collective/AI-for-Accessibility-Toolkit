@@ -1661,11 +1661,16 @@ def run_fix_pass(page, spec, items=None, max_items=10, json_output=False):
         if text is not None:
             say(text, end=end, flush=True)
 
+    # The header goes out whenever the pass has items, even when the caller
+    # capped the run at zero of them. Every pass printed it there before, so
+    # `fix-alt 0`, `fix-labels 0` and `scan 0` still open with their own line
+    # and a count of zero.
+    render = spec.progress
+    if items:
+        line(render.header(items, attempted))
     if not attempted:
         return fixes, 0, 0
 
-    render = spec.progress
-    line(render.header(items, attempted))
     for i, item in enumerate(items[:attempted]):
         selector = item.get('selector', '')
         if render.begin:
