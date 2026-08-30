@@ -26,3 +26,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cli*", "tools*"]
+
+[tool.pytest.ini_options]
+testpaths = ["cli/tests"]
+markers = [
+    "browser: spawns a headless Chromium; deselect with -m 'not browser'",
+]
