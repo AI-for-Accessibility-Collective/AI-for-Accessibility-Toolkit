@@ -4,9 +4,9 @@ name: CLI
 on:
   push:
     branches: [main, rearch-experiment]
-    paths: ['cli/**', 'tools/**', 'pyproject.toml', '.github/workflows/cli.yml']
+    paths: ['cli/**', 'tools/**', 'pyproject.toml', 'package.json', 'package-lock.json', '.github/workflows/cli.yml']
   pull_request:
-    paths: ['cli/**', 'tools/**', 'pyproject.toml', '.github/workflows/cli.yml']
+    paths: ['cli/**', 'tools/**', 'pyproject.toml', 'package.json', 'package-lock.json', '.github/workflows/cli.yml']
 
 jobs:
   harness:

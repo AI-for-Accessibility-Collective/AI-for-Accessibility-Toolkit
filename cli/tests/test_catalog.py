@@ -35,3 +35,11 @@ def test_no_args_shows_usage(cli: CliRunner) -> None:
     result = cli()
     assert result.returncode == 0
     assert "session" in result.stdout
+
+
+def test_json_flag_is_accepted_before_the_subcommand(cli: CliRunner) -> None:
+    """The pre-Typer CLI took --json anywhere in the line. Keeping that working
+    means a script written against the older syntax does not silently break."""
+    result = cli("--json", "list", "tools")
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["auditors"]

@@ -28,27 +28,48 @@ ai4a11y list profiles     # ability profiles from tools/profiles/settings.json
 ai4a11y create <name> --type adapter   # scaffold a new adapter
 ```
 
-Session, instant and local (no AI):
+Session, instant and local. Nothing leaves the browser:
 
 ```bash
-ai4a11y session start | stop | status | tabs
-ai4a11y session go <url> | back | scroll | tab | activate | focused
+ai4a11y session start | stop | status | tabs | focus | cleanup-tabs
+ai4a11y session back | scroll | tab | activate | focused | key | arrow
+ai4a11y session heading | skip | dismiss | enable | disable | tools | profiles
 ai4a11y session list [headings|links|buttons|forms|landmarks|images|tables]
-ai4a11y session find "<text>" | read [selector]
+ai4a11y session find "<text>" | read [selector] | tables
 ai4a11y session audit [--json]           # axe-core WCAG audit
-ai4a11y session enable <tool> | disable <tool> | tools
-ai4a11y session profile <name> | profiles
 ai4a11y session find-alt | find-labels | find-contrast | find-captions | find-all
 ```
 
-Session, AI-backed. These call the locally installed [Claude Code](https://claude.com/claude-code) CLI, one subprocess per command. When it is not installed they answer with a `needs-ai` message instead of doing the work; they never guess:
+Session, AI-backed. These reach the locally installed [Claude Code](https://claude.com/claude-code) CLI:
 
 ```bash
-ai4a11y session describe | ask "<question>"
-ai4a11y session tap "<target>" | type "<field>" "<text>" | hover | drag
+ai4a11y session describe | ask "<question>" | summary | diff
+ai4a11y session tap "<target>" | type "<field>" "<text>" | hover | drag | nudge | pickdate
 ai4a11y session do "<task>"              # autonomous multi-step mode
 ai4a11y session fix-alt | fix-labels | simplify | fix-all | scan
+ai4a11y session go <url> | profile <name>    # see below
 ```
+
+What that means in practice, because the page content involved is the user's:
+
+- **What is sent.** A screenshot, page text, or an element's surrounding markup,
+  depending on the command. `describe`, `ask`, `fix-alt` and the pointer commands
+  send images of the page.
+- **How many calls.** One per item, not one per command. `fix-alt` makes up to one
+  call per image it is fixing, and `do` and `scan` make as many as their work
+  takes. A run over ten images is ten subprocesses.
+- **What it costs.** Nothing beyond a Claude subscription by default. Exporting
+  `ANTHROPIC_API_KEY` switches the underlying CLI to per-token API billing, which
+  is a real charge per call.
+- **`go` and `profile` are the two that surprise people.** Neither calls a model
+  itself. Both hand the page a set of callbacks that AI-backed adapters use, so a
+  profile whose tools include `autoSimplify` or `autoSummarize` (`cognitive`,
+  `olderAdult`, `adhd`) sends page text on every navigation until the profile is
+  cleared with `ai4a11y session profile none`.
+
+When the Claude Code CLI is not installed, or a call fails, these commands write
+nothing to the page. They say `needs-ai` on the line where the fix would have
+been, and a command that reached no model and changed nothing exits 3.
 
 ## Tests
 

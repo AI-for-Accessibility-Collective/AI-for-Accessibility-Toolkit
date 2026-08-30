@@ -690,8 +690,18 @@ def _session_command_names() -> set:
 
 
 def main() -> None:
-    # Backwards-compatible shortcuts: `ai4a11y audit` == `ai4a11y session audit`.
     argv = sys.argv
+
+    # Backwards-compatible shortcut: --json used to be stripped from anywhere in
+    # the line, so `ai4a11y --json list tools` worked. Typer declares it on the
+    # leaf commands, which is where its help belongs, so move a leading one to
+    # the end rather than break a script written against the older syntax. A
+    # command with no --json still says so, in its own words.
+    while "--json" in argv[1:] and argv[1] == "--json":
+        argv.pop(1)
+        argv.append("--json")
+
+    # Backwards-compatible shortcuts: `ai4a11y audit` == `ai4a11y session audit`.
     if len(argv) > 1 and not argv[1].startswith("-"):
         if argv[1] not in ("list", "create", "session") and argv[1] in _session_command_names():
             argv.insert(1, "session")
