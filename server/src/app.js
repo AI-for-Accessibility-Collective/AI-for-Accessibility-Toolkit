@@ -8,7 +8,7 @@
 // `invokeLibrarianRoute` (server/src/routes.js) — this file never imports
 // anything under toolkit/ directly.
 
-import { verifyToken, verifyAdminHeader, issueToken, listTokens, revokeToken } from './auth.js';
+import { verifyToken, verifyAdminHeader, issueToken, listTokens, revokeToken, revokeTokensFor } from './auth.js';
 import { LIBRARIAN_ROUTES_BY_NAME, invokeLibrarianRoute } from './routes.js';
 import { buildMeta } from './meta.js';
 import { renderAdminPage } from './admin-page.js';
@@ -137,8 +137,10 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   // Admin: the user PROFILES themselves (a uid's `users/<uid>/` partition),
   // distinct from the access tokens above. GET lists every stored profile;
-  // DELETE wipes one profile's data entirely (revoking a token only cuts off
-  // access — this removes the ability profile + memory). Same admin auth.
+  // DELETE is the whole deletion story in one place: evict the cached toolkit
+  // instance (so a stale in-memory instance cannot write the partition back),
+  // revoke the uid's tokens (so a still-valid credential cannot recreate it),
+  // then wipe the data. Same admin auth.
   async function handleAdminUsers(req, res, method, pathname) {
     if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
       return sendJSON(res, 401, { error: 'unauthorized' });
@@ -152,14 +154,20 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     if (method === 'DELETE' && pathname.startsWith(ADMIN_USERS_PREFIX + '/')) {
       const uid = decodeURIComponent(pathname.slice((ADMIN_USERS_PREFIX + '/').length));
       if (!uid) return sendJSON(res, 404, { error: 'not-found' });
-      let deleted;
+      let deleted, revokedTokens;
       try {
+        // Order matters: cut off the ways the partition could be rewritten
+        // (cached instance, live tokens) before removing the data, so a
+        // request racing the delete cannot resurrect a wiped profile.
+        toolkitHost.evict?.(uid);
+        revokedTokens = await revokeTokensFor(store, uid);
         deleted = await store.deleteUser(uid);
       } catch (e) {
         return sendJSON(res, 400, { error: e.message });
       }
-      if (!deleted) return sendJSON(res, 404, { error: 'not-found' });
-      return sendJSON(res, 200, { ok: true, uid });
+      // 404 only when there was nothing at all: no data AND no live tokens.
+      if (!deleted && !revokedTokens) return sendJSON(res, 404, { error: 'not-found' });
+      return sendJSON(res, 200, { ok: true, uid, revokedTokens });
     }
 
     return sendJSON(res, 404, { error: 'not-found' });
