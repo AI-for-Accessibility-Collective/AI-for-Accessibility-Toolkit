@@ -42,7 +42,7 @@ The repository used to hold the extensions, the CLI, and team projects alongside
 - **Understand the person, not just the page.** Per-app settings become one device-independent model of ability (`text.size × 1.4`, `vision.descriptions`, `motion: reduced`), with per-dimension confidence and provenance.
 - **Onboard once, adapt everywhere.** The same model renders to web CSS settings, XR angular text sizing, or any surface you write — no re-interviewing the user per device.
 - **Suggest, never apply.** Everything an inference could be wrong about flows through a proposal/consent queue. Nothing silently changes a person's profile.
-- **Privacy by default.** Single-writer stores, no-memory zones for sensitive categories, and a permission broker that shares understanding with other apps only under explicit, revocable, audited grants.
+- **Privacy by default.** Single-writer stores, no-memory zones for sensitive categories, and understanding shared with other apps only under explicit, revocable, audited grants.
 - **Bring your own everything.** Inject your own storage, clock, scheduler, and consent UI at construction; connect your own LLM afterward through `librarian.setGeminiCaller(fn)`. The core touches no platform API directly.
 
 ## Quick Start
@@ -100,7 +100,7 @@ See [docs/architecture.md](docs/architecture.md) for how they fit together, and 
 
 ## Using the Toolkit
 
-Three ways to build on it, depending on your host:
+Four ways to build on it, depending on your host:
 
 1. **Embed the core directly (any JS runtime).** `createToolkit({ ports }) → { datastore, librarian }`. Implement the ports for your platform — the Node bindings in [`toolkit/platforms/node/`](toolkit/platforms/node/) are the template; a Chrome host implementation lives in [`toolkit/platforms/chrome/`](toolkit/platforms/chrome/).
 2. **Call the hosted HTTP service (any language).** Run [`server/`](server/) (locally or on Cloud Run) and hit the same Librarian methods over HTTP with a bearer token — for non-JS clients, or to keep the profile server-side. See [server/README.md](server/README.md).
@@ -111,14 +111,14 @@ Three ways to build on it, depending on your host:
 
 The toolkit does not try to be a complete story on its own. A host brings:
 
-- **Ports** ([`toolkit/ports/index.js`](toolkit/ports/index.js)): `KVStore` is the one required argument to `createToolkit`; `Clock`, `Scheduler`, and `Consent` default to built-ins and no-ops. Mind the `Consent` default: it is a no-op, so a host that does not wire a consent surface gets a toolkit whose proposals are never shown to anyone. The "suggest, never apply" guarantee depends on the host implementing it.
+- **Ports** ([`toolkit/ports/index.js`](toolkit/ports/index.js)): `KVStore` is the one required argument to `createToolkit`; `Clock`, `Scheduler`, and `Consent` default to built-ins and no-ops. Mind the `Consent` default: it is a no-op, so a host that does not wire a consent surface gets a toolkit whose proposals are never shown to anyone. The "suggest, never apply" guarantee holds either way; the core keeps proposals pending until a person resolves them, and the consent surface is what lets a person see and resolve them.
 - **An actuation port** ([`toolkit/ports/actuation.js`](toolkit/ports/actuation.js)) if the host applies changes to a live surface. Import it directly; it is not re-exported from the index.
-- **An LLM caller**, connected after construction via `librarian.setGeminiCaller(fn)`, if the host wants the generative features. Everything structural works without one.
+- **An LLM caller**, wired in two places if the host wants all the generative features: `librarian.setGeminiCaller(fn)` after construction enables the core's slow lane, and `setAIProvider(provider)` from [`tools/utils/ai.js`](tools/utils/ai.js) enables the catalog adapters that can call a provider. They are separate seams; wiring one does not enable the other. Everything structural works with neither.
 - **Onboarding**: a way to capture `supportAreas`, free text, and a note into a profile. [`onboarding/`](onboarding/) is a runnable reference.
 
 ### When no AI provider is configured
 
-The catalog degrades deliberately rather than failing as a whole, in two lanes defined in [`tools/utils/ai.js`](tools/utils/ai.js): six core methods (image description, simplification, labeling, and similar) throw a clear error when no provider supplies them, and ten optional methods return `null` so the caller skips that enhancement. Adapters catch both, so a missing provider narrows results instead of crashing the page: heuristic-first adapters such as `fix-tables` still land their fix with a deterministic fallback, while purely generative ones such as `generate-alt` produce nothing. The check is per method, so a host can supply a partial provider and only the missing capabilities degrade.
+The catalog degrades deliberately rather than failing as a whole, in two lanes defined in [`tools/utils/ai.js`](tools/utils/ai.js) (the provider a host supplies via `setAIProvider`): six core methods (image description, simplification, labeling, and similar) throw a clear error when no provider supplies them, and ten optional methods return `null` so the caller skips that enhancement. Adapters catch both, so a missing provider narrows results instead of crashing the page: heuristic-first adapters such as `fix-tables` still land their fix with a deterministic fallback, while purely generative ones such as `generate-alt` produce nothing. The check is per method, so a host can supply a partial provider and only the missing capabilities degrade.
 
 One honest limit of the current convention: an adapter does not report upward why it produced nothing, so a host cannot yet tell "no API key" from "the model declined" from "nothing on this page needed it". A structured way to say so is an open item on the [roadmap](ROADMAP.md).
 
@@ -158,7 +158,7 @@ reference for the "capture a profile" half of a host.
 
 A developer library of reusable accessibility building blocks, usable on their own:
 
-- **Adapters** ([`tools/adapters/`](tools/adapters/)) — 50 fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more. 12 of the 50 can call an AI provider; the rest are pure DOM and CSS and run with no key and no cost.
+- **Adapters** ([`tools/adapters/`](tools/adapters/)) — 48 fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more. 12 of the 48 can call an AI provider; the rest run with no key and no cost, built on DOM, CSS, and browser APIs such as Web Speech and Web Audio.
 - **Auditors** ([`tools/auditors/`](tools/auditors/)) — detectors that find issues for adapters to fix (missing alt text, low contrast, unlabeled controls).
 - **Validators** ([`tools/validators/`](tools/validators/)) — the verifier engine for agentic flows: check that a page matches what the person asked an agent for and decide how hard to insist. Pairs with the `contract-mismatch` auditor and the `agent-watch` adapter. Machinery only — a host renders its own validation UI.
 - **Profiles** ([`tools/profiles/`](tools/profiles/)) — evidence-based ability presets (Blind, Low Vision, Dyslexia, Motor, …) mapping to settings.
@@ -168,7 +168,7 @@ A developer library of reusable accessibility building blocks, usable on their o
 ## Repository Layout
 
 ```
-toolkit/     Platform-agnostic core — Librarian, datastore, ability model, broker,
+toolkit/     Platform-agnostic core — Librarian, datastore, ability model, grants,
              skill engine, ports, sync, protocol, surfaces, reference platform bindings
 tools/       Developer catalog — adapters, auditors, profiles, utils
 controller/  Optional text/voice control surface — ControlPort, grammar, mounts,

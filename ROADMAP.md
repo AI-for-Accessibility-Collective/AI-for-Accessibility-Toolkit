@@ -33,10 +33,9 @@ Last updated: 2026-08-30. This lists what is genuinely open, not what is done. S
 
 These were raised in the Collective's review and are represented here rather than filled. Each is owner-TBD.
 
-- In-page natural-language adaptation requests.
+- Offering the Controller inside an arbitrary page without host code to mount it. The review asked for in-page natural-language requests and a voice-mode UI; the [Controller](controller/) already provides the text/voice widget, speech recognition, and natural-language commands (see [docs/voice-mode.md](docs/voice-mode.md)), so what remains open is the delivery path: today a host must implement a `ControlPort` and mount the widget itself.
 - An observer API for behavioral inference.
 - Closed-beta signup flows.
-- Voice-mode UI.
 - Borrowing external review agents.
 
 Prepared with AI assistance; reviewed and edited by Josephine, who is responsible for its content.

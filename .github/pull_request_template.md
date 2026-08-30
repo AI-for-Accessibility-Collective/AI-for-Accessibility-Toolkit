@@ -19,6 +19,6 @@ Which needs/profiles/disabilities does this help?
 ## How to test
 
 1. `npm install`
-2. `npm test` (toolkit + catalog suites)
+2. `npm test` (tools, toolkit, controller, and onboarding suites)
 3. Relevant demos: `node toolkit/hosts/xr-demo/demo.js`, `node toolkit/hosts/skill-demo/demo.js`, `node server/test/server-test.mjs`
 4. If you changed the core API, regenerate `toolkit/API.md` + the skill and commit the result.

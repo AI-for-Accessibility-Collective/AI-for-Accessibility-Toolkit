@@ -8,11 +8,11 @@ This policy covers this repository: the toolkit core, the tools catalog, the hos
 2. Email the maintainers directly at [dcelin@stanford.edu](mailto:dcelin@stanford.edu)
 3. Include: a description, steps to reproduce, potential impact, and a suggested fix if you have one
 
-We will respond within 48 hours and work with you to understand and address the issue. Only the latest version is supported.
+We will respond within 48 hours and work with you to understand and address the issue. There are no tagged releases yet; until the first one, only the current state of the default branch is supported.
 
 ## Facts worth knowing
 
-- **The library never holds an API key.** The AI provider is injected by the host (`tools/utils/ai.js`); key storage and transmission are the host's responsibility.
+- **The library never holds an API key.** The AI provider is injected by the host (`tools/utils/ai.js`); key storage and transmission are the host's responsibility. The hosted service is itself such a host: `server/` reads `GEMINI_API_KEY` from its environment and holds it for the life of the deployment, so a deployer owns that key's handling.
 - **Profile ids are credentials.** The onboarding service's routes are unauthenticated by design; the profile id itself is the capability, so treat an id like a private share link. Details in [onboarding/README.md](onboarding/README.md).
 - **The hosted service uses bearer tokens.** See [server/README.md](server/README.md) before deploying.
 - **Cross-app sharing is gated by explicit, revocable grants** (`toolkit/sync/grants.js`); free text and confidence scores are never exported through them.
