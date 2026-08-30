@@ -50,6 +50,7 @@ import hashlib
 import io
 import json
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 from html import escape as html_escape
 
@@ -2361,6 +2362,22 @@ def session_disconnect(p, browser):
         pass
 
 
+@contextmanager
+def connected_page():
+    """Yield the session's focused page, detaching cleanly whatever happens.
+
+    Every session command needs the same three lines to open a connection and
+    the same two to close it. Written out at each call site, the close was one
+    early return away from being skipped, which leaks a websocket into the
+    user's browser for the rest of its life. Here it cannot be skipped.
+    """
+    p, browser, page = session_connect()
+    try:
+        yield page
+    finally:
+        session_disconnect(p, browser)
+
+
 def session_stop():
     """Kill the persistent browser, and only that browser."""
     import os as _os, signal as _signal
@@ -2390,11 +2407,10 @@ def session_status():
         print("No session running.", flush=True); return
     info = _read_session(verify=False)
     try:
-        p, browser, page = session_connect()
-        print(f"Session pid={info['pid']} started={info['started']}", flush=True)
-        print(f"URL: {page.url}", flush=True)
-        print(f"Title: {page.title()[:80]}", flush=True)
-        session_disconnect(p, browser)
+        with connected_page() as page:
+            print(f"Session pid={info['pid']} started={info['started']}", flush=True)
+            print(f"URL: {page.url}", flush=True)
+            print(f"Title: {page.title()[:80]}", flush=True)
     except ForeignBrowser:
         raise
     except Exception as ex:
@@ -2523,8 +2539,7 @@ def session_go(url):
     If a profile is active, tools are auto-injected and profile auto-applied
     after navigation — works like the extension.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         page.goto(url, wait_until='domcontentloaded', timeout=30000)
         time.sleep(1)
 
@@ -2542,38 +2557,36 @@ def session_go(url):
         else:
             print(f"Navigated to {page.url}", flush=True)
             print(f"Title: {page.title()[:80]}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_back():
     """Browser back."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         page.go_back(wait_until='domcontentloaded', timeout=15000)
         time.sleep(1)
         print(f"Back → {page.url}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_scroll(direction='down', amount=800):
     """Scroll the persistent page."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         dy = amount if direction in ('down', 'd') else -amount
         page.evaluate("(dy) => window.scrollBy(0, dy)", int(dy))
         time.sleep(0.5)
         pos = page.evaluate("window.scrollY")
         print(f"Scrolled {direction} → y={pos}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_describe(json_output=False):
     """Fast-path describe of current page for BLV user. One Claude call, no loop."""
+    # connected_page() is entered by hand here rather than with `with`, so this
+    # except guards only the connect attempt, same as before. A plain `with`
+    # would put the whole body inside the try, and a failure unrelated to the
+    # connection (a bad screenshot, a Claude call) would be misreported as
+    # "No browser session".
+    page_cm = connected_page()
     try:
-        p, browser, page = session_connect()
+        page = page_cm.__enter__()
     except Exception as e:
         if json_output:
             print(json.dumps({"error": f"No browser session: {e}"}))
@@ -2624,7 +2637,7 @@ Skip decorative elements. If it's a modal/captcha/blocker, say so first."""
         else:
             print(result, flush=True)
     finally:
-        session_disconnect(p, browser)
+        page_cm.__exit__(None, None, None)
 
 
 def _focused_info(page):
@@ -2661,27 +2674,21 @@ def _announce(info):
 
 def session_tab(direction='forward'):
     """Press Tab (or Shift+Tab), report newly focused element. Zero Claude calls."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         page.keyboard.press('Shift+Tab' if direction == 'back' else 'Tab')
         time.sleep(0.15)
         print(_announce(_focused_info(page)), flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_activate():
     """Press Enter on focused element (activate link/button, submit form). Zero Claude calls."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         page.keyboard.press('Enter')
         time.sleep(0.3)
         print(f"Activated. URL: {page.url}", flush=True)
         focused = _focused_info(page)
         if not focused.get('none'):
             print(f"Now focused: {_announce(focused)}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_key(keys: str, count: int = 1):
@@ -2698,8 +2705,7 @@ def session_key(keys: str, count: int = 1):
       session_key("Space")           # toggle/activate
       session_key("Escape")          # close dialog
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         # Normalize common aliases
         key_map = {
             'right': 'ArrowRight', 'left': 'ArrowLeft', 'up': 'ArrowUp', 'down': 'ArrowDown',
@@ -2723,8 +2729,6 @@ def session_key(keys: str, count: int = 1):
 
         if not focused.get('none'):
             print(f"Focused: {_announce(focused)}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_arrow(direction: str, count: int = 1):
@@ -2744,8 +2748,7 @@ def session_list(kind='focusables'):
     """Print a list of elements by kind (focusables, headings, links, buttons, forms).
     Pure DOM extraction, zero Claude calls, instant. Mirrors screen-reader rotor/elements-list.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         kind = kind.lower()
         if kind in ('heading', 'headings', 'h'):
             rows = page.evaluate("""
@@ -2838,8 +2841,6 @@ def session_list(kind='focusables'):
                 role = r['role'] or r['tag']
                 print(f"  [{role}] {r['name']}")
             print(f"({len(rows)} focusable)" if rows else "(no focusables)", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_find(text):
@@ -2847,8 +2848,7 @@ def session_find(text):
     Broader than Ctrl+F: also surfaces unlabeled-in-body items like images with matching alt text.
     Zero Claude calls.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         hits = page.evaluate("""
             (needle) => {
                 const nl = needle.toLowerCase();
@@ -2901,8 +2901,6 @@ def session_find(text):
             print(f"\nElement attribute matches ({len(attr_hits)}):", flush=True)
             for h in attr_hits[:20]:
                 print(f"  <{h['tag']} {h['attr']}=\"{h['value']}\"> @y={h['y']}")
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_read(selector=None):
@@ -2911,8 +2909,7 @@ def session_read(selector=None):
     Good for 'read me this article' — skips nav, ads, footers, sidebars. Falls back to
     full body text if no article-like container found.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         text = page.evaluate(f"""
             (sel) => {{
                 // 1. Honor explicit selector if given
@@ -2964,14 +2961,11 @@ def session_read(selector=None):
         else:
             print(text, flush=True)
         print(f"\n({len(text)} chars)", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_list_tables(max_tables=5):
     """Extract tabular data from the page (instant, zero Claude)."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         tables = page.evaluate(f"""
             () => {{
                 const out = [];
@@ -2999,8 +2993,6 @@ def session_list_tables(max_tables=5):
             for row in t['rows']:
                 print("  " + " | ".join(c[:40] for c in row))
         print(f"\n({len(tables)} tables)", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 # Path to bundled axe-core
@@ -3042,8 +3034,13 @@ def session_audit(severity_filter=None, json_output=False):
             print(f"Invalid severity '{severity_filter}'. Use: {', '.join(sorted(valid_severities))}")
         sys.exit(1)
 
+    # connected_page() is entered by hand here rather than with `with`, so this
+    # except guards only the connect attempt, same as before. A plain `with`
+    # would put the whole body inside the try, and an audit failure unrelated
+    # to the connection would be misreported as "No browser session".
+    page_cm = connected_page()
     try:
-        p, browser, page = session_connect()
+        page = page_cm.__enter__()
     except Exception as e:
         if json_output:
             print(json.dumps({"error": f"No browser session: {e}"}))
@@ -3129,7 +3126,7 @@ def session_audit(severity_filter=None, json_output=False):
             print(f"Total: {total} violations | {results['passes']} passed | {results['incomplete']} need review")
 
     finally:
-        session_disconnect(p, browser)
+        page_cm.__exit__(None, None, None)
 
 
 def session_ask(question):
@@ -3139,8 +3136,7 @@ def session_ask(question):
     screen ('what's the mass value?', 'is the block submerged?'), ai4a11y captures + answers.
     One Claude call, ~20s.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         import os as _os
         run_dir = OUT / f"session_ask_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -3169,8 +3165,6 @@ Full page text ({len(ctx['text'])} chars):
 Accessibility outline:
 {chr(10).join(outline[:15])}"""
         print(ask_claude(str(shot), prompt), flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_nudge(target, direction='right', count=5):
@@ -3194,8 +3188,7 @@ def session_nudge(target, direction='right', count=5):
     user selects a Custom/unlocked material. ai4a11y reports this honestly via
     the before/after diff.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         before_hash = get_screenshot_hash(page)
         import os as _os
         run_dir = OUT / f"session_nudge_{_os.getpid()}_{int(time.time())}"
@@ -3252,8 +3245,6 @@ Respond with JSON ONLY:
         else:
             print(f"Nudged {count}× — NO visual change (slider may be locked; "
                   f"check material/mode state)", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_pickdate(field_desc, date_str):
@@ -3272,8 +3263,7 @@ def session_pickdate(field_desc, date_str):
     date_str formats accepted: YYYY-MM-DD, "June 15 2026", "Jun 15", etc.
       — Claude normalizes downstream; we just pass it in the prompt.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         # Step 1: open the picker by clicking the field
         before = state_snapshot(page)
         candidates = get_interactables_full(page)
@@ -3374,8 +3364,6 @@ DAY CELLS are small squares in the calendar grid. Do NOT click the month header 
                 print(f"pickdate aborted: {act.get('error', act)}", flush=True); return
 
         print("pickdate: too many month-navigation steps (>14); giving up", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_type(where, text):
@@ -3388,8 +3376,7 @@ def session_type(where, text):
 
     Example: session_type("search field", "accessibility")
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         before = state_snapshot(page)
         candidates = get_interactables_full(page)
 
@@ -3514,8 +3501,6 @@ Return JSON: {{"el": N}} or {{"xf": 0.5, "yf": 0.3}} or {{"error": "reason"}}"""
         page.keyboard.type(text)
         time.sleep(0.5)
         print(f"Vision-grounded: clicked ({x},{y}) and typed: {text[:60]}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def _tap_click_and_diff(page, x, y, before):
@@ -3547,8 +3532,7 @@ def session_tap(description):
       3. If picked: scroll element into view, click at captured center coords, diff state.
       4. If text miss: fall back to vision SoM flow on the current viewport.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         before = state_snapshot(page)
         candidates = get_interactables_full(page)
 
@@ -3753,8 +3737,6 @@ Return JSON only:
         print(f"Done. URL: {page.url}", flush=True)
         title = page.title()
         if title: print(f"Title: {title[:80]}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def _text_ground_one(candidates, description, verb="click", timeout=60, model=_IRIS_VISION_MODEL):
@@ -3930,8 +3912,7 @@ def session_hover(description):
     we read it directly — no vision call, <2s total.
     Slow path: if the tooltip is canvas-rendered (D3 chart), fall back to vision.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         before_hash = get_screenshot_hash(page)
         candidates = get_interactables_full(page)
         t = _text_ground_one(candidates, description, verb="hover")
@@ -3988,8 +3969,6 @@ def session_hover(description):
         prompt = f"""A blind user hovered on "{t['label']}" to see if a tooltip/popover appeared. Describe WHAT APPEARED or highlighted — be concise (1-3 sentences). Focus only on new content that wasn't there before hovering. If a chart tooltip shows a value, state the exact value and label."""
         desc = ask_claude(str(shot), prompt)
         print(desc.strip(), flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_drag(from_desc, to_desc):
@@ -4004,8 +3983,7 @@ def session_drag(from_desc, to_desc):
     does NOT synthesize — the drag will visibly happen but `dragstart`/`dragover`/`drop`
     won't fire. For those, fall back to `session do`.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         before = state_snapshot(page)
         candidates = get_interactables_full(page)
         if not candidates:
@@ -4129,8 +4107,6 @@ Include reason_from/reason_to so your own work is auditable — this improves ac
             print("State diff: visual change (page content updated — no url/title/focus change)", flush=True)
         else:
             print("State diff: NONE — drag may not have taken effect (wrong target or page ignored it)", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_diff():
@@ -4143,8 +4119,7 @@ def session_diff():
     Fast path: if only URL/title/scroll/focus changed (cheap structured diff), report
     that and skip vision. Slow path: screenshot-diff + vision call for page content change.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         import os as _os
         current = state_snapshot(page)
         try:
@@ -4221,8 +4196,6 @@ def session_diff():
         else:
             print("(keeping previous baseline — vision call failed, retry `session diff` later)",
                   flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_focused():
@@ -4231,8 +4204,7 @@ def session_focused():
     Use when the user has been tabbing and wants to double-check where they are before
     hitting Enter, OR when ai4a11y's own click may have moved focus and they want to confirm.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         info = page.evaluate("""
             () => {
                 const el = document.activeElement;
@@ -4268,8 +4240,6 @@ def session_focused():
         extra = info.get('extra', '')
         print(f"Focused: [{info.get('role', '?')}] {label}{extra}", flush=True)
         print(f"On: {(info.get('title') or '')[:60]} — {(info.get('url') or '')[:60]}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_dismiss():
@@ -4278,8 +4248,7 @@ def session_dismiss():
     Huge pain point for BLV users — these often block screen readers.
     Uses common selector patterns to find and close intrusive overlays.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         dismissed = page.evaluate("""
             () => {
                 const selectors = [
@@ -4333,8 +4302,6 @@ def session_dismiss():
             print(f"Dismissed {dismissed} popup(s)/banner(s)", flush=True)
         else:
             print("No popups or cookie banners found to dismiss", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_summary():
@@ -4342,8 +4309,7 @@ def session_summary():
 
     For rapid orientation — "what kind of page is this and what's the main thing?"
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         # Get minimal context
         title = page.title()
         url = page.url
@@ -4366,8 +4332,6 @@ Text preview:
 Be concise — exactly 2 sentences, no more."""
 
         print(ask_claude_text(prompt), flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_heading(direction='next', level=None):
@@ -4380,8 +4344,7 @@ def session_heading(direction='next', level=None):
     if level is not None and (level < 1 or level > 6):
         print(f"Invalid heading level {level}. Must be 1-6.", flush=True)
         return
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         result = page.evaluate(f"""
             (direction, level) => {{
                 const selector = level ? `h${{level}}` : 'h1, h2, h3, h4, h5, h6';
@@ -4431,8 +4394,6 @@ def session_heading(direction='next', level=None):
             print(f"(heading {result['index']}/{result['total']})", flush=True)
         else:
             print(result.get('msg', 'No headings found'), flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_skip():
@@ -4440,8 +4401,7 @@ def session_skip():
 
     Looks for <main>, [role="main"], <article>, or #content.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         result = page.evaluate("""
             () => {
                 const selectors = [
@@ -4484,8 +4444,6 @@ def session_skip():
                 print(f"Skipped to main content: [{result['role']}]", flush=True)
         else:
             print("No main content landmark found", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_media(action, value=None):
@@ -4495,8 +4453,7 @@ def session_media(action, value=None):
         action: play, pause, toggle, seek, rate, volume, mute, status
         value: For seek (seconds), rate (0.5-2.0), volume (0-1)
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         result = page.evaluate(f"""
             (action, value) => {{
                 const media = document.querySelector('video, audio');
@@ -4555,8 +4512,6 @@ def session_media(action, value=None):
             state = "paused" if result.get('paused') else "playing"
             print(f"{result.get('msg', 'OK')}", flush=True)
             print(f"[{result.get('type', 'media')}] {cur_str} / {dur_str} ({state}, {result.get('playbackRate', 1)}x)", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_screenshot(filename=None):
@@ -4565,8 +4520,7 @@ def session_screenshot(filename=None):
     Args:
         filename: Optional output filename (defaults to timestamped file in Downloads)
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if filename:
             path = Path(filename).expanduser()
         else:
@@ -4577,8 +4531,6 @@ def session_screenshot(filename=None):
         print(f"Screenshot saved: {path}", flush=True)
         print(f"Page: {page.title()[:50]}", flush=True)
         print(f"URL: {page.url[:70]}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_report(output=None):
@@ -4586,8 +4538,7 @@ def session_report(output=None):
 
     Includes all violations, passes, and incomplete checks with full details.
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         # Inject axe-core
         page.add_script_tag(content=_get_axe_script())
         page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
@@ -4688,18 +4639,13 @@ def session_report(output=None):
         path.write_text(html)
         print(f"Report saved: {path}", flush=True)
         print(f"Violations: {len(results['violations'])} | Passed: {len(results['passes'])} | Review: {len(results['incomplete'])}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_do(task, min_interactions=0, max_steps=8):
     """Run the full reactive agent on the current page state (no re-navigation)."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         run_agent(url=page.url, task=task, max_steps=max_steps,
                   min_interactions=min_interactions, existing_page=page)
-    finally:
-        session_disconnect(p, browser)
 
 
 # ============================================================
@@ -4723,8 +4669,7 @@ def session_enable(tool_name, options=None):
       session enable visualAssist '{"fontScale": 150, "largeCursor": true}'
       session enable colorBlindMode deuteranopia
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
             return
@@ -4779,8 +4724,6 @@ def session_enable(tool_name, options=None):
             print(f"Enabled: {result.get('tool', tool_name)}", flush=True)
         else:
             print(f"Error: {result.get('error', 'Unknown error')}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_disable(tool_name):
@@ -4790,8 +4733,7 @@ def session_disable(tool_name):
       session disable darkMode
       session disable visualAssist
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
             return
@@ -4805,8 +4747,6 @@ def session_disable(tool_name):
             print(f"Disabled: {result.get('tool', tool_name)}", flush=True)
         else:
             print(f"Error: {result.get('error', 'Unknown error')}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_tools(json_output=False):
@@ -4816,8 +4756,7 @@ def session_tools(json_output=False):
       session tools
       session tools --json
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
             return
@@ -4836,8 +4775,6 @@ def session_tools(json_output=False):
             print(f"  [{status}] {tool['name']}{desc}", flush=True)
         print("─" * 60, flush=True)
         print("\nUse: session enable <tool> | session disable <tool>", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_profile(profile_name, json_output=False):
@@ -4862,8 +4799,7 @@ def session_profile(profile_name, json_output=False):
         print("Profile cleared. Tools will not auto-apply on navigation.", flush=True)
         return
 
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         _expose_ai_callbacks(page)
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
@@ -4891,8 +4827,6 @@ def session_profile(profile_name, json_output=False):
                     print(f"  ✓ {tool}", flush=True)
         else:
             print(f"Error: {result.get('error', 'Unknown error')}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_profiles(json_output=False):
@@ -4902,8 +4836,7 @@ def session_profiles(json_output=False):
       session profiles
       session profiles --json
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
             return
@@ -4922,8 +4855,6 @@ def session_profiles(json_output=False):
                 print(f"    {profile['description']}", flush=True)
         print("─" * 60, flush=True)
         print("\nUse: session profile <name>", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 # ============================================================
@@ -4932,8 +4863,7 @@ def session_profiles(json_output=False):
 
 def session_find_missing_alt(json_output=False):
     """Find images without alt text."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -4948,14 +4878,11 @@ def session_find_missing_alt(json_output=False):
             print(f"  • {img['selector']}: (empty alt)", flush=True)
         for c in result.get('canvases', []):
             print(f"  • {c['selector']}: <canvas>", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_find_missing_labels(json_output=False):
     """Find unlabeled interactive elements."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -4970,14 +4897,11 @@ def session_find_missing_labels(json_output=False):
             print(f"  • button: {el['selector']}", flush=True)
         for el in result.get('inputs', []):
             print(f"  • input[{el.get('type', '?')}]: {el['selector']}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_find_poor_contrast(json_output=False):
     """Find text with poor color contrast."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -4992,14 +4916,11 @@ def session_find_poor_contrast(json_output=False):
             print(f"    color: {el.get('color')} on {el.get('background')}", flush=True)
         if len(result) > 10:
             print(f"  ... and {len(result) - 10} more", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_find_missing_captions(json_output=False):
     """Find media without captions."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -5012,14 +4933,11 @@ def session_find_missing_captions(json_output=False):
             print(f"  • video: {v.get('src', '')[:50]}", flush=True)
         for a in result.get('audio', []):
             print(f"  • audio: {a.get('src', '')[:50]}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 def session_find_all(json_output=False):
     """Run all auditors and summarize issues."""
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -5052,8 +4970,6 @@ def session_find_all(json_output=False):
         print(f"  Poor contrast:       {s['poorContrast']}", flush=True)
         print(f"  Missing captions:    {s['missingCaptions']}", flush=True)
         print(f"{'─' * 40}", flush=True)
-    finally:
-        session_disconnect(p, browser)
 
 
 # ============================================================
@@ -5070,8 +4986,7 @@ def session_fix_alt(max_images=10, json_output=False):
       session fix-alt           # Fix up to 10 images
       session fix-alt 5         # Fix up to 5 images
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -5158,9 +5073,6 @@ Return ONLY the alt text, no quotes or preamble."""
                 print(f"  {unreachable} skipped, needs AI", flush=True)
         return _ai_exit_status(len(fixes), unreachable)
 
-    finally:
-        session_disconnect(p, browser)
-
 
 def session_simplify(selector=None, json_output=False):
     """Use Claude to simplify text content for cognitive accessibility.
@@ -5170,8 +5082,7 @@ def session_simplify(selector=None, json_output=False):
       session simplify "article"          # Simplify specific element
       session simplify ".content"         # Simplify by CSS selector
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -5235,9 +5146,6 @@ Return ONLY the simplified text, maintaining paragraph structure."""
         # Optionally apply to page (create overlay or replace)
         # For now just return - user can copy/paste or we add --apply flag later
 
-    finally:
-        session_disconnect(p, browser)
-
 
 def session_fix_labels(max_elements=10, json_output=False):
     """Use Claude to generate labels for unlabeled interactive elements.
@@ -5246,8 +5154,7 @@ def session_fix_labels(max_elements=10, json_output=False):
       session fix-labels          # Fix up to 10 elements
       session fix-labels 5        # Fix up to 5 elements
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -5350,9 +5257,6 @@ Return ONLY the label text, nothing else."""
                 print(f"  {unreachable} skipped, needs AI", flush=True)
         return _ai_exit_status(len(fixes), unreachable)
 
-    finally:
-        session_disconnect(p, browser)
-
 
 def session_fix_all(json_output=False):
     """Run all AI fixes: alt text, labels.
@@ -5387,8 +5291,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
       session scan              # Full scan with AI fixes
       session scan --no-ai      # Only non-AI fixes
     """
-    p, browser, page = session_connect()
-    try:
+    with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
@@ -5733,9 +5636,6 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             }, indent=2))
 
         return _ai_exit_status(ai_applied, ai_unreachable)
-
-    finally:
-        session_disconnect(p, browser)
 
 
 # ============================================================
