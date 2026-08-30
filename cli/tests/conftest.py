@@ -61,6 +61,33 @@ def cli(cli_env: dict) -> CliRunner:
     return _run
 
 
+@pytest.fixture(autouse=True)
+def _restore_active_profile(cli_env: dict):
+    """Put the active profile back the way the test found it.
+
+    The active profile lives in one state file shared by every test in the run,
+    and it changes what later commands do. `session go` hands the page the
+    callbacks that AI-backed adapters call, so a profile such as `cognitive`
+    has a navigation send page text out for an answer. A test that sets a
+    profile and does not clear it therefore reaches into every test after it,
+    and through the `cli` runner, which keeps the whole environment and so has
+    a real Claude binary on its PATH, those calls reach a real model.
+
+    Restoring here rather than in the test that sets one means a test added
+    later cannot bring the problem back by forgetting to clean up.
+    """
+    state = Path(cli_env["AI4A11Y_OUT"]) / ".ai4a11y_session_state.json"
+    before = state.read_text() if state.exists() else None
+    yield
+    after = state.read_text() if state.exists() else None
+    if after == before:
+        return
+    if before is None:
+        state.unlink(missing_ok=True)
+    else:
+        state.write_text(before)
+
+
 @pytest.fixture(scope="session")
 def run_without_claude(cli_env: dict) -> CliRunner:
     """Run a CLI command with the Claude Code CLI unreachable.
