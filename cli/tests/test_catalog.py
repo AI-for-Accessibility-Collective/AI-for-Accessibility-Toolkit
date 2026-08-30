@@ -2,7 +2,9 @@
 
 import json
 
-from conftest import REPO_ROOT, CliRunner
+import pytest
+
+from conftest import FIXTURE_URL, REPO_ROOT, CliRunner
 
 
 def _catalog_files(subdir: str) -> set:
@@ -43,3 +45,22 @@ def test_json_flag_is_accepted_before_the_subcommand(cli: CliRunner) -> None:
     result = cli("--json", "list", "tools")
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["auditors"]
+
+
+@pytest.mark.browser
+def test_find_all_agrees_with_each_auditor_run_alone(chromium_session, cli):
+    """find-all must report the same counts the individual auditors report.
+
+    They used to be separate code paths over the same page, so they could
+    disagree without anything failing.
+    """
+    cli("session", "go", FIXTURE_URL)
+    combined = json.loads(cli("session", "find-all", "--json").stdout)
+
+    for key, command in [
+        ("missingAlt", "find-missing-alt"),
+        ("missingLabels", "find-missing-labels"),
+        ("missingCaptions", "find-missing-captions"),
+    ]:
+        alone = json.loads(cli("session", command, "--json").stdout)
+        assert combined["summary"][key] == alone.get("total", 0), key
