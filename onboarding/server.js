@@ -93,10 +93,6 @@ async function remoteLibrarian(token, method, args) {
 // that will not load renders as empty rather than breaking the page); only
 // writes throw, and the first failure stops the rest so we do not pile more
 // half-written state on top of it.
-// FLAG(review): this reports a failed write, it does not undo the writes that
-// already landed. Whether a partial onboarding should roll back, retry, or show
-// the person a partial state is a design question about the remote error
-// contract, and it has no owner yet.
 async function remoteWrite(token, method, args) {
   const r = await remoteLibrarian(token, method, args);
   if (r.status !== 200) {
@@ -104,6 +100,31 @@ async function remoteWrite(token, method, args) {
     throw new Error(`profile write failed (${method}: HTTP ${r.status}, ${detail})`);
   }
   return r;
+}
+
+// The whole profile an onboarding form produces, as ONE write.
+//
+// Every one of these paths lives in the single `mine.profile` record, so
+// writing them one at a time is four round trips against the same document
+// and any failure between two of them leaves a profile that contradicts
+// itself: needs derived from support areas that were never stored, or a
+// vision kind the needs no longer match. Someone reading that profile is
+// reading a description of a person who does not exist. Written together,
+// the record either takes the new answers or keeps the old ones.
+//
+// Every field is written even when empty, because a re-onboard has to CLEAR
+// what the person deselected. A profile corrected from low vision to blind
+// must drop the old magnification needs; someone who unchecks every area must
+// not keep stale supportAreas or a visionKind that then disagrees with the
+// cleared needs. freeText follows the same rule and matters most, because it
+// is where someone describes their own disability in their own words.
+function profileFields(areas, needs, kind, text) {
+  return {
+    supportAreas: areas,
+    'fields.needs': needs,
+    'fields.visionKind': kind ?? null,
+    freeText: text,
+  };
 }
 
 // ── Onboarding: capture supportAreas + free-text need into a profile ────────
@@ -224,17 +245,16 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
     const token = t.body.token;
-    // Always write every derived field (even empty) so a re-onboard clears what
-    // the person deselected: a profile corrected from low-vision to blind must
-    // drop the old magnification needs, and someone who unchecks every area
-    // must not keep stale supportAreas or visionKind that then disagree with
-    // the cleared needs. freeText follows the same rule, and it matters most,
-    // because it is the field where someone describes their own disability in
-    // their own words.
-    await remoteWrite(token, 'setProfileField', ['supportAreas', areas]);
-    await remoteWrite(token, 'setProfileField', ['fields.needs', needs]);
-    await remoteWrite(token, 'setProfileField', ['fields.visionKind', kind ?? null]);
-    await remoteWrite(token, 'setProfileField', ['freeText', text]);
+    // Two records, and nothing spans them: the profile is one document, the
+    // self-description note lives in a memory shard. So the ORDER decides what
+    // a failure between them leaves behind. The note goes first and the
+    // profile last, because the profile is the copy a person is shown (the
+    // "current profile" banner reads profile.freeText). Writing it last means
+    // the visible state never claims a change the other record has not already
+    // made: we never tell someone their description is gone while a copy of it
+    // is still stored. A failure throws, and re-running onboarding with the
+    // same uid converges, because every write here is unconditional and the
+    // note upserts by topic rather than appending.
     if (text) {
       // Stable topic so a re-onboard UPSERTS this note (addNote upserts by
       // topic) instead of appending a duplicate every run.
@@ -249,25 +269,19 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
         await remoteWrite(token, 'deleteNote', [note.id]);
       }
     }
+    await remoteWrite(token, 'setProfileFields', [profileFields(areas, needs, kind, text)]);
   } else {
     const { host } = await localBits();
     const { librarian } = await host.getInstance(uid);
-    // Same rule as the remote branch: every derived field written
-    // unconditionally so a re-onboard clears what was deselected and the
-    // profile stays consistent.
-    await librarian.setProfileField('supportAreas', areas);
-    await librarian.setProfileField('fields.needs', needs);
-    await librarian.setProfileField('fields.visionKind', kind ?? null);
-    await librarian.setProfileField('freeText', text);
+    // Same order and the same single write as the remote branch.
     if (text) {
-      // Stable topic → re-onboard upserts (not appends) this note.
       await librarian.addNote(text, { source: 'user-explicit', topic: 'self-description' });
     } else {
-      // Same rule as the remote branch: clearing the box clears the note.
       for (const note of await librarian.listNotes({ topic: 'self-description' })) {
         await librarian.deleteNote(note.id);
       }
     }
+    await librarian.setProfileFields(profileFields(areas, needs, kind, text));
   }
   return { uid, supportAreas: areas, freeText: text, visionKind: kind, needs };
 }
