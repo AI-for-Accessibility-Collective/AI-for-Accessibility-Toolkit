@@ -1621,14 +1621,18 @@ class FixPass(NamedTuple):
     timeout: int = 30      # seconds allowed for a text call
 
 
-def _auditor_items(name, *keys):
+def _auditor_items(auditor, *keys):
     """An `items` callable for a pass whose list comes from one of the auditors.
+
+    `auditor` is the same short key `run_auditor` and the `session_find_*`
+    commands use (`'alt'`, `'labels'`, ...), not the JS function name, so
+    there is one place that spells the JS name for a given auditor.
 
     The lists named by `keys` are concatenated in the order given, which is the
     order the commands have always reported them in.
     """
     def items(page):
-        result = page.evaluate(f"() => window.ai4a11y.auditors.{name}()")
+        result = run_auditor(page, auditor)
         found = []
         for key in keys:
             found.extend(result.get(key, []))
@@ -5023,97 +5027,84 @@ def session_profiles(json_output=False):
 # Auditor functions — find accessibility issues
 # ============================================================
 
-# Each auditor is the same command: inject, evaluate one JavaScript auditor,
-# print a header and a bullet per finding. Only the auditor name, the header
-# and the shape of a bullet differ, so those are data.
-AUDITORS = {
-    'alt': {
-        'js': 'findMissingAlt',
-        'header': 'Images missing alt text',
-        'total': lambda r: r.get('total', 0),
-        'bullets': lambda r: (
-            [f"{i['selector']}: {i.get('src', '')[:50]}" for i in r.get('noAlt', [])]
-            + [f"{i['selector']}: (empty alt)" for i in r.get('emptyAlt', [])]
-            + [f"{c['selector']}: <canvas>" for c in r.get('canvases', [])]
-        ),
-    },
-    'labels': {
-        'js': 'findMissingLabels',
-        'header': 'Unlabeled elements',
-        'total': lambda r: r.get('total', 0),
-        'bullets': lambda r: (
-            [f"link: {e['selector']}" for e in r.get('links', [])]
-            + [f"button: {e['selector']}" for e in r.get('buttons', [])]
-            + [f"input[{e.get('type', '?')}]: {e['selector']}" for e in r.get('inputs', [])]
-        ),
-    },
-    'contrast': {
-        'js': 'findPoorContrast',
-        'header': 'Low contrast text',
-        'total': len,
-        'bullets': lambda r: [
-            f"{e['selector']}: \"{e.get('text', '')[:30]}\"\n"
-            f"    color: {e.get('color')} on {e.get('background')}"
-            for e in r[:10]
-        ],
-        'more': lambda r: max(0, len(r) - 10),
-    },
-    'captions': {
-        'js': 'findMissingCaptions',
-        'header': 'Media without captions',
-        'total': lambda r: r.get('total', 0),
-        'bullets': lambda r: (
-            [f"video: {v.get('src', '')[:50]}" for v in r.get('videos', [])]
-            + [f"audio: {a.get('src', '')[:50]}" for a in r.get('audio', [])]
-        ),
-    },
+# The one thing genuinely shared between the four auditors: the JS function
+# name behind each short key. Everything else (header text, bullet shape, the
+# contrast cap) has exactly one producer and one consumer, so it stays in the
+# command that owns it rather than becoming data with an audience of one.
+AUDITOR_JS = {
+    'alt': 'findMissingAlt',
+    'labels': 'findMissingLabels',
+    'contrast': 'findPoorContrast',
+    'captions': 'findMissingCaptions',
 }
 
 
 def run_auditor(page, name):
     """Evaluate one auditor and return its raw result."""
-    return page.evaluate(f"() => window.ai4a11y.auditors.{AUDITORS[name]['js']}()")
+    return page.evaluate(f"() => window.ai4a11y.auditors.{AUDITOR_JS[name]}()")
 
 
-def _report_auditor(name, result, json_output):
-    spec = AUDITORS[name]
-    if json_output:
-        print(json.dumps(result, indent=2))
-        return
-    print(f"\n{spec['header']}: {spec['total'](result)}", flush=True)
-    for line in spec['bullets'](result):
-        print(f"  • {line}", flush=True)
-    more = spec.get('more', lambda _: 0)(result)
-    if more:
-        print(f"  ... and {more} more", flush=True)
-
-
-def _session_find(name, json_output=False):
+def _audit(name, json_output, render):
+    """Connect, inject, evaluate one auditor, then dump JSON or render text."""
     with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
-        _report_auditor(name, run_auditor(page, name), json_output)
+        result = run_auditor(page, name)
+        if json_output:
+            print(json.dumps(result, indent=2))
+            return
+        render(result)
 
 
 def session_find_missing_alt(json_output=False):
     """Find images without alt text."""
-    return _session_find('alt', json_output)
+    def render(result):
+        print(f"\nImages missing alt text: {result.get('total', 0)}", flush=True)
+        for img in result.get('noAlt', []):
+            print(f"  • {img['selector']}: {img.get('src', '')[:50]}", flush=True)
+        for img in result.get('emptyAlt', []):
+            print(f"  • {img['selector']}: (empty alt)", flush=True)
+        for c in result.get('canvases', []):
+            print(f"  • {c['selector']}: <canvas>", flush=True)
+    return _audit('alt', json_output, render)
 
 
 def session_find_missing_labels(json_output=False):
     """Find unlabeled interactive elements."""
-    return _session_find('labels', json_output)
+    def render(result):
+        print(f"\nUnlabeled elements: {result.get('total', 0)}", flush=True)
+        for el in result.get('links', []):
+            print(f"  • link: {el['selector']}", flush=True)
+        for el in result.get('buttons', []):
+            print(f"  • button: {el['selector']}", flush=True)
+        for el in result.get('inputs', []):
+            print(f"  • input[{el.get('type', '?')}]: {el['selector']}", flush=True)
+    return _audit('labels', json_output, render)
 
 
 def session_find_poor_contrast(json_output=False):
     """Find text with poor color contrast."""
-    return _session_find('contrast', json_output)
+    def render(result):
+        print(f"\nLow contrast text: {len(result)}", flush=True)
+        for el in result[:10]:
+            text = el.get('text', '')[:30]
+            print(f"  • {el['selector']}: \"{text}\"", flush=True)
+            print(f"    color: {el.get('color')} on {el.get('background')}", flush=True)
+        if len(result) > 10:
+            print(f"  ... and {len(result) - 10} more", flush=True)
+    return _audit('contrast', json_output, render)
 
 
 def session_find_missing_captions(json_output=False):
     """Find media without captions."""
-    return _session_find('captions', json_output)
+    def render(result):
+        print(f"\nMedia without captions: {result.get('total', 0)}", flush=True)
+        for v in result.get('videos', []):
+            print(f"  • video: {v.get('src', '')[:50]}", flush=True)
+        for a in result.get('audio', []):
+            print(f"  • audio: {a.get('src', '')[:50]}", flush=True)
+    return _audit('captions', json_output, render)
 
 
 def session_find_all(json_output=False):
@@ -5167,7 +5158,7 @@ def _alt_locate(page, item, i):
 
 
 ALT_PASS = FixPass(
-    items=_auditor_items("findMissingAlt", "noAlt", "emptyAlt"),
+    items=_auditor_items("alt", "noAlt", "emptyAlt"),
     locate=_alt_locate,
     shot=lambda item, i: OUT / f"img_{i}.png",
     prompt=lambda page, item: """Describe this image for a blind user. Write a concise alt text (1-2 sentences) that captures:
@@ -5342,7 +5333,7 @@ Return ONLY the label text, nothing else."""
 # counted, which left the control exactly as unusable as it started while the
 # run reported a fix. run_fix_pass is where that is refused now.
 LABEL_PASS = FixPass(
-    items=_auditor_items("findMissingLabels", "links", "buttons", "inputs"),
+    items=_auditor_items("labels", "links", "buttons", "inputs"),
     locate=lambda page, item, i: page.query_selector(item.get('selector', '')),
     prompt=_label_prompt,
     call="text",
