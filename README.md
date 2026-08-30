@@ -14,13 +14,36 @@ Most accessibility tooling audits a single surface and hands you a report. This 
 
 It is **not an app.** It's a library you build on. Any developer — web, mobile, XR, desktop, server — can wire in a small set of platform ports and get a personalization core, an agent that turns plain-language needs into reusable recipes, and a catalog of ready-made accessibility fixes to draw from.
 
+**Status: an active research project, pre-alpha.** This is a technology probe, not a product. The adapters are demonstrations; their effectiveness for the people they aim to serve has not been formally validated. The toolkit is also not a replacement for screen readers, magnifiers, or any other assistive technology a person relies on.
+
+## Who this is for
+
+- **Developers contributing skills and adapters** to the catalog: start at [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Developers building applications on the toolkit**: start at [Using the Toolkit](#using-the-toolkit) and [What a host implements](#what-a-host-implements).
+- **Builders of agentic AI** who mainly want the design principles: start at [docs/architecture.md](docs/architecture.md) and [Principles](#principles).
+- **People who want to try the browser extensions**: they live in the [extension repository](https://github.com/josifiin/AI-for-Accessibility-Extension), which has a no-code install guide.
+
+Per-audience documentation beyond this map is a later project activity.
+
+## Where things moved
+
+The repository used to hold the extensions, the CLI, and team projects alongside the core. They now live in the [extension repository](https://github.com/josifiin/AI-for-Accessibility-Extension), split out with **full history preserved** in both repositories.
+
+| Old path | Now |
+|---|---|
+| `extension/`, `personalized-extension/` | The extension repository. |
+| `webapp/` | The extension repository, as candidates to return to their originating teams. |
+| `projects/` | The extension repository; the canonical list stays at [docs/projects.md](docs/projects.md). |
+| `cli/` | Proposed to return here as a draft pull request; its history is preserved in both repositories meanwhile. |
+| `toolkit/adapters/` | Renamed in place to `toolkit/platforms/`, to keep "adapter" for the catalog's accessibility fixes. |
+
 ## Why
 
 - **Understand the person, not just the page.** Per-app settings become one device-independent model of ability (`text.size × 1.4`, `vision.descriptions`, `motion: reduced`), with per-dimension confidence and provenance.
 - **Onboard once, adapt everywhere.** The same model renders to web CSS settings, XR angular text sizing, or any surface you write — no re-interviewing the user per device.
 - **Suggest, never apply.** Everything an inference could be wrong about flows through a proposal/consent queue. Nothing silently changes a person's profile.
 - **Privacy by default.** Single-writer stores, no-memory zones for sensitive categories, and a permission broker that shares understanding with other apps only under explicit, revocable, audited grants.
-- **Bring your own everything.** Inject your own storage, clock, scheduler, consent UI, and LLM. The core touches no platform API directly.
+- **Bring your own everything.** Inject your own storage, clock, scheduler, and consent UI at construction; connect your own LLM afterward through `librarian.setGeminiCaller(fn)`. The core touches no platform API directly.
 
 ## Quick Start
 
@@ -84,6 +107,21 @@ Three ways to build on it, depending on your host:
 3. **Draw from the catalog.** Use the ready-made accessibility fixes, detectors, and profiles in [`tools/`](tools/) — and the tools/skills registry in [`toolkit/registry/`](toolkit/registry/) — as building blocks, whether or not you embed the personalization core.
 4. **Drop in the Controller.** Give people a text/voice way to drive your app: implement the `ControlPort` for your surface and mount the [`controller/`](controller/) widget (or connect it to a remote receiver). Optional and independent of the core.
 
+### What a host implements
+
+The toolkit does not try to be a complete story on its own. A host brings:
+
+- **Ports** ([`toolkit/ports/index.js`](toolkit/ports/index.js)): `KVStore` is the one required argument to `createToolkit`; `Clock`, `Scheduler`, and `Consent` default to built-ins and no-ops. Mind the `Consent` default: it is a no-op, so a host that does not wire a consent surface gets a toolkit whose proposals are never shown to anyone. The "suggest, never apply" guarantee depends on the host implementing it.
+- **An actuation port** ([`toolkit/ports/actuation.js`](toolkit/ports/actuation.js)) if the host applies changes to a live surface. Import it directly; it is not re-exported from the index.
+- **An LLM caller**, connected after construction via `librarian.setGeminiCaller(fn)`, if the host wants the generative features. Everything structural works without one.
+- **Onboarding**: a way to capture `supportAreas`, free text, and a note into a profile. [`onboarding/`](onboarding/) is a runnable reference.
+
+### When no AI provider is configured
+
+The catalog degrades deliberately rather than failing as a whole, in two lanes defined in [`tools/utils/ai.js`](tools/utils/ai.js): six core methods (image description, simplification, labeling, and similar) throw a clear error when no provider supplies them, and ten optional methods return `null` so the caller skips that enhancement. Adapters catch both, so a missing provider narrows results instead of crashing the page: heuristic-first adapters such as `fix-tables` still land their fix with a deterministic fallback, while purely generative ones such as `generate-alt` produce nothing. The check is per method, so a host can supply a partial provider and only the missing capabilities degrade.
+
+One honest limit of the current convention: an adapter does not report upward why it produced nothing, so a host cannot yet tell "no API key" from "the model declined" from "nothing on this page needed it". A structured way to say so is an open item on the [roadmap](ROADMAP.md).
+
 ## The Controller (optional)
 
 A ready-made, **platform-neutral text/voice control surface** that lets a person
@@ -120,7 +158,7 @@ reference for the "capture a profile" half of a host.
 
 A developer library of reusable accessibility building blocks, usable on their own:
 
-- **Adapters** ([`tools/adapters/`](tools/adapters/)) — 40+ fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more.
+- **Adapters** ([`tools/adapters/`](tools/adapters/)) — 50 fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more. 12 of the 50 can call an AI provider; the rest are pure DOM and CSS and run with no key and no cost.
 - **Auditors** ([`tools/auditors/`](tools/auditors/)) — detectors that find issues for adapters to fix (missing alt text, low contrast, unlabeled controls).
 - **Validators** ([`tools/validators/`](tools/validators/)) — the verifier engine for agentic flows: check that a page matches what the person asked an agent for and decide how hard to insist. Pairs with the `contract-mismatch` auditor and the `agent-watch` adapter. Machinery only — a host renders its own validation UI.
 - **Profiles** ([`tools/profiles/`](tools/profiles/)) — evidence-based ability presets (Blind, Low Vision, Dyslexia, Motor, …) mapping to settings.
@@ -139,11 +177,16 @@ server/      Hosted HTTP service exposing the core to any language/runtime
 onboarding/  Example web service: capture a profile + serve the Controller demo
 examples/    Runnable, dependency-free examples
 docs/        Architecture, API, and design docs
+scripts/     Repository checks (the packed-package fixture)
 ```
+
+The open work and the known gaps live in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
 Add an adapter or auditor to the catalog, a profile, a `SKILL.md` recipe, a surface renderer, or a platform port. See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/API.md](docs/API.md).
+
+A note for developers building with this toolkit: it does not remove your responsibility to build accessibly. Adapters repair barriers in pages after the fact; considering accessibility early is still the cheaper and better path. The [W3C WAI guidance on planning accessibility](https://www.w3.org/WAI/planning-and-managing/) is a good starting point.
 
 ## Principles
 
@@ -155,7 +198,7 @@ Add an adapter or auditor to the catalog, a profile, a `SKILL.md` recipe, a surf
 
 ## Security & License
 
-Report vulnerabilities via [SECURITY.md](SECURITY.md). Licensed under Apache 2.0 ([LICENSE](LICENSE)).
+Report vulnerabilities via [SECURITY.md](SECURITY.md), which also states this repository's security-relevant facts (host-injected AI providers, profile ids as credentials, the hosted service's tokens). The data-handling model in one line: single-writer stores, no-memory zones for sensitive categories, and cross-app sharing only under explicit, revocable grants. Licensed under Apache 2.0 ([LICENSE](LICENSE)).
 
 ---
 
