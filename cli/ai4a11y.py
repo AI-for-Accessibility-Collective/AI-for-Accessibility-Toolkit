@@ -5670,6 +5670,15 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
       session scan              # Full scan with AI fixes
       session scan --no-ai      # Only non-AI fixes
     """
+    # Every progress line below goes through `say`, which is `print` for a
+    # person and a no-op for a caller who asked for --json. The payload and the
+    # progress share one stdout, so `scan --json` used to emit dozens of human
+    # lines ahead of the payload and json.loads failed on the first of them.
+    # fix-alt and fix-labels were fixed the same way earlier; scan was missed.
+    # The two "Error:" lines are left on plain stdout, which is what those same
+    # commands do, because they report that the command could not run at all.
+    say = quiet(json_output)
+
     with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
@@ -5689,27 +5698,27 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         page.add_script_tag(content=axe_script)
         page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
 
-        print("\n" + "═" * 50, flush=True)
-        print("ACCESSIBILITY SCAN", flush=True)
-        print("═" * 50, flush=True)
+        say("\n" + "═" * 50, flush=True)
+        say("ACCESSIBILITY SCAN", flush=True)
+        say("═" * 50, flush=True)
 
         # Step 1: Run full non-AI scan via JavaScript
-        print("\n[1/4] Running axe-core analysis...", flush=True)
+        say("\n[1/4] Running axe-core analysis...", flush=True)
         result = page.evaluate("() => window.ai4a11y.runFullScan()")
 
         violations = result.get('violations', [])
         fixed_non_ai = result.get('fixed', {}).get('nonAi', 0)
         needs_ai = result.get('skipped', {}).get('needsAi', [])
 
-        print(f"      Found {len(violations)} violation types", flush=True)
+        say(f"      Found {len(violations)} violation types", flush=True)
         for v in violations[:10]:
-            print(f"        • {v['id']}: {v['count']} elements", flush=True)
+            say(f"        • {v['id']}: {v['count']} elements", flush=True)
         if len(violations) > 10:
-            print(f"        ... and {len(violations) - 10} more", flush=True)
+            say(f"        ... and {len(violations) - 10} more", flush=True)
 
         # Step 2: Report non-AI fixes
-        print(f"\n[2/4] Applied {fixed_non_ai} non-AI fixes", flush=True)
-        print("      (duplicate IDs, tabindex, ARIA, lang, target=_blank, etc.)", flush=True)
+        say(f"\n[2/4] Applied {fixed_non_ai} non-AI fixes", flush=True)
+        say("      (duplicate IDs, tabindex, ARIA, lang, target=_blank, etc.)", flush=True)
 
         # Step 3: AI fixes
         ai_fixed = 0
@@ -5728,18 +5737,18 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             three were then counted as fixes. run_fix_pass refuses all of that
             in one place now.
 
-            json_output is not passed on, because scan prints its progress
-            whatever the caller asked for. That makes `scan --json` unparseable,
-            which is a defect of its own and not one this pass changes.
+            json_output goes on to the pass, so a sub-pass silences its own
+            progress under --json the way the rest of scan does.
             """
             nonlocal ai_unreachable
             fixes, _attempted, unreachable = run_fix_pass(
-                page, spec, items=items, max_items=max_items)
+                page, spec, items=items, max_items=max_items,
+                json_output=json_output)
             ai_unreachable += unreachable
             return len(fixes)
 
         if fix_ai and needs_ai:
-            print(f"\n[3/4] Processing {len(needs_ai)} AI-required fixes...", flush=True)
+            say(f"\n[3/4] Processing {len(needs_ai)} AI-required fixes...", flush=True)
 
             # Group by rule type
             image_fixes = [n for n in needs_ai if 'image' in n['ruleId'] or 'img' in n['ruleId'] or n['ruleId'] == 'image-alt']
@@ -5774,7 +5783,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             if contrast_fixes and ai_fixed + contrast_fixed < max_ai_fixes:
                 remaining = max_ai_fixes - ai_fixed - contrast_fixed
                 count = min(len(contrast_fixes), remaining, 5)  # Limit contrast fixes
-                print(f"      Fixing {count} contrast issues...", flush=True)
+                say(f"      Fixing {count} contrast issues...", flush=True)
                 for fix in contrast_fixes[:count]:
                     selector = fix['selector']
                     try:
@@ -5802,16 +5811,16 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                             }}
                         }}""", {'s': selector})
                         contrast_fixed += 1
-                        print(f"        ✓ {selector[:30]}... contrast fixed", flush=True)
+                        say(f"        ✓ {selector[:30]}... contrast fixed", flush=True)
                     except Exception as e:
-                        print(f"        ✗ {selector[:30]}: {e}", flush=True)
+                        say(f"        ✗ {selector[:30]}: {e}", flush=True)
 
-            print(f"      Applied {ai_fixed} AI fixes, {contrast_fixed} local contrast fixes",
-                  flush=True)
+            say(f"      Applied {ai_fixed} AI fixes, {contrast_fixed} local contrast fixes",
+                flush=True)
         elif not fix_ai:
-            print(f"\n[3/4] Skipping AI fixes (--no-ai)", flush=True)
+            say(f"\n[3/4] Skipping AI fixes (--no-ai)", flush=True)
         else:
-            print(f"\n[3/4] No AI fixes needed", flush=True)
+            say(f"\n[3/4] No AI fixes needed", flush=True)
 
         # Text processing (cognitive profile features)
         text_simplified = 0
@@ -5827,31 +5836,32 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                 SCAN_SUMMARIZE_PASS, text_processing['summarize'], 3)
 
         # Step 4: Summary
-        print(f"\n[4/4] Summary", flush=True)
-        print("─" * 50, flush=True)
         total_fixed = fixed_non_ai + contrast_fixed + ai_fixed
-        print(f"      Violations found:  {sum(v['count'] for v in violations)}", flush=True)
-        print(f"      Non-AI fixes:      {fixed_non_ai + contrast_fixed}", flush=True)
-        print(f"      AI fixes:          {ai_fixed}", flush=True)
-        if text_simplified > 0:
-            print(f"      Text simplified:   {text_simplified}", flush=True)
-        if text_summarized > 0:
-            print(f"      Summaries added:   {text_summarized}", flush=True)
-        print(f"      Total fixed:       {total_fixed + text_simplified + text_summarized}", flush=True)
-        if ai_unreachable:
-            print(f"      Skipped, needs AI: {ai_unreachable}", flush=True)
-        print("═" * 50 + "\n", flush=True)
+
+        def render():
+            print(f"\n[4/4] Summary", flush=True)
+            print("─" * 50, flush=True)
+            print(f"      Violations found:  {sum(v['count'] for v in violations)}", flush=True)
+            print(f"      Non-AI fixes:      {fixed_non_ai + contrast_fixed}", flush=True)
+            print(f"      AI fixes:          {ai_fixed}", flush=True)
+            if text_simplified > 0:
+                print(f"      Text simplified:   {text_simplified}", flush=True)
+            if text_summarized > 0:
+                print(f"      Summaries added:   {text_summarized}", flush=True)
+            print(f"      Total fixed:       {total_fixed + text_simplified + text_summarized}", flush=True)
+            if ai_unreachable:
+                print(f"      Skipped, needs AI: {ai_unreachable}", flush=True)
+            print("═" * 50 + "\n", flush=True)
 
         ai_applied = ai_fixed + text_simplified + text_summarized
-        if json_output:
-            print(json.dumps({
-                'violations': violations,
-                'fixed': {'nonAi': fixed_non_ai + contrast_fixed, 'ai': ai_fixed,
-                          'total': total_fixed},
-                'textProcessing': {'simplified': text_simplified, 'summarized': text_summarized},
-                'skippedNeedsAi': ai_unreachable,
-                'remaining': len(needs_ai) - ai_fixed if needs_ai else 0
-            }, indent=2))
+        emit({
+            'violations': violations,
+            'fixed': {'nonAi': fixed_non_ai + contrast_fixed, 'ai': ai_fixed,
+                      'total': total_fixed},
+            'textProcessing': {'simplified': text_simplified, 'summarized': text_summarized},
+            'skippedNeedsAi': ai_unreachable,
+            'remaining': len(needs_ai) - ai_fixed if needs_ai else 0
+        }, render, json_output)
 
         return _ai_exit_status(ai_applied, ai_unreachable)
 

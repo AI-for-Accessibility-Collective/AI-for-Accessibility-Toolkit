@@ -15,6 +15,7 @@ stand-in is a shell script.
 """
 
 import json
+import re
 import subprocess
 import sys
 
@@ -125,6 +126,48 @@ def test_no_element_is_given_an_empty_label_when_claude_is_missing(
         finally:
             browser.close()
     assert empty == 0
+
+
+@pytest.mark.parametrize(
+    "command", ["fix-alt", "fix-labels", "find-all", "audit", "scan"])
+def test_json_output_is_parseable_and_alone_on_stdout(
+    chromium_session: dict, run_without_claude, command: str
+) -> None:
+    """--json prints one JSON document and no progress lines.
+
+    Progress used to go to stdout ahead of the payload, so --json did not
+    actually parse for a caller. `scan` is in the list because it kept doing
+    that after the other commands stopped: it wrote its whole scan transcript
+    first, and json.loads failed on the first line of it.
+    """
+    result = run_without_claude("session", command, "--json")
+    json.loads(result.stdout)  # raises if anything else reached stdout
+
+
+def test_scan_json_carries_the_same_counts_as_the_human_summary(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """Silencing scan's progress must not change what the payload says.
+
+    The test above only proves stdout parses. An empty payload, or one built
+    from different numbers, would satisfy it. This pins the keys and checks
+    the counts against the summary block a person reads.
+    """
+    payload = json.loads(run_without_claude("session", "scan", "--json").stdout)
+
+    assert set(payload) == {"violations", "fixed", "textProcessing",
+                            "skippedNeedsAi", "remaining"}
+    assert set(payload["fixed"]) == {"nonAi", "ai", "total"}
+
+    # A scan writes its non-AI fixes into the page, so the second run has to
+    # start from a reloaded fixture or it finds fewer things left to fix.
+    run_without_claude("session", "go", FIXTURE_URL)
+    human = run_without_claude("session", "scan").stdout
+    non_ai = re.search(r"Non-AI fixes:\s*(\d+)", human)
+    ai = re.search(r"^\s*AI fixes:\s*(\d+)", human, re.MULTILINE)
+    assert non_ai and ai, human
+    assert payload["fixed"]["nonAi"] == int(non_ai.group(1))
+    assert payload["fixed"]["ai"] == int(ai.group(1))
 
 
 @pytest.mark.parametrize("command", [("fix-alt",), ("fix-labels",)])
