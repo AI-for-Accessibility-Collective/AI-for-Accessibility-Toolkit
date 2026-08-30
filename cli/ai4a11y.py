@@ -50,7 +50,7 @@ import hashlib
 import io
 import json
 import subprocess
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from html import escape as html_escape
 
@@ -2579,21 +2579,20 @@ def session_scroll(direction='down', amount=800):
 
 def session_describe(json_output=False):
     """Fast-path describe of current page for BLV user. One Claude call, no loop."""
-    # connected_page() is entered by hand here rather than with `with`, so this
-    # except guards only the connect attempt, same as before. A plain `with`
+    # connected_page() is entered through ExitStack rather than a bare `with`, so
+    # this except guards only the connect attempt, same as before. A plain `with`
     # would put the whole body inside the try, and a failure unrelated to the
     # connection (a bad screenshot, a Claude call) would be misreported as
     # "No browser session".
-    page_cm = connected_page()
-    try:
-        page = page_cm.__enter__()
-    except Exception as e:
-        if json_output:
-            print(json.dumps({"error": f"No browser session: {e}"}))
-        else:
-            print(f"Error: No browser session. Run 'ai4a11y session start' first.")
-        sys.exit(1)
-    try:
+    with ExitStack() as stack:
+        try:
+            page = stack.enter_context(connected_page())
+        except Exception as e:
+            if json_output:
+                print(json.dumps({"error": f"No browser session: {e}"}))
+            else:
+                print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+            sys.exit(1)
         import os as _os, re as _re
         run_dir = OUT / f"session_describe_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -2636,8 +2635,6 @@ Skip decorative elements. If it's a modal/captcha/blocker, say so first."""
             print(json.dumps(output, indent=2))
         else:
             print(result, flush=True)
-    finally:
-        page_cm.__exit__(None, None, None)
 
 
 def _focused_info(page):
@@ -3034,20 +3031,19 @@ def session_audit(severity_filter=None, json_output=False):
             print(f"Invalid severity '{severity_filter}'. Use: {', '.join(sorted(valid_severities))}")
         sys.exit(1)
 
-    # connected_page() is entered by hand here rather than with `with`, so this
-    # except guards only the connect attempt, same as before. A plain `with`
+    # connected_page() is entered through ExitStack rather than a bare `with`, so
+    # this except guards only the connect attempt, same as before. A plain `with`
     # would put the whole body inside the try, and an audit failure unrelated
     # to the connection would be misreported as "No browser session".
-    page_cm = connected_page()
-    try:
-        page = page_cm.__enter__()
-    except Exception as e:
-        if json_output:
-            print(json.dumps({"error": f"No browser session: {e}"}))
-        else:
-            print(f"Error: No browser session. Run 'ai4a11y session start' first.")
-        sys.exit(1)
-    try:
+    with ExitStack() as stack:
+        try:
+            page = stack.enter_context(connected_page())
+        except Exception as e:
+            if json_output:
+                print(json.dumps({"error": f"No browser session: {e}"}))
+            else:
+                print(f"Error: No browser session. Run 'ai4a11y session start' first.")
+            sys.exit(1)
         # Inject axe-core
         page.add_script_tag(content=_get_axe_script())
         page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
@@ -3124,9 +3120,6 @@ def session_audit(severity_filter=None, json_output=False):
 
             print(f"\n{'─' * 60}")
             print(f"Total: {total} violations | {results['passes']} passed | {results['incomplete']} need review")
-
-    finally:
-        page_cm.__exit__(None, None, None)
 
 
 def session_ask(question):
