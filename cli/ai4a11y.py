@@ -214,12 +214,7 @@ def _expose_ai_callbacks(page):
 Return ONLY the alt text, no quotes or explanation."""
             result = ask_claude(temp_path, prompt)
             Path(temp_path).unlink(missing_ok=True)
-            # Extract just the text response
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(result)
 
         # Simplify text - takes text, returns simplified version
         def ai_simplify_text(text):
@@ -234,12 +229,7 @@ Text to simplify:
 {text[:2000]}
 
 Return ONLY the simplified text."""
-            result = ask_claude_text(prompt, timeout=60)
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=60))
 
         # Summarize text - takes text, returns summary
         def ai_summarize_text(text):
@@ -250,12 +240,7 @@ Text:
 {text[:3000]}
 
 Return ONLY the summary."""
-            result = ask_claude_text(prompt, timeout=60)
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=60))
 
         def ai_translate_text(text, target_lang="English"):
             prompt = f"""Translate the following text into {target_lang or 'English'}.
@@ -265,21 +250,13 @@ Text:
 {text[:3000]}
 
 Return ONLY the translated text."""
-            result = ask_claude_text(prompt, timeout=60)
-            try:
-                return json.loads(result).get('answer', result)
-            except Exception:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=60))
 
         def ai_define_word(word, context=""):
             prompt = f"""Define the word or phrase "{word}" in one short, plain-language sentence a general reader can understand, as used in this context: "{(context or '')[:400]}".
 
 Return ONLY the definition."""
-            result = ask_claude_text(prompt, timeout=30)
-            try:
-                return json.loads(result).get('answer', result)
-            except Exception:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=30))
 
         # Generate label - takes context about element, returns accessible label
         def ai_generate_labels(context):
@@ -291,12 +268,7 @@ Element context:
 {ctx_str}
 
 Return ONLY the label text."""
-            result = ask_claude_text(prompt, timeout=30)
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=30))
 
         # Fix contrast - takes fg/bg colors, returns the adjusted foreground
         # color as a hex string (the adapter assigns it to element.style.color)
@@ -337,11 +309,7 @@ Context: {json.dumps(context) if isinstance(context, dict) else context}
 Provide a brief, useful description (1-2 sentences) that helps a screen reader user understand what this element shows or does."""
             result = ask_claude(temp_path, prompt)
             Path(temp_path).unlink(missing_ok=True)
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(result)
 
         # Extract a chart/graph's data as a structured table (explore-a-chart adapter)
         def ai_extract_chart_data(image_data, context):
@@ -383,12 +351,7 @@ Surrounding context: "{context}"
 
 Generate a short, descriptive link text (2-5 words) that explains where the link goes.
 Return ONLY the improved link text."""
-            result = ask_claude_text(prompt, timeout=30)
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=30))
 
         # Infer a table column header from sample cell values
         def ai_infer_column_header(sample_data):
@@ -398,12 +361,7 @@ Return ONLY the improved link text."""
 {sample_str}
 
 Return ONLY a short header name (1-3 words)."""
-            result = ask_claude_text(prompt, timeout=30)
-            try:
-                data = json.loads(result)
-                return data.get('answer', result)
-            except:
-                return result.strip()
+            return claude_answer(ask_claude_text(prompt, timeout=30))
 
         # Expose functions to page
         page.expose_function("ai4a11y_describeImage", ai_describe_image)
@@ -1517,6 +1475,67 @@ def _safe_screenshot(page, path):
             return False
 
 
+# Marks a payload that ask_claude / ask_claude_text synthesized because the call
+# never reached a model. The payloads keep their old shape as well, so the agent
+# loops that read 'action' and 'answer' are unaffected.
+_AI_FAILED_KEY = 'ai4a11y_call_failed'
+
+
+def _ai_failure(reason, answer='', error=None):
+    """The payload both Claude helpers return when the call did not go through."""
+    payload = {_AI_FAILED_KEY: True, 'action': 'done', 'reason': reason,
+               'answer': answer, 'error': error or reason}
+    return json.dumps(payload)
+
+
+def claude_answer(raw):
+    """The model's answer, or None when the call never reached a model.
+
+    Both helpers report failure by returning a payload rather than raising, so a
+    caller doing json.loads(raw).get('answer') cannot tell an answer from an
+    apology. It gets either an error sentence, which is how "Claude CLI error:
+    ..." ended up written into an alt attribute, or an empty string, which is how
+    a paragraph got replaced with nothing while the run counted a success.
+
+    Every site that writes model output into the page reads it through here, so
+    an unreachable model stops at the call site.
+    """
+    if raw is None:
+        return None
+    try:
+        data = json.loads(raw)
+    except (TypeError, ValueError):
+        return raw.strip() or None
+    if not isinstance(data, dict):
+        return raw.strip() or None
+    if data.get(_AI_FAILED_KEY):
+        return None
+    answer = data.get('answer', raw)
+    if not isinstance(answer, str):
+        answer = str(answer)
+    return answer.strip() or None
+
+
+# Exit status for a command that could not reach a model at all. Kept distinct
+# from 1 so a script can tell "install the Claude Code CLI" from a real error.
+AI_UNAVAILABLE_EXIT = 3
+
+# Printed in place of a fix whenever the model was unreachable for that item.
+NEEDS_AI_LINE = "needs-ai: no answer from the Claude Code CLI, nothing written"
+
+
+def _ai_exit_status(applied, unreachable):
+    """Nonzero when the model was unreachable and the command changed nothing.
+
+    A run that got some answers keeps them and still exits 0; the per-item
+    needs-ai lines say what was skipped. A run that got none did no work, and
+    saying so through the exit status is what lets a script or an agent notice.
+    """
+    if unreachable and not applied:
+        return AI_UNAVAILABLE_EXIT
+    return 0
+
+
 def ask_claude(image_path, prompt):
     """Invoke Claude Code subprocess with screenshot + prompt, return stdout.
 
@@ -1535,16 +1554,14 @@ def ask_claude(image_path, prompt):
             env=_claude_cli_env(),
         )
         if result.returncode != 0:
-            return json.dumps({'action': 'done',
-                               'answer': f'Claude CLI error: {result.stderr[:200]}',
-                               'reason': 'subprocess failed'})
+            return _ai_failure('subprocess failed',
+                               f'Claude CLI error: {result.stderr[:200]}')
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        return json.dumps({'action': 'done', 'answer': 'Claude CLI timeout', 'reason': 'took >180s'})
+        return _ai_failure('took >180s', 'Claude CLI timeout')
     except FileNotFoundError:
-        return json.dumps({'action': 'done',
-                           'answer': 'Claude Code CLI not installed; this command needs it',
-                           'reason': 'needs-ai'})
+        return _ai_failure('needs-ai',
+                           'Claude Code CLI not installed; this command needs it')
 
 
 def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
@@ -1562,15 +1579,14 @@ def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
             env=_claude_cli_env(),
         )
         if result.returncode != 0:
-            # Include an empty 'answer' so callers doing data.get('answer', result)
-            # degrade to "" (→ safe fallback) instead of leaking the raw error
-            # JSON into an aria-label / table header.
-            return json.dumps({'error': f'cli failed: {result.stderr[:200]}', 'answer': ''})
+            return _ai_failure('subprocess failed',
+                               error=f'cli failed: {result.stderr[:200]}')
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        return json.dumps({'error': 'timeout', 'answer': ''})
+        return _ai_failure('timeout', error='timeout')
     except FileNotFoundError:
-        return json.dumps({'error': 'needs-ai: Claude Code CLI not installed', 'answer': ''})
+        return _ai_failure('needs-ai',
+                           error='needs-ai: Claude Code CLI not installed')
 
 
 def plan_task(page, task, run_dir, context=""):
@@ -4944,6 +4960,7 @@ def session_fix_alt(max_images=10, json_output=False):
             return
 
         fixes = []
+        unreachable = 0
         count = min(len(all_images), max_images)
         print(f"\nGenerating alt text for {count} images...", flush=True)
 
@@ -4974,16 +4991,17 @@ def session_fix_alt(max_images=10, json_output=False):
 
 Return ONLY the alt text, no quotes or preamble."""
 
-                raw = ask_claude(str(img_path), prompt)
+                alt_text = claude_answer(ask_claude(str(img_path), prompt))
+                img_path.unlink(missing_ok=True)
 
-                # Parse response
-                try:
-                    data = json.loads(raw)
-                    alt_text = data.get('answer', raw)
-                except:
-                    alt_text = raw.strip()
+                # An unreachable model is not an alt text. Writing the failure
+                # payload here is how images ended up labelled "Claude CLI
+                # error: ..." for a blind reader, counted as fixed.
+                if alt_text is None:
+                    unreachable += 1
+                    print(NEEDS_AI_LINE, flush=True)
+                    continue
 
-                # Clean up alt text
                 alt_text = alt_text.strip('"\'').strip()
                 if len(alt_text) > 300:
                     alt_text = alt_text[:297] + "..."
@@ -4997,9 +5015,6 @@ Return ONLY the alt text, no quotes or preamble."""
                 fixes.append({'selector': selector, 'alt': alt_text})
                 print(f"✓ \"{alt_text[:50]}...\"" if len(alt_text) > 50 else f"✓ \"{alt_text}\"", flush=True)
 
-                # Clean up screenshot
-                img_path.unlink(missing_ok=True)
-
             except Exception as e:
                 print(f"error: {e}", flush=True)
 
@@ -5007,6 +5022,7 @@ Return ONLY the alt text, no quotes or preamble."""
             print(json.dumps(fixes, indent=2))
         else:
             print(f"\n✓ Fixed {len(fixes)} images", flush=True)
+        return _ai_exit_status(len(fixes), unreachable)
 
     finally:
         session_disconnect(p, browser)
@@ -5067,13 +5083,10 @@ Text to simplify:
 
 Return ONLY the simplified text, maintaining paragraph structure."""
 
-        raw = ask_claude_text(prompt, timeout=120)
-
-        try:
-            data = json.loads(raw)
-            simplified = data.get('answer', raw)
-        except:
-            simplified = raw.strip()
+        simplified = claude_answer(ask_claude_text(prompt, timeout=120))
+        if simplified is None:
+            print(NEEDS_AI_LINE, flush=True)
+            return AI_UNAVAILABLE_EXIT
 
         if json_output:
             print(json.dumps({'original': original[:500], 'simplified': simplified}, indent=2))
@@ -5114,6 +5127,7 @@ def session_fix_labels(max_elements=10, json_output=False):
             return
 
         fixes = []
+        unreachable = 0
         count = min(len(all_elements), max_elements)
         print(f"\nGenerating labels for {count} elements...", flush=True)
 
@@ -5157,14 +5171,21 @@ Surrounding text: {context.get('nearby', '')[:150]}
 
 Return ONLY the label text, nothing else."""
 
-                raw = ask_claude_text(prompt, timeout=30)
-                try:
-                    data = json.loads(raw)
-                    label = data.get('answer', raw)
-                except:
-                    label = raw.strip()
+                label = claude_answer(ask_claude_text(prompt, timeout=30))
+
+                # aria-label="" is not a label. It used to be written here on
+                # every failed call, and counted, which left the control exactly
+                # as unusable as it started while the run reported a fix.
+                if label is None:
+                    unreachable += 1
+                    print(NEEDS_AI_LINE, flush=True)
+                    continue
 
                 label = label.strip('"\'').strip()[:50]
+                if not label:
+                    unreachable += 1
+                    print(NEEDS_AI_LINE, flush=True)
+                    continue
 
                 # Apply the label
                 page.evaluate(f"""(data) => {{
@@ -5187,6 +5208,7 @@ Return ONLY the label text, nothing else."""
             print(json.dumps(fixes, indent=2))
         else:
             print(f"\n✓ Fixed {len(fixes)} elements", flush=True)
+        return _ai_exit_status(len(fixes), unreachable)
 
     finally:
         session_disconnect(p, browser)
@@ -5199,12 +5221,16 @@ def session_fix_all(json_output=False):
       session fix-all
     """
     print("\n=== Fixing Alt Text ===", flush=True)
-    session_fix_alt(max_images=10, json_output=json_output)
+    alt_status = session_fix_alt(max_images=10, json_output=json_output)
 
     print("\n=== Fixing Labels ===", flush=True)
-    session_fix_labels(max_elements=10, json_output=json_output)
+    label_status = session_fix_labels(max_elements=10, json_output=json_output)
 
     print("\n=== Done ===", flush=True)
+    # Both halves have to have got nowhere before the run counts as a failure.
+    if alt_status and label_status:
+        return AI_UNAVAILABLE_EXIT
+    return 0
 
 
 def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
@@ -5258,6 +5284,26 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
 
         # Step 3: AI fixes
         ai_fixed = 0
+        contrast_fixed = 0
+        ai_unreachable = 0
+
+        def answer_or_skip(raw, what):
+            """The model's answer, or None after reporting that there was none.
+
+            Every AI-backed fix below writes its answer straight into the page,
+            so each one reads it through here first. A failed call used to reach
+            those writes as an error sentence or as the empty string, which is
+            how images ended up labelled "Claude CLI error: ...", controls ended
+            up with aria-label="", and a paragraph queued for simplification was
+            replaced with nothing. All three were then counted as fixes.
+            """
+            nonlocal ai_unreachable
+            text = claude_answer(raw)
+            if text:
+                return text
+            ai_unreachable += 1
+            print(f"        ✗ {str(what)[:30]}: {NEEDS_AI_LINE}", flush=True)
+            return None
         if fix_ai and needs_ai:
             print(f"\n[3/4] Processing {len(needs_ai)} AI-required fixes...", flush=True)
 
@@ -5279,13 +5325,13 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                         img_path = OUT / f"scan_img_{i}.png"
                         el.screenshot(path=str(img_path))
                         prompt = "Describe this image for a blind user. Write concise alt text (1-2 sentences). Return ONLY the alt text."
-                        raw = ask_claude(str(img_path), prompt)
-                        try:
-                            data = json.loads(raw)
-                            alt = data.get('answer', raw)
-                        except:
-                            alt = raw.strip()
+                        alt = answer_or_skip(ask_claude(str(img_path), prompt), selector)
+                        if alt is None:
+                            continue
                         alt = alt.strip('"\'').strip()[:200]
+                        if not alt:
+                            answer_or_skip(None, selector)
+                            continue
                         page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.alt = d.a; }}", {'s': selector, 'a': alt})
                         ai_fixed += 1
                         print(f"        ✓ {selector[:30]}... → \"{alt[:40]}...\"", flush=True)
@@ -5309,12 +5355,13 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                             canvas_path = OUT / f"canvas_{cvs['index']}.png"
                             el.screenshot(path=str(canvas_path))
                             prompt = "Describe this canvas graphic for a blind user. What does it show? Write 1-2 sentences."
-                            raw = ask_claude(str(canvas_path), prompt)
-                            try:
-                                desc = json.loads(raw).get('answer', raw)
-                            except:
-                                desc = raw.strip()
+                            desc = answer_or_skip(ask_claude(str(canvas_path), prompt), cvs['selector'])
+                            if desc is None:
+                                continue
                             desc = desc.strip('"\'').strip()[:200]
+                            if not desc:
+                                answer_or_skip(None, cvs['selector'])
+                                continue
                             page.evaluate(f"""(d) => {{
                                 const c = document.querySelectorAll('canvas')[d.i];
                                 if(c) {{ c.setAttribute('role', 'img'); c.setAttribute('aria-label', d.desc); }}
@@ -5347,12 +5394,13 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                         if el:
                             el.screenshot(path=str(frame_path))
                             prompt = "Describe this video frame for a blind user. What is happening in this video? Write 1-2 sentences."
-                            raw = ask_claude(str(frame_path), prompt)
-                            try:
-                                desc = json.loads(raw).get('answer', raw)
-                            except:
-                                desc = raw.strip()
+                            desc = answer_or_skip(ask_claude(str(frame_path), prompt), vid['selector'])
+                            if desc is None:
+                                continue
                             desc = desc.strip('"\'').strip()[:200]
+                            if not desc:
+                                answer_or_skip(None, vid['selector'])
+                                continue
                             page.evaluate(f"(d) => {{ const v = document.querySelectorAll('video')[d.i]; if(v) v.setAttribute('aria-label', d.desc); }}", {'i': vid['index'], 'desc': desc})
                             ai_fixed += 1
                             print(f"        ✓ video {vid['index']+1} → \"{desc[:40]}...\"", flush=True)
@@ -5381,21 +5429,26 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                         if not context:
                             continue
                         prompt = f"Generate a 2-5 word accessible label for: {json.dumps(context)}. Return ONLY the label."
-                        raw = ask_claude_text(prompt, timeout=30)
-                        try:
-                            label = json.loads(raw).get('answer', raw)
-                        except:
-                            label = raw.strip()
+                        label = answer_or_skip(ask_claude_text(prompt, timeout=30), selector)
+                        if label is None:
+                            continue
                         label = label.strip('"\'').strip()[:50]
+                        if not label:
+                            answer_or_skip(None, selector)
+                            continue
                         page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.setAttribute('aria-label', d.l); }}", {'s': selector, 'l': label})
                         ai_fixed += 1
                         print(f"        ✓ {selector[:30]}... → \"{label}\"", flush=True)
                     except Exception as e:
                         print(f"        ✗ {selector[:30]}: {e}", flush=True)
 
-            # Fix contrast issues
-            if contrast_fixes and ai_fixed < max_ai_fixes:
-                remaining = max_ai_fixes - ai_fixed
+            # Fix contrast issues. This pass picks black or white from the
+            # computed background luminance and calls no model, so its successes
+            # are counted apart from the model-derived ones. Folding them in
+            # overstated the AI work and let a run where every model call failed
+            # still look like it had fixed something.
+            if contrast_fixes and ai_fixed + contrast_fixed < max_ai_fixes:
+                remaining = max_ai_fixes - ai_fixed - contrast_fixed
                 count = min(len(contrast_fixes), remaining, 5)  # Limit contrast fixes
                 print(f"      Fixing {count} contrast issues...", flush=True)
                 for fix in contrast_fixes[:count]:
@@ -5424,12 +5477,13 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                                 el.dataset.ai4a11yContrastFixed = 'true';
                             }}
                         }}""", {'s': selector})
-                        ai_fixed += 1
+                        contrast_fixed += 1
                         print(f"        ✓ {selector[:30]}... contrast fixed", flush=True)
                     except Exception as e:
                         print(f"        ✗ {selector[:30]}: {e}", flush=True)
 
-            print(f"      Applied {ai_fixed} AI fixes", flush=True)
+            print(f"      Applied {ai_fixed} AI fixes, {contrast_fixed} local contrast fixes",
+                  flush=True)
         elif not fix_ai:
             print(f"\n[3/4] Skipping AI fixes (--no-ai)", flush=True)
         else:
@@ -5450,12 +5504,13 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                     if not text:
                         continue
                     prompt = f"Simplify this text for someone with cognitive disabilities. Use short sentences, simple words. Keep the meaning. Text: {text}"
-                    raw = ask_claude_text(prompt, timeout=45)
-                    try:
-                        simplified = json.loads(raw).get('answer', raw)
-                    except:
-                        simplified = raw.strip()
+                    simplified = answer_or_skip(ask_claude_text(prompt, timeout=45), selector)
+                    if simplified is None:
+                        continue
                     simplified = simplified.strip('"\'').strip()
+                    if not simplified:
+                        answer_or_skip(None, selector)
+                        continue
                     page.evaluate("""(d) => {
                         const el = document.querySelector(d.s);
                         if (el) {
@@ -5481,12 +5536,13 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                     if not text:
                         continue
                     prompt = f"Write a 1-2 sentence summary of this content: {text}"
-                    raw = ask_claude_text(prompt, timeout=45)
-                    try:
-                        summary = json.loads(raw).get('answer', raw)
-                    except:
-                        summary = raw.strip()
+                    summary = answer_or_skip(ask_claude_text(prompt, timeout=45), selector)
+                    if summary is None:
+                        continue
                     summary = summary.strip('"\'').strip()
+                    if not summary:
+                        answer_or_skip(None, selector)
+                        continue
                     page.evaluate(f"""(d) => {{
                         const el = document.querySelector(d.s);
                         if (el) {{
@@ -5505,24 +5561,31 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         # Step 4: Summary
         print(f"\n[4/4] Summary", flush=True)
         print("─" * 50, flush=True)
-        total_fixed = fixed_non_ai + ai_fixed
+        total_fixed = fixed_non_ai + contrast_fixed + ai_fixed
         print(f"      Violations found:  {sum(v['count'] for v in violations)}", flush=True)
-        print(f"      Non-AI fixes:      {fixed_non_ai}", flush=True)
+        print(f"      Non-AI fixes:      {fixed_non_ai + contrast_fixed}", flush=True)
         print(f"      AI fixes:          {ai_fixed}", flush=True)
         if text_simplified > 0:
             print(f"      Text simplified:   {text_simplified}", flush=True)
         if text_summarized > 0:
             print(f"      Summaries added:   {text_summarized}", flush=True)
         print(f"      Total fixed:       {total_fixed + text_simplified + text_summarized}", flush=True)
+        if ai_unreachable:
+            print(f"      Skipped, needs AI: {ai_unreachable}", flush=True)
         print("═" * 50 + "\n", flush=True)
 
+        ai_applied = ai_fixed + text_simplified + text_summarized
         if json_output:
             print(json.dumps({
                 'violations': violations,
-                'fixed': {'nonAi': fixed_non_ai, 'ai': ai_fixed, 'total': total_fixed},
+                'fixed': {'nonAi': fixed_non_ai + contrast_fixed, 'ai': ai_fixed,
+                          'total': total_fixed},
                 'textProcessing': {'simplified': text_simplified, 'summarized': text_summarized},
+                'skippedNeedsAi': ai_unreachable,
                 'remaining': len(needs_ai) - ai_fixed if needs_ai else 0
             }, indent=2))
+
+        return _ai_exit_status(ai_applied, ai_unreachable)
 
     finally:
         session_disconnect(p, browser)

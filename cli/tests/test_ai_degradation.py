@@ -1,0 +1,139 @@
+"""A command that cannot reach Claude must change nothing and say so.
+
+Each test runs a real fix command against the live fixture with the Claude
+Code CLI hidden from PATH, then compares the page against the snapshot taken
+before the run. The commands under test consume model output and write it
+straight into the page, so "the model was unreachable" has to stop at the
+call site rather than travel on as alt text, as a label, or as an empty
+string that replaces a paragraph.
+
+No AI model is called: the point of stripping PATH is that there is nothing
+to call.
+"""
+
+import subprocess
+import sys
+
+import pytest
+from playwright.sync_api import sync_playwright
+
+from conftest import FIXTURE_URL, REPO_ROOT, CliRunner
+
+pytestmark = pytest.mark.browser
+
+
+@pytest.fixture(autouse=True)
+def _fresh_page(chromium_session: dict, cli: CliRunner) -> None:
+    """Reload the fixture before every test.
+
+    These tests assert that a command left the page alone, so each one has to
+    start from a page no earlier command has written to.
+    """
+    result = cli("session", "go", FIXTURE_URL)
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.fixture(scope="module")
+def run_without_claude(chromium_session: dict):
+    """Run a CLI command with the Claude Code CLI unreachable."""
+    env = {**chromium_session, "PATH": "/usr/bin:/bin"}
+
+    def _run(*args: str) -> "subprocess.CompletedProcess[str]":
+        return subprocess.run(
+            [sys.executable, "-m", "cli.cli", *args],
+            cwd=REPO_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+
+    return _run
+
+
+def _page_html(env: dict) -> str:
+    """The page body, with one screenshot artifact normalized away.
+
+    Taking an element screenshot makes Playwright hide the text caret, which it
+    does by setting an inline style on the page's inputs and then clearing it.
+    That leaves style="" behind on elements no command touched, so an empty
+    style attribute is dropped before the comparison. Any attribute or text a
+    command actually wrote still shows up as a difference.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp(
+            f"http://localhost:{env['AI4A11Y_CDP_PORT']}"
+        )
+        try:
+            page = [pg for c in browser.contexts for pg in c.pages][0]
+            html = page.evaluate("() => document.body.outerHTML")
+        finally:
+            browser.close()
+    return html.replace(' style=""', "")
+
+
+@pytest.mark.parametrize("command", [("fix-alt",), ("fix-labels",), ("scan",)])
+def test_fix_command_reports_failure_when_claude_is_missing(
+    chromium_session: dict, run_without_claude, command: tuple
+) -> None:
+    result = run_without_claude("session", *command)
+    assert result.returncode != 0, f"reported success:\n{result.stdout}"
+    assert "needs-ai" in (result.stdout + result.stderr).lower()
+
+
+@pytest.mark.parametrize("command", [("fix-alt",), ("fix-labels",)])
+def test_fix_command_leaves_the_page_untouched_when_claude_is_missing(
+    chromium_session: dict, run_without_claude, command: tuple
+) -> None:
+    before = _page_html(chromium_session)
+    run_without_claude("session", *command)
+    assert _page_html(chromium_session) == before
+
+
+def test_scan_never_erases_text_when_claude_is_missing(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """Scan's non-AI fixes may touch attributes; its AI path must not touch text."""
+    def paragraphs() -> list:
+        with sync_playwright() as p:
+            browser = p.chromium.connect_over_cdp(
+                f"http://localhost:{chromium_session['AI4A11Y_CDP_PORT']}"
+            )
+            try:
+                page = [pg for c in browser.contexts for pg in c.pages][0]
+                return page.evaluate(
+                    "() => [...document.querySelectorAll('p')].map(e => e.textContent)"
+                )
+            finally:
+                browser.close()
+
+    # The simplify and summarize paths only run under a profile that asks for
+    # them, and the profile only reaches the page through a navigation, so the
+    # order here is the order a user would type.
+    run_without_claude("session", "profile", "cognitive")
+    run_without_claude("session", "go", FIXTURE_URL)
+
+    before = paragraphs()
+    assert any(len(t.strip()) > 500 for t in before), "fixture must carry a long block"
+
+    run_without_claude("session", "scan")
+    assert paragraphs() == before
+
+
+def test_no_element_is_given_an_empty_label_when_claude_is_missing(
+    chromium_session: dict, run_without_claude
+) -> None:
+    run_without_claude("session", "fix-labels")
+    with sync_playwright() as p:
+        browser = p.chromium.connect_over_cdp(
+            f"http://localhost:{chromium_session['AI4A11Y_CDP_PORT']}"
+        )
+        try:
+            page = [pg for c in browser.contexts for pg in c.pages][0]
+            empty = page.evaluate(
+                "() => [...document.querySelectorAll('[aria-label]')]"
+                ".filter(e => !e.getAttribute('aria-label').trim()).length"
+            )
+        finally:
+            browser.close()
+    assert empty == 0

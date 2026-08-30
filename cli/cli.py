@@ -38,6 +38,18 @@ AUDITORS_DIR = TOOLS_DIR / "auditors"
 PROFILES_PATH = TOOLS_DIR / "profiles" / "settings.json"
 
 
+def _exit(status) -> None:
+    """Turn an engine command's return value into this process's exit status.
+
+    Most engine commands return None, which is success. The AI-backed ones
+    return a status so a command that could not reach a model and therefore
+    changed nothing says so in a way a script or an agent can read, rather than
+    only in prose on stdout.
+    """
+    if status:
+        raise typer.Exit(int(status))
+
+
 def _engine():
     """Import the session engine on first use (it pulls in Playwright)."""
     try:
@@ -609,25 +621,25 @@ def find_all(as_json: bool = typer.Option(False, "--json")) -> None:
 @session_app.command("fix-alt")
 def fix_alt(max_images: int = typer.Argument(10), as_json: bool = typer.Option(False, "--json")) -> None:
     """Generate alt text for images (needs the Claude Code CLI)."""
-    _engine().session_fix_alt(max_images=max_images, json_output=as_json)
+    _exit(_engine().session_fix_alt(max_images=max_images, json_output=as_json))
 
 
 @session_app.command("fix-labels")
 def fix_labels(max_elements: int = typer.Argument(10), as_json: bool = typer.Option(False, "--json")) -> None:
     """Generate labels for unlabeled controls (needs the Claude Code CLI)."""
-    _engine().session_fix_labels(max_elements=max_elements, json_output=as_json)
+    _exit(_engine().session_fix_labels(max_elements=max_elements, json_output=as_json))
 
 
 @session_app.command()
 def simplify(selector: Optional[str] = typer.Argument(None), as_json: bool = typer.Option(False, "--json")) -> None:
     """Simplify page text in place (needs the Claude Code CLI)."""
-    _engine().session_simplify(selector=selector, json_output=as_json)
+    _exit(_engine().session_simplify(selector=selector, json_output=as_json))
 
 
 @session_app.command("fix-all")
 def fix_all(as_json: bool = typer.Option(False, "--json")) -> None:
     """Run every automatic fix."""
-    _engine().session_fix_all(json_output=as_json)
+    _exit(_engine().session_fix_all(json_output=as_json))
 
 
 @session_app.command()
@@ -637,7 +649,7 @@ def scan(
     as_json: bool = typer.Option(False, "--json"),
 ) -> None:
     """Full scan and fix, like the extension (AI fixes need the Claude Code CLI)."""
-    _engine().session_scan(fix_ai=not no_ai, max_ai_fixes=max_ai_fixes, json_output=as_json)
+    _exit(_engine().session_scan(fix_ai=not no_ai, max_ai_fixes=max_ai_fixes, json_output=as_json))
 
 
 # --- aliases (hidden) -------------------------------------------------------
