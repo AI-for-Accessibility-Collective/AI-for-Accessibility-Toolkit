@@ -21,6 +21,7 @@
 // Zero dependencies (node:http). Local mode reuses server/src/{store,toolkit-host}.
 
 import http from 'node:http';
+import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,8 +86,14 @@ async function remoteLibrarian(token, method, args) {
 }
 
 // ── Onboarding: capture supportAreas + free-text need into a profile ────────
+// A generated uid is the profile's capability: the read routes are
+// unauthenticated (a person onboarding has no credential yet), so knowing the
+// uid must be the credential, the way an unguessable share link works. 128
+// random bits, base64url. A person can still type their own memorable id;
+// the UI and README say what that trades away (a guessable id is a readable
+// profile).
 function genUid() {
-  return 'user-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  return 'u-' + crypto.randomBytes(16).toString('base64url');
 }
 
 // Default STRUCTURED needs per support area. The toolkit deliberately projects

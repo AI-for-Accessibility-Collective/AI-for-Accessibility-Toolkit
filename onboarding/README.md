@@ -50,6 +50,17 @@ ONBOARD_MODE=remote TOOLKIT_URL=http://127.0.0.1:8080 ADMIN_PASSWORD=<server-adm
   server's `DELETE /admin/users/:uid`; in local mode it removes the profile's
   store partition directly.
 
+### Profile ids are capabilities
+
+The onboarding and profile-view routes are unauthenticated on purpose: a
+person onboarding has no credential yet. The profile id itself is therefore
+the credential, the way an unguessable share link works. Generated ids carry
+128 random bits and cannot be guessed; treat one like a private link. A
+memorable id you type yourself CAN be guessed, and whoever knows a profile id
+can read that profile (support areas, free-text self-description, ability
+model), so use typed ids only on machines and networks you trust. The admin
+password gates only the list and delete routes.
+
 ## Env
 
 | Var | Purpose | Default |
