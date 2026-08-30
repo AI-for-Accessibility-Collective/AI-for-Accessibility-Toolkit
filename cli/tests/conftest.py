@@ -62,6 +62,27 @@ def cli(cli_env: dict) -> CliRunner:
 
 
 @pytest.fixture(scope="session")
+def run_without_claude(cli_env: dict) -> CliRunner:
+    """Run a CLI command with the Claude Code CLI unreachable.
+
+    Stripping PATH is also what keeps these tests from calling a model: there
+    is nothing on the trimmed PATH to call.
+    """
+
+    def _run(*args: str, timeout: int = 120) -> "subprocess.CompletedProcess[str]":
+        return subprocess.run(
+            [sys.executable, "-m", "cli.cli", *args],
+            cwd=REPO_ROOT,
+            env={**cli_env, "PATH": "/usr/bin:/bin"},
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+
+    return _run
+
+
+@pytest.fixture(scope="session")
 def chromium_session(cli_env: dict):
     """A headless Chromium the session commands can connect to over CDP.
 

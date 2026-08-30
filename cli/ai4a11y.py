@@ -160,6 +160,27 @@ def _inject_cli_tools(page, auto_apply_profile=False):
         return False
 
 
+def _publish_active_profile(page):
+    """Tell the page which profile is active, without applying its adapters.
+
+    Anything that asks the catalog what the profile wants reads this, and it is
+    a different question from whether the profile's adapters are switched on.
+    Only navigation used to set it, so a command that asked without navigating
+    was answered as if no profile were active.
+    """
+    profile = _get_active_profile()
+    if not profile:
+        return
+    try:
+        page.evaluate(
+            "(state) => window.ai4a11y?.setSessionState?.(state)",
+            {'activeProfile': profile}
+        )
+    except Exception:
+        # The page may not have the tools loaded; the caller reports that.
+        pass
+
+
 def _auto_apply_saved_profile(page):
     """Apply the saved active profile to the page (if any)."""
     profile = _get_active_profile()
@@ -167,11 +188,7 @@ def _auto_apply_saved_profile(page):
         return
 
     try:
-        # Set session state so JS can access profile settings
-        page.evaluate(
-            "(state) => window.ai4a11y?.setSessionState?.(state)",
-            {'activeProfile': profile}
-        )
+        _publish_active_profile(page)
 
         result = page.evaluate(
             "(name) => window.ai4a11y.applyProfile(name)",
@@ -1524,8 +1541,21 @@ AI_UNAVAILABLE_EXIT = 3
 # names the browser it started.
 SESSION_MISMATCH_EXIT = 4
 
+# Exit status for a session command run before any session was started.
+NO_SESSION_EXIT = 5
+
 # Printed in place of a fix whenever the model was unreachable for that item.
 NEEDS_AI_LINE = "needs-ai: no answer from the Claude Code CLI, nothing written"
+
+
+def _ai_fix_report(fixes, attempted, unreachable):
+    """The --json payload for a fix command.
+
+    A bare list of fixes cannot express a degraded run: five fixes out of ten
+    items and five out of five look identical to a caller reading it. Exit
+    status only says whether anything at all got done, so the counts go here.
+    """
+    return {'fixed': fixes, 'attempted': attempted, 'skippedNeedsAi': unreachable}
 
 
 def _ai_exit_status(applied, unreachable):
@@ -2012,6 +2042,10 @@ def _chromium_path():
     raise RuntimeError("No Chrome/Chromium found")
 
 
+class NoSession(RuntimeError):
+    """No session has been started, so there is no browser to talk to."""
+
+
 class ForeignBrowser(RuntimeError):
     """The browser on the recorded port is not the one this session started.
 
@@ -2054,7 +2088,7 @@ def _read_session(verify=True):
     else's browser, on their tabs.
     """
     if not SESSION_FILE.exists():
-        raise RuntimeError("No session running. Start one with: ai4a11y session start")
+        raise NoSession("No session running. Start one with: ai4a11y session start")
     info = json.loads(SESSION_FILE.read_text())
     if not verify:
         return info
@@ -5045,18 +5079,25 @@ def session_fix_alt(max_images=10, json_output=False):
         all_images = result.get('noAlt', []) + result.get('emptyAlt', [])
 
         if not all_images:
-            print("No images found missing alt text.", flush=True)
+            if json_output:
+                print(json.dumps(_ai_fix_report([], 0, 0), indent=2))
+            else:
+                print("No images found missing alt text.", flush=True)
             return
 
         fixes = []
         unreachable = 0
         count = min(len(all_images), max_images)
-        print(f"\nGenerating alt text for {count} images...", flush=True)
+        # Progress goes to stdout, which is also where the payload goes, so it
+        # is silenced under --json rather than left to make the output
+        # unparseable.
+        say = (lambda *a, **k: None) if json_output else print
+        say(f"\nGenerating alt text for {count} images...", flush=True)
 
         for i, img_info in enumerate(all_images[:count]):
             selector = img_info.get('selector', '')
             src = img_info.get('src', '')[:40]
-            print(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
+            say(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
 
             try:
                 # Screenshot the specific image element
@@ -5065,7 +5106,7 @@ def session_fix_alt(max_images=10, json_output=False):
                     # Try finding by src
                     el = page.query_selector(f'img[src*="{src[:20]}"]')
                 if not el:
-                    print("not found", flush=True)
+                    say("not found", flush=True)
                     continue
 
                 # Take screenshot of just this element
@@ -5088,7 +5129,7 @@ Return ONLY the alt text, no quotes or preamble."""
                 # error: ..." for a blind reader, counted as fixed.
                 if alt_text is None:
                     unreachable += 1
-                    print(NEEDS_AI_LINE, flush=True)
+                    say(NEEDS_AI_LINE, flush=True)
                     continue
 
                 alt_text = alt_text.strip('"\'').strip()
@@ -5102,15 +5143,17 @@ Return ONLY the alt text, no quotes or preamble."""
                 }}""", {'selector': selector, 'alt': alt_text})
 
                 fixes.append({'selector': selector, 'alt': alt_text})
-                print(f"✓ \"{alt_text[:50]}...\"" if len(alt_text) > 50 else f"✓ \"{alt_text}\"", flush=True)
+                say(f"✓ \"{alt_text[:50]}...\"" if len(alt_text) > 50 else f"✓ \"{alt_text}\"", flush=True)
 
             except Exception as e:
-                print(f"error: {e}", flush=True)
+                say(f"error: {e}", flush=True)
 
         if json_output:
-            print(json.dumps(fixes, indent=2))
+            print(json.dumps(_ai_fix_report(fixes, count, unreachable), indent=2))
         else:
-            print(f"\n✓ Fixed {len(fixes)} images", flush=True)
+            print(f"\n✓ Fixed {len(fixes)} of {count} images", flush=True)
+            if unreachable:
+                print(f"  {unreachable} skipped, needs AI", flush=True)
         return _ai_exit_status(len(fixes), unreachable)
 
     finally:
@@ -5212,22 +5255,26 @@ def session_fix_labels(max_elements=10, json_output=False):
                        result.get('inputs', []))
 
         if not all_elements:
-            print("No unlabeled elements found.", flush=True)
+            if json_output:
+                print(json.dumps(_ai_fix_report([], 0, 0), indent=2))
+            else:
+                print("No unlabeled elements found.", flush=True)
             return
 
         fixes = []
         unreachable = 0
         count = min(len(all_elements), max_elements)
-        print(f"\nGenerating labels for {count} elements...", flush=True)
+        say = (lambda *a, **k: None) if json_output else print
+        say(f"\nGenerating labels for {count} elements...", flush=True)
 
         for i, el_info in enumerate(all_elements[:count]):
             selector = el_info.get('selector', '')
-            print(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
+            say(f"  [{i+1}/{count}] {selector}...", end=" ", flush=True)
 
             try:
                 el = page.query_selector(selector)
                 if not el:
-                    print("not found", flush=True)
+                    say("not found", flush=True)
                     continue
 
                 # Get context about the element
@@ -5245,7 +5292,7 @@ def session_fix_labels(max_elements=10, json_output=False):
                 }""", selector)
 
                 if not context:
-                    print("no context", flush=True)
+                    say("no context", flush=True)
                     continue
 
                 # Call Claude to generate label
@@ -5267,13 +5314,13 @@ Return ONLY the label text, nothing else."""
                 # as unusable as it started while the run reported a fix.
                 if label is None:
                     unreachable += 1
-                    print(NEEDS_AI_LINE, flush=True)
+                    say(NEEDS_AI_LINE, flush=True)
                     continue
 
                 label = label.strip('"\'').strip()[:50]
                 if not label:
                     unreachable += 1
-                    print(NEEDS_AI_LINE, flush=True)
+                    say(NEEDS_AI_LINE, flush=True)
                     continue
 
                 # Apply the label
@@ -5288,15 +5335,17 @@ Return ONLY the label text, nothing else."""
                 }}""", {'selector': selector, 'label': label})
 
                 fixes.append({'selector': selector, 'label': label})
-                print(f"✓ \"{label}\"", flush=True)
+                say(f"✓ \"{label}\"", flush=True)
 
             except Exception as e:
-                print(f"error: {e}", flush=True)
+                say(f"error: {e}", flush=True)
 
         if json_output:
-            print(json.dumps(fixes, indent=2))
+            print(json.dumps(_ai_fix_report(fixes, count, unreachable), indent=2))
         else:
-            print(f"\n✓ Fixed {len(fixes)} elements", flush=True)
+            print(f"\n✓ Fixed {len(fixes)} of {count} elements", flush=True)
+            if unreachable:
+                print(f"  {unreachable} skipped, needs AI", flush=True)
         return _ai_exit_status(len(fixes), unreachable)
 
     finally:
@@ -5340,6 +5389,12 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
             return
+
+        # The text passes below ask the catalog which text tools the active
+        # profile wants. That answer comes from session state, which only a
+        # navigation used to set, so those passes ran or not depending on
+        # whether a `session go` happened to fall after `session profile`.
+        _publish_active_profile(page)
 
         # Inject axe-core (required for runFullScan)
         axe_script = _get_axe_script()

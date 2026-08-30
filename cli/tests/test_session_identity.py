@@ -70,14 +70,18 @@ def test_stop_does_not_kill_a_process_it_cannot_identify(foreign_session) -> Non
     result = run("session", "stop")
     assert _still_running(victim), "session stop killed an unrelated process"
     assert result.returncode != 0
-    assert "not the browser" in (result.stdout + result.stderr).lower()
+    output = result.stdout + result.stderr
+    assert "not the browser" in output.lower()
+    assert "Traceback" not in output, output
 
 
 def test_commands_refuse_a_browser_the_session_did_not_start(foreign_session) -> None:
     run, _ = foreign_session
     result = run("session", "status")
     assert result.returncode != 0
-    assert "not the browser" in (result.stdout + result.stderr).lower()
+    output = result.stdout + result.stderr
+    assert "not the browser" in output.lower()
+    assert "Traceback" not in output, output
 
 
 def test_start_records_the_browser_it_launched(chromium_session: dict) -> None:
@@ -161,3 +165,18 @@ def test_a_session_file_without_a_browser_id_is_not_guessed_about(
     assert "predates browser identity" in result.stdout + result.stderr
     # The pid in that file is this test process. It had better still be here.
     assert (home / "session.json").exists()
+
+
+def test_no_session_is_a_sentence_not_a_traceback(tmp_path: Path) -> None:
+    """Running a session command with nothing started is an ordinary mistake,
+    and a Python traceback is a poor way to say so."""
+    result = subprocess.run(
+        [sys.executable, "-m", "cli.cli", "session", "fix-alt"],
+        cwd=REPO_ROOT,
+        env={**os.environ, "AI4A11Y_HOME": str(tmp_path / "empty")},
+        capture_output=True, text=True, timeout=60,
+    )
+    assert result.returncode != 0
+    output = result.stdout + result.stderr
+    assert "Traceback" not in output, output
+    assert "ai4a11y session start" in output

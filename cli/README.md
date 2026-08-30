@@ -69,7 +69,34 @@ What that means in practice, because the page content involved is the user's:
 
 When the Claude Code CLI is not installed, or a call fails, these commands write
 nothing to the page. They say `needs-ai` on the line where the fix would have
-been, and a command that reached no model and changed nothing exits 3.
+been.
+
+## Exit status
+
+| Code | Meaning |
+|---|---|
+| 0 | The command did its work. A run that fixed some items and skipped others is still 0; see below. |
+| 2 | The command line was wrong (Typer's usage error). |
+| 3 | An AI-backed command reached no model and so changed nothing. |
+| 4 | The recorded session is not the browser it started. Nothing was touched. |
+| 5 | A session command ran with no session started. |
+
+A partly degraded run exits 0 on purpose. `scan` also does local fixes, and
+failing the whole command because two of twenty model calls timed out would
+report eighteen real fixes as a failure. The count is in the payload instead, so
+a caller that cares can see it:
+
+```console
+$ ai4a11y session fix-alt --json      # with the Claude Code CLI unreachable
+{
+  "fixed": [],
+  "attempted": 2,
+  "skippedNeedsAi": 2
+}
+```
+
+`--json` prints that payload and nothing else. `scan --json` carries the same
+`skippedNeedsAi` count alongside its own fields.
 
 ## Tests
 

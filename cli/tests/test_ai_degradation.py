@@ -11,6 +11,7 @@ No AI model is called: the point of stripping PATH is that there is nothing
 to call.
 """
 
+import json
 import subprocess
 import sys
 
@@ -31,24 +32,6 @@ def _fresh_page(chromium_session: dict, cli: CliRunner) -> None:
     """
     result = cli("session", "go", FIXTURE_URL)
     assert result.returncode == 0, result.stderr
-
-
-@pytest.fixture(scope="module")
-def run_without_claude(chromium_session: dict):
-    """Run a CLI command with the Claude Code CLI unreachable."""
-    env = {**chromium_session, "PATH": "/usr/bin:/bin"}
-
-    def _run(*args: str) -> "subprocess.CompletedProcess[str]":
-        return subprocess.run(
-            [sys.executable, "-m", "cli.cli", *args],
-            cwd=REPO_ROOT,
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-
-    return _run
 
 
 def _page_html(env: dict) -> str:
@@ -108,15 +91,14 @@ def test_scan_never_erases_text_when_claude_is_missing(
                 browser.close()
 
     # The simplify and summarize paths only run under a profile that asks for
-    # them, and the profile only reaches the page through a navigation, so the
-    # order here is the order a user would type.
+    # them.
     run_without_claude("session", "profile", "cognitive")
-    run_without_claude("session", "go", FIXTURE_URL)
 
     before = paragraphs()
     assert any(len(t.strip()) > 500 for t in before), "fixture must carry a long block"
 
-    run_without_claude("session", "scan")
+    result = run_without_claude("session", "scan")
+    assert "Simplifying" in result.stdout, "the simplify pass did not run"
     assert paragraphs() == before
 
 
@@ -137,3 +119,21 @@ def test_no_element_is_given_an_empty_label_when_claude_is_missing(
         finally:
             browser.close()
     assert empty == 0
+
+
+@pytest.mark.parametrize("command", [("fix-alt",), ("fix-labels",)])
+def test_json_output_reports_what_was_skipped(
+    chromium_session: dict, run_without_claude, command: tuple
+) -> None:
+    """A caller reading --json has to be able to see a degraded run.
+
+    Exit status says only whether anything at all got done, so a run that fixed
+    some items and skipped others looks like a clean success from the outside
+    unless the payload says otherwise.
+    """
+    result = run_without_claude("session", *command, "--json")
+    payload = json.loads(result.stdout)
+
+    assert payload["fixed"] == []
+    assert payload["skippedNeedsAi"] > 0
+    assert payload["attempted"] == payload["skippedNeedsAi"]

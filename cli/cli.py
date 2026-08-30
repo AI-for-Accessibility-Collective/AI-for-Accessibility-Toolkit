@@ -710,8 +710,15 @@ def main() -> None:
     except _engine().ForeignBrowser as ex:
         # Refusing to drive a browser this session did not start is an ordinary
         # outcome, not a crash, so it reads as a sentence and not a traceback.
+        # sys.exit, not typer.Exit: nothing catches a typer.Exit raised out
+        # here, so it prints as an unhandled exception with the original
+        # chained under it, which is the traceback this avoids.
         typer.echo(str(ex), err=True)
-        raise typer.Exit(_engine().SESSION_MISMATCH_EXIT)
+        sys.exit(_engine().SESSION_MISMATCH_EXIT)
+    except _engine().NoSession as ex:
+        # So is running a session command before starting a session.
+        typer.echo(str(ex), err=True)
+        sys.exit(_engine().NO_SESSION_EXIT)
 
 
 if __name__ == "__main__":
