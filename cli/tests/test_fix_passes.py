@@ -8,6 +8,7 @@ file has changed behavior, whatever the diff says.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -88,6 +89,26 @@ def test_fix_all_fails_when_either_half_falls_short(
 
 
 @pytest.mark.browser
+def test_fix_all_fails_when_only_alt_half_succeeds(
+    chromium_session, run_with_flaky_claude
+):
+    """One clean half does not cover for the other.
+
+    The fixture holds two images, so a budget of 2 answered calls lets
+    fix-alt finish every image it has. fix-labels runs after it in the same
+    process and shares the same call counter, so it reaches no model at all.
+    A collapse that let one half's success paper over the other's failure
+    would turn this exit code green.
+    """
+    run = run_with_flaky_claude(2)
+    run("session", "go", FIXTURE_URL)
+    result = run("session", "fix-all")
+
+    assert result.returncode == AI_UNAVAILABLE_EXIT
+    assert NEEDS_AI_LINE in result.stdout
+
+
+@pytest.mark.browser
 def test_scan_reports_local_and_ai_work_separately(
     chromium_session, run_without_claude
 ):
@@ -98,6 +119,23 @@ def test_scan_reports_local_and_ai_work_separately(
     assert NEEDS_AI_LINE in result.stdout
     assert "Claude Code CLI not installed" not in result.stdout
     assert result.returncode == AI_UNAVAILABLE_EXIT
+
+    # scan --json is not usable here: session_scan prints dozens of human
+    # progress lines ahead of the payload, so json.loads fails on its stdout.
+    # That is a pre-existing defect tracked separately. The human summary
+    # block is stable, so the local/AI split is pinned against it instead.
+    non_ai = re.search(r"Non-AI fixes:\s*(\d+)", result.stdout)
+    ai = re.search(r"^\s*AI fixes:\s*(\d+)", result.stdout, re.MULTILINE)
+    skipped = re.search(r"Skipped, needs AI:\s*(\d+)", result.stdout)
+    assert non_ai and ai and skipped, result.stdout
+
+    # The low-contrast paragraph in the fixture is fixed by computing a
+    # luminance locally, no model involved, so it must land in the non-AI
+    # count. A run with no model reachable must still show zero AI fixes,
+    # never a contrast fix miscounted as one.
+    assert int(non_ai.group(1)) > 0
+    assert int(ai.group(1)) == 0
+    assert int(skipped.group(1)) > 0
 
 
 @pytest.mark.browser
