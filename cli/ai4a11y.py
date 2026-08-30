@@ -5383,6 +5383,222 @@ def session_fix_all(json_output=False):
     return 0
 
 
+# ------------------------------------------------------------
+# The six AI sub-passes inside `scan`
+#
+# They share one wording for a failed call and one for an item that raised,
+# and each keeps its own success line, so a scan reads the way it always has.
+# ------------------------------------------------------------
+
+def _scan_unanswered(i, item, selector):
+    return f"        ✗ {str(selector)[:30]}: {NEEDS_AI_LINE}"
+
+
+def _scan_failed(i, item, selector, error):
+    return f"        ✗ {selector[:30]}: {error}"
+
+
+SCAN_IMAGE_PASS = FixPass(
+    locate=lambda page, item, i: page.query_selector(item['selector']),
+    shot=lambda item, i: OUT / f"scan_img_{i}.png",
+    prompt=lambda page, item: (
+        "Describe this image for a blind user. Write concise alt text "
+        "(1-2 sentences). Return ONLY the alt text."),
+    call="vision",
+    cap=lambda v: v[:200],
+    write="(d) => { const e = document.querySelector(d.selector);"
+          " if(e) e.alt = d.value; }",
+    field="alt",
+    progress=FixProgress(
+        header=lambda items, count: f"      Fixing {count} images...",
+        applied=lambda i, item, sel, value: (
+            f"        ✓ {sel[:30]}... → \"{value[:40]}...\""),
+        failed=_scan_failed,
+        unanswered=_scan_unanswered,
+    ),
+)
+
+
+CANVAS_ITEMS_JS = """() => {
+    return Array.from(document.querySelectorAll('canvas'))
+        .filter(c => !c.getAttribute('aria-label') && !c.getAttribute('role'))
+        .map((c, i) => ({ index: i, selector: c.id ? '#' + c.id : `canvas:nth-of-type(${i+1})` }));
+}"""
+
+
+SCAN_CANVAS_PASS = FixPass(
+    items=lambda page: page.evaluate(CANVAS_ITEMS_JS),
+    locate=lambda page, item, i: page.query_selector(item['selector']),
+    shot=lambda item, i: OUT / f"canvas_{item['index']}.png",
+    prompt=lambda page, item: (
+        "Describe this canvas graphic for a blind user. What does it show? "
+        "Write 1-2 sentences."),
+    call="vision",
+    cap=lambda v: v[:200],
+    write="(d) => {\n"
+          "    const c = document.querySelectorAll('canvas')[d.index];\n"
+          "    if(c) { c.setAttribute('role', 'img');"
+          " c.setAttribute('aria-label', d.value); }\n"
+          "}",
+    field="description",
+    progress=FixProgress(
+        header=lambda items, count: f"      Describing {count} canvas elements...",
+        applied=lambda i, item, sel, value: (
+            f"        ✓ canvas {item['index']+1} → \"{value[:40]}...\""),
+        failed=lambda i, item, sel, error: f"        ✗ canvas {item['index']+1}: {error}",
+        unanswered=_scan_unanswered,
+    ),
+)
+
+
+VIDEO_ITEMS_JS = """() => {
+    return Array.from(document.querySelectorAll('video'))
+        .filter(v => !v.getAttribute('aria-label') && !v.getAttribute('aria-describedby'))
+        .map((v, i) => ({ index: i, selector: v.id ? '#' + v.id : `video:nth-of-type(${i+1})` }));
+}"""
+
+
+VIDEO_SEEK_JS = """(idx) => {
+    const video = document.querySelectorAll('video')[idx];
+    if (video) { video.pause(); video.currentTime = Math.min(2, video.duration / 4); }
+}"""
+
+
+def _video_locate(page, item, i):
+    """Park the video on a frame worth describing, then hand back the element."""
+    page.evaluate(VIDEO_SEEK_JS, item['index'])
+    time.sleep(0.5)
+    return page.query_selector(item['selector'])
+
+
+SCAN_VIDEO_PASS = FixPass(
+    items=lambda page: page.evaluate(VIDEO_ITEMS_JS),
+    locate=_video_locate,
+    shot=lambda item, i: OUT / f"video_frame_{item['index']}.png",
+    prompt=lambda page, item: (
+        "Describe this video frame for a blind user. What is happening in this "
+        "video? Write 1-2 sentences."),
+    call="vision",
+    cap=lambda v: v[:200],
+    write="(d) => { const v = document.querySelectorAll('video')[d.index];"
+          " if(v) v.setAttribute('aria-label', d.value); }",
+    field="description",
+    progress=FixProgress(
+        header=lambda items, count: f"      Describing {count} videos...",
+        applied=lambda i, item, sel, value: (
+            f"        ✓ video {item['index']+1} → \"{value[:40]}...\""),
+        failed=lambda i, item, sel, error: f"        ✗ video {item['index']+1}: {error}",
+        unanswered=_scan_unanswered,
+    ),
+)
+
+
+SCAN_LABEL_CONTEXT_JS = """(sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    return {
+        tag: el.tagName,
+        href: el.href,
+        text: el.innerText?.slice(0,100),
+        parent: el.parentElement?.innerText?.slice(0,100)
+    };
+}"""
+
+
+def _scan_label_prompt(page, item):
+    context = page.evaluate(SCAN_LABEL_CONTEXT_JS, item['selector'])
+    if not context:
+        return None
+    return (f"Generate a 2-5 word accessible label for: {json.dumps(context)}. "
+            "Return ONLY the label.")
+
+
+SCAN_LABEL_PASS = FixPass(
+    prompt=_scan_label_prompt,
+    call="text",
+    timeout=30,
+    cap=lambda v: v[:50],
+    write="(d) => { const e = document.querySelector(d.selector);"
+          " if(e) e.setAttribute('aria-label', d.value); }",
+    field="label",
+    progress=FixProgress(
+        header=lambda items, count: f"      Fixing {count} labels...",
+        applied=lambda i, item, sel, value: f"        ✓ {sel[:30]}... → \"{value}\"",
+        failed=_scan_failed,
+        unanswered=_scan_unanswered,
+    ),
+)
+
+
+def _scan_simplify_prompt(page, item):
+    text = page.evaluate(
+        "(sel) => document.querySelector(sel)?.textContent?.trim()?.slice(0, 500)",
+        item['selector'])
+    if not text:
+        return None
+    return ("Simplify this text for someone with cognitive disabilities. Use "
+            f"short sentences, simple words. Keep the meaning. Text: {text}")
+
+
+SCAN_SIMPLIFY_PASS = FixPass(
+    prompt=_scan_simplify_prompt,
+    call="text",
+    timeout=45,
+    write="""(d) => {
+    const el = document.querySelector(d.selector);
+    if (el) {
+        el.dataset.ai4a11ySimplified = 'true';
+        el.dataset.ai4a11yOriginal = el.textContent;
+        el.textContent = d.value;
+        el.style.backgroundColor = '#e8f5e9';
+        el.title = 'Text simplified for readability';
+    }
+}""",
+    field="simplified",
+    progress=FixProgress(
+        header=lambda items, count: (
+            f"\n[3b/4] Simplifying {len(items)} complex text blocks..."),
+        applied=lambda i, item, sel, value: f"        ✓ {sel[:30]}... simplified",
+        failed=_scan_failed,
+        unanswered=_scan_unanswered,
+    ),
+)
+
+
+def _scan_summarize_prompt(page, item):
+    text = page.evaluate(
+        "(sel) => document.querySelector(sel)?.textContent?.trim()?.slice(0, 1000)",
+        item['selector'])
+    if not text:
+        return None
+    return f"Write a 1-2 sentence summary of this content: {text}"
+
+
+SCAN_SUMMARIZE_PASS = FixPass(
+    prompt=_scan_summarize_prompt,
+    call="text",
+    timeout=45,
+    write="""(d) => {
+    const el = document.querySelector(d.selector);
+    if (el) {
+        el.dataset.ai4a11ySummarized = 'true';
+        const summaryBox = document.createElement('div');
+        summaryBox.style.cssText = 'background: #fff3e0; padding: 12px; margin-bottom: 12px; border-left: 4px solid #ff9800; border-radius: 4px;';
+        summaryBox.innerHTML = '<strong>Summary:</strong> ' + d.value;
+        el.parentElement?.insertBefore(summaryBox, el);
+    }
+}""",
+    field="summary",
+    progress=FixProgress(
+        header=lambda items, count: (
+            f"\n[3c/4] Summarizing {len(items)} long content blocks..."),
+        applied=lambda i, item, sel, value: f"        ✓ {sel[:30]}... summary added",
+        failed=_scan_failed,
+        unanswered=_scan_unanswered,
+    ),
+)
+
+
 def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
     """Run full accessibility scan and fix issues (like extension does).
 
@@ -5442,23 +5658,28 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         contrast_fixed = 0
         ai_unreachable = 0
 
-        def answer_or_skip(raw, what):
-            """The model's answer, or None after reporting that there was none.
+        def ai_pass(spec, items, max_items):
+            """Run one AI sub-pass and fold its unanswered count into the scan's.
 
             Every AI-backed fix below writes its answer straight into the page,
-            so each one reads it through here first. A failed call used to reach
-            those writes as an error sentence or as the empty string, which is
-            how images ended up labelled "Claude CLI error: ...", controls ended
-            up with aria-label="", and a paragraph queued for simplification was
-            replaced with nothing. All three were then counted as fixes.
+            and each one used to decide on its own what to do when no answer
+            came back. A failed call reached those writes as an error sentence
+            or as the empty string, which is how images ended up labelled
+            "Claude CLI error: ...", controls ended up with aria-label="", and a
+            paragraph queued for simplification was replaced with nothing. All
+            three were then counted as fixes. run_fix_pass refuses all of that
+            in one place now.
+
+            json_output is not passed on, because scan prints its progress
+            whatever the caller asked for. That makes `scan --json` unparseable,
+            which is a defect of its own and not one this pass changes.
             """
             nonlocal ai_unreachable
-            text = claude_answer(raw)
-            if text:
-                return text
-            ai_unreachable += 1
-            print(f"        ✗ {str(what)[:30]}: {NEEDS_AI_LINE}", flush=True)
-            return None
+            fixes, _attempted, unreachable = run_fix_pass(
+                page, spec, items=items, max_items=max_items)
+            ai_unreachable += unreachable
+            return len(fixes)
+
         if fix_ai and needs_ai:
             print(f"\n[3/4] Processing {len(needs_ai)} AI-required fixes...", flush=True)
 
@@ -5469,133 +5690,23 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
 
             # Fix images
             if image_fixes:
-                count = min(len(image_fixes), max_ai_fixes)
-                print(f"      Fixing {count} images...", flush=True)
-                for i, fix in enumerate(image_fixes[:count]):
-                    selector = fix['selector']
-                    try:
-                        el = page.query_selector(selector)
-                        if not el:
-                            continue
-                        img_path = OUT / f"scan_img_{i}.png"
-                        el.screenshot(path=str(img_path))
-                        prompt = "Describe this image for a blind user. Write concise alt text (1-2 sentences). Return ONLY the alt text."
-                        alt = answer_or_skip(ask_claude(str(img_path), prompt), selector)
-                        if alt is None:
-                            continue
-                        alt = alt.strip('"\'').strip()[:200]
-                        if not alt:
-                            answer_or_skip(None, selector)
-                            continue
-                        page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.alt = d.a; }}", {'s': selector, 'a': alt})
-                        ai_fixed += 1
-                        print(f"        ✓ {selector[:30]}... → \"{alt[:40]}...\"", flush=True)
-                        img_path.unlink(missing_ok=True)
-                    except Exception as e:
-                        print(f"        ✗ {selector[:30]}: {e}", flush=True)
+                ai_fixed += ai_pass(SCAN_IMAGE_PASS, image_fixes, max_ai_fixes)
 
             # Fix canvas elements without descriptions
-            canvas_without_desc = page.evaluate("""() => {
-                return Array.from(document.querySelectorAll('canvas'))
-                    .filter(c => !c.getAttribute('aria-label') && !c.getAttribute('role'))
-                    .map((c, i) => ({ index: i, selector: c.id ? '#' + c.id : `canvas:nth-of-type(${i+1})` }));
-            }""")
+            canvas_without_desc = SCAN_CANVAS_PASS.items(page)
             if canvas_without_desc and ai_fixed < max_ai_fixes:
-                count = min(len(canvas_without_desc), 3)
-                print(f"      Describing {count} canvas elements...", flush=True)
-                for cvs in canvas_without_desc[:count]:
-                    try:
-                        el = page.query_selector(cvs['selector'])
-                        if el:
-                            canvas_path = OUT / f"canvas_{cvs['index']}.png"
-                            el.screenshot(path=str(canvas_path))
-                            prompt = "Describe this canvas graphic for a blind user. What does it show? Write 1-2 sentences."
-                            desc = answer_or_skip(ask_claude(str(canvas_path), prompt), cvs['selector'])
-                            if desc is None:
-                                continue
-                            desc = desc.strip('"\'').strip()[:200]
-                            if not desc:
-                                answer_or_skip(None, cvs['selector'])
-                                continue
-                            page.evaluate(f"""(d) => {{
-                                const c = document.querySelectorAll('canvas')[d.i];
-                                if(c) {{ c.setAttribute('role', 'img'); c.setAttribute('aria-label', d.desc); }}
-                            }}""", {'i': cvs['index'], 'desc': desc})
-                            ai_fixed += 1
-                            print(f"        ✓ canvas {cvs['index']+1} → \"{desc[:40]}...\"", flush=True)
-                            canvas_path.unlink(missing_ok=True)
-                    except Exception as e:
-                        print(f"        ✗ canvas {cvs['index']+1}: {e}", flush=True)
+                ai_fixed += ai_pass(SCAN_CANVAS_PASS, canvas_without_desc, 3)
 
             # Fix videos without descriptions (autoVideoDescribe)
-            videos_without_desc = page.evaluate("""() => {
-                return Array.from(document.querySelectorAll('video'))
-                    .filter(v => !v.getAttribute('aria-label') && !v.getAttribute('aria-describedby'))
-                    .map((v, i) => ({ index: i, selector: v.id ? '#' + v.id : `video:nth-of-type(${i+1})` }));
-            }""")
+            videos_without_desc = SCAN_VIDEO_PASS.items(page)
             if videos_without_desc and ai_fixed < max_ai_fixes:
-                count = min(len(videos_without_desc), 3)  # Limit video processing
-                print(f"      Describing {count} videos...", flush=True)
-                for vid in videos_without_desc[:count]:
-                    try:
-                        # Capture video frame
-                        frame_path = OUT / f"video_frame_{vid['index']}.png"
-                        page.evaluate(f"""(idx) => {{
-                            const video = document.querySelectorAll('video')[idx];
-                            if (video) {{ video.pause(); video.currentTime = Math.min(2, video.duration / 4); }}
-                        }}""", vid['index'])
-                        time.sleep(0.5)
-                        el = page.query_selector(vid['selector'])
-                        if el:
-                            el.screenshot(path=str(frame_path))
-                            prompt = "Describe this video frame for a blind user. What is happening in this video? Write 1-2 sentences."
-                            desc = answer_or_skip(ask_claude(str(frame_path), prompt), vid['selector'])
-                            if desc is None:
-                                continue
-                            desc = desc.strip('"\'').strip()[:200]
-                            if not desc:
-                                answer_or_skip(None, vid['selector'])
-                                continue
-                            page.evaluate(f"(d) => {{ const v = document.querySelectorAll('video')[d.i]; if(v) v.setAttribute('aria-label', d.desc); }}", {'i': vid['index'], 'desc': desc})
-                            ai_fixed += 1
-                            print(f"        ✓ video {vid['index']+1} → \"{desc[:40]}...\"", flush=True)
-                            frame_path.unlink(missing_ok=True)
-                    except Exception as e:
-                        print(f"        ✗ video {vid['index']+1}: {e}", flush=True)
+                # Limit video processing
+                ai_fixed += ai_pass(SCAN_VIDEO_PASS, videos_without_desc, 3)
 
             # Fix labels
             if label_fixes and ai_fixed < max_ai_fixes:
-                remaining = max_ai_fixes - ai_fixed
-                count = min(len(label_fixes), remaining)
-                print(f"      Fixing {count} labels...", flush=True)
-                for fix in label_fixes[:count]:
-                    selector = fix['selector']
-                    try:
-                        context = page.evaluate("""(sel) => {
-                            const el = document.querySelector(sel);
-                            if (!el) return null;
-                            return {
-                                tag: el.tagName,
-                                href: el.href,
-                                text: el.innerText?.slice(0,100),
-                                parent: el.parentElement?.innerText?.slice(0,100)
-                            };
-                        }""", selector)
-                        if not context:
-                            continue
-                        prompt = f"Generate a 2-5 word accessible label for: {json.dumps(context)}. Return ONLY the label."
-                        label = answer_or_skip(ask_claude_text(prompt, timeout=30), selector)
-                        if label is None:
-                            continue
-                        label = label.strip('"\'').strip()[:50]
-                        if not label:
-                            answer_or_skip(None, selector)
-                            continue
-                        page.evaluate(f"(d) => {{ const e = document.querySelector(d.s); if(e) e.setAttribute('aria-label', d.l); }}", {'s': selector, 'l': label})
-                        ai_fixed += 1
-                        print(f"        ✓ {selector[:30]}... → \"{label}\"", flush=True)
-                    except Exception as e:
-                        print(f"        ✗ {selector[:30]}: {e}", flush=True)
+                ai_fixed += ai_pass(SCAN_LABEL_PASS, label_fixes,
+                                    max_ai_fixes - ai_fixed)
 
             # Fix contrast issues. This pass picks black or white from the
             # computed background luminance and calls no model, so its successes
@@ -5650,68 +5761,12 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         text_processing = result.get('textProcessing', {})
 
         if text_processing.get('simplify'):
-            simplify_items = text_processing['simplify']
-            print(f"\n[3b/4] Simplifying {len(simplify_items)} complex text blocks...", flush=True)
-            for item in simplify_items[:5]:
-                selector = item['selector']
-                try:
-                    text = page.evaluate("(sel) => document.querySelector(sel)?.textContent?.trim()?.slice(0, 500)", selector)
-                    if not text:
-                        continue
-                    prompt = f"Simplify this text for someone with cognitive disabilities. Use short sentences, simple words. Keep the meaning. Text: {text}"
-                    simplified = answer_or_skip(ask_claude_text(prompt, timeout=45), selector)
-                    if simplified is None:
-                        continue
-                    simplified = simplified.strip('"\'').strip()
-                    if not simplified:
-                        answer_or_skip(None, selector)
-                        continue
-                    page.evaluate("""(d) => {
-                        const el = document.querySelector(d.s);
-                        if (el) {
-                            el.dataset.ai4a11ySimplified = 'true';
-                            el.dataset.ai4a11yOriginal = el.textContent;
-                            el.textContent = d.t;
-                            el.style.backgroundColor = '#e8f5e9';
-                            el.title = 'Text simplified for readability';
-                        }
-                    }""", {'s': selector, 't': simplified})
-                    text_simplified += 1
-                    print(f"        ✓ {selector[:30]}... simplified", flush=True)
-                except Exception as e:
-                    print(f"        ✗ {selector[:30]}: {e}", flush=True)
+            text_simplified = ai_pass(
+                SCAN_SIMPLIFY_PASS, text_processing['simplify'], 5)
 
         if text_processing.get('summarize'):
-            summarize_items = text_processing['summarize']
-            print(f"\n[3c/4] Summarizing {len(summarize_items)} long content blocks...", flush=True)
-            for item in summarize_items[:3]:
-                selector = item['selector']
-                try:
-                    text = page.evaluate("(sel) => document.querySelector(sel)?.textContent?.trim()?.slice(0, 1000)", selector)
-                    if not text:
-                        continue
-                    prompt = f"Write a 1-2 sentence summary of this content: {text}"
-                    summary = answer_or_skip(ask_claude_text(prompt, timeout=45), selector)
-                    if summary is None:
-                        continue
-                    summary = summary.strip('"\'').strip()
-                    if not summary:
-                        answer_or_skip(None, selector)
-                        continue
-                    page.evaluate(f"""(d) => {{
-                        const el = document.querySelector(d.s);
-                        if (el) {{
-                            el.dataset.ai4a11ySummarized = 'true';
-                            const summaryBox = document.createElement('div');
-                            summaryBox.style.cssText = 'background: #fff3e0; padding: 12px; margin-bottom: 12px; border-left: 4px solid #ff9800; border-radius: 4px;';
-                            summaryBox.innerHTML = '<strong>Summary:</strong> ' + d.t;
-                            el.parentElement?.insertBefore(summaryBox, el);
-                        }}
-                    }}""", {'s': selector, 't': summary})
-                    text_summarized += 1
-                    print(f"        ✓ {selector[:30]}... summary added", flush=True)
-                except Exception as e:
-                    print(f"        ✗ {selector[:30]}: {e}", flush=True)
+            text_summarized = ai_pass(
+                SCAN_SUMMARIZE_PASS, text_processing['summarize'], 3)
 
         # Step 4: Summary
         print(f"\n[4/4] Summary", flush=True)
