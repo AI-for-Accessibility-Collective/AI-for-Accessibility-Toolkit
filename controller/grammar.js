@@ -20,17 +20,26 @@ function norm(s) {
   return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+// Determiners a person naturally puts in front of the setting's noun: "turn
+// off MY dark mode", "without A dark theme". Defined once and shared by every
+// off rule, for the same reason the builder below exists at all: a determiner
+// group hand-copied into each rule drifts, and the rule that gets missed does
+// the OPPOSITE of what the person asked. Accepting only "the" is how "turn off
+// my dark mode" turned dark mode ON.
+const DET = '(?:(?:the|my|your|a|an)\\s+)?';
+
 // Build the "off" rule for one boolean toggle. Matches the common off
 // phrasings for the toggle's noun: "<noun> off" (which also covers "turn the
 // <noun> off"), "turn off / switch off / disable / stop / remove / no /
-// no more / without <noun>", plus any per-toggle aliases in `extraSrc`.
+// no more / without <noun>", each allowing a determiner, plus any per-toggle
+// aliases in `extraSrc`.
 // One shared builder instead of a hand-kept phrase list per setting: the
 // hand-kept list is how "dark mode off" turned dark mode ON.
 function offRule(nounSrc, changes, say, extraSrc) {
   const noun = `(?:${nounSrc})`;
   const parts = [
     `\\b${noun}\\s+off\\b`,
-    `\\b(?:turn off|switch off|disable|stop|remove|no more|no|without)\\s+(?:the\\s+)?${noun}\\b`,
+    `\\b(?:turn off|switch off|disable|stop|remove|no more|no|without)\\s+${DET}${noun}\\b`,
   ];
   if (extraSrc) parts.push(extraSrc);
   return { re: new RegExp(parts.join('|')), build: (_m, u) => adapt(u, { changes, say }) };
@@ -61,23 +70,29 @@ const RULES = [
 
   // — toggles off — before every positive toggle rule, so an off phrasing can
   // never fall through to the positive rule and do the opposite of what the
-  // person asked. Two toggles are special-cased below the block: distractions
-  // ("remove distractions" means hide them) and motion ("stop motion" means
-  // reduce it), so they keep their own narrower off aliases.
+  // person asked. Contrast keeps its own line further down, next to the
+  // positive contrast rule, but is built the same way.
+  //
+  // Distractions is the one toggle that CANNOT use the shared builder: the
+  // builder's verb list contains "remove", and "remove distractions" means
+  // HIDE them, not show them again. So it keeps a narrower hand-written rule.
+  // Motion is safe in the builder because its noun is the compound
+  // ("motion reducer" / "reduced motion"), so "stop motion" and "no motion"
+  // still fall through to the positive rule and reduce motion, as intended.
   offRule('dark(?: mode| theme)?', { darkMode: false }, 'Turning dark mode off', '\\blight mode\\b'),
   offRule('focus mode', { focusMode: false }, 'Turning focus mode off'),
   offRule('dyslexi[ac](?: friendly)?(?: font)?', { dyslexiaFont: false }, 'Back to the standard font'),
   offRule('reading (?:guide|ruler)', { readingGuide: false }, 'Turning the reading guide off'),
   offRule('(?:large|big|bigger) cursor', { largeCursor: false }, 'Back to the normal cursor', '\\bnormal cursor\\b'),
   offRule('(?:big|large|bigger) (?:targets|buttons|controls)', { bigTargets: false }, 'Back to normal-size controls'),
-  { re: /\b(?:motion reducer|reduced? motion)\s+off\b|\bturn off (?:the )?(?:motion reducer|reduced? motion)\b|\ballow (?:motion|animations?)( again)?\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: false }, say: 'Allowing motion again' }) },
-  { re: /\b(?:show|bring back|stop hiding) (?:the )?(?:distractions?|ads)\b/, build: (_m, u) => adapt(u, { changes: { hideDistractions: false }, say: 'Showing everything again' }) },
+  offRule('motion reducer|reduced? motion', { motionReducer: false }, 'Allowing motion again', '\\ballow (?:motion|animations?)(?: again)?\\b'),
+  { re: new RegExp(`\\b(?:show|bring back|stop hiding) ${DET}(?:distractions?|ads)\\b`), build: (_m, u) => adapt(u, { changes: { hideDistractions: false }, say: 'Showing everything again' }) },
 
   // — dark / light —
   { re: /\bdark( mode| theme)?\b/, build: (_m, u) => adapt(u, { changes: { darkMode: true }, say: 'Turning on dark mode' }) },
 
   // — contrast — negation first
-  { re: /\b(no|remove|less) contrast\b|\b(?:high[- ]?)?contrast\s+off\b|\bturn off (?:the )?(?:high[- ]?)?contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'none' }, say: 'Removing high contrast' }) },
+  offRule('(?:high[- ]?)?contrast', { contrastMode: 'none' }, 'Removing high contrast', `\\bless ${DET}(?:high[- ]?)?contrast\\b`),
   { re: /\bhigh[- ]?contrast\b|\bmore contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
 
   // — motion —

@@ -52,6 +52,43 @@ for (const u of ['contrast off', 'high contrast off', 'turn off high contrast', 
   check(`off: "${u}" → contrastMode none`, i && i.changes.contrastMode === 'none');
 }
 
+// ── determiners in front of the noun ───────────────────────────────────────
+// "turn off MY dark mode" is how people actually speak, and a rule that
+// accepted only "the" sent every one of these to the POSITIVE rule: the person
+// asked for a setting off and heard a confident confirmation it was on. One
+// case per (toggle x determiner) so a determiner accepted by one rule and not
+// another fails loudly here rather than in someone's browser.
+const DETERMINERS = ['', 'the', 'my', 'your', 'a', 'an'];
+const detCases = [
+  // [phrase with a DET slot, key, expected value when off]
+  ['turn off DET dark mode', 'darkMode', false],
+  ['without DET dark theme', 'darkMode', false],
+  ['disable DET focus mode', 'focusMode', false],
+  ['turn off DET dyslexia font', 'dyslexiaFont', false],
+  ['remove DET reading guide', 'readingGuide', false],
+  ['disable DET big cursor', 'largeCursor', false],
+  ['turn off DET big buttons', 'bigTargets', false],
+  ['turn off DET motion reducer', 'motionReducer', false],
+  ['stop hiding DET ads', 'hideDistractions', false],
+  ['turn off DET high contrast', 'contrastMode', 'none'],
+];
+for (const [tpl, key, want] of detCases) {
+  for (const d of DETERMINERS) {
+    // norm() collapses the double space the empty determiner leaves behind.
+    const u = tpl.replace('DET', d);
+    const i = parse(u);
+    check(`det: "${u}" -> ${key} ${JSON.stringify(want)}`, !!i && i.type === 'adapt' && i.changes[key] === want);
+  }
+}
+
+// Contrast phrasings that the hand-written contrast rule used to miss outright
+// (it required "no contrast" adjacent, so "no HIGH contrast" fell through to
+// the positive rule and turned contrast ON).
+for (const u of ['no high contrast', 'without high contrast', 'disable high contrast', 'less contrast', 'less high contrast']) {
+  const i = parse(u);
+  check(`off: "${u}" -> contrastMode none`, !!i && i.changes.contrastMode === 'none');
+}
+
 // ── on phrasings still resolve to true (no over-negation) ──────────────────
 const onCases = [
   ['dark mode please', 'darkMode'],
