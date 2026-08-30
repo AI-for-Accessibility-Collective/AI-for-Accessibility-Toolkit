@@ -8067,13 +8067,43 @@ ${chunk}
   }
   function getSelector(el) {
     if (!el || !el.tagName) return "unknown";
-    const tag = el.tagName.toLowerCase();
-    if (el.id) return `#${el.id}`;
-    if (el.className && typeof el.className === "string") {
-      const classes = el.className.trim().split(/\s+/).filter((c) => c).slice(0, 2).join(".");
-      if (classes) return `${tag}.${classes}`;
+    const doc = el.ownerDocument || document;
+    const esc = (s) => typeof CSS !== "undefined" && CSS.escape ? CSS.escape(s) : s;
+    const addressesOnlyThis = (sel) => {
+      try {
+        const found = doc.querySelectorAll(sel);
+        return found.length === 1 && found[0] === el;
+      } catch {
+        return false;
+      }
+    };
+    if (el.id) {
+      const byId = `#${esc(el.id)}`;
+      if (addressesOnlyThis(byId)) return byId;
     }
-    return tag;
+    const tag = el.tagName.toLowerCase();
+    if (el.className && typeof el.className === "string") {
+      const classes = el.className.trim().split(/\s+/).filter((c) => c).slice(0, 2).map(esc).join(".");
+      if (classes && addressesOnlyThis(`${tag}.${classes}`)) return `${tag}.${classes}`;
+    }
+    const step = (node) => {
+      const name = node.tagName.toLowerCase();
+      const parent = node.parentElement;
+      if (!parent) return name;
+      const twins = Array.from(parent.children).filter((c) => c.tagName === node.tagName);
+      return twins.length === 1 ? name : `${name}:nth-of-type(${twins.indexOf(node) + 1})`;
+    };
+    const parts = [];
+    for (let node = el; node && node.tagName; node = node.parentElement) {
+      if (node !== el && node.id) {
+        const rooted = `#${esc(node.id)} > ${parts.join(" > ")}`;
+        if (addressesOnlyThis(rooted)) return rooted;
+      }
+      parts.unshift(step(node));
+      const path = parts.join(" > ");
+      if (addressesOnlyThis(path)) return path;
+    }
+    return parts.join(" > ");
   }
   if (typeof window !== "undefined") {
     setupAIProvider();
