@@ -118,12 +118,17 @@ await check('deep tool imports', async () => {
   }
 });
 
-// Negative checks: test directories must not ship.
-await check('test dirs excluded', async () => {
-  for (const spec of ['@ai4a11y/tools/test/browser-validate.js', '@ai4a11y/toolkit/test/skill-test.js']) {
-    let resolved = false;
-    try { require.resolve(spec); resolved = true; } catch { /* expected */ }
-    assert.ok(!resolved, spec + ' should not be resolvable from the packed tarball');
+// Negative checks: test directories must not ship. Checked on disk, not with
+// require.resolve: neither package exports ./test/*, so resolution fails with
+// ERR_PACKAGE_PATH_NOT_EXPORTED even when the files ARE in the tarball, which
+// would make a resolve-based check pass vacuously.
+await check('test dirs excluded', () => {
+  const roots = {
+    '@ai4a11y/toolkit': path.dirname(require.resolve('@ai4a11y/toolkit/package.json')),
+    '@ai4a11y/tools': path.dirname(require.resolve('@ai4a11y/tools/constants.js')),
+  };
+  for (const [name, root] of Object.entries(roots)) {
+    assert.ok(!existsSync(path.join(root, 'test')), name + ' shipped its test/ directory');
   }
 });
 
