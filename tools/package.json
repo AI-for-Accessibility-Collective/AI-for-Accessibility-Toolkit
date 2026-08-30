@@ -1,3 +1,29 @@
 {
-  "type": "module"
+  "name": "@ai4a11y/tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared accessibility tool catalog for the AI for Accessibility Toolkit: adapters, auditors, validators, utilities, and ability profiles used by the extensions and the CLI.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./constants.js": "./constants.js",
+    "./adapters/*.js": "./adapters/*.js",
+    "./auditors/*.js": "./auditors/*.js",
+    "./validators/*.js": "./validators/*.js",
+    "./utils/*.js": "./utils/*.js",
+    "./profiles/settings.js": "./profiles/settings.js",
+    "./profiles/settings.json": "./profiles/settings.json",
+    "./insights/*": "./insights/*"
+  },
+  "files": [
+    "index.js",
+    "constants.js",
+    "adapters/",
+    "auditors/",
+    "validators/",
+    "utils/",
+    "profiles/",
+    "insights/",
+    "README.md"
+  ]
 }
