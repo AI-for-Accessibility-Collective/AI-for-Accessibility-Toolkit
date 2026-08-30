@@ -1541,6 +1541,10 @@ def ask_claude(image_path, prompt):
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
         return json.dumps({'action': 'done', 'answer': 'Claude CLI timeout', 'reason': 'took >180s'})
+    except FileNotFoundError:
+        return json.dumps({'action': 'done',
+                           'answer': 'Claude Code CLI not installed; this command needs it',
+                           'reason': 'needs-ai'})
 
 
 def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
@@ -1565,6 +1569,8 @@ def ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL):
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
         return json.dumps({'error': 'timeout', 'answer': ''})
+    except FileNotFoundError:
+        return json.dumps({'error': 'needs-ai: Claude Code CLI not installed', 'answer': ''})
 
 
 def plan_task(page, task, run_dir, context=""):
