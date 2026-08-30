@@ -129,19 +129,34 @@ def test_no_element_is_given_an_empty_label_when_claude_is_missing(
 
 
 @pytest.mark.parametrize(
-    "command", ["fix-alt", "fix-labels", "find-all", "audit", "scan"])
+    "command",
+    ["fix-alt", "fix-labels", "find-all", "audit", "scan", "simplify"])
 def test_json_output_is_parseable_and_alone_on_stdout(
-    chromium_session: dict, run_without_claude, command: str
+    chromium_session: dict, run_without_claude, run_with_flaky_claude, command: str
 ) -> None:
     """--json prints one JSON document and no progress lines.
 
     Progress used to go to stdout ahead of the payload, so --json did not
-    actually parse for a caller. `scan` is in the list because it kept doing
-    that after the other commands stopped: it wrote its whole scan transcript
-    first, and json.loads failed on the first line of it.
+    actually parse for a caller. `scan` and `simplify` are in the list because
+    they kept doing that after the other commands stopped: scan wrote its whole
+    transcript first, simplify wrote two lines, and json.loads failed on the
+    first line either way.
+
+    `simplify` is the one command here given a model that answers. It has no
+    payload at all for a run where the model was unreachable: it prints one
+    needs-ai sentence and stops, so with nothing on PATH there would be no
+    document to check and the case this test exists for would go uncovered.
+    The stand-in is a shell script, so no model is called for it either.
+
+    The page is already the fixture when this runs: `_fresh_page` above is
+    autouse, so it navigates before every test in this file, `-k` selection
+    included. Do not add a `session go` here as well. A second navigation
+    right before the command leaves the page in a state where a later
+    element screenshot waits out its full 30 second timeout, which turns
+    three of the fix tests further down into 60 second failures.
     """
-    run_without_claude("session", "go", FIXTURE_URL)
-    result = run_without_claude("session", command, "--json")
+    run = run_with_flaky_claude(1) if command == "simplify" else run_without_claude
+    result = run("session", command, "--json")
     json.loads(result.stdout)  # raises if anything else reached stdout
 
 
@@ -154,11 +169,11 @@ def test_scan_json_carries_the_same_counts_as_the_human_summary(
     from different numbers, would satisfy it. This pins the keys and checks
     the counts against the summary block a person reads.
     """
-    # A scan writes its non-AI fixes into the page, so a run that starts on a
-    # page an earlier scan already fixed finds fewer things left to fix. Both
-    # runs below reload the fixture first, or the two sets of counts are taken
-    # from different pages and the comparison means nothing.
-    run_without_claude("session", "go", FIXTURE_URL)
+    # `_fresh_page` has already loaded the fixture for the first run. The
+    # second one needs the reload below, because a scan writes its non-AI fixes
+    # into the page and a scan of an already fixed page finds fewer things left
+    # to fix. Without it the two sets of counts come off different pages and
+    # the comparison means nothing.
     payload = json.loads(run_without_claude("session", "scan", "--json").stdout)
 
     assert set(payload) == {"violations", "fixed", "textProcessing",

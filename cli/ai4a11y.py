@@ -5265,6 +5265,14 @@ def session_simplify(selector=None, json_output=False):
       session simplify "article"          # Simplify specific element
       session simplify ".content"         # Simplify by CSS selector
     """
+    # The two progress lines below go through `say`, which is `print` for a
+    # person and a no-op for a caller who asked for --json. They shared stdout
+    # with the payload, so `simplify --json` did not parse, the same defect
+    # scan had. The "Element not found" and needs-ai lines stay on plain
+    # stdout: those are runs that produce no payload at all, and giving them
+    # one would be choosing a shape for it rather than refactoring.
+    say = quiet(json_output)
+
     with connected_page() as page:
         if not _inject_cli_tools(page):
             print("Error: Could not inject tools.", flush=True)
@@ -5292,8 +5300,8 @@ def session_simplify(selector=None, json_output=False):
             print(f"Element not found: {target_selector}", flush=True)
             return
 
-        print(f"Simplifying text in {target_selector}...", flush=True)
-        print(f"Original length: {len(original)} chars", flush=True)
+        say(f"Simplifying text in {target_selector}...", flush=True)
+        say(f"Original length: {len(original)} chars", flush=True)
 
         # Call Claude to simplify
         prompt = f"""Simplify this text for someone with cognitive disabilities or limited reading ability.
