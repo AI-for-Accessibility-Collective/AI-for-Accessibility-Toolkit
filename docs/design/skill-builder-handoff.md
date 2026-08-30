@@ -1,4 +1,4 @@
-> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior. Notably: custom adapters now run as chrome.userScripts (USER_SCRIPT world), not new Function in the content script, and activeSkills is not part of the save flow.
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior. File paths refer to the tree as it was when this was written, before the repository split; see the README's "Where things moved" section for current locations. Notably: custom adapters now run as chrome.userScripts (USER_SCRIPT world), not new Function in the content script, and activeSkills is not part of the save flow.
 
 # Skill Builder — Hand-off Document
 
