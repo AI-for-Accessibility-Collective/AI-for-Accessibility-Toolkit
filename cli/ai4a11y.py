@@ -2856,7 +2856,7 @@ def session_list_tables(max_tables=5):
 
 # Path to bundled axe-core
 _AXE_BUNDLE_PATH = Path(__file__).parent / "axe-core.min.js"
-_AXE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.0/axe.min.js"
+_AXE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.12.1/axe.min.js"
 _AXE_SCRIPT = None
 
 def _get_axe_script():
