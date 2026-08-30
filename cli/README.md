@@ -4,6 +4,8 @@ A terminal front end for the toolkit's catalog. It launches a persistent Chromiu
 
 This is a research probe, pre-alpha, restored from the pre-split repository and rewired to this tree. Expect rough edges.
 
+Two files: `cli.py` is the command line (a [Typer](https://typer.tiangolo.com/) app: parsing, help, shell completion via `ai4a11y --install-completion`); `ai4a11y.py` is the engine it calls. Every command and group answers `--help`.
+
 ## Setup
 
 ```bash
@@ -47,6 +49,16 @@ ai4a11y session tap "<target>" | type "<field>" "<text>" | hover | drag
 ai4a11y session do "<task>"              # autonomous multi-step mode
 ai4a11y session fix-alt | fix-labels | simplify | fix-all | scan
 ```
+
+## Tests
+
+```bash
+pip install -e '.[dev]'             # adds pytest
+python -m pytest                    # full harness; spawns its own headless Chromium
+python -m pytest -m 'not browser'   # catalog and degradation tests only, no browser
+```
+
+The harness lives in [`tests/`](tests/) and runs the real command surface as subprocesses against a fixture page with planted defects. It is isolated: its browser runs on a free port with its own state directories, and no test calls an AI model. CI runs it, then rebuilds the bundle and fails on drift against the committed copy.
 
 ## Vendored files
 
