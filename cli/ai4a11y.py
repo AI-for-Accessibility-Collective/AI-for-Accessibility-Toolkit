@@ -1957,10 +1957,12 @@ Return JSON only: {{"lesson": "..."}}"""
 # PERSISTENT SESSION — keep browser alive across ai4a11y calls
 # ============================================================
 
-SESSION_DIR = Path.home() / ".ai4a11y"
+# Session state location, CDP port, and browser profile dir. Overridable via
+# environment so tests and parallel sessions can isolate themselves.
+SESSION_DIR = Path(_os.environ.get("AI4A11Y_HOME") or (Path.home() / ".ai4a11y"))
 SESSION_FILE = SESSION_DIR / "session.json"
-CDP_PORT = 9222
-USER_DATA_DIR = "/tmp/ai4a11y-user-data"
+CDP_PORT = int(_os.environ.get("AI4A11Y_CDP_PORT") or 9222)
+USER_DATA_DIR = _os.environ.get("AI4A11Y_USER_DATA_DIR") or "/tmp/ai4a11y-user-data"
 
 
 def _chromium_path():
