@@ -2013,7 +2013,17 @@ def _chromium_path():
 
 
 class ForeignBrowser(RuntimeError):
-    """The browser on the recorded port is not the one this session started."""
+    """The browser on the recorded port is not the one this session started.
+
+    `stale` says whether the recorded browser is known to be gone. When it is,
+    the session file describes nothing and can be dropped. When it is not, the
+    file is the only handle the user has on whatever is still running, so it
+    stays and the message tells them what to do with it.
+    """
+
+    def __init__(self, message, stale=False):
+        super().__init__(message)
+        self.stale = stale
 
 
 def _cdp_browser_id(cdp, timeout=1):
@@ -2048,12 +2058,23 @@ def _read_session(verify=True):
     info = json.loads(SESSION_FILE.read_text())
     if not verify:
         return info
+    if not info.get('browser'):
+        # Written before session files carried a browser id. There is no way to
+        # tell whether the browser on that port is this session's, so say that
+        # rather than guess in either direction.
+        raise ForeignBrowser(
+            f"This session file predates browser identity, so what is on "
+            f"{info.get('cdp')} cannot be matched to it. Nothing was touched. "
+            f"Quit that browser yourself, delete {SESSION_FILE}, and run "
+            "'ai4a11y session start'."
+        )
     live = _cdp_browser_id(info.get('cdp', ''))
     if live is None or live != info.get('browser'):
         raise ForeignBrowser(
             "The browser this session recorded is gone, and what is on "
             f"{info.get('cdp')} now is not the browser it started. Nothing was "
-            "touched. Run 'ai4a11y session start' for a new one."
+            "touched. Run 'ai4a11y session start' for a new one.",
+            stale=True,
         )
     return info
 
@@ -2069,6 +2090,15 @@ def session_start():
         if existing.get('browser') and _cdp_browser_id(existing.get('cdp', '')) == existing['browser']:
             print(f"Session already running (pid {existing['pid']}). Use 'session stop' first or just reuse.", flush=True)
             return existing
+        if not existing.get('browser') and _cdp_browser_id(existing.get('cdp', '')):
+            # A session file from before browser ids, with something still on
+            # the port. Launching now would fail confusingly: the new browser
+            # cannot bind the port and its CDP endpoint never comes up.
+            raise ForeignBrowser(
+                f"A browser is already on {existing.get('cdp')} from a session "
+                f"file that predates browser identity. Quit it yourself and "
+                f"delete {SESSION_FILE}, then start again."
+            )
 
     exe = _chromium_path()
     proc = subprocess.Popen(
@@ -2307,7 +2337,8 @@ def session_stop():
         # killed: the browser exited, the number came round again, and someone
         # else's program is now holding it. Drop the stale file instead.
         print(str(ex), flush=True)
-        SESSION_FILE.unlink(missing_ok=True)
+        if ex.stale:
+            SESSION_FILE.unlink(missing_ok=True)
         return SESSION_MISMATCH_EXIT
     try:
         _os.kill(info['pid'], _signal.SIGTERM)

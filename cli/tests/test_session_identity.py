@@ -137,3 +137,27 @@ def test_stop_still_kills_the_browser_it_did_start(tmp_path: Path) -> None:
         if browser.poll() is None:
             browser.kill()
             browser.wait(timeout=10)
+
+
+def test_a_session_file_without_a_browser_id_is_not_guessed_about(
+    chromium_session: dict, tmp_path: Path
+) -> None:
+    """Session files written before this change name no browser. Neither
+    trusting nor killing is right, so the commands say what is going on."""
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "session.json").write_text(
+        json.dumps({"pid": os.getpid(),
+                    "cdp": f"http://localhost:{chromium_session['AI4A11Y_CDP_PORT']}",
+                    "started": "pytest"})
+    )
+    result = subprocess.run(
+        [sys.executable, "-m", "cli.cli", "session", "stop"],
+        cwd=REPO_ROOT,
+        env={**chromium_session, "AI4A11Y_HOME": str(home)},
+        capture_output=True, text=True, timeout=60,
+    )
+    assert result.returncode != 0
+    assert "predates browser identity" in result.stdout + result.stderr
+    # The pid in that file is this test process. It had better still be here.
+    assert (home / "session.json").exists()
