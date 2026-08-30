@@ -1706,6 +1706,22 @@ def run_fix_pass(page, spec, items=None, max_items=10, json_output=False):
             value = value.strip('"\'').strip()
             if spec.cap:
                 value = spec.cap(value)
+            # This branch is a deliberate change in what fix-alt does, made in
+            # the commit that collapsed the two standalone fixers (855c707) and
+            # not called out in its message.
+            #
+            # Seven of the eight passes refused an empty answer here and counted
+            # it as unanswered. fix-alt did not: it wrote the empty string into
+            # the alt attribute and counted a fix, so an image flagged for
+            # missing alt text came out of the run still missing it, reported as
+            # fixed. There is one loop now, so it does what the seven did and
+            # fix-alt refuses too.
+            #
+            # The window is narrow. claude_answer already returns None for an
+            # answer that is empty or only whitespace, so what reaches here is
+            # non-empty and this fires only when stripping the surrounding
+            # quote characters leaves nothing, meaning the whole answer was
+            # quote characters.
             if not value:
                 unreachable += 1
                 line(render.unanswered(i, item, selector))
