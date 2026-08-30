@@ -99,6 +99,9 @@ def test_fix_all_fails_when_only_alt_half_succeeds(
     process and shares the same call counter, so it reaches no model at all.
     A collapse that let one half's success paper over the other's failure
     would turn this exit code green.
+
+    test_ai_degradation.py has a test with the same budget for the same
+    reason; a fixture change to the image count needs to update both.
     """
     run = run_with_flaky_claude(2)
     run("session", "go", FIXTURE_URL)
@@ -136,6 +139,15 @@ def test_scan_reports_local_and_ai_work_separately(
     assert int(non_ai.group(1)) > 0
     assert int(ai.group(1)) == 0
     assert int(skipped.group(1)) > 0
+
+    # The totals above are satisfied by the images and the low-contrast
+    # paragraph alone, so they would stay green even if the fixture's canvas
+    # and video elements went missing, or if scan's canvas and video
+    # sub-passes silently stopped running. Each sub-pass announces itself on
+    # plain stdout before it starts, so match on that instead. The count is
+    # left out of the pattern because it depends on the fixture.
+    assert re.search(r"Describing \d+ canvas elements", result.stdout)
+    assert re.search(r"Describing \d+ videos", result.stdout)
 
 
 @pytest.mark.browser

@@ -170,6 +170,10 @@ def test_fix_all_fails_when_only_one_half_degraded(
 
     Answering both images and nothing after it means ``fix-alt`` finishes
     cleanly and ``fix-labels`` reaches no model at all.
+
+    The budget of 2 is tied to the fixture holding two images. test_fix_passes.py
+    has a test with the same budget for the same reason; a fixture change to the
+    image count needs to update both.
     """
     run = run_with_flaky_claude(2)
     result = run("session", "fix-all")
