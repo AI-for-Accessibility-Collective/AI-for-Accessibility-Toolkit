@@ -85,6 +85,23 @@ async function remoteLibrarian(token, method, args) {
   return { status: resp.status, body: await resp.json().catch(() => null) };
 }
 
+// remoteLibrarian resolves for ANY HTTP status, so an unchecked write turns a
+// failed profile save into a reported success: the person finishes onboarding,
+// is handed a uid, and the profile behind it was never written. That matters
+// more now that the uid IS the profile's read credential — we would be handing
+// out a capability for nothing. Reads stay deliberately tolerant (a profile
+// that will not load renders as empty rather than breaking the page); only
+// writes throw, and the first failure stops the rest so we do not pile more
+// half-written state on top of it.
+async function remoteWrite(token, method, args) {
+  const r = await remoteLibrarian(token, method, args);
+  if (r.status !== 200) {
+    const detail = r.body?.error || r.body?.message || 'no detail';
+    throw new Error(`profile write failed (${method}: HTTP ${r.status}, ${detail})`);
+  }
+  return r;
+}
+
 // ── Onboarding: capture supportAreas + free-text need into a profile ────────
 // A generated uid is the profile's capability: the read routes are
 // unauthenticated (a person onboarding has no credential yet), so knowing the
@@ -210,22 +227,22 @@ async function onboard({ uid, supportAreas, freeText, visionKind }) {
     // the cleared needs. freeText follows the same rule, and it matters most,
     // because it is the field where someone describes their own disability in
     // their own words.
-    await remoteLibrarian(token, 'setProfileField', ['supportAreas', areas]);
-    await remoteLibrarian(token, 'setProfileField', ['fields.needs', needs]);
-    await remoteLibrarian(token, 'setProfileField', ['fields.visionKind', kind ?? null]);
-    await remoteLibrarian(token, 'setProfileField', ['freeText', text]);
+    await remoteWrite(token, 'setProfileField', ['supportAreas', areas]);
+    await remoteWrite(token, 'setProfileField', ['fields.needs', needs]);
+    await remoteWrite(token, 'setProfileField', ['fields.visionKind', kind ?? null]);
+    await remoteWrite(token, 'setProfileField', ['freeText', text]);
     if (text) {
       // Stable topic so a re-onboard UPSERTS this note (addNote upserts by
       // topic) instead of appending a duplicate every run.
-      await remoteLibrarian(token, 'addNote', [text, { source: 'user-explicit', topic: 'self-description' }]);
+      await remoteWrite(token, 'addNote', [text, { source: 'user-explicit', topic: 'self-description' }]);
     } else {
       // Clearing the box has to clear the note too. addNote('') writes nothing
       // (it returns empty-text), and deleteNote takes an id, so the note is
       // found by topic first. Without this the person's own sentence about
       // their disability stays in the profile after they deleted it.
-      const listed = await remoteLibrarian(token, 'listNotes', [{ topic: 'self-description' }]);
+      const listed = await remoteWrite(token, 'listNotes', [{ topic: 'self-description' }]);
       for (const note of listed.body?.result || []) {
-        await remoteLibrarian(token, 'deleteNote', [note.id]);
+        await remoteWrite(token, 'deleteNote', [note.id]);
       }
     }
   } else {
