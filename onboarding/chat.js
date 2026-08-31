@@ -376,6 +376,7 @@ function setMic(on) {
 function toggleMic() {
   if (!recog) return;
   if (listening) { recog.stop(); return; }
+  try { if (TTS) window.speechSynthesis.cancel(); } catch {} // stop any playing reply before listening
   try { recog.start(); setMic(true); } catch {}
 }
 function initVoiceInput() {
