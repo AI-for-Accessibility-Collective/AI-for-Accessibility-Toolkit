@@ -69,7 +69,7 @@ def _inject_cli_tools(page, auto_apply_profile=False):
 
 
 def _publish_active_profile(page):
-    """Tell the page which profile is active, without applying its adapters.
+    """Tell the page which profile is active. Returns whether it took it.
 
     Anything that asks the catalog what the profile wants reads this, and it is
     a different question from whether the profile's adapters are switched on.
@@ -79,31 +79,71 @@ def _publish_active_profile(page):
     A cleared profile is published too. Returning early on a falsy profile
     left the last value published standing until the page was replaced, so a
     page went on being told a profile was active after it had been cleared.
+
+    The return value is what makes a failure to publish visible. Anything under
+    `window.ai4a11y` satisfies the check that decides the tools are already
+    injected, so the page may hold an object without `setSessionState` on it.
+    The optional-call chain this used to be gave back `undefined` whether it
+    published or found nothing to publish through, which reported that page
+    as one that had taken the state.
     """
     try:
-        page.evaluate(
-            "(state) => window.ai4a11y?.setSessionState?.(state)",
+        return bool(page.evaluate(
+            _js("publish_session_state.js"),
             {'activeProfile': _get_active_profile()}
-        )
+        ))
     except Exception:
         # The page may not have the tools loaded; the caller reports that.
-        pass
+        return False
 
 
 def _withdraw_active_profile(page):
-    """Take a cleared profile into an open page. Returns the tools turned off.
+    """Take a cleared profile into an open page. Returns what it managed to do.
 
     Publishing the cleared state is only half of it. The adapters a profile
     switches on bind their own listeners and ask a model from page events, and
     they consult no session state, so they keep running until something
     disables them. Applying a profile begins by disabling every tool; clearing
     one does the same and enables nothing after it.
+
+    Every way this can fall short used to arrive at the caller as the number 0,
+    which is also what a page with nothing switched on returns, so the command
+    reported a stop it had not performed. The report says which of the two
+    halves happened, names what is still running, and carries the reason it
+    could not finish:
+
+        published  — the page took the cleared session state
+        turnedOff  — the tools this call switched off, by name
+        stillOn    — the tools still enabled after it, by name
+        reason     — why the withdrawal did not finish, or None
+        withdrew   — both halves done and nothing left running
     """
-    _publish_active_profile(page)
+    report = {'published': _publish_active_profile(page),
+              'turnedOff': [], 'stillOn': [], 'reason': None}
     try:
-        return page.evaluate(_js("withdraw_profile.js"))
-    except Exception:
-        return 0
+        outcome = page.evaluate(_js("withdraw_profile.js"))
+    except Exception as exc:
+        outcome = None
+        # Playwright errors run to many lines; the first is the one that
+        # says what happened, and this goes on a line of a person's output.
+        failure = "the page stopped answering (%s)" % str(exc).strip().splitlines()[0][:120]
+    else:
+        failure = None if outcome else (
+            "what the page has under `ai4a11y` is not the bundle this CLI "
+            "installs, so its tools could not be listed")
+
+    if outcome:
+        report['turnedOff'] = outcome.get('turnedOff') or []
+        report['stillOn'] = outcome.get('stillOn') or []
+        if report['stillOn']:
+            failure = ("these tools would not turn off: "
+                       + ", ".join(report['stillOn']))
+        elif not report['published']:
+            failure = "the page did not take the cleared profile"
+
+    report['reason'] = failure
+    report['withdrew'] = failure is None
+    return report
 
 
 def _auto_apply_saved_profile(page):

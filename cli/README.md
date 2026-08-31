@@ -72,11 +72,13 @@ What that means in practice, because the page content involved is the user's:
 - **`ai4a11y session profile none` is how you stop them.** It clears the saved
   profile so that nothing reapplies it on the next navigation, and it reaches into
   the page you have open and turns the profile's tools back off there. It says how
-  many it turned off. Where it cannot reach a page, because no session is running
-  or the tools are not loaded, it says that instead of reporting a stop it did not
-  perform, and loading a page then clears the tab. Until this was fixed the
-  command wrote the saved state and stopped there, so the tab in front of you kept
-  the profile and its adapters until you navigated.
+  many it turned off. Where it cannot finish — no session is running, the tools are
+  not loaded, the tab holds an object this CLI cannot drive, or a tool will not turn
+  off — it says so, names what is still running, and **exits non-zero**, instead of
+  reporting a stop it did not perform; loading a page then clears the tab. Only a
+  run that exits 0 is a run that cleared the page. Until this was fixed the command
+  wrote the saved state and stopped there, so the tab in front of you kept the
+  profile and its adapters until you navigated.
 
 When the Claude Code CLI is not installed, or a call fails, these commands write
 nothing to the page. They say `needs-ai` on the line where the fix would have
@@ -87,6 +89,7 @@ been.
 | Code | Meaning |
 |---|---|
 | 0 | The command did the whole job. Every item it attempted was fixed. |
+| 1 | A profile could not be taken back out of the open page, or applied to it. |
 | 2 | The command line was wrong (Typer's usage error). |
 | 3 | An AI-backed command could not reach a model for at least one item. |
 | 4 | The recorded session is not the browser it started. Nothing was touched. |

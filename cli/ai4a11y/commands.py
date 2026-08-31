@@ -2052,40 +2052,58 @@ def session_profile(profile_name, json_output=False):
     # next navigation.
     if profile_name.lower() == 'none':
         _set_active_profile(None)
-        result = {'cleared': True, 'reachedPage': False, 'toolsTurnedOff': 0}
+        result = {'cleared': True, 'reachedPage': False, 'withdrawn': False,
+                  'toolsTurnedOff': 0, 'toolsStillOn': [], 'note': None}
         try:
             with connected_page() as page:
                 if _inject_cli_tools(page):
-                    result['toolsTurnedOff'] = _withdraw_active_profile(page)
                     result['reachedPage'] = True
+                    report = _withdraw_active_profile(page)
+                    result['withdrawn'] = report['withdrew']
+                    result['toolsTurnedOff'] = len(report['turnedOff'])
+                    result['toolsStillOn'] = report['stillOn']
+                    if not report['withdrew']:
+                        result['note'] = (
+                            f"The open page is not cleared: {report['reason']}. "
+                            "It may still have the profile applied. Reload it "
+                            "to be sure.")
                 else:
                     result['note'] = (
                         "Could not reach the tools on the open page, so it may "
                         "still have the profile applied. Load a page to be sure.")
         except NoSession:
+            # Nothing is open, so nothing is left holding the profile. This is
+            # the ordinary case rather than a failure, and it is the one place
+            # a page that was not reached is not a page that may still be armed.
+            result['withdrawn'] = True
             result['note'] = ("No browser session is running, so there was no "
                               "open page to clear.")
         except Exception as e:
             # Never let a browser problem turn clearing a profile into a
             # failure. The saved profile is already cleared by this point; say
-            # what was not reached rather than raising over it.
+            # what was not reached rather than raising over it. Playwright
+            # errors run to many lines and this one goes on a line of output.
+            first = str(e).strip().splitlines()[0][:120]
             result['note'] = (
-                f"Did not reach the open page ({e}), so it may still have the "
-                "profile applied. Load a page to be sure.")
+                f"Did not reach the open page ({first}), so it may still have "
+                "the profile applied. Load a page to be sure.")
 
         def render():
             print("Profile cleared. It will not auto-apply on navigation.",
                   flush=True)
-            if result['reachedPage']:
+            if result['withdrawn'] and result['reachedPage']:
                 count = result['toolsTurnedOff']
                 noun = "tool" if count == 1 else "tools"
                 print(f"Turned off {count} {noun} on the open page.",
                       flush=True)
-            else:
+            if result['note']:
                 print(result['note'], flush=True)
 
         emit(result, render, json_output)
-        return
+        # A withdrawal that did not finish is a privacy control that did not
+        # hold, so it exits non-zero. Only the count line used to distinguish
+        # the two, on stdout, where nothing scripting this command reads it.
+        return None if result['withdrawn'] else 1
 
     with connected_page() as page:
         _expose_ai_callbacks(page)
@@ -2117,6 +2135,11 @@ def session_profile(profile_name, json_output=False):
             _set_active_profile(profile_name)
 
         emit(result, render, json_output)
+        # Applying a profile and applying nothing were one exit status, with
+        # only a line of prose between them. This half is a privacy control
+        # too, in the other direction: what a person asked to be switched on
+        # for them is either on the page or it is not.
+        return None if result.get('success') else 1
 
 
 def session_profiles(json_output=False):
