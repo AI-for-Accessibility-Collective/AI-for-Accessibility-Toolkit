@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Accessibility Chat</title>
+<title>A11y Toolkit Chat</title>
 <style>
   :root {
     --bg: #f6f8fc; --panel: #ffffff; --ink: #1a1c1e; --muted: #5a6068;
@@ -97,6 +97,20 @@
   #demo-app p { margin: .3rem 0; }
   #demo-app aside.ad { border: 1px dashed #b3261e; color: #b3261e; padding: .35rem; font-size: .78rem; border-radius: .4rem; }
   #drive-note { color: var(--muted); font-size: .78rem; margin: .25rem 0 0; }
+  .btn.danger { border-color: #d93025; color: #d93025; }
+
+  /* The chat WINDOW mirrors adaptations applied via chat (synced from #demo-app
+     by chat.js) — a setting the person asks for also changes the UI they're in. */
+  #surface[style*="--aa-font-scale"] { font-size: calc(1rem * var(--aa-font-scale, 1)); }
+  #surface[style*="--aa-line-height"] #transcript { line-height: var(--aa-line-height, 1.5); }
+  #surface[style*="--aa-letter-spacing"] { letter-spacing: var(--aa-letter-spacing, 0); }
+  #surface.aa-dark { filter: invert(1) hue-rotate(180deg); }
+  #surface.aa-dyslexia { font-family: "Comic Sans MS", "OpenDyslexic", sans-serif; }
+  #surface.aa-reduce-motion * { animation: none !important; transition: none !important; }
+  #surface.aa-focus-mode .bubble { opacity: .65; }
+  #surface.aa-focus-mode .msg:last-child .bubble { opacity: 1; }
+  #surface[data-aa-contrast="yellow-black"] .bubble { background: #000 !important; color: #ff0 !important; }
+  #surface[data-aa-contrast="yellow-black"] #composer-form { background: #000; border-color: #ff0; }
 
   /* Adaptation classes/vars the dom-receiver toggles on #demo-app. */
   #demo-app[style*="--aa-font-scale"] { font-size: calc(1rem * var(--aa-font-scale, 1)); }
@@ -111,10 +125,10 @@
 </style>
 </head>
 <body>
-  <div class="app">
+  <div class="app" id="surface">
     <header>
       <button id="hamburger" class="icon-btn" aria-label="Settings" aria-expanded="false" aria-controls="drawer" title="Settings">☰</button>
-      <span class="brand"><span class="spark">✦</span> A11y Chat</span>
+      <span class="brand"><span class="spark">✦</span> A11y Toolkit Chat</span>
       <div id="profile" role="status" aria-live="polite">No profile yet.</div>
     </header>
 
@@ -126,7 +140,7 @@
         <button type="button" id="mic" aria-pressed="false" aria-label="Speak" title="Speak">🎤</button>
         <button type="submit" id="send" aria-label="Send" title="Send">➤</button>
       </form>
-      <p class="hint">Adapts your profile, drives a connected app, or adapts the demo app (in Settings) — by text or voice.</p>
+      <p class="hint">Adapts your profile, this window, or a connected app — by text or voice.</p>
     </div>
   </div>
 
@@ -134,6 +148,27 @@
   <div id="drawer" hidden>
     <div class="drawer-panel" role="dialog" aria-label="Settings" aria-modal="true">
       <h2>Settings <button id="drawer-close" class="icon-btn" aria-label="Close settings" title="Close">✕</button></h2>
+
+      <div class="field">
+        <button type="button" id="reset-profile" class="btn danger">Reset profile</button>
+        <span class="desc">Forget the current user and clear all applied settings — start fresh, as no specific person.</span>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <strong style="font-size:.9rem;">What the chat controls</strong>
+        <span class="desc">By default the chat drives the demo app (below) and this window. Connect a remote receiver to drive a real app instead.</span>
+        <label for="ws-url" style="font-size:.8rem;color:var(--muted);">Connect a remote receiver</label>
+        <input type="text" id="ws-url" placeholder="ws://127.0.0.1:9333">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button type="button" id="use-local-harness" class="btn">Connect browser-harness</button>
+          <button type="button" id="connect-remote" class="btn">Connect</button>
+        </div>
+        <p id="drive-note">Driving the demo app + this window.</p>
+      </div>
+
+      <hr>
 
       <div class="field">
         <label class="row"><input type="checkbox" id="speak-cb"> Speak replies aloud</label>
@@ -152,18 +187,6 @@
       </div>
 
       <hr>
-
-      <div class="field">
-        <strong style="font-size:.9rem;">What the chat controls</strong>
-        <button type="button" id="use-local" class="btn">Use the demo app</button>
-        <label for="ws-url" style="font-size:.8rem;color:var(--muted);">…or connect a remote receiver</label>
-        <input type="text" id="ws-url" placeholder="ws://127.0.0.1:9333">
-        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-          <button type="button" id="use-local-harness" class="btn">Connect browser-harness</button>
-          <button type="button" id="connect-remote" class="btn">Connect</button>
-        </div>
-        <p id="drive-note">Driving the demo app below.</p>
-      </div>
 
       <details class="demo" open>
         <summary>Demo app (what the controller drives)</summary>

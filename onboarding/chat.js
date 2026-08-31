@@ -158,7 +158,7 @@ function rebuildController() {
 function useLocal() {
   if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
   currentControl = localReceiver;
-  $('drive-note').textContent = 'Driving the demo app below.';
+  $('drive-note').textContent = 'Driving the demo app + this window.';
   rebuildController();
   if (unNote) { unNote(); unNote = null; }
   wireNotes();
@@ -353,15 +353,39 @@ function initSettings() {
     if (recog) { try { recog.abort(); } catch {} recog = null; }
     initVoiceInput();
   });
-  // Drive: local vs remote
-  $('use-local').addEventListener('click', () => useLocal());
+  // Drive: connect a remote receiver (default is the local demo app + window).
   $('connect-remote').addEventListener('click', () => useRemote($('ws-url').value.trim()));
   $('use-local-harness').addEventListener('click', () => { $('ws-url').value = 'ws://127.0.0.1:9333'; useRemote('ws://127.0.0.1:9333'); });
+
+  // Reset profile: forget the current user and clear every applied setting — a
+  // reload gives a fresh receiver (no adaptations), an empty transcript, and no
+  // profile, i.e. starting from scratch as no specific person.
+  $('reset-profile').addEventListener('click', () => {
+    try { localStorage.removeItem('onb-uid'); } catch {}
+    location.reload();
+  });
+}
+
+// ── mirror adaptations onto the chat window itself ────────────────────────────
+// The controller drives #demo-app (in the drawer). A setting the person asks for
+// should also change the UI they're actually using, so we mirror the receiver's
+// applied classes/vars from #demo-app onto #surface (the chat window). Driven by
+// a MutationObserver, so it tracks apply AND undo, however the change was made.
+const AA_CLASSES = ['aa-dark', 'aa-dyslexia', 'aa-reduce-motion', 'aa-hide-distractions', 'aa-focus-mode'];
+const AA_VARS = ['--aa-font-scale', '--aa-line-height', '--aa-letter-spacing'];
+function syncSurface() {
+  const src = $('demo-app'), dst = $('surface');
+  if (!src || !dst) return;
+  for (const c of AA_CLASSES) dst.classList.toggle(c, src.classList.contains(c));
+  for (const v of AA_VARS) { const val = src.style.getPropertyValue(v); if (val) dst.style.setProperty(v, val); else dst.style.removeProperty(v); }
+  const contrast = src.getAttribute('data-aa-contrast');
+  if (contrast) dst.setAttribute('data-aa-contrast', contrast); else dst.removeAttribute('data-aa-contrast');
 }
 
 // ── boot ──────────────────────────────────────────────────────────────────────
 const localReceiver = createDomReceiver($('demo-app'), { scrollTarget: document.scrollingElement || document.documentElement });
 currentControl = localReceiver;
+new MutationObserver(syncSurface).observe($('demo-app'), { attributes: true, attributeFilter: ['class', 'style', 'data-aa-contrast'] });
 
 async function boot() {
   await loadProfile();
