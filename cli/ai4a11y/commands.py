@@ -495,46 +495,7 @@ def session_read(selector=None):
     full body text if no article-like container found.
     """
     with connected_page() as page:
-        text = page.evaluate(f"""
-            (sel) => {{
-                // 1. Honor explicit selector if given
-                if (sel) {{
-                    const el = document.querySelector(sel);
-                    if (el) return el.innerText.replace(/\\s+/g, ' ').trim();
-                }}
-                // 2. Try semantic containers
-                const candidates = [
-                    'article',
-                    '[role="article"]',
-                    'main article',
-                    'main',
-                    '[role="main"]',
-                    '#content article',
-                    '#content',
-                    '.article-body',
-                    '.post-content',
-                    '.entry-content',
-                ];
-                for (const c of candidates) {{
-                    const el = document.querySelector(c);
-                    if (el && el.innerText && el.innerText.length > 200) {{
-                        return el.innerText.replace(/\\s+\\n/g, '\\n').replace(/\\n{{3,}}/g, '\\n\\n').trim();
-                    }}
-                }}
-                // 3. Text-density heuristic — find the <div> with most text relative to tags
-                let best = null, bestScore = 0;
-                document.querySelectorAll('div, section').forEach(el => {{
-                    const text = el.innerText || '';
-                    if (text.length < 400) return;
-                    const tags = el.querySelectorAll('*').length || 1;
-                    const score = text.length / tags;
-                    if (score > bestScore) {{ bestScore = score; best = el; }}
-                }});
-                if (best) return best.innerText.replace(/\\s+\\n/g, '\\n').replace(/\\n{{3,}}/g, '\\n\\n').trim();
-                // 4. Fallback: whole body
-                return (document.body.innerText || '').replace(/\\s+\\n/g, '\\n').replace(/\\n{{3,}}/g, '\\n\\n').trim();
-            }}
-        """, selector)
+        text = page.evaluate(_js("session_read.js"), selector)
 
         if not text:
             print("(no article text found)", flush=True)
@@ -1755,49 +1716,7 @@ def session_heading(direction='next', level=None):
         print(f"Invalid heading level {level}. Must be 1-6.", flush=True)
         return
     with connected_page() as page:
-        result = page.evaluate(f"""
-            (direction, level) => {{
-                const selector = level ? `h${{level}}` : 'h1, h2, h3, h4, h5, h6';
-                const headings = [...document.querySelectorAll(selector)].filter(h => h.offsetParent !== null);
-                if (!headings.length) return {{found: false, msg: 'No headings found'}};
-
-                const active = document.activeElement;
-                let currentIdx = -1;
-
-                // Find current position
-                for (let i = 0; i < headings.length; i++) {{
-                    if (headings[i] === active || headings[i].contains(active)) {{
-                        currentIdx = i;
-                        break;
-                    }}
-                }}
-
-                // Calculate target index
-                let targetIdx;
-                if (direction === 'next') {{
-                    targetIdx = currentIdx + 1;
-                    if (targetIdx >= headings.length) targetIdx = 0;  // wrap
-                }} else {{
-                    targetIdx = currentIdx - 1;
-                    if (targetIdx < 0) targetIdx = headings.length - 1;  // wrap
-                }}
-
-                const target = headings[targetIdx];
-                target.setAttribute('tabindex', '-1');
-                target.focus();
-                target.scrollIntoView({{behavior: 'smooth', block: 'center'}});
-
-                const tag = target.tagName.toLowerCase();
-                const text = (target.textContent || '').trim().slice(0, 80);
-                return {{
-                    found: true,
-                    tag: tag,
-                    text: text,
-                    index: targetIdx + 1,
-                    total: headings.length
-                }};
-            }}
-        """, [direction, level])
+        result = page.evaluate(_js("session_heading.js"), [direction, level])
 
         if result.get('found'):
             print(f"[{result['tag']}] {result['text']}", flush=True)
@@ -1832,53 +1751,7 @@ def session_media(action, value=None):
         value: For seek (seconds), rate (0.5-2.0), volume (0-1)
     """
     with connected_page() as page:
-        result = page.evaluate(f"""
-            (action, value) => {{
-                const media = document.querySelector('video, audio');
-                if (!media) return {{error: 'No video or audio found on page'}};
-
-                const info = () => ({{
-                    type: media.tagName.toLowerCase(),
-                    duration: media.duration,
-                    currentTime: media.currentTime,
-                    paused: media.paused,
-                    muted: media.muted,
-                    volume: media.volume,
-                    playbackRate: media.playbackRate
-                }});
-
-                switch (action) {{
-                    case 'play':
-                        media.play();
-                        return {{...info(), msg: 'Playing'}};
-                    case 'pause':
-                        media.pause();
-                        return {{...info(), msg: 'Paused'}};
-                    case 'toggle':
-                        if (media.paused) media.play();
-                        else media.pause();
-                        return {{...info(), msg: media.paused ? 'Paused' : 'Playing'}};
-                    case 'seek':
-                        const seekTo = parseFloat(value) || 0;
-                        media.currentTime = Math.max(0, Math.min(seekTo, media.duration));
-                        return {{...info(), msg: `Seeked to ${{Math.floor(media.currentTime)}}s`}};
-                    case 'rate':
-                        const rate = parseFloat(value);
-                        if (!isNaN(rate)) media.playbackRate = Math.max(0.25, Math.min(rate, 4.0));
-                        return {{...info(), msg: `Speed: ${{media.playbackRate}}x`}};
-                    case 'volume':
-                        const vol = parseFloat(value);
-                        if (!isNaN(vol)) media.volume = Math.max(0, Math.min(vol, 1));
-                        return {{...info(), msg: `Volume: ${{Math.round(media.volume * 100)}}%`}};
-                    case 'mute':
-                        media.muted = !media.muted;
-                        return {{...info(), msg: media.muted ? 'Muted' : 'Unmuted'}};
-                    case 'status':
-                    default:
-                        return {{...info(), msg: 'Status'}};
-                }}
-            }}
-        """, [action, value])
+        result = page.evaluate(_js("session_media.js"), [action, value])
 
         if result.get('error'):
             print(result['error'], flush=True)
@@ -2921,18 +2794,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                             continue
                         # Simple fix: make text black or white based on background
                         # (AI-based fix would be better but this is faster)
-                        page.evaluate(f"""(d) => {{
-                            const el = document.querySelector(d.s);
-                            if (!el) return;
-                            const bg = getComputedStyle(el).backgroundColor;
-                            // Parse RGB and calculate luminance
-                            const rgb = bg.match(/\\d+/g);
-                            if (rgb && rgb.length >= 3) {{
-                                const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
-                                el.style.color = lum > 0.5 ? '#000000' : '#ffffff';
-                                el.dataset.ai4a11yContrastFixed = 'true';
-                            }}
-                        }}""", {'s': selector})
+                        page.evaluate(_js("session_scan_contrast_fix.js"), {'s': selector})
                         contrast_fixed += 1
                         say(f"        ✓ {selector[:30]}... contrast fixed", flush=True)
                     except Exception as e:
