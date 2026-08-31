@@ -22,21 +22,49 @@ LAYERS = {
 }
 
 
+PACKAGE = "ai4a11y"
+
+
+def _siblings_in(dotted: str, alias_names: list) -> set:
+    """Sibling module names named by one import's module path and aliases.
+
+    `dotted` is the module path with any leading dots already stripped, so
+    `page` for `from .page import ...` and `cli.ai4a11y.page` for the absolute
+    spelling of the same import. Whatever follows the package name is the
+    sibling; when nothing follows it, the siblings are the imported aliases,
+    as in `from . import page` and `from cli.ai4a11y import page`.
+    """
+    parts = [p for p in dotted.split(".") if p]
+    if PACKAGE in parts:
+        parts = parts[parts.index(PACKAGE) + 1:]
+    if parts:
+        return {parts[0]} & set(LAYERS)
+    return set(alias_names) & set(LAYERS)
+
+
 def _local_imports(path: Path) -> set:
     """Sibling module names this file imports.
 
-    Catches both shapes: `from .page import get_elements` puts the module in
-    `node.module`, and `from . import page` puts it in the alias names.
+    Catches every spelling, because the layering is only as strong as the
+    shapes it recognizes and an absolute import is the easy way around a
+    check that only looks at relative ones:
+
+        from .page import get_elements
+        from . import page
+        from cli.ai4a11y.page import get_elements
+        from cli.ai4a11y import page
+        import cli.ai4a11y.page
     """
     names = set()
     for node in ast.walk(ast.parse(path.read_text())):
-        if not isinstance(node, ast.ImportFrom) or node.level != 1:
-            continue
-        if node.module:
-            names.add(node.module.split(".")[0])
-        else:
-            names.update(alias.name for alias in node.names)
-    return names & set(LAYERS)
+        if isinstance(node, ast.ImportFrom):
+            names |= _siblings_in(
+                node.module or "", [a.name for a in node.names]
+            )
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                names |= _siblings_in(alias.name, [])
+    return names
 
 
 def test_engine_imports_only_point_downward() -> None:
