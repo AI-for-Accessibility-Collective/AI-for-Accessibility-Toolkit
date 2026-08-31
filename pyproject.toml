@@ -27,6 +27,17 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["cli*", "tools*"]
 
+# The CLI runs JavaScript in the page for almost everything it does, so these
+# files are not extras. Without them an installed ai4a11y cannot inject its
+# tools, cannot run an audit or a fix, and reads a page with no Readability.
+[tool.setuptools.package-data]
+cli = [
+    "js/*.js",
+    "lib/*.js",
+    "cli-tools.bundle.js",
+    "axe-core.min.js",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["cli/tests"]
 markers = [
