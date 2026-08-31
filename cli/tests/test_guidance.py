@@ -50,18 +50,39 @@ def test_every_npm_script_the_readmes_name_exists() -> None:
 
 import ast
 
+ENGINE_DIR = REPO_ROOT / "cli" / "ai4a11y"
+
 
 def _ai_backed_engine_functions() -> set:
-    """Every session_* engine function that can reach a Claude subprocess."""
-    tree = ast.parse((REPO_ROOT / "cli" / "ai4a11y.py").read_text())
-    functions = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
-    calls = {
-        name: {
-            c.func.id for c in ast.walk(node)
-            if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
-        }
-        for name, node in functions.items()
-    }
+    """Every session_* engine function that can reach a Claude subprocess.
+
+    The engine is a package of six modules now, so the call graph is built
+    from all of them at once rather than one module at a time. That matters:
+    resolving each module against itself alone finds 11 commands, because a
+    command in commands.py calls a fix pass that lives in ai.py and the edge
+    is dropped. Over the union it finds 18, which is what the single-module
+    engine reported before the split.
+
+    A call counts in either shape: a bare name, from `from .ai import
+    ask_claude`, or an attribute, from `from . import ai` followed by
+    `ai.ask_claude(...)`.
+    """
+    calls = {}
+    for path in sorted(ENGINE_DIR.glob("*.py")):
+        for node in ast.parse(path.read_text()).body:
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            named = {
+                c.func.id for c in ast.walk(node)
+                if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
+            }
+            attrs = {
+                c.func.attr for c in ast.walk(node)
+                if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute)
+            }
+            calls[node.name] = named | attrs
+    assert calls, f"found no engine functions under {ENGINE_DIR}"
+
     reaching = {"ask_claude", "ask_claude_text"}
     growing = True
     while growing:
