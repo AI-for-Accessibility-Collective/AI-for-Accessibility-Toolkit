@@ -78,6 +78,11 @@ def _publish_active_profile(page):
     """
     profile = _get_active_profile()
     if not profile:
+        # FLAG(review): returning here is what makes `session profile none`
+        # leave an open page still running the profile's AI adapters. Nothing
+        # ever publishes a cleared profile into a page, so the last value
+        # published stands until the page is replaced. Paired with the flag in
+        # session_profile; the two are one defect and one fix.
         return
     try:
         page.evaluate(

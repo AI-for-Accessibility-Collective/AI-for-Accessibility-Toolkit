@@ -2160,6 +2160,16 @@ def session_profile(profile_name, json_output=False):
       session profile none       # clear active profile
     """
     # Handle clearing profile
+    #
+    # FLAG(review): this clears the saved profile and nothing else. It never
+    # connects to the browser, so a page that already has the profile keeps it
+    # and its AI adapters keep sending page text out. Measured on one tab: the
+    # scan text passes still ran after this command, and stopped only after the
+    # next page load. The message below is true about navigation and reads as a
+    # broader assurance than it is. Left for whoever owns the session
+    # lifecycle, because pushing the clear into the page is a change to that
+    # lifecycle and the exposed AI callbacks are a separate mechanism from the
+    # published profile state. cli/README.md tells users what actually stops it.
     if profile_name.lower() == 'none':
         _set_active_profile(None)
         print("Profile cleared. Tools will not auto-apply on navigation.", flush=True)
