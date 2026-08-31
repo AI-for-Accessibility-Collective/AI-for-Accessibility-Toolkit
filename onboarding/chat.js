@@ -370,7 +370,13 @@ function setMic(on) {
   const b = $('mic'); if (!b) return;
   b.setAttribute('aria-pressed', on ? 'true' : 'false');
   b.classList.toggle('listening', on);
-  b.title = on ? 'Stop listening' : 'Speak';
+  b.title = on ? 'Stop listening (Ctrl+Space)' : 'Speak (Ctrl+Space)';
+}
+// Start/stop dictation. Shared by the mic button and the Ctrl+Space shortcut.
+function toggleMic() {
+  if (!recog) return;
+  if (listening) { recog.stop(); return; }
+  try { recog.start(); setMic(true); } catch {}
 }
 function initVoiceInput() {
   const b = $('mic');
@@ -380,7 +386,7 @@ function initVoiceInput() {
   recog.onresult = (e) => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; $('composer-input').value = t.replace(/\s+/g, ' ').trim(); gotText = !!$('composer-input').value; };
   recog.onerror = () => setMic(false);
   recog.onend = () => { setMic(false); if (gotText) { gotText = false; handleTurn($('composer-input').value); } };
-  b.addEventListener('click', () => { if (listening) { recog.stop(); return; } try { recog.start(); setMic(true); } catch {} });
+  b.addEventListener('click', toggleMic);
 }
 
 // ── settings drawer ───────────────────────────────────────────────────────────
@@ -452,6 +458,15 @@ async function boot() {
 
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
   $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
+
+  // Ctrl+Space anywhere starts/stops voice input (only when the mic is available
+  // and enabled). Note: on macOS Ctrl+Space may also be the OS input-source
+  // switcher; the toggle here fires regardless.
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (e.code === 'Space' || e.key === ' ')) {
+      if (SR && voiceInOn && recog) { e.preventDefault(); toggleMic(); }
+    }
+  });
 
   addMessage('assistant', 'Hi — I set up your ability profile and adapt your connected application. Try “I’m blind”, “I need bigger text”, “dark mode”, or tell me what you need. Say “help” for more.');
   $('composer-input').focus();
