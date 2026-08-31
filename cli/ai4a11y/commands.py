@@ -1716,6 +1716,16 @@ def session_heading(direction='next', level=None):
         print(f"Invalid heading level {level}. Must be 1-6.", flush=True)
         return
     with connected_page() as page:
+        # FLAG(review): page.evaluate passes one argument, and the script takes
+        # two parameters, so the whole list arrives as `direction` and `level`
+        # is always undefined. `direction === 'next'` is therefore never true
+        # and every call walks backwards, and `--level` is ignored. Measured
+        # against a page with an h1, an h2 and an h3: asking for the next
+        # level 2 heading returns the h3. Pre-existing, and unchanged by the
+        # move into cli/js/. Not fixed here because it changes what two
+        # commands do for the person using them, which wants its own tests.
+        # text_recovery_scroll.js and verify_click_landed.js take one
+        # destructured parameter and are correct.
         result = page.evaluate(_js("session_heading.js"), [direction, level])
 
         if result.get('found'):
@@ -1751,6 +1761,13 @@ def session_media(action, value=None):
         value: For seek (seconds), rate (0.5-2.0), volume (0-1)
     """
     with connected_page() as page:
+        # FLAG(review): the same one-argument mismatch as session_heading. The
+        # script takes `(action, value)`, so `action` receives the whole list
+        # and never matches a case. Every action falls through to the default
+        # branch, which means `session media play`, `pause`, `seek`, `rate`,
+        # `volume` and `mute` all report status and change nothing. Measured
+        # against a headless Chromium. Pre-existing, and unchanged by the move
+        # into cli/js/. Left for the same reason as session_heading.
         result = page.evaluate(_js("session_media.js"), [action, value])
 
         if result.get('error'):
