@@ -246,6 +246,52 @@ function startWaiting() {
 }
 function stopWaiting() { if (waitingRow) { waitingRow.remove(); waitingRow = null; } }
 
+// ── composer history (shell-style Up/Down recall) ─────────────────────────────
+// Sent messages are remembered (per browser) and recalled with the arrow keys —
+// Up walks back through older messages, Down walks forward, and Down past the
+// newest restores whatever draft you were typing.
+const HIST_KEY = 'aa-chat-history';
+const HIST_MAX = 100;
+let history = [];
+try { const h = JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); if (Array.isArray(h)) history = h.filter((x) => typeof x === 'string'); } catch { history = []; }
+let histIndex = history.length; // points one past the newest = "the current draft"
+let histDraft = '';             // the in-progress line, restored when you arrow past newest
+
+function pushHistory(text) {
+  const t = String(text || '').trim();
+  if (t && history[history.length - 1] !== t) { // skip empty + consecutive dupes
+    history.push(t);
+    if (history.length > HIST_MAX) history = history.slice(-HIST_MAX);
+    try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch {}
+  }
+  histIndex = history.length;
+  histDraft = '';
+}
+function caretToEnd(ta) { const n = ta.value.length; try { ta.setSelectionRange(n, n); } catch {} }
+// Only recall when the caret is on the first line (Up) / last line (Down), so a
+// multi-line draft still moves the cursor normally.
+function onFirstLine(ta) { return ta.selectionStart === ta.selectionEnd && ta.value.slice(0, ta.selectionStart).indexOf('\n') === -1; }
+function onLastLine(ta) { return ta.selectionStart === ta.selectionEnd && ta.value.slice(ta.selectionEnd).indexOf('\n') === -1; }
+function recallPrev(ta) {
+  if (!history.length || histIndex === 0) return;
+  if (histIndex === history.length) histDraft = ta.value; // remember the live draft
+  histIndex--;
+  ta.value = history[histIndex] || '';
+  caretToEnd(ta);
+}
+function recallNext(ta) {
+  if (histIndex >= history.length) return;
+  histIndex++;
+  ta.value = histIndex === history.length ? histDraft : (history[histIndex] || '');
+  caretToEnd(ta);
+}
+function onComposerKey(e) {
+  const ta = e.target;
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTurn(ta.value); return; }
+  if (e.key === 'ArrowUp' && onFirstLine(ta) && history.length) { e.preventDefault(); recallPrev(ta); }
+  else if (e.key === 'ArrowDown' && onLastLine(ta) && histIndex < history.length) { e.preventDefault(); recallNext(ta); }
+}
+
 // ── the main turn ─────────────────────────────────────────────────────────────
 let busy = false;
 async function handleTurn(text) {
@@ -253,6 +299,7 @@ async function handleTurn(text) {
   if (!u || busy) return;
   busy = true;
   addMessage('user', u);
+  pushHistory(u); // remember for Up/Down recall
   $('composer-input').value = '';
   try {
     // Routing precedence:
@@ -361,7 +408,7 @@ function initSettings() {
   // reload gives a fresh receiver (no adaptations), an empty transcript, and no
   // profile, i.e. starting from scratch as no specific person.
   $('reset-profile').addEventListener('click', () => {
-    try { localStorage.removeItem('onb-uid'); } catch {}
+    try { localStorage.removeItem('onb-uid'); localStorage.removeItem(HIST_KEY); } catch {}
     location.reload();
   });
 }
@@ -395,7 +442,7 @@ async function boot() {
   initVoiceInput();
 
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
-  $('composer-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTurn($('composer-input').value); } });
+  $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
 
   addMessage('assistant', 'Hi — I can adapt this page for you or set up your profile. Try “bigger text”, “dark mode”, or tell me “I’m blind”. Say “help” for more.');
   $('composer-input').focus();
