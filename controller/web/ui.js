@@ -58,9 +58,10 @@ function blip(freq, dur, when = 0, vol = 0.05, type = 'sine') {
     o.start(t); o.stop(t + dur + 0.02);
   } catch { /* audio unavailable */ }
 }
-const earconThinkPulse = () => { blip(440, 0.12, 0, 0.045); blip(620, 0.12, 0.14, 0.035); };
-const earconDone = () => { blip(660, 0.12, 0, 0.06); blip(880, 0.18, 0.11, 0.06); };
-const earconError = () => { blip(300, 0.2, 0, 0.07, 'square'); blip(210, 0.26, 0.17, 0.06, 'square'); };
+// Exported so other surfaces (e.g. the /chat page) can play the same cues.
+export const earconThinkPulse = () => { blip(440, 0.12, 0, 0.045); blip(620, 0.12, 0.14, 0.035); };
+export const earconDone = () => { blip(660, 0.12, 0, 0.06); blip(880, 0.18, 0.11, 0.06); };
+export const earconError = () => { blip(300, 0.2, 0, 0.07, 'square'); blip(210, 0.26, 0.17, 0.06, 'square'); };
 
 // Strip markdown / stray formatting characters before speaking. A task result
 // or note often comes back as markdown ("**done** — see `config.js`"), and a

@@ -23,7 +23,7 @@ import { createDomReceiver } from '/controller/lib/web/dom-receiver.js';
 import { websocketChannel, remoteControl } from '/controller/lib/transport/remote.js';
 import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { parse } from '/controller/lib/grammar.js';
-import { bestVoice, forSpeech } from '/controller/lib/web/ui.js';
+import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
 
 const $ = (id) => document.getElementById(id);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -181,6 +181,7 @@ function wireNotes() {
     unNote = currentControl.onNote((text) => {
       if (!text) return;
       stopWaiting();
+      earconDone(); // the task finished — the "done" chime
       addMessage('assistant', String(text));
       speak(String(text));
     });
@@ -234,7 +235,7 @@ function addMessage(role, text) {
   wrap.scrollTop = wrap.scrollHeight;
   return bubble;
 }
-let waitingRow = null;
+let waitingRow = null, thinkTimer = null;
 function startWaiting() {
   stopWaiting();
   const wrap = $('transcript');
@@ -243,8 +244,15 @@ function startWaiting() {
   b.setAttribute('aria-label', 'Working…');
   for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'dot'; b.append(d); }
   waitingRow.append(b); wrap.append(waitingRow); wrap.scrollTop = wrap.scrollHeight;
+  // A repeating "thinking" earcon while the task runs — the audio counterpart of
+  // the dots (same cue the floating Controller plays).
+  earconThinkPulse();
+  thinkTimer = setInterval(earconThinkPulse, 2400);
 }
-function stopWaiting() { if (waitingRow) { waitingRow.remove(); waitingRow = null; } }
+function stopWaiting() {
+  if (waitingRow) { waitingRow.remove(); waitingRow = null; }
+  if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
+}
 
 // ── composer history (shell-style Up/Down recall) ─────────────────────────────
 // Sent messages are remembered (per browser) and recalled with the arrow keys —
@@ -332,6 +340,7 @@ async function handleTurn(text) {
     }
     addMessage('assistant', res.say); speak(res.say);
   } catch (e) {
+    stopWaiting(); earconError();
     const m = 'Sorry — ' + (e && e.message ? e.message : 'something went wrong') + '.';
     addMessage('assistant', m); speak(m);
   } finally {
