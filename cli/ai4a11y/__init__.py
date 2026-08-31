@@ -94,8 +94,8 @@ from .ai import (  # noqa: F401
     ask_claude_text,
 )
 
-# commands: the session commands and the specs that configure the fix engine.
-from .commands import (  # noqa: F401
+# page: everything that reads or draws on a live page.
+from .page import (  # noqa: F401
     _inject_cli_tools,
     _publish_active_profile,
     _auto_apply_saved_profile,
@@ -120,6 +120,10 @@ from .commands import (  # noqa: F401
     verify_action,
     smart_scroll,
     grid_hover,
+)
+
+# commands: the session commands and the specs that configure the fix engine.
+from .commands import (  # noqa: F401
     create_browser,
     _dispatch_action,
     _auditor_items,
