@@ -2038,14 +2038,17 @@ def session_profile(profile_name, json_output=False):
     # connects to the browser, so a page that already has the profile keeps it
     # and its AI adapters keep sending page text out. Measured on one tab: the
     # scan text passes still ran after this command, and stopped only after the
-    # next page load. The message below is true about navigation and reads as a
-    # broader assurance than it is. Left for whoever owns the session
+    # next page load. The message below now says so, in the same words as
+    # cli/README.md, so the person at the terminal reads the limit rather than
+    # only the reader of the README. Left for whoever owns the session
     # lifecycle, because pushing the clear into the page is a change to that
     # lifecycle and the exposed AI callbacks are a separate mechanism from the
     # published profile state. cli/README.md tells users what actually stops it.
     if profile_name.lower() == 'none':
         _set_active_profile(None)
-        print("Profile cleared. Tools will not auto-apply on navigation.", flush=True)
+        print("Profile cleared. Tools will not auto-apply on navigation. "
+              "A page that is already open keeps the profile until you load a page.",
+              flush=True)
         return
 
     with connected_page() as page:
