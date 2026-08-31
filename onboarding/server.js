@@ -45,6 +45,23 @@ const REGISTRY_DIR = path.join(TOOLKIT_DIR, 'registry');
 // offers these; onboarding accepts any subset.
 const SUPPORT_AREAS = ['vision', 'reading', 'cognitive', 'motor', 'hearing', 'sensory', 'attention'];
 
+// Optional Gemini completion for the /chat surface's best-effort LLM lane
+// (controller-intent classification + a general spoken answer). DEMO-scoped and
+// key-gated: with no GEMINI_API_KEY on THIS process, /api/assist reports
+// { available:false } and the chat degrades to deterministic-only (settings +
+// onboarding still work fully). Not an open proxy for the hardened toolkit
+// server — a small assist for this demo host, size-capped per request.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+let _assist = null;
+async function assistCaller() {
+  if (!GEMINI_API_KEY) return null;
+  if (!_assist) {
+    const { createGeminiCaller } = await import('../server/src/gemini.js');
+    _assist = createGeminiCaller({ apiKey: GEMINI_API_KEY });
+  }
+  return _assist;
+}
+
 // ── Local mode: embed the toolkit over a file store ─────────────────────────
 let _localHost = null, _localStore = null;
 async function localBits() {
@@ -353,6 +370,20 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
 
+    // Chat surface at /chat — one conversational input that does both onboarding
+    // and controller. Its own module is /chat.js; it imports the controller core
+    // from /controller/lib (served below) with absolute paths, so no rewrite.
+    if (method === 'GET' && (pathname === '/chat' || pathname === '/chat/')) {
+      const html = await readFile(path.join(__dirname, 'chat.html'), 'utf8');
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+    if (method === 'GET' && pathname === '/chat.js') {
+      const js = await readFile(path.join(__dirname, 'chat.js'), 'utf8');
+      res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' });
+      return res.end(js);
+    }
+
     // Controller UI at /controller. The demo's imports are relative to
     // controller/demo/; rewrite them to the /controller/lib prefix this
     // server exposes so the same page works when served from here.
@@ -388,6 +419,24 @@ const server = http.createServer(async (req, res) => {
       const uid = new URL(req.url, 'http://localhost').searchParams.get('uid') || '';
       try { return sendJSON(res, 200, await abilityModelFor(uid)); }
       catch (e) { return sendJSON(res, 502, { error: e.message }); }
+    }
+
+    // Best-effort LLM completion for the /chat surface. { available:false } when
+    // no key is configured (the client then falls back to deterministic-only).
+    if (method === 'POST' && pathname === '/api/assist') {
+      const caller = await assistCaller();
+      if (!caller) return sendJSON(res, 200, { available: false });
+      let body;
+      try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
+      const prompt = String(body && body.prompt || '').slice(0, 4000); // size cap
+      if (!prompt) return sendJSON(res, 400, { error: 'prompt required' });
+      try {
+        const text = await caller(prompt);
+        return sendJSON(res, 200, { available: true, text: String(text) });
+      } catch (e) {
+        // A model/transport failure is data, not a 500 — chat degrades quietly.
+        return sendJSON(res, 200, { available: false, error: e.message });
+      }
     }
 
     if (method === 'POST' && pathname === '/api/onboard') {
@@ -430,6 +479,8 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(`[onboarding] admin ${ADMIN_PASSWORD ? 'enabled' : 'DISABLED (set ADMIN_PASSWORD to list/delete)'}`);
     console.log(`[onboarding] open http://127.0.0.1:${PORT}/onboarding`);
     console.log(`[onboarding] controller http://127.0.0.1:${PORT}/controller`);
+    console.log(`[onboarding] chat       http://127.0.0.1:${PORT}/chat`);
+    console.log(`[onboarding] assist LLM ${GEMINI_API_KEY ? 'enabled' : 'DISABLED (set GEMINI_API_KEY for the chat general-answer lane)'}`);
   });
 }
 

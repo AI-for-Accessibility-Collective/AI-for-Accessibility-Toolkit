@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility Chat</title>
+<style>
+  :root {
+    --bg: #f6f8fc; --panel: #ffffff; --ink: #1a1c1e; --muted: #5a6068;
+    --line: rgba(0,0,0,.10); --accent: #1a73e8; --accent-ink: #fff;
+    --user-bg: #d3e3fd; --user-ink: #041e49; --assist-bg: #f0f2f5; --assist-ink: #1a1c1e;
+    --pill: #eef1f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131416; --panel: #1e1f22; --ink: #e3e3e6; --muted: #9aa0a6;
+      --line: rgba(255,255,255,.14); --accent: #8ab4f8; --accent-ink: #062e6f;
+      --user-bg: #004a77; --user-ink: #c2e7ff; --assist-bg: #282a2d; --assist-ink: #e3e3e6;
+      --pill: #2a2c30;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; }
+  .app { width: 100%; max-width: 46rem; height: 100%; display: flex; flex-direction: column; }
+
+  /* Header: profile pill (always visible) + settings hamburger */
+  header { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; }
+  .brand { font-weight: 600; font-size: 1.05rem; letter-spacing: -.01em; white-space: nowrap; }
+  .brand .spark { color: var(--accent); }
+  #profile { flex: 1; min-width: 0; background: var(--pill); border: 1px solid var(--line);
+    border-radius: 999px; padding: .4rem .8rem; font-size: .85rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #profile .who { font-family: ui-monospace, Menlo, monospace; color: var(--ink); }
+  #profile a { color: var(--accent); }
+  .icon-btn { border: 1px solid var(--line); background: var(--panel); color: inherit;
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+    display: grid; place-items: center; flex: none; }
+  .icon-btn:focus-visible, .composer button:focus-visible, .composer textarea:focus-visible,
+  a:focus-visible, input:focus-visible, select:focus-visible, [role="switch"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* Transcript */
+  #transcript { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .6rem; }
+  .msg { display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .bubble { max-width: 80%; padding: .6rem .85rem; border-radius: 1.1rem; line-height: 1.5;
+    font-size: 1rem; white-space: pre-wrap; word-wrap: break-word; }
+  .msg.user .bubble { background: var(--user-bg); color: var(--user-ink); border-bottom-right-radius: .35rem; }
+  .msg.assistant .bubble { background: var(--assist-bg); color: var(--assist-ink); border-bottom-left-radius: .35rem; }
+  .bubble.waiting { display: inline-flex; gap: .3rem; align-items: center; }
+  .bubble.waiting .dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; opacity: .35;
+    animation: blink 1.2s infinite ease-in-out; }
+  .bubble.waiting .dot:nth-child(2) { animation-delay: .2s; }
+  .bubble.waiting .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none !important; opacity: .6 !important; } }
+
+  /* Composer (pill, Gemini-like) */
+  .composer { padding: .5rem 1rem 1rem; }
+  #composer-form { display: flex; align-items: flex-end; gap: .5rem; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 1.6rem; padding: .35rem .5rem .35rem 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  #composer-input { flex: 1; border: 0; resize: none; background: transparent; color: inherit;
+    font: inherit; font-size: 1rem; padding: .5rem 0; max-height: 8rem; line-height: 1.4; }
+  #composer-input:focus { outline: none; }
+  .composer button { border: 0; border-radius: 50%; width: 2.5rem; height: 2.5rem; cursor: pointer;
+    font-size: 1.15rem; flex: none; display: grid; place-items: center; }
+  #mic { background: var(--pill); color: var(--ink); }
+  #mic.listening { background: #d93025; color: #fff; }
+  #send { background: var(--accent); color: var(--accent-ink); }
+  .hint { text-align: center; color: var(--muted); font-size: .75rem; margin: .4rem 0 0; }
+
+  /* Settings drawer */
+  #drawer { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: grid; justify-items: end; z-index: 20; }
+  #drawer[hidden] { display: none; }
+  .drawer-panel { width: min(22rem, 92vw); height: 100%; background: var(--panel); border-left: 1px solid var(--line);
+    padding: 1rem 1.1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+  .drawer-panel h2 { font-size: 1rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
+  .field { display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; }
+  .field label.row { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+  .field .desc { color: var(--muted); font-size: .78rem; }
+  .field select, .field input[type="text"] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line);
+    border-radius: .5rem; background: transparent; color: inherit; }
+  .drawer-panel .btn { align-self: flex-start; border: 1px solid var(--line); background: var(--pill); color: inherit;
+    border-radius: .5rem; padding: .35rem .7rem; font-size: .85rem; cursor: pointer; }
+  .drawer-panel hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+  .drawer-panel a { color: var(--accent); font-size: .85rem; }
+
+  /* The demo app the controller drives (adaptations show here). */
+  details.demo { margin: 0 1rem 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--panel); }
+  details.demo > summary { cursor: pointer; padding: .6rem .9rem; font-size: .85rem; color: var(--muted); }
+  #demo-app { padding: 0 1rem 1rem; }
+  #demo-app h3 { font-size: 1rem; }
+  #demo-app aside.ad { border: 1px dashed #b3261e; color: #b3261e; padding: .4rem; font-size: .8rem; border-radius: .4rem; }
+  #drive-note { padding: 0 1rem; color: var(--muted); font-size: .78rem; margin: 0 0 .5rem; }
+
+  /* Adaptation classes/vars the dom-receiver toggles on #demo-app. */
+  #demo-app[style*="--aa-font-scale"] { font-size: calc(1rem * var(--aa-font-scale, 1)); }
+  #demo-app[style*="--aa-line-height"] { line-height: var(--aa-line-height, 1.5); }
+  #demo-app[style*="--aa-letter-spacing"] { letter-spacing: var(--aa-letter-spacing, 0); }
+  #demo-app.aa-dark { filter: invert(1) hue-rotate(180deg); }
+  #demo-app.aa-dyslexia { font-family: "Comic Sans MS", "OpenDyslexic", sans-serif; }
+  #demo-app.aa-reduce-motion * { animation: none !important; transition: none !important; }
+  #demo-app.aa-hide-distractions .ad, #demo-app.aa-hide-distractions aside { display: none !important; }
+  #demo-app.aa-focus-mode p { opacity: .55; } #demo-app.aa-focus-mode p:hover { opacity: 1; }
+  #demo-app[data-aa-contrast="yellow-black"] { background: #000 !important; color: #ff0 !important; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <span class="brand"><span class="spark">✦</span> A11y Chat</span>
+      <div id="profile" role="status" aria-live="polite">No profile yet.</div>
+      <button id="hamburger" class="icon-btn" aria-label="Settings" aria-expanded="false" aria-controls="drawer" title="Settings">☰</button>
+    </header>
+
+    <div id="transcript" role="log" aria-live="polite" aria-label="Conversation"></div>
+
+    <p id="drive-note">Driving the demo app below.</p>
+
+    <div class="composer">
+      <form id="composer-form">
+        <textarea id="composer-input" rows="1" placeholder="Message — e.g. “bigger text”, “I’m blind”, “open google and search…”" aria-label="Message"></textarea>
+        <button type="button" id="mic" aria-pressed="false" aria-label="Speak" title="Speak">🎤</button>
+        <button type="submit" id="send" aria-label="Send" title="Send">➤</button>
+      </form>
+      <p class="hint">Adapts this page, updates your profile, or drives a connected app — by text or voice.</p>
+    </div>
+
+    <details class="demo">
+      <summary>Demo app (what the controller drives)</summary>
+      <main id="demo-app" aria-label="Demo article">
+        <h3>Getting started with the toolkit</h3>
+        <p>The AI for Accessibility Toolkit is a platform-agnostic library developers embed to add
+           agentic accessibility to any app. This panel is a stand-in for a real application.</p>
+        <aside class="ad">Sponsored — a distracting advertisement block.</aside>
+        <h3>Reading and motion</h3>
+        <p>You can enlarge the text, raise contrast, reduce motion, or have the page read aloud —
+           all by chatting above. Adaptations you ask for show up here.</p>
+      </main>
+    </details>
+  </div>
+
+  <!-- Settings drawer (behind the hamburger) -->
+  <div id="drawer" hidden>
+    <div class="drawer-panel" role="dialog" aria-label="Settings" aria-modal="true">
+      <h2>Settings <button id="drawer-close" class="icon-btn" aria-label="Close settings" title="Close">✕</button></h2>
+
+      <div class="field">
+        <label class="row"><input type="checkbox" id="speak-cb"> Speak replies aloud</label>
+        <span class="desc">Read assistant replies with text-to-speech. Turn off if you use a screen reader.</span>
+      </div>
+
+      <div class="field" id="voice-row">
+        <label for="voice-select">Voice (output)</label>
+        <select id="voice-select" aria-label="Voice for spoken replies"></select>
+        <span class="desc">Which voice speaks replies. “Automatic” picks the best available.</span>
+      </div>
+
+      <div class="field" id="voicein-row">
+        <label class="row"><input type="checkbox" id="voicein-cb"> Voice input (microphone)</label>
+        <span class="desc">Show the mic button so you can speak your message.</span>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <strong style="font-size:.9rem;">What the chat controls</strong>
+        <button type="button" id="use-local" class="btn">Use the demo app</button>
+        <label for="ws-url" style="font-size:.8rem;color:var(--muted);">…or connect a remote receiver</label>
+        <input type="text" id="ws-url" placeholder="ws://127.0.0.1:9333">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button type="button" id="use-local-harness" class="btn">Connect browser-harness</button>
+          <button type="button" id="connect-remote" class="btn">Connect</button>
+        </div>
+      </div>
+
+      <hr>
+      <a href="/onboarding">Open full onboarding →</a>
+      <a href="/controller">Open the floating Controller demo →</a>
+    </div>
+  </div>
+
+  <script type="module" src="/chat.js"></script>
+</body>
+</html>
