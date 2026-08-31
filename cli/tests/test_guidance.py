@@ -66,12 +66,24 @@ def _ai_backed_engine_functions() -> set:
     A call counts in either shape: a bare name, from `from .ai import
     ask_claude`, or an attribute, from `from . import ai` followed by
     `ai.ask_claude(...)`.
+
+    What this cannot see is a callback the browser calls. See the note under
+    the AI-backed block in cli/README.md.
     """
-    calls = {}
+    calls, defined_in = {}, {}
+    collisions = []
     for path in sorted(ENGINE_DIR.glob("*.py")):
         for node in ast.parse(path.read_text()).body:
-            if not isinstance(node, ast.FunctionDef):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
+            # The call graph is keyed by bare name across all six modules, so
+            # two modules defining the same top-level name would drop one
+            # function's edges and quietly shrink the disclosure.
+            if node.name in defined_in:
+                collisions.append(
+                    f"{node.name} in both {defined_in[node.name]} and {path.name}"
+                )
+            defined_in[node.name] = path.name
             named = {
                 c.func.id for c in ast.walk(node)
                 if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
@@ -82,6 +94,10 @@ def _ai_backed_engine_functions() -> set:
             }
             calls[node.name] = named | attrs
     assert calls, f"found no engine functions under {ENGINE_DIR}"
+    assert not collisions, (
+        "two engine modules define the same top-level function name, so this "
+        "walk would drop one of them: " + "; ".join(sorted(collisions))
+    )
 
     reaching = {"ask_claude", "ask_claude_text"}
     growing = True
