@@ -8,8 +8,8 @@ One Typer app, three areas:
   ai4a11y session <command>        drive a live Chromium page over CDP
 
 Run `ai4a11y --help` or `ai4a11y session --help` for the full surface.
-The session engine lives in ai4a11y.py; this module only parses the command
-line and delegates. Session commands import the engine lazily so catalog
+The session engine lives in the ai4a11y package; this module only parses the
+command line and delegates. Session commands import the engine lazily so catalog
 commands work without Playwright installed.
 """
 

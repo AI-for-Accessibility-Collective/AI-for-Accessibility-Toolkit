@@ -2232,6 +2232,14 @@ def session_find_all(json_output=False):
 # ============================================================
 # AI Fix functions — use Claude to fix accessibility issues
 # ============================================================
+#
+# Each pass below is a FixPass spec, and its `write` is the JavaScript that
+# puts the model's answer on the page. Where that script is a line or two,
+# it stays an inline string next to the rest of the spec, so the whole pass
+# reads in one place. Six are that short. Where it is long enough that
+# reading it in Python costs something, it is a file under cli/js/ loaded
+# with `_js`, so an editor treats it as JavaScript. Two are that long: the
+# simplify and summarize writers inside `scan`.
 
 def _alt_locate(page, item, i):
     """The image element, falling back to a match on part of its src."""
