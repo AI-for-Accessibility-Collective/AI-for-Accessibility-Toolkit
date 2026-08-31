@@ -444,7 +444,7 @@ async function boot() {
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
   $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
 
-  addMessage('assistant', 'Hi — I can adapt this page for you or set up your profile. Try “bigger text”, “dark mode”, or tell me “I’m blind”. Say “help” for more.');
+  addMessage('assistant', 'Hi — I set up your ability profile and adapt your connected applications. Try “bigger text”, “dark mode”, or tell me “I’m blind”. Say “help” for more.');
   $('composer-input').focus();
 }
 boot();
