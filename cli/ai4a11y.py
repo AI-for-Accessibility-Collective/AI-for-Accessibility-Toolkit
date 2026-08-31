@@ -145,6 +145,7 @@ def _get_readability_script():
             _READABILITY_SCRIPT = ""
     return _READABILITY_SCRIPT
 
+
 # Session state file for persistent profile settings
 _SESSION_STATE_FILE = OUT / ".ai4a11y_session_state.json"
 
@@ -264,7 +265,7 @@ def _auto_apply_saved_profile(page):
         if result.get('success'):
             # Silently applied — no output to keep it instant/automatic
             pass
-    except Exception as e:
+    except Exception:
         # Profile application failed — page may not have tools loaded properly
         pass
 
@@ -555,7 +556,8 @@ def add_grid_overlay(image_path, output_path, grid_size=100, focus_point=None, m
             fx, fy = focus_point[0] + margin, focus_point[1] + margin
             draw.line([(fx - 20, fy), (fx + 20, fy)], fill=(255, 255, 0), width=2)
             draw.line([(fx, fy - 20), (fx, fy + 20)], fill=(255, 255, 0), width=2)
-            draw.text((fx + 5, fy + 5), f"{focus_point[0]},{focus_point[1]}", fill=(255, 255, 0), font=font)
+            draw.text((fx + 5, fy + 5), f"{focus_point[0]},{focus_point[1]}",
+                      fill=(255, 255, 0), font=font)
 
         new_img.save(output_path)
         return output_path
@@ -593,9 +595,11 @@ def add_grid_overlay(image_path, output_path, grid_size=100, focus_point=None, m
 
         fine = 25
         for x in range(max(0, fx - 100), min(w, fx + 100), fine):
-            draw.line([(x, max(0, fy - 100)), (x, min(h, fy + 100))], fill=(0, 180, 255, 100), width=1)
+            draw.line([(x, max(0, fy - 100)), (x, min(h, fy + 100))],
+                      fill=(0, 180, 255, 100), width=1)
         for y in range(max(0, fy - 100), min(h, fy + 100), fine):
-            draw.line([(max(0, fx - 100), y), (min(w, fx + 100), y)], fill=(0, 180, 255, 100), width=1)
+            draw.line([(max(0, fx - 100), y), (min(w, fx + 100), y)],
+                      fill=(0, 180, 255, 100), width=1)
 
     img.save(output_path)
     return output_path
@@ -718,7 +722,10 @@ def get_elements(page):
     for frame in page.frames[1:]:
         try:
             if frame.url and 'about:' not in frame.url:
-                elements.append({'tag': 'iframe', 'label': f'Embedded: {frame.url[:50]}', 'x': 0, 'y': 0})
+                elements.append({
+                    'tag': 'iframe', 'label': f'Embedded: {frame.url[:50]}',
+                    'x': 0, 'y': 0,
+                })
         except:
             pass
 
@@ -751,7 +758,8 @@ def state_snapshot(page):
     try:
         return page.evaluate(_js("state_snapshot.js"))
     except Exception:
-        return {'url': page.url, 'title': '', 'scroll_y': 0, 'interactable_count': 0, 'focused_label': ''}
+        return {'url': page.url, 'title': '', 'scroll_y': 0,
+                'interactable_count': 0, 'focused_label': ''}
 
 
 def describe_state_diff(before, after):
@@ -764,7 +772,7 @@ def describe_state_diff(before, after):
     if before.get('title') != after.get('title'):
         changes.append(f"title → {after['title'][:60]}")
     if before.get('scroll_y') != after.get('scroll_y'):
-        changes.append(f"scroll y={before.get('scroll_y',0)}→{after.get('scroll_y',0)}")
+        changes.append(f"scroll y={before.get('scroll_y', 0)}→{after.get('scroll_y', 0)}")
     ic_before = before.get('interactable_count', 0)
     ic_after = after.get('interactable_count', 0)
     if abs(ic_after - ic_before) >= 2:
@@ -830,10 +838,14 @@ def get_a11y_outline(page, max_items=30):
         return []
 
     # Roles worth surfacing for an agent (structure + interactive)
-    STRUCTURAL = {'banner', 'navigation', 'main', 'complementary', 'contentinfo',
-                   'region', 'form', 'search', 'dialog', 'heading'}
-    INTERACTIVE = {'button', 'link', 'textbox', 'combobox', 'checkbox', 'radio',
-                    'tab', 'menuitem', 'slider', 'searchbox', 'switch', 'option'}
+    STRUCTURAL = {
+        'banner', 'navigation', 'main', 'complementary', 'contentinfo',
+        'region', 'form', 'search', 'dialog', 'heading',
+    }
+    INTERACTIVE = {
+        'button', 'link', 'textbox', 'combobox', 'checkbox', 'radio',
+        'tab', 'menuitem', 'slider', 'searchbox', 'switch', 'option',
+    }
     KEEP = STRUCTURAL | INTERACTIVE
 
     out = []
@@ -900,9 +912,11 @@ def verify_action(page, action_fn, description="action"):
         print(f"⚠ {description}: NO CHANGE DETECTED")
         return False, str(before_path), str(after_path), None, None
 
-    diff_path, change_pct, bbox = create_diff_image(str(before_path), str(after_path), str(diff_path))
+    diff_path, change_pct, bbox = create_diff_image(
+        str(before_path), str(after_path), str(diff_path))
     print(f"✓ {description}: {change_pct:.1f}% changed, region: {bbox}")
-    return True, str(before_path), str(after_path), str(diff_path), {'pct': change_pct, 'bbox': bbox}
+    return (True, str(before_path), str(after_path), str(diff_path),
+            {'pct': change_pct, 'bbox': bbox})
 
 
 def smart_scroll(page, max_scrolls=10):
@@ -925,7 +939,8 @@ def smart_scroll(page, max_scrolls=10):
         page.evaluate("window.scrollBy(0, window.innerHeight * 0.8)")
         time.sleep(0.8)
 
-        at_bottom = page.evaluate("window.innerHeight + window.scrollY >= document.body.scrollHeight - 100")
+        at_bottom = page.evaluate(
+            "window.innerHeight + window.scrollY >= document.body.scrollHeight - 100")
         if at_bottom:
             _safe_screenshot(page, OUT / f"scroll_{i+1}.png")
             screenshots.append(str(OUT / f"scroll_{i+1}.png"))
@@ -983,8 +998,8 @@ def create_browser(stealth=False, visible=False):
     context_opts = {'viewport': {'width': 1280, 'height': 800}}
     if stealth:
         context_opts['user_agent'] = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
-                                       'AppleWebKit/537.36 (KHTML, like Gecko) '
-                                       'Chrome/122.0.0.0 Safari/537.36')
+                                      'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                      'Chrome/122.0.0.0 Safari/537.36')
 
     context = browser.new_context(**context_opts)
     page = context.new_page()
@@ -1059,9 +1074,11 @@ def _dispatch_action(page, decision):
     if action == 'wheel':
         page.mouse.move(decision.get('x'), decision.get('y'))
         mod = decision.get('mod')
-        if mod: page.keyboard.down(mod)
+        if mod:
+            page.keyboard.down(mod)
         page.mouse.wheel(decision.get('dx', 0), decision.get('dy', 300))
-        if mod: page.keyboard.up(mod)
+        if mod:
+            page.keyboard.up(mod)
         return 0
     if action == 'long_press':
         page.mouse.move(decision.get('x'), decision.get('y'))
@@ -1070,7 +1087,8 @@ def _dispatch_action(page, decision):
         page.mouse.up()
         return 1
     if action == 'upload':
-        page.evaluate("([x, y]) => document.elementFromPoint(x, y)?.click()", [int(decision.get('x', 0)), int(decision.get('y', 0))])
+        page.evaluate("([x, y]) => document.elementFromPoint(x, y)?.click()",
+                      [int(decision.get('x', 0)), int(decision.get('y', 0))])
         time.sleep(0.3)
         inputs = page.locator("input[type='file']")
         if inputs.count() > 0:
@@ -1154,8 +1172,8 @@ def _safe_screenshot(page, path):
     try:
         page.screenshot(path=str(path), timeout=8000)
         return True
-    except Exception as e:
-        msg = str(e)
+    except Exception:
+        pass
     try:
         page.set_viewport_size({'width': 1280, 'height': 800})
         time.sleep(0.3)
@@ -1584,7 +1602,8 @@ Is the answer fully supported by what's visible in the screenshot, to a naive ob
             print(f"\n✓ ANSWER (direct, verified): {direct}", flush=True)
             print(f"  Verifier: {verdict.get('reason', '')[:200]}", flush=True)
             if existing_page is None:
-                browser.close(); p.stop()
+                browser.close()
+                p.stop()
             return [{'action': 'direct_answer', 'answer': direct}]
         else:
             print(f"Direct answer rejected ({verdict.get('reason', '')[:100]}) — falling back to reactive loop", flush=True)
@@ -1610,13 +1629,15 @@ Is the answer fully supported by what's visible in the screenshot, to a naive ob
         current_hash = get_screenshot_hash(page)
         current_url = page.url
 
-        # Fine-grained change classification (research: fine-grained failure detection helps recovery)
+        # Fine-grained change classification (research: fine-grained failure
+        # detection helps recovery)
         page_state = page.evaluate(_js("run_agent_page_state.js"))
 
         feedback = ""
         if step > 0:
             changes = []
-            if current_url != last_url: changes.append(f"URL→{current_url[:60]}")
+            if current_url != last_url:
+                changes.append(f"URL→{current_url[:60]}")
             if last_click_hit and last_click_hit.get('tag') in ('html', 'body', 'none'):
                 changes.append(f"⚠ last click at ({last_click_hit['x']},{last_click_hit['y']}) hit <{last_click_hit['tag']}> — MISSED target")
             elif last_click_hit:
@@ -1626,9 +1647,13 @@ Is the answer fully supported by what's visible in the screenshot, to a naive ob
                 no_effect_streak += 1
             else:
                 no_effect_streak = 0
-                if current_hash != last_hash: changes.append("pixels changed")
-                if page_state.get('modalVisible'): changes.append("MODAL VISIBLE — dismiss first")
-                if page_state.get('focusedTag'): changes.append(f"focus={page_state['focusedTag']}:{page_state['focusedLabel'][:20]}")
+                if current_hash != last_hash:
+                    changes.append("pixels changed")
+                if page_state.get('modalVisible'):
+                    changes.append("MODAL VISIBLE — dismiss first")
+                if page_state.get('focusedTag'):
+                    changes.append(
+                        f"focus={page_state['focusedTag']}:{page_state['focusedLabel'][:20]}")
             if changes:
                 feedback = (feedback + f"\nSince last action: {' | '.join(changes)}").strip()
         last_hash, last_url = current_hash, current_url
@@ -1649,21 +1674,27 @@ Is the answer fully supported by what's visible in the screenshot, to a naive ob
 
         def _el_line(i, e):
             ctx = []
-            if e.get('role'): ctx.append(f"role={e['role']}")
-            if e.get('parent'): ctx.append(f"in {e['parent']}")
+            if e.get('role'):
+                ctx.append(f"role={e['role']}")
+            if e.get('parent'):
+                ctx.append(f"in {e['parent']}")
             ctx_str = f" ({', '.join(ctx)})" if ctx else ""
             return f"  [{i+1}] {e['tag']}: {e['label']}{ctx_str}"
         elements_summary = "\n".join(_el_line(i, e) for i, e in enumerate(addressable))
 
         interact_need = max(0, min_interactions - interact_count)
-        force_note = (f"\nFORCE-INTERACT: You must perform {interact_need} more real "
-                      "interaction(s) (click/type/hover, NOT scroll) before 'done' is accepted. "
-                      "Actually exercise the page — don't just read captions.") if interact_need else ""
+        force_note = (
+            f"\nFORCE-INTERACT: You must perform {interact_need} more real "
+            "interaction(s) (click/type/hover, NOT scroll) before 'done' is accepted. "
+            "Actually exercise the page — don't just read captions."
+        ) if interact_need else ""
 
         lessons_str = ""
         if lessons:
-            lessons_str = "\nLessons learned from earlier attempts (DO NOT repeat these mistakes):\n" + \
-                "\n".join(f"  • {l}" for l in lessons[-5:])
+            lessons_str = (
+                "\nLessons learned from earlier attempts (DO NOT repeat these mistakes):\n"
+                + "\n".join(f"  • {lesson}" for lesson in lessons[-5:])
+            )
 
         prompt = f"""Task: {task}
 URL: {current_url}
@@ -1757,9 +1788,14 @@ JSON only: {{"supported": true|false, "reason": "concrete mismatch or corroborat
                 print(f"  Verifier: {verdict.get('reason', '')[:200]}", flush=True)
                 break
             else:
-                print(f"⚠ Done rejected by verifier: {verdict.get('reason', '')[:200]}", flush=True)
-                history[-1] = {'action': 'done_rejected', 'reason': f"verifier: {verdict.get('reason', '')[:100]}"}
-                # Reflexion: ask for a lesson about why the attempt failed + what to try differently
+                print(
+                    f"⚠ Done rejected by verifier: {verdict.get('reason', '')[:200]}", flush=True)
+                history[-1] = {
+                    'action': 'done_rejected',
+                    'reason': f"verifier: {verdict.get('reason', '')[:100]}",
+                }
+                # Reflexion: ask for a lesson about why the attempt failed +
+                # what to try differently
                 reflect_prompt = f"""A previous attempt failed verification.
 
 Your claim: {answer}
@@ -1779,6 +1815,7 @@ Return JSON only: {{"lesson": "..."}}"""
                 except Exception:
                     pass
                 continue
+
         def resolve_and_dispatch(dec):
             """Resolve 'el' index → x,y then dispatch. Returns interact delta."""
             el_idx = dec.get('el')
@@ -1803,7 +1840,9 @@ Return JSON only: {{"lesson": "..."}}"""
                 _js("verify_click_landed.js"), [x, y])
             last_click_hit = {**hit, 'x': x, 'y': y} if hit else {'x': x, 'y': y, 'tag': 'none'}
             if hit and hit['tag'] in ('html', 'body'):
-                print(f"  ⚠ click at ({x},{y}) hit <{hit['tag']}> — likely missed target", flush=True)
+                print(
+                    f"  ⚠ click at ({x},{y}) hit <{hit['tag']}> — likely missed target",
+                    flush=True)
 
         try:
             if action == 'sequence':
@@ -1811,7 +1850,9 @@ Return JSON only: {{"lesson": "..."}}"""
                 pre_url = page.url
                 for i, sub in enumerate(steps):
                     if sub.get('action') in ('done', 'sequence'):
-                        print(f"  skipping nested/terminal sub-action '{sub.get('action')}'", flush=True)
+                        print(
+                            f"  skipping nested/terminal sub-action '{sub.get('action')}'",
+                            flush=True)
                         continue
                     try:
                         delta, resolved = resolve_and_dispatch(sub)
@@ -1822,7 +1863,7 @@ Return JSON only: {{"lesson": "..."}}"""
                         break
                     _safe_screenshot(page, run_dir / f"step{step}_sub{i}.png")
                     if page.url != pre_url:
-                        print(f"  sequence aborted: URL changed mid-sequence", flush=True)
+                        print("  sequence aborted: URL changed mid-sequence", flush=True)
                         break
                     time.sleep(0.1)
                 wait_for_stable(page, timeout=5)
@@ -1967,7 +2008,8 @@ def session_start():
         existing = json.loads(SESSION_FILE.read_text())
         # A recorded pid that is still alive proves nothing on its own: it may
         # have been recycled. The browser has to answer to its own recorded id.
-        if existing.get('browser') and _cdp_browser_id(existing.get('cdp', '')) == existing['browser']:
+        if (existing.get('browser')
+                and _cdp_browser_id(existing.get('cdp', '')) == existing['browser']):
             print(f"Session already running (pid {existing['pid']}). Use 'session stop' first or just reuse.", flush=True)
             return existing
         if not existing.get('browser') and _cdp_browser_id(existing.get('cdp', '')):
@@ -2223,7 +2265,8 @@ def connected_page():
 def session_stop():
     """Kill the persistent browser, and only that browser."""
     if not SESSION_FILE.exists():
-        print("No session to stop.", flush=True); return
+        print("No session to stop.", flush=True)
+        return
     try:
         info = _read_session()
     except ForeignBrowser as ex:
@@ -2245,7 +2288,8 @@ def session_stop():
 def session_status():
     """Print current page URL/title and basic state."""
     if not SESSION_FILE.exists():
-        print("No session running.", flush=True); return
+        print("No session running.", flush=True)
+        return
     info = _read_session(verify=False)
     try:
         with connected_page() as page:
@@ -2263,14 +2307,16 @@ def session_tabs():
     BLV users don't have to eyeball the tab strip — ai4a11y reads it aloud instead.
     """
     if not SESSION_FILE.exists():
-        print("No session running.", flush=True); return
+        print("No session running.", flush=True)
+        return
     info = _read_session()
     p = sync_playwright().start()
     try:
         browser = p.chromium.connect_over_cdp(info['cdp'])
         all_pages = [pg for c in browser.contexts for pg in c.pages]
         if not all_pages:
-            print("(no open tabs)", flush=True); return
+            print("(no open tabs)", flush=True)
+            return
         # Pick the single tab ai4a11y would operate on — same logic as session_connect
         # so the display matches reality. No more multiple-→ when multiple windows
         # each have a "visible" tab.
@@ -2307,16 +2353,19 @@ def session_focus_tab(n):
     subsequent ai4a11y call operates on this tab until the user navigates away.
     """
     if not SESSION_FILE.exists():
-        print("No session running.", flush=True); return
+        print("No session running.", flush=True)
+        return
     info = _read_session()
     p = sync_playwright().start()
     try:
         browser = p.chromium.connect_over_cdp(info['cdp'])
         all_pages = [pg for c in browser.contexts for pg in c.pages]
         if not all_pages:
-            print("(no open tabs)", flush=True); return
+            print("(no open tabs)", flush=True)
+            return
         if n < 1 or n > len(all_pages):
-            print(f"invalid tab number {n}; have {len(all_pages)} tabs", flush=True); return
+            print(f"invalid tab number {n}; have {len(all_pages)} tabs", flush=True)
+            return
         pg = all_pages[n - 1]
         _write_last_tab(pg)
         try:
@@ -2325,8 +2374,10 @@ def session_focus_tab(n):
         except Exception:
             title, url = '(unreachable)', ''
         print(f"Focus locked on tab [{n}]: {title}   {url}", flush=True)
-        try: browser.close()
-        except Exception: pass
+        try:
+            browser.close()
+        except Exception:
+            pass
     finally:
         p.stop()
 
@@ -2336,14 +2387,16 @@ def session_cleanup_tabs():
     long-running sessions (e.g. after crashes, restore-on-launch, or multi-test
     runs that left zombie tabs behind)."""
     if not SESSION_FILE.exists():
-        print("No session running.", flush=True); return
+        print("No session running.", flush=True)
+        return
     info = _read_session()
     p = sync_playwright().start()
     try:
         browser = p.chromium.connect_over_cdp(info['cdp'])
         all_pages = [pg for c in browser.contexts for pg in c.pages]
         if not all_pages:
-            print("(no open tabs)", flush=True); return
+            print("(no open tabs)", flush=True)
+            return
         keep = None
         last = _read_last_tab()
         if last and last.get('target_id'):
@@ -2368,8 +2421,10 @@ def session_cleanup_tabs():
             kept_title, kept_url = '(unknown)', ''
         _write_last_tab(keep)
         print(f"Closed {closed} tab(s). Kept: {kept_title}   {kept_url}", flush=True)
-        try: browser.close()
-        except Exception: pass
+        try:
+            browser.close()
+        except Exception:
+            pass
     finally:
         p.stop()
 
@@ -2441,7 +2496,8 @@ def session_describe(json_output=False):
         outline = get_a11y_outline(page)
         elements = get_elements(page)
         addressable = [e for e in elements if e.get('x', 0) > 0][:15]
-        el_summary = "\n".join(f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
+        el_summary = "\n".join(
+            f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
 
         ctx = get_page_context(page, text_limit=4000)
         prompt = f"""Describe this page for a BLV (blind/low-vision) user in 3-6 sentences. Be honest and specific. Use the page text + accessibility tree (most reliable) plus the screenshot (for visual layout).
@@ -2478,15 +2534,20 @@ def _focused_info(page):
 
 
 def _announce(info):
-    if info.get('none'): return "No element currently focused (focus is on document body)"
+    if info.get('none'):
+        return "No element currently focused (focus is on document body)"
     parts = []
     role = info.get('role') or info.get('tag', '')
     name = info.get('name', '').strip()
     parts.append(f"{role}" + (f": {name}" if name else ""))
-    if info.get('type') and info['type'] != role: parts.append(f"type={info['type']}")
-    if info.get('value') is not None and info['value'] != '': parts.append(f"value={info['value']}")
-    if info.get('checked') is True: parts.append("checked")
-    if info.get('disabled'): parts.append("disabled")
+    if info.get('type') and info['type'] != role:
+        parts.append(f"type={info['type']}")
+    if info.get('value') is not None and info['value'] != '':
+        parts.append(f"value={info['value']}")
+    if info.get('checked') is True:
+        parts.append("checked")
+    if info.get('disabled'):
+        parts.append("disabled")
     return ", ".join(parts)
 
 
@@ -2621,7 +2682,8 @@ def session_find(text):
         hits = page.evaluate(_js("session_find.js"), text)
 
         if not hits:
-            print(f"Not found: '{text}'", flush=True); return
+            print(f"Not found: '{text}'", flush=True)
+            return
 
         text_hits = [h for h in hits if h.get('kind') == 'text']
         attr_hits = [h for h in hits if h.get('kind') == 'attr']
@@ -2685,7 +2747,8 @@ def session_read(selector=None):
         """, selector)
 
         if not text:
-            print("(no article text found)", flush=True); return
+            print("(no article text found)", flush=True)
+            return
         # Cap the printed output so terminal doesn't flood; full text still extracted
         LIMIT = 15000
         if len(text) > LIMIT:
@@ -2719,7 +2782,8 @@ def session_list_tables(max_tables=5):
             }}
         """)
         if not tables:
-            print("(no tables found)", flush=True); return
+            print("(no tables found)", flush=True)
+            return
         for i, t in enumerate(tables, 1):
             cap = f": {t['caption']}" if t['caption'] else ''
             print(f"\nTable {i}{cap} ({len(t['rows'])} rows)")
@@ -2732,6 +2796,7 @@ def session_list_tables(max_tables=5):
 _AXE_BUNDLE_PATH = Path(__file__).parent / "axe-core.min.js"
 _AXE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.12.1/axe.min.js"
 _AXE_SCRIPT = None
+
 
 def _get_axe_script():
     """Load axe-core script (cached). Downloads from CDN if local bundle missing."""
@@ -2809,7 +2874,10 @@ def session_audit(severity_filter=None, json_output=False):
 
             # Print by severity
             severity_order = ['critical', 'serious', 'moderate', 'minor']
-            severity_icons = {'critical': '[!!]', 'serious': '[!]', 'moderate': '[~]', 'minor': '[.]'}
+            severity_icons = {
+                'critical': '[!!]', 'serious': '[!]',
+                'moderate': '[~]', 'minor': '[.]',
+            }
 
             for sev in severity_order:
                 issues = by_severity[sev]
@@ -2901,7 +2969,8 @@ def session_nudge(target, direction='right', count=5):
         run_dir.mkdir(parents=True, exist_ok=True)
         shot = run_dir / "nudge.png"
         if not _safe_screenshot(page, shot):
-            print("Can't nudge: screenshot failed", flush=True); return
+            print("Can't nudge: screenshot failed", flush=True)
+            return
 
         real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
         vw, vh = real.get('w', 1280), real.get('h', 800)
@@ -2934,7 +3003,8 @@ Respond with JSON ONLY:
 
         if choice.get('error') or not (isinstance(choice.get('x'), (int, float))
                                        and isinstance(choice.get('y'), (int, float))):
-            print(f"Can't nudge: {choice.get('error', 'no coords')}", flush=True); return
+            print(f"Can't nudge: {choice.get('error', 'no coords')}", flush=True)
+            return
 
         x, y = int(choice['x']), int(choice['y'])
         reason = choice.get('reason', '')
@@ -3005,7 +3075,8 @@ Return JSON ONLY:
                 print(f"Can't open picker: {choice.get('error', 'no field match')}", flush=True)
                 return
         else:
-            print("No candidates — can't locate date field", flush=True); return
+            print("No candidates — can't locate date field", flush=True)
+            return
 
         # Step 2-4: loop up to 14 months forward/back while navigating calendar
         run_dir = OUT / f"session_pickdate_{_os.getpid()}_{int(time.time())}"
@@ -3014,7 +3085,8 @@ Return JSON ONLY:
         for step in range(14):
             shot = run_dir / f"cal_{step}.png"
             if not _safe_screenshot(page, shot):
-                print("Can't pickdate: screenshot failed", flush=True); return
+                print("Can't pickdate: screenshot failed", flush=True)
+                return
             real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
             vw, vh = real.get('w', 1280), real.get('h', 800)
             prompt = f"""You are navigating a calendar popup for a blind user.
@@ -3048,8 +3120,10 @@ DAY CELLS are small squares in the calendar grid. Do NOT click the month header 
             if action == 'pick_day':
                 x, y = int(act.get('x', 0)), int(act.get('y', 0))
                 if x <= 0 or y <= 0:
-                    print(f"pick_day: invalid coords {act}", flush=True); return
-                print(f"Clicking day cell at ({x},{y}) in {act.get('month_year','?')}", flush=True)
+                    print(f"pick_day: invalid coords {act}", flush=True)
+                    return
+                print(f"Clicking day cell at ({x},{y}) in {act.get('month_year', '?')}",
+                      flush=True)
                 page.mouse.click(x, y)
                 time.sleep(1.0)
                 after = state_snapshot(page)
@@ -3061,12 +3135,16 @@ DAY CELLS are small squares in the calendar grid. Do NOT click the month header 
             elif action == 'next_month' or action == 'prev_month':
                 x, y = int(act.get('x', 0)), int(act.get('y', 0))
                 if x <= 0 or y <= 0:
-                    print(f"{action}: invalid coords {act}", flush=True); return
-                print(f"[step {step}] {action} from {act.get('current','?')} — clicking ({x},{y})", flush=True)
+                    print(f"{action}: invalid coords {act}", flush=True)
+                    return
+                print(
+                    f"[step {step}] {action} from {act.get('current', '?')} — clicking ({x},{y})",
+                    flush=True)
                 page.mouse.click(x, y)
                 time.sleep(0.8)
             else:
-                print(f"pickdate aborted: {act.get('error', act)}", flush=True); return
+                print(f"pickdate aborted: {act.get('error', act)}", flush=True)
+                return
 
         print("pickdate: too many month-navigation steps (>14); giving up", flush=True)
 
@@ -3167,12 +3245,14 @@ Rules:
         raw_path = run_dir / "type_raw.png"
         shot_path = run_dir / "type.png"
         if not _safe_screenshot(page, raw_path):
-            print("Can't find field: vision fallback screenshot failed", flush=True); return
+            print("Can't find field: vision fallback screenshot failed", flush=True)
+            return
 
         elements = get_elements(page)
         addressable = [e for e in elements if e.get('x', 0) > 0 and e.get('y', 0) > 0][:25]
         add_som_markers(str(raw_path), str(shot_path), addressable)
-        el_summary = "\n".join(f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
+        el_summary = "\n".join(
+            f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
 
         real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
         vw, vh = real.get('w', 1280), real.get('h', 800)
@@ -3186,10 +3266,12 @@ Return JSON: {{"el": N}} or {{"xf": 0.5, "yf": 0.3}} or {{"error": "reason"}}"""
             s, e = raw.find('{'), raw.rfind('}') + 1
             coords = json.loads(raw[s:e])
         except Exception:
-            print(f"Could not parse vision result: {raw[:150]}", flush=True); return
+            print(f"Could not parse vision result: {raw[:150]}", flush=True)
+            return
 
         if coords.get('error'):
-            print(f"Can't find field: {coords['error']}", flush=True); return
+            print(f"Can't find field: {coords['error']}", flush=True)
+            return
 
         el_idx = coords.get('el')
         if el_idx and 1 <= el_idx <= len(addressable):
@@ -3198,7 +3280,8 @@ Return JSON: {{"el": N}} or {{"xf": 0.5, "yf": 0.3}} or {{"error": "reason"}}"""
         elif coords.get('xf') is not None:
             x, y = int(coords['xf'] * vw), int(coords['yf'] * vh)
         else:
-            print("No coordinates returned", flush=True); return
+            print("No coordinates returned", flush=True)
+            return
 
         page.mouse.click(x, y)
         time.sleep(0.3)
@@ -3306,7 +3389,8 @@ Rules:
             raw = ask_claude_text(prompt, timeout=90, model=_IRIS_VISION_MODEL)
             try:
                 s, e = raw.find('{'), raw.rfind('}') + 1
-                return json.loads(raw[s:e]) if s >= 0 and e > s else {'error': f'parse failed: {raw[:80]}'}
+                return json.loads(raw[s:e]) if s >= 0 and e > s else {
+                    'error': f'parse failed: {raw[:80]}'}
             except Exception:
                 return {'error': f'parse failed: {raw[:80]}'}
 
@@ -3349,7 +3433,9 @@ Rules:
                     return
                 print("Text-grounded click had no effect — trying recovery", flush=True)
         else:
-            print(f"Text-grounding: {choice.get('error') or 'no pick'} — trying recovery", flush=True)
+            print(
+                f"Text-grounding: {choice.get('error') or 'no pick'} — trying recovery",
+                flush=True)
 
         # Recovery: DOM-wide text scan for leaf element matching description.
         # Fires whenever text-grounding didn't produce a confident useful click,
@@ -3369,7 +3455,8 @@ Rules:
         addressable = [e for e in elements if e.get('x', 0) > 0 and e.get('y', 0) > 0][:25]
         add_som_markers(str(raw_path), str(shot_path), addressable)
 
-        el_summary = "\n".join(f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
+        el_summary = "\n".join(
+            f"  [{i+1}] {e['tag']}: {e['label']}" for i, e in enumerate(addressable))
         a11y_outline = get_a11y_outline(page)
         real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
         vw, vh = real.get('w', 1280), real.get('h', 800)
@@ -3400,7 +3487,8 @@ Return JSON only:
 
         coords = resolve_coords()
         if coords.get('error'):
-            print(f"Can't tap: {coords['error']}", flush=True); return
+            print(f"Can't tap: {coords['error']}", flush=True)
+            return
 
         el_idx = coords.get('el')
         if el_idx is not None and 1 <= el_idx <= len(addressable):
@@ -3408,12 +3496,14 @@ Return JSON only:
             x, y = t['x'], t['y']
             print(f"Vision tap: element [{el_idx}] ({t['label']}) at ({x},{y})", flush=True)
         elif coords.get('xf') is not None and coords.get('yf') is not None:
-            x = int(coords['xf'] * vw); y = int(coords['yf'] * vh)
+            x = int(coords['xf'] * vw)
+            y = int(coords['yf'] * vh)
             print(f"Vision tap: ({x},{y}) [xf={coords['xf']}, yf={coords['yf']}]", flush=True)
         else:
             x, y = coords.get('x'), coords.get('y')
             if x is None or y is None:
-                print("No coordinates returned", flush=True); return
+                print("No coordinates returned", flush=True)
+                return
             print(f"Vision tap: ({x},{y})", flush=True)
 
         changed = _tap_click_and_diff(page, x, y, before)
@@ -3426,19 +3516,23 @@ Return JSON only:
             )
             el2 = coords2.get('el')
             if el2 and 1 <= el2 <= len(addressable):
-                t = addressable[el2 - 1]; x, y = t['x'], t['y']
+                t = addressable[el2 - 1]
+                x, y = t['x'], t['y']
             elif coords2.get('xf') is not None and coords2.get('yf') is not None:
-                x = int(coords2['xf'] * vw); y = int(coords2['yf'] * vh)
+                x = int(coords2['xf'] * vw)
+                y = int(coords2['yf'] * vh)
             elif coords2.get('x') is not None:
                 x, y = coords2['x'], coords2['y']
             else:
-                print(f"Retry failed: {coords2}", flush=True); return
+                print(f"Retry failed: {coords2}", flush=True)
+                return
             print(f"Retrying at ({x},{y})", flush=True)
             _tap_click_and_diff(page, x, y, before)
 
         print(f"Done. URL: {page.url}", flush=True)
         title = page.title()
-        if title: print(f"Title: {title[:80]}", flush=True)
+        if title:
+            print(f"Title: {title[:80]}", flush=True)
 
 
 def _text_ground_one(candidates, description, verb="click", timeout=60, model=_IRIS_VISION_MODEL):
@@ -3493,7 +3587,7 @@ def _scroll_into_view(page, candidate):
     refreshed = get_interactables_full(page)
     match = next((r for r in refreshed
                   if r['kind'] == candidate['kind'] and r['label'] == candidate['label']
-                     and r['visible']), None)
+                  and r['visible']), None)
     return match
 
 
@@ -3555,7 +3649,7 @@ def session_hover(description):
 
         t = _scroll_into_view(page, t)
         if t is None:
-            print(f"Can't hover: element lost after scroll", flush=True)
+            print("Can't hover: element lost after scroll", flush=True)
             return
         x, y = t['cx'], t['cy_vp']
         print(f"Hover: [{t['idx']}] {t['kind']}: {t['label']} at ({x},{y})", flush=True)
@@ -3582,7 +3676,8 @@ def session_hover(description):
         # Slow path: vision
         after_hash = get_screenshot_hash(page)
         if after_hash == before_hash:
-            print("No visible change after hover — this element likely has no tooltip.", flush=True)
+            print("No visible change after hover — this element likely has no tooltip.",
+                  flush=True)
             return
 
         run_dir = OUT / f"session_hover_{_os.getpid()}_{int(time.time())}"
@@ -3611,7 +3706,8 @@ def session_drag(from_desc, to_desc):
         before = state_snapshot(page)
         candidates = get_interactables_full(page)
         if not candidates:
-            print("No interactables found", flush=True); return
+            print("No interactables found", flush=True)
+            return
 
         lines = [
             f"  [{c['idx']}] {c['kind']}: {c['label']}"
@@ -3665,7 +3761,8 @@ Rules: never invent indices. If only one target is in the list, return {{"error"
             run_dir.mkdir(parents=True, exist_ok=True)
             shot = run_dir / "drag.png"
             if not _safe_screenshot(page, shot):
-                print("Can't drag: screenshot failed", flush=True); return
+                print("Can't drag: screenshot failed", flush=True)
+                return
             real = page.evaluate("({w: window.innerWidth, h: window.innerHeight})")
             vw, vh = real.get('w', 1280), real.get('h', 800)
             v_prompt = f"""Identify drag start and end coordinates on the screenshot.
@@ -3696,8 +3793,10 @@ Include reason_from/reason_to so your own work is auditable — this improves ac
             f = v_choice.get('from') or {}
             t = v_choice.get('to') or {}
             if not (isinstance(f.get('xf'), (int, float)) and isinstance(f.get('yf'), (int, float))
-                    and isinstance(t.get('xf'), (int, float)) and isinstance(t.get('yf'), (int, float))):
-                print(f"Can't drag: {v_choice.get('error', 'no vision coords')}", flush=True); return
+                    and isinstance(t.get('xf'), (int, float))
+                    and isinstance(t.get('yf'), (int, float))):
+                print(f"Can't drag: {v_choice.get('error', 'no vision coords')}", flush=True)
+                return
             x1, y1 = int(f['xf'] * vw), int(f['yf'] * vh)
             x2, y2 = int(t['xf'] * vw), int(t['yf'] * vh)
             print(f"Vision drag: ({x1},{y1}) → ({x2},{y2})", flush=True)
@@ -3727,7 +3826,9 @@ Include reason_from/reason_to so your own work is auditable — this improves ac
         if diff:
             print(f"State diff: {diff}", flush=True)
         elif visually_changed:
-            print("State diff: visual change (page content updated — no url/title/focus change)", flush=True)
+            print(
+                "State diff: visual change (page content updated — no url/title/focus change)",
+                flush=True)
         else:
             print("State diff: NONE — drag may not have taken effect (wrong target or page ignored it)", flush=True)
 
@@ -3760,8 +3861,9 @@ def session_diff():
 
         if not baseline_state.exists():
             save_baseline()
-            print("Saved baseline snapshot. Call `session diff` again after acting to see changes.",
-                  flush=True)
+            print(
+                "Saved baseline snapshot. Call `session diff` again after acting to see changes.",
+                flush=True)
             return
 
         prev = json.loads(baseline_state.read_text())
@@ -4115,7 +4217,9 @@ def session_report(output=None):
     <h2>Passed ({len(results['passes'])})</h2>
 """
         for p_item in results['passes'][:20]:  # Limit to first 20
-            html += f"""    <div class="pass">{html_escape(p_item.get('help', 'Unknown'))}</div>\n"""
+            html += (
+                f"""    <div class="pass">{html_escape(p_item.get('help', 'Unknown'))}</div>\n"""
+            )
         if len(results['passes']) > 20:
             html += f"    <p>...and {len(results['passes']) - 20} more</p>\n"
 
@@ -4453,6 +4557,7 @@ def session_find_all(json_output=False):
                 'missingCaptions': captions.get('total', 0)
             }
         }
+
         def render():
             s = result['summary']
             total = sum(s.values())
@@ -4993,7 +5098,8 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             say(f"\n[3/4] Processing {len(needs_ai)} AI-required fixes...", flush=True)
 
             # Group by rule type
-            image_fixes = [n for n in needs_ai if 'image' in n['ruleId'] or 'img' in n['ruleId'] or n['ruleId'] == 'image-alt']
+            image_fixes = [n for n in needs_ai if 'image' in n['ruleId']
+                           or 'img' in n['ruleId'] or n['ruleId'] == 'image-alt']
             label_fixes = [n for n in needs_ai if 'name' in n['ruleId'] or 'label' in n['ruleId']]
             contrast_fixes = [n for n in needs_ai if 'contrast' in n['ruleId']]
 
@@ -5055,9 +5161,9 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             say(f"      Applied {ai_fixed} AI fixes, {contrast_fixed} local contrast fixes",
                 flush=True)
         elif not fix_ai:
-            say(f"\n[3/4] Skipping AI fixes (--no-ai)", flush=True)
+            say("\n[3/4] Skipping AI fixes (--no-ai)", flush=True)
         else:
-            say(f"\n[3/4] No AI fixes needed", flush=True)
+            say("\n[3/4] No AI fixes needed", flush=True)
 
         # Text processing (cognitive profile features)
         text_simplified = 0
@@ -5076,7 +5182,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         total_fixed = fixed_non_ai + contrast_fixed + ai_fixed
 
         def render():
-            print(f"\n[4/4] Summary", flush=True)
+            print("\n[4/4] Summary", flush=True)
             print("─" * 50, flush=True)
             print(f"      Violations found:  {sum(v['count'] for v in violations)}", flush=True)
             print(f"      Non-AI fixes:      {fixed_non_ai + contrast_fixed}", flush=True)
@@ -5085,7 +5191,9 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                 print(f"      Text simplified:   {text_simplified}", flush=True)
             if text_summarized > 0:
                 print(f"      Summaries added:   {text_summarized}", flush=True)
-            print(f"      Total fixed:       {total_fixed + text_simplified + text_summarized}", flush=True)
+            print(
+                f"      Total fixed:       {total_fixed + text_simplified + text_summarized}",
+                flush=True)
             if ai_unreachable:
                 print(f"      Skipped, needs AI: {ai_unreachable}", flush=True)
             print("═" * 50 + "\n", flush=True)
@@ -5146,7 +5254,8 @@ def _act_diff(page, args):
     input()
     after_path = OUT / "diff_after.png"
     _safe_screenshot(page, after_path)
-    diff_path, pct, bbox = create_diff_image(str(before_path), str(after_path), str(OUT / "diff_result.png"))
+    diff_path, pct, bbox = create_diff_image(
+        str(before_path), str(after_path), str(OUT / "diff_result.png"))
     print(f"After: {after_path}\nDiff: {diff_path} ({pct:.1f}% changed, region: {bbox})")
 
 
@@ -5221,14 +5330,22 @@ def _act_drag(page, args):
     x1, y1, x2, y2 = int(args[0]), int(args[1]), int(args[2]), int(args[3])
 
     def do_drag():
-        page.mouse.move(x1, y1); time.sleep(0.2)
-        page.mouse.down(); time.sleep(0.1)
-        page.mouse.move(x2, y2, steps=20); time.sleep(0.1)
-        page.mouse.up(); time.sleep(0.8)
+        page.mouse.move(x1, y1)
+        time.sleep(0.2)
+        page.mouse.down()
+        time.sleep(0.1)
+        page.mouse.move(x2, y2, steps=20)
+        time.sleep(0.1)
+        page.mouse.up()
+        time.sleep(0.8)
 
-    success, before, after, diff, info = verify_action(page, do_drag, f"drag ({x1},{y1})→({x2},{y2})")
+    success, before, after, diff, info = verify_action(
+        page, do_drag, f"drag ({x1},{y1})→({x2},{y2})")
     if success and diff:
-        add_grid_overlay(after, str(OUT / "drag_annotated.png"), grid_size=100, focus_point=(x2, y2), mode="light")
+        add_grid_overlay(
+            after, str(OUT / "drag_annotated.png"),
+            grid_size=100, focus_point=(x2, y2), mode="light",
+        )
         print(f"Annotated result: {OUT}/drag_annotated.png")
 
 
@@ -5240,7 +5357,10 @@ def _act_key(page, args):
 
 
 # Actions that close the browser immediately (no page.png/elements summary after)
-TERMINAL_ACTIONS = {"fullpage", "scroll", "grid", "diff", "track", "describe", "read", "ask", "hover"}
+TERMINAL_ACTIONS = {
+    "fullpage", "scroll", "grid", "diff", "track",
+    "describe", "read", "ask", "hover",
+}
 
 ACTION_HANDLERS = {
     "fullpage": _act_fullpage, "scroll": _act_scroll, "grid": _act_grid,
@@ -5270,7 +5390,9 @@ def run(url, action=None, *args):
         time.sleep(1)
     except Exception as e:
         print(f"Error loading page: {e}")
-        browser.close(); p.stop(); return
+        browser.close()
+        p.stop()
+        return
 
     handler = ACTION_HANDLERS.get(action)
 
@@ -5282,13 +5404,16 @@ def run(url, action=None, *args):
         handler(page, args)
 
     if action in TERMINAL_ACTIONS:
-        browser.close(); p.stop(); return
+        browser.close()
+        p.stop()
+        return
 
     # Post-action: capture final state + summary for interaction actions
     _safe_screenshot(page, OUT / "page.png")
     elements = get_elements(page)
     data = extract_data(page)
-    browser.close(); p.stop()
+    browser.close()
+    p.stop()
 
     print(f"\nPage: {data.get('title', 'Untitled')[:60]}")
     print(f"Screenshot: {OUT}/page.png")
@@ -5301,9 +5426,12 @@ def run(url, action=None, *args):
             coords = f" @({e['x']},{e['y']})" if e['x'] > 0 else ""
             print(f"  {e['tag']}: {e['label']}{coords}")
 
-    if data.get('legend'): print(f"\nLegend: {', '.join(data['legend'])}")
-    if data.get('axes'): print(f"Axes: {', '.join(data['axes'][:6])}")
-    if data.get('values'): print(f"Values: {', '.join(data['values'][:6])}")
+    if data.get('legend'):
+        print(f"\nLegend: {', '.join(data['legend'])}")
+    if data.get('axes'):
+        print(f"Axes: {', '.join(data['axes'][:6])}")
+    if data.get('values'):
+        print(f"Values: {', '.join(data['values'][:6])}")
 
 
 if __name__ == "__main__":
