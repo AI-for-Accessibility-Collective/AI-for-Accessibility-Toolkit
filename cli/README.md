@@ -64,13 +64,23 @@ What that means in practice, because the page content involved is the user's:
 - **`go` and `profile` are the two that surprise people.** Neither calls a model
   itself. Both hand the page a set of callbacks that AI-backed adapters use, so a
   profile whose tools include `autoSimplify` or `autoSummarize` (`cognitive`,
-  `olderAdult`, `adhd`) sends page text on every navigation until the profile is
-  cleared with `ai4a11y session profile none`.
-- **Those adapters keep working after the command that set them up has finished.**
-  Once `go` or `profile` has put an AI-backed profile on a tab, a later command on
-  that same tab can send a screenshot or page text to a model through the adapters,
-  even a command listed above as instant and local. Clearing the profile with
-  `ai4a11y session profile none` is what stops it.
+  `olderAdult`, `adhd`) sends page text on every navigation. Clearing the profile
+  stops the next navigation from applying it, but it does not undo it on the page
+  you are looking at. See the next point.
+- **Those adapters keep working after the command that set them up has finished,
+  and `session profile none` does not stop them on a page that is already open.**
+  Once `go` or `profile` has put an AI-backed profile on a tab, that tab keeps it,
+  so a later command on the same tab can send page text or a screenshot to a model
+  through the adapters, including a command listed above as instant and local.
+  `ai4a11y session profile none` clears the saved profile so that it is not applied
+  again, and it says so, but it does not reach into the open page, so that page
+  carries on with the profile it already has. What we measured as stopping it, on
+  one tab, is loading a page: `ai4a11y session go <url>` after clearing the
+  profile, or `ai4a11y session stop` followed by `ai4a11y session start`.
+  Switching to a profile with no AI tools and then loading a page works too. Read
+  `profile none` as a change that takes effect on the next page you load, not on
+  the one in front of you. This is a known defect in that command, not the way it
+  is meant to work.
 
 When the Claude Code CLI is not installed, or a call fails, these commands write
 nothing to the page. They say `needs-ai` on the line where the fix would have
