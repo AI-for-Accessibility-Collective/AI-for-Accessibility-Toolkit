@@ -59,16 +59,5 @@ def test_read_extracts_article_text(cli: CliRunner) -> None:
     assert "Plain readable paragraph" in result.stdout
 
 
-@pytest.mark.browser
-def test_repeated_commands_do_not_leak_browser_connections(chromium_session, cli):
-    """Twelve commands in a row must leave twelve detached connections, not twelve open ones.
-
-    Playwright's connect_over_cdp opens a websocket per connection. Before the
-    context manager, every command that raised between connect and disconnect
-    left one open, and the browser eventually refused new ones.
-    """
-    for _ in range(12):
-        assert cli("session", "status").returncode == 0
-    # A thirteenth connection still succeeds, which it would not if the
-    # previous twelve were still attached.
-    assert cli("session", "tabs").returncode == 0
+# Whether a command lets go of its browser connection is in
+# test_connection_cleanup.py, which drives the failing command that leaked one.
