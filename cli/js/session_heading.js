@@ -1,5 +1,5 @@
 
-            (direction, level) => {
+            ([direction, level]) => {
                 const selector = level ? `h${level}` : 'h1, h2, h3, h4, h5, h6';
                 const headings = [...document.querySelectorAll(selector)].filter(h => h.offsetParent !== null);
                 if (!headings.length) return {found: false, msg: 'No headings found'};

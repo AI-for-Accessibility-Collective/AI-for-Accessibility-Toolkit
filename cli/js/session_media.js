@@ -1,5 +1,5 @@
 
-            (action, value) => {
+            ([action, value]) => {
                 const media = document.querySelector('video, audio');
                 if (!media) return {error: 'No video or audio found on page'};
 
