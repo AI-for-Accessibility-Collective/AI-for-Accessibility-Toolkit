@@ -9,7 +9,8 @@ run it over, live with the commands in `commands.py`.
 import json
 import subprocess
 import time
-from typing import NamedTuple
+from pathlib import Path
+from typing import Any, Callable, Literal, NamedTuple
 
 import os as _os
 
@@ -180,6 +181,18 @@ def _ai_exit_status(applied, unreachable):
     return 0
 
 
+# What a rendering callable hands back: one line, or nothing for a step this
+# pass keeps quiet about. `line` below drops the None, which is what lets a
+# pass leave a step unworded without leaving the field unset.
+Line = str | None
+
+# The page, and one item off an auditor. Both come from Playwright or from
+# JSON evaluated in the page, so there is no type here to name them by; what
+# the annotations below are worth saying is arity and order.
+Page = Any
+Item = Any
+
+
 class FixProgress(NamedTuple):
     """How one fix pass words the lines it prints.
 
@@ -190,16 +203,17 @@ class FixProgress(NamedTuple):
     stdout, and this is a refactor, so only the loop and the unanswered-model
     contract are shared. Presentation stays with the pass.
 
-    Each field is a callable returning the line to print, or None for a pass
-    that says nothing at that point.
+    Each field is a callable returning the line to print, and the ones with a
+    default may be left off entirely by a pass that says nothing at that point.
     """
-    header: object       # (items, count) -> the line that opens the pass
-    applied: object      # (i, item, selector, value) -> a write happened
-    failed: object       # (i, item, selector, error) -> the item raised
-    unanswered: object   # (i, item, selector) -> no answer came back
-    begin: object = None     # (i, count, item, selector) -> prefix, no newline
-    missing: object = None   # (i, item, selector) -> the element is not there
-    no_input: object = None  # (i, item, selector) -> nothing to prompt about
+    header: Callable[[list, int], Line]              # items, count: opens the pass
+    applied: Callable[[int, Item, str, Any], Line]   # i, item, selector, value
+    failed: Callable[[int, Item, str, Any], Line]    # i, item, selector, error
+    unanswered: Callable[[int, Item, str], Line]     # i, item, selector
+    # A prefix printed with no newline, so the outcome lands on the same line.
+    begin: Callable[[int, int, Item, str], Line] | None = None   # i, count, item, sel
+    missing: Callable[[int, Item, str], Line] | None = None      # element not there
+    no_input: Callable[[int, Item, str], Line] | None = None     # nothing to prompt on
 
 
 class FixPass(NamedTuple):
@@ -214,17 +228,25 @@ class FixPass(NamedTuple):
     an auditor behind it. Scan's video pass runs its own query for videos that
     carry no description. `_auditor_items` builds this callable for the passes
     that do read an auditor, so those stay one line.
+
+    `call` is a Literal because the loop branches on it by equality and falls
+    through to the text call for anything that is not "vision". Spelled as a
+    plain str, a typo in a new pass is not an error anywhere: the pass runs,
+    the model answers a prompt about an element nobody screenshotted, and the
+    answer is written into the page.
     """
-    prompt: object       # (page, item) -> the prompt text, or None to skip
-    call: str            # "vision" screenshots the located element, "text" does not
+    prompt: Callable[[Page, Item], str | None]   # None to skip this item
+    call: Literal["vision", "text"]   # vision screenshots the located element
     write: str           # JS taking (data): data.selector, data.value, data.index
     field: str           # key the answer takes in the --json payload
     progress: FixProgress
-    items: object = None   # (page) -> the items, when the pass can find them itself
-    locate: object = None  # (page, item, i) -> element, or None to skip the item
-    shot: object = None    # (item, i) -> where the vision screenshot goes
-    cap: object = None     # (value) -> value, how a long answer is trimmed
-    timeout: int = 30      # seconds allowed for a text call
+    # The items, for a pass that can find its own.
+    items: Callable[[Page], list] | None = None
+    # The element to screenshot and to write to, or None to skip the item.
+    locate: Callable[[Page, Item, int], Any] | None = None
+    shot: Callable[[Item, int], Path] | None = None  # where the screenshot goes
+    cap: Callable[[str], str] | None = None          # how a long answer is trimmed
+    timeout: int = 30                                # seconds for a text call
 
 
 def run_fix_pass(page, spec, items=None, max_items=10, json_output=False):
