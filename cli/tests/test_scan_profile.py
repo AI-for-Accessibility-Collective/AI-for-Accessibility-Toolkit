@@ -145,12 +145,15 @@ def test_clearing_the_profile_works_with_no_browser_session(
 def test_loading_a_page_after_clearing_the_profile_does_stop_the_text_passes(
     chromium_session: dict, run_without_claude, cli: CliRunner
 ) -> None:
-    """The mitigation the README names has to keep working.
+    """The second route to a cleared tab has to keep working.
 
     A navigation gives the tab a new document, and with no saved profile
-    nothing republishes one into it, so the passes stop. This is the only
-    advice we can give a user who wants page text to stop leaving the browser,
-    so it is worth a test of its own.
+    nothing republishes one into it, so the passes stop. `session profile
+    none` is the control we point a user at now that it reaches the open page,
+    and this was the only advice we had before it did. It stays covered
+    because it is what the command itself falls back to recommending when it
+    cannot reach the page, and because a person who has navigated since
+    clearing should not find the passes running again.
     """
     assert cli("session", "profile", "cognitive").returncode == 0
 
