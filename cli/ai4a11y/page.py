@@ -75,23 +75,35 @@ def _publish_active_profile(page):
     a different question from whether the profile's adapters are switched on.
     Only navigation used to set it, so a command that asked without navigating
     was answered as if no profile were active.
+
+    A cleared profile is published too. Returning early on a falsy profile
+    left the last value published standing until the page was replaced, so a
+    page went on being told a profile was active after it had been cleared.
     """
-    profile = _get_active_profile()
-    if not profile:
-        # FLAG(review): returning here is what makes `session profile none`
-        # leave an open page still running the profile's AI adapters. Nothing
-        # ever publishes a cleared profile into a page, so the last value
-        # published stands until the page is replaced. Paired with the flag in
-        # session_profile; the two are one defect and one fix.
-        return
     try:
         page.evaluate(
             "(state) => window.ai4a11y?.setSessionState?.(state)",
-            {'activeProfile': profile}
+            {'activeProfile': _get_active_profile()}
         )
     except Exception:
         # The page may not have the tools loaded; the caller reports that.
         pass
+
+
+def _withdraw_active_profile(page):
+    """Take a cleared profile into an open page. Returns the tools turned off.
+
+    Publishing the cleared state is only half of it. The adapters a profile
+    switches on bind their own listeners and ask a model from page events, and
+    they consult no session state, so they keep running until something
+    disables them. Applying a profile begins by disabling every tool; clearing
+    one does the same and enables nothing after it.
+    """
+    _publish_active_profile(page)
+    try:
+        return page.evaluate(_js("withdraw_profile.js"))
+    except Exception:
+        return 0
 
 
 def _auto_apply_saved_profile(page):

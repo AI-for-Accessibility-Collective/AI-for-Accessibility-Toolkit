@@ -48,6 +48,7 @@ from .page import (
     _expose_ai_callbacks,
     _inject_cli_tools,
     _publish_active_profile,
+    _withdraw_active_profile,
     add_som_markers,
     create_diff_image,
     describe_state_diff,
@@ -61,6 +62,7 @@ from .page import (
     wait_for_stable,
 )
 from .browser import (
+    NoSession,
     _find_page_by_target_id,
     _pick_focused_page,
     _read_last_tab,
@@ -2042,23 +2044,47 @@ def session_profile(profile_name, json_output=False):
       session profile dyslexia
       session profile none       # clear active profile
     """
-    # Handle clearing profile
-    #
-    # FLAG(review): this clears the saved profile and nothing else. It never
-    # connects to the browser, so a page that already has the profile keeps it
-    # and its AI adapters keep sending page text out. Measured on one tab: the
-    # scan text passes still ran after this command, and stopped only after the
-    # next page load. The message below now says so, in the same words as
-    # cli/README.md, so the person at the terminal reads the limit rather than
-    # only the reader of the README. Left for whoever owns the session
-    # lifecycle, because pushing the clear into the page is a change to that
-    # lifecycle and the exposed AI callbacks are a separate mechanism from the
-    # published profile state. cli/README.md tells users what actually stops it.
+    # Clearing the profile has to reach the open page, not only the saved
+    # state. Someone runs this to stop page content going to a model, so a
+    # command that wrote the state file and stopped there reported a stop it
+    # had not performed. Clearing the state is done first and unconditionally:
+    # whatever happens with the browser, the profile does not come back on the
+    # next navigation.
     if profile_name.lower() == 'none':
         _set_active_profile(None)
-        print("Profile cleared. Tools will not auto-apply on navigation. "
-              "A page that is already open keeps the profile until you load a page.",
-              flush=True)
+        result = {'cleared': True, 'reachedPage': False, 'toolsTurnedOff': 0}
+        try:
+            with connected_page() as page:
+                if _inject_cli_tools(page):
+                    result['toolsTurnedOff'] = _withdraw_active_profile(page)
+                    result['reachedPage'] = True
+                else:
+                    result['note'] = (
+                        "Could not reach the tools on the open page, so it may "
+                        "still have the profile applied. Load a page to be sure.")
+        except NoSession:
+            result['note'] = ("No browser session is running, so there was no "
+                              "open page to clear.")
+        except Exception as e:
+            # Never let a browser problem turn clearing a profile into a
+            # failure. The saved profile is already cleared by this point; say
+            # what was not reached rather than raising over it.
+            result['note'] = (
+                f"Did not reach the open page ({e}), so it may still have the "
+                "profile applied. Load a page to be sure.")
+
+        def render():
+            print("Profile cleared. It will not auto-apply on navigation.",
+                  flush=True)
+            if result['reachedPage']:
+                count = result['toolsTurnedOff']
+                noun = "tool" if count == 1 else "tools"
+                print(f"Turned off {count} {noun} on the open page.",
+                      flush=True)
+            else:
+                print(result['note'], flush=True)
+
+        emit(result, render, json_output)
         return
 
     with connected_page() as page:

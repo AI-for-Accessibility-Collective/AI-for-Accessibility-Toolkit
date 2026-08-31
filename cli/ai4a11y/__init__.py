@@ -98,6 +98,7 @@ from .ai import (  # noqa: F401
 from .page import (  # noqa: F401
     _inject_cli_tools,
     _publish_active_profile,
+    _withdraw_active_profile,
     _auto_apply_saved_profile,
     _ai_callbacks_exposed,
     _expose_ai_callbacks,
