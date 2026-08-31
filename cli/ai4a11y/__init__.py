@@ -122,13 +122,9 @@ from .page import (  # noqa: F401
     grid_hover,
 )
 
-# commands: the session commands and the specs that configure the fix engine.
-from .commands import (  # noqa: F401
+# browser: the persistent session and its Chromium connection.
+from .browser import (  # noqa: F401
     create_browser,
-    _dispatch_action,
-    _auditor_items,
-    plan_task,
-    run_agent,
     _chromium_path,
     NoSession,
     ForeignBrowser,
@@ -147,6 +143,14 @@ from .commands import (  # noqa: F401
     connected_page,
     session_stop,
     session_status,
+)
+
+# commands: the session commands and the specs that configure the fix engine.
+from .commands import (  # noqa: F401
+    _dispatch_action,
+    _auditor_items,
+    plan_task,
+    run_agent,
     session_tabs,
     session_focus_tab,
     session_cleanup_tabs,
@@ -316,10 +320,6 @@ __all__ = [
     "smart_scroll",
     "grid_hover",
     "create_browser",
-    "_dispatch_action",
-    "_auditor_items",
-    "plan_task",
-    "run_agent",
     "_chromium_path",
     "NoSession",
     "ForeignBrowser",
@@ -338,6 +338,10 @@ __all__ = [
     "connected_page",
     "session_stop",
     "session_status",
+    "_dispatch_action",
+    "_auditor_items",
+    "plan_task",
+    "run_agent",
     "session_tabs",
     "session_focus_tab",
     "session_cleanup_tabs",
