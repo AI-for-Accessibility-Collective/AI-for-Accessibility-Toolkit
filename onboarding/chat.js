@@ -22,6 +22,7 @@ import { createController } from '/controller/lib/createController.js';
 import { createDomReceiver } from '/controller/lib/web/dom-receiver.js';
 import { websocketChannel, remoteControl } from '/controller/lib/transport/remote.js';
 import { createLlmLane } from '/controller/lib/llm-lane.js';
+import { parse } from '/controller/lib/grammar.js';
 import { bestVoice, forSpeech } from '/controller/lib/web/ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -76,7 +77,7 @@ const AREA_RULES = [
   { area: 'motor', re: /motor|tremor|parkinson|keyboard only|can'?t use (a |the )?mouse|switch access|shaky hands|dexterity/i },
   { area: 'hearing', re: /\bdeaf\b|hard of hearing|hearing|captions?/i },
   { area: 'sensory', re: /sensory|overwhelm|overload|autis|too much motion|flashing/i },
-  { area: 'attention', re: /adhd|attention|can'?t focus|distract|concentrat/i },
+  { area: 'attention', re: /adhd|attention|can'?t focus|hard to focus|distracted|can'?t concentrate|concentrat/i },
 ];
 // Blind vs low vision: mirrors the server's isBlindText — a blind screen-reader
 // user needs the OPPOSITE of magnification, so we must not guess "vision" once.
@@ -254,14 +255,22 @@ async function handleTurn(text) {
   addMessage('user', u);
   $('composer-input').value = '';
   try {
-    // 1) self-description → onboarding
-    const onb = detectOnboarding(u);
-    if (onb) {
-      const reply = await applyOnboarding(onb);
-      addMessage('assistant', reply); speak(reply);
-      return;
+    // Routing precedence:
+    //   1) a deterministic CONTROLLER command wins ("bigger text", "hide
+    //      distractions", "read this", "undo") — these are actions, never a
+    //      profile edit, even though a word like "distractions" also appears in
+    //      the onboarding vocabulary.
+    //   2) otherwise a self-description → onboarding ("I'm blind").
+    //   3) otherwise back to the controller (LLM lane / task / a general answer).
+    const grammarHit = parse(u);
+    if (!grammarHit) {
+      const onb = detectOnboarding(u);
+      if (onb) {
+        const reply = await applyOnboarding(onb);
+        addMessage('assistant', reply); speak(reply);
+        return;
+      }
     }
-    // 2) controller: grammar → (llm lane) → task/unrecognized
     const res = await controller.handle(u, { returnToController: true });
     if (res.intent && res.intent.action === 'task' && res.ok) {
       addMessage('assistant', res.say); speak(res.say);
