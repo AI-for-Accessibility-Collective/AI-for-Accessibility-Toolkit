@@ -43,17 +43,23 @@ as a command; the run() and run_agent() functions remain importable.
 """
 
 from playwright.sync_api import sync_playwright
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageChops
 import sys
 import time
 import hashlib
 import io
 import json
+import re
 import subprocess
+import tempfile
+import base64
+import signal as _signal
+import urllib.request
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from html import escape as html_escape
 from typing import NamedTuple
+from urllib.parse import urlparse as _urlparse
 
 import os as _os
 # Output directory for screenshots / filmstrips. Override with AI4A11Y_OUT env var.
@@ -276,8 +282,6 @@ def _expose_ai_callbacks(page):
     try:
         # Describe image - takes base64 image data, returns alt text
         def ai_describe_image(image_data):
-            import tempfile
-            import base64
             # Save base64 to temp file
             with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
                 if ',' in image_data:
@@ -360,7 +364,6 @@ Suggest an adjusted foreground color that:
 Return ONLY the hex color (e.g. #1a2b3c), nothing else."""
             result = ask_claude_text(prompt, timeout=30)
             try:
-                import re
                 text = (result or '').strip()
                 # Prefer an exact hex response; otherwise take the LAST hex in the
                 # text — a chatty model puts the *suggested* color last, after
@@ -374,8 +377,6 @@ Return ONLY the hex color (e.g. #1a2b3c), nothing else."""
 
         # Describe element - takes screenshot + element info
         def ai_describe_element(image_data, element_type, context):
-            import tempfile
-            import base64
             with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
                 if ',' in image_data:
                     image_data = image_data.split(',')[1]
@@ -391,8 +392,6 @@ Provide a brief, useful description (1-2 sentences) that helps a screen reader u
 
         # Extract a chart/graph's data as a structured table (explore-a-chart adapter)
         def ai_extract_chart_data(image_data, context):
-            import tempfile
-            import base64
             with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
                 if ',' in image_data:
                     image_data = image_data.split(',')[1]
@@ -604,8 +603,6 @@ def add_grid_overlay(image_path, output_path, grid_size=100, focus_point=None, m
 
 def create_diff_image(before_path, after_path, output_path, threshold=30):
     """Create visual diff highlighting changes between two screenshots."""
-    from PIL import ImageChops
-
     before = Image.open(before_path).convert('RGB')
     after = Image.open(after_path).convert('RGB')
 
@@ -1537,9 +1534,6 @@ def run_agent(url, task, max_steps=5, min_interactions=0, existing_page=None):
     min_interactions: reject 'done' until this many non-trivial actions have run.
     existing_page: if provided, use it instead of opening a new browser (persistent session).
     """
-    import os, re
-    from urllib.parse import urlparse
-
     if existing_page is not None:
         page = existing_page
         p, browser = None, None  # managed by caller
@@ -1547,7 +1541,7 @@ def run_agent(url, task, max_steps=5, min_interactions=0, existing_page=None):
     else:
         eff_url = url
 
-    host = re.sub(r'[^a-z0-9]+', '-', (urlparse(eff_url).hostname or 'site').lower()).strip('-')
+    host = re.sub(r'[^a-z0-9]+', '-', (_urlparse(eff_url).hostname or 'site').lower()).strip('-')
     task_slug = re.sub(r'[^a-z0-9]+', '-', task.lower())[:40].strip('-')
     ts = time.strftime('%H%M%S')
     run_dir = OUT / f"{host}_{task_slug}_{ts}"
@@ -1923,7 +1917,6 @@ def _cdp_browser_id(cdp, timeout=1):
     because the default here is 9222, the port every DevTools Protocol client
     reaches for first.
     """
-    import urllib.request
     try:
         with urllib.request.urlopen(f"{cdp}/json/version", timeout=timeout) as response:
             ws = json.loads(response.read()).get('webSocketDebuggerUrl', '')
@@ -1969,7 +1962,6 @@ def _read_session(verify=True):
 
 def session_start():
     """Launch detached Chromium with CDP port. Survives after this Python process exits."""
-    import os as _os
     SESSION_DIR.mkdir(exist_ok=True)
     if SESSION_FILE.exists():
         existing = json.loads(SESSION_FILE.read_text())
@@ -2001,7 +1993,6 @@ def session_start():
         start_new_session=True,  # detach from current process group
     )
     # Wait for CDP endpoint to come up
-    import urllib.request
     for _ in range(30):
         time.sleep(0.3)
         try:
@@ -2231,7 +2222,6 @@ def connected_page():
 
 def session_stop():
     """Kill the persistent browser, and only that browser."""
-    import os as _os, signal as _signal
     if not SESSION_FILE.exists():
         print("No session to stop.", flush=True); return
     try:
@@ -2443,7 +2433,6 @@ def session_describe(json_output=False):
                  lambda: print("Error: No browser session. Run 'ai4a11y session start' first."),
                  json_output)
             sys.exit(1)
-        import os as _os, re as _re
         run_dir = OUT / f"session_describe_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
         shot = run_dir / "describe.png"
@@ -2751,7 +2740,6 @@ def _get_axe_script():
         if _AXE_BUNDLE_PATH.exists():
             _AXE_SCRIPT = _AXE_BUNDLE_PATH.read_text()
         else:
-            import urllib.request
             print("(downloading axe-core...)", flush=True)
             with urllib.request.urlopen(_AXE_CDN, timeout=10) as resp:
                 _AXE_SCRIPT = resp.read().decode('utf-8')
@@ -2857,7 +2845,6 @@ def session_ask(question):
     One Claude call, ~20s.
     """
     with connected_page() as page:
-        import os as _os
         run_dir = OUT / f"session_ask_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
         shot = run_dir / "ask.png"
@@ -2910,7 +2897,6 @@ def session_nudge(target, direction='right', count=5):
     """
     with connected_page() as page:
         before_hash = get_screenshot_hash(page)
-        import os as _os
         run_dir = OUT / f"session_nudge_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
         shot = run_dir / "nudge.png"
@@ -3022,7 +3008,6 @@ Return JSON ONLY:
             print("No candidates — can't locate date field", flush=True); return
 
         # Step 2-4: loop up to 14 months forward/back while navigating calendar
-        import os as _os
         run_dir = OUT / f"session_pickdate_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -3177,7 +3162,6 @@ Rules:
             print("Text-grounding: no field matched — falling back to vision", flush=True)
 
         # Phase 2: vision fallback (original SoM flow)
-        import os as _os
         run_dir = OUT / f"session_type_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
         raw_path = run_dir / "type_raw.png"
@@ -3264,7 +3248,6 @@ def session_tap(description):
             # /features/issues — the marketing one is on the same host but
             # different top-level path.
             try:
-                from urllib.parse import urlparse as _urlparse
                 u = _urlparse(page.url)
                 cur_host = u.netloc.lower()
                 parts = [p for p in u.path.split('/') if p]
@@ -3376,7 +3359,6 @@ Rules:
         print("Falling back to vision", flush=True)
 
         # Phase 2: vision fallback (original SoM flow)
-        import os as _os
         run_dir = OUT / f"session_tap_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
         raw_path = run_dir / "tap_raw.png"
@@ -3603,7 +3585,6 @@ def session_hover(description):
             print("No visible change after hover — this element likely has no tooltip.", flush=True)
             return
 
-        import os as _os
         run_dir = OUT / f"session_hover_{_os.getpid()}_{int(time.time())}"
         run_dir.mkdir(parents=True, exist_ok=True)
         shot = run_dir / "after_hover.png"
@@ -3680,7 +3661,6 @@ Rules: never invent indices. If only one target is in the list, return {{"error"
             # Vision fallback: canvas/WebGL sliders have no a11y endpoints. Ask Claude
             # for fractional viewport coords of the start and end points.
             print(f"Text-grounding failed for drag ({choice.get('error', 'no indices')}) — vision fallback", flush=True)
-            import os as _os
             run_dir = OUT / f"session_drag_{_os.getpid()}_{int(time.time())}"
             run_dir.mkdir(parents=True, exist_ok=True)
             shot = run_dir / "drag.png"
@@ -3763,7 +3743,6 @@ def session_diff():
     that and skip vision. Slow path: screenshot-diff + vision call for page content change.
     """
     with connected_page() as page:
-        import os as _os
         current = state_snapshot(page)
         try:
             current['text_hash'] = hashlib.md5(
