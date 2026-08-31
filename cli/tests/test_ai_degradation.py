@@ -130,7 +130,7 @@ def test_no_element_is_given_an_empty_label_when_claude_is_missing(
 
 @pytest.mark.parametrize(
     "command",
-    ["fix-alt", "fix-labels", "find-all", "audit", "scan", "simplify"])
+    ["fix-alt", "fix-labels", "fix-all", "find-all", "audit", "scan", "simplify"])
 def test_json_output_is_parseable_and_alone_on_stdout(
     chromium_session: dict, run_without_claude, run_with_flaky_claude, command: str
 ) -> None:
@@ -140,7 +140,10 @@ def test_json_output_is_parseable_and_alone_on_stdout(
     actually parse for a caller. `scan` and `simplify` are in the list because
     they kept doing that after the other commands stopped: scan wrote its whole
     transcript first, simplify wrote two lines, and json.loads failed on the
-    first line either way.
+    first line either way. `fix-all` was the last of them, and the only one
+    where silencing the banners was not the whole fix: it ran two commands that
+    each emitted a payload, so stdout held two documents and no amount of
+    quieting made that one.
 
     `simplify` is the one command here given a model that answers. It has no
     payload at all for a run where the model was unreachable: it prints one
@@ -187,6 +190,60 @@ def test_scan_json_carries_the_same_counts_as_the_human_summary(
     assert non_ai and ai, human
     assert payload["fixed"]["nonAi"] == int(non_ai.group(1))
     assert payload["fixed"]["ai"] == int(ai.group(1))
+
+
+def test_fix_all_json_combines_both_halves_into_one_document(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """The combined payload is a fix payload, plus the split.
+
+    `fix-all` runs the alt pass and the label pass, and a caller wants both the
+    whole run and the halves. The top level carries the same three keys in the
+    same types as `fix-alt --json` and `fix-labels --json`, so anything that
+    already reads a fix payload reads this one, and `passes` holds each half
+    unchanged for a caller that wants to tell them apart.
+
+    The totals are checked against the halves rather than against fixed
+    numbers, so this keeps testing the arithmetic on a fixture page that grows
+    new defects later.
+    """
+    payload = json.loads(run_without_claude("session", "fix-all", "--json").stdout)
+
+    assert set(payload) == {"fixed", "attempted", "skippedNeedsAi", "passes"}
+    assert set(payload["passes"]) == {"alt", "labels"}
+
+    alt, labels = payload["passes"]["alt"], payload["passes"]["labels"]
+    for half in (alt, labels):
+        assert set(half) == {"fixed", "attempted", "skippedNeedsAi"}
+
+    assert payload["fixed"] == alt["fixed"] + labels["fixed"]
+    assert payload["attempted"] == alt["attempted"] + labels["attempted"]
+    assert payload["skippedNeedsAi"] == (
+        alt["skippedNeedsAi"] + labels["skippedNeedsAi"])
+
+    # With no model reachable nothing is fixed and everything attempted is
+    # skipped, which is what makes the exit status nonzero. Asserting it here
+    # keeps the payload honest about a fully degraded run rather than only
+    # internally consistent.
+    assert payload["fixed"] == []
+    assert payload["skippedNeedsAi"] == payload["attempted"] > 0
+
+
+def test_fix_all_human_output_still_names_both_halves(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """Combining the payload must not disturb what a person sees.
+
+    The banners are the only thing separating the two halves in the human
+    output, and they are now printed through the same silenced writer as the
+    progress lines, which is exactly the kind of change that drops them.
+    """
+    human = run_without_claude("session", "fix-all").stdout
+
+    assert "=== Fixing Alt Text ===" in human, human
+    assert "=== Fixing Labels ===" in human, human
+    assert "=== Done ===" in human, human
+    assert "{" not in human, human
 
 
 @pytest.mark.parametrize("command", [("fix-alt",), ("fix-labels",)])

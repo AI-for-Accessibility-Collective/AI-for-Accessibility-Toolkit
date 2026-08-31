@@ -2315,6 +2315,41 @@ Return ONLY the alt text, no quotes or preamble.""",
 )
 
 
+def _fix_pass_on_page(page, spec, max_items, noun, empty, json_output):
+    """Run one AI fix pass on an open page and return its --json payload.
+
+    The payload is returned rather than emitted because `fix-all` runs two of
+    these and owes its caller one document. `None` means the tools could not be
+    injected, which is reported here and leaves the caller nothing to emit.
+
+    Progress and the payload share stdout, so the human lines are silenced
+    under --json rather than left to make the output unparseable.
+    """
+    say = quiet(json_output)
+    if not _inject_cli_tools(page):
+        print("Error: Could not inject tools.", flush=True)
+        return None
+
+    items = spec.items(page)
+    if not items:
+        say(empty, flush=True)
+        return _ai_fix_report([], 0, 0)
+
+    fixes, count, unreachable = run_fix_pass(
+        page, spec, items=items, max_items=max_items, json_output=json_output)
+    _print_fix_result(fixes, count, unreachable, noun, json_output)
+    return _ai_fix_report(fixes, count, unreachable)
+
+
+def _finish_fix(report, json_output):
+    """Emit a single fix command's payload and give back its exit status."""
+    if report is None:
+        return None
+    if json_output:
+        print(json.dumps(report, indent=2))
+    return _ai_exit_status(len(report['fixed']), report['skippedNeedsAi'])
+
+
 def session_fix_alt(max_images=10, json_output=False):
     """Use Claude to generate alt text for images missing it.
 
@@ -2326,26 +2361,10 @@ def session_fix_alt(max_images=10, json_output=False):
       session fix-alt 5         # Fix up to 5 images
     """
     with connected_page() as page:
-        if not _inject_cli_tools(page):
-            print("Error: Could not inject tools.", flush=True)
-            return
-
-        all_images = ALT_PASS.items(page)
-        if not all_images:
-            emit(_ai_fix_report([], 0, 0),
-                 lambda: print("No images found missing alt text.", flush=True),
-                 json_output)
-            return
-
-        # Progress goes to stdout, which is also where the payload goes, so it
-        # is silenced under --json rather than left to make the output
-        # unparseable.
-        fixes, count, unreachable = run_fix_pass(
-            page, ALT_PASS, items=all_images, max_items=max_images,
-            json_output=json_output)
-
-        _print_fix_result(fixes, count, unreachable, "images", json_output)
-        return _ai_exit_status(len(fixes), unreachable)
+        report = _fix_pass_on_page(
+            page, ALT_PASS, max_images, "images",
+            "No images found missing alt text.", json_output)
+    return _finish_fix(report, json_output)
 
 
 def session_simplify(selector=None, json_output=False):
@@ -2487,23 +2506,10 @@ def session_fix_labels(max_elements=10, json_output=False):
       session fix-labels 5        # Fix up to 5 elements
     """
     with connected_page() as page:
-        if not _inject_cli_tools(page):
-            print("Error: Could not inject tools.", flush=True)
-            return
-
-        all_elements = LABEL_PASS.items(page)
-        if not all_elements:
-            emit(_ai_fix_report([], 0, 0),
-                 lambda: print("No unlabeled elements found.", flush=True),
-                 json_output)
-            return
-
-        fixes, count, unreachable = run_fix_pass(
-            page, LABEL_PASS, items=all_elements, max_items=max_elements,
-            json_output=json_output)
-
-        _print_fix_result(fixes, count, unreachable, "elements", json_output)
-        return _ai_exit_status(len(fixes), unreachable)
+        report = _fix_pass_on_page(
+            page, LABEL_PASS, max_elements, "elements",
+            "No unlabeled elements found.", json_output)
+    return _finish_fix(report, json_output)
 
 
 def session_fix_all(json_output=False):
@@ -2512,18 +2518,39 @@ def session_fix_all(json_output=False):
     Example:
       session fix-all
     """
-    print("\n=== Fixing Alt Text ===", flush=True)
-    alt_status = session_fix_alt(max_images=10, json_output=json_output)
+    say = quiet(json_output)
+    with connected_page() as page:
+        say("\n=== Fixing Alt Text ===", flush=True)
+        alt = _fix_pass_on_page(
+            page, ALT_PASS, 10, "images",
+            "No images found missing alt text.", json_output)
+        say("\n=== Fixing Labels ===", flush=True)
+        labels = _fix_pass_on_page(
+            page, LABEL_PASS, 10, "elements",
+            "No unlabeled elements found.", json_output)
+        say("\n=== Done ===", flush=True)
 
-    print("\n=== Fixing Labels ===", flush=True)
-    label_status = session_fix_labels(max_elements=10, json_output=json_output)
+    if alt is None or labels is None:
+        return
 
-    print("\n=== Done ===", flush=True)
+    # One document, not two. Running the halves as commands had each of them
+    # emit its own payload, so `--json` wrote two objects to stdout and parsed
+    # as neither. The top level keeps the three keys and the types a single
+    # fix command emits, so a caller that reads one reads this; `passes` holds
+    # each half unchanged for a caller that wants them apart.
+    combined = {
+        'fixed': alt['fixed'] + labels['fixed'],
+        'attempted': alt['attempted'] + labels['attempted'],
+        'skippedNeedsAi': alt['skippedNeedsAi'] + labels['skippedNeedsAi'],
+        'passes': {'alt': alt, 'labels': labels},
+    }
+    if json_output:
+        print(json.dumps(combined, indent=2))
+
     # Either half falling short is enough. A run that captioned the images and
-    # labelled none of the controls did not do what fix-all names.
-    if alt_status or label_status:
-        return AI_UNAVAILABLE_EXIT
-    return 0
+    # labelled none of the controls did not do what fix-all names, and summing
+    # what each half could not reach says exactly that.
+    return _ai_exit_status(len(combined['fixed']), combined['skippedNeedsAi'])
 
 
 # ------------------------------------------------------------

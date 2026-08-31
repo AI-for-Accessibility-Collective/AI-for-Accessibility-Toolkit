@@ -18,7 +18,6 @@ from .config import (
     OUT,
     _IRIS_VISION_EFFORT,
     _IRIS_VISION_MODEL,
-    emit,
     quiet,
 )
 
@@ -151,18 +150,21 @@ def _ai_fix_report(fixes, attempted, unreachable):
 
 
 def _print_fix_result(fixes, attempted, unreachable, noun, json_output):
-    """The closing report every AI fix command prints.
+    """The closing report every AI fix command prints, for a person.
 
     It lives beside `_ai_fix_report` rather than beside the commands because it
     is that payload's other half: the same three counts, worded for a person.
     `noun` is the only thing the fix commands differ on here, "images" for one
     and "elements" for the next.
+
+    It prints and nothing more. The payload is emitted by the caller, because
+    `fix-all` combines two of these runs into one document and a function that
+    emitted here would put two on stdout.
     """
-    def render():
-        print(f"\n✓ Fixed {len(fixes)} of {attempted} {noun}", flush=True)
-        if unreachable:
-            print(f"  {unreachable} skipped, needs AI", flush=True)
-    emit(_ai_fix_report(fixes, attempted, unreachable), render, json_output)
+    say = quiet(json_output)
+    say(f"\n✓ Fixed {len(fixes)} of {attempted} {noun}", flush=True)
+    if unreachable:
+        say(f"  {unreachable} skipped, needs AI", flush=True)
 
 
 def _ai_exit_status(applied, unreachable):
