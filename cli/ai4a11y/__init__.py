@@ -52,6 +52,7 @@ from .config import (  # noqa: F401
     _js,
     quiet,
     emit,
+    warn,
     _get_readability_script,
     _SESSION_STATE_FILE,
     _get_session_state,

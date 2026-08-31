@@ -6,6 +6,7 @@ here opens a browser or calls a model, so it stays cheap to import.
 """
 
 import json
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -92,6 +93,19 @@ def emit(payload, render, json_output):
         render()
 
 
+def warn(*args):
+    """Write a diagnostic to stderr.
+
+    A command that could not run at all still owed its caller a clean stdout,
+    and said so there anyway: under --json the message landed in front of the
+    payload, so the document did not parse, and when the command produced no
+    payload the caller parsed prose instead of an answer. Stderr is where this
+    belongs whether or not --json was asked for, because it is not the answer
+    to the question the command was asked.
+    """
+    print(*args, file=sys.stderr, flush=True)
+
+
 def _get_readability_script():
     """Load the Readability library for ReaderMode."""
     global _READABILITY_SCRIPT
@@ -141,8 +155,8 @@ def _get_cli_tools_script():
         if _CLI_TOOLS_BUNDLE.exists():
             _CLI_TOOLS_SCRIPT = _CLI_TOOLS_BUNDLE.read_text()
         else:
-            print(f"Warning: CLI tools bundle not found at {_CLI_TOOLS_BUNDLE}")
-            print("Run 'npm run build:cli' to generate it.")
+            warn(f"Warning: CLI tools bundle not found at {_CLI_TOOLS_BUNDLE}")
+            warn("Run 'npm run build:cli' to generate it.")
             _CLI_TOOLS_SCRIPT = ""
     return _CLI_TOOLS_SCRIPT
 

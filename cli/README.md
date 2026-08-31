@@ -89,7 +89,7 @@ been.
 | Code | Meaning |
 |---|---|
 | 0 | The command did the whole job. Every item it attempted was fixed. |
-| 1 | A profile could not be taken back out of the open page, or applied to it. |
+| 1 | The command could not do the job at all: the tools would not load into the page, or a profile could not be taken back out of one. Nothing but the payload reaches stdout; the reason is on stderr. |
 | 2 | The command line was wrong (Typer's usage error). |
 | 3 | An AI-backed command could not reach a model for at least one item. |
 | 4 | The recorded session is not the browser it started. Nothing was touched. |

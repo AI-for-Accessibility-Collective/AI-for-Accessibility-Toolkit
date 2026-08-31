@@ -31,6 +31,7 @@ from .config import (
     _set_active_profile,
     emit,
     quiet,
+    warn,
 )
 from .ai import (
     FixPass,
@@ -1923,7 +1924,7 @@ def session_enable(tool_name, options=None):
     """
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
+            warn("Error: Could not inject tools. Run 'npm run build:cli' first.")
             return
 
         # Parse options
@@ -1987,7 +1988,7 @@ def session_disable(tool_name):
     """
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
+            warn("Error: Could not inject tools. Run 'npm run build:cli' first.")
             return
 
         result = page.evaluate(
@@ -2010,7 +2011,7 @@ def session_tools(json_output=False):
     """
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
+            warn("Error: Could not inject tools. Run 'npm run build:cli' first.")
             return
 
         tools_list = page.evaluate("() => window.ai4a11y.listTools()")
@@ -2108,8 +2109,8 @@ def session_profile(profile_name, json_output=False):
     with connected_page() as page:
         _expose_ai_callbacks(page)
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
-            return
+            warn("Error: Could not inject tools. Run 'npm run build:cli' first.")
+            return 1
 
         result = page.evaluate(
             "(name) => window.ai4a11y.applyProfile(name)",
@@ -2151,7 +2152,7 @@ def session_profiles(json_output=False):
     """
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools. Run 'npm run build:cli' first.", flush=True)
+            warn("Error: Could not inject tools. Run 'npm run build:cli' first.")
             return
 
         profiles_list = page.evaluate("() => window.ai4a11y.listProfiles()")
@@ -2194,7 +2195,7 @@ def _audit(name, json_output, render):
     """Connect, inject, evaluate one auditor, then dump JSON or render text."""
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools.", flush=True)
+            warn("Error: Could not inject tools.")
             return
         result = run_auditor(page, name)
         emit(result, lambda: render(result), json_output)
@@ -2254,7 +2255,7 @@ def session_find_all(json_output=False):
     """Run all auditors and summarize issues."""
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools.", flush=True)
+            warn("Error: Could not inject tools.")
             return
         alt = run_auditor(page, 'alt')
         labels = run_auditor(page, 'labels')
@@ -2350,7 +2351,7 @@ def _fix_pass_on_page(page, spec, max_items, noun, empty, json_output):
     """
     say = quiet(json_output)
     if not _inject_cli_tools(page):
-        print("Error: Could not inject tools.", flush=True)
+        warn("Error: Could not inject tools.")
         return None
 
     items = spec.items(page)
@@ -2365,9 +2366,14 @@ def _fix_pass_on_page(page, spec, max_items, noun, empty, json_output):
 
 
 def _finish_fix(report, json_output):
-    """Emit a single fix command's payload and give back its exit status."""
+    """Emit a single fix command's payload and give back its exit status.
+
+    No report means the pass could not start, which is a failure and not a
+    fix run that found nothing: returning None for it exited 0, so a script
+    reading the status was told a page had been fixed that was never touched.
+    """
     if report is None:
-        return None
+        return 1
     if json_output:
         print(json.dumps(report, indent=2))
     return _ai_exit_status(len(report['fixed']), report['skippedNeedsAi'])
@@ -2408,7 +2414,7 @@ def session_simplify(selector=None, json_output=False):
 
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools.", flush=True)
+            warn("Error: Could not inject tools.")
             return
 
         # Find target element
@@ -2554,7 +2560,10 @@ def session_fix_all(json_output=False):
         say("\n=== Done ===", flush=True)
 
     if alt is None or labels is None:
-        return
+        # One half that could not start is a fix-all that did not run. There is
+        # no payload to combine, so --json writes nothing to stdout rather than
+        # half a document, and the status says the run failed.
+        return 1
 
     # One document, not two. Running the halves as commands had each of them
     # emit its own payload, so `--json` wrote two objects to stdout and parsed
@@ -2772,14 +2781,17 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
     # progress share one stdout, so `scan --json` used to emit dozens of human
     # lines ahead of the payload and json.loads failed on the first of them.
     # fix-alt and fix-labels were fixed the same way earlier; scan was missed.
-    # The two "Error:" lines are left on plain stdout, which is what those same
-    # commands do, because they report that the command could not run at all.
+    # The two "Error:" lines go to stderr, which is what every command does
+    # with them: they report that the command could not run at all, so they
+    # are not the answer to what was asked and must not share stdout with it.
+    # Each also returns a failing status, because a scan that never started
+    # exiting 0 tells a script the page was scanned.
     say = quiet(json_output)
 
     with connected_page() as page:
         if not _inject_cli_tools(page):
-            print("Error: Could not inject tools.", flush=True)
-            return
+            warn("Error: Could not inject tools.")
+            return 1
 
         # The text passes below ask the catalog which text tools the active
         # profile wants. That answer comes from session state, which only a
@@ -2790,8 +2802,8 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         # Inject axe-core (required for runFullScan)
         axe_script = _get_axe_script()
         if not axe_script:
-            print("Error: Could not load axe-core.", flush=True)
-            return
+            warn("Error: Could not load axe-core.")
+            return 1
         page.add_script_tag(content=axe_script)
         page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
 

@@ -21,6 +21,7 @@ from .config import (
     _get_cli_tools_script,
     _get_readability_script,
     _js,
+    warn,
 )
 from .ai import (
     _safe_screenshot,
@@ -64,7 +65,7 @@ def _inject_cli_tools(page, auto_apply_profile=False):
 
         return True
     except Exception as e:
-        print(f"Failed to inject tools: {e}")
+        warn(f"Failed to inject tools: {e}")
         return False
 
 
