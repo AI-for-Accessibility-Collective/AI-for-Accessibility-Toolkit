@@ -158,7 +158,7 @@ function rebuildController() {
 function useLocal() {
   if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
   currentControl = localReceiver;
-  $('drive-note').textContent = 'Driving the demo app + this window.';
+  $('drive-note').textContent = 'Driving the demo preview + this window.';
   rebuildController();
   if (unNote) { unNote(); unNote = null; }
   wireNotes();
