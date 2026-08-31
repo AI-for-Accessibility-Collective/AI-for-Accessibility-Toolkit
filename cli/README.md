@@ -66,6 +66,11 @@ What that means in practice, because the page content involved is the user's:
   profile whose tools include `autoSimplify` or `autoSummarize` (`cognitive`,
   `olderAdult`, `adhd`) sends page text on every navigation until the profile is
   cleared with `ai4a11y session profile none`.
+- **Those adapters keep working after the command that set them up has finished.**
+  Once `go` or `profile` has put an AI-backed profile on a tab, a later command on
+  that same tab can send a screenshot or page text to a model through the adapters,
+  even a command listed above as instant and local. Clearing the profile with
+  `ai4a11y session profile none` is what stops it.
 
 When the Claude Code CLI is not installed, or a call fails, these commands write
 nothing to the page. They say `needs-ai` on the line where the fix would have
