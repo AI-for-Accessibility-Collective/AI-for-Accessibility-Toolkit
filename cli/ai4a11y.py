@@ -69,6 +69,34 @@ _CLI_TOOLS_SCRIPT = None
 _READABILITY_PATH = Path(__file__).parent / "lib" / "readability.js"
 _READABILITY_SCRIPT = None
 
+# The page scripts this module hands to page.evaluate. They live in cli/js/ so
+# an editor treats them as JavaScript and a diff that touches a page query
+# reads as a JavaScript change. `_js` is the lowest thing in this file: it
+# reads a path and nothing else, so a later split can put it under every other
+# layer.
+_JS_DIR = Path(__file__).parent / "js"
+_JS_CACHE = {}
+
+
+def _js(name):
+    """Read a JavaScript file from cli/js/, cached after the first read.
+
+    A missing file raises. The two older loaders in this module return an empty
+    string instead, which is why a package built without its JavaScript assets
+    reports "Could not inject tools" rather than naming the file it could not
+    find.
+    """
+    if name not in _JS_CACHE:
+        path = _JS_DIR / name
+        if not path.exists():
+            raise FileNotFoundError(
+                f"ai4a11y is missing its script {name}. Expected it at {path}. "
+                "This usually means the package was built without its JavaScript "
+                "assets."
+            )
+        _JS_CACHE[name] = path.read_text(encoding="utf-8")
+    return _JS_CACHE[name]
+
 
 # ============================================================
 # Output helpers
@@ -688,99 +716,7 @@ def wait_for_stable(page, timeout=5):
 
 def get_elements(page):
     """Enumerate interactive elements (including shadow DOM, iframes)."""
-    elements = page.evaluate("""
-        () => {
-            const els = [];
-            const seen = new Set();
-
-            function processElement(el, depth = 0) {
-                if (depth > 5) return;
-                const rect = el.getBoundingClientRect();
-                if (rect.width < 15 || rect.height < 15) return;
-                if (rect.top > window.innerHeight * 2 || rect.bottom < 0) return;
-
-                const label = el.getAttribute('aria-label')
-                    || el.textContent?.trim().slice(0, 40)
-                    || el.getAttribute('title')
-                    || el.getAttribute('alt') || '';
-
-                const tag = el.tagName.toLowerCase();
-                const key = `${label}${tag}${Math.round(rect.x)}${Math.round(rect.y)}`;
-
-                const isButton = tag === 'button' || el.getAttribute('role') === 'button';
-                const isLink = tag === 'a' && el.getAttribute('href');
-                const isInput = ['input', 'select', 'textarea'].includes(tag);
-                const hasPointer = window.getComputedStyle(el).cursor === 'pointer';
-                const hasClick = el.onclick !== null || el.hasAttribute('onclick');
-                const hasTabindex = el.hasAttribute('tabindex');
-                const hasRole = el.hasAttribute('role');
-
-                if ((isButton || isLink || isInput || hasPointer || hasClick || hasTabindex || hasRole) && label && !seen.has(key)) {
-                    seen.add(key);
-
-                    let elType = 'element';
-                    if (isButton) elType = 'button';
-                    else if (isLink) elType = 'link';
-                    else if (tag === 'input' && el.type === 'range') elType = 'slider';
-                    else if (tag === 'select') elType = 'select';
-                    else if (hasPointer) elType = 'clickable';
-
-                    let extra = '';
-                    if (elType === 'slider') extra = ` [${el.min || 0}-${el.max || 100}, val:${el.value}]`;
-                    else if (elType === 'select') extra = ` [selected: ${el.options?.[el.selectedIndex]?.text || ''}]`;
-
-                    // Disambiguation context: role + nearest labeled parent (e.g. "in: nav · header")
-                    const role = el.getAttribute('role') || '';
-                    let parentCtx = '';
-                    let p = el.parentElement, depth2 = 0;
-                    while (p && depth2 < 4) {
-                        const pTag = p.tagName.toLowerCase();
-                        const pLabel = p.getAttribute('aria-label') || p.id || '';
-                        if (['nav', 'header', 'footer', 'aside', 'main', 'section', 'dialog', 'form'].includes(pTag) || pLabel) {
-                            parentCtx = pLabel ? `${pTag}[${pLabel.slice(0, 20)}]` : pTag;
-                            break;
-                        }
-                        p = p.parentElement; depth2++;
-                    }
-
-                    els.push({
-                        tag: elType,
-                        label: label.slice(0, 50) + extra,
-                        role: role,
-                        parent: parentCtx,
-                        x: Math.round(rect.x + rect.width/2),
-                        y: Math.round(rect.y + rect.height/2)
-                    });
-                }
-
-                if (el.shadowRoot) {
-                    el.shadowRoot.querySelectorAll('*').forEach(child => processElement(child, depth + 1));
-                }
-            }
-
-            document.querySelectorAll('*').forEach(el => processElement(el));
-
-            const svgs = document.querySelectorAll('svg');
-            const canvas = document.querySelectorAll('canvas');
-            let chartType = null;
-            svgs.forEach(svg => {
-                const hasCircles = svg.querySelectorAll('circle').length > 5;
-                const hasRects = svg.querySelectorAll('rect').length > 5;
-                const hasPaths = svg.querySelectorAll('path').length > 3;
-                const hasLines = svg.querySelectorAll('line').length > 3;
-                if (hasCircles && hasPaths) chartType = 'scatter/bubble chart';
-                else if (hasRects) chartType = 'bar chart';
-                else if (hasPaths && !hasRects && !hasCircles) chartType = 'line chart';
-                else if (hasLines) chartType = 'line chart';
-            });
-
-            if (chartType) els.push({ tag: 'chart-type', label: chartType, x: 0, y: 0 });
-            if (svgs.length) els.push({ tag: 'info', label: `${svgs.length} SVG graphics`, x: 0, y: 0 });
-            if (canvas.length) els.push({ tag: 'info', label: `${canvas.length} canvas elements`, x: 0, y: 0 });
-
-            return els.slice(0, 25);
-        }
-    """)
+    elements = page.evaluate(_js("get_elements.js"))
 
     for frame in page.frames[1:]:
         try:
@@ -801,215 +737,7 @@ def get_interactables_full(page, max_items=80):
     context so Claude can disambiguate candidates from text alone, no screenshot.
     """
     try:
-        items = page.evaluate("""
-        (maxItems) => {
-            const out = [];
-            const seen = new Set();
-
-            function process(el, depth = 0) {
-                if (depth > 6) return;
-                const rect = el.getBoundingClientRect();
-                // attached to layout (has size); don't skip offscreen — caller scrolls
-                if (rect.width < 8 || rect.height < 8) return;
-
-                const tag = el.tagName.toLowerCase();
-                const role = el.getAttribute('role') || '';
-                const href = el.getAttribute('href') || '';
-
-                const isButton = tag === 'button' || role === 'button' || (tag === 'input' && ['submit','button','reset'].includes(el.type));
-                const isLink = tag === 'a' && href;
-                const isInput = ['input','select','textarea'].includes(tag) && el.type !== 'hidden';
-                const hasPointer = window.getComputedStyle(el).cursor === 'pointer';
-                const hasOnclick = el.onclick !== null || el.hasAttribute('onclick');
-                const hasTabindex = el.hasAttribute('tabindex') && el.getAttribute('tabindex') !== '-1';
-                const interactiveRoles = ['button','link','menuitem','tab','checkbox','radio','switch','option','treeitem','combobox','slider'];
-                const hasInteractiveRole = interactiveRoles.includes(role);
-                const hasTestHook = el.hasAttribute('data-testid') || el.hasAttribute('data-action') || el.hasAttribute('data-test');
-                const isDraggable = el.getAttribute('draggable') === 'true';
-                // An aria-labeled div/span is almost certainly there for a reason —
-                // drop zones, canvas overlays, custom clickables without role.
-                const labeledContainer = (tag === 'div' || tag === 'span' || tag === 'li')
-                                         && el.hasAttribute('aria-label');
-
-                if (!(isButton || isLink || isInput || hasPointer || hasOnclick || hasTabindex || hasInteractiveRole || hasTestHook || isDraggable || labeledContainer)) {
-                    if (el.shadowRoot) {
-                        el.shadowRoot.querySelectorAll('*').forEach(c => process(c, depth + 1));
-                    }
-                    return;
-                }
-
-                // Inputs/selects/textareas: build a richer label from MULTIPLE attrs
-                // (aria-label AND placeholder AND name AND <label for> AND aria-labelledby).
-                // Users describe fields loosely ("email field" / "search box") so we
-                // want any one of those hints to be matchable.
-                let rawLabel;
-                if (isInput) {
-                    const parts = [];
-                    const push = (s) => {
-                        if (!s) return;
-                        const t = String(s).trim().replace(/\\s+/g, ' ').slice(0, 40);
-                        if (!t) return;
-                        // skip if already substring-covered by an existing part (case-insensitive)
-                        const lt = t.toLowerCase();
-                        if (parts.some(p => p.toLowerCase().includes(lt) || lt.includes(p.toLowerCase()))) return;
-                        parts.push(t);
-                    };
-                    push(el.getAttribute('aria-label'));
-                    push(el.getAttribute('placeholder'));
-                    push(el.getAttribute('title'));
-                    push(el.getAttribute('name'));
-                    // Linked <label for="id">
-                    if (el.labels && el.labels.length) {
-                        for (const lbl of el.labels) push(lbl.textContent);
-                    }
-                    // aria-labelledby resolution
-                    const labelledBy = el.getAttribute('aria-labelledby');
-                    if (labelledBy) {
-                        for (const id of labelledBy.split(/\\s+/)) {
-                            const ref = id && document.getElementById(id);
-                            if (ref) push(ref.textContent);
-                        }
-                    }
-                    rawLabel = parts.slice(0, 3).join(' · ').slice(0, 80);
-                    if (!rawLabel) rawLabel = (el.value || el.id || '').slice(0, 40);
-                } else {
-                    rawLabel = (el.getAttribute('aria-label')
-                        || el.textContent?.trim().replace(/\\s+/g, ' ')
-                        || el.getAttribute('title')
-                        || el.getAttribute('alt')
-                        || el.getAttribute('placeholder')
-                        || el.value
-                        || el.getAttribute('data-testid')
-                        || '').slice(0, 80);
-                }
-                if (!rawLabel) return;
-
-                // de-dupe near-duplicates (same label + tag within 20px)
-                const key = `${tag}|${role}|${rawLabel}|${Math.round(rect.x/20)}|${Math.round((rect.y + window.scrollY)/20)}`;
-                if (seen.has(key)) return;
-                seen.add(key);
-
-                // landmark context — helps Claude pick among duplicates like "Edit"
-                let parentCtx = '';
-                let p = el.parentElement, d2 = 0;
-                while (p && d2 < 5) {
-                    const pTag = p.tagName.toLowerCase();
-                    const pLabel = p.getAttribute('aria-label') || p.id || '';
-                    if (['nav','header','footer','aside','main','section','dialog','form','article'].includes(pTag)) {
-                        parentCtx = pLabel ? `${pTag}[${pLabel.slice(0,20)}]` : pTag;
-                        break;
-                    }
-                    if (pLabel && p.getAttribute('role')) {
-                        parentCtx = `${p.getAttribute('role')}[${pLabel.slice(0,20)}]`;
-                        break;
-                    }
-                    p = p.parentElement; d2++;
-                }
-
-                let kind = 'element';
-                if (isButton) kind = 'button';
-                else if (isLink) kind = 'link';
-                else if (tag === 'input' && el.type === 'range') kind = 'slider';
-                else if (tag === 'select') kind = 'select';
-                else if (isInput) kind = 'input';
-                else if (role) kind = role;
-                else if (hasPointer || hasOnclick) kind = 'clickable';
-
-                let extra = '';
-                if (kind === 'slider') extra = ` [${el.min||0}-${el.max||100}, val:${el.value}]`;
-                else if (kind === 'select') extra = ` [sel:${el.options?.[el.selectedIndex]?.text || ''}]`;
-                else if (kind === 'input') extra = el.value ? ` [val:${String(el.value).slice(0,30)}]` : '';
-                else {
-                    // Surface an href suffix whenever one is reachable — from the
-                    // element itself, its nearest <a> ancestor, or a descendant <a>.
-                    // Covers custom turbo-tabs / role=button wrappers around real
-                    // links (GitHub repo tabs, Vercel dashboard nav, etc.) so the
-                    // SAME-SITE disambiguator can see the intended destination.
-                    let linkHref = (tag === 'a' && href) ? href : '';
-                    if (!linkHref) {
-                        const anc = el.closest('a[href]');
-                        if (anc) linkHref = anc.getAttribute('href') || '';
-                    }
-                    if (!linkHref) {
-                        const desc = el.querySelector('a[href]');
-                        if (desc) linkHref = desc.getAttribute('href') || '';
-                    }
-                    if (linkHref) {
-                        // normalize to absolute-ish for downstream SAME-SITE matching
-                        try {
-                            const abs = new URL(linkHref, location.href).href;
-                            extra = ` → ${abs.slice(0, 80)}`;
-                        } catch (e) {
-                            extra = ` → ${linkHref.slice(0, 80)}`;
-                        }
-                    }
-                }
-
-                const vh = window.innerHeight;
-                const cx = Math.round(rect.x + rect.width / 2);
-                const cy_vp = Math.round(rect.y + rect.height / 2);
-                const cy_page = cy_vp + Math.round(window.scrollY);
-                const visible = rect.top < vh && rect.bottom > 0;
-
-                out.push({
-                    kind: kind,
-                    label: rawLabel + extra,
-                    parent: parentCtx,
-                    cx: cx,
-                    cy_vp: cy_vp,
-                    cy_page: cy_page,
-                    visible: visible,
-                    disabled: !!el.disabled,
-                });
-
-                if (el.shadowRoot) {
-                    el.shadowRoot.querySelectorAll('*').forEach(c => process(c, depth + 1));
-                }
-            }
-
-            document.querySelectorAll('body, body *').forEach(el => process(el));
-
-            // Rank before capping so the N we keep are the RELEVANT N, not the first
-            // N in DOM order (which are always header/nav on big pages like Wikipedia,
-            // leaving body-text links unreachable). Priority:
-            //   1. viewport-visible → these are what the user is literally looking at
-            //   2. within visible: SAME-SITE hrefs before cross-site / marketing chrome
-            //      (repo /owner/repo/... before /features/... on github.com/owner/repo;
-            //      current-doc anchors before global nav, etc.)
-            //   3. offscreen, sorted by distance to current viewport (nearest first)
-            //   4. ties: preserve DOM order (stable sort)
-            const vh = window.innerHeight;
-            const sy = window.scrollY;
-            const viewportMid = sy + vh / 2;
-            const curHost = location.host.toLowerCase();
-            const curPathParts = location.pathname.split('/').filter(Boolean);
-            const curPrefix = '/' + curPathParts.slice(0, 2).join('/');
-            out.forEach((o, idx) => {
-                o._domOrder = idx;
-                o._dist = o.visible ? 0 : Math.abs(o.cy_page - viewportMid);
-                o._sameSite = 0;
-                const m = o.label && o.label.match(/→ (\\S+)/);
-                if (m) {
-                    const h = m[1].toLowerCase();
-                    // absolute URL with curHost + curPrefix, or relative starting with curPrefix
-                    if (h.startsWith('/') && !h.startsWith('//')) {
-                        if (curPrefix !== '/' && (h === curPrefix || h.startsWith(curPrefix + '/'))) o._sameSite = 1;
-                    } else if (h.includes(curHost)) {
-                        if (curPrefix === '/' || h.includes(curPrefix + '/') || h.endsWith(curPrefix)) o._sameSite = 1;
-                    }
-                }
-            });
-            out.sort((a, b) => {
-                if (a.visible !== b.visible) return a.visible ? -1 : 1;
-                if (a.visible && a._sameSite !== b._sameSite) return b._sameSite - a._sameSite;
-                if (a._dist !== b._dist) return a._dist - b._dist;
-                return a._domOrder - b._domOrder;
-            });
-            const capped = out.slice(0, maxItems);
-            capped.forEach(o => { delete o._domOrder; delete o._dist; delete o._sameSite; });
-            return capped;
-        }
-    """, max_items)
+        items = page.evaluate(_js("get_interactables_full.js"), max_items)
     except Exception:
         # Mid-navigation / CDP race / CSP eval block — degrade to "no candidates"
         # so _text_ground_one reports "not in list" and vision fallback kicks in.
@@ -1024,20 +752,7 @@ def state_snapshot(page):
     Use get_screenshot_hash separately when pixel-change detection matters.
     """
     try:
-        return page.evaluate("""
-            () => ({
-                url: location.href,
-                title: document.title,
-                scroll_y: Math.round(window.scrollY),
-                interactable_count: document.querySelectorAll(
-                    'a[href], button, input:not([type=hidden]), textarea, select, [role=button], [role=link], [tabindex]:not([tabindex="-1"])'
-                ).length,
-                focused_label: (document.activeElement?.getAttribute('aria-label')
-                    || document.activeElement?.textContent?.trim().slice(0,40)
-                    || document.activeElement?.tagName?.toLowerCase()
-                    || ''),
-            })
-        """)
+        return page.evaluate(_js("state_snapshot.js"))
     except Exception:
         return {'url': page.url, 'title': '', 'scroll_y': 0, 'interactable_count': 0, 'focused_label': ''}
 
@@ -1064,36 +779,7 @@ def describe_state_diff(before, after):
 
 def extract_data(page):
     """Extract chart data (legend, axes, values, title) from visualization."""
-    return page.evaluate("""
-        () => {
-            const data = {};
-            const legends = new Set();
-            document.querySelectorAll('[class*="legend"] text, [class*="legend"] span, .legend-item, [class*="series-label"]').forEach(el => {
-                const t = el.textContent?.trim();
-                if (t && t.length < 30 && t.length > 0) legends.add(t);
-            });
-            if (legends.size) data.legend = [...legends].slice(0, 8);
-
-            const axes = new Set();
-            document.querySelectorAll('[class*="axis"] text, .axis-label, [class*="tick"] text').forEach(el => {
-                const t = el.textContent?.trim();
-                if (t && t.length < 20 && t.length > 0) axes.add(t);
-            });
-            if (axes.size) data.axes = [...axes].slice(0, 10);
-
-            const values = [];
-            document.querySelectorAll('[class*="value"], [class*="label"] text, [data-value]').forEach(el => {
-                const v = el.getAttribute('data-value') || el.textContent?.trim();
-                if (v && /^[\\d,.%$]+$/.test(v.replace(/\\s/g, ''))) values.push(v);
-            });
-            if (values.length) data.values = [...new Set(values)].slice(0, 10);
-
-            const title = document.querySelector('h1, h2, [class*="title"]')?.textContent?.trim();
-            if (title) data.title = title.slice(0, 60);
-
-            return data;
-        }
-    """)
+    return page.evaluate(_js("extract_data.js"))
 
 
 def get_page_context(page, text_limit=8000):
@@ -1124,20 +810,7 @@ def get_page_context(page, text_limit=8000):
         text = ''
 
     try:
-        tables = page.evaluate("""
-            () => {
-                const out = [];
-                document.querySelectorAll('table.infobox, table.wikitable, table[role="table"]').forEach(t => {
-                    const rows = [];
-                    t.querySelectorAll('tr').forEach(tr => {
-                        const cells = [...tr.querySelectorAll('th, td')].map(c => (c.textContent || '').trim().replace(/\\s+/g,' '));
-                        if (cells.length) rows.push(cells.join(' | '));
-                    });
-                    if (rows.length) out.push(rows.slice(0, 40).join('\\n'));
-                });
-                return out.slice(0, 3);  // up to 3 tables
-            }
-        """)
+        tables = page.evaluate(_js("get_page_context_tables.js"))
     except Exception:
         tables = []
 
@@ -1267,22 +940,7 @@ def smart_scroll(page, max_scrolls=10):
 
 def grid_hover(page):
     """Sample 3×3 grid of hovers on the main chart area to trigger tooltips."""
-    chart_bounds = page.evaluate("""
-        () => {
-            const selectors = ['svg:not([width="0"])', 'canvas', '[class*="chart"]',
-                '[class*="graph"]', '[class*="plot"]', 'figure', '.grapher', '#chart', 'main svg'];
-            for (const sel of selectors) {
-                const chart = document.querySelector(sel);
-                if (chart) {
-                    const rect = chart.getBoundingClientRect();
-                    if (rect.width > 200 && rect.height > 200) {
-                        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-                    }
-                }
-            }
-            return { x: 400, y: 300, width: 800, height: 500 };
-        }
-    """)
+    chart_bounds = page.evaluate(_js("grid_hover_chart_bounds.js"))
 
     if not chart_bounds:
         print("No chart area found for grid hover")
@@ -1424,17 +1082,7 @@ def _dispatch_action(page, decision):
     if action == 'media':
         op, value = decision.get('op', 'info'), decision.get('value', 0)
         info = page.evaluate(
-            """(args) => {
-                const m = document.querySelector('video, audio');
-                if (!m) return {error: 'no media element'};
-                if (args.op === 'play') m.play();
-                else if (args.op === 'pause') m.pause();
-                else if (args.op === 'seek') m.currentTime = args.value;
-                else if (args.op === 'rate') m.playbackRate = args.value;
-                else if (args.op === 'volume') m.volume = Math.max(0, Math.min(1, args.value));
-                return {duration: m.duration, currentTime: m.currentTime,
-                        paused: m.paused, rate: m.playbackRate, volume: m.volume};
-            }""", {'op': op, 'value': value})
+            _js("dispatch_action_media.js"), {'op': op, 'value': value})
         print(f"  media.{op}: {info}", flush=True)
         return 1
     raise ValueError(f"unknown action: {action}")
@@ -1969,16 +1617,7 @@ Is the answer fully supported by what's visible in the screenshot, to a naive ob
         current_url = page.url
 
         # Fine-grained change classification (research: fine-grained failure detection helps recovery)
-        page_state = page.evaluate("""() => {
-            const active = document.activeElement;
-            return {
-                title: document.title.slice(0, 60),
-                focusedTag: active ? active.tagName.toLowerCase() : '',
-                focusedLabel: active ? (active.getAttribute('aria-label') || active.textContent?.trim().slice(0, 40) || '') : '',
-                modalVisible: !!document.querySelector('[role="dialog"]:not([hidden]), .modal:not([hidden]), [aria-modal="true"]'),
-                bodyClasses: document.body.className.slice(0, 80)
-            };
-        }""")
+        page_state = page.evaluate(_js("run_agent_page_state.js"))
 
         feedback = ""
         if step > 0:
@@ -2167,14 +1806,7 @@ Return JSON only: {{"lesson": "..."}}"""
             if x is None or y is None:
                 return
             hit = page.evaluate(
-                """([x, y]) => {
-                    const el = document.elementFromPoint(x, y);
-                    if (!el) return null;
-                    return {tag: el.tagName.toLowerCase(),
-                            text: (el.textContent || '').trim().slice(0, 40),
-                            role: el.getAttribute('role') || '',
-                            aria: el.getAttribute('aria-label') || ''};
-                }""", [x, y])
+                _js("verify_click_landed.js"), [x, y])
             last_click_hit = {**hit, 'x': x, 'y': y} if hit else {'x': x, 'y': y, 'tag': 'none'}
             if hit and hit['tag'] in ('html', 'body'):
                 print(f"  ⚠ click at ({x},{y}) hit <{hit['tag']}> — likely missed target", flush=True)
@@ -2853,21 +2485,7 @@ Skip decorative elements. If it's a modal/captcha/blocker, say so first."""
 
 def _focused_info(page):
     """Return role/name/state of the currently focused element, for announce-style output."""
-    return page.evaluate("""
-        () => {
-            const a = document.activeElement;
-            if (!a || a === document.body) return {none: true};
-            return {
-                tag: a.tagName.toLowerCase(),
-                role: a.getAttribute('role') || '',
-                name: a.getAttribute('aria-label') || a.textContent?.trim().slice(0, 80) || a.value || a.placeholder || '',
-                type: a.type || '',
-                checked: a.checked ?? null,
-                disabled: a.disabled ?? false,
-                value: (a.value !== undefined ? String(a.value).slice(0, 60) : null)
-            };
-        }
-    """)
+    return page.evaluate(_js("focused_info.js"))
 
 
 def _announce(info):
@@ -2965,92 +2583,40 @@ def session_list(kind='focusables'):
     with connected_page() as page:
         kind = kind.lower()
         if kind in ('heading', 'headings', 'h'):
-            rows = page.evaluate("""
-                () => [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map(h => ({
-                    level: parseInt(h.tagName[1]),
-                    text: h.textContent.trim().slice(0, 100)
-                })).filter(r => r.text)
-            """)
+            rows = page.evaluate(_js("session_list_headings.js"))
             for r in rows[:50]:
                 print(f"  H{r['level']}: {r['text']}")
             print(f"({len(rows)} headings)" if rows else "(no headings)", flush=True)
         elif kind in ('link', 'links', 'l', 'k'):
-            rows = page.evaluate("""
-                () => [...document.querySelectorAll('a[href]')].map(a => ({
-                    text: (a.getAttribute('aria-label') || a.textContent.trim() || a.href).slice(0, 80),
-                    href: a.href
-                })).filter(r => r.text && r.text !== r.href.slice(0, 80))
-            """)
+            rows = page.evaluate(_js("session_list_links.js"))
             for r in rows[:50]:
                 print(f"  {r['text']}")
             print(f"({len(rows)} links)" if rows else "(no links)", flush=True)
         elif kind in ('button', 'buttons', 'b'):
-            rows = page.evaluate("""
-                () => [...document.querySelectorAll('button, [role=\"button\"], input[type=\"submit\"], input[type=\"button\"]')].map(b => ({
-                    text: (b.getAttribute('aria-label') || b.textContent.trim() || b.value || '').slice(0, 80),
-                    disabled: b.disabled
-                })).filter(r => r.text)
-            """)
+            rows = page.evaluate(_js("session_list_buttons.js"))
             for r in rows[:50]:
                 print(f"  {r['text']}{' (disabled)' if r['disabled'] else ''}")
             print(f"({len(rows)} buttons)" if rows else "(no buttons)", flush=True)
         elif kind in ('form', 'forms', 'fields', 'f'):
-            rows = page.evaluate("""
-                () => [...document.querySelectorAll('input:not([type=\"hidden\"]), textarea, select')].map(el => {
-                    const labelEl = el.labels?.[0];
-                    const label = el.getAttribute('aria-label') || labelEl?.textContent.trim() || el.placeholder || el.name || '';
-                    return {label: label.slice(0, 60), type: el.type || el.tagName.toLowerCase(),
-                            value: (el.value || '').slice(0, 40), required: el.required};
-                }).filter(r => r.label)
-            """)
+            rows = page.evaluate(_js("session_list_forms.js"))
             for r in rows[:50]:
                 req = ' *required*' if r['required'] else ''
                 val = f' = {r["value"]}' if r['value'] else ''
                 print(f"  [{r['type']}] {r['label']}{val}{req}")
             print(f"({len(rows)} form fields)" if rows else "(no form fields)", flush=True)
         elif kind in ('image', 'images', 'img', 'g'):
-            rows = page.evaluate("""
-                () => [...document.querySelectorAll('img, [role="img"], picture, svg[aria-label]')].map(el => {
-                    const rect = el.getBoundingClientRect();
-                    const scrollY = rect.top + window.scrollY;
-                    const src = el.currentSrc || el.src || el.getAttribute('data-src') || '';
-                    const alt = el.getAttribute('alt') || el.getAttribute('aria-label') || el.getAttribute('title') || '';
-                    return {
-                        alt: alt.slice(0, 80),
-                        src: src.slice(-80),
-                        w: Math.round(rect.width),
-                        h: Math.round(rect.height),
-                        y: Math.round(scrollY),
-                        hidden: rect.width < 5 || rect.height < 5 || el.offsetParent === null
-                    };
-                }).filter(r => !r.hidden)
-            """)
+            rows = page.evaluate(_js("session_list_images.js"))
             for r in rows[:80]:
                 label = r['alt'] or f"(no alt) {r['src'].split('/')[-1][:40]}"
                 print(f"  [{r['w']}×{r['h']} @y={r['y']}] {label}")
             print(f"({len(rows)} images)" if rows else "(no images)", flush=True)
         elif kind in ('landmark', 'landmarks', 'region', 'regions', 'r'):
-            rows = page.evaluate("""
-                () => [...document.querySelectorAll('[role=\"banner\"],[role=\"navigation\"],[role=\"main\"],[role=\"complementary\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"form\"],[role=\"region\"],header,nav,main,aside,footer,section[aria-label],section[aria-labelledby]')].map(el => ({
-                    role: el.getAttribute('role') || el.tagName.toLowerCase(),
-                    label: (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || '').slice(0, 60)
-                }))
-            """)
+            rows = page.evaluate(_js("session_list_landmarks.js"))
             for r in rows[:30]:
                 print(f"  {r['role']}" + (f": {r['label']}" if r['label'] else ""))
             print(f"({len(rows)} landmarks)" if rows else "(no landmarks)", flush=True)
         else:  # focusables
-            rows = page.evaluate("""
-                () => {
-                    const candidates = document.querySelectorAll('a[href], button, input:not([type=\"hidden\"]), textarea, select, [tabindex]:not([tabindex=\"-1\"])');
-                    return [...candidates].filter(el => !el.disabled && el.offsetParent !== null).map(el => ({
-                        tag: el.tagName.toLowerCase(),
-                        role: el.getAttribute('role') || '',
-                        name: (el.getAttribute('aria-label') || el.textContent?.trim() || el.value || el.placeholder || '').slice(0, 70),
-                        type: el.type || ''
-                    })).filter(r => r.name)
-                }
-            """)
+            rows = page.evaluate(_js("session_list_focusables.js"))
             for r in rows[:80]:
                 role = r['role'] or r['tag']
                 print(f"  [{role}] {r['name']}")
@@ -3063,43 +2629,7 @@ def session_find(text):
     Zero Claude calls.
     """
     with connected_page() as page:
-        hits = page.evaluate("""
-            (needle) => {
-                const nl = needle.toLowerCase();
-                const out = [];
-
-                // 1. Body text matches (with surrounding context)
-                const body = document.body.innerText || '';
-                const lower = body.toLowerCase();
-                let idx = lower.indexOf(nl);
-                while (idx >= 0 && out.length < 20) {
-                    const s = Math.max(0, idx - 40);
-                    const e = Math.min(body.length, idx + needle.length + 40);
-                    out.push({kind: 'text', snippet: body.slice(s, e).replace(/\\s+/g, ' ').trim()});
-                    idx = lower.indexOf(nl, idx + 1);
-                }
-
-                // 2. Element attribute matches (alt, aria-label, title, placeholder)
-                const attrs = ['alt', 'aria-label', 'title', 'placeholder'];
-                const seen = new Set();
-                document.querySelectorAll('*').forEach(el => {
-                    if (out.length >= 40) return;
-                    for (const a of attrs) {
-                        const v = el.getAttribute(a);
-                        if (v && v.toLowerCase().includes(nl)) {
-                            const key = el.tagName + v;
-                            if (seen.has(key)) continue;
-                            seen.add(key);
-                            const rect = el.getBoundingClientRect();
-                            const y = Math.round(rect.top + window.scrollY);
-                            out.push({kind: 'attr', tag: el.tagName.toLowerCase(), attr: a,
-                                      value: v.slice(0, 100), y: y});
-                        }
-                    }
-                });
-                return out;
-            }
-        """, text)
+        hits = page.evaluate(_js("session_find.js"), text)
 
         if not hits:
             print(f"Not found: '{text}'", flush=True); return
@@ -3266,24 +2796,7 @@ def session_audit(severity_filter=None, json_output=False):
         page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
 
         # Run axe
-        results = page.evaluate("""
-            async () => {
-                const results = await axe.run();
-                return {
-                    violations: results.violations.map(v => ({
-                        id: v.id,
-                        impact: v.impact,
-                        description: v.description,
-                        help: v.help,
-                        helpUrl: v.helpUrl,
-                        nodes: v.nodes.length
-                    })),
-                    passes: results.passes.length,
-                    incomplete: results.incomplete.length,
-                    url: window.location.href
-                };
-            }
-        """)
+        results = page.evaluate(_js("session_audit.js"))
 
         violations = results['violations']
         if severity_filter:
@@ -4023,76 +3536,7 @@ def _text_recovery_scroll(page, description, kinds=None):
     """
     want_inputs = kinds is not None and all(k in ('input', 'textarea') for k in kinds)
     try:
-        match = page.evaluate("""
-            ([desc, wantInputs]) => {
-                const stop = new Set(['the','and','for','with','this','that','click','tap','link','button','press','open','use','from','some','any','all','tab','page','site','window','field','box','bar']);
-                const words = desc.toLowerCase().split(/\\s+/)
-                    .filter(w => w.length > 2 && !stop.has(w));
-                if (!words.length) return null;
-
-                const clickableSel = wantInputs
-                    ? 'input:not([type=hidden]), textarea'
-                    : 'a[href], button, [role="button"], [role="link"]';
-
-                // Pick the best-matching element by accessible text, preferring
-                // short/leaf elements. If that element isn't clickable itself,
-                // find the nearest clickable element within its subtree, then
-                // sibling/ancestor subtree (common pattern: title in <p>, adjacent
-                // <a> with ID/link). This fixes sites like arXiv where paper
-                // titles are plain text next to an arXiv:XXXX link.
-                const textSel = 'a[href], button, [role="button"], [role="link"], p, li, h1, h2, h3, h4, h5, h6, td, div, span, article, section';
-                const els = [...document.querySelectorAll(textSel)];
-                let best = null, bestLen = Infinity;
-                for (const el of els) {
-                    const visibleText = (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim();
-                    if (visibleText.length > 300 || visibleText.length < 2) continue;
-                    const t = (visibleText + ' ' +
-                               (el.getAttribute('aria-label') || '') + ' ' +
-                               (el.getAttribute('title') || '') + ' ' +
-                               (el.getAttribute('placeholder') || '')
-                              ).toLowerCase().replace(/\\s+/g, ' ').trim();
-                    if (!t) continue;
-                    if (!words.every(w => t.includes(w))) continue;
-                    if (visibleText.length < bestLen) {
-                        bestLen = visibleText.length;
-                        best = el;
-                    }
-                }
-                if (!best) return null;
-
-                // Resolve to a clickable element.
-                let clickTarget = best;
-                if (!best.matches(clickableSel)) {
-                    // descendant first (click target embedded in the matched text container)
-                    clickTarget = best.querySelector(clickableSel);
-                    if (!clickTarget) {
-                        // nearest clickable ancestor
-                        clickTarget = best.closest(clickableSel);
-                    }
-                    if (!clickTarget) {
-                        // scan ancestor subtree: walk up ≤5 levels, check each parent's subtree
-                        let parent = best.parentElement, depth = 0;
-                        while (parent && depth < 5) {
-                            const cand = parent.querySelector(clickableSel);
-                            if (cand) { clickTarget = cand; break; }
-                            parent = parent.parentElement;
-                            depth += 1;
-                        }
-                    }
-                    if (!clickTarget) return null;
-                }
-                const r = clickTarget.getBoundingClientRect();
-                if (r.width === 0 || r.height === 0) return null;
-                return {
-                    label: (clickTarget.textContent || clickTarget.getAttribute('aria-label') || '').replace(/\\s+/g, ' ').trim().slice(0, 60),
-                    kind: clickTarget.tagName.toLowerCase() === 'a' ? 'link' :
-                          clickTarget.tagName.toLowerCase() === 'button' ? 'button' :
-                          (clickTarget.tagName.toLowerCase()),
-                    cy_page: r.top + window.scrollY + r.height / 2,
-                    cx_page: r.left + window.scrollX + r.width / 2,
-                };
-            }
-        """, [description, want_inputs])
+        match = page.evaluate(_js("text_recovery_scroll.js"), [description, want_inputs])
     except Exception:
         return None
 
@@ -4147,15 +3591,7 @@ def session_hover(description):
         time.sleep(0.8)  # tooltip render delay
 
         # Fast path: DOM-detectable tooltip appeared
-        dom_tooltips = page.evaluate("""
-            () => [...document.querySelectorAll(
-                '[role="tooltip"], .tooltip, .tippy-box, [data-tippy-root], [role="status"][aria-live], .MuiTooltip-popper, [data-radix-popper-content-wrapper]'
-            )].filter(el => {
-                const r = el.getBoundingClientRect();
-                return r.width > 0 && r.height > 0 && el.offsetParent !== null;
-            }).map(el => (el.innerText || el.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 300))
-              .filter(t => t)
-        """)
+        dom_tooltips = page.evaluate(_js("session_hover_tooltips.js"))
         if dom_tooltips:
             for tip in dom_tooltips[:3]:
                 print(f"Tooltip: {tip}", flush=True)
@@ -4412,37 +3848,7 @@ def session_focused():
     hitting Enter, OR when ai4a11y's own click may have moved focus and they want to confirm.
     """
     with connected_page() as page:
-        info = page.evaluate("""
-            () => {
-                const el = document.activeElement;
-                if (!el || el === document.body) {
-                    return {role: 'body', label: '(nothing focused — just the page)',
-                            url: location.href, title: document.title};
-                }
-                const tag = el.tagName.toLowerCase();
-                const role = el.getAttribute('role') || tag;
-                const label = (el.getAttribute('aria-label')
-                    || el.textContent?.trim().replace(/\\s+/g, ' ')
-                    || el.value
-                    || el.placeholder
-                    || el.getAttribute('title')
-                    || '').slice(0, 120);
-                const href = el.getAttribute('href') || '';
-                const type = el.type || '';
-                const value = (el.value !== undefined ? String(el.value) : '').slice(0, 80);
-                const checked = el.checked;
-                const disabled = el.disabled;
-                let extra = '';
-                if (href) extra += ` → ${href.slice(0, 80)}`;
-                if (type && type !== tag) extra += ` [${type}]`;
-                if (value && value !== label) extra += ` value="${value}"`;
-                if (checked !== undefined && (tag === 'input' && (type === 'checkbox' || type === 'radio'))) {
-                    extra += checked ? ' [checked]' : ' [unchecked]';
-                }
-                if (disabled) extra += ' [disabled]';
-                return {role, label, extra, url: location.href, title: document.title};
-            }
-        """)
+        info = page.evaluate(_js("session_focused.js"))
         label = info.get('label') or '(no label)'
         extra = info.get('extra', '')
         print(f"Focused: [{info.get('role', '?')}] {label}{extra}", flush=True)
@@ -4456,55 +3862,7 @@ def session_dismiss():
     Uses common selector patterns to find and close intrusive overlays.
     """
     with connected_page() as page:
-        dismissed = page.evaluate("""
-            () => {
-                const selectors = [
-                    // Cookie consent
-                    '[class*="cookie"] button[class*="accept"]',
-                    '[class*="cookie"] button[class*="agree"]',
-                    '[class*="cookie"] button[class*="close"]',
-                    '[class*="consent"] button[class*="accept"]',
-                    '[id*="cookie"] button',
-                    '[aria-label*="cookie" i] button',
-                    '[aria-label*="accept" i][aria-label*="cookie" i]',
-                    // Generic modals/dialogs
-                    '[role="dialog"] button[aria-label*="close" i]',
-                    '[role="dialog"] button[aria-label*="dismiss" i]',
-                    '[role="alertdialog"] button[aria-label*="close" i]',
-                    '[class*="modal"] button[class*="close"]',
-                    '[class*="modal"] [aria-label*="close" i]',
-                    '[class*="popup"] button[class*="close"]',
-                    '[class*="overlay"] button[class*="close"]',
-                    // Newsletter/signup popups
-                    '[class*="newsletter"] button[class*="close"]',
-                    '[class*="subscribe"] button[class*="close"]',
-                    // Generic X close buttons
-                    'button[aria-label="Close"]',
-                    'button[aria-label="Dismiss"]',
-                    '[class*="close-button"]',
-                    // GDPR specific
-                    '#onetrust-accept-btn-handler',
-                    '.cc-dismiss',
-                    '.cc-accept',
-                ];
-                let count = 0;
-                for (const sel of selectors) {
-                    const btns = document.querySelectorAll(sel);
-                    for (const btn of btns) {
-                        if (btn.offsetParent !== null) {  // visible
-                            btn.click();
-                            count++;
-                        }
-                    }
-                }
-                // Also try removing common overlay classes
-                document.querySelectorAll('[class*="overlay"][class*="cookie"]').forEach(el => {
-                    el.style.display = 'none';
-                    count++;
-                });
-                return count;
-            }
-        """)
+        dismissed = page.evaluate(_js("session_dismiss.js"))
         if dismissed > 0:
             print(f"Dismissed {dismissed} popup(s)/banner(s)", flush=True)
         else:
@@ -4520,13 +3878,7 @@ def session_summary():
         # Get minimal context
         title = page.title()
         url = page.url
-        text = page.evaluate("""
-            () => {
-                const main = document.querySelector('main, [role="main"], article, .content, #content');
-                const target = main || document.body;
-                return (target.innerText || '').slice(0, 2000);
-            }
-        """)
+        text = page.evaluate(_js("session_summary.js"))
 
         prompt = f"""Give a 2-sentence summary of this page. First sentence: what type of page/site is this. Second sentence: what's the main content or purpose right now.
 
@@ -4609,39 +3961,7 @@ def session_skip():
     Looks for <main>, [role="main"], <article>, or #content.
     """
     with connected_page() as page:
-        result = page.evaluate("""
-            () => {
-                const selectors = [
-                    'main',
-                    '[role="main"]',
-                    'article',
-                    '#main-content',
-                    '#content',
-                    '.main-content',
-                    '.content'
-                ];
-                for (const sel of selectors) {
-                    const el = document.querySelector(sel);
-                    if (el && el.offsetParent !== null) {
-                        el.setAttribute('tabindex', '-1');
-                        el.focus();
-                        el.scrollIntoView({behavior: 'smooth', block: 'start'});
-
-                        // Find first focusable child
-                        const firstFocusable = el.querySelector('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
-                        if (firstFocusable) {
-                            firstFocusable.focus();
-                        }
-
-                        const tag = el.tagName.toLowerCase();
-                        const role = el.getAttribute('role') || tag;
-                        const label = el.getAttribute('aria-label') || '';
-                        return {found: true, role: role, label: label};
-                    }
-                }
-                return {found: false};
-            }
-        """)
+        result = page.evaluate(_js("session_skip.js"))
 
         if result.get('found'):
             label = result.get('label')
@@ -4751,20 +4071,7 @@ def session_report(output=None):
         page.wait_for_function("typeof axe !== 'undefined'", timeout=5000)
 
         # Run full axe analysis
-        results = page.evaluate("""
-            async () => {
-                const results = await axe.run();
-                return {
-                    url: window.location.href,
-                    title: document.title,
-                    timestamp: new Date().toISOString(),
-                    violations: results.violations,
-                    passes: results.passes,
-                    incomplete: results.incomplete,
-                    inapplicable: results.inapplicable
-                };
-            }
-        """)
+        results = page.evaluate(_js("session_report.js"))
 
         # Generate HTML report
         timestamp = time.strftime("%Y%m%d_%H%M%S")
@@ -5291,10 +4598,7 @@ def session_simplify(selector=None, json_output=False):
                 target_selector = 'body'
 
         # Get original text
-        original = page.evaluate("""(sel) => {
-            const el = document.querySelector(sel);
-            return el ? el.innerText : null;
-        }""", target_selector)
+        original = page.evaluate(_js("session_simplify_original.js"), target_selector)
 
         if not original:
             print(f"Element not found: {target_selector}", flush=True)
@@ -5339,18 +4643,7 @@ Return ONLY the simplified text, maintaining paragraph structure."""
         # For now just return - user can copy/paste or we add --apply flag later
 
 
-LABEL_CONTEXT_JS = """(sel) => {
-    const el = document.querySelector(sel);
-    if (!el) return null;
-    return {
-        tag: el.tagName,
-        type: el.type || el.role,
-        href: el.href,
-        innerHTML: el.innerHTML.slice(0, 200),
-        parent: el.parentElement?.innerText?.slice(0, 100),
-        nearby: el.parentElement?.parentElement?.innerText?.slice(0, 200)
-    };
-}"""
+LABEL_CONTEXT_JS = _js("label_context.js")
 
 
 def _label_prompt(page, item):
@@ -5485,11 +4778,7 @@ SCAN_IMAGE_PASS = FixPass(
 )
 
 
-CANVAS_ITEMS_JS = """() => {
-    return Array.from(document.querySelectorAll('canvas'))
-        .filter(c => !c.getAttribute('aria-label') && !c.getAttribute('role'))
-        .map((c, i) => ({ index: i, selector: c.id ? '#' + c.id : `canvas:nth-of-type(${i+1})` }));
-}"""
+CANVAS_ITEMS_JS = _js("canvas_items.js")
 
 
 SCAN_CANVAS_PASS = FixPass(
@@ -5517,17 +4806,10 @@ SCAN_CANVAS_PASS = FixPass(
 )
 
 
-VIDEO_ITEMS_JS = """() => {
-    return Array.from(document.querySelectorAll('video'))
-        .filter(v => !v.getAttribute('aria-label') && !v.getAttribute('aria-describedby'))
-        .map((v, i) => ({ index: i, selector: v.id ? '#' + v.id : `video:nth-of-type(${i+1})` }));
-}"""
+VIDEO_ITEMS_JS = _js("video_items.js")
 
 
-VIDEO_SEEK_JS = """(idx) => {
-    const video = document.querySelectorAll('video')[idx];
-    if (video) { video.pause(); video.currentTime = Math.min(2, video.duration / 4); }
-}"""
+VIDEO_SEEK_JS = _js("video_seek.js")
 
 
 def _video_locate(page, item, i):
@@ -5559,16 +4841,7 @@ SCAN_VIDEO_PASS = FixPass(
 )
 
 
-SCAN_LABEL_CONTEXT_JS = """(sel) => {
-    const el = document.querySelector(sel);
-    if (!el) return null;
-    return {
-        tag: el.tagName,
-        href: el.href,
-        text: el.innerText?.slice(0,100),
-        parent: el.parentElement?.innerText?.slice(0,100)
-    };
-}"""
+SCAN_LABEL_CONTEXT_JS = _js("scan_label_context.js")
 
 
 def _scan_label_prompt(page, item):
@@ -5610,16 +4883,7 @@ SCAN_SIMPLIFY_PASS = FixPass(
     prompt=_scan_simplify_prompt,
     call="text",
     timeout=45,
-    write="""(d) => {
-    const el = document.querySelector(d.selector);
-    if (el) {
-        el.dataset.ai4a11ySimplified = 'true';
-        el.dataset.ai4a11yOriginal = el.textContent;
-        el.textContent = d.value;
-        el.style.backgroundColor = '#e8f5e9';
-        el.title = 'Text simplified for readability';
-    }
-}""",
+    write=_js("scan_simplify_write.js"),
     field="simplified",
     progress=FixProgress(
         header=lambda items, count: (
@@ -5644,16 +4908,7 @@ SCAN_SUMMARIZE_PASS = FixPass(
     prompt=_scan_summarize_prompt,
     call="text",
     timeout=45,
-    write="""(d) => {
-    const el = document.querySelector(d.selector);
-    if (el) {
-        el.dataset.ai4a11ySummarized = 'true';
-        const summaryBox = document.createElement('div');
-        summaryBox.style.cssText = 'background: #fff3e0; padding: 12px; margin-bottom: 12px; border-left: 4px solid #ff9800; border-radius: 4px;';
-        summaryBox.innerHTML = '<strong>Summary:</strong> ' + d.value;
-        el.parentElement?.insertBefore(summaryBox, el);
-    }
-}""",
+    write=_js("scan_summarize_write.js"),
     field="summary",
     progress=FixProgress(
         header=lambda items, count: (
@@ -5796,12 +5051,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
                     selector = fix['selector']
                     try:
                         # Get current colors
-                        colors = page.evaluate("""(sel) => {
-                            const el = document.querySelector(sel);
-                            if (!el) return null;
-                            const s = getComputedStyle(el);
-                            return { fg: s.color, bg: s.backgroundColor };
-                        }""", selector)
+                        colors = page.evaluate(_js("session_scan_contrast_colors.js"), selector)
                         if not colors:
                             continue
                         # Simple fix: make text black or white based on background
