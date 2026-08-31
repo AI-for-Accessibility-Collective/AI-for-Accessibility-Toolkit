@@ -29,6 +29,10 @@ function check(name, cond) {
   check('grammar: "dark mode" → darkMode true', parse('dark mode please').changes.darkMode === true);
   check('grammar: "light mode" negation → darkMode false', parse('switch to light mode').changes.darkMode === false);
   check('grammar: "high contrast" → contrastMode enum', parse('high contrast').changes.contrastMode === 'yellow-black');
+  check('grammar: "low contrast" → contrastMode light', parse('low contrast').changes.contrastMode === 'light');
+  check('grammar: "lower the contrast" → contrastMode light', parse('lower the contrast').changes.contrastMode === 'light');
+  check('grammar: "less contrast" → contrastMode light', parse('less contrast').changes.contrastMode === 'light');
+  check('grammar: "no contrast" → contrastMode none', parse('no contrast').changes.contrastMode === 'none');
   check('grammar: "reduce motion" → motionReducer true', parse('please reduce motion').changes.motionReducer === true);
   check('grammar: "read this" → query content text', (() => { const i = parse('read this to me'); return i.type === 'query' && i.ask === 'content' && i.mode === 'text'; })());
   check('grammar: "what\'s on screen" → query content outline', (() => { const i = parse("what's on screen"); return i.type === 'query' && i.ask === 'content'; })());

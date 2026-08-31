@@ -47,9 +47,12 @@ const RULES = [
   { re: /\b(light mode|no dark|turn off dark)\b/, build: (_m, u) => adapt(u, { changes: { darkMode: false }, say: 'Turning dark mode off' }) },
   { re: /\bdark( mode| theme)?\b/, build: (_m, u) => adapt(u, { changes: { darkMode: true }, say: 'Turning on dark mode' }) },
 
-  // — contrast — negation first
-  { re: /\b(no|remove|less) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'none' }, say: 'Removing high contrast' }) },
-  { re: /\bhigh[- ]?contrast\b|\bmore contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
+  // — contrast — negation first, then LOW (the 'light' level), then HIGH.
+  // Order matters: "no/remove contrast" turns it off; "low/lower/reduce/soft
+  // contrast" selects the low-contrast level; "high/more contrast" the high one.
+  { re: /\b(no|remove|turn off) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'none' }, say: 'Removing the contrast setting' }) },
+  { re: /\b(low|lower|reduce|reduced|less|soft|softer)( the| a)? contrast\b|\blow[- ]?contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'light' }, say: 'Lowering the contrast' }) },
+  { re: /\bhigh[- ]?contrast\b|\b(more|high|higher|strong|stronger) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
 
   // — motion —
   { re: /\b(reduce|stop|less|no) (motion|animation|animations)\b|\bmotion reducer\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: true }, say: 'Reducing motion' }) },

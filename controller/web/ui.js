@@ -395,5 +395,6 @@ export const CONTROLLER_CSS = `
 .aa-hide-distractions .ad, .aa-hide-distractions [data-ad], .aa-hide-distractions aside { display: none !important; }
 .aa-focus-mode p { opacity: .55; } .aa-focus-mode p:hover { opacity: 1; }
 [data-aa-contrast="yellow-black"] { background: #000 !important; color: #ff0 !important; }
+[data-aa-contrast="light"] { filter: contrast(0.62); }
 .aa-reading-guide { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="4" height="24"><rect width="4" height="24" fill="orange"/></svg>') 2 12, auto; }
 `;

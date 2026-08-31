@@ -111,6 +111,7 @@
   #surface.aa-focus-mode .msg:last-child .bubble { opacity: 1; }
   #surface[data-aa-contrast="yellow-black"] .bubble { background: #000 !important; color: #ff0 !important; }
   #surface[data-aa-contrast="yellow-black"] #composer-form { background: #000; border-color: #ff0; }
+  #surface[data-aa-contrast="light"] { filter: contrast(0.62); }
 
   /* Adaptation classes/vars the dom-receiver toggles on #demo-app. */
   #demo-app[style*="--aa-font-scale"] { font-size: calc(1rem * var(--aa-font-scale, 1)); }
@@ -122,6 +123,7 @@
   #demo-app.aa-hide-distractions .ad, #demo-app.aa-hide-distractions aside { display: none !important; }
   #demo-app.aa-focus-mode p { opacity: .55; } #demo-app.aa-focus-mode p:hover { opacity: 1; }
   #demo-app[data-aa-contrast="yellow-black"] { background: #000 !important; color: #ff0 !important; }
+  #demo-app[data-aa-contrast="light"] { filter: contrast(0.62); }
 </style>
 </head>
 <body>
