@@ -4,7 +4,7 @@ A terminal front end for the toolkit's catalog. It launches a persistent Chromiu
 
 This is a research probe, pre-alpha, restored from the pre-split repository and rewired to this tree. Expect rough edges.
 
-Two files: `cli.py` is the command line (a [Typer](https://typer.tiangolo.com/) app: parsing, help, shell completion via `ai4a11y --install-completion`); `ai4a11y.py` is the engine it calls. Every command and group answers `--help`.
+`cli.py` is the command line (a [Typer](https://typer.tiangolo.com/) app: parsing, help, shell completion via `ai4a11y --install-completion`). The engine it calls is the `ai4a11y/` package next to it, six modules that import in one direction only: `config.py`, then `ai.py`, `page.py`, `browser.py`, `agent.py`, and `commands.py`. Every command and group answers `--help`.
 
 ## Setup
 
