@@ -23,6 +23,17 @@ Controller tab) via CDP. Full guidance + a ready-to-adapt snippet:
 `browser-harness-a11y/docs/receiver-issue-mute-audio.md`. Documented in
 `controller/PROTOCOL.md`.
 
+### boolean `false` settings are rejected by browser-harness
+**Toolkit half: correct.** "stop live captions" resolves to
+`applySettings({showCaptions:false})`, the right payload for a `boolean`
+settingsMeta key.
+
+**Receiver half: BUG.** browser-harness applies `showCaptions:true` but returns
+`{"error":"nothing applied"}` for `false` (with an empty `rejected`) — a
+truthiness test treating `False` as "no value". Every boolean key can likely be
+switched on by voice but not off. Spec + fix:
+`browser-harness-a11y/docs/receiver-issue-boolean-false-settings.md`.
+
 ### `stop` — interrupt a running task
 **Toolkit half: shipped** (`ed75dab`). Optional `stop()` in the ControlPort +
 `canStop` capability; the Controller calls it from a Stop control shown while a
