@@ -155,9 +155,13 @@ function rebuildController() {
   window.__chat = controller;
 }
 
+// Remember the connected receiver so a page refresh reconnects to it (the socket
+// dies with the page, but the receiver — e.g. browser-harness — is still up).
+const WS_KEY = 'aa-chat-ws';
 function useLocal() {
   if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
   currentControl = localReceiver;
+  try { localStorage.removeItem(WS_KEY); } catch {}
   $('drive-note').textContent = 'Driving the demo preview + this window.';
   rebuildController();
   if (unNote) { unNote(); unNote = null; }
@@ -168,6 +172,8 @@ function useRemote(url) {
   if (remoteChannel) remoteChannel.close();
   remoteChannel = websocketChannel(url);
   currentControl = remoteControl({ channel: remoteChannel });
+  try { localStorage.setItem(WS_KEY, url); } catch {}
+  $('ws-url').value = url;
   $('drive-note').textContent = 'Driving remote receiver ' + url + ' — messages go straight through as tasks.';
   rebuildController();
   if (unNote) { unNote(); unNote = null; }
@@ -424,7 +430,7 @@ function initSettings() {
   // reload gives a fresh receiver (no adaptations), an empty transcript, and no
   // profile, i.e. starting from scratch as no specific person.
   $('reset-profile').addEventListener('click', () => {
-    try { localStorage.removeItem('onb-uid'); localStorage.removeItem(HIST_KEY); } catch {}
+    try { localStorage.removeItem('onb-uid'); localStorage.removeItem(HIST_KEY); localStorage.removeItem(WS_KEY); } catch {}
     location.reload();
   });
 }
@@ -456,6 +462,10 @@ async function boot() {
   wireNotes();
   initSettings();
   initVoiceInput();
+
+  // Reconnect to the receiver we were driving before a refresh, if any.
+  let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
+  if (savedWs) useRemote(savedWs);
 
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
   $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
