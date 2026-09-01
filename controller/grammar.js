@@ -57,6 +57,10 @@ const RULES = [
   // — motion —
   { re: /\b(reduce|stop|less|no) (motion|animation|animations)\b|\bmotion reducer\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: true }, say: 'Reducing motion' }) },
 
+  // — captions — negation first (turn on the captions media already has).
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(live |closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(live |closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) on\b|^(live |closed )?(captions?|subtitles?)$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
+
   // — focus / distraction —
   { re: /\bfocus mode\b/, build: (_m, u) => adapt(u, { changes: { focusMode: true }, say: 'Turning on focus mode' }) },
   { re: /\b(hide|remove|dim) (distraction|distractions|ads|clutter)\b/, build: (_m, u) => adapt(u, { changes: { hideDistractions: true }, say: 'Hiding distractions' }) },
@@ -178,7 +182,7 @@ export { STEP };
 export function vocabularyKeys() {
   const keys = new Set();
   for (const k of Object.keys(STEP)) if (settingsMeta[k]) keys.add(k);
-  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets']) {
+  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions']) {
     if (settingsMeta[k]) keys.add(k);
   }
   return [...keys];

@@ -378,8 +378,8 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(html);
     }
-    if (method === 'GET' && pathname === '/chat.js') {
-      const js = await readFile(path.join(__dirname, 'chat.js'), 'utf8');
+    if (method === 'GET' && (pathname === '/chat.js' || pathname === '/chat-routing.js')) {
+      const js = await readFile(path.join(__dirname, pathname.slice(1)), 'utf8');
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' });
       return res.end(js);
     }

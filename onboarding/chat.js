@@ -24,6 +24,7 @@ import { websocketChannel, remoteControl } from '/controller/lib/transport/remot
 import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { parse } from '/controller/lib/grammar.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
+import { detectOnboarding, visionKindOf } from '/chat-routing.js';
 
 const $ = (id) => document.getElementById(id);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -64,51 +65,13 @@ function renderProfile(uid, model) {
   if (bits.length) el.append(' · ' + bits.join(' · '));
 }
 
-// ── onboarding heuristic: is this message a self-description? ──────────────────
-// Maps a natural sentence onto {supportAreas, visionKind}. Deliberately gated on
-// a self-description lead ("I'm / I have / I use / my …") OR a bare condition
-// word, so imperative commands ("read this", "bigger text") are NOT swallowed as
-// onboarding — those fall through to the controller grammar.
-const SELF = /\b(i['’]?m|i am|i['’]?ve|i have|i use|i get|my|me)\b/i;
-const AREA_RULES = [
-  { area: 'vision', re: /\bblind\b|low vision|partially sighted|visually impaired|can'?t see|cannot see|screen ?reader|voice ?over|nvda|jaws|talkback|magnif/i },
-  { area: 'reading', re: /dyslexi|trouble reading|hard to read|letters (move|jump)|reading/i },
-  { area: 'cognitive', re: /cognitive|memory|remember|plain language|simple language|understand|comprehen/i },
-  { area: 'motor', re: /motor|tremor|parkinson|keyboard only|can'?t use (a |the )?mouse|switch access|shaky hands|dexterity/i },
-  { area: 'hearing', re: /\bdeaf\b|hard of hearing|hearing|captions?/i },
-  { area: 'sensory', re: /sensory|overwhelm|overload|autis|too much motion|flashing/i },
-  { area: 'attention', re: /adhd|attention|can'?t focus|hard to focus|distracted|can'?t concentrate|concentrat/i },
-];
-// Blind vs low vision: mirrors the server's isBlindText — a blind screen-reader
-// user needs the OPPOSITE of magnification, so we must not guess "vision" once.
-function visionKindOf(t) {
-  const s = t.toLowerCase();
-  if (/colou?r[- ]?blind/.test(s)) return null; // colour-vision deficiency, not blindness
-  if (/screen ?reader|voice ?over|nvda|jaws|talkback|can'?t see|cannot see|totally blind|completely blind|\bblind\b/.test(s)
-      && !/legally blind/.test(s)) return 'blind';
-  if (/low vision|partially sighted|bigger text|magnif|too small|hard to see/.test(s)) return 'lowVision';
-  return null;
-}
-function detectOnboarding(text) {
-  const t = String(text || '').trim();
-  if (!t) return null;
-  const areas = [];
-  for (const r of AREA_RULES) if (r.re.test(t)) areas.push(r.area);
-  if (!areas.length) return null;
-  // Gate: a self-description lead, or the message is essentially just the
-  // condition (few words) — so "read this" (command) never counts.
-  const bareCondition = t.split(/\s+/).length <= 4;
-  if (!SELF.test(t) && !bareCondition) return null;
-  const visionKind = areas.includes('vision') ? visionKindOf(t) : undefined;
-  return { supportAreas: [...new Set(areas)], freeText: t, visionKind };
-}
-
+// ── onboarding (detection lives in chat-routing.js, unit-tested) ─────────────
 // Chat onboarding is ADDITIVE and conversational: a new self-description MERGES
 // with what's already known rather than replacing it ("I'm blind" then later "I
 // also have dyslexia" → vision + reading). Support areas are unioned; the free
-// text keeps its history (appended); and the vision kind is recomputed from the
-// COMBINED text, so adding an unrelated need can never silently flip a blind
-// profile to low-vision (or vice-versa).
+// text keeps its history; and the vision kind is recomputed from the COMBINED
+// text, so adding an unrelated need can never silently flip a blind profile to
+// low-vision (or vice-versa).
 async function applyOnboarding(o) {
   const uid = currentUid() || 'demo-user';
   const prevAreas = operatorModel.supportAreas || [];

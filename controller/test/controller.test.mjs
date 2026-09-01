@@ -33,6 +33,11 @@ function check(name, cond) {
   check('grammar: "lower the contrast" → contrastMode light', parse('lower the contrast').changes.contrastMode === 'light');
   check('grammar: "less contrast" → contrastMode light', parse('less contrast').changes.contrastMode === 'light');
   check('grammar: "no contrast" → contrastMode none', parse('no contrast').changes.contrastMode === 'none');
+  check('grammar: "show captions" → showCaptions true', parse('show captions').changes.showCaptions === true);
+  check('grammar: "turn on subtitles" → showCaptions true', parse('turn on subtitles').changes.showCaptions === true);
+  check('grammar: "stop live captions" → showCaptions false', parse('stop live captions').changes.showCaptions === false);
+  check('grammar: "no live captions" → showCaptions false', parse('no live captions').changes.showCaptions === false);
+  check('grammar: "captions off" → showCaptions false', parse('captions off').changes.showCaptions === false);
   check('grammar: "reduce motion" → motionReducer true', parse('please reduce motion').changes.motionReducer === true);
   check('grammar: "read this" → query content text', (() => { const i = parse('read this to me'); return i.type === 'query' && i.ask === 'content' && i.mode === 'text'; })());
   check('grammar: "what\'s on screen" → query content outline', (() => { const i = parse("what's on screen"); return i.type === 'query' && i.ask === 'content'; })());
