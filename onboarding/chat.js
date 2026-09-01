@@ -435,8 +435,22 @@ function setMic(on) {
 function toggleMic() {
   if (!recog) return;
   if (listening) { recog.stop(); return; }
-  try { if (TTS) window.speechSynthesis.cancel(); } catch {} // stop any playing reply before listening
+  silenceAudioForDictation();
   try { recog.start(); setMic(true); } catch {}
+}
+// Before listening, silence audio so the mic doesn't transcribe what's playing.
+// A page can only reach ITS OWN tab (cancel TTS + pause local media); to silence
+// OTHER tabs we ask the connected receiver (e.g. browser-harness, which controls
+// the whole browser via CDP) to muteAudio — best-effort, ignored by receivers
+// that don't implement it.
+function silenceAudioForDictation() {
+  try { if (TTS) window.speechSynthesis.cancel(); } catch {}
+  try { document.querySelectorAll('audio, video').forEach((m) => { try { m.pause(); } catch {} }); } catch {}
+  try {
+    if (remoteChannel && currentControl && typeof currentControl.performAction === 'function') {
+      currentControl.performAction('muteAudio', null, null, { returnToController: false });
+    }
+  } catch {}
 }
 function initVoiceInput() {
   const b = $('mic');

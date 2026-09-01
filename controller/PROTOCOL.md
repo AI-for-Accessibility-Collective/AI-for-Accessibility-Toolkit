@@ -168,6 +168,13 @@ One app action. `meta` (4th arg) carries per-run flags:
   `task` and skips the local grammar entirely — so a task receiver should expect
   the full range of instructions, including ones the settings grammar could
   itself have parsed (`"make text bigger"`): the app interprets them.
+- `muteAudio` *(optional)* — silence audio the person isn't dictating to. The
+  Controller fires this when **voice input starts**, so the microphone doesn't
+  transcribe media that's playing. A web Controller can pause its OWN tab, but
+  only the receiver that drives the browser can reach OTHER tabs — pause every
+  `<audio>`/`<video>` and cancel `speechSynthesis` across all targets (CDP), or
+  mute the tabs. Declare `"muteAudio"` in `actions` to receive it; best-effort,
+  no reply is awaited.
 - Unsupported action → `{ "ok": false, "detail": "unsupported action: …" }`.
 
 ### `stop() → StopResult`  *(optional)*
