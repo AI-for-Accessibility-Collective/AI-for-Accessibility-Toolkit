@@ -9,6 +9,10 @@ Deferred work that's been scoped but not (fully) done. Two kinds:
 Keep this list short: add an item when you defer something with a clear plan,
 remove it when it's done.
 
+> This file is **pending work only**. The canonical list of everything a receiver
+> must implement is `controller/PROTOCOL.md` — start at its **§0 Conformance
+> checklist**.
+
 ## Receiver tasks
 
 ### `muteAudio` — silence other tabs during dictation
