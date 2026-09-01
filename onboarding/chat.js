@@ -418,8 +418,15 @@ async function generalAnswer(u) {
     return fallbackHelp();
   }
 }
+// Nothing deterministic matched and there was nowhere to pass it. Say WHY —
+// usually "no app is connected", which is the actual reason a request like
+// "play a podcast from spotify" goes nowhere.
 function fallbackHelp() {
-  return 'I can change this page for you — try “bigger text”, “dark mode”, “high contrast”, “reduce motion”, or “read this”. Tell me about your needs (like “I’m blind” or “I have dyslexia”) and I’ll set up your profile. To send a full task to a connected app, describe what you want done.';
+  const base = 'I can adapt this page — try “bigger text”, “dark mode”, “high contrast”, or “read this” — and I’ll set up your profile if you tell me about your needs (“I’m blind”).';
+  if (!remoteChannel) {
+    return 'Nothing is connected that could do that. I can only adapt this page and your profile right now — to run a request like that, connect an app first: Settings → Connect browser-harness. ' + base;
+  }
+  return base;
 }
 
 // ── voice input ───────────────────────────────────────────────────────────────

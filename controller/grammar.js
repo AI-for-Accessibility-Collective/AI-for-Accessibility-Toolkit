@@ -124,6 +124,10 @@ const PREFIX_FILLER = new Set([
   'i', "i'd", 'id', "i'll", 'like', 'want', 'to', "let's", 'lets', 'just',
   'make', 'set', 'turn', 'on', 'the', 'a', 'an', 'my', 'this', 'some', 'more',
   'it', 'them', 'give', 'me', 'use', 'put', 'go',
+  // Question lead-ins, so "what are my settings" still reads as a whole query.
+  // NOTE: "about" is deliberately absent — "tell me about dark mode" should go
+  // to the app, not flip a setting.
+  'what', "what's", 'whats', 'are', 'is', 'show', 'tell',
 ]);
 // A second clause: another instruction tacked on. Any of these downstream of a
 // match means the utterance is compound and must go to the app whole.

@@ -221,6 +221,34 @@ async function run() {
     check('stop: receiver without stop() → graceful ok, nothing stopped', g.ok === true && g.stopped === false);
   }
 
+  // ── 13. narrow grammar + pass-through to the app ──────────────────────────
+  {
+    // A rule matching a SUBSTRING of a longer sentence must not claim it.
+    const recv = createMockReceiver({ actions: ['task'] });
+    const c = createController({ control: recv });
+    const r = await c.handle('tell me about dark matter');
+    check('narrow: "dark matter" does not turn on dark mode', !('darkMode' in recv.settings) && r.intent.action === 'task');
+
+    // With a task-capable app, commands pass through rather than being run locally.
+    const r2 = await c.handle('scroll down');
+    check('pass-through: a command goes to the app when it takes tasks', r2.intent.action === 'task');
+    const r3 = await c.handle('play a podcast from spotify');
+    check('pass-through: free-form goes to the app', r3.ok && r3.intent.action === 'task');
+
+    // The settings vocabulary stays deterministic (fast, undoable, persisted).
+    const r4 = await c.handle('bigger text');
+    check('narrow: a clean settings phrase is still deterministic', r4.intent.type === 'adapt' && recv.settings.fontScale === 110);
+
+    // With NO task app, a whole-utterance command still runs locally.
+    const local = createMockReceiver({ actions: ['scroll'] });
+    const c2 = createController({ control: local });
+    const r5 = await c2.handle('scroll down');
+    check('no-task receiver: a whole-utterance command still runs locally', r5.ok && local.focus === 'scroll:down');
+    // …and a substring match still does NOT fire.
+    const r6 = await c2.handle('tell me about dark matter');
+    check('no-task receiver: substring match still refused, not adapted', !('darkMode' in local.settings) && r6.ok === false);
+  }
+
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }
