@@ -72,6 +72,18 @@
   #send { background: var(--accent); color: var(--accent-ink); }
   .hint { text-align: center; color: var(--muted); font-size: .75rem; margin: .4rem 0 0; }
 
+  /* Connection status (reconnecting / connected / failed) for a remote receiver. */
+  .conn { margin: 0 1rem; padding: .4rem .7rem; border-radius: .6rem; font-size: .8rem;
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .conn[hidden] { display: none; }
+  .conn.connecting { background: rgba(26,115,232,.14); color: var(--muted); }
+  .conn.connected { background: rgba(30,142,62,.16); color: #1e8e3e; }
+  .conn.failed, .conn.lost { background: rgba(217,48,37,.14); color: #d93025; }
+  .conn .pulse { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor;
+    animation: blink 1s infinite ease-in-out; }
+  .conn button { border: 1px solid currentColor; background: transparent; color: inherit;
+    border-radius: .4rem; padding: .1rem .5rem; font-size: .75rem; cursor: pointer; }
+
   /* Settings drawer */
   #drawer { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: grid; justify-items: start; z-index: 20; }
   #drawer[hidden] { display: none; }
@@ -135,6 +147,8 @@
     </header>
 
     <div id="transcript" role="log" aria-live="polite" aria-label="Conversation"></div>
+
+    <div id="conn-status" class="conn" role="status" aria-live="polite" hidden></div>
 
     <div class="composer">
       <form id="composer-form">

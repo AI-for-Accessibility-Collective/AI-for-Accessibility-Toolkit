@@ -158,10 +158,36 @@ function rebuildController() {
 // Remember the connected receiver so a page refresh reconnects to it (the socket
 // dies with the page, but the receiver — e.g. browser-harness — is still up).
 const WS_KEY = 'aa-chat-ws';
+
+// A visible connection state for the remote receiver: reconnecting → connected,
+// or failed/lost with retry / fall-back actions.
+let connHideTimer = null;
+function setConnStatus(state, url) {
+  const el = $('conn-status');
+  if (connHideTimer) { clearTimeout(connHideTimer); connHideTimer = null; }
+  el.className = 'conn ' + (state === 'hidden' ? '' : state);
+  el.textContent = '';
+  if (state === 'hidden') { el.hidden = true; return; }
+  el.hidden = false;
+  const btn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', fn); return b; };
+  if (state === 'connecting') {
+    const d = document.createElement('span'); d.className = 'pulse';
+    el.append(d, 'Reconnecting to ' + url + '…');
+  } else if (state === 'connected') {
+    el.append('✓ Connected to ' + url);
+    connHideTimer = setTimeout(() => { el.hidden = true; }, 2500);
+  } else if (state === 'failed') {
+    el.append('⚠ Couldn’t reach ' + url + '. ', btn('Retry', () => useRemote(url)), btn('Use demo preview', () => { useLocal(); }));
+  } else if (state === 'lost') {
+    el.append('⚠ Connection to ' + url + ' lost. ', btn('Reconnect', () => useRemote(url)), btn('Use demo preview', () => { useLocal(); }));
+  }
+}
+
 function useLocal() {
   if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
   currentControl = localReceiver;
   try { localStorage.removeItem(WS_KEY); } catch {}
+  setConnStatus('hidden');
   $('drive-note').textContent = 'Driving the demo preview + this window.';
   rebuildController();
   if (unNote) { unNote(); unNote = null; }
@@ -178,6 +204,21 @@ function useRemote(url) {
   rebuildController();
   if (unNote) { unNote(); unNote = null; }
   wireNotes();
+
+  // Reflect the socket lifecycle. Guard with the channel identity so a previous
+  // socket's late close/error can't clobber the status of a newer connection.
+  setConnStatus('connecting', url);
+  const myChannel = remoteChannel, sock = remoteChannel.socket;
+  let opened = false;
+  const live = () => remoteChannel === myChannel;
+  try {
+    if (sock.readyState === 1) { opened = true; setConnStatus('connected', url); }
+    else {
+      sock.addEventListener('open', () => { opened = true; if (live()) setConnStatus('connected', url); });
+      sock.addEventListener('error', () => { if (live() && !opened) setConnStatus('failed', url); });
+      sock.addEventListener('close', () => { if (live()) setConnStatus(opened ? 'lost' : 'failed', url); });
+    }
+  } catch {}
 }
 
 // Late results from a remote task arrive as out-of-band notes.
