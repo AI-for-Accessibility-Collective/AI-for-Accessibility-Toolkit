@@ -57,9 +57,16 @@ const RULES = [
   // — motion —
   { re: /\b(reduce|stop|less|no) (motion|animation|animations)\b|\bmotion reducer\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: true }, say: 'Reducing motion' }) },
 
-  // — captions — negation first (turn on the captions media already has).
-  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(live |closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
-  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(live |closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) on\b|^(live |closed )?(captions?|subtitles?)$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
+  // — LIVE captions — the browser's own on-device captioning (Chrome Live
+  // Caption), which captions ANY audio, including media with no caption track.
+  // A different thing from a media file's own captions, so it must precede the
+  // generic caption rules below — those would otherwise swallow "live".
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?live (captions?|cc)\b|\blive captions? off\b/, build: (_m, u) => adapt(u, { changes: { liveCaptions: false }, say: 'Turning live captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?live (captions?|cc)\b|\blive captions? on\b|^live captions?$/, build: (_m, u) => adapt(u, { changes: { liveCaptions: true }, say: 'Turning live captions on' }) },
+
+  // — captions — the media's OWN track (incl. "closed captions"). Negation first.
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) on\b|^(closed )?(captions?|subtitles?)$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
 
   // — focus / distraction —
   { re: /\bfocus mode\b/, build: (_m, u) => adapt(u, { changes: { focusMode: true }, say: 'Turning on focus mode' }) },
@@ -182,7 +189,7 @@ export { STEP };
 export function vocabularyKeys() {
   const keys = new Set();
   for (const k of Object.keys(STEP)) if (settingsMeta[k]) keys.add(k);
-  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions']) {
+  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions', 'liveCaptions']) {
     if (settingsMeta[k]) keys.add(k);
   }
   return [...keys];

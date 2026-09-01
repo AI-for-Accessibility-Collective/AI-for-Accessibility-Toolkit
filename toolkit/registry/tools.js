@@ -639,6 +639,11 @@ export const settingsMeta = {
   autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
   autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
   showCaptions:    { type: 'boolean', description: 'Turn on captions the media already has (no AI)' },
+  // Distinct from showCaptions: a BROWSER/OS feature that captions any audio
+  // on-device (Chrome Live Caption), including audio with no caption track of
+  // its own. A platform capability, not a page adapter — only a receiver that
+  // owns the browser can toggle it, so it has no entry in the tools catalog.
+  liveCaptions:    { type: 'boolean', description: 'Browser-generated captions for any audio (Chrome Live Caption)' },
   autoCaptions:    { type: 'boolean', description: 'Generate captions for media that has none (AI)' },
   autoSimplify:    { type: 'boolean', description: 'Simplify complex text' },
   autoSummarize:   { type: 'boolean', description: 'Add summaries to long content' },
