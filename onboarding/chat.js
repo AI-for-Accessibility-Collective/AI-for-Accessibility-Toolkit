@@ -290,9 +290,9 @@ function startWaiting() {
   const b = document.createElement('div'); b.className = 'bubble waiting';
   b.setAttribute('aria-label', 'Working…');
   for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'dot'; b.append(d); }
-  // A Stop button to interrupt the running task (ControlPort stop()).
+  // An icon Stop button (with tooltip) to interrupt the running task (ControlPort stop()).
   const stop = document.createElement('button'); stop.type = 'button'; stop.className = 'waiting-stop';
-  stop.textContent = 'Stop'; stop.setAttribute('aria-label', 'Stop the running task');
+  stop.textContent = '■'; stop.title = 'Stop the running task'; stop.setAttribute('aria-label', 'Stop the running task');
   stop.addEventListener('click', stopTask);
   waitingRow.append(b, stop); wrap.append(waitingRow); wrap.scrollTop = wrap.scrollHeight;
   // A repeating "thinking" earcon while the task runs — the audio counterpart of
