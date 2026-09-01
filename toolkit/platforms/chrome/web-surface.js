@@ -52,7 +52,10 @@ export const WEB_DERIVATION = {
   letterSpacing: (v) => ({ letterSpacing: Number(v) }),
   reduceMotion:  (v) => ({ motionReducer: !!v }),
   darkTheme:     (v) => ({ darkMode: !!v }),
-  captions:      (v) => ({ autoCaptions: !!v }),
+  // A hearing profile gets BOTH: showCaptions is the baseline that always works
+  // (turn on captions media already has — no AI), autoCaptions the enhancement
+  // that activates only when a model is wired (transcribe media that has none).
+  captions:      (v) => ({ showCaptions: !!v, autoCaptions: !!v }),
   simplify:      (v) => ({ autoSimplify: !!v }),
   contrast:      (v) => ({ contrastMode: v === true ? 'light' : v }),
   dyslexiaFont:  (v) => ({ dyslexiaFont: !!v }),

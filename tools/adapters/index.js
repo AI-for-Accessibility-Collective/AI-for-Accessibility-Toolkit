@@ -20,6 +20,7 @@ export { VoiceCommands } from './voice-commands.js';
 export { KeyboardNavigator } from './keyboard-nav.js';
 export { ColorBlindMode } from './color-blind.js';
 export { AutoTranscriber } from './auto-transcriber.js';
+export { ShowCaptions } from './show-captions.js';
 export { DismissOverlays } from './dismiss-overlays.js';
 export { BigTargets } from './big-targets.js';
 export { LinkHighlighter } from './link-highlighter.js';
