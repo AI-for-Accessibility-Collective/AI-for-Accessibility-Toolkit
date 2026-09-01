@@ -140,6 +140,12 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   waiting.hidden = true;
   for (let i = 0; i < 3; i++) waiting.appendChild(el(doc, 'span', { class: 'aa-dot' }));
 
+  // Stop control — interrupts a running task via the ControlPort stop(). Kept
+  // OUTSIDE the aria-hidden dots so a screen reader can reach it. Shown only
+  // while a task is running.
+  const stopBtn = el(doc, 'button', { type: 'button', class: 'aa-btn aa-stop', 'aria-label': 'Stop the running task' }, 'Stop');
+  stopBtn.hidden = true;
+
   const row = el(doc, 'div', { class: 'aa-row' });
   const input = el(doc, 'input', { type: 'text', class: 'aa-input', placeholder: 'What do you need?', 'aria-label': 'What do you need?' });
   const go = el(doc, 'button', { type: 'button', class: 'aa-btn aa-go' }, 'Go');
@@ -150,7 +156,7 @@ export function renderControllerUI(controller, { doc = document } = {}) {
     row.append(mic);
   }
   row.append(help);
-  root.append(feedbackAlert, feedbackStatus, waiting, row);
+  root.append(feedbackAlert, feedbackStatus, waiting, stopBtn, row);
 
   // The Speak-results toggle (only where TTS exists) — keyboard-reachable + labelled.
   if (TTS) {
@@ -249,6 +255,7 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   function startWaiting() {
     stopWaiting();
     waiting.hidden = false;
+    stopBtn.hidden = false;
     earconThinkPulse();
     thinkTimer = setInterval(earconThinkPulse, 2400);
     waitGuard = setTimeout(stopWaiting, 120000); // don't pulse forever if no note comes
@@ -256,9 +263,19 @@ export function renderControllerUI(controller, { doc = document } = {}) {
   }
   function stopWaiting() {
     waiting.hidden = true;
+    stopBtn.hidden = true;
     if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
     if (waitGuard) { clearTimeout(waitGuard); waitGuard = null; }
   }
+  // Interrupt the running task on the receiver, then settle the UI.
+  stopBtn.addEventListener('click', async () => {
+    stopBtn.disabled = true;
+    let r; try { r = await controller.stop(); } catch { /* best effort */ }
+    stopWaiting();
+    earconDone();
+    deliver((r && (r.detail || (r.stopped ? 'Stopped.' : 'Nothing to stop.'))) || 'Stopped.', { assertive: true });
+    stopBtn.disabled = false;
+  });
 
   // A background tab can't make itself active (browsers block that), but it CAN
   // post a system notification whose click returns focus here — so a result that
@@ -381,6 +398,8 @@ export const CONTROLLER_CSS = `
 .aa-btn { padding: .5rem .7rem; font-size: 1rem; font-weight: 600; border: 0; border-radius: 8px;
   background: #1f6feb; color: #fff; cursor: pointer; white-space: nowrap; }
 .aa-btn.aa-mic, .aa-btn.aa-help { background: transparent; color: inherit; border: 1px solid #99a; }
+.aa-btn.aa-stop { background: transparent; color: #b3261e; border: 1px solid #b3261e; margin-bottom: .5rem; align-self: flex-start; }
+.aa-btn.aa-stop[hidden] { display: none; }
 .aa-mic[aria-pressed="true"] { background: #b3261e; color: #fff; border-color: #b3261e; }
 .aa-btn:focus-visible, .aa-input:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
 .aa-large .aa-btn, .aa-large .aa-input { padding: .8rem 1.1rem; font-size: 1.2rem; }

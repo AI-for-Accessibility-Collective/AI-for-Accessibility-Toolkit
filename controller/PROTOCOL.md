@@ -69,7 +69,8 @@ doesn't know the kind, so it's safe to emit today.
 
 ## 3. The methods (the ControlPort)
 
-Implement these seven. Types are the canonical shapes from `control-port.js`.
+Implement the seven core methods; `stop` is optional (see below). Types are the
+canonical shapes from `control-port.js`.
 
 ### `describeCapabilities() → ControlCapabilities`
 Called first and often. Declare exactly what you can do — the Controller offers
@@ -78,8 +79,9 @@ only these to the user and its grammar/LLM lane are filtered to them.
 {
   "platform": "browser-harness",
   "settingKeys": ["fontScale", "lineHeight", "darkMode", "contrastMode", "motionReducer", "hideDistractions"],
-  "actions": ["scroll", "activate", "back", "forward"],
+  "actions": ["scroll", "activate", "back", "forward", "task"],
   "canReadContent": true,
+  "canStop": true,                                // optional: stop() can interrupt a running task
   "targets": ["Documentation", "Buy now"]        // optional: activatable labels
 }
 ```
@@ -88,6 +90,9 @@ only these to the user and its grammar/LLM lane are filtered to them.
   list keys you actually apply.
 - `actions` are the `performAction` ids you support. Common set:
   `scroll`, `activate`, `back`, `forward`.
+- `canStop` (optional, default falsy): set `true` if you implement `stop()` and
+  have long-running work worth interrupting (e.g. a `task`). The Controller shows
+  a **Stop** affordance only when this is true.
 
 ### `getContext() → ControlContext`
 A neutral snapshot. The Controller calls this before a **relative** adaptation
@@ -164,6 +169,27 @@ One app action. `meta` (4th arg) carries per-run flags:
   the full range of instructions, including ones the settings grammar could
   itself have parsed (`"make text bigger"`): the app interprets them.
 - Unsupported action → `{ "ok": false, "detail": "unsupported action: …" }`.
+
+### `stop() → StopResult`  *(optional)*
+Interrupt any **in-flight long-running work** started via `performAction` — above
+all a `task` an agent is still running (30–120s). This is the counterpart to the
+task catch-all: it lets the person abort a request they no longer want, instead
+of waiting out the whole run. Must return **promptly** (don't block on the
+teardown); do the actual cancellation in the background.
+```json
+{ "ok": true, "stopped": true, "detail": "cancelled the running task" }
+```
+- `stopped` is `true` if something was actually interrupted, `false` if nothing
+  was running (still `ok: true`).
+- Abort the work you started — e.g. fire the `AbortSignal` on the agent's fetch,
+  kill the child run, cancel the queued job. After stopping a `task`, you may
+  emit a final `aa-control-note` ("Stopped.") so the waiting Controller settles.
+- Declare support with `canStop: true` in `describeCapabilities()`. Receivers
+  with nothing long-running may omit `stop` entirely (the Controller then treats
+  it as unsupported) or return `{ "ok": true, "stopped": false }`.
+
+The Controller calls this from its **Stop** control (shown while a task runs, when
+`canStop` is true) — see `createController().stop()`.
 
 ## 4. Reference receiver skeleton (Python-ish pseudocode)
 

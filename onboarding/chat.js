@@ -290,7 +290,11 @@ function startWaiting() {
   const b = document.createElement('div'); b.className = 'bubble waiting';
   b.setAttribute('aria-label', 'Working…');
   for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'dot'; b.append(d); }
-  waitingRow.append(b); wrap.append(waitingRow); wrap.scrollTop = wrap.scrollHeight;
+  // A Stop button to interrupt the running task (ControlPort stop()).
+  const stop = document.createElement('button'); stop.type = 'button'; stop.className = 'waiting-stop';
+  stop.textContent = 'Stop'; stop.setAttribute('aria-label', 'Stop the running task');
+  stop.addEventListener('click', stopTask);
+  waitingRow.append(b, stop); wrap.append(waitingRow); wrap.scrollTop = wrap.scrollHeight;
   // A repeating "thinking" earcon while the task runs — the audio counterpart of
   // the dots (same cue the floating Controller plays).
   earconThinkPulse();
@@ -299,6 +303,14 @@ function startWaiting() {
 function stopWaiting() {
   if (waitingRow) { waitingRow.remove(); waitingRow = null; }
   if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
+}
+// Ask the receiver to interrupt the running task, then settle the UI.
+async function stopTask() {
+  let r; try { r = await controller.stop(); } catch {}
+  stopWaiting();
+  earconDone();
+  const msg = (r && (r.detail || (r.stopped ? 'Stopped.' : 'Nothing to stop.'))) || 'Stopped.';
+  addMessage('assistant', msg); speak(msg);
 }
 
 // ── composer history (shell-style Up/Down recall) ─────────────────────────────

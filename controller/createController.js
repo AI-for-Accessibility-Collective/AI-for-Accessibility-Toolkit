@@ -59,6 +59,14 @@ export function createController({ control = noopControl, llm = null, operator =
       }
       return presentation;
     },
+    /** Interrupt any in-flight long-running work on the receiver (e.g. a running
+     *  `task`). Returns the receiver's StopResult, or a graceful result when the
+     *  receiver implements no stop(). Safe to call any time. */
+    async stop() {
+      const fn = control && control.stop;
+      if (typeof fn !== 'function') return { ok: true, stopped: false, detail: 'receiver has no stop' };
+      try { return await control.stop(); } catch (e) { return { ok: false, error: (e && e.message) || 'stop failed' }; }
+    },
     /** Resolve an utterance to an Intent without acting (introspection/preview). */
     resolve: (utterance) => router.resolve(utterance),
     /** Resolve AND act. Returns a normalized `{ ok, intent, say, data }` result.

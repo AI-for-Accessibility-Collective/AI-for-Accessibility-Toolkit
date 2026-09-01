@@ -203,6 +203,24 @@ async function run() {
     check('failure relays the receiver detail string', /no agent configured/.test((await cn.handle('do a thing')).say));
   }
 
+  // ── 12. stop(): interrupt a running task on the receiver ──────────────────
+  {
+    const recv = createMockReceiver({ actions: ['task'] });
+    const c = createController({ control: recv, rawToTask: true });
+    check('stop: task receiver advertises canStop', (await recv.describeCapabilities()).canStop === true);
+    check('stop: nothing running → stopped:false', (await c.stop()).stopped === false);
+    await c.handle('do a long thing'); // starts a task
+    const s = await c.stop();
+    check('stop: interrupts the running task', s.ok === true && s.stopped === true);
+
+    // A receiver with no stop() at all → the controller degrades gracefully.
+    const noStop = Object.assign({}, createMockReceiver({ actions: ['task'] }));
+    delete noStop.stop;
+    const c2 = createController({ control: noStop, rawToTask: true });
+    const g = await c2.stop();
+    check('stop: receiver without stop() → graceful ok, nothing stopped', g.ok === true && g.stopped === false);
+  }
+
   console.log(`\nController M4 (commands): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }

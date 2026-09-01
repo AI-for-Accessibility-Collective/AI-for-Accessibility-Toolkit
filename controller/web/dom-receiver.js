@@ -69,6 +69,7 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
     settingKeys: Object.keys(RENDERERS),
     actions: ['scroll', 'activate', 'back', 'forward'],
     canReadContent: true,
+    canStop: false, // this receiver acts synchronously — nothing long-running to interrupt
   };
 
   // Track the logical active values (what was requested), separate from how
@@ -154,6 +155,11 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
         return { ok: true, detail: `activated ${nameOf(match)}` };
       }
       return { ok: false, detail: `unsupported action: ${action}` };
+    },
+
+    async stop() {
+      // Nothing long-running here (settings/actions apply synchronously).
+      return { ok: true, stopped: false, detail: 'no long-running work on this receiver' };
     },
   };
 }
