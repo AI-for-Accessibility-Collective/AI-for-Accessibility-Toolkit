@@ -22,8 +22,9 @@ Local (embedded toolkit, its own data dir):
 
 ```bash
 ADMIN_PASSWORD=dev DATA_DIR=./onboarding-data node onboarding/server.js
-# open http://127.0.0.1:4000/onboarding   (onboarding)
-# open http://127.0.0.1:4000/controller   (controller UI)
+# open http://127.0.0.1:4000/            (chat — the front door; / redirects to /chat)
+# open http://127.0.0.1:4000/onboarding   (the step-by-step onboarding form)
+# open http://127.0.0.1:4000/controller   (the floating Controller demo)
 ```
 
 Remote (against a running `server/` on :8080 — ADMIN_PASSWORD must match it):

@@ -384,9 +384,10 @@ const server = http.createServer(async (req, res) => {
     const { pathname } = new URL(req.url, 'http://localhost');
     const method = req.method;
 
-    // The page lives at /onboarding; bare / redirects there.
+    // /chat is the front door — one conversational surface that does both
+    // onboarding and control. The step-by-step form stays at /onboarding.
     if (method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
-      res.writeHead(302, { location: '/onboarding' });
+      res.writeHead(302, { location: '/chat' });
       return res.end();
     }
     if (method === 'GET' && (pathname === '/onboarding' || pathname === '/onboarding/')) {
@@ -536,9 +537,10 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
   server.listen(PORT, () => {
     console.log(`[onboarding] mode=${MODE} target=${MODE === 'remote' ? TOOLKIT_URL : DATA_DIR}`);
     console.log(`[onboarding] admin ${ADMIN_PASSWORD ? 'enabled' : 'DISABLED (set ADMIN_PASSWORD to list/delete)'}`);
-    console.log(`[onboarding] open http://127.0.0.1:${PORT}/onboarding`);
-    console.log(`[onboarding] controller http://127.0.0.1:${PORT}/controller`);
+    console.log(`[onboarding] open       http://127.0.0.1:${PORT}/          → /chat`);
     console.log(`[onboarding] chat       http://127.0.0.1:${PORT}/chat`);
+    console.log(`[onboarding] onboarding http://127.0.0.1:${PORT}/onboarding`);
+    console.log(`[onboarding] controller http://127.0.0.1:${PORT}/controller`);
     console.log(`[onboarding] assist LLM ${GEMINI_API_KEY ? 'enabled' : 'DISABLED (set GEMINI_API_KEY for the chat general-answer lane)'}`);
     warnIfSplitStore();
   });
