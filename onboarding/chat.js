@@ -24,7 +24,7 @@ import { websocketChannel, remoteControl } from '/controller/lib/transport/remot
 import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { parse } from '/controller/lib/grammar.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
-import { detectOnboarding, visionKindOf } from '/chat-routing.js';
+import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.js';
 
 const $ = (id) => document.getElementById(id);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -92,6 +92,25 @@ async function applyOnboarding(o) {
   const areas = d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
   const kind = d.visionKind ? ` (${d.visionKind === 'blind' ? 'screen-reader / no magnification' : 'low vision'})` : '';
   return `Got it — updated your profile. Support areas: ${areas}${kind}. Tell me more any time, or edit it on the onboarding page.`;
+}
+
+// Drop the durable user-explicit setting overrides so the profile is the source
+// again (librarian.resetToProfile via /api/reset-to-profile). Does NOT forget who
+// the person is — support areas, free text and needs all survive; that's what the
+// Reset-profile button in Settings does.
+async function applyResetToProfile() {
+  const uid = currentUid();
+  if (!uid) return 'There\u2019s no profile set yet, so there\u2019s nothing to go back to. Tell me about your needs (like \u201cI\u2019m blind\u201d) and I\u2019ll set one up.';
+  const r = await fetch('/api/reset-to-profile', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ uid }) });
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error || 'reset failed');
+  await loadProfile();
+  rebuildController();
+  const n = (d.forgotten || []).length;
+  const keys = [...new Set((d.forgotten || []).map((f) => f.key))];
+  return n
+    ? `Back to your profile \u2014 I forgot ${n} change${n === 1 ? '' : 's'} you'd made (${keys.join(', ')}). Your profile itself is unchanged.`
+    : 'You\u2019re already on your profile \u2014 there were no changes to forget.';
 }
 
 // ── the driven app (controller half) ─────────────────────────────────────────
@@ -339,6 +358,15 @@ async function handleTurn(text) {
     //      the onboarding vocabulary.
     //   2) otherwise a self-description → onboarding ("I'm blind").
     //   3) otherwise back to the controller (LLM lane / task / a general answer).
+    // "back to my profile" — forget the deliberate overrides and let the profile
+    // decide again. A PROFILE operation (like onboarding), so it's handled here
+    // rather than in the grammar, and it runs before the grammar so "reset my
+    // settings" isn't read as a settings command.
+    if (isResetToProfile(u)) {
+      const reply = await applyResetToProfile();
+      addMessage('assistant', reply); speak(reply);
+      return;
+    }
     const grammarHit = parse(u);
     if (!grammarHit) {
       const onb = detectOnboarding(u);

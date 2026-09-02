@@ -52,10 +52,14 @@ export const WEB_DERIVATION = {
   letterSpacing: (v) => ({ letterSpacing: Number(v) }),
   reduceMotion:  (v) => ({ motionReducer: !!v }),
   darkTheme:     (v) => ({ darkMode: !!v }),
-  // A hearing profile gets BOTH: showCaptions is the baseline that always works
-  // (turn on captions media already has — no AI), autoCaptions the enhancement
-  // that activates only when a model is wired (transcribe media that has none).
-  captions:      (v) => ({ showCaptions: !!v, autoCaptions: !!v }),
+  // A hearing profile gets all three tiers, cheapest-first: showCaptions turns
+  // on captions the media already has (no AI); liveCaptions is the browser's own
+  // on-device captioning for audio with no track at all; autoCaptions is the AI
+  // enhancement that activates only when a model is wired. Naming liveCaptions
+  // here matters — a receiver that INFERS it from the caption keys owns state
+  // the profile never expressed, so an explicit "off" can't be recorded against
+  // it and a reset can't restore it.
+  captions:      (v) => ({ showCaptions: !!v, liveCaptions: !!v, autoCaptions: !!v }),
   simplify:      (v) => ({ autoSimplify: !!v }),
   contrast:      (v) => ({ contrastMode: v === true ? 'light' : v }),
   dyslexiaFont:  (v) => ({ dyslexiaFont: !!v }),

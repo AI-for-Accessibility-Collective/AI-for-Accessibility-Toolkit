@@ -27,6 +27,21 @@ Controller tab) via CDP. Full guidance + a ready-to-adapt snippet:
 `browser-harness-a11y/docs/receiver-issue-mute-audio.md`. Documented in
 `controller/PROTOCOL.md`.
 
+### browser-harness's shadow store for browser-level settings
+**Toolkit half: done.** The blockers named in
+`browser-harness-a11y/docs/toolkit-issue-reset-to-profile.md` are cleared:
+`liveCaptions` is in `settingsMeta`, in the `deaf` preset, and in the hearing
+derivation (so the profile NAMES it instead of the receiver inferring it from
+the caption keys); and `librarian.resetToProfile({scope?})` drops the durable
+user-explicit `setting.*` records, reachable at `POST /api/reset-to-profile` and
+by saying "back to my profile" in /chat.
+
+**Receiver half: TODO.** Delete the local record of browser-level settings,
+write explicit choices through `recordScopedSettings` like every other setting,
+and read `liveCaptions` from the resolved settings rather than inferring it.
+Until then a reset appears not to work: the toolkit forgets the override and the
+receiver re-asserts it on the next sync.
+
 ### `stop` — interrupt a running task
 **Toolkit half: shipped** (`ed75dab`). Optional `stop()` in the ControlPort +
 `canStop` capability; the Controller calls it from a Stop control shown while a

@@ -486,6 +486,53 @@ export function createLibrarian({
       return { removed: true };
     },
 
+    // "Forget what I've changed, go back to my profile."
+    //
+    // undoLast is LIFO and per-session; resetUndo clears a journal without
+    // restoring anything. Neither answers "start again from who I am" — and
+    // that is the point of an ability model: once a session has drifted through
+    // a dozen spoken adjustments there must be a way back to the person.
+    //
+    // Drops the durable `user-explicit` records for `setting.*` — the tier that
+    // gets FINAL say in getEffectivePreferences (see the `explicit` deferral
+    // there) — so the next read re-derives from the profile and learned records
+    // alone. Nothing else is touched: notes, non-setting explicit records, and
+    // every weaker tier survive; this forgets deliberate overrides, not the
+    // person.
+    //
+    // @param {{scope?: string, url?: string, contexts?: string[]}} [opts]
+    //   scope — limit to one scope ('general' | 'category:x' | 'origin:x' |
+    //   'context:x' | 'tool:x'); omit to reset EVERY scope.
+    //   url/contexts — what to compute the returned `restored` view for.
+    // @returns {{forgotten: Array<{scope,key,value}>, scopes: string[], restored: object}}
+    async resetToProfile(opts = {}) {
+      const only = opts.scope && VALID_SCOPE.test(opts.scope) ? opts.scope : null;
+      const shards = only
+        ? { [only]: await DS().getMemoryShard(only) }
+        : await DS().allMemoryShards();
+
+      const forgotten = [];
+      const touched = [];
+      for (const [scope, recs] of Object.entries(shards || {})) {
+        const keep = [];
+        let dirty = false;
+        for (const r of recs || []) {
+          const isExplicitSetting = r && r.status === 'active' && r.source === 'user-explicit'
+            && typeof r.aspect === 'string' && r.aspect.startsWith('setting.');
+          if (!isExplicitSetting) { keep.push(r); continue; }
+          const key = r.aspect.slice('setting.'.length);
+          forgotten.push({ scope, key, value: r.settings ? r.settings[key] : undefined });
+          dirty = true;
+        }
+        if (dirty) { await DS().setMemoryShard(scope, keep); touched.push(scope); }
+      }
+
+      // getEffectivePreferences computes on read, so dropping the records IS the
+      // recompute; this returns the profile-derived view the person gets back.
+      const restored = await this.getEffectivePreferences(opts.url || null, opts.contexts || []);
+      return { forgotten, scopes: touched, restored };
+    },
+
     // Classify once, cache forever; user override wins and is sticky.
     // Deterministic by default — pass {allowLlm: true, title} to let the
     // background's classify handler fall through to Gemini for unknown hosts.

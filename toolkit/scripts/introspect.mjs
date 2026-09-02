@@ -263,6 +263,7 @@ const CONCERN_MAP = {
   'librarian:hasScopedSetting': 'profile/ability',
   'librarian:getScopedSetting': 'profile/ability',
   'librarian:removeScopedSetting': 'profile/ability',
+  'librarian:resetToProfile': 'profile/ability',
 
   // ---- memory ----
   'librarian:recall': 'memory',

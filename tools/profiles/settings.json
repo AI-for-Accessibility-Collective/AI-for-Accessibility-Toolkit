@@ -53,6 +53,7 @@
       "description": "Auto captions for media, visual focus for non-audio navigation",
       "tools": {
         "showCaptions": true,
+        "liveCaptions": true,
         "autoCaptions": true,
         "enhanceFocus": true,
         "autoDescribe": false,

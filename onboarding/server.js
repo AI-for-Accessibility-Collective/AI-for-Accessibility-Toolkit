@@ -284,6 +284,24 @@ async function abilityModelFor(uid) {
   return { exists: true, uid, model };
 }
 
+// "Forget what I've changed, go back to my profile." Drops the durable
+// user-explicit setting records so the next read re-derives from the profile.
+// The profile itself (support areas, free text, needs) is untouched — this
+// forgets deliberate overrides, not the person.
+async function resetToProfileFor(uid, scope) {
+  uid = String(uid || '').trim();
+  if (!uid) throw new Error('uid required');
+  if (MODE === 'remote') {
+    const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-reset' });
+    if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
+    const r = await remoteLibrarian(t.body.token, 'resetToProfile', [scope ? { scope } : {}]);
+    return r.body?.result || {};
+  }
+  const { host } = await localBits();
+  const { librarian } = await host.getInstance(uid);
+  return await librarian.resetToProfile(scope ? { scope } : {});
+}
+
 // ── Admin: list + delete profiles (gated by ADMIN_PASSWORD) ─────────────────
 function adminOk(req) {
   if (!ADMIN_PASSWORD) return false;
@@ -436,6 +454,17 @@ const server = http.createServer(async (req, res) => {
       } catch (e) {
         // A model/transport failure is data, not a 500 — chat degrades quietly.
         return sendJSON(res, 200, { available: false, error: e.message });
+      }
+    }
+
+    if (method === 'POST' && pathname === '/api/reset-to-profile') {
+      let body;
+      try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
+      try {
+        const result = await resetToProfileFor(body?.uid, body?.scope);
+        return sendJSON(res, 200, { ok: true, ...result });
+      } catch (e) {
+        return sendJSON(res, 400, { ok: false, error: e.message });
       }
     }
 

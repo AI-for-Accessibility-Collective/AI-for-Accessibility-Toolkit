@@ -47,6 +47,29 @@ export function visionKindOf(text) {
   return null;
 }
 
+// "Forget what I've changed, go back to my profile." A PROFILE operation, not a
+// setting — it drops the durable user-explicit overrides so the profile is the
+// source again. Kept here (not in the grammar) because the chat owns profile
+// operations, and it must not be confused with `undo` (LIFO, one step) or with
+// the Reset-profile button (which forgets WHO you are, not just what you changed).
+const RESET_TO_PROFILE = /\b(reset|restore|revert|go|back|return)\b[^.]*\b(to |back to )?(my |the )?(profile|preferences|settings|defaults)\b|\bstart over\b|\bstart again\b|\bforget (what i('ve| have)? )?changed\b/i;
+// …but "what are my settings" is a QUESTION the grammar answers, and "undo" is
+// its own thing — never treat those as a reset. Matched as question FORMS, not
+// bare keywords: a plain "what" must not veto "forget what I changed".
+const NOT_RESET = /\bundo\b|\bwhat('?s| is| are)\b|\b(show|tell|list|check) (me )?(my |the )?(settings?|preferences?)\b/i;
+
+/**
+ * Does this message ask to go back to the profile?
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function isResetToProfile(text) {
+  const t = String(text || '').trim();
+  if (!t) return false;
+  if (NOT_RESET.test(t)) return false;
+  return RESET_TO_PROFILE.test(t);
+}
+
 /**
  * @param {string} text
  * @returns {{supportAreas:string[], freeText:string, visionKind?:string}|null}

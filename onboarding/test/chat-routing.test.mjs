@@ -9,7 +9,7 @@
 // gate) instead of turning captions off.
 //
 // Run: node onboarding/test/chat-routing.test.mjs
-import { detectOnboarding, visionKindOf } from '../chat-routing.js';
+import { detectOnboarding, visionKindOf, isResetToProfile } from '../chat-routing.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; console.log('PASS:', name); } else { fail++; console.log('FAIL:', name); } }
@@ -62,6 +62,18 @@ for (const c of ['', '   ', 'what is the weather', 'open google and search for a
   const r = detectOnboarding('I am deaf and I have dyslexia');
   check('multiple areas detected together', !!r && r.supportAreas.includes('hearing') && r.supportAreas.includes('reading'));
 }
+
+// ── "back to my profile" ─────────────────────────────────────────────────────
+for (const t of [
+  'back to my profile', 'reset my settings', 'go back to my profile', 'start over',
+  'start again', 'restore my preferences', 'reset to defaults', 'forget what I changed',
+]) check(`reset recognized: "${t}"`, isResetToProfile(t) === true);
+
+// Must NOT be confused with the question the grammar answers, or with undo.
+for (const t of [
+  'what are my settings', "what's set", 'show my settings', 'undo', 'undo that',
+  'bigger text', "I'm blind", 'tell me my preferences', 'list my settings',
+]) check(`reset NOT triggered: "${t}"`, isResetToProfile(t) === false);
 
 console.log(`\nChat routing: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
