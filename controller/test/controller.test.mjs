@@ -48,6 +48,16 @@ function check(name, cond) {
   check('grammar: "live captions" → liveCaptions true', parse('live captions').changes.liveCaptions === true);
   check('grammar: live-caption rules never set showCaptions', !('showCaptions' in parse('turn off live captions').changes));
   check('grammar: plain caption rules never set liveCaptions', !('liveCaptions' in parse('turn off captions').changes));
+  // -ing forms: "captioning" / "subtitling" are how people actually say it, and
+  // anything the grammar misses goes to an agent that may claim it succeeded.
+  check('grammar: "turn off live captioning" → liveCaptions false', parse('turn off live captioning').changes.liveCaptions === false);
+  check('grammar: "turn on live captioning" → liveCaptions true', parse('turn on live captioning').changes.liveCaptions === true);
+  check('grammar: "live captioning" alone → liveCaptions true', parse('live captioning').changes.liveCaptions === true);
+  check('grammar: "turn off captioning" → showCaptions false', parse('turn off captioning').changes.showCaptions === false);
+  check('grammar: "show captioning" → showCaptions true', parse('show captioning').changes.showCaptions === true);
+  // "subtitling" drops the e — the stem must be subtitl(es?|ing), not subtitle(s|ing)?
+  check('grammar: "turn off subtitling" → showCaptions false', parse('turn off subtitling').changes.showCaptions === false);
+  check('grammar: "turn off subtitles" still works', parse('turn off subtitles').changes.showCaptions === false);
   check('grammar: "reduce motion" → motionReducer true', parse('please reduce motion').changes.motionReducer === true);
   check('grammar: "read this" → query content text', (() => { const i = parse('read this to me'); return i.type === 'query' && i.ask === 'content' && i.mode === 'text'; })());
   check('grammar: "what\'s on screen" → query content outline', (() => { const i = parse("what's on screen"); return i.type === 'query' && i.ask === 'content'; })());

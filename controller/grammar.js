@@ -61,12 +61,12 @@ const RULES = [
   // Caption), which captions ANY audio, including media with no caption track.
   // A different thing from a media file's own captions, so it must precede the
   // generic caption rules below — those would otherwise swallow "live".
-  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?live (captions?|cc)\b|\blive captions? off\b/, build: (_m, u) => adapt(u, { changes: { liveCaptions: false }, say: 'Turning live captions off' }) },
-  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?live (captions?|cc)\b|\blive captions? on\b|^live captions?$/, build: (_m, u) => adapt(u, { changes: { liveCaptions: true }, say: 'Turning live captions on' }) },
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?live (caption(s|ing)?|cc)\b|\blive caption(s|ing)? off\b/, build: (_m, u) => adapt(u, { changes: { liveCaptions: false }, say: 'Turning live captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?live (caption(s|ing)?|cc)\b|\blive caption(s|ing)? on\b|^live caption(s|ing)?$/, build: (_m, u) => adapt(u, { changes: { liveCaptions: true }, say: 'Turning live captions on' }) },
 
   // — captions — the media's OWN track (incl. "closed captions"). Negation first.
-  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
-  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(closed )?(captions?|subtitles?|cc)\b|\b(captions?|subtitles?) on\b|^(closed )?(captions?|subtitles?)$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(closed )?(caption(s|ing)?|subtitl(es?|ing)|cc)\b|\b(caption(s|ing)?|subtitl(es?|ing)) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(closed )?(caption(s|ing)?|subtitl(es?|ing)|cc)\b|\b(caption(s|ing)?|subtitl(es?|ing)) on\b|^(closed )?(caption(s|ing)?|subtitl(es?|ing))$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
 
   // — focus / distraction —
   { re: /\bfocus mode\b/, build: (_m, u) => adapt(u, { changes: { focusMode: true }, say: 'Turning on focus mode' }) },
