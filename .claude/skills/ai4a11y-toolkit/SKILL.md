@@ -325,13 +325,15 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   methods (called by the voice side panel on the Librarian object rather than
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
-  `removeScopedSetting`, `recordExplicitSetting`.
+  `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
+  ("back to my profile": the bulk inverse of `recordScopedSettings` — without a
+  wire route a remote host's reset reaches nothing and reports success anyway).
 - The natural-language note methods — `addNote`, `listNotes`, `updateNote`,
   `deleteNote`, `findNotes` — are routes under their own names too. Notes are
   the free-form text the person wrote about their own needs; a hosted instance
   partitions them by uid like every other record, and they remain outside
   `GRANT_SCOPES`, so no other app can read one.
-- 46 routes total.
+- 47 routes total.
 
 ## Connecting to a hosted instance (URL + token)
 

@@ -295,7 +295,14 @@ async function resetToProfileFor(uid, scope) {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-reset' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
     const r = await remoteLibrarian(t.body.token, 'resetToProfile', [scope ? { scope } : {}]);
-    return r.body?.result || {};
+    // A reset that forgot NOTHING ({forgotten: []}) and a reset that never ran
+    // are different things, and only one of them should be reported as success —
+    // telling someone their settings went back to normal when the call 404'd is
+    // the worst of both. Demand a real result object.
+    if (r.status !== 200 || !r.body || typeof r.body.result !== 'object' || r.body.result === null) {
+      throw new Error(`the toolkit service did not run resetToProfile (HTTP ${r.status}${r.body && r.body.error ? ': ' + r.body.error : ''}) — is it running a build that routes it?`);
+    }
+    return r.body.result;
   }
   const { host } = await localBits();
   const { librarian } = await host.getInstance(uid);
@@ -502,6 +509,29 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+// In local mode onboarding keeps its OWN copy of every profile under DATA_DIR.
+// If a toolkit service is also running, a receiver is reading THAT store — same
+// person, two files: a preference the receiver recorded is invisible here, and a
+// reset here clears records the receiver never read. Silent and expensive to
+// find, so say it loudly when we can detect it.
+async function warnIfSplitStore() {
+  if (MODE !== 'local') return;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 800);
+    const resp = await fetch(TOOLKIT_URL + '/healthz', { signal: ctrl.signal }).catch(() => null);
+    clearTimeout(t);
+    if (!resp || !resp.ok) return; // nothing there (or not the toolkit) — local-only is fine
+  } catch { return; }
+  console.warn(`
+[onboarding] ⚠  TWO STORES. A toolkit service is running at ${TOOLKIT_URL}, but this
+[onboarding]    process is in LOCAL mode and keeps its own profiles in ${DATA_DIR}.
+[onboarding]    A receiver talking to the service reads a DIFFERENT store: settings it
+[onboarding]    records are invisible here, and a reset here won't touch them.
+[onboarding]    To share one store:  ONBOARD_MODE=remote TOOLKIT_URL=${TOOLKIT_URL} ADMIN_PASSWORD=… node onboarding/server.js
+`);
+}
+
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
   server.listen(PORT, () => {
     console.log(`[onboarding] mode=${MODE} target=${MODE === 'remote' ? TOOLKIT_URL : DATA_DIR}`);
@@ -510,6 +540,7 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(`[onboarding] controller http://127.0.0.1:${PORT}/controller`);
     console.log(`[onboarding] chat       http://127.0.0.1:${PORT}/chat`);
     console.log(`[onboarding] assist LLM ${GEMINI_API_KEY ? 'enabled' : 'DISABLED (set GEMINI_API_KEY for the chat general-answer lane)'}`);
+    warnIfSplitStore();
   });
 }
 
