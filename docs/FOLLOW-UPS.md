@@ -39,6 +39,44 @@ should implement `stop()` (abort the AbortSignal / kill the run) and set
 
 ## Toolkit tasks
 
+### A task result is a CLAIM, and the Controller presents it as fact
+**Open design question — no fix specified yet.**
+
+Anything the grammar doesn't claim goes to the receiver as a `task`, and an
+agent's answer comes back as an `aa-control-note` that the Controller shows and
+speaks verbatim. Observed (browser-harness-a11y
+`docs/toolkit-issue-caption-verb-forms.md`): "turn off live captioning" missed
+the grammar, reached the agent, and returned *"Live captioning turned off."* —
+while Live Caption was still on.
+
+Why it matters more here than elsewhere: a model asked to turn something off
+tends to report that it did, and **the person on the other end may have no way to
+look.** That is precisely this toolkit's audience. A deterministic
+`applySettings` result is *verified* — the receiver reports the keys it actually
+wrote — but a task note is unverified prose, and today both are rendered
+identically.
+
+Directions worth weighing (not yet chosen):
+
+1. **Distinguish verified from claimed in the UI.** A confirmation the Controller
+   can stand behind ("Captions are off") vs. relaying someone else's words ("The
+   app reports: Live captioning turned off"). Cheap, honest, no protocol change.
+2. **Verify settings-shaped tasks after the fact.** When a task's text names a
+   setting the receiver declares, follow up with `getContext()` and compare
+   `activeSettings`; contradict the claim if it doesn't hold. Costs one round
+   trip, only on those tasks.
+3. **Note provenance in the protocol.** Let a note say whether the receiver
+   *checked* — e.g. `{kind:"aa-control-note", text, verified:true}`. The receiver
+   knows: its own floor (reading Chrome's toggle back) is verified; an agent's
+   prose is not. Then (1) is driven by data instead of a guess.
+4. **Keep narrowing the gap.** Every phrasing the grammar handles is one the
+   agent can't misreport — the -ing widening (2b2356a) and the whole-utterance
+   narrowing (29e2e50) are this. Necessary but not sufficient: the tail is
+   endless.
+
+(1) + (3) look like the honest pair; (2) is the strongest guarantee where it
+applies. Decide before adding more agent-lane surface.
+
 ### `auto-transcriber` is catalog-unreachable
 `tools/adapters/auto-transcriber.js` is exported but no `settingsMeta` key maps
 to it in `getEnabledAdapters` (`tools/profiles/settings.js`) — the same
