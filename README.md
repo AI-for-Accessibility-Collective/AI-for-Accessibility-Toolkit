@@ -138,6 +138,24 @@ A developer library of reusable accessibility building blocks, usable on their o
 - **Registry** ([`toolkit/registry/tools.js`](toolkit/registry/tools.js)) — the single catalog of tools + their settings vocabulary that grounds the Engineer and any host UI.
 - **Starter skills** ([`toolkit/skills/builtin/`](toolkit/skills/builtin/)) — `SKILL.md` recipes composing adapters for common needs.
 
+## The CLI (experimental)
+
+[`cli/`](cli/) is the toolkit's command line, restored from the pre-split tree and rewired to this repository's catalog. It drives a real Chromium page over the Chrome DevTools Protocol and injects the same adapters, auditors, and profiles the catalog ships, so a developer or a coding agent can try them on a live page from a terminal:
+
+```bash
+pip install -e .       # installs the ai4a11y command (Python 3.10+)
+npm run build:cli      # bundle the catalog for injection
+
+ai4a11y list tools               # every auditor and adapter, from tools/
+ai4a11y session start            # launch a persistent Chromium
+ai4a11y session go <url>
+ai4a11y session audit            # axe-core WCAG audit of the live page
+ai4a11y session profile lowVision
+ai4a11y session stop
+```
+
+Commands that reason about the page visually (`describe`, `ask`, `tap`, `do`) call the locally installed Claude Code CLI and report `needs-ai` when it is not there; everything else runs locally with no AI. Details in [`cli/README.md`](cli/README.md). Experimental and pre-alpha, like the rest of this repository.
+
 ## Repository Layout
 
 ```
@@ -147,6 +165,7 @@ tools/       Developer catalog — adapters, auditors, profiles, utils
 controller/  Optional text/voice control surface — ControlPort, grammar, mounts,
              remote transport, web UI, demo (a sibling; the core never depends on it)
 server/      Hosted HTTP service exposing the core to any language/runtime
+cli/         Experimental Python CLI: try the catalog on a live page from a terminal
 onboarding/  Example web service: /chat (conversational front door), /onboarding
              (step-by-step form), /controller (Controller demo) — one port
 examples/    Runnable, dependency-free examples
