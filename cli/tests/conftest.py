@@ -19,6 +19,14 @@ from typing import Callable
 
 import pytest
 
+# Chromium's sandbox needs unprivileged user namespaces. Ubuntu 24.04, which
+# GitHub's ubuntu-latest runners use, restricts those through AppArmor, so a
+# Chromium launched directly (not through Playwright's launcher) exits before
+# its CDP endpoint comes up, with the error hidden behind the discarded stderr.
+# The tests only ever open about:blank and local fixtures in a throwaway
+# profile, so running without the sandbox on Linux loses nothing.
+HEADLESS_SANDBOX_ARGS = ["--no-sandbox"] if sys.platform.startswith("linux") else []
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_URL = (Path(__file__).parent / "fixtures" / "defects.html").resolve().as_uri()
 
@@ -158,6 +166,7 @@ def chromium_session(cli_env: dict):
         [
             exe,
             "--headless=new",
+            *HEADLESS_SANDBOX_ARGS,
             f"--remote-debugging-port={port}",
             f"--user-data-dir={cli_env['AI4A11Y_USER_DATA_DIR']}",
             "--no-first-run",

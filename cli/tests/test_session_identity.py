@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import REPO_ROOT, CliRunner
+from conftest import HEADLESS_SANDBOX_ARGS, REPO_ROOT, CliRunner
 
 pytestmark = pytest.mark.browser
 
@@ -106,7 +106,7 @@ def test_stop_still_kills_the_browser_it_did_start(tmp_path: Path) -> None:
     with sync_playwright() as p:
         exe = p.chromium.executable_path
     browser = subprocess.Popen(
-        [exe, "--headless=new", f"--remote-debugging-port={port}",
+        [exe, "--headless=new", *HEADLESS_SANDBOX_ARGS, f"--remote-debugging-port={port}",
          f"--user-data-dir={tmp_path / 'profile'}", "--no-first-run", "about:blank"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
