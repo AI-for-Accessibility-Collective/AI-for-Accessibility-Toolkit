@@ -37,3 +37,26 @@ jobs:
           npm ci
           npm run build:cli
           git diff --exit-code cli/cli-tools.bundle.js
+
+      # The CLI runs JavaScript in the page for almost everything it does, so a
+      # wheel without these files installs a CLI that cannot audit or fix.
+      - name: JavaScript assets ship in the wheel
+        run: |
+          pip install build
+          python -m build --wheel --outdir dist-check .
+          python - <<'PY'
+          import glob, pathlib, sys, zipfile
+          wheel = glob.glob('dist-check/*.whl')[0]
+          shipped = {n for n in zipfile.ZipFile(wheel).namelist() if n.endswith('.js')}
+          wanted = {p.as_posix() for p in pathlib.Path('cli/js').glob('*.js')}
+          wanted |= {'cli/lib/readability.js', 'cli/cli-tools.bundle.js', 'cli/axe-core.min.js'}
+          missing = sorted(wanted - shipped)
+          if missing:
+              print('Missing from the wheel. Without these an installed ai4a11y')
+              print('cannot inject its tools, so every audit and fix command fails.')
+              print('Check [tool.setuptools.package-data] in pyproject.toml.')
+              for name in missing:
+                  print('  ' + name)
+              sys.exit(1)
+          print(f'{len(shipped)} JavaScript files ship in the wheel')
+          PY

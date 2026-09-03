@@ -8,8 +8,8 @@ One Typer app, three areas:
   ai4a11y session <command>        drive a live Chromium page over CDP
 
 Run `ai4a11y --help` or `ai4a11y session --help` for the full surface.
-The session engine lives in ai4a11y.py; this module only parses the command
-line and delegates. Session commands import the engine lazily so catalog
+The session engine lives in the ai4a11y package; this module only parses the
+command line and delegates. Session commands import the engine lazily so catalog
 commands work without Playwright installed.
 """
 
@@ -586,7 +586,10 @@ def session_tools(as_json: bool = typer.Option(False, "--json", help="JSON outpu
 @session_app.command()
 def profile(name: str, as_json: bool = typer.Option(False, "--json", help="JSON output")) -> None:
     """Apply an accessibility profile."""
-    _engine().session_profile(name, json_output=as_json)
+    # `profile none` is a privacy control, and it returns a status when it
+    # could not finish taking the profile out of the open page. Dropping that
+    # status left the page's state readable only in prose on stdout.
+    _exit(_engine().session_profile(name, json_output=as_json))
 
 
 @session_app.command()

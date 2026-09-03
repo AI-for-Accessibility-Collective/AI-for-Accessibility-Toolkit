@@ -15,6 +15,7 @@ stand-in is a shell script.
 """
 
 import json
+import re
 import subprocess
 import sys
 
@@ -127,6 +128,124 @@ def test_no_element_is_given_an_empty_label_when_claude_is_missing(
     assert empty == 0
 
 
+@pytest.mark.parametrize(
+    "command",
+    ["fix-alt", "fix-labels", "fix-all", "find-all", "audit", "scan", "simplify"])
+def test_json_output_is_parseable_and_alone_on_stdout(
+    chromium_session: dict, run_without_claude, run_with_flaky_claude, command: str
+) -> None:
+    """--json prints one JSON document and no progress lines.
+
+    Progress used to go to stdout ahead of the payload, so --json did not
+    actually parse for a caller. `scan` and `simplify` are in the list because
+    they kept doing that after the other commands stopped: scan wrote its whole
+    transcript first, simplify wrote two lines, and json.loads failed on the
+    first line either way. `fix-all` was the last of them, and the only one
+    where silencing the banners was not the whole fix: it ran two commands that
+    each emitted a payload, so stdout held two documents and no amount of
+    quieting made that one.
+
+    `simplify` is the one command here given a model that answers. It has no
+    payload at all for a run where the model was unreachable: it prints one
+    needs-ai sentence and stops, so with nothing on PATH there would be no
+    document to check and the case this test exists for would go uncovered.
+    The stand-in is a shell script, so no model is called for it either.
+
+    The page is already the fixture when this runs: `_fresh_page` above is
+    autouse, so it navigates before every test in this file, `-k` selection
+    included. Do not add a `session go` here as well. A second navigation
+    right before the command leaves the page in a state where a later
+    element screenshot waits out its full 30 second timeout, which turns
+    three of the fix tests further down into 60 second failures.
+    """
+    run = run_with_flaky_claude(1) if command == "simplify" else run_without_claude
+    result = run("session", command, "--json")
+    json.loads(result.stdout)  # raises if anything else reached stdout
+
+
+def test_scan_json_carries_the_same_counts_as_the_human_summary(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """Silencing scan's progress must not change what the payload says.
+
+    The test above only proves stdout parses. An empty payload, or one built
+    from different numbers, would satisfy it. This pins the keys and checks
+    the counts against the summary block a person reads.
+    """
+    # `_fresh_page` has already loaded the fixture for the first run. The
+    # second one needs the reload below, because a scan writes its non-AI fixes
+    # into the page and a scan of an already fixed page finds fewer things left
+    # to fix. Without it the two sets of counts come off different pages and
+    # the comparison means nothing.
+    payload = json.loads(run_without_claude("session", "scan", "--json").stdout)
+
+    assert set(payload) == {"violations", "fixed", "textProcessing",
+                            "skippedNeedsAi", "remaining"}
+    assert set(payload["fixed"]) == {"nonAi", "ai", "total"}
+
+    run_without_claude("session", "go", FIXTURE_URL)
+    human = run_without_claude("session", "scan").stdout
+    non_ai = re.search(r"Non-AI fixes:\s*(\d+)", human)
+    ai = re.search(r"^\s*AI fixes:\s*(\d+)", human, re.MULTILINE)
+    assert non_ai and ai, human
+    assert payload["fixed"]["nonAi"] == int(non_ai.group(1))
+    assert payload["fixed"]["ai"] == int(ai.group(1))
+
+
+def test_fix_all_json_combines_both_halves_into_one_document(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """The combined payload is a fix payload, plus the split.
+
+    `fix-all` runs the alt pass and the label pass, and a caller wants both the
+    whole run and the halves. The top level carries the same three keys in the
+    same types as `fix-alt --json` and `fix-labels --json`, so anything that
+    already reads a fix payload reads this one, and `passes` holds each half
+    unchanged for a caller that wants to tell them apart.
+
+    The totals are checked against the halves rather than against fixed
+    numbers, so this keeps testing the arithmetic on a fixture page that grows
+    new defects later.
+    """
+    payload = json.loads(run_without_claude("session", "fix-all", "--json").stdout)
+
+    assert set(payload) == {"fixed", "attempted", "skippedNeedsAi", "passes"}
+    assert set(payload["passes"]) == {"alt", "labels"}
+
+    alt, labels = payload["passes"]["alt"], payload["passes"]["labels"]
+    for half in (alt, labels):
+        assert set(half) == {"fixed", "attempted", "skippedNeedsAi"}
+
+    assert payload["fixed"] == alt["fixed"] + labels["fixed"]
+    assert payload["attempted"] == alt["attempted"] + labels["attempted"]
+    assert payload["skippedNeedsAi"] == (
+        alt["skippedNeedsAi"] + labels["skippedNeedsAi"])
+
+    # With no model reachable nothing is fixed and everything attempted is
+    # skipped, which is what makes the exit status nonzero. Asserting it here
+    # keeps the payload honest about a fully degraded run rather than only
+    # internally consistent.
+    assert payload["fixed"] == []
+    assert payload["skippedNeedsAi"] == payload["attempted"] > 0
+
+
+def test_fix_all_human_output_still_names_both_halves(
+    chromium_session: dict, run_without_claude
+) -> None:
+    """Combining the payload must not disturb what a person sees.
+
+    The banners are the only thing separating the two halves in the human
+    output, and they are now printed through the same silenced writer as the
+    progress lines, which is exactly the kind of change that drops them.
+    """
+    human = run_without_claude("session", "fix-all").stdout
+
+    assert "=== Fixing Alt Text ===" in human, human
+    assert "=== Fixing Labels ===" in human, human
+    assert "=== Done ===" in human, human
+    assert "{" not in human, human
+
+
 @pytest.mark.parametrize("command", [("fix-alt",), ("fix-labels",)])
 def test_json_output_reports_what_was_skipped(
     chromium_session: dict, run_without_claude, command: tuple
@@ -170,6 +289,10 @@ def test_fix_all_fails_when_only_one_half_degraded(
 
     Answering both images and nothing after it means ``fix-alt`` finishes
     cleanly and ``fix-labels`` reaches no model at all.
+
+    The budget of 2 is tied to the fixture holding two images. test_fix_passes.py
+    has a test with the same budget for the same reason; a fixture change to the
+    image count needs to update both.
     """
     run = run_with_flaky_claude(2)
     result = run("session", "fix-all")

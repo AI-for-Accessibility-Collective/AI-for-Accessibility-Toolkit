@@ -3,8 +3,11 @@
 Tests run the real command surface through subprocess (``python -m cli.cli``)
 so they exercise exactly what a user types. Browser tests spawn their own
 headless Chromium on a free port with isolated state directories; nothing
-touches ``~/.ai4a11y``, port 9222, or a developer's running browser. No test
-calls an AI model.
+touches ``~/.ai4a11y``, port 9222, or a developer's running browser.
+
+No test calls an AI model, and the harness is what guarantees it rather than
+each test: every runner is built from ``cli_env``, whose PATH has no ``claude``
+on it. A test that needs a call answered puts a stand-in on PATH itself.
 """
 
 import json
@@ -39,12 +42,28 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+# Enough PATH to run a subprocess, with no `claude` anywhere on it.
+#
+# What a test can reach is decided by the environment its runner hands the
+# subprocess, so the default has to be that it can reach no model. A
+# developer's own PATH has a real Claude Code CLI on it, and these commands
+# hand the page the callbacks AI-backed adapters call: inheriting that PATH,
+# a test that applies `cognitive` and loads the fixture sends the fixture's
+# text to a real model. Every runner below starts from this, and the one that
+# needs calls answered puts its own stand-in in front of it.
+NO_MODEL_PATH = "/usr/bin:/bin"
+
+
 @pytest.fixture(scope="session")
 def cli_env(tmp_path_factory: pytest.TempPathFactory) -> dict:
-    """Environment that points every piece of CLI state at a temp directory."""
+    """Environment that points every piece of CLI state at a temp directory.
+
+    It replaces PATH as well, so no runner built from it can reach a model.
+    """
     base = tmp_path_factory.mktemp("ai4a11y")
     return {
         **os.environ,
+        "PATH": NO_MODEL_PATH,
         "AI4A11Y_HOME": str(base / "home"),
         "AI4A11Y_OUT": str(base / "out"),
         "AI4A11Y_USER_DATA_DIR": str(base / "chrome-profile"),
@@ -54,7 +73,11 @@ def cli_env(tmp_path_factory: pytest.TempPathFactory) -> dict:
 
 @pytest.fixture(scope="session")
 def cli(cli_env: dict) -> CliRunner:
-    """Run the CLI as a subprocess and return the completed process."""
+    """Run the CLI as a subprocess and return the completed process.
+
+    Nothing run through it can call a model; `cli_env` has taken the Claude
+    Code CLI off PATH.
+    """
 
     def _run(*args: str, timeout: int = 120) -> "subprocess.CompletedProcess[str]":
         return subprocess.run(
@@ -69,25 +92,47 @@ def cli(cli_env: dict) -> CliRunner:
     return _run
 
 
+@pytest.fixture(autouse=True)
+def _restore_active_profile(cli_env: dict):
+    """Put the active profile back the way the test found it.
+
+    The active profile lives in one state file shared by every test in the run,
+    and it changes what later commands do. `session go` hands the page the
+    callbacks that AI-backed adapters call, so a profile such as `cognitive`
+    has a navigation ask for text passes it would not otherwise run. A test
+    that sets a profile and does not clear it therefore reaches into every
+    test after it, and those calls arrive somewhere no one chose.
+
+    Where they arrive is `NO_MODEL_PATH` and nothing else, so a leaked profile
+    can no longer reach a model. It still makes one test's state another
+    test's starting point, which is enough reason to put it back.
+
+    Restoring here rather than in the test that sets one means a test added
+    later cannot bring the problem back by forgetting to clean up.
+    """
+    state = Path(cli_env["AI4A11Y_OUT"]) / ".ai4a11y_session_state.json"
+    before = state.read_text() if state.exists() else None
+    yield
+    after = state.read_text() if state.exists() else None
+    if after == before:
+        return
+    if before is None:
+        state.unlink(missing_ok=True)
+    else:
+        state.write_text(before)
+
+
 @pytest.fixture(scope="session")
-def run_without_claude(cli_env: dict) -> CliRunner:
+def run_without_claude(cli: CliRunner) -> CliRunner:
     """Run a CLI command with the Claude Code CLI unreachable.
 
-    Stripping PATH is also what keeps these tests from calling a model: there
-    is nothing on the trimmed PATH to call.
+    The same runner as `cli`, because unreachable is now what every runner is.
+    It keeps its own name because the tests that ask for it are the ones whose
+    subject is what a command does with no model behind it, and reading
+    `run_without_claude(...)` at the call site says that; reading `cli(...)`
+    would leave it to a reader to know what is on the harness's PATH.
     """
-
-    def _run(*args: str, timeout: int = 120) -> "subprocess.CompletedProcess[str]":
-        return subprocess.run(
-            [sys.executable, "-m", "cli.cli", *args],
-            cwd=REPO_ROOT,
-            env={**cli_env, "PATH": "/usr/bin:/bin"},
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-
-    return _run
+    return cli
 
 
 # A stand-in for the Claude Code CLI that answers a fixed number of calls and
@@ -111,7 +156,9 @@ def run_with_flaky_claude(cli_env: dict, tmp_path: Path):
     """Build a runner whose ``claude`` answers ``succeed_calls`` times, then fails.
 
     Takes the number of calls to answer and returns a runner, so one test can
-    place the cutoff wherever the behavior it is checking changes.
+    place the cutoff wherever the behavior it is checking changes. This is the
+    only runner with anything answering on PATH, and what answers is the shell
+    script above.
     """
 
     def _make(succeed_calls: int) -> CliRunner:
@@ -124,7 +171,7 @@ def run_with_flaky_claude(cli_env: dict, tmp_path: Path):
         counter.write_text("0")
         env = {
             **cli_env,
-            "PATH": f"{shim_dir}:/usr/bin:/bin",
+            "PATH": f"{shim_dir}:{NO_MODEL_PATH}",
             "AI4A11Y_SHIM_COUNT": str(counter),
             "AI4A11Y_SHIM_SUCCEED": str(succeed_calls),
         }

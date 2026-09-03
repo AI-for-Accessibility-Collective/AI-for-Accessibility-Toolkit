@@ -57,3 +57,7 @@ def test_read_extracts_article_text(cli: CliRunner) -> None:
     result = cli("session", "read")
     assert result.returncode == 0, result.stderr
     assert "Plain readable paragraph" in result.stdout
+
+
+# Whether a command lets go of its browser connection is in
+# test_connection_cleanup.py, which drives the failing command that leaked one.

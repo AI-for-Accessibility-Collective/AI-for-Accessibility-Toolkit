@@ -4,7 +4,7 @@ A terminal front end for the toolkit's catalog. It launches a persistent Chromiu
 
 This is a research probe, pre-alpha, restored from the pre-split repository and rewired to this tree. Expect rough edges.
 
-Two files: `cli.py` is the command line (a [Typer](https://typer.tiangolo.com/) app: parsing, help, shell completion via `ai4a11y --install-completion`); `ai4a11y.py` is the engine it calls. Every command and group answers `--help`.
+`cli.py` is the command line (a [Typer](https://typer.tiangolo.com/) app: parsing, help, shell completion via `ai4a11y --install-completion`). The engine it calls is the `ai4a11y/` package next to it, six modules that import in one direction only: `config.py`, then `ai.py`, `page.py`, `browser.py`, `agent.py`, and `commands.py`. Every command and group answers `--help`.
 
 ## Setup
 
@@ -64,8 +64,21 @@ What that means in practice, because the page content involved is the user's:
 - **`go` and `profile` are the two that surprise people.** Neither calls a model
   itself. Both hand the page a set of callbacks that AI-backed adapters use, so a
   profile whose tools include `autoSimplify` or `autoSummarize` (`cognitive`,
-  `olderAdult`, `adhd`) sends page text on every navigation until the profile is
-  cleared with `ai4a11y session profile none`.
+  `olderAdult`, `adhd`) sends page text on every navigation.
+- **Those adapters keep working after the command that set them up has finished.**
+  Once `go` or `profile` has put an AI-backed profile on a tab, that tab keeps it,
+  so a later command on the same tab can send page text or a screenshot to a model
+  through the adapters, including a command listed above as instant and local.
+- **`ai4a11y session profile none` is how you stop them.** It clears the saved
+  profile so that nothing reapplies it on the next navigation, and it reaches into
+  the page you have open and turns the profile's tools back off there. It says how
+  many it turned off. Where it cannot finish — no session is running, the tools are
+  not loaded, the tab holds an object this CLI cannot drive, or a tool will not turn
+  off — it says so, names what is still running, and **exits non-zero**, instead of
+  reporting a stop it did not perform; loading a page then clears the tab. Only a
+  run that exits 0 is a run that cleared the page. Until this was fixed the command
+  wrote the saved state and stopped there, so the tab in front of you kept the
+  profile and its adapters until you navigated.
 
 When the Claude Code CLI is not installed, or a call fails, these commands write
 nothing to the page. They say `needs-ai` on the line where the fix would have
@@ -76,6 +89,7 @@ been.
 | Code | Meaning |
 |---|---|
 | 0 | The command did the whole job. Every item it attempted was fixed. |
+| 1 | The command could not do the job at all: the tools would not load into the page, or a profile could not be taken back out of one. Nothing but the payload reaches stdout; the reason is on stderr. |
 | 2 | The command line was wrong (Typer's usage error). |
 | 3 | An AI-backed command could not reach a model for at least one item. |
 | 4 | The recorded session is not the browser it started. Nothing was touched. |
