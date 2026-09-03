@@ -16,14 +16,23 @@ host-agnostic. No `chrome.*`, no required cloud model, no API key.
 
 ```
 Person speaks / types  →  Controller (web/ui.js + core)  →  ControlPort  →  the app
-   mic / text field          recognize → resolve → dispatch      7 methods     (local or remote)
+   mic / text field          recognize → resolve → dispatch   7 methods + stop  (local or remote)
    ← live region + TTS + earcons  ←  deliver result  ←───────────────────────────────┘
 ```
 
+Two surfaces run this same stack: the **floating widget**
+([`controller/web/ui.js`](../controller/web/ui.js), mounted on any page) and the
+**chat window** at `/chat` — a different shape over the same `createController`
+core, where the same utterance can also update the person's profile.
+
 - **Input** — the Web Speech `SpeechRecognition` API (feature-detected; the same
   code `onboarding/` uses). A 🎤 Speak button dictates into the field and
-  auto-submits when recognition ends; a text field is always available too
-  (speech-impaired users, noisy rooms, deterministic tests).
+  auto-submits when recognition ends; **Ctrl+Space** toggles it from anywhere; a
+  text field is always available too (speech-impaired users, noisy rooms,
+  deterministic tests). Starting dictation **silences playback first** — it
+  cancels any in-progress TTS and pauses local media, and asks a connected
+  receiver to `muteAudio` so other tabs don't get transcribed (a page can't reach
+  them itself).
 - **Understanding** — a **hybrid** engine, no model required
   ([`controller/grammar.js`](../controller/grammar.js) +
   [`router.js`](../controller/router.js)): a zero-dependency grammar over the
@@ -39,8 +48,14 @@ Person speaks / types  →  Controller (web/ui.js + core)  →  ControlPort  →
   local DOM page or a remote mobile / XR / desktop app.
 - **Output** — results land in an **ARIA live region** so a screen reader
   announces them in the person's own voice, and are **spoken via TTS** when the
-  "Speak results aloud" toggle is on. While a task runs, an animated waiting
-  indicator + a Web-Audio "thinking" earcon play, then a done / error chime.
+  "Speak results aloud" toggle is on. The voice is **chosen, not inherited**
+  (`bestVoice`: a local Premium/Enhanced voice, else a network one, else the
+  platform default — the OS default is often a poor compact voice), and is
+  selectable and persisted. Spoken text is stripped of markdown first
+  (`forSpeech`) so a task's `**bold**` and backticks aren't read aloud as
+  punctuation. While a task runs, an animated waiting indicator + a Web-Audio
+  "thinking" earcon play, with a **Stop** control that calls the port's `stop()`,
+  then a done / error chime.
 
 ## Voice output that doesn't fight a screen reader
 

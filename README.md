@@ -108,13 +108,24 @@ vocabulary.
 `createController({ control, operator }) → { handle, presentation }`. Design +
 milestones: [`controller/DESIGN.md`](controller/DESIGN.md).
 
-## Onboarding (example service)
+## Onboarding + Chat (example service)
 
-[`onboarding/`](onboarding/) is a tiny, zero-dependency web service that captures
-a person's needs into an ability profile (embedding the toolkit locally, or
-proxying a running `server/`), and — with an admin password — lists and deletes
-profiles. It also serves the Controller demo from the same port. A runnable
-reference for the "capture a profile" half of a host.
+[`onboarding/`](onboarding/) is a tiny, zero-dependency web service — a runnable
+reference for the "capture a profile" half of a host. It embeds the toolkit
+locally or proxies a running `server/`, and (with an admin password) lists and
+deletes profiles. It serves three surfaces on one port:
+
+| path | what it is |
+|---|---|
+| **`/chat`** | The front door (`/` redirects here). One conversational input — text or voice — that does **both** halves: describing yourself (*"I'm blind"*) updates your profile; a setting or command (*"bigger text"*, *"turn off captions"*, *"open google and search…"*) is carried to the app through the neutral `ControlPort`. Also: profile always visible, "back to my profile" to undo drift, and a settings drawer for speech in/out. |
+| `/onboarding` | The step-by-step form — pick support areas, describe your needs, hear it read back. |
+| `/controller` | The floating Controller widget driving a demo app (or a remote receiver). |
+
+The chat is deliberately **deterministic-first**: the grammar and the
+self-description heuristic resolve instantly and offline, and anything they
+don't claim is passed to the app rather than guessed at. An LLM lane is
+optional — without a key the surface still works fully for settings and
+onboarding.
 
 ## The Catalog
 
@@ -136,7 +147,8 @@ tools/       Developer catalog — adapters, auditors, profiles, utils
 controller/  Optional text/voice control surface — ControlPort, grammar, mounts,
              remote transport, web UI, demo (a sibling; the core never depends on it)
 server/      Hosted HTTP service exposing the core to any language/runtime
-onboarding/  Example web service: capture a profile + serve the Controller demo
+onboarding/  Example web service: /chat (conversational front door), /onboarding
+             (step-by-step form), /controller (Controller demo) — one port
 examples/    Runnable, dependency-free examples
 docs/        Architecture, API, and design docs
 ```

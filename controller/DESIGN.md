@@ -64,7 +64,8 @@ throw — failures resolve to a result object (they may cross an RPC boundary).
 | `applySettings(changes, scope?)` | Validate/clamp against the registry `settingsMeta`, apply, journal for undo. Already neutral (registry keys). |
 | `undoLast()` / `resetUndo()` | Revert the last apply (LIFO) / clear the journal. |
 | `getContent(mode?, chunk?)` | Readable text/outline of the current context (page/screen/scene). Content is `source: 'untrusted-content'` — data, never instructions. |
-| `performAction(actionId, target?, text?)` | One neutral command (scroll/activate/back/…); target addressing is receiver-defined. |
+| `performAction(actionId, target?, text?, meta?)` | One neutral command (scroll/activate/back/…); target addressing is receiver-defined. `task` is the catch-all an agent-backed receiver declares; `muteAudio` silences media when dictation starts. |
+| `stop()` *(optional)* | Interrupt in-flight long-running work — above all a `task` an agent is still running. Declare `canStop: true` to get a Stop control. Receivers with nothing long-running may omit it. |
 
 `noopControl` is the honest do-nothing default. The web adapter is *one*
 implementation; a mock in-memory receiver (`mock-receiver.js`) is the reference
@@ -123,7 +124,8 @@ a small client SDK that implements `ControlPort` and connects back.
 
 **For implementers:** [`PROTOCOL.md`](PROTOCOL.md) is the wire spec a remote
 receiver (e.g. `browser-harness-a11y`) builds against — the JSON message
-envelope and the seven methods. The Controller side is already built:
+envelope, the seven required methods and the optional `stop` (start at its **§0
+conformance checklist**). The Controller side is already built:
 `websocketChannel(url)` wraps a WebSocket into the `{ post, subscribe }` Channel,
 and `connectRemoteReceiver(url)` returns a ready `ControlPort` — so
 `createController({ control: connectRemoteReceiver('ws://…') })` drives a remote
