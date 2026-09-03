@@ -154,7 +154,7 @@ ai4a11y session profile lowVision
 ai4a11y session stop
 ```
 
-Commands that reason about the page visually (`describe`, `ask`, `tap`, `do`) call the locally installed Claude Code CLI and report `needs-ai` when it is not there; everything else runs locally with no AI. Details in [`cli/README.md`](cli/README.md). Experimental and pre-alpha, like the rest of this repository.
+About half the session commands reach the locally installed Claude Code CLI, which means a screenshot or the page's text leaves the browser, once per item rather than once per command. The rest run entirely locally. [`cli/README.md`](cli/README.md) lists which are which, what each sends, and what it costs. Without that CLI the AI-backed commands write nothing to the page and say `needs-ai`. Details in [`cli/README.md`](cli/README.md). Experimental and pre-alpha, like the rest of this repository.
 
 ## Repository Layout
 
