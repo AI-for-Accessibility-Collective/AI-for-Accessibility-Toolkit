@@ -51,4 +51,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Toolkit service tests
-        run: node server/test/server-test.mjs
+        run: |
+          node server/test/server-test.mjs
+          node server/test/delete-cascade.test.mjs
+          node server/test/gcs-pagination.test.mjs
+
+      - name: Toolkit package self-check
+        # Validates the package exactly as npm would publish it, catching
+        # manifest drift (files list vs exports map) that in-repo tests cannot
+        # see because they resolve against the working tree.
+        run: |
+          cd toolkit
+          npm pack --dry-run
+          npx --yes publint

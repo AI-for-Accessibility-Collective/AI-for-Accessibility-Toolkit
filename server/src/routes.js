@@ -24,6 +24,12 @@ export const LIBRARIAN_ROUTES = [
   { route: 'getAbilityModel', target: 'getAbilityModel', kind: 'librarian' },
   { route: 'listProcedural', target: 'listProcedural', kind: 'librarian' },
   { route: 'setProfileField', target: 'setProfileField', kind: 'librarian' },
+  // Several profile paths in ONE write. Every field lives in the same
+  // `mine.profile` record, so a remote caller sending four setProfileField
+  // requests writes that record four times and a failure between any two
+  // leaves a half-updated profile. Fields that belong to one form go over
+  // the wire together.
+  { route: 'setProfileFields', target: 'setProfileFields', kind: 'librarian' },
   { route: 'recordScopedSettings', target: 'recordScopedSettings', kind: 'librarian' },
   { route: 'getSiteCategory', target: 'getSiteCategory', kind: 'librarian' },
   // alias: librarianSetSiteCategory -> L.setSiteCategoryOverride(origin, category)

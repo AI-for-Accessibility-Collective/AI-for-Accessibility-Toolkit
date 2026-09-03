@@ -107,6 +107,26 @@ export function gcsStore(bucket) {
     return cachedToken.token;
   }
 
+  // Follow nextPageToken to exhaustion. GCS caps every listing page (1,000
+  // items by default), so a single-page read here means a wrong user list or,
+  // worse, a partial delete that reports success.
+  async function listAll(params) {
+    const token = await accessToken();
+    const items = [];
+    const prefixes = [];
+    let pageToken;
+    do {
+      const url = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o?${params}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) throw new Error(`gcsStore: list failed (${resp.status}): ${await resp.text()}`);
+      const data = await resp.json();
+      if (data.items) items.push(...data.items);
+      if (data.prefixes) prefixes.push(...data.prefixes);
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+    return { items, prefixes };
+  }
+
   return {
     kind: 'gcs',
     async readJSON(key) {
@@ -130,13 +150,9 @@ export function gcsStore(bucket) {
       if (!resp.ok) throw new Error(`gcsStore: write ${key} failed (${resp.status}): ${await resp.text()}`);
     },
     async listUsers() {
-      const token = await accessToken();
       // delimiter='/' collapses each users/<uid>/... into one prefix entry.
-      const url = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o?prefix=users/&delimiter=/`;
-      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-      if (!resp.ok) throw new Error(`gcsStore: listUsers failed (${resp.status}): ${await resp.text()}`);
-      const data = await resp.json();
-      return (data.prefixes || [])
+      const { prefixes } = await listAll('prefix=users/&delimiter=/');
+      return prefixes
         .map((p) => p.replace(/^users\//, '').replace(/\/$/, ''))
         .filter(Boolean)
         .sort();
@@ -144,10 +160,7 @@ export function gcsStore(bucket) {
     async deleteUser(uid) {
       assertSafeUid(uid);
       const token = await accessToken();
-      const listUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o?prefix=${encodeURIComponent(`users/${uid}/`)}`;
-      const listResp = await fetch(listUrl, { headers: { Authorization: `Bearer ${token}` } });
-      if (!listResp.ok) throw new Error(`gcsStore: deleteUser list failed (${listResp.status}): ${await listResp.text()}`);
-      const items = (await listResp.json()).items || [];
+      const { items } = await listAll(`prefix=${encodeURIComponent(`users/${uid}/`)}`);
       if (!items.length) return false;
       for (const it of items) {
         const delUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(it.name)}`;

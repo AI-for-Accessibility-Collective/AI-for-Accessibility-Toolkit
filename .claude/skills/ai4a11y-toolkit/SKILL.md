@@ -53,6 +53,7 @@ Read directly off a live `createToolkit(...)` instance — call as `toolkit.libr
 | `librarian.getProfile()` | async | (no doc comment) |
 | `librarian.getAbilityModel()` | async | The modality-agnostic AbilityModel view (../core/ability). |
 | `librarian.setProfileField(path, value)` | async | User-initiated edit — bypasses the proposal gate by design (the gate exists for *inferred* changes; explicit user intent needs no consent). |
+| `librarian.setProfileFields(fields)` | async | Set SEVERAL profile paths in ONE write. |
 | `librarian.recordExplicitSetting(key, value, origin)` | async | Fast lane for manual setting flips (popup toggle, onboarding choice). |
 | `librarian.recordScopedSettings(scope, settings, opts)` | async | Generalized explicit-setting writer: upserts one durable user-explicit record PER setting key at the given scope (general \| category:<id> \| origin:<host> \| context:<id>). |
 | `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |
@@ -326,14 +327,20 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
   `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
-  ("back to my profile": the bulk inverse of `recordScopedSettings` — without a
+  ("back to my profile": the bulk inverse of `recordScopedSettings`. Without a
   wire route a remote host's reset reaches nothing and reports success anyway).
+- `setProfileFields` is a first-class route under its own name for the same
+  reason, with no extension message behind it. Every profile field lives in one
+  stored record, so a caller that writes four fields in four requests writes
+  that record four times and a failure between any two of them leaves a profile
+  that contradicts itself. Fields belonging to one form go over the wire
+  together.
 - The natural-language note methods — `addNote`, `listNotes`, `updateNote`,
   `deleteNote`, `findNotes` — are routes under their own names too. Notes are
   the free-form text the person wrote about their own needs; a hosted instance
   partitions them by uid like every other record, and they remain outside
   `GRANT_SCOPES`, so no other app can read one.
-- 47 routes total.
+- 48 routes total.
 
 ## Connecting to a hosted instance (URL + token)
 

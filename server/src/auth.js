@@ -61,6 +61,23 @@ export async function revokeToken(store, id) {
   return true;
 }
 
+/** Revoke every token belonging to `uid` (part of user deletion: a wiped
+ *  profile's credentials must die with it, or the next authenticated write
+ *  recreates the partition). Same flip-the-flag semantics as revokeToken, so
+ *  the audit trail survives. Returns how many tokens were newly revoked. */
+export async function revokeTokensFor(store, uid) {
+  const tokens = await loadTokens(store);
+  let n = 0;
+  for (const rec of tokens) {
+    if (rec.uid === uid && !rec.revoked) {
+      rec.revoked = true;
+      n++;
+    }
+  }
+  if (n) await saveTokens(store, tokens);
+  return n;
+}
+
 /** Resolve a presented bearer token to its record, or null if missing,
  *  malformed, unknown, or revoked. Hash comparison is timing-safe. */
 export async function verifyToken(store, presented) {
