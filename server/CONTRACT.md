@@ -51,7 +51,9 @@
   methods (called by the voice side panel on the Librarian object rather than
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
-  `removeScopedSetting`, `recordExplicitSetting`.
+  `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
+  ("back to my profile": the bulk inverse of `recordScopedSettings`. Without a
+  wire route a remote host's reset reaches nothing and reports success anyway).
 - `setProfileFields` is a first-class route under its own name for the same
   reason, with no extension message behind it. Every profile field lives in one
   stored record, so a caller that writes four fields in four requests writes
@@ -63,7 +65,7 @@
   the free-form text the person wrote about their own needs; a hosted instance
   partitions them by uid like every other record, and they remain outside
   `GRANT_SCOPES`, so no other app can read one.
-- 47 routes total.
+- 48 routes total.
 
 ## Health path caveat
 

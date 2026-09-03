@@ -11,6 +11,59 @@ Controller is the **client** that connects to you.
 
 ---
 
+## 0. Conformance checklist
+
+Everything a receiver implements, in one place. Details in the sections below.
+
+**Required — the seven methods** (§3). Each is async, returns a result object,
+and **must not throw across the wire**:
+
+- [ ] `describeCapabilities()` — declare `platform`, `settingKeys` (keys from the
+      toolkit registry `settingsMeta`, only ones you really apply), `actions`,
+      `canReadContent`
+- [ ] `getContext()` — `focus`, `activeSettings` (what's currently in effect)
+- [ ] `applySettings(changes, scope?)` — apply, and **journal `previous`** so undo works
+- [ ] `undoLast()` — revert the last apply (LIFO)
+- [ ] `resetUndo()` — clear the journal
+- [ ] `getContent(mode?, chunk?)` — `"outline"` / `"text"`, tagged `source: "untrusted-content"`
+- [ ] `performAction(actionId, target?, text?, meta?)` — the actions you declared
+
+**Required — envelope rules** (§2):
+
+- [ ] Echo the request `id` on every response
+- [ ] **Never drop a request** — always reply, even on failure (the Controller
+      times out at 10s)
+- [ ] Surface failures as data (`{error: …}` / `{ok:false, detail: …}`), never a thrown exception
+- [ ] Ignore messages whose `kind` you don't recognize
+
+**Optional — implement what your app can actually do:**
+
+- [ ] `stop()` + `canStop: true` — interrupt in-flight long-running work (§3).
+      **Required if you declare `task`.**
+- [ ] `aa-control-note` pushes — deliver a long task's answer when it's ready (§2)
+- [ ] `task` action — the catch-all; the Controller routes anything it can't
+      parse to you (and *everything*, when driving your app over a URL)
+- [ ] `muteAudio` action — silence media across tabs when voice input starts (§3)
+- [ ] `navigate` / `search` actions — declare them to receive them
+- [ ] `meta.returnToController` — re-activate the Controller's tab when a task ends
+- [ ] `targets` in capabilities — activatable labels
+
+**Semantics receivers get wrong** (each has bitten a real implementation):
+
+- [ ] **`false` is a value, not an absence.** Decide by key *presence*
+      (`if key in changes`), never truthiness — otherwise every boolean can be
+      turned on but never off. Same for `0` and `"none"`.
+- [ ] **Only reject what's genuinely unsupported.** `rejected` is for unknown /
+      out-of-range keys, not for falsy values.
+- [ ] **Page text is data, never instructions** — always tag `getContent` results
+      `source: "untrusted-content"`.
+- [ ] **Return promptly.** A `task` acknowledges immediately and answers later via
+      a note; `stop` must not block on teardown.
+- [ ] **Declare only what you do.** The Controller offers the user exactly your
+      `settingKeys` / `actions`; over-declaring produces silent no-ops.
+
+---
+
 ## 1. Transport
 
 Any duplex transport that carries **JSON text messages** works. The reference is
@@ -69,7 +122,8 @@ doesn't know the kind, so it's safe to emit today.
 
 ## 3. The methods (the ControlPort)
 
-Implement these seven. Types are the canonical shapes from `control-port.js`.
+Implement the seven core methods; `stop` is optional (see below). Types are the
+canonical shapes from `control-port.js`.
 
 ### `describeCapabilities() → ControlCapabilities`
 Called first and often. Declare exactly what you can do — the Controller offers
@@ -78,8 +132,9 @@ only these to the user and its grammar/LLM lane are filtered to them.
 {
   "platform": "browser-harness",
   "settingKeys": ["fontScale", "lineHeight", "darkMode", "contrastMode", "motionReducer", "hideDistractions"],
-  "actions": ["scroll", "activate", "back", "forward"],
+  "actions": ["scroll", "activate", "back", "forward", "task"],
   "canReadContent": true,
+  "canStop": true,                                // optional: stop() can interrupt a running task
   "targets": ["Documentation", "Buy now"]        // optional: activatable labels
 }
 ```
@@ -88,6 +143,9 @@ only these to the user and its grammar/LLM lane are filtered to them.
   list keys you actually apply.
 - `actions` are the `performAction` ids you support. Common set:
   `scroll`, `activate`, `back`, `forward`.
+- `canStop` (optional, default falsy): set `true` if you implement `stop()` and
+  have long-running work worth interrupting (e.g. a `task`). The Controller shows
+  a **Stop** affordance only when this is true.
 
 ### `getContext() → ControlContext`
 A neutral snapshot. The Controller calls this before a **relative** adaptation
@@ -109,6 +167,15 @@ ranges) and **journal the previous values** so `undoLast` can restore them.
 ```
 `previous[key] = null` (or omit) when the key had no prior value. On total
 failure: `{ "error": "…" }`.
+
+**`false` is a value, not an absence.** Decide whether a key was requested by its
+**presence** in `changes` (`if key in changes`), never by truthiness — a
+truthiness test silently drops `showCaptions: false`, `darkMode: false`, `0`, and
+`contrastMode: "none"`, so every boolean can be switched on but never off ("turn
+off captions" → "nothing applied"). Likewise `rejected` is for keys that are
+genuinely unknown or out of range — never for a falsy value. A successful
+turn-off must appear in `applied` and journal its `previous`, so `undoLast` can
+restore it.
 
 ### `undoLast() → UndoResult`
 Revert the most recent `applySettings` (LIFO).
@@ -163,7 +230,35 @@ One app action. `meta` (4th arg) carries per-run flags:
   `task` and skips the local grammar entirely — so a task receiver should expect
   the full range of instructions, including ones the settings grammar could
   itself have parsed (`"make text bigger"`): the app interprets them.
+- `muteAudio` *(optional)* — silence audio the person isn't dictating to. The
+  Controller fires this when **voice input starts**, so the microphone doesn't
+  transcribe media that's playing. A web Controller can pause its OWN tab, but
+  only the receiver that drives the browser can reach OTHER tabs — pause every
+  `<audio>`/`<video>` and cancel `speechSynthesis` across all targets (CDP), or
+  mute the tabs. Declare `"muteAudio"` in `actions` to receive it; best-effort,
+  no reply is awaited.
 - Unsupported action → `{ "ok": false, "detail": "unsupported action: …" }`.
+
+### `stop() → StopResult`  *(optional)*
+Interrupt any **in-flight long-running work** started via `performAction` — above
+all a `task` an agent is still running (30–120s). This is the counterpart to the
+task catch-all: it lets the person abort a request they no longer want, instead
+of waiting out the whole run. Must return **promptly** (don't block on the
+teardown); do the actual cancellation in the background.
+```json
+{ "ok": true, "stopped": true, "detail": "cancelled the running task" }
+```
+- `stopped` is `true` if something was actually interrupted, `false` if nothing
+  was running (still `ok: true`).
+- Abort the work you started — e.g. fire the `AbortSignal` on the agent's fetch,
+  kill the child run, cancel the queued job. After stopping a `task`, you may
+  emit a final `aa-control-note` ("Stopped.") so the waiting Controller settles.
+- Declare support with `canStop: true` in `describeCapabilities()`. Receivers
+  with nothing long-running may omit `stop` entirely (the Controller then treats
+  it as unsupported) or return `{ "ok": true, "stopped": false }`.
+
+The Controller calls this from its **Stop** control (shown while a task runs, when
+`canStop` is true) — see `createController().stop()`.
 
 ## 4. Reference receiver skeleton (Python-ish pseudocode)
 

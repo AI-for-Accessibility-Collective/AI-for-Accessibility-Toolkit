@@ -83,8 +83,9 @@ for (const [tpl, key, want] of detCases) {
 
 // Contrast phrasings that the hand-written contrast rule used to miss outright
 // (it required "no contrast" adjacent, so "no HIGH contrast" fell through to
-// the positive rule and turned contrast ON).
-for (const u of ['no high contrast', 'without high contrast', 'disable high contrast', 'less contrast', 'less high contrast']) {
+// the positive rule and turned contrast ON). "less contrast" on its own now
+// selects the low-contrast level (see controller.test.mjs), so it is not here.
+for (const u of ['no high contrast', 'without high contrast', 'disable high contrast', 'less high contrast']) {
   const i = parse(u);
   check(`off: "${u}" -> contrastMode none`, !!i && i.changes.contrastMode === 'none');
 }

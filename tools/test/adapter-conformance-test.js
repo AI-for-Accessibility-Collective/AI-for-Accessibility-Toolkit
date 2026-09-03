@@ -94,7 +94,7 @@ const TOOL_OBJECTS = [
   'FocusMode', 'KeyboardNavigator', 'LanguageTag', 'LinkHighlighter', 'LiveRegionAnnouncer',
   'Magnifier', 'MathA11y', 'MotionReducer', 'MuteSounds', 'PageOutline',
   'PersistentHover', 'ReaderMode', 'ReadingRuler', 'ReadingSpot', 'ReduceBrightness',
-  'ReflowColumn', 'SkipLinks', 'SoundVisualizer', 'SpaFocus', 'StopAutoAdvance',
+  'ReflowColumn', 'ShowCaptions', 'SkipLinks', 'SoundVisualizer', 'SpaFocus', 'StopAutoAdvance',
   'TranslatePage', 'UnpinSticky', 'VisualAssist', 'VoiceCommands',
 ];
 sameSet('tool objects', toolObjects.slice().sort(), TOOL_OBJECTS.slice().sort());

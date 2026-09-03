@@ -106,6 +106,10 @@ export const LIBRARIAN_ROUTES = [
   { route: 'getScopedSetting', target: 'getScopedSetting', kind: 'librarian' },
   { route: 'removeScopedSetting', target: 'removeScopedSetting', kind: 'librarian' },
   { route: 'recordExplicitSetting', target: 'recordExplicitSetting', kind: 'librarian' },
+  // "Back to my profile" — the bulk inverse of recordScopedSettings. Without a
+  // wire route a remote host's reset reaches nothing and reports success anyway,
+  // telling the person their settings went back to normal when they did not.
+  { route: 'resetToProfile', target: 'resetToProfile', kind: 'librarian' },
 
   // ---- natural-language notes --------------------------------------------
   // Prose the person wrote about their own needs (toolkit/core/librarian.js,

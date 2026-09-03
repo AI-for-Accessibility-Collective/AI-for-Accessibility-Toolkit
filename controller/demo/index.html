@@ -119,20 +119,44 @@
     document.getElementById('ws-url').value = 'ws://127.0.0.1:9333';
     document.getElementById('connect').click();
   });
-  document.getElementById('connect').addEventListener('click', () => {
-    const url = document.getElementById('ws-url').value.trim();
+  // Remember the connected receiver so a page refresh reconnects to it (the
+  // socket dies with the page, but the receiver is still running).
+  const WS_KEY = 'aa-controller-ws';
+  function connectRemote(url) {
+    url = (url || '').trim();
     if (!url) return;
     if (remoteChannel) remoteChannel.close();
     remoteChannel = websocketChannel(url);
     currentControl = remoteControl({ channel: remoteChannel });
-    document.getElementById('drive-note').innerHTML = 'Driving: <strong>remote receiver</strong> <code>' + url + '</code> — input is sent straight through as a task (no grammar).';
+    try { localStorage.setItem(WS_KEY, url); } catch {}
+    document.getElementById('ws-url').value = url;
     document.getElementById('connect').hidden = true;
     document.getElementById('disconnect').hidden = false;
     rebuild();
-  });
+
+    // Reflect the socket lifecycle in the drive-note (reconnecting → driving, or
+    // couldn't reach / lost). Guard with the channel identity so a previous
+    // socket's late event can't clobber a newer connection's status.
+    const note = document.getElementById('drive-note');
+    const driving = 'Driving: <strong>remote receiver</strong> <code>' + url + '</code> — input is sent straight through as a task (no grammar).';
+    const myChannel = remoteChannel, sock = remoteChannel.socket;
+    let opened = false;
+    const set = (html) => { if (remoteChannel === myChannel) note.innerHTML = html; };
+    note.innerHTML = 'Connecting to <code>' + url + '</code>…';
+    try {
+      if (sock.readyState === 1) { opened = true; set(driving); }
+      else {
+        sock.addEventListener('open', () => { opened = true; set(driving); });
+        sock.addEventListener('error', () => { if (!opened) set('⚠ Couldn’t reach <code>' + url + '</code> — is the receiver running?'); });
+        sock.addEventListener('close', () => set(opened ? '⚠ Connection to <code>' + url + '</code> lost.' : '⚠ Couldn’t reach <code>' + url + '</code> — is the receiver running?'));
+      }
+    } catch {}
+  }
+  document.getElementById('connect').addEventListener('click', () => connectRemote(document.getElementById('ws-url').value));
   document.getElementById('disconnect').addEventListener('click', () => {
     if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
     currentControl = localReceiver;
+    try { localStorage.removeItem(WS_KEY); } catch {}
     document.getElementById('drive-note').innerHTML = 'Driving: <strong>the local demo app</strong> below.';
     document.getElementById('disconnect').hidden = true;
     document.getElementById('connect').hidden = false;
@@ -142,6 +166,9 @@
   // Read the profile you onboarded with (same-origin localStorage 'onb-uid' that
   // /onboarding writes); shows "not set" and builds a default operator if none.
   loadProfile(currentUid());
+  // Reconnect to the receiver we were driving before a refresh, if any.
+  let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
+  if (savedWs) connectRemote(savedWs);
 </script>
 </body>
 </html>

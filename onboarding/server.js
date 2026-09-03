@@ -47,6 +47,23 @@ const REGISTRY_DIR = path.join(TOOLKIT_DIR, 'registry');
 // offers these; onboarding accepts any subset.
 const SUPPORT_AREAS = ['vision', 'reading', 'cognitive', 'motor', 'hearing', 'sensory', 'attention'];
 
+// Optional Gemini completion for the /chat surface's best-effort LLM lane
+// (controller-intent classification + a general spoken answer). DEMO-scoped and
+// key-gated: with no GEMINI_API_KEY on THIS process, /api/assist reports
+// { available:false } and the chat degrades to deterministic-only (settings +
+// onboarding still work fully). Not an open proxy for the hardened toolkit
+// server — a small assist for this demo host, size-capped per request.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+let _assist = null;
+async function assistCaller() {
+  if (!GEMINI_API_KEY) return null;
+  if (!_assist) {
+    const { createGeminiCaller } = await import('../server/src/gemini.js');
+    _assist = createGeminiCaller({ apiKey: GEMINI_API_KEY });
+  }
+  return _assist;
+}
+
 // ── Local mode: embed the toolkit over a file store ─────────────────────────
 let _localHost = null, _localStore = null;
 async function localBits() {
@@ -349,6 +366,31 @@ async function abilityModelFor(uid) {
   return { exists: true, uid, model };
 }
 
+// "Forget what I've changed, go back to my profile." Drops the durable
+// user-explicit setting records so the next read re-derives from the profile.
+// The profile itself (support areas, free text, needs) is untouched — this
+// forgets deliberate overrides, not the person.
+async function resetToProfileFor(uid, scope) {
+  uid = String(uid || '').trim();
+  if (!uid) throw new Error('uid required');
+  if (MODE === 'remote') {
+    const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-reset' });
+    if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
+    const r = await remoteLibrarian(t.body.token, 'resetToProfile', [scope ? { scope } : {}]);
+    // A reset that forgot NOTHING ({forgotten: []}) and a reset that never ran
+    // are different things, and only one of them should be reported as success —
+    // telling someone their settings went back to normal when the call 404'd is
+    // the worst of both. Demand a real result object.
+    if (r.status !== 200 || !r.body || typeof r.body.result !== 'object' || r.body.result === null) {
+      throw new Error(`the toolkit service did not run resetToProfile (HTTP ${r.status}${r.body && r.body.error ? ': ' + r.body.error : ''}) — is it running a build that routes it?`);
+    }
+    return r.body.result;
+  }
+  const { host } = await localBits();
+  const { librarian } = await host.getInstance(uid);
+  return await librarian.resetToProfile(scope ? { scope } : {});
+}
+
 // ── Admin: list + delete profiles (gated by ADMIN_PASSWORD) ─────────────────
 function adminOk(req) {
   if (!ADMIN_PASSWORD) return false;
@@ -424,15 +466,30 @@ const server = http.createServer(async (req, res) => {
     const { pathname } = new URL(req.url, 'http://localhost');
     const method = req.method;
 
-    // The page lives at /onboarding; bare / redirects there.
+    // /chat is the front door — one conversational surface that does both
+    // onboarding and control. The step-by-step form stays at /onboarding.
     if (method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
-      res.writeHead(302, { location: '/onboarding' });
+      res.writeHead(302, { location: '/chat' });
       return res.end();
     }
     if (method === 'GET' && (pathname === '/onboarding' || pathname === '/onboarding/')) {
       const html = await readFile(path.join(__dirname, 'index.html'), 'utf8');
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(html);
+    }
+
+    // Chat surface at /chat — one conversational input that does both onboarding
+    // and controller. Its own module is /chat.js; it imports the controller core
+    // from /controller/lib (served below) with absolute paths, so no rewrite.
+    if (method === 'GET' && (pathname === '/chat' || pathname === '/chat/')) {
+      const html = await readFile(path.join(__dirname, 'chat.html'), 'utf8');
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+    if (method === 'GET' && (pathname === '/chat.js' || pathname === '/chat-routing.js')) {
+      const js = await readFile(path.join(__dirname, pathname.slice(1)), 'utf8');
+      res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' });
+      return res.end(js);
     }
 
     // Controller UI at /controller. The demo's imports are relative to
@@ -472,6 +529,35 @@ const server = http.createServer(async (req, res) => {
       catch (e) { return sendJSON(res, 502, { error: e.message }); }
     }
 
+    // Best-effort LLM completion for the /chat surface. { available:false } when
+    // no key is configured (the client then falls back to deterministic-only).
+    if (method === 'POST' && pathname === '/api/assist') {
+      const caller = await assistCaller();
+      if (!caller) return sendJSON(res, 200, { available: false });
+      let body;
+      try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
+      const prompt = String(body && body.prompt || '').slice(0, 4000); // size cap
+      if (!prompt) return sendJSON(res, 400, { error: 'prompt required' });
+      try {
+        const text = await caller(prompt);
+        return sendJSON(res, 200, { available: true, text: String(text) });
+      } catch (e) {
+        // A model/transport failure is data, not a 500 — chat degrades quietly.
+        return sendJSON(res, 200, { available: false, error: e.message });
+      }
+    }
+
+    if (method === 'POST' && pathname === '/api/reset-to-profile') {
+      let body;
+      try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
+      try {
+        const result = await resetToProfileFor(body?.uid, body?.scope);
+        return sendJSON(res, 200, { ok: true, ...result });
+      } catch (e) {
+        return sendJSON(res, 400, { ok: false, error: e.message });
+      }
+    }
+
     if (method === 'POST' && pathname === '/api/onboard') {
       let body;
       try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
@@ -506,12 +592,39 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+// In local mode onboarding keeps its OWN copy of every profile under DATA_DIR.
+// If a toolkit service is also running, a receiver is reading THAT store — same
+// person, two files: a preference the receiver recorded is invisible here, and a
+// reset here clears records the receiver never read. Silent and expensive to
+// find, so say it loudly when we can detect it.
+async function warnIfSplitStore() {
+  if (MODE !== 'local') return;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 800);
+    const resp = await fetch(TOOLKIT_URL + '/healthz', { signal: ctrl.signal }).catch(() => null);
+    clearTimeout(t);
+    if (!resp || !resp.ok) return; // nothing there (or not the toolkit) — local-only is fine
+  } catch { return; }
+  console.warn(`
+[onboarding] ⚠  TWO STORES. A toolkit service is running at ${TOOLKIT_URL}, but this
+[onboarding]    process is in LOCAL mode and keeps its own profiles in ${DATA_DIR}.
+[onboarding]    A receiver talking to the service reads a DIFFERENT store: settings it
+[onboarding]    records are invisible here, and a reset here won't touch them.
+[onboarding]    To share one store:  ONBOARD_MODE=remote TOOLKIT_URL=${TOOLKIT_URL} ADMIN_PASSWORD=… node onboarding/server.js
+`);
+}
+
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
   server.listen(PORT, () => {
     console.log(`[onboarding] mode=${MODE} target=${MODE === 'remote' ? TOOLKIT_URL : DATA_DIR}`);
     console.log(`[onboarding] admin ${ADMIN_PASSWORD ? 'enabled' : 'DISABLED (set ADMIN_PASSWORD to list/delete)'}`);
-    console.log(`[onboarding] open http://127.0.0.1:${PORT}/onboarding`);
+    console.log(`[onboarding] open       http://127.0.0.1:${PORT}/          → /chat`);
+    console.log(`[onboarding] chat       http://127.0.0.1:${PORT}/chat`);
+    console.log(`[onboarding] onboarding http://127.0.0.1:${PORT}/onboarding`);
     console.log(`[onboarding] controller http://127.0.0.1:${PORT}/controller`);
+    console.log(`[onboarding] assist LLM ${GEMINI_API_KEY ? 'enabled' : 'DISABLED (set GEMINI_API_KEY for the chat general-answer lane)'}`);
+    warnIfSplitStore();
   });
 }
 

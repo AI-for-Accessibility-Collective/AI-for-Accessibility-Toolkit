@@ -32,6 +32,12 @@ ports and consume the core, the catalog, or the hosted service.
   through a neutral `ControlPort`. It *consumes* the toolkit (imports
   `../toolkit/registry/tools.js` for the settings vocabulary); the toolkit never
   depends on it. See `controller/DESIGN.md` + `controller/PROTOCOL.md`.
+- `onboarding/` — a zero-dep example host serving three surfaces on one port:
+  `/chat` (the front door; `/` redirects there — one conversational input doing
+  both profile capture and app control, over the same `createController` core),
+  `/onboarding` (the step-by-step form), and `/controller` (the widget demo).
+  Runs `local` (its own data dir) or `remote` (proxying `server/`) — in local
+  mode alongside a running service it warns about the two-store split.
 - `examples/`, `docs/` — runnable examples and documentation.
 
 `createToolkit({ kv, clock, scheduler, consent, ... }) → { datastore, librarian }`
